@@ -12,7 +12,23 @@
 > discovered to the Gotchas section. A change without a handoff update is an
 > incomplete change.
 
-Last updated: **2026-08-04** (session 10a: **this checkout is a git repository
+Last updated: **2026-08-04** (session 10b: **`cl` is a BAD SEARCH DIMENSION —
+removing it from the search RAISES the S3 yield.** Pinning `cl` at 150 fF and
+holding every other bound takes the random-search yield from
+**8.73% [7.54, 10.09] to 13.54% [12.08, 15.16]**, disjoint 95% intervals, on
+2000 paired LHS samples. The optimum is bracketed (50/100/150/250/400 fF gives
+8.73/11.27/13.54/12.06/9.52%), so 150 fF is a real interior maximum, though not
+separable from 250 fF at this n. Mechanism: `cl` trades peak MAGNITUDE against
+peak LOCATION and location wins up to ~150 fF, after which the load pole stops
+relocating peaks and starts extinguishing them. **Second result, and it
+sharpens G40:** the RAW coupling factor falls monotonically 1.00 -> 0.68 across
+the sweep while the conditional-on-a-peak one stays flat at 1.01-1.10 — so the
+raw statistic is tracking the no-peak fraction, not any conflict between the S3
+conditions. **Third, and it must not be buried: this makes G3 HARDER**, because
+the random-search baseline RL has to beat rises from ~11 samples per hit to ~7.
+Full write-up `nebula/CL_SENSITIVITY.md`; `params.py` untouched (rule 6).
+430 -> **444 green**. See G42, G43.
+Earlier session 10a: **this checkout is a git repository
 again, and for the first time its history is CLEAN of the copyrighted PDFs.**
 Session 9d ended with a note that `git init` had never been run here, so the
 "update HANDOFF in the same commit" rule could not be honoured mechanically.
@@ -165,9 +181,22 @@ signaling, ADC-based DSP receiver, 28 nm CMOS reference parameters).
 │   │                       matched boost comparison, the 3.3 V rejection —
 │   │                       and §4, which RETRACTS the coupled-constraint
 │   │                       argument. Read §4 before writing any deliverable.
+│   ├── CL_SENSITIVITY.md   NEW (2026-08-04). What `cl` does to the S3 yield,
+│   │                       measured by pinning it. Removing cl from the search
+│   │                       RAISES yield 8.73% -> 13.54%; the optimum is
+│   │                       bracketed at ~150-250 fF. Also the cleanest
+│   │                       demonstration that a RAW coupling factor tracks the
+│   │                       no-peak fraction (G43). Read §5 before touching the
+│   │                       action space and §7 before quoting any coupling
+│   │                       number.
 │   ├── experiments/s3_yield.py  the random-search baseline, as a coupling
 │   │                       factor rather than a bare percentage. Carries
 │   │                       PROPOSED_BOX (not yet in params.py — rule 6).
+│   │                       `--cl-fixed F` pins one axis by overwriting that
+│   │                       coordinate of the SAME seeded LHS design, so runs
+│   │                       are PAIRED. Every rate carries a two-sided Wilson
+│   │                       95% interval; the coupling factor carries a
+│   │                       percentile bootstrap (resolution ~+/-10% at n=2000).
 │   ├── device/sky130_runner.py  one SKY130 point, four analyses (.op .ac
 │   │                       .noise .dc), one call. Owns the two unit
 │   │                       conversions (metres->microns, i_bias->per-side)
@@ -430,8 +459,25 @@ Plus: git init, .gitignore, 28 tests, Wilson-bound BER reporting.
   cannot deliver at all) is the recommended one, and **S9 corner robustness**
   is the cheapest to measure next.
 - **The honest random-search baseline is 8.73%** (165 of 1890 simulated, from
-  2000 Latin-hypercube samples of the re-derived 1.8 V box). It is a baseline
-  for G3 to beat, not evidence of a mechanism.
+  2000 Latin-hypercube samples of the re-derived 1.8 V box), **95% CI
+  [7.54, 10.09]**. It is a baseline for G3 to beat, not evidence of a
+  mechanism. **It rises to 13.54% [12.08, 15.16] if `cl` is pinned at 150 fF
+  instead of searched** (session 10b, `nebula/CL_SENSITIVITY.md`) — so which
+  number G3 must beat is a live decision, not a fact.
+- **`cl` sensitivity, 2000 paired LHS samples per point** (session 10b). Pin
+  `cl`, hold every other bound:
+
+        cl        50f     100f     150f     250f     400f    (sampled 10-500f)
+        S3      8.73%   11.27%   13.54%   12.06%    9.52%          8.73%
+        A       52.65   48.52    46.14    39.26    33.54           48.47
+        B       16.61   21.90    24.02    22.80    19.21           16.03
+        peaks    1673    1559     1469     1313     1168            1578
+
+  Both marginals turn over; A falls monotonically (the load pole eats peaking)
+  while B rises then falls (the load pole first relocates the peak into the S3
+  window, then extinguishes it). 150 fF is a genuine interior maximum but is
+  NOT separable from 250 fF at this n. S5, S6 and the saturated fraction do
+  not move at all with `cl`, as expected.
 - Reference operating point: 3 cm (9 dB) channel, SNR 26 dB, CTLE 6 dB,
   Alexander: BER ≈ 1e-4; SNR 28: 0 errors (bound ~1e-4→ 8.7e-5 at 30k syms).
 - Loss sweep (SNR 28, CTLE 6 dB): clean ≤12 dB; ~1e-2 at 24 dB; lock lost
@@ -482,7 +528,13 @@ Plus: git init, .gitignore, 28 tests, Wilson-bound BER reporting.
        * **Approve or amend the proposed box**, then copy it into
          `common/params.py::BOUNDS`. It is deliberately NOT copied in yet
          (§8 rule 6). The old bounds carry a superseded banner naming their
-         three known defects.
+         three known defects. **Session 10b adds one amendment to decide:
+         drop `cl` from the action space and fix it at 150-250 fF** — it
+         raises the S3 yield from 8.73% to 13.54% AND removes a dimension
+         (G42, `nebula/CL_SENSITIVITY.md` §6). Two caveats belong to the
+         human: it raises the G3 baseline RL must beat, and `cl` is physically
+         set by the following stage's input capacitance, so the value should
+         be justified by that load rather than picked to maximise yield.
        * **Measure the corner-robust yield** — the same 2000 samples over the
          45-corner S9 grid. Cheapest remaining route to a real constraint, and
          it is claimed contribution #1 in CLAUDEwa §7. ~0.42 s/point.
@@ -850,6 +902,51 @@ Plus: git init, .gitignore, 28 tests, Wilson-bound BER reporting.
   existing** (that is the 1.04x figure). Costs the same simulations as the
   bare percentage — three counters instead of one. Generalise the habit: any
   "X% therefore hard" claim in this project needs the marginals next to it.
+- **G42 — (nebula) a search DIMENSION can be worth less than a constant, and
+  `cl` is.** Pinning `cl` at 150 fF and holding every other bound raises the S3
+  random-search yield from **8.73% [7.54, 10.09] to 13.54% [12.08, 15.16]** —
+  disjoint intervals, 2000 paired samples. The whole 10-500 fF bound is worse
+  than a single well-chosen value inside it, so the axis is not carrying
+  information, it is spending samples. That is now **two** of nine sampled
+  parameters that measurement says should not be in the action space
+  (`nf_in` is the other, G38). **The trap this sets: improving the box
+  improves the RANDOM-SEARCH BASELINE, which is what CLAUDEwa §7 requires RL
+  to beat at G3.** 8.73% -> 13.54% moves the bar from ~11 samples per hit to
+  ~7. Take the better box anyway — a baseline that was weak only because of a
+  badly chosen dimension is not one worth beating, and a judge will ask why
+  `cl` was searched at all — but record it as a deliberate decision, not as a
+  silent improvement that raises the bar three weeks before the gate. Full
+  data: `nebula/CL_SENSITIVITY.md`.
+- **G43 — (nebula) a RAW coupling factor tracks the no-peak fraction, not the
+  coupling.** G40 already said the statistic must also be computed conditional
+  on a peak existing. Session 10b shows *how badly* it matters, as a trend
+  rather than a footnote. Sweeping `cl` over 50/100/150/250/400 fF:
+
+        raw coupling          1.00  0.94  0.82  0.74  0.68   monotone
+        conditional coupling  1.08  1.10  1.01  1.02  1.05   flat
+        designs with a peak   1673  1559  1469  1313  1168   monotone
+
+  The raw factor moves by 32% while the real one does not move at all, and it
+  moves in lockstep with the number of designs that have no interior maximum.
+  Those fail A and B together and make the two look positively associated for
+  a reason that has nothing to do with S3. **Never quote a raw coupling factor
+  without the conditional one beside it** — it is the no-peak fraction in
+  disguise. (One honest wrinkle: at `cl` = 100 fF the conditional interval
+  [1.02, 1.20] does exclude 1.0, so there is a real ~10% adverse effect there.
+  Ten percent cannot explain a 8.73% yield; G40 stands.)
+- **G44 — (nebula) `meas ac MAX ... TO=50g` reports the SWEEP EDGE as a peak.**
+  The `has_peak` filter in `s3_yield.py` is
+  `peaking_db > 0.25 and f_pk_hz > 50e6`, which catches a monotonically
+  FALLING response (it reports `f_pk` at the 10 MHz start) but **not** a
+  response still rising at the top of the sweep, which reports `f_pk` at
+  ~47.9 GHz and sails through both tests. Observed on a real sample:
+  rl=111, cl=50f -> `f_pk = 47.863 GHz`, i.e. no interior maximum at all.
+  Those designs are counted in `n_has_peak` and should not be. It does not
+  affect S3 itself (47.9 GHz fails the 1.25-2.5 GHz window anyway) but it
+  inflates the has-peak denominator and therefore slightly biases the
+  conditional coupling factor. Fix is a symmetric upper guard
+  (`f_pk_hz < 0.9 * f_sweep_max`); not applied yet because it changes a
+  published statistic and needs the re-run to go with it.
 - **G25 — (nebula) the channel needs TWO loss numbers, not one.** A CTLE's
   peaking is RELATIVE (|H(f_nyq)|/|H(0)|), so what it equalises is the
   channel's **tilt**, not its absolute loss. Comparing peaking against
@@ -1775,3 +1872,84 @@ and the `!`-rule trap). **G1 amended.** **§10 corrected** — it claimed a remo
 **Not done, deliberately:** no remote, no push. Pointing this history at the
 existing GitHub repo is a real choice between a new remote and a rewrite of the
 old one, and it is a human's (G1 as amended).
+
+### 2026-08-04 — Session 10b (`cl` sensitivity: a search dimension worth less than a constant)
+
+**Tests: 430 -> 444** (+14, all in `nebula/tests/test_sky130_runner.py`;
+105.9 s, 2 deselected). Full write-up: `nebula/CL_SENSITIVITY.md`.
+**`common/params.py` is untouched** — this is a measurement and a proposal,
+and rule 6 reserves the bound change for a human.
+
+**What was added.** `--cl-fixed FARADS` in `experiments/s3_yield.py`, plus the
+uncertainty machinery the conclusions need.
+
+The pin **overwrites the `cl` coordinate of the same seeded LHS design** rather
+than re-sampling in eight dimensions. That is the load-bearing design choice:
+the other eight coordinates are identical sample-by-sample across all runs, so
+a yield difference is attributable to `cl` and nothing else. A free consistency
+check falls out — `headroom_ok_1v8()` never reads `cl`, so the free-rejection
+count must be identical across runs, and it is (110 rejected / 1890 simulated,
+every time).
+
+**Result 1 — pinning `cl` BEATS searching it (G42).** 2000 samples per point:
+
+        cl        50f     100f     150f     250f     400f    sampled 10-500f
+        S3      8.73%   11.27%   13.54%   12.06%    9.52%          8.73%
+                                  ^^^ max, and disjoint CIs vs both ends
+
+8.73% [7.54, 10.09] -> 13.54% [12.08, 15.16]. The whole bound is worse than a
+single value inside it. 150 fF is a real interior maximum, **but is not
+separable from 250 fF** at this n — the supportable claim is "the optimum is in
+150-250 fF", not "the optimum is 150 fF".
+
+Mechanism, visible in the marginals: A (peaking 3-12 dB) falls monotonically
+52.65 -> 33.54% as the load pole eats peaking, while B (f_peak in window) rises
+16.61 -> 24.02% then falls back to 19.21%. Extra `cl` first *relocates* the
+peak into the S3 window and then *extinguishes* it — session 9c's finding,
+re-measured across 9450 designs instead of two. The count of designs with any
+interior peak falls monotonically 1673 -> 1168.
+
+**Result 2 — the raw coupling factor is the no-peak fraction in disguise
+(G43).** Across the same sweep the raw factor moves 1.00 -> 0.68 (32%) while
+the conditional-on-a-peak factor sits flat at 1.01-1.10, in lockstep with the
+falling peak count. This is the strongest form G40 has taken: not an argument
+that the conditional version is better, but a five-point trend showing the raw
+one measuring something else entirely. Honest wrinkle recorded rather than
+smoothed: at `cl` = 100 fF the conditional interval [1.02, 1.20] does exclude
+1.0, so there is a real ~10% adverse effect there — an order of magnitude too
+small to be the retracted sentence's mechanism, and G40 stands.
+
+**Result 3, and it is the uncomfortable one — this makes G3 HARDER.** RL must
+beat random search. A better box means a better baseline: ~11 samples per hit
+becomes ~7. Recorded in G42 as a decision to take deliberately rather than a
+free win.
+
+**An analytic prediction was made in advance and FAILED, which is why it is
+written down.** The obvious model — peak of a 1-zero/2-pole response sits near
+f_p2 — predicts *zero* S3 yield at `cl` = 50 fF, because no `rl` in 50-800 ohm
+puts f_p2 inside 1.25-2.5 GHz (it would need 1273-2547). Measured: 8.73%. One
+probed sample has f_p2 = 55.3 GHz and peaks at 9.55 GHz. **f_peak is set by
+the zero interacting with both poles, not by the load pole alone** — the first
+evidence that the analytic pre-screen in the next work item will not be a
+one-liner.
+
+**A near-miss worth recording.** `cl` = 50 fF returned 165/1890, the same
+integer as the baseline, which is exactly what a silently-ignored CLI flag
+looks like. It was tested rather than explained away: A moved 916 -> 995 and
+B moved 303 -> 314, and a direct probe showed `f_pk` moving 9.55 -> 6.61 ->
+5.50 -> 3.16 GHz across cl = 50/100/150/500 fF on one sample. Genuine
+coincidence. (The identical `n_simulated` is not a coincidence — see above.)
+
+**New: uncertainty on every number.** `wilson_ci()` (two-sided Wilson score —
+stays in [0,1] and gives a real upper bound at zero successes, which the
+45-corner sweep will need) and `bootstrap_coupling_ci()` (percentile bootstrap
+over whole rows, the only honest option for a ratio of three correlated
+proportions; measured resolution ~+/-10% at n=2000). Wilson is deliberately
+NOT imported from `python_models/pam4_chain.py` — nebula is independent by
+design — and a test holds the two implementations to each other so they cannot
+drift.
+
+**New gotchas G42** (a dimension worth less than a constant; and the G3
+tension), **G43** (raw coupling = no-peak fraction), **G44** (`meas ac MAX`
+reports the 50 GHz sweep edge as a peak, so `has_peak` over-counts; found
+while probing, not yet fixed because fixing it moves a published statistic).

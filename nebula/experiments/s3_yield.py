@@ -36,9 +36,35 @@ three box widths, so the stability is demonstrated rather than claimed.
 Costs the same 2000 simulations as the bare percentage did. Three counters
 instead of one.
 
+EVERY RATE IS REPORTED WITH A BINOMIAL 95% INTERVAL
+----------------------------------------------------
+G40's lesson generalises: a bare proportion invites a conclusion its own
+sampling error does not support. 165/1890 is 8.73%, but 165 is a count with a
+standard error of about 12, so the honest statement is 8.73% [7.53, 10.10].
+`wilson_ci` supplies that interval for every proportion printed here, and the
+coupling factor — a ratio of three correlated proportions, for which no closed
+form applies — gets a percentile bootstrap over the same rows. Without it there
+is no way to tell whether 0.89x and 1.04x differ from each other or from 1.00x.
+
+--cl-fixed: WHY ONE AXIS GETS PINNED
+-------------------------------------
+`cl` is the bound the re-derivation moved furthest — 6x tighter than the 1.2 V
+box, because f_p2 = 1/(2*pi*RL*CL) and 400 fF already drives the Nyquist boost
+negative (BOUNDS_REDERIVATION §6). That makes it the natural candidate for
+"how much of the 8.73% is just the cl bound being loose?", which `--cl-fixed`
+answers by removing cl from the search entirely and re-measuring.
+
+The pin is applied AFTER sampling, overwriting the cl coordinate of the SAME
+Latin-hypercube design. That is deliberate and it matters: with the seed held,
+the other eight coordinates are IDENTICAL across pinned runs, so a difference
+between two cl values is attributable to cl and not to a different draw. LHS
+stratification is per-dimension, so discarding one dimension's values leaves
+the remaining eight exactly as well stratified as before.
+
 USAGE
     python -m nebula.experiments.s3_yield --n 2000
     python -m nebula.experiments.s3_yield --n 2000 --box-scan
+    python -m nebula.experiments.s3_yield --n 2000 --cl-fixed 100e-15
 """
 
 from __future__ import annotations
@@ -228,6 +254,30 @@ def scale_box(
     return out
 
 
+def pin_param(
+    rows: list[dict[str, float]],
+    name: str,
+    value: float,
+) -> list[dict[str, float]]:
+    """Overwrite one coordinate of an existing sample with a fixed value.
+
+    Applied AFTER `sample_box` rather than by re-sampling in d-1 dimensions,
+    so that two pinned runs at the same seed differ in EXACTLY one coordinate.
+    That turns the comparison between them into a paired one — any difference
+    in yield is caused by `name`, not by a different draw of the other eight
+    parameters. Re-sampling in d-1 dimensions would move every coordinate and
+    confound the two effects.
+
+    Raises on an unknown name rather than silently adding a parameter the
+    netlist will never read.
+    """
+    if not rows:
+        return rows
+    if name not in rows[0]:
+        raise KeyError(f"{name!r} is not a sampled parameter; have {sorted(rows[0])}")
+    return [{**r, name: float(value)} for r in rows]
+
+
 def sample_box(
     box: dict[str, tuple[float, float, bool, str]],
     n: int,
@@ -300,6 +350,86 @@ def evaluate(params: dict[str, float]) -> Row:
 
 
 # ─────────────────────────────────────────────────────────────────────────────
+# Uncertainty. Every proportion below is k successes out of n Bernoulli trials.
+# ─────────────────────────────────────────────────────────────────────────────
+
+
+def wilson_ci(k: int, n: int, z: float = 1.96) -> tuple[float, float]:
+    """Two-sided Wilson score interval on a binomial proportion.
+
+    WHY WILSON AND NOT THE TEXTBOOK `p +/- z*sqrt(p(1-p)/n)`. The normal
+    approximation is built on a symmetry that does not hold near 0 or 1: at
+    S3's 8.7% over 1890 trials it puts the lower edge in roughly the right
+    place but keeps drifting below zero as p falls, and for a spec that yields
+    0/1890 it returns the interval [0, 0] — a claim of certainty from a sample
+    that has merely never seen the event. Wilson is the interval obtained by
+    inverting the score test; it stays inside [0, 1] by construction and
+    returns a non-degenerate upper bound at k = 0, which is the case this
+    experiment hits whenever a corner kills a spec outright.
+
+    `python_models/pam4_chain.py::ber_wilson_upper` is the same algebra, kept
+    to the one-sided upper bound a BER needs. It is NOT imported: `nebula/` is
+    independent of `python_models/` by design (CLAUDEwa.md §10), and a
+    cross-project import for six lines of arithmetic would be the first thread
+    of a dependency this repo deliberately does not have. The duplication is
+    load-bearing; a test pins the two against each other.
+
+    Returns (lo, hi). n <= 0 gives the vacuous (0.0, 1.0) — no data, no claim.
+    """
+    if n <= 0:
+        return (0.0, 1.0)
+    p = k / n
+    z2 = z * z
+    denom = 1.0 + z2 / n
+    centre = (p + z2 / (2.0 * n)) / denom
+    half = (z / denom) * math.sqrt(p * (1.0 - p) / n + z2 / (4.0 * n * n))
+    return (max(0.0, centre - half), min(1.0, centre + half))
+
+
+def _fmt_ci(k: int, n: int) -> str:
+    lo, hi = wilson_ci(k, n)
+    return f"[{lo * 100:5.2f}, {hi * 100:5.2f}]"
+
+
+def bootstrap_coupling_ci(
+    a: Sequence[bool],
+    b: Sequence[bool],
+    n_boot: int = 10_000,
+    seed: int = 20260805,
+    z_pct: tuple[float, float] = (2.5, 97.5),
+) -> tuple[float, float]:
+    """Percentile-bootstrap interval for P(A)*P(B) / P(A and B).
+
+    The coupling factor is a ratio of three proportions measured on the SAME
+    rows, so they are correlated and no closed-form interval applies. The
+    bootstrap resamples whole rows — preserving that correlation, which is the
+    entire point — and reports the 2.5/97.5 percentiles of the resulting ratio.
+
+    This is what makes "1.04x" a statement rather than a decimal: without it,
+    there is no way to say whether the box-scan's 0.89 / 0.90 / 1.04 spread is
+    signal or noise. Draws where the joint count is zero give an infinite
+    ratio; they are dropped, and if too many are dropped the interval is
+    reported as unbounded rather than quietly truncated.
+    """
+    a_arr = np.asarray(a, dtype=bool)
+    b_arr = np.asarray(b, dtype=bool)
+    n = a_arr.size
+    if n == 0:
+        return (math.nan, math.nan)
+    rng = np.random.default_rng(seed)
+    idx = rng.integers(0, n, size=(n_boot, n))
+    pa = a_arr[idx].mean(axis=1)
+    pb = b_arr[idx].mean(axis=1)
+    pj = (a_arr & b_arr)[idx].mean(axis=1)
+    live = pj > 0
+    if live.sum() < 0.95 * n_boot:
+        return (math.nan, math.inf)
+    ratio = (pa[live] * pb[live]) / pj[live]
+    lo, hi = np.percentile(ratio, z_pct)
+    return (float(lo), float(hi))
+
+
+# ─────────────────────────────────────────────────────────────────────────────
 # The statistic.
 # ─────────────────────────────────────────────────────────────────────────────
 
@@ -326,6 +456,29 @@ class YieldStat:
     n_peaking_hp: int = 0
     n_fpeak_hp: int = 0
     n_s3_joint_hp: int = 0
+    #: Percentile-bootstrap 95% interval on the coupling factor. NaN when not
+    #: computed (a hand-built stat in a test), inf on the high edge when too
+    #: many resamples had an empty joint to divide by.
+    coupling_ci_lo: float = math.nan
+    coupling_ci_hi: float = math.nan
+    coupling_hp_ci_lo: float = math.nan
+    coupling_hp_ci_hi: float = math.nan
+    #: The pinned `cl` in farads, or None if cl was sampled. Recorded so a
+    #: results file says what it is a result OF.
+    cl_fixed: Optional[float] = None
+
+    # ---- binomial 95% intervals, as (lo, hi) fractions ----
+    @property
+    def ci_joint(self) -> tuple[float, float]:
+        return wilson_ci(self.n_s3_joint, self.n_simulated)
+
+    @property
+    def ci_a(self) -> tuple[float, float]:
+        return wilson_ci(self.n_peaking, self.n_simulated)
+
+    @property
+    def ci_b(self) -> tuple[float, float]:
+        return wilson_ci(self.n_fpeak, self.n_simulated)
 
     @property
     def p_a_hp(self) -> float:
@@ -366,38 +519,45 @@ class YieldStat:
         return self.p_independent / self.p_joint if self.p_joint else math.inf
 
     def report(self, title: str) -> str:
-        L = [f"--- {title} ---",
+        n = self.n_simulated
+        pin = ("cl sampled" if self.cl_fixed is None
+               else f"cl PINNED at {self.cl_fixed * 1e15:.4g} fF")
+        L = [f"--- {title} ({pin}) ---",
              f"  sampled                       {self.n_sampled}",
              f"  rejected by headroom (free)   {self.n_headroom_rejected}",
              f"  simulated                     {self.n_simulated}",
              "",
+             "  (bracketed intervals are two-sided Wilson 95%)",
              f"  A: peaking in 3-12 dB         {self.n_peaking:5d}  "
-             f"{self.p_a * 100:6.2f}%",
+             f"{self.p_a * 100:6.2f}%  {_fmt_ci(self.n_peaking, n)}",
              f"  B: f_peak in 1.25-2.5 GHz     {self.n_fpeak:5d}  "
-             f"{self.p_b * 100:6.2f}%",
+             f"{self.p_b * 100:6.2f}%  {_fmt_ci(self.n_fpeak, n)}",
              f"  independence would predict          {self.p_independent * 100:6.2f}%",
              f"  A and B measured (S3)         {self.n_s3_joint:5d}  "
-             f"{self.p_joint * 100:6.2f}%",
-             f"  ==> COUPLING FACTOR                 {self.coupling_factor:6.2f}x",
+             f"{self.p_joint * 100:6.2f}%  {_fmt_ci(self.n_s3_joint, n)}",
+             f"  ==> COUPLING FACTOR                 {self.coupling_factor:6.2f}x  "
+             f"[{self.coupling_ci_lo:5.2f}, {self.coupling_ci_hi:5.2f}] boot",
              "",
              f"  conditional on a peak existing ({self.n_has_peak} samples):",
              f"    A {self.p_a_hp * 100:6.2f}%   B {self.p_b_hp * 100:6.2f}%   "
              f"A*B {self.p_a_hp * self.p_b_hp * 100:6.2f}%   "
              f"joint {self.p_joint_hp * 100:6.2f}%   "
-             f"coupling {self.coupling_factor_hp:5.2f}x",
+             f"coupling {self.coupling_factor_hp:5.2f}x  "
+             f"[{self.coupling_hp_ci_lo:5.2f}, {self.coupling_hp_ci_hi:5.2f}]",
              "",
              f"  S3 also with boost at Nyquist {self.n_s3_with_nyquist:5d}  "
-             f"{self.n_s3_with_nyquist / self.n_simulated * 100:6.2f}%",
+             f"{self.n_s3_with_nyquist / n * 100:6.2f}%  "
+             f"{_fmt_ci(self.n_s3_with_nyquist, n)}",
              f"  S5 noise < 1.5 mVrms          {self.n_s5:5d}  "
-             f"{self.n_s5 / self.n_simulated * 100:6.2f}%",
+             f"{self.n_s5 / n * 100:6.2f}%  {_fmt_ci(self.n_s5, n)}",
              f"  S6 power < 15 mW              {self.n_s6:5d}  "
-             f"{self.n_s6 / self.n_simulated * 100:6.2f}%",
+             f"{self.n_s6 / n * 100:6.2f}%  {_fmt_ci(self.n_s6, n)}",
              f"  input pair saturated          {self.n_saturated:5d}  "
-             f"{self.n_saturated / self.n_simulated * 100:6.2f}%"]
+             f"{self.n_saturated / n * 100:6.2f}%  {_fmt_ci(self.n_saturated, n)}"]
         return "\n".join(L)
 
 
-def summarize(rows: Sequence[Row]) -> YieldStat:
+def summarize(rows: Sequence[Row], cl_fixed: Optional[float] = None) -> YieldStat:
     pk_lo, pk_hi = SPEC_PEAKING_DB_RANGE
     f_lo, f_hi = SPEC_F_PEAK_HZ_RANGE
     sim = [r for r in rows if r.ok]
@@ -410,7 +570,17 @@ def summarize(rows: Sequence[Row]) -> YieldStat:
     # returning the low-frequency end of the sweep. A monotonically falling
     # response reports f_pk at the 10 MHz start point with 0 dB of peaking.
     hp = [r.peaking_db > 0.25 and r.f_pk_hz > 50e6 for r in sim]
+
+    boot_lo, boot_hi = bootstrap_coupling_ci(a, b)
+    a_hp = [x for x, h in zip(a, hp) if h]
+    b_hp = [y for y, h in zip(b, hp) if h]
+    hp_lo, hp_hi = (bootstrap_coupling_ci(a_hp, b_hp) if a_hp
+                    else (math.nan, math.nan))
+
     return YieldStat(
+        cl_fixed=cl_fixed,
+        coupling_ci_lo=boot_lo, coupling_ci_hi=boot_hi,
+        coupling_hp_ci_lo=hp_lo, coupling_hp_ci_hi=hp_hi,
         n_sampled=len(rows),
         n_headroom_rejected=sum(1 for r in rows if r.skipped_headroom),
         n_simulated=len(sim),
@@ -457,17 +627,28 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     ap.add_argument("--workers", type=int, default=8)
     ap.add_argument("--box-scan", action="store_true",
                     help="repeat at 0.6x / 1.0x / 1.5x box width")
+    ap.add_argument("--cl-fixed", type=float, default=None, metavar="FARADS",
+                    help="pin cl instead of sampling it, e.g. --cl-fixed 100e-15. "
+                         "Every other bound is held. The pin overwrites the cl "
+                         "coordinate of the same seeded Latin-hypercube design, "
+                         "so runs at different --cl-fixed values are PAIRED: "
+                         "they differ in cl and in nothing else.")
     ap.add_argument("--out", type=Path, default=Path("s3_yield_results.json"))
     args = ap.parse_args(argv)
 
     factors = [0.6, 1.0, 1.5] if args.box_scan else [1.0]
-    results = {}
+    results: dict = {}
+    if args.cl_fixed is not None:
+        print(f"cl PINNED at {args.cl_fixed:.6g} F "
+              f"({args.cl_fixed * 1e15:.4g} fF); all other bounds held\n")
     for f in factors:
         box = PROPOSED_BOX if f == 1.0 else scale_box(PROPOSED_BOX, f)
         params = sample_box(box, args.n, args.seed)
+        if args.cl_fixed is not None:
+            params = pin_param(params, "cl", args.cl_fixed)
         with ProcessPoolExecutor(max_workers=args.workers) as ex:
             rows = list(ex.map(evaluate, params, chunksize=8))
-        stat = summarize(rows)
+        stat = summarize(rows, cl_fixed=args.cl_fixed)
         title = "PROPOSED BOX" if f == 1.0 else f"box x{f}"
         print(stat.report(title))
         if f == 1.0:
@@ -478,12 +659,15 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
 
     if args.box_scan:
         print("--- box-width sensitivity: the point of reporting a ratio ---")
-        print("  width   P(A)     P(B)     P(A)P(B)  P(A and B)  coupling")
+        print("  width   P(A)     P(B)     P(A)P(B)  P(A and B)   [Wilson 95%]"
+              "    coupling  [bootstrap 95%]")
         for f in factors:
             s = YieldStat(**results[str(f)])
             print(f"  x{f:<5} {s.p_a * 100:6.2f}%  {s.p_b * 100:6.2f}%  "
                   f"{s.p_independent * 100:7.3f}%  {s.p_joint * 100:8.3f}%  "
-                  f"{s.coupling_factor:8.2f}x")
+                  f"{_fmt_ci(s.n_s3_joint, s.n_simulated)}  "
+                  f"{s.coupling_factor:8.2f}x  "
+                  f"[{s.coupling_ci_lo:.2f}, {s.coupling_ci_hi:.2f}]")
 
     args.out.write_text(json.dumps(results, indent=1), encoding="ascii")
     print(f"\nwrote {args.out}")

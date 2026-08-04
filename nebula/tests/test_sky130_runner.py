@@ -11,6 +11,7 @@ cleanly when it or the PDK is absent.
 from __future__ import annotations
 
 import math
+from dataclasses import asdict
 
 import numpy as np
 import pytest
@@ -26,10 +27,13 @@ from nebula.experiments.s3_yield import (
     UNDERIVABLE,
     Row,
     YieldStat,
+    bootstrap_coupling_ci,
     headroom_ok_1v8,
+    pin_param,
     sample_box,
     scale_box,
     summarize,
+    wilson_ci,
 )
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -242,6 +246,145 @@ def test_yield_stat_survives_a_round_trip_through_json():
 def test_summarize_raises_rather_than_reporting_a_dead_box():
     with pytest.raises(RuntimeError):
         summarize([Row(ok=False, reason="x")])
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Uncertainty. A bare proportion is what G40 is about; these pin the intervals
+# that stop the same mistake being made one level up.
+# ─────────────────────────────────────────────────────────────────────────────
+
+
+def test_wilson_matches_the_serdes_one_sided_bound():
+    """`wilson_ci`'s upper edge is the SAME algebra as
+    `python_models/pam4_chain.py::ber_wilson_upper`.
+
+    The duplication is deliberate — nebula/ does not import python_models/
+    (CLAUDEwa §10) — so this test is what keeps the two from drifting. If it
+    ever fails, one of them changed and the other did not.
+    """
+    import sys
+    from pathlib import Path
+    sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "python_models"))
+    from pam4_chain import ber_wilson_upper
+
+    for k, n in ((0, 1890), (165, 1890), (3, 100), (999, 1000)):
+        assert wilson_ci(k, n)[1] == pytest.approx(ber_wilson_upper(k, n), rel=1e-12)
+
+
+def test_wilson_gives_a_real_upper_bound_at_zero_successes():
+    """The case that makes Wilson worth the six lines.
+
+    0/1890 under the normal approximation is the interval [0, 0] — certainty
+    from a sample that has simply never seen the event. A corner that kills a
+    spec outright hits this exact case in the S9 sweep.
+    """
+    lo, hi = wilson_ci(0, 1890)
+    assert lo == 0.0
+    assert 0.0 < hi < 0.01
+
+
+def test_wilson_never_leaves_the_unit_interval():
+    for k, n in ((0, 5), (5, 5), (1, 3), (2, 4), (0, 1)):
+        lo, hi = wilson_ci(k, n)
+        assert 0.0 <= lo <= hi <= 1.0
+
+
+def test_wilson_with_no_data_claims_nothing():
+    assert wilson_ci(0, 0) == (0.0, 1.0)
+
+
+def test_wilson_interval_shrinks_as_n_grows():
+    wide = wilson_ci(9, 100)
+    narrow = wilson_ci(900, 10_000)
+    assert (narrow[1] - narrow[0]) < (wide[1] - wide[0]) / 5
+
+
+def test_bootstrap_ci_brackets_one_for_independent_conditions():
+    """The interval must contain 1.0 when nothing is coupled, or the
+    'independent to measurement precision' reading is unsupported."""
+    rng = np.random.default_rng(7)
+    a = rng.random(2000) < 0.48
+    b = rng.random(2000) < 0.16
+    lo, hi = bootstrap_coupling_ci(a, b)
+    assert lo < 1.0 < hi
+
+
+def test_bootstrap_ci_excludes_one_when_conditions_really_conflict():
+    """And it must EXCLUDE 1.0 when they do conflict — otherwise it could
+    never distinguish the two and would be decoration."""
+    a = np.array([True] * 500 + [False] * 500 + [True] * 5)
+    b = np.array([False] * 500 + [True] * 500 + [True] * 5)
+    lo, hi = bootstrap_coupling_ci(a, b)
+    assert lo > 1.0
+
+
+def test_bootstrap_ci_brackets_the_point_estimate():
+    rng = np.random.default_rng(11)
+    a = rng.random(1500) < 0.5
+    b = rng.random(1500) < 0.3
+    point = (a.mean() * b.mean()) / (a & b).mean()
+    lo, hi = bootstrap_coupling_ci(a, b)
+    assert lo <= point <= hi
+
+
+def test_summarize_attaches_a_bootstrap_interval_around_its_own_estimate():
+    rows = []
+    for a in (True, False):
+        for b in (True, False):
+            for _ in range(60):
+                rows.append(_row(6.0 if a else 20.0, 2.0e9 if b else 0.5e9))
+    stat = summarize(rows)
+    assert stat.coupling_ci_lo <= stat.coupling_factor <= stat.coupling_ci_hi
+    assert YieldStat(**asdict(stat)).coupling_ci_hi == stat.coupling_ci_hi
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# --cl-fixed. The pin has to change cl and NOTHING else, or the three runs it
+# produces are not comparable and the whole experiment is confounded.
+# ─────────────────────────────────────────────────────────────────────────────
+
+
+def test_pin_param_changes_only_the_named_coordinate():
+    rows = sample_box(PROPOSED_BOX, 50, seed=3)
+    pinned = pin_param(rows, "cl", 100e-15)
+    assert all(r["cl"] == 100e-15 for r in pinned)
+    for before, after in zip(rows, pinned):
+        for name in before:
+            if name != "cl":
+                assert after[name] == before[name]
+
+
+def test_pinned_runs_at_different_values_are_paired():
+    """Two pins of the same seeded design differ in cl and in nothing else.
+    This is what makes 'the yield moved because of cl' a valid statement."""
+    rows = sample_box(PROPOSED_BOX, 40, seed=5)
+    a = pin_param(rows, "cl", 50e-15)
+    b = pin_param(rows, "cl", 150e-15)
+    for ra, rb in zip(a, b):
+        differing = {k for k in ra if ra[k] != rb[k]}
+        assert differing == {"cl"}
+
+
+def test_pin_param_does_not_mutate_its_input():
+    rows = sample_box(PROPOSED_BOX, 10, seed=9)
+    original = [dict(r) for r in rows]
+    pin_param(rows, "cl", 42e-15)
+    assert rows == original
+
+
+def test_pin_param_rejects_an_unknown_parameter():
+    """A typo must not silently add a key the netlist never reads."""
+    rows = sample_box(PROPOSED_BOX, 5, seed=1)
+    with pytest.raises(KeyError):
+        pin_param(rows, "c_l", 100e-15)
+
+
+def test_summarize_records_the_pinned_value():
+    """A results file has to say what it is a result OF."""
+    stat = summarize([_row(6.0, 2.0e9), _row(20.0, 0.5e9)], cl_fixed=100e-15)
+    assert stat.cl_fixed == 100e-15
+    assert "PINNED" in stat.report("t") and "100 fF" in stat.report("t")
+    assert summarize([_row(6.0, 2.0e9)]).cl_fixed is None
 
 
 # ─────────────────────────────────────────────────────────────────────────────
