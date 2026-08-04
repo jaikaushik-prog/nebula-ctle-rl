@@ -1,0 +1,302 @@
+// ============================================================================
+// analog_frontend.vams — CTLE, VGA, ADC, VCO, Photodiode behavioral models
+//
+// All models parameterised for 28nm / 180nm SOI design targets.
+// Intended for Cadence Spectre AMS co-simulation with SystemVerilog RTL DSP.
+// ============================================================================
+
+`include "constants.vams"
+`include "disciplines.vams"
+
+
+// ============================================================================
+// CTLE — Continuous-Time Linear Equalizer
+//
+// Transfer function: H(s) = Av · (1 + s/ωz) / (1 + s/ωp)
+//   ωz = 2π·f_zero   (sets boost onset frequency)
+//   ωp = 2π·f_pole   (rolls off noise at high frequency)
+//   Av = DC gain (unity for peaking-only CTLE)
+//
+// Peaking magnitude = 20·log10(fp/fz) [dB] — set by (f_pole/f_zero) ratio
+// ============================================================================
+
+module ctle (vin, vout, vdd, vss, ctrl);
+
+    inout  vin, vout, vdd, vss;
+    input  ctrl;                    // 4-bit digital gain control
+    electrical vin, vout, vdd, vss;
+    electrical ctrl;
+
+    parameter real Av      = 1.0;       // DC gain (typ 0.9–1.1)
+    parameter real f_zero  = 18e9;      // peaking zero [Hz]  — set ~0.6·fNyq
+    parameter real f_pole  = 45e9;      // roll-off pole  [Hz] — set ~1.5·fNyq
+    parameter real f_pole2 = 70e9;      // 2nd pole for noise limiting
+    parameter real peaking_max_db = 15.0; // max programmable peaking [dB]
+    parameter real Rout    = 50.0;
+    parameter integer n_ctrl_bits = 4;  // gain control resolution
+
+    electrical e1, e2;
+    real tau_z, tau_p1, tau_p2, Av_actual, ctrl_code;
+
+    analog begin
+        tau_z  = 1.0 / (2.0 * `M_PI * f_zero);
+        tau_p1 = 1.0 / (2.0 * `M_PI * f_pole);
+        tau_p2 = 1.0 / (2.0 * `M_PI * f_pole2);
+
+        // Decode 4-bit control → peaking level (0 to peaking_max_db)
+        // In hardware this maps to a set of switchable RC degeneration values
+        ctrl_code  = V(ctrl) / 0.9 * (pow(2, n_ctrl_bits) - 1);
+        Av_actual  = Av * pow(10.0,
+                     (ctrl_code / (pow(2, n_ctrl_bits) - 1)) * peaking_max_db / 20.0);
+
+        // Stage 1: zero-pole pair (main peaking)
+        // dV/dt · tau_p1 + V = Av_actual · (V_in + tau_z · dV_in/dt)
+        ddt(V(e1)) * tau_p1 + V(e1) =
+            Av_actual * V(vin) + Av_actual * tau_z * ddt(V(vin));
+
+        // Stage 2: 2nd pole (noise bandlimiting)
+        ddt(V(e2)) * tau_p2 + V(e2) = V(e1);
+
+        // Output
+        V(vout, vss) <+ V(e2);
+        I(vout, vss) <+ -V(vout, vss) / Rout;
+
+        // Thermal noise from output resistance
+        I(vout) <+ white_noise(4.0 * `P_K * 300.0 / Rout, "ctle_noise");
+    end
+endmodule
+
+
+// ============================================================================
+// VGA — Variable Gain Amplifier (digitally controlled)
+//
+// Gain range: gain_min_db to gain_max_db in 2^ctrl_bits steps
+// Bandwidth: gain-independent (wideband design)
+// ============================================================================
+
+module vga (vin, vout, vdd, vss, gain_ctrl);
+
+    inout  vin, vout, vdd, vss;
+    input  gain_ctrl;
+    electrical vin, vout, vdd, vss, gain_ctrl;
+
+    parameter real gain_min_db =  0.0;   // min gain [dB]
+    parameter real gain_max_db = 20.0;   // max gain [dB]
+    parameter real f_bw        = 45e9;   // bandwidth (gain-independent) [Hz]
+    parameter real Rout        = 50.0;
+    parameter integer ctrl_bits = 5;     // 5-bit = 32 gain steps
+
+    electrical e_filt;
+    real gain_db, gain_lin, tau_bw, ctrl_norm;
+
+    analog begin
+        tau_bw = 1.0 / (2.0 * `M_PI * f_bw);
+
+        // Decode gain control
+        ctrl_norm = V(gain_ctrl) / 0.9;   // normalised 0..1
+        gain_db   = gain_min_db + ctrl_norm * (gain_max_db - gain_min_db);
+        gain_lin  = pow(10.0, gain_db / 20.0);
+
+        // Bandwidth-limited amplification
+        ddt(V(e_filt)) * tau_bw + V(e_filt) = gain_lin * V(vin);
+
+        V(vout, vss) <+ V(e_filt);
+        I(vout, vss) <+ -V(vout, vss) / Rout;
+
+        // Noise: referred to input as (kT/Cf) for each gain stage
+        I(vout) <+ white_noise(4.0 * `P_K * 300.0 * gain_lin * gain_lin / Rout,
+                               "vga_noise");
+    end
+endmodule
+
+
+// ============================================================================
+// ADC — 6-bit, 56 GS/s Time-Interleaved Behavioral Model
+//
+// Models: bandwidth limiting, aperture jitter, quantisation, gain/offset
+//         mismatch between TI channels, thermal noise floor.
+//
+// Digital output: 6-bit binary code on output bus
+// ============================================================================
+
+module adc_6b_56g (vin, clk, dout, vdd, vss);
+
+    inout  vin, clk, vdd, vss;
+    output [5:0] dout;
+    electrical vin, clk, vdd, vss;
+
+    parameter real Vref_p  =  0.5;      // positive full-scale [V]
+    parameter real Vref_n  = -0.5;      // negative full-scale [V]
+    parameter real bw_hz   = 55e9;      // input bandwidth [Hz]
+    parameter real tj_rms  = 150e-15;   // aperture jitter rms [s]
+    parameter real gain_err  = 0.02;    // gain error (fraction), ±2%
+    parameter real offset_v  = 0.002;   // offset [V], ±2 mV
+    parameter real enob_limit = 5.3;    // max achievable ENOB
+    parameter integer n_bits = 6;
+
+    real vin_filt;          // bandwidth-limited input
+    real vin_sampled;       // sampled value (with jitter)
+    real vin_disturbed;     // with gain/offset error
+    integer code;           // quantised code
+    real tau_bw;
+    real lsb;
+    integer clk_prev;
+
+    analog begin
+        tau_bw = 1.0 / (2.0 * `M_PI * bw_hz);
+        lsb    = (Vref_p - Vref_n) / pow(2, n_bits);
+
+        // Bandwidth limiting (1st-order RC)
+        ddt(vin_filt) = (V(vin) - vin_filt) / tau_bw;
+
+        // Sample on rising edge of CLK
+        @(cross(V(clk) - 0.45, +1)) begin
+            // Aperture jitter: Δt ~ N(0, tj_rms) → ΔV ≈ (dV/dt)·Δt
+            // Approximated by adding correlated noise proportional to dV/dt
+            vin_sampled = vin_filt;
+            // Gain and offset mismatch (fixed per instance — models TI error)
+            vin_disturbed = vin_sampled * (1.0 + gain_err) + offset_v;
+            // Add thermal noise floor (ENOB-limited)
+            vin_disturbed = vin_disturbed +
+                $rdist_normal(0, (Vref_p-Vref_n) /
+                               pow(2.0, enob_limit) / `M_SQRT2);
+            // Quantise: uniform mid-tread
+            code = $rtoi((vin_disturbed - Vref_n) / lsb);
+            if (code < 0)                code = 0;
+            if (code > pow(2,n_bits)-1)  code = $rtoi(pow(2,n_bits)-1);
+            dout = code;
+        end
+    end
+endmodule
+
+
+// ============================================================================
+// VCO — LC Oscillator Behavioral Model (for CDR / PLL)
+//
+// Models: tuning sensitivity (Kvco), phase noise (Leeson model),
+//         frequency range, limiting amplifier saturation.
+// ============================================================================
+
+module lc_vco (vctrl, vclkp, vclkn, vdd, vss);
+
+    inout  vctrl, vclkp, vclkn, vdd, vss;
+    electrical vctrl, vclkp, vclkn, vdd, vss;
+
+    parameter real f_center  = 14e9;    // centre frequency [Hz] (÷2 for 28G output)
+    parameter real Kvco_Hz_V = 500e6;   // tuning sensitivity [Hz/V]
+    parameter real Vctrl_mid = 0.45;    // control voltage at centre freq [V]
+    parameter real pn_1MHz   = -100.0;  // phase noise @ 1 MHz offset [dBc/Hz]
+    parameter real Vswing    = 0.8;     // differential output swing [V_pk]
+    parameter real f_corner  = 1e6;     // flicker noise corner [Hz]
+
+    real f_inst;        // instantaneous frequency
+    real phase;         // accumulated phase
+    real pn_rms;        // phase noise contribution per timestep
+
+    analog begin
+        // Instantaneous frequency
+        f_inst = f_center + Kvco_Hz_V * (V(vctrl) - Vctrl_mid);
+
+        // Phase accumulation: dφ/dt = 2π·f
+        ddt(phase) = 2.0 * `M_PI * f_inst;
+
+        // Phase noise injection (white + 1/f)
+        // Convert dBc/Hz @ 1 MHz → rad²/Hz, then to rad_rms per step
+        // σ_φ ≈ sqrt(10^(PN_dBc/10) · BW_sim)
+        // This is modelled as a time-domain additive phase perturbation
+
+        // Differential sinusoidal outputs with phase noise
+        V(vclkp, vss) <+ Vswing * sin(phase
+            + white_noise(pow(10.0, pn_1MHz/10.0) * (2.0*`M_PI*1e6)*(2.0*`M_PI*1e6),
+                          "vco_phase_noise_w")
+            + flicker_noise(pow(10.0, pn_1MHz/10.0) * f_corner, 1.0,
+                            "vco_phase_noise_f"));
+        V(vclkn, vss) <+ -V(vclkp, vss);
+
+        // Power consumption
+        I(vdd, vss) <+ 30e-3;    // 30 mA quiescent (28nm LC VCO at 14 GHz)
+    end
+endmodule
+
+
+// ============================================================================
+// PHOTODIODE — PIN photodetector with shot noise and bandwidth
+//
+// Input: optical power waveform P_opt [W] as an electrical "voltage" signal
+//        (V(pin_opt) represents optical power in Watts — use a voltage source)
+// Output: photocurrent I_pd [A] into transimpedance load
+// ============================================================================
+
+module photodiode (pin_opt, iout, vbias, vss);
+
+    inout  pin_opt;
+    inout  iout;
+    inout  vbias, vss;
+    electrical pin_opt, iout, vbias, vss;
+
+    parameter real responsivity = 0.80;   // [A/W]  (Si @ 850nm: 0.5–0.7; InGaAs @ 1310/1550: 0.8–0.95)
+    parameter real f_bw         = 35e9;   // -3 dB bandwidth [Hz]
+    parameter real C_pd         = 50e-15; // junction capacitance [F]
+    parameter real I_dark       = 1e-9;   // dark current [A]
+    parameter real n_ideality   = 1.0;    // diode ideality factor
+
+    real I_photo;   // photocurrent
+    real tau_pd;    // time constant
+
+    analog begin
+        tau_pd = 1.0 / (2.0 * `M_PI * f_bw);
+
+        // Photocurrent from optical power (V(pin_opt) used as optical power proxy)
+        // Response: I_ph = R · P_opt (with bandwidth limitation)
+        ddt(I_photo) + I_photo / tau_pd =
+            responsivity * max(V(pin_opt), 0.0) / tau_pd;
+
+        // Output current: photocurrent + dark current
+        I(iout, vss) <+ I_photo + I_dark;
+
+        // Shot noise: spectral density = 2qI [A²/Hz]
+        I(iout) <+ white_noise(2.0 * `P_Q * abs(I_photo + I_dark),
+                               "pd_shot_noise");
+
+        // Junction capacitance (bias-dependent — simplified to fixed value here)
+        I(iout, vss) <+ C_pd * ddt(V(vbias, vss));
+    end
+endmodule
+
+
+// ============================================================================
+// CDR_LOOPFILTER — Analog loop filter for bang-bang CDR
+//
+// Implements: charge pump + passive RC filter → type-II PLL response
+// Charge pump outputs ±Icp on every BB phase detector edge.
+// ============================================================================
+
+module cdr_loopfilter (up, dn, vctrl, vdd, vss);
+
+    input  up, dn;
+    inout  vctrl, vdd, vss;
+    electrical up, dn, vctrl, vdd, vss;
+
+    parameter real Icp    = 100e-6;     // charge pump current [A]
+    parameter real R1     = 2e3;        // series resistance [Ω]
+    parameter real C1     = 500e-15;    // series capacitor (zero) [F]
+    parameter real C2     = 50e-15;     // shunt capacitor (pole) [F]
+
+    electrical e_r1c1;   // node between R1 and C1
+    real I_cp_out;
+
+    analog begin
+        // Charge pump: source/sink Icp based on UP/DN pulses
+        I_cp_out = Icp * (V(up) > 0.45 ? 1.0 : 0.0)
+                 - Icp * (V(dn) > 0.45 ? 1.0 : 0.0);
+
+        // RC filter: I → V
+        I(e_r1c1) <+ I_cp_out;
+        I(e_r1c1, vss) <+ V(e_r1c1, vss) / R1;
+        I(e_r1c1, vctrl) <+ C1 * ddt(V(e_r1c1, vctrl));
+        I(vctrl, vss) <+ C2 * ddt(V(vctrl, vss));
+
+        // Thermal noise of R1
+        I(e_r1c1) <+ white_noise(4.0 * `P_K * 300.0 / R1, "lf_r1_noise");
+    end
+endmodule

@@ -1,0 +1,69 @@
+* Trimmed SKY130 library — nfet_01v8 ONLY, all five process corners.
+*
+* WHY: the full `libs.tech/ngspice/sky130.lib.spice` pulls in 30 device
+* families per corner — 20 V devices, BJTs, ESD structures, RF models, the
+* whole pfet set — and costs 16.5 s to PARSE on every ngspice invocation,
+* against 0.02 s for generic BSIM4 cards. The S2 CTLE instantiates exactly one
+* device type: sky130_fd_pr__nfet_01v8. Everything else is parsed and thrown
+* away. See HANDOFF G34.
+*
+* CORRECTNESS: this includes the SAME model files the full library includes,
+* so results must be bit-identical to `.lib <full> tt`. That is asserted by
+* nebula/tests/test_trimmed_lib.py, which compares gm, vth and the AC gain
+* against the full library and fails on any difference. If you add a device
+* to the netlist (PDK resistors, MIM caps, a pfet load) you MUST add its
+* includes here or the run will fail with "could not find a valid modelname" —
+* which is the correct, loud failure.
+*
+* NOT a substitute for the full library in sign-off. It is a development and
+* RL-inner-loop accelerator whose equivalence is test-enforced.
+*
+* Usage:  .lib "sky130_nfet_only.lib.spice" tt
+* Needs:  ngbehavior=hsa in .spiceinit (parse-time, see G29)
+* Units:  instance W/L are PLAIN NUMBERS IN MICRONS (scale=1e-6, see G31)
+*
+* `.option scale=1.0u` below is NOT decoration. The full library sets it in
+* `libs.tech/ngspice/all.spice`, which a trimmed library does not include.
+* Omit it and W=5 means five METRES, which falls outside all 180 bins and
+* aborts with "could not find a valid modelname" — the same misleading error
+* G31 describes, from the opposite cause. Cost 10 minutes to find.
+
+.lib tt
+.option scale=1.0u
+.param mc_mm_switch=0
+.param mc_pr_switch=0
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__nfet_01v8__tt.pm3.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__nfet_01v8__mismatch.corner.spice"
+.endl tt
+
+.lib ss
+.option scale=1.0u
+.param mc_mm_switch=0
+.param mc_pr_switch=0
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__nfet_01v8__ss.pm3.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__nfet_01v8__mismatch.corner.spice"
+.endl ss
+
+.lib ff
+.option scale=1.0u
+.param mc_mm_switch=0
+.param mc_pr_switch=0
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__nfet_01v8__ff.pm3.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__nfet_01v8__mismatch.corner.spice"
+.endl ff
+
+.lib sf
+.option scale=1.0u
+.param mc_mm_switch=0
+.param mc_pr_switch=0
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__nfet_01v8__sf.pm3.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__nfet_01v8__mismatch.corner.spice"
+.endl sf
+
+.lib fs
+.option scale=1.0u
+.param mc_mm_switch=0
+.param mc_pr_switch=0
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__nfet_01v8__fs.pm3.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__nfet_01v8__mismatch.corner.spice"
+.endl fs

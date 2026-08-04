@@ -1,0 +1,163 @@
+﻿
+Note: No compatibility mode selected!
+
+
+Circuit: * g1 hand-design — source-degenerated differential pair ctle
+
+
+================================================================
+  OPERATING POINT
+================================================================
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+Warning: k2 should be specified with k1.
+ Reference value :  0.00000e+00
+
+No. of Data Rows : 1
+--- Bias voltages ---
+v(outp) = 9.000000e-01
+v(outn) = 9.000000e-01
+v(src1) = 5.248347e-02
+v(src2) = 5.248347e-02
+--- M1 device parameters ---
+@m1[gm] = 1.115388e-02
+@m1[vgs] = 8.275165e-01
+@m1[vds] = 8.475165e-01
+@m1[vth] = 4.746672e-01
+@m1[id] = 2.500000e-03
+@m1[vdsat] = 2.941201e-01
+--- M2 device parameters ---
+@m2[gm] = 1.115388e-02
+@m2[vgs] = 8.275165e-01
+@m2[vds] = 8.475165e-01
+@m2[vth] = 4.746672e-01
+@m2[id] = 2.500000e-03
+--- Derived ---
+  gm (mS):
+gm_val * 1000 = 1.115388e+01
+  Vov (mV):
+vov_val * 1000 = 3.528494e+02
+  Power (mW):
+
+================================================================
+  AC ANALYSIS — frequency response
+================================================================
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+Warning: k2 should be specified with k1.
+
+No. of Data Rows : 251
+gain_dc_db          =  -1.412294e+01
+gain_nyq_db         =  -7.703541e+00
+gain_peak_db        =  -5.931378e+00 at=  1.258925e+09
+
+--- AC Results ---
+  DC gain (dB):
+gain_dc_db = -1.41229e+01
+  Nyquist gain at 2.5 GHz (dB):
+gain_nyq_db = -7.70354e+00
+  Peak gain (dB):
+gain_peak_db = -5.93138e+00
+
+  *** PEAKING (dB) = peak - DC: ***
+peaking_db = 8.191562e+00
+  S3 target: 3 to 12 dB
+
+--- Gain at key frequencies ---
+g_500m              =  -8.412292e+00
+g_1g                =  -6.098840e+00
+g_1p25g             =  -5.931830e+00
+g_1p8g              =  -6.446829e+00
+g_2g                =  -6.773841e+00
+g_2p5g              =  -7.703541e+00
+g_5g                =  -1.204906e+01
+
+================================================================
+  NOISE ANALYSIS — input-referred noise
+================================================================
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+Warning: k2 should be specified with k1.
+
+No. of Data Rows : 54
+
+No. of Data Rows : 1
+--- Noise Results ---
+  Input-referred noise (Vrms):
+inoise_total = 2.635060e-04
+  Output noise (Vrms):
+onoise_total = 9.208888e-05
+  Input-referred noise (mVrms):
+noise_mvrms = 2.635060e-01
+  S5 target: < 1.5 mVrms
+
+================================================================
+  DESIGN EQUATION CROSS-CHECK (CLAUDEwa.md §6)
+================================================================
+--- Analytic predictions (from gm and component values) ---
+  Degeneration factor (1 + gm*Rs/2):
+  DC gain (linear V/V):
+  DC gain (dB):
+  Zero frequency f_z (Hz):
+  Pole 1 frequency f_p1 (Hz):
+  Pole 2 frequency f_p2 (Hz):
+  Asymptotic peaking (dB):
+
+--- Compare simulated DC gain vs predicted ---
+  Simulated DC gain (dB):
+  Predicted DC gain (dB):
+  Disagreement (dB): (should be < 1 dB)
+
+================================================================
+  SPEC SUMMARY
+================================================================
+
+  S3 Peaking:     target 3-12 dB
+
+  S5 Noise:       target < 1.5 mVrms
+noise_mvrms = 2.635060e-01
+
+  S6 Power:       target < 15 mW
+
+================================================================
+  DONE — adjust .param values at top and re-run
+================================================================
+ngspice-41 done
+ngspice_con.exe : Warning from checkvalid: vector itail is not available or has zero length.
+At line:2 char:8
++ $out = & $ng -b "C:\Users\DELL\Desktop\serdes-dsp-framework-main\nebu ...
++        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (Warning from ch...as zero length.:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+Error: RHS "v(vdd) * itail * 1000" invalid
+Warning from checkvalid: vector power_mw is not available or has zero length.
+Warning from checkvalid: vector rs_ohm is not available or has zero length.
+Error: RHS "1 + gm * rs_ohm / 2" invalid
+Warning from checkvalid: vector rl_ohm is not available or has zero length.
+Error: RHS "gm * rl_ohm / k_degen" invalid
+Warning from checkvalid: vector adc_predicted is not available or has zero length.
+Error: RHS "db(adc_predicted)" invalid
+Warning from checkvalid: vector rs_ohm is not available or has zero length.
+Error: RHS "1 / (2 * 3.14159265 * rs_ohm * cs_f)" invalid
+Warning from checkvalid: vector k_degen is not available or has zero length.
+Error: RHS "k_degen / (2 * 3.14159265 * rs_ohm * cs_f)" invalid
+Warning from checkvalid: vector rl_ohm is not available or has zero length.
+Error: RHS "1 / (2 * 3.14159265 * rl_ohm * cl_f)" invalid
+Warning from checkvalid: vector k_degen is not available or has zero length.
+Error: RHS "20 * log(k_degen) / log(10)" invalid
+Warning from checkvalid: vector k_degen is not available or has zero length.
+Warning from checkvalid: vector adc_predicted is not available or has zero length.
+Warning from checkvalid: vector adc_predicted_db is not available or has zero length.
+Warning from checkvalid: vector fz_predicted is not available or has zero length.
+Warning from checkvalid: vector fp1_predicted is not available or has zero length.
+Warning from checkvalid: vector fp2_predicted is not available or has zero length.
+Warning from checkvalid: vector peaking_predicted is not available or has zero length.
+Warning from checkvalid: vector gain_dc_db is not available or has zero length.
+Warning from checkvalid: vector adc_predicted_db is not available or has zero length.
+Warning from checkvalid: vector gain_dc_db is not available or has zero length.
+Error: RHS "gain_dc_db - adc_predicted_db" invalid
+Warning from checkvalid: vector gain_error_db is not available or has zero length.
+Warning from checkvalid: vector peaking_db is not available or has zero length.
+Warning from checkvalid: vector power_mw is not available or has zero length.
+

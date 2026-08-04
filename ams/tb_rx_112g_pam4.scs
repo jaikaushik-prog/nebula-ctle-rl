@@ -1,0 +1,229 @@
+// ============================================================================
+// tb_rx_112g_pam4.scs — Cadence Spectre AMS Testbench
+// 112G PAM-4 Receiver: VerilogA AFE + SystemVerilog DSP co-simulation
+//
+// Hierarchy:
+//   [PRBS TX] → [Channel s2p] → [TIA] → [CTLE] → [VGA] → [ADC]
+//        ↓ (6-bit digital)
+//   [FFE RTL] → [DFE RTL] → [LMS RTL] → [BB-CDR RTL] → [BER checker]
+//
+// AMS connect modules bridge Spectre (real/electrical) ↔ Xcelium (logic)
+//
+// Run with: spectre +ams tb_rx_112g_pam4.scs +xmsimargs "-timescale 1ps/1fs"
+// ============================================================================
+
+simulator lang=spectre
+global 0 vdd vss
+
+// ── Supply and global parameters ─────────────────────────────────────────────
+parameters VDD=0.9 TEMP=27 FBAUD=56G VREF=0.5
+
+vdd_src (vdd 0) vsource type=dc dc=VDD
+parameters lang=verilog
+  `define FBAUD 56e9
+  `define N_PAR 32
+  `define N_FFE_PRE 3
+  `define N_FFE_POST 17
+  `define N_DFE 5
+
+// ── Include model files ───────────────────────────────────────────────────────
+include "/pdk/28nm/models/spectre/tt_typical.scs" section=tt
+
+// VerilogA behavioral models
+ahdl_include "./veriloga_models/tia.vams"
+ahdl_include "./veriloga_models/analog_frontend.vams"
+
+// ── AMS connect module declarations ──────────────────────────────────────────
+// real→logic: converts Spectre real-valued net → Xcelium logic bus
+connectmodule r2l_6bit (a, d[5:0]);
+  inout real a;
+  output [5:0] d;
+  electrical a;
+  parameter real vref_p =  0.5;
+  parameter real vref_n = -0.5;
+  parameter real vth    =  0.45;  // logic threshold
+  real code_real;
+  analog begin
+    @(cross(V(a) - vref_n, +1) or cross(V(a) - vref_p, +1)) begin
+      code_real = floor((V(a) - vref_n) / ((vref_p-vref_n)/64.0));
+      code_real = max(0, min(code_real, 63));
+      d = $rtoi(code_real);
+    end
+  end
+endmodule
+
+// logic→real: converts 4-bit CTLE gain code (from DSP) → analog voltage
+connectmodule l2r_4bit (d[3:0], a);
+  input [3:0] d;
+  inout real a;
+  electrical a;
+  analog begin
+    V(a) <+ $itor(d) * 0.9 / 15.0;   // 4-bit DAC: 0..15 → 0..0.9V
+  end
+endmodule
+
+// ── PAM-4 TX source (PRBS-31 + Gray + TX FFE + DAC) ─────────────────────────
+// Modelled as ideal voltage source with built-in PAM-4 waveform
+// In production: replace with parameterised PAM4 VerilogA TX model
+subckt pam4_tx_src (vout_p vout_n)
+  parameters fbaud=56G swing_pp=0.8 n_taps_tx=3
+  // TX FFE coefficients: pre= -0.05, main= 0.9, post= -0.05
+  parameters c_pre=-0.05 c_main=0.9 c_post=-0.05
+
+  // VerilogA-based PAM4 transmitter
+  vpam4 (vout_p vout_n 0) pam4_tx_vams
+    + fbaud=fbaud swing=swing_pp
+    + c_pre=c_pre c_main=c_main c_post=c_post
+    + prbs_order=31 gray_en=1 ffe_en=1
+    + rise_time=5p fall_time=5p    // 5 ps edge rate
+ends pam4_tx_src
+
+// ── Channel model (S-parameter 2-port for 30cm PCB trace) ────────────────────
+// Replace with measured .s4p file for actual hardware correlation
+subckt channel_30cm (in_p in_n out_p out_n)
+  xch_pp (in_p out_p 0) nport file="./channels/pcb_30cm_trace.s2p" \
+         port[1]=in_p port[2]=out_p z0=100
+  // Package + via model (lumped approximation)
+  Lpkg_in  (in_p  pkg_in_p)  inductor l=100p   // 100 pH package bond-wire
+  Cpkg_in  (pkg_in_p 0)      capacitor c=100f   // 100 fF via capacitance
+  Lpkg_out (out_p pkg_out_p) inductor l=100p
+  Cpkg_out (pkg_out_p 0)     capacitor c=100f
+ends channel_30cm
+
+// ── Optical channel alternative (comment above, uncomment below for optical) ─
+// subckt optical_imdd_ch (iin iout)
+//   xpd  (vopt iout vbias 0)  photodiode responsivity=0.8 f_bw=35G
+//   vlaser (vopt 0) laser_vams p_avg_dbm=-3 er_db=6 fbaud=56G
+// ends optical_imdd_ch
+
+// ── Analog front-end ──────────────────────────────────────────────────────────
+subckt analog_rx_frontend (iin_p iin_n vadc_out vdd vss ctle_ctrl[3:0])
+
+  // TIA: converts input current (from photodiode or termination) to voltage
+  xtia (iin_p vtia_out vdd vss) tia
+    + Zt=2e3 f3dB=35G noise_A=15p Vout_max=0.8 Vout_min=-0.8
+
+  // CTLE: programmable peaking 0–15 dB via 4-bit digital control
+  xctle (vtia_out vctle_out vdd vss vctle_ctrl_v) ctle
+    + f_zero=18G f_pole=45G peaking_max_db=15
+
+  // 4-bit code → analog voltage for CTLE
+  xdac_ctle (ctle_ctrl[3:0] vctle_ctrl_v) l2r_4bit
+
+  // VGA: normalises signal to ADC input range
+  xvga (vctle_out vadc_in vdd vss vgain_ctrl) vga
+    + gain_min_db=0 gain_max_db=20 f_bw=45G
+
+  // AGC loop: simple integrator, drives VGA gain
+  // (full digital AGC is in RTL; this is the analog path only)
+  vagc (vgain_ctrl 0) vsource type=dc dc=0.45   // fixed at mid-gain for now
+
+  // ADC: 6-bit 56GS/s TI model
+  xadc (vadc_in adc_clk adc_dout[5:0] vdd vss) adc_6b_56g
+    + Vref_p=VREF Vref_n=0-VREF tj_rms=150f n_sub=16
+
+  // ADC sampling clock: 56 GHz differential
+  vadc_clk (adc_clk 0) vsource type=sine sinedc=0.45 \
+           sinef=FBAUD sineampl=0.4 sinephase=0
+
+  vadc_out (vadc_out 0) vcvs gain=1 pos=vadc_in neg=0  // monitor point
+
+ends analog_rx_frontend
+
+// ── Top-level testbench ───────────────────────────────────────────────────────
+// TX
+xtx (vtx_p vtx_n) pam4_tx_src fbaud=FBAUD swing_pp=0.8
+
+// Channel
+xch (vtx_p vtx_n vrx_p vrx_n) channel_30cm
+
+// RX termination (differential 100Ω)
+Rterm (vrx_p vrx_n) resistor r=100
+
+// Convert to single-ended for TIA input current
+// (In real design: RX termination drives differential TIA input)
+Rcurr_sense_p (vrx_p iin_rx) resistor r=50   // model 50Ω source → current
+Rcurr_sense_n (vrx_n 0)      resistor r=50
+
+// AWGN injection (models thermal noise not captured in channel)
+// Amplitude set by parameter: v_noise_rms = VDD/2^ADC_BITS/sqrt(SNR)
+parameters SNR_DB=20 ADC_BITS=6
+parameters V_NOISE_RMS='VREF / pow(2,ADC_BITS) * pow(10,-SNR_DB/20)'
+vnoise_p (iin_rx inoise_rx_p) vsource type=noise \
+         noisepsd='4*1.38e-23*300/50' noisepower=V_NOISE_RMS
+
+// Analog front-end
+xafe (inoise_rx_p 0 vadc_mon vdd vss ctle_code[3:0]) analog_rx_frontend
+
+// ── DSP RTL (Xcelium) via AMS connect modules ────────────────────────────────
+// The ADC output bus (6-bit logic) enters the RTL DSP core here
+// AMS connect modules are auto-inserted by Spectre AMS at the boundary
+
+// DSP top-level (SystemVerilog, synthesised or behavioural)
+xdsp_core (
+  .clk(clk_dsp),
+  .rst_n(rst_n),
+  .adc_in(xafe.xadc.adc_dout),    // 6-bit ADC output
+  .adc_vld(adc_vld),
+  .ffe_out(ffe_out_bus),           // to LMS
+  .decisions(decisions_bus),       // to BER checker
+  .slicer_in(slicer_bus),
+  .phase_code(cdr_phase_code),
+  .lock_det(cdr_lock),
+  .ffe_coeff_tap(ffe_taps_mon),
+  .dfe_coeff_tap(dfe_taps_mon),
+  .ctle_ctrl(ctle_code),           // feeds back to analog CTLE
+  .err_count(err_count),
+  .bit_count(bit_count),
+  .ber_update(ber_update_pulse)
+) xdsp_rtl;
+
+// DSP system clock: 1.75 GHz (= FBAUD / N_PAR = 56G / 32)
+vclk_dsp (clk_dsp 0) vsource type=pulse \
+          val0=0 val1=0.9 period=571p width=285p \
+          delay=0 rise=5p fall=5p
+
+// Power-on reset
+vrst (rst_n 0) vsource type=pulse \
+     val0=0 val1=0.9 delay=10n width=10n period=1u \
+     rise=100p fall=100p
+
+// ADC valid: tied to ADC clock (every cycle is valid at steady state)
+vadc_vld (adc_vld 0) vsource type=dc dc=0.9
+
+// ── Simulation control ────────────────────────────────────────────────────────
+tran sim_tran stop=1u \
+     errpreset=conservative \
+     method=trap \
+     maxstep=2p \
+     annotate=status
+
+// ── Measurements ──────────────────────────────────────────────────────────────
+// Eye diagram measurement at ADC input
+meas_eye_height tran \
+  expr='eyeHeight(V("vadc_mon"), 1/FBAUD, 4)' \
+  from=200n to=1u
+
+// BER snapshot at end of simulation
+meas_ber_err tran \
+  expr='I_value(V("xdsp_rtl.err_count"), 1u)' \
+  at=1u
+
+// CDR lock status
+meas_cdr_lock tran \
+  expr='I_value(V("cdr_lock"), 1u)' \
+  at=1u
+
+// Save waveforms
+save V(vtx_p) V(vrx_p) V(vadc_mon) V(clk_dsp)
+save V(xafe.vtia_out:p) V(xafe.vctle_out:p) V(xafe.vadc_in:p)
+save I(xafe.xtia.iin:p)
+// Digital nodes (via AMS interface)
+save xdsp_rtl.decisions[0:3] xdsp_rtl.ffe_out[0] xdsp_rtl.phase_code
+
+// ── Parameter variation for corner runs ──────────────────────────────────────
+// Uncomment to enable alter statements for corner sweeps:
+// alter alter_snr SNR_DB=15
+// tran sim_tran_snr15 stop=500n method=trap maxstep=2p
+// alter alter_snr SNR_DB=25
+// tran sim_tran_snr25 stop=500n method=trap maxstep=2p

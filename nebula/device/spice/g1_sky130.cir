@@ -1,0 +1,109 @@
+* G1 Hand-Design with SKY130 PDK
+* Using ngspice compatibility mode for SKY130 models
+
+* ===================== TUNABLE PARAMETERS =====================
+.param VDD_V   = 1.8
+.param ITAIL   = 5m
+.param RS_OHM  = 800
+.param CS_F    = 0.8p
+.param RL_OHM  = 200
+.param CL_F    = 0.8p
+.param VCM_V   = 0.9
+.param WIN     = 5u
+.param LIN     = 0.15u
+* ==============================================================
+
+* SKY130 slope/mismatch parameters — set to zero for nominal TT
+.param sky130_fd_pr__nfet_01v8__toxe_slope_spectre = 0
+.param sky130_fd_pr__nfet_01v8__vth0_slope_spectre = 0
+.param sky130_fd_pr__nfet_01v8__voff_slope_spectre = 0
+.param sky130_fd_pr__nfet_01v8__toxe_slope = 0
+.param sky130_fd_pr__nfet_01v8__vth0_slope = 0
+.param sky130_fd_pr__nfet_01v8__voff_slope = 0
+.param mc_mm_switch = 0
+.param mc_pr_switch = 0
+
+* Include SKY130 NFET TT corner model
+.include "C:\Users\DELL\sky130_fd_pr\cells\nfet_01v8\sky130_fd_pr__nfet_01v8__tt.corner.spice"
+.include "C:\Users\DELL\sky130_fd_pr\cells\nfet_01v8\sky130_fd_pr__nfet_01v8__tt.pm3.spice"
+
+vdd   vdd 0 {VDD_V}
+vinp  inp 0 dc {VCM_V} ac 0.5
+vinn  inn 0 dc {VCM_V} ac -0.5
+
+* Input pair — SKY130 nfet_01v8
+xm1 outp inp src1 0 sky130_fd_pr__nfet_01v8 W={WIN} L={LIN} nf=10 ad=0 as=0 pd=0 ps=0 mult=1 sa=0 sb=0 sd=0
+xm2 outn inn src2 0 sky130_fd_pr__nfet_01v8 W={WIN} L={LIN} nf=10 ad=0 as=0 pd=0 ps=0 mult=1 sa=0 sb=0 sd=0
+
+* Source degeneration
+rs src1 src2 {RS_OHM}
+cs src1 src2 {CS_F}
+
+* Tail current (ideal)
+it1 src1 0 dc {ITAIL/2}
+it2 src2 0 dc {ITAIL/2}
+
+* Loads
+rl1 vdd outp {RL_OHM}
+rl2 vdd outn {RL_OHM}
+cl1 outp 0 {CL_F}
+cl2 outn 0 {CL_F}
+
+.control
+set noaskquit
+set filetype=ascii
+set ngbehavior=hsa
+
+echo ""
+echo "================================================================"
+echo "  G1 — SKY130 nfet_01v8, TT corner"
+echo "================================================================"
+op
+echo "--- Voltages ---"
+print v(outp) v(outn) v(src1) v(src2)
+echo "--- M1 ---"
+print @m.xm1.msky130_fd_pr__nfet_01v8[gm]
+print @m.xm1.msky130_fd_pr__nfet_01v8[id]
+print @m.xm1.msky130_fd_pr__nfet_01v8[vgs]
+print @m.xm1.msky130_fd_pr__nfet_01v8[vds]
+print @m.xm1.msky130_fd_pr__nfet_01v8[vth]
+
+echo ""
+echo "================================================================"
+echo "  AC"
+echo "================================================================"
+ac dec 50 1meg 100g
+let vdiff = v(outp) - v(outn)
+let vdiff_db = db(vdiff)
+meas ac gain_dc_db FIND vdiff_db AT=1meg
+meas ac gain_nyq_db FIND vdiff_db AT=2.5g
+meas ac gain_peak_db MAX vdiff_db FROM=100meg TO=50g
+let peaking_db = gain_peak_db - gain_dc_db
+echo "  DC gain:"
+print gain_dc_db
+echo "  Nyquist gain:"
+print gain_nyq_db
+echo "  Peak gain:"
+print gain_peak_db
+echo "  PEAKING:"
+print peaking_db
+
+echo ""
+echo "================================================================"
+echo "  NOISE"
+echo "================================================================"
+noise v(outp,outn) vinp dec 20 10meg 5g
+print inoise_total
+let noise_mv = inoise_total * 1000
+echo "  Noise (mVrms):"
+print noise_mv
+
+echo ""
+echo "  Power (mW) = VDD * Itail:"
+let pwr = 1.8 * 0.005 * 1000
+print pwr
+
+quit
+.endc
+
+.end

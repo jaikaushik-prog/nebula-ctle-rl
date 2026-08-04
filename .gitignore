@@ -1,0 +1,111 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# REFERENCE LIBRARY — COPYRIGHTED. MUST NEVER ENTER GIT HISTORY.
+#
+# HANDOFF G1: the PDFs/DOCXs in this tree are IEEE papers, PhD theses, Intel
+# and Xilinx application notes, and the professor's own handwritten notes. In
+# the previous checkout they were committed to the baseline commit, which is
+# why that repo can never be made public without rewriting history. This
+# checkout was `git init`-ed fresh (2026-08-05) specifically so they are
+# excluded from commit #1 onward and there is nothing to strip later.
+#
+# `git status --ignored` and `git ls-files '*.pdf'` are the two checks.
+# ─────────────────────────────────────────────────────────────────────────────
+*.pdf
+*.docx
+*.doc
+*.pptx
+resources/
+
+# ─────────────────────────────────────────────────────────────────────────────
+# PDK — SKY130.
+#
+# The working install lives OUT OF TREE at C:\Users\DELL\sky130A (HANDOFF G33),
+# so nothing here should match today. These patterns exist so that a PDK copied
+# or symlinked into the repo (~52 MB, 856 files, and not ours to redistribute)
+# cannot be committed by accident.
+#
+# NOT ignored, and must stay tracked:
+#   nebula/device/spice/sky130_nfet_only.lib.spice  — OUR trimmed library (G36).
+#   It contains only `.include` pointers into the out-of-tree PDK plus a header
+#   and `.option scale=1.0u`; it redistributes no model cards.
+# ─────────────────────────────────────────────────────────────────────────────
+sky130A/
+sky130_fd_pr/
+sky130*/
+libs.tech/
+libs.ref/
+open_pdks/
+volare/
+*.pm3.spice
+*.corner.spice
+!nebula/device/spice/sky130_nfet_only.lib.spice
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Python
+# ─────────────────────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+.ipynb_checkpoints/
+
+# ─────────────────────────────────────────────────────────────────────────────
+# RUN ARTIFACTS — regenerable. Nothing here is an input to anything.
+# ─────────────────────────────────────────────────────────────────────────────
+
+# python_models sweeps + figures (regenerate: sweeps then make_report_figures.py)
+results/
+python_models/results/
+
+# nebula experiment output (regenerate: python -m nebula.experiments.<name>)
+s3_yield_results.json
+cl_sensitivity_results.json
+s9_yield_results.json
+analytic_screen_results.json
+
+# ngspice scratch. run_point() works in a TemporaryDirectory, but interactive
+# sessions in nebula/device/spice/ leave these behind.
+*.raw
+*.log
+swing.txt
+nebula/device/spice/*.csv
+nebula/device/spice/*.txt
+nebula/device/spice/*.out
+
+# ams_rl_ppo reference implementation (CLAUDEwa §4.2): its SOURCE is tracked,
+# its shipped checkpoints and training logs are not. They are the artifacts of
+# the degenerate result table §4.2 says explicitly not to anchor on.
+*.pt
+*.npz
+policy*.zip
+train_summary*.json
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Simulators / EDA (mostly Phase 4, none of it run yet)
+# ─────────────────────────────────────────────────────────────────────────────
+simulation/
+*.vcd
+*.shm/
+xcelium.d/
+*.history
+*.cdslck
+.simvision/
+INCA_libs/
+tools/
+
+# MATLAB
+*.asv
+*.mat
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Editor / OS / agent-local
+# ─────────────────────────────────────────────────────────────────────────────
+.claude/settings.local.json
+.vscode/
+.idea/
+Thumbs.db
+.DS_Store

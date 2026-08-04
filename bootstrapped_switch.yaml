@@ -1,0 +1,118 @@
+# RL-PPO / PPO-Offline / PPO-Online / PPO-Blend — Implementation
+
+Full implementation of:
+
+> Z. Guo, J. Fu, S. Bhanushali, Z. Zeng, I. Banerjee, A. Sanyal, "Balancing
+> Speed and Accuracy for Robust Analog-Mixed Signal Circuit Design using
+> Closed-Loop Reinforcement Learning with Ensemble Neural Network
+> Surrogates," ISCAS 2026.
+
+This repo reproduces every component described in the paper: the ensemble
+regressor with regression focal loss (Eq. 1), the shortfall-based reward
+(Eq. 2), the discriminator OOD critic (Eq. 3–4), all four training setups
+from Fig. 2 (RL-PPO / RL-PPO-Offline / RL-PPO-Online / RL-PPO-Blend), the
+RL-DDPG baseline, the component-importance analysis (Eq. 5–6, Table I), and
+the Table II/III-style evaluation protocol.
+
+## Read this before you run anything: what's real vs. substituted
+
+| Paper component | This repo | Status |
+|---|---|---|
+| Ensemble regressor, focal loss (Eq. 1) | `src/regressor.py` | **Faithful implementation.** PyTorch instead of TensorFlow (paper's Sec. V.B); identical architecture (4-layer MLP, [64,32,16,8]) and loss. |
+| Discriminator (Eq. 3–4) | `src/discriminator.py` | **Faithful implementation.** |
+| Reward (Eq. 2) | `src/reward.py` | **Faithful implementation.** |
+| Component importance (Eq. 5–6) | `src/component_importance.py` | Faithful to the formula, with one documented adaptation — see the file's docstring (the paper's Eq. 5 implies separate first-layer weights per output branch; a standard MLP shares its first layer across both heads, so we treat the shared layer's magnitude as feeding both terms of Eq. 6 equally). |
+| PPO / DDPG training loop | `src/train.py` (Stable-Baselines3) | **Faithful implementation**, same hyperparameters as Sec. V.B ([64,64] MLP, lr=1e-4, γ=0.99, entropy=0.05, batch=64). |
+| Fig. 2 mode logic (Offline/Online/Blend scheduling) | `src/gym_env.py` | **Faithful implementation** of the control flow (K-step SPICE interval, B-step discriminator retrain, p% blend schedule). |
+| **28nm Cadence Spectre SPICE simulation** | `src/simulator.py` | **NOT real SPICE.** This sandbox has no EDA tools, no foundry PDK, and no network path to Cadence. `SyntheticSpiceEnv` is a physics-*inspired* analytic stand-in (on-resistance, bootstrap divider ratio, kT/C noise, source-resistance linearization) with injected mismatch noise, built so the qualitative story in Sec. IV (samp_nmos/CB/source_res dominate) roughly holds. **Swap `SyntheticSpiceEnv.evaluate()` for your real Ocean/Spectre harness before trusting any absolute numbers.** |
+| **LLM-FS / LLM-FT (LLaMA-2-7B) baselines** | `src/llm_baseline.py` | **NOT reproduced.** No GPU/weights access and no path to a weights host in this sandbox. The file provides (a) a real few-shot baseline via the Anthropic API you can point at any Claude model you're licensed for, and (b) a clearly-labeled random placeholder so the pipeline still runs offline. Neither reproduces the paper's literal 28.6%/11.6% etc. numbers. |
+| 26 / 38 tunable parameters (Sec. V.A) | `src/circuits.py` | Correct **counts**, and every parameter *named* in the paper (Table I / Sec. IV) is present. The paper doesn't publish its full 26/38-length parameter list (normal for a 4-page ISCAS paper); we fill the remainder with standard W/L/finger-count sizing triples for each named device, tagged `derived=True` in the code so you always know what's paper-verbatim vs. filled in. Replace with your real netlist's parameter list for production use. |
+
+**Bottom line:** the *ML framework* (RL algorithm, surrogate, discriminator,
+reward, mode-scheduling, evaluation protocol) is a complete, tested, running
+implementation of the paper's methodology. The *numbers* you'll see when you
+run it depend on `SyntheticSpiceEnv`, not on Cadence Spectre — treat pass
+rates as illustrating that the machinery works, not as a replication of
+Table II/III's exact percentages.
+
+## Install
+
+```bash
+pip install -r requirements.txt
+# optional, only for the real LLM-FS baseline in llm_baseline.py:
+pip install anthropic
+```
+
+## Quick start
+
+```bash
+cd src
+
+# 1. Train one mode on one circuit
+python train.py --circuit bootstrapped_switch --mode ppo      --timesteps 8000
+python train.py --circuit bootstrapped_switch --mode offline  --timesteps 8000
+python train.py --circuit bootstrapped_switch --mode online   --timesteps 2000 --K 25
+python train.py --circuit bootstrapped_switch --mode blend    --timesteps 4000 --blend-p 1.0
+python train.py --circuit bootstrapped_switch --mode ddpg     --timesteps 8000
+
+# 2. Evaluate a trained run's pass rate (SNDR>=60dB / >=75dB) on unseen points
+python evaluate.py --run-dir ../results/bootstrapped_switch_offline --n-test 200
+
+# 3. Or run the whole Table-II/III-style sweep in one command
+python reproduce_tables.py --circuit buffer_switch --timesteps 4000
+
+# 4. Component importance (reproduces Eq. 5-6 / Table I methodology)
+python component_importance.py
+
+# 5. Run the test suite
+python -m pytest ../tests -v
+```
+
+To scale toward the paper's actual regime (Sec. V.B: 10^5 training steps,
+4,790-sample pretraining set), use `configs/*.yaml` as a reference and pass
+`--timesteps 100000 --n-init 4790`. Expect RL-PPO-Online and higher Blend
+fractions to get much slower as SPICE-call count grows — that trade-off is
+the whole point of the paper (Table III), and `SyntheticSpiceEnv`'s
+`call_cost_s` lets you tune how expensive a "SPICE call" is to see the
+speed/fidelity curve for yourself.
+
+## File map
+
+```
+src/
+  circuits.py              # 26/38-param spaces for the two ADC front-ends (Sec V.A)
+  simulator.py              # SPICE stand-in -- swap for real Spectre here (see table above)
+  regressor.py               # Ensemble MLP regressor + focal loss (Eq. 1, Sec III.C)
+  discriminator.py           # OOD discriminator (Eq. 3, Sec III.F)
+  reward.py                  # R_pred, R_dis, R_total (Eq. 2, 4)
+  gym_env.py                  # Fig. 2 mode logic: ppo / offline / online / blend
+  train.py                    # SB3 PPO/DDPG training CLI (Sec V.B hyperparameters)
+  evaluate.py                 # Pass-rate evaluation vs SNDR thresholds (Sec V.C)
+  component_importance.py     # Eq. 5-6, Table I methodology
+  reproduce_tables.py         # End-to-end sweep -> Table II/III-style CSV/Markdown
+  llm_baseline.py              # LLM-FS baseline interface (see limitations above)
+configs/
+  bootstrapped_switch.yaml    # Paper-scale hyperparameters, circuit 1
+  buffer_switch.yaml           # Paper-scale hyperparameters, circuit 2
+tests/
+  test_pipeline.py             # 11 unit tests: math correctness + mode scheduling
+```
+
+## Notes on fidelity to the paper
+
+- **Eq. 1 (focal loss):** implemented exactly as `(1 - exp(-||R-y||^2))^gamma
+  * ||R-y||^2`, gamma=2, averaged over the batch.
+- **Eq. 2 (reward):** implemented exactly; verified non-positive by
+  `tests/test_pipeline.py::test_reward_nonpositive`.
+- **Eq. 3–4 (discriminator + penalty):** implemented exactly; verified that
+  the penalty is maximized (=0) at the D(a)=0.5 boundary.
+- **Fig. 2 mode scheduling:** the online-mode "every K steps" and
+  discriminator "every B steps, batch 2K" logic is unit-tested
+  (`test_online_mode_spice_call_scheduling`) — this caught a real off-by-one
+  bug during development (single-shot episodes were double-incrementing the
+  step counter via both `reset()` and `step()`, which silently prevented
+  any K-multiple from ever being hit). Worth knowing if you extend the env.
+- **Table II/III's "Time (s) per 1k steps":** measured directly as wall-clock
+  training time, not estimated — comparable in spirit to the paper's
+  reported numbers but will differ with hardware and with your
+  `call_cost_s` setting.

@@ -1,0 +1,41 @@
+* Source-degenerated CTLE, differential — HAND-SIZING SANDBOX
+*
+* This file is for interactive exploration, not for producing deliverables.
+* Load it with:   ngspice_con ctle.cir      (NO -b, you want the prompt)
+* Run it FROM THIS DIRECTORY so ./.spiceinit is read at parse time.
+*
+* Units: the trimmed library sets `.option scale=1.0u`, so W and L below are
+* PLAIN NUMBERS IN MICRONS. W=5 means 5 um. Writing W=5u would mean 5 pm and
+* would fail with the misleading "could not find a valid modelname".
+
+.lib "sky130_nfet_only.lib.spice" tt
+
+.param W=5 L=0.15 NF=4
+.param RL=400 RS=600 CS=200f IT=1.5m CL=100f
+.param VDD=1.8 VCM=0.9
+
+Vdd   vdd 0 {VDD}
+Vcm   cm  0 {VCM}
+Vinp  inp cm AC 0.5
+Vinn  inn cm AC -0.5
+
+XM1   outp inp s1 0 sky130_fd_pr__nfet_01v8 W={W} L={L} nf={NF}
+XM2   outn inn s2 0 sky130_fd_pr__nfet_01v8 W={W} L={L} nf={NF}
+
+RLp   vdd outp {RL}
+RLn   vdd outn {RL}
+
+* Between the two SOURCES, not source-to-ground. This is where the /2 in
+* k = 1 + (gm+gmbs)*Rs/2 comes from: each half-circuit sees Rs/2.
+Rdeg  s1 s2 {RS}
+Cdeg  s1 s2 {CS}
+
+* TWO separate ideal sinks, one per side. A single shared tail would short
+* out the degeneration network above.
+It1   s1 0 {IT}
+It2   s2 0 {IT}
+
+CLp   outp 0 {CL}
+CLn   outn 0 {CL}
+
+.end

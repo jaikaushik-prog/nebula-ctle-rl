@@ -1,0 +1,59 @@
+* G0 decisive control: does .disto work for BSIM4, or only for old MOS levels?
+*
+* Same topology twice. m1/m2 use BSIM4 (level=54); m3/m4 use the level=1
+* Shichman-Hodges model, which ngspice definitely implements distortion for.
+* If level=1 gives a non-zero HD3 and BSIM4 gives exactly zero, the answer is
+* that BSIM4 contributes no distortion terms at all - the analysis "runs" and
+* silently reports a perfectly linear device.
+
+.param VCM_V = 0.88
+
+vdd  vdd 0 1.2
+vinp inp 0 dc {VCM_V} ac 0.5  distof1 0.5
+vinn inn 0 dc {VCM_V} ac -0.5 distof1 -0.5
+
+* --- BSIM4 half ---
+m1 outp inp s1 0 nch W=40u L=0.35u
+m2 outn inn s2 0 nch W=40u L=0.35u
+rs12 s1 s2 800
+cs12 s1 s2 0.8p
+i1 s1 0 dc 2.5m
+i2 s2 0 dc 2.5m
+rl1 vdd outp 120
+rl2 vdd outn 120
+
+* --- level=1 half ---
+m3 boutp inp s3 0 nold W=40u L=0.35u
+m4 boutn inn s4 0 nold W=40u L=0.35u
+rs34 s3 s4 800
+cs34 s3 s4 0.8p
+i3 s3 0 dc 2.5m
+i4 s4 0 dc 2.5m
+rl3 vdd boutp 120
+rl4 vdd boutn 120
+
+.model nch nmos level=54 version=4.8.2
++ tnom=27 vth0=0.35 k1=0.5 k2=0.05 u0=0.045 toxe=2.8n toxp=2.8n ndep=2.4e17
++ lint=0.01u wint=0.01u rdsw=200
+
+.model nold nmos level=1 vto=0.35 kp=90u lambda=0.08 gamma=0.5 phi=0.7
+
+.control
+set noaskquit
+op
+
+ac dec 20 1meg 10g
+meas ac bsim_fund  FIND vm(outp)  AT=100meg
+meas ac l1_fund    FIND vm(boutp) AT=100meg
+
+disto dec 1 100meg 100meg
+
+echo "G0 --- disto2 plot (3rd harmonic), single-ended nodes ---"
+setplot disto2
+print mag(v(outp)) mag(v(boutp))
+echo "G0 --- disto1 plot (2nd harmonic), single-ended nodes ---"
+setplot disto1
+print mag(v(outp)) mag(v(boutp))
+
+.endc
+.end

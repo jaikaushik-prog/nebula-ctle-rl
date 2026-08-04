@@ -1,0 +1,166 @@
+* G1 Hand-Design — Source-degenerated differential pair CTLE
+* Target: PCIe Gen2, 5 Gbps NRZ, Nyquist = 2.5 GHz
+* Specs: S3 (3-12 dB peaking), S5 (<1.5 mVrms noise), S6 (<15 mW)
+*
+* Starting from G0 values. Adjust parameters below and re-run.
+
+* ===================== TUNABLE PARAMETERS =====================
+* Change these to explore the design space:
+.param VDD_V   = 1.2
+.param ITAIL   = 5m
+.param RS_OHM  = 800
+.param CS_F    = 0.8p
+.param RL_OHM  = 120
+.param CL_F    = 1.2p
+.param VCM_V   = 0.88
+.param WIN     = 40u
+.param LIN     = 0.35u
+.param NF_IN   = 1
+* ==============================================================
+
+vdd   vdd 0 {VDD_V}
+
+* Differential input, AC source for .ac
+vinp  inp 0 dc {VCM_V} ac 0.5
+vinn  inn 0 dc {VCM_V} ac -0.5
+
+* Input pair
+m1 outp inp src1 0 nch W={WIN} L={LIN}
+m2 outn inn src2 0 nch W={WIN} L={LIN}
+
+* Source degeneration: Rs || Cs between the two sources
+rs src1 src2 {RS_OHM}
+cs src1 src2 {CS_F}
+
+* Tail current (ideal sources for now — real tail transistor later)
+it1 src1 0 dc {ITAIL/2}
+it2 src2 0 dc {ITAIL/2}
+
+* Loads
+rl1 vdd outp {RL_OHM}
+rl2 vdd outn {RL_OHM}
+cl1 outp 0 {CL_F}
+cl2 outn 0 {CL_F}
+
+* Generic BSIM4 NMOS — PLACEHOLDER, will swap for PDK when available.
+*
+* This card MUST stay identical to the one in device/ngspice_runner.py, which
+* is what every measured number in HANDOFF came from. It did not, and the
+* difference was `k2` — the BSIM4 body-effect coefficient, i.e. precisely the
+* parameter the §6 correction turns on. Measured 2026-08-04 at the reference
+* point (Itail=5m Rs=800 Cs=0.8p RL=120 CL=1.2p Vcm=0.88 W=40u L=0.35u):
+*
+*                     without k2        with k2=0.05 (runner)
+*     gm               11.154 mS          10.973 mS
+*     gmbs              2.787 mS           3.583 mS
+*     gmbs/gm             0.250              0.327
+*     A_dc            -14.123 dB         -14.569 dB
+*     peaking            8.19 dB            8.29 dB
+*
+* So the .cir a human opens and the .py the audit ran disagreed by 0.45 dB of
+* gain and 30% of the body-effect term. k2 added here to match.
+.model nch nmos level=54 version=4.8.2
++ tnom=27 vth0=0.35 k1=0.5 k2=0.05 u0=0.045 toxe=2.8n toxp=2.8n ndep=2.4e17
++ lint=0.01u wint=0.01u rdsw=200 cgso=0.3n cgdo=0.3n
+
+.control
+set noaskquit
+set filetype=ascii
+
+* ─────────── OPERATING POINT ───────────
+echo ""
+echo "================================================================"
+echo "  OPERATING POINT"
+echo "================================================================"
+op
+echo "--- Bias voltages ---"
+print v(outp) v(outn) v(src1) v(src2)
+echo "--- M1 device parameters ---"
+print @m1[gm] @m1[gmbs] @m1[gds] @m1[vgs] @m1[vds] @m1[vth] @m1[id] @m1[vdsat]
+echo "--- M2 device parameters ---"
+print @m2[gm] @m2[gmbs] @m2[vgs] @m2[vds] @m2[vth] @m2[id]
+
+* NO DERIVED ARITHMETIC HERE. Vov, power and the SS6 cross-check are computed
+* in Python by nebula/device/crosscheck.py from the primitives printed above.
+* The previous version of this block did `let power_mw = v(vdd) * {ITAIL}*1000`
+* and friends; every one of them failed as a WARNING while ngspice exited 0.
+* See CLAUDEwa.md S8 rule 9, HANDOFF G26 and G30.
+
+* ─────────── AC ANALYSIS ───────────
+echo ""
+echo "================================================================"
+echo "  AC ANALYSIS — frequency response"
+echo "================================================================"
+ac dec 50 1meg 100g
+
+* Build differential vector explicitly (ngspice does not support vdb(a,b))
+let vdiff = v(outp) - v(outn)
+let vdiff_db = db(vdiff)
+let vdiff_mag = mag(vdiff)
+
+* Find key gains
+meas ac gain_dc_db FIND vdiff_db AT=1meg
+meas ac gain_nyq_db FIND vdiff_db AT=2.5g
+meas ac gain_peak_db MAX vdiff_db FROM=100meg TO=50g
+
+echo ""
+echo "--- AC Results ---"
+echo "  DC gain (dB):"
+print gain_dc_db
+echo "  Nyquist gain at 2.5 GHz (dB):"
+print gain_nyq_db
+echo "  Peak gain (dB):"
+print gain_peak_db
+
+* Peaking = gain_peak_db - gain_dc_db is computed in Python (rule 9), not here.
+
+* Print gain at a few key frequencies
+echo "--- Gain at key frequencies ---"
+meas ac g_500m FIND vdiff_db AT=500meg
+meas ac g_1g FIND vdiff_db AT=1g
+meas ac g_1p25g FIND vdiff_db AT=1.25g
+meas ac g_1p8g FIND vdiff_db AT=1.8g
+meas ac g_2g FIND vdiff_db AT=2g
+meas ac g_2p5g FIND vdiff_db AT=2.5g
+meas ac g_5g FIND vdiff_db AT=5g
+
+* ─────────── NOISE ANALYSIS ───────────
+echo ""
+echo "================================================================"
+echo "  NOISE ANALYSIS — input-referred noise"
+echo "================================================================"
+noise v(outp,outn) vinp dec 20 10meg 5g
+echo "--- Noise Results ---"
+echo "  Input-referred noise (Vrms):"
+print inoise_total
+echo "  Output noise (Vrms):"
+print onoise_total
+echo "  S5 target: < 1.5 mVrms"
+
+* ─────────── DESIGN EQUATION CHECK — DELIBERATELY NOT HERE ───────────
+*
+* The CLAUDEwa.md §6 cross-check USED to live in this file as a block of
+* `let` statements. It never ran. `@m1[gm]` lives in the `op1` plot and the
+* current plot after `.ac` is `ac1`, and `.param` names such as {RS_OHM} are
+* not visible as .control vectors at all — so every `let` errored with
+* "vector ... is not available or has zero length", ngspice printed those as
+* WARNINGS, carried on, and exited 0. The gate reported green while computing
+* nothing, and the equation it was meant to check turned out to be 2.33 dB
+* wrong (the missing body-effect term, CLAUDEwa.md §6).
+*
+* The check now lives in Python, where a failure is an exception:
+*
+*     nebula/device/crosscheck.py :: cross_check_ngspice_output()
+*     nebula/tests/test_crosscheck.py
+*
+* It parses the .op primitives printed above, applies §6 including gmbs, and
+* raises. It is covered by a test that deliberately corrupts A_dc and asserts
+* the gate goes red.
+*
+* Do not put derived arithmetic back into this file.
+* See CLAUDEwa.md §8 rule 9, HANDOFF G26 and G30.
+
+quit
+.endc
+
+.end

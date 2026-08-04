@@ -1,0 +1,70 @@
+* G1 Peaking Tunability Sweep — How does Rs control peaking?
+* Running the same circuit at Rs = 200, 400, 800, 1200, 1600 ohm
+
+.param VDD_V = 1.2
+.param ITAIL = 5m
+.param CS_F  = 0.8p
+.param RL_OHM = 120
+.param CL_F  = 1.2p
+.param VCM_V = 0.88
+.param WIN   = 40u
+.param LIN   = 0.35u
+
+vdd vdd 0 {VDD_V}
+vinp inp 0 dc {VCM_V} ac 0.5
+vinn inn 0 dc {VCM_V} ac -0.5
+
+m1 outp inp src1 0 nch W={WIN} L={LIN}
+m2 outn inn src2 0 nch W={WIN} L={LIN}
+
+rs src1 src2 800
+cs src1 src2 {CS_F}
+it1 src1 0 dc {ITAIL/2}
+it2 src2 0 dc {ITAIL/2}
+rl1 vdd outp {RL_OHM}
+rl2 vdd outn {RL_OHM}
+cl1 outp 0 {CL_F}
+cl2 outn 0 {CL_F}
+
+.model nch nmos level=54 version=4.8.2
++ tnom=27 vth0=0.35 k1=0.5 u0=0.045 toxe=2.8n toxp=2.8n ndep=2.4e17
++ lint=0.01u wint=0.01u rdsw=200 cgso=0.3n cgdo=0.3n
+
+.control
+set noaskquit
+
+echo "================================================================"
+echo "  G1 PEAKING TUNABILITY SWEEP"
+echo "  Sweeping Rs to check S3 coverage (3-12 dB peaking)"
+echo "================================================================"
+echo ""
+
+foreach rs_val 100 200 400 600 800 1000 1200 1600 2000
+  alter rs $rs_val
+  op
+  let gm1 = @m1[gm]
+
+  ac dec 50 1meg 50g
+  let vdiff = v(outp) - v(outn)
+  let vdiff_db = db(vdiff)
+  meas ac g_dc FIND vdiff_db AT=1meg
+  meas ac g_peak MAX vdiff_db FROM=100meg TO=50g
+  let pk = g_peak - g_dc
+
+  noise v(outp,outn) vinp dec 20 10meg 5g
+  let noise_mv = inoise_total * 1000
+
+  echo "Rs=$rs_val  gm=$&gm1  peaking=$&pk  noise_mV=$&noise_mv"
+  destroy all
+end
+
+echo ""
+echo "================================================================"
+echo "  S3 target: peaking must be tunable 3-12 dB"
+echo "  S5 target: noise < 1.5 mVrms"
+echo "================================================================"
+
+quit
+.endc
+
+.end

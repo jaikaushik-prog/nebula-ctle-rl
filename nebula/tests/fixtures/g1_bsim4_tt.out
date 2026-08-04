@@ -1,0 +1,80 @@
+
+Note: Compatibility modes selected: hs a
+
+
+Circuit: * g1 hand-design ? source-degenerated differential pair ctle
+
+
+================================================================
+  OPERATING POINT
+================================================================
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+
+No. of Data Rows : 1
+--- Bias voltages ---
+v(outp) = 9.000000e-01
+v(outn) = 9.000000e-01
+v(src1) = 4.500600e-02
+v(src2) = 4.500600e-02
+--- M1 device parameters ---
+@m1[gm] = 1.097342e-02
+@m1[gmbs] = 3.582543e-03
+@m1[gds] = 4.309664e-04
+@m1[vgs] = 8.349940e-01
+@m1[vds] = 8.549940e-01
+@m1[vth] = 4.759025e-01
+@m1[id] = 2.500000e-03
+@m1[vdsat] = 2.889172e-01
+--- M2 device parameters ---
+@m2[gm] = 1.097342e-02
+@m2[gmbs] = 3.582543e-03
+@m2[vgs] = 8.349940e-01
+@m2[vds] = 8.549940e-01
+@m2[vth] = 4.759025e-01
+@m2[id] = 2.500000e-03
+
+================================================================
+  AC ANALYSIS ? frequency response
+================================================================
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+
+No. of Data Rows : 251
+gain_dc_db          =  -1.456892e+01
+gain_nyq_db         =  -7.961916e+00
+gain_peak_db        =  -6.279118e+00 at=  1.258925e+09
+
+--- AC Results ---
+  DC gain (dB):
+gain_dc_db = -1.45689e+01
+  Nyquist gain at 2.5 GHz (dB):
+gain_nyq_db = -7.96192e+00
+  Peak gain (dB):
+gain_peak_db = -6.27912e+00
+--- Gain at key frequencies ---
+g_500m              =  -8.842476e+00
+g_1g                =  -6.474592e+00
+g_1p25g             =  -6.280498e+00
+g_1p8g              =  -6.746570e+00
+g_2g                =  -7.059613e+00
+g_2p5g              =  -7.961916e+00
+g_5g                =  -1.224992e+01
+
+================================================================
+  NOISE ANALYSIS ? input-referred noise
+================================================================
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+
+No. of Data Rows : 54
+
+No. of Data Rows : 1
+--- Noise Results ---
+  Input-referred noise (Vrms):
+inoise_total = 2.750846e-04
+  Output noise (Vrms):
+onoise_total = 9.208227e-05
+  S5 target: < 1.5 mVrms
+ngspice-41 done
+

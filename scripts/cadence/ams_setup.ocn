@@ -1,0 +1,303 @@
+; ============================================================================
+; ams_setup.ocn — Cadence Ocean script for AMS co-simulation
+;
+; Sets up Spectre AMS environment for 112G PAM-4 receiver:
+;   - Loads VerilogA behavioral models (TIA, CTLE, ADC)
+;   - Connects to SystemVerilog DSP RTL
+;   - Configures connect modules (real↔logic interfaces)
+;   - Runs parametric sweeps and Monte Carlo
+;   - Exports results to CSV for Python post-processing
+;
+; Usage in Cadence IC617/ICADV12:
+;   load("ams_setup.ocn")
+;   runAMSSim()
+;
+; N. Mishra, BITS Pilani
+; ============================================================================
+
+; ── Library and cell references ─────────────────────────────────────────────
+(setq LIB_NAME    "serdes112g")
+(setq CELL_TB     "tb_rx_112g_pam4")
+(setq VIEW_TB     "schematic")
+(setq SIM_DIR     "./simulation")
+(setq RESULT_DIR  "./results")
+
+; ── ADE session setup ────────────────────────────────────────────────────────
+(procedure runAMSSim ()
+  ; Open ADE session
+  (setq session (siOpen LIB_NAME CELL_TB VIEW_TB))
+  (siSetSimulator session 'spectre)
+
+  ; ── Simulation type: transient ──────────────────────────────────────────
+  (siSetAnalysis session 'tran
+    '(stop    1u          ; 1 µs = ~56k symbols at 56 Gbaud
+      step    1p          ; 1 ps timestep (sufficient for 56G)
+      method  trap        ; trapezoidal integration (stable)
+      maxstep 2p          ; max step near signal edges
+      errpreset conservative))
+
+  ; ── Model includes ───────────────────────────────────────────────────────
+  (siSetModelFile session
+    'spectre
+    (list
+      "/pdk/28nm/models/spectre/tt_typical.scs"
+      "./veriloga_models/tia.vams"
+      "./veriloga_models/analog_frontend.vams"
+    ))
+
+  ; ── AMS connect modules ──────────────────────────────────────────────────
+  ; Real→Digital: ADC output (real voltage → 6-bit bus)
+  ; Digital→Real: DSP control signals (logic → analog VGA/CTLE control)
+  (siSetConnectRule session
+    'connectMode  'automatic
+    'disciplines  '("electrical" "logic")
+    'cm_lib       "connectLib"
+    'cm_cell      "real_to_digital_6b"
+    'cm_view      "veriloga")
+
+  ; ── Signals to save ──────────────────────────────────────────────────────
+  (siAddSavePoint session
+    (list
+      "V(\"/vin_rx\")"              ; RX input voltage
+      "V(\"/vtia_out\")"            ; TIA output
+      "V(\"/vctle_out\")"           ; CTLE output
+      "V(\"/vadc_in\")"             ; ADC input (after VGA)
+      "I(\"/x_tia/iin\")"           ; TIA input current
+      "/dsp/ffe_out[0]"             ; First FFE output (RTL)
+      "/dsp/decisions[0]"           ; First PAM-4 decision
+      "/cdr/phase_code"             ; CDR phase output
+      "/ber/err_count"              ; BER error counter
+    ))
+
+  ; Run and return results handle
+  (siRun session)
+  (printf "AMS simulation complete.\n")
+  session
+)
+
+
+; ── Parametric sweep: CTLE peaking vs BER ────────────────────────────────────
+(procedure sweepCTLEPeaking ()
+  (setq peaking_vals (list 0.0 4.0 8.0 10.0 12.0 15.0))   ; dB
+  (setq results_list (list))
+
+  (foreach peak_db peaking_vals
+    (printf "Running CTLE peaking = %g dB...\n" peak_db)
+    (setq sess (siOpen LIB_NAME CELL_TB VIEW_TB))
+    (siSetSimulator sess 'spectre)
+    (siSetAnalysis sess 'tran '(stop 500n step 1p method trap))
+
+    ; Set CTLE peaking parameter
+    (siSetVariable sess "ctle_ctrl_code"
+      (round (* peak_db / 15.0 * 15)))   ; 4-bit code (0–15)
+
+    (siSetModelFile sess 'spectre
+      (list "/pdk/28nm/models/spectre/tt_typical.scs"
+            "./veriloga_models/analog_frontend.vams"))
+
+    (siAddSavePoint sess '("/ber/err_count" "/ber/bit_count"))
+    (siRun sess)
+
+    ; Extract BER from simulation result
+    (setq err_cnt (siGetValue sess "/ber/err_count" 'final))
+    (setq bit_cnt (siGetValue sess "/ber/bit_count" 'final))
+    (setq ber_val (/ (float err_cnt) (max (float bit_cnt) 1.0)))
+
+    (setq results_list
+      (append results_list
+        (list (list peak_db err_cnt bit_cnt ber_val))))
+    (printf "  peak=%g dB → BER=%.2e\n" peak_db ber_val)
+  )
+
+  ; Export to CSV
+  (exportResultsCSV results_list
+    (strcat RESULT_DIR "/ctle_sweep.csv")
+    (list "peaking_db" "err_count" "bit_count" "ber"))
+  results_list
+)
+
+
+; ── Monte Carlo simulation (PVT + mismatch) ──────────────────────────────────
+(procedure runMonteCarlo (n_runs)
+  (if (not n_runs) (setq n_runs 50))
+  (printf "Running %d Monte Carlo iterations...\n" n_runs)
+
+  (setq mc_results (list))
+
+  (for run_idx 1 n_runs
+    (printf "MC run %d/%d\n" run_idx n_runs)
+    (setq sess (siOpen LIB_NAME CELL_TB VIEW_TB))
+    (siSetSimulator sess 'spectre)
+
+    ; Monte Carlo analysis setup
+    (siSetAnalysis sess 'tran
+      '(stop 200n step 1p method trap maxstep 2p))
+
+    (siSetMonteCarlo sess
+      '(seed       (random)
+        numruns    1
+        variations (all)     ; process + mismatch
+        savefamilyplots t))
+
+    (siSetModelFile sess 'spectre
+      (list "/pdk/28nm/models/spectre/mc_all.scs"
+            "./veriloga_models/analog_frontend.vams"))
+
+    (siAddSavePoint sess '("/ber/err_count" "/ber/bit_count"
+                           "V(\"/vctle_out\")" "/cdr/phase_code"))
+    (siRun sess)
+
+    ; Collect results
+    (setq err  (siGetValue sess "/ber/err_count" 'final))
+    (setq bits (siGetValue sess "/ber/bit_count" 'final))
+    (setq ber  (/ (float err) (max (float bits) 1.0)))
+    (setq mc_results (append mc_results (list (list run_idx ber))))
+    (printf "  BER = %.2e\n" ber)
+  )
+
+  ; Statistics
+  (setq ber_vals (mapcar cadr mc_results))
+  (setq ber_mean (/ (apply + ber_vals) n_runs))
+  (printf "\nMC Summary: mean=%.2e  worst=%.2e\n"
+          ber_mean (apply max ber_vals))
+
+  (exportResultsCSV mc_results
+    (strcat RESULT_DIR "/monte_carlo.csv")
+    (list "run" "ber"))
+  mc_results
+)
+
+
+; ── PVT corner simulation ─────────────────────────────────────────────────────
+(procedure runPVTCorners ()
+  ; IEEE standard 8-corner set for 28nm CMOS
+  (setq corners
+    (list
+      (list "tt" 1.05 27)    ; typical-typical, nominal supply, 27°C
+      (list "ff" 1.155 -40)  ; fast-fast, high VDD, cold
+      (list "ss" 0.945 125)  ; slow-slow, low VDD, hot
+      (list "fs" 1.05 -40)   ; fast-NMOS / slow-PMOS
+      (list "sf" 1.05 125)   ; slow-NMOS / fast-PMOS
+      (list "tt_hot"  1.05 85)
+      (list "tt_cold" 1.05 -40)
+      (list "ss_hot"  0.945 85)))
+
+  (setq corner_results (list))
+
+  (foreach corner corners
+    (setq name (car corner))
+    (setq vdd  (cadr corner))
+    (setq temp (caddr corner))
+    (printf "Running corner: %s (VDD=%.3fV T=%d°C)\n" name vdd temp)
+
+    (setq sess (siOpen LIB_NAME CELL_TB VIEW_TB))
+    (siSetSimulator sess 'spectre)
+    (siSetAnalysis sess 'tran '(stop 200n step 1p method trap))
+    (siSetVariable sess "VDD_val" vdd)
+    (siSetVariable sess "TEMP_val" temp)
+
+    (setq model_file (sprintf "/pdk/28nm/models/spectre/%s.scs" name))
+    (siSetModelFile sess 'spectre
+      (list model_file "./veriloga_models/analog_frontend.vams"))
+
+    (siAddSavePoint sess
+      '("/ber/err_count" "/ber/bit_count" "/cdr/lock_det"
+        "V(\"/vctle_out\")" "V(\"/vadc_in\")"))
+    (siRun sess)
+
+    (setq err  (siGetValue sess "/ber/err_count" 'final))
+    (setq bits (siGetValue sess "/ber/bit_count" 'final))
+    (setq lock (siGetValue sess "/cdr/lock_det"  'final))
+    (setq ber  (/ (float err) (max (float bits) 1.0)))
+
+    (printf "  %s: BER=%.2e  CDR_lock=%d\n" name ber lock)
+    (setq corner_results
+      (append corner_results (list (list name vdd temp ber lock))))
+  )
+
+  (exportResultsCSV corner_results
+    (strcat RESULT_DIR "/pvt_corners.csv")
+    (list "corner" "vdd" "temp" "ber" "cdr_lock"))
+  corner_results
+)
+
+
+; ── SNR sweep via noise source scaling ────────────────────────────────────────
+(procedure sweepSNR (snr_db_list)
+  (if (not snr_db_list)
+    (setq snr_db_list (list 15.0 17.0 19.0 21.0 23.0 25.0)))
+
+  (setq snr_results (list))
+
+  (foreach snr snr_db_list
+    (setq sess (siOpen LIB_NAME CELL_TB VIEW_TB))
+    (siSetSimulator sess 'spectre)
+    (siSetAnalysis sess 'tran '(stop 300n step 1p method trap))
+    ; Scale noise source amplitude to achieve target SNR
+    ; NoiseLevel maps SNR_dB to noise RMS voltage
+    (setq noise_scale (pow 10 (- (/ snr 20.0))))
+    (siSetVariable sess "awgn_scale" noise_scale)
+    (siSetModelFile sess 'spectre
+      (list "/pdk/28nm/models/spectre/tt_typical.scs"
+            "./veriloga_models/analog_frontend.vams"))
+    (siAddSavePoint sess '("/ber/err_count" "/ber/bit_count"))
+    (siRun sess)
+    (setq ber (/ (float (siGetValue sess "/ber/err_count" 'final))
+                 (max 1.0 (float (siGetValue sess "/ber/bit_count" 'final)))))
+    (printf "SNR=%g dB → BER=%.2e\n" snr ber)
+    (setq snr_results (append snr_results (list (list snr ber))))
+  )
+
+  (exportResultsCSV snr_results
+    (strcat RESULT_DIR "/snr_sweep.csv")
+    (list "snr_db" "ber"))
+  snr_results
+)
+
+
+; ── CSV export utility ────────────────────────────────────────────────────────
+(procedure exportResultsCSV (data filename headers)
+  (setq fp (outfile filename "w"))
+  ; Write header
+  (fprintf fp "%s\n" (buildString headers ","))
+  ; Write rows
+  (foreach row data
+    (fprintf fp "%s\n"
+      (buildString (mapcar (lambda (x) (sprintf "%g" x)) row) ",")))
+  (close fp)
+  (printf "Results exported to %s\n" filename)
+)
+
+
+; ── Eye diagram measurement via Virtuoso waveform tools ──────────────────────
+(procedure measureEyeOpening (session signal_name)
+  ; Use Spectre's built-in eye measurement functions
+  (setq waveform (siGetWaveform session signal_name))
+  (setq eye_meas (awvEyeDiagram
+    waveform
+    ?uiSymbol  (/ 1.0 56e9)   ; 1 UI at 56 Gbaud
+    ?nlevels   4              ; PAM-4
+    ?clockType 'recovered))
+
+  ; Extract metrics
+  (setq eye_height   (awvEyeParam eye_meas 'eyeHeight))
+  (setq eye_width_ui (awvEyeParam eye_meas 'eyeWidth))
+  (setq jitter_rms   (awvEyeParam eye_meas 'rmsJitter))
+
+  (printf "Eye Height: %.4f V\nEye Width:  %.4f UI\nRMS Jitter: %.2f ps\n"
+          eye_height eye_width_ui (* jitter_rms 1e12))
+  (list eye_height eye_width_ui jitter_rms)
+)
+
+
+; ── Quick test: verify simulation directory exists ────────────────────────────
+(procedure checkSetup ()
+  (if (not (isDir SIM_DIR))
+    (system (sprintf "mkdir -p %s %s" SIM_DIR RESULT_DIR)))
+  (printf "Simulation dir: %s\n" SIM_DIR)
+  (printf "Results dir:    %s\n" RESULT_DIR)
+  (printf "Setup OK.\n")
+)
+
+; Run setup check on load
+(checkSetup)

@@ -1,0 +1,74 @@
+* G0 probe - is ngspice .disto usable for HD3 (CLAUDEwa.md S4)?
+*
+* S4 wants HD3 < -30 dBc at a 100 MHz differential input. The question is
+* whether BSIM4's higher-order derivatives feed .disto well enough to answer
+* that, or whether HD3 has to come from a transient + FFT instead. The two
+* cost very different amounts per RL evaluation, which is why this has to be
+* settled before the fidelity tiers are planned.
+*
+* NOTE on .disto invocation: passing the trailing f2overf1 argument puts
+* ngspice in TWO-TONE intermodulation mode, which then demands a `distof2`
+* source and aborts with "No source with f2 distortion input" if there isn't
+* one. Single-tone harmonic mode - which is what S4 asks for - is the form
+* WITHOUT that argument.
+
+.param VDD_V   = 1.2
+.param ITAIL   = 5m
+.param RS_OHM  = 800
+.param CS_F    = 0.8p
+.param RL_OHM  = 120
+.param CL_F    = 1.2p
+.param VCM_V   = 0.88
+.param WIN     = 40u
+.param LIN     = 0.35u
+
+vdd   vdd 0 {VDD_V}
+vinp  inp 0 dc {VCM_V} ac 0.5  distof1 0.5
+vinn  inn 0 dc {VCM_V} ac -0.5 distof1 -0.5
+
+m1 outp inp src1 0 nch W={WIN} L={LIN}
+m2 outn inn src2 0 nch W={WIN} L={LIN}
+
+rs src1 src2 {RS_OHM}
+cs src1 src2 {CS_F}
+it1 src1 0 dc {ITAIL/2}
+it2 src2 0 dc {ITAIL/2}
+
+rl1 vdd outp {RL_OHM}
+rl2 vdd outn {RL_OHM}
+cl1 outp 0 {CL_F}
+cl2 outn 0 {CL_F}
+
+.model nch nmos level=54 version=4.8.2
++ tnom=27 vth0=0.35 k1=0.5 k2=0.05 u0=0.045 toxe=2.8n toxp=2.8n ndep=2.4e17
++ lint=0.01u wint=0.01u rdsw=200 cgso=0.3n cgdo=0.3n
+
+.control
+set noaskquit
+
+op
+let gm1 = @m1[gm]
+echo "G0RESULT gm_S" $&gm1
+
+ac dec 50 1meg 100g
+let vd    = v(outp) - v(outn)
+let vd_db = db(vd)
+meas ac g_dc  FIND vd_db AT=1meg
+meas ac g_nyq FIND vd_db AT=2.5g
+meas ac g_pk  MAX  vd_db FROM=1meg TO=50g
+
+* Single-tone harmonic distortion at the S4 test tone.
+meas ac v1_fund FIND mag(vd) AT=100meg
+
+disto dec 1 100meg 100meg
+
+echo "G0RESULT --- disto1 (2nd harmonic) ---"
+setplot disto1
+print mag(v(outp)-v(outn))
+echo "G0RESULT --- disto2 (3rd harmonic) ---"
+setplot disto2
+print mag(v(outp)-v(outn))
+
+.endc
+
+.end

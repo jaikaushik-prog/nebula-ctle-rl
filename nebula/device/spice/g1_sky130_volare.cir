@@ -1,0 +1,96 @@
+* G1 topology on the REAL SKY130 PDK (open_pdks-generated, installed via volare)
+*
+* This supersedes g1_sky130.cir, which included the RAW sky130_fd_pr repo and
+* could not parse (HANDOFF G29). The difference is the library: this file uses
+* the open_pdks-GENERATED libs.tech/ngspice/sky130.lib.spice, which carries
+* real .model cards and a working .subckt parameter list.
+*
+* *** SUPPLY WARNING ***  sky130 nfet_01v8 is an 1.8 V device, so this netlist
+* runs at VDD = 1.8 V. The generic-BSIM4 hand-design in g1_handdesign.cir runs
+* at 1.2 V. The two are DIFFERENT DESIGN POINTS and their parameter bounds do
+* not transfer -- i_bias's 12 mA ceiling is 14.4 mW at 1.2 V and 21.6 mW here,
+* which fails S6. See nebula/common/params.py's provenance audit.
+*
+* Run from this directory so ./.spiceinit is picked up (ngbehavior=hsa must be
+* set at parse time -- putting it in .control is too late, G29).
+*
+*   cd nebula/device/spice && ngspice_con -b g1_sky130_volare.cir
+
+.param VDD_V  = 1.8
+.param ITAIL  = 5m
+.param RS_OHM = 800
+.param CS_F   = 0.8p
+.param RL_OHM = 200
+.param CL_F   = 0.8p
+.param VCM_V  = 0.9
+* *** UNITS TRAP ***  The sky130 ngspice lib sets `option scale=1e-6`, and the
+* sky130_fd_pr subckts default to `l=1 w=1` meaning ONE MICRON. So instance W
+* and L here are PLAIN NUMBERS IN MICRONS, not SI metres. Writing `5u` gives
+* 5e-6 * 1e-6 = 5 picometres, which falls outside every one of the 180 model
+* bins and aborts with the misleading "could not find a valid modelname".
+* The generic-BSIM4 netlists in this directory use SI metres. Do not copy W/L
+* between the two families without converting.
+.param WIN    = 5
+.param LIN    = 0.15
+.param NF_IN  = 10
+
+* Monte-Carlo / mismatch switches off -> nominal TT device.
+.param mc_mm_switch = 0
+.param mc_pr_switch = 0
+
+.lib "C:/Users/DELL/sky130A/libs.tech/ngspice/sky130.lib.spice" tt
+
+vdd  vdd 0 {VDD_V}
+vinp inp 0 dc {VCM_V} ac 0.5
+vinn inn 0 dc {VCM_V} ac -0.5
+
+xm1 outp inp src1 0 sky130_fd_pr__nfet_01v8 W={WIN} L={LIN} nf={NF_IN} mult=1
+xm2 outn inn src2 0 sky130_fd_pr__nfet_01v8 W={WIN} L={LIN} nf={NF_IN} mult=1
+
+rs src1 src2 {RS_OHM}
+cs src1 src2 {CS_F}
+
+it1 src1 0 dc {ITAIL/2}
+it2 src2 0 dc {ITAIL/2}
+
+rl1 vdd outp {RL_OHM}
+rl2 vdd outn {RL_OHM}
+cl1 outp 0 {CL_F}
+cl2 outn 0 {CL_F}
+
+.control
+set noaskquit
+set filetype=ascii
+
+* ---- operating point: primitives only, no derived arithmetic (rule 9) ----
+op
+print v(outp) v(outn) v(src1) v(src2)
+print @m.xm1.msky130_fd_pr__nfet_01v8[gm]
+print @m.xm1.msky130_fd_pr__nfet_01v8[gmbs]
+print @m.xm1.msky130_fd_pr__nfet_01v8[id]
+print @m.xm1.msky130_fd_pr__nfet_01v8[vgs]
+print @m.xm1.msky130_fd_pr__nfet_01v8[vds]
+print @m.xm1.msky130_fd_pr__nfet_01v8[vth]
+print @m.xm1.msky130_fd_pr__nfet_01v8[vdsat]
+
+* ---- AC sweep: this is the P2 acceptance criterion ----
+ac dec 50 1meg 100g
+let vd = v(outp) - v(outn)
+let vd_db = db(vd)
+meas ac g_dc  FIND vd_db AT=1meg
+meas ac g_nyq FIND vd_db AT=2.5g
+meas ac g_pk  MAX  vd_db FROM=10meg TO=50g
+
+* ---- noise ----
+noise v(outp,outn) vinp dec 20 10meg 5g
+print inoise_total
+
+* Peaking, power and the SS6 cross-check are computed in PYTHON from the
+* primitives above. Do NOT add `let` arithmetic here: `.param` names are not
+* visible as .control vectors and cross-plot references fail as WARNINGS with
+* exit code 0. See CLAUDEwa.md S8 rule 9 and HANDOFF G26/G30.
+
+quit
+.endc
+
+.end

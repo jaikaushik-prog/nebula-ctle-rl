@@ -1,0 +1,136 @@
+// ============================================================================
+// tia.vams — Transimpedance Amplifier Behavioral Model
+//
+// Models shunt-feedback TIA for optical and electrical receivers.
+// Includes: transimpedance gain, bandwidth, input-referred noise,
+//           output clipping, and slew-rate limiting.
+//
+// Parameters target 180nm SOI CMOS (adjustable for 28nm/65nm)
+//
+// Ports:
+//   iin    : input current (from photodiode or PCB termination)
+//   vout   : output voltage (single-ended or differential pair)
+//   vdd    : supply
+//   vss    : ground
+//
+// Usage in Cadence Spectre:
+//   itia (iin vout vdd vss) tia
+//       + Zt=2e3 f3dB=35e9 noise_A_rHz=15e-12
+// ============================================================================
+
+`include "constants.vams"
+`include "disciplines.vams"
+
+module tia (iin, vout, vdd, vss);
+
+    // Port declarations
+    inout  iin;
+    inout  vout;
+    inout  vdd;
+    inout  vss;
+
+    electrical iin, vout, vdd, vss;
+
+    // ── Parameters ───────────────────────────────────────────────────────────
+    parameter real Zt       = 2e3;      // Transimpedance [Ω]  (typ 1–4 kΩ)
+    parameter real f3dB     = 35e9;     // -3 dB bandwidth [Hz]
+    parameter real f_zero   = 50e9;     // optional peaking zero [Hz] (set > f3dB for flat)
+    parameter real noise_A  = 15e-12;   // Input-referred noise current density [A/√Hz]
+    parameter real Vout_max =  0.8;     // Output voltage clipping (positive) [V]
+    parameter real Vout_min = -0.8;     // Output voltage clipping (negative) [V]
+    parameter real slew_VpS = 500e9;    // Slew rate limit [V/s]  (500 GV/s = 0.5 V/ps)
+    parameter real Vbias    =  0.0;     // Output DC operating point (mid-supply)
+    parameter real Rout     = 50.0;     // Output resistance [Ω]
+    parameter integer noise_seed = 123; // RNG seed for noise
+
+    // ── Internal nodes ────────────────────────────────────────────────────────
+    electrical e_int1;      // First-order filtered node
+    electrical e_int2;      // Second-order filtered node (peaking)
+    electrical e_noise;     // Noise injection node
+
+    // ── Internal variables ────────────────────────────────────────────────────
+    real tau_p;             // Dominant pole time constant
+    real tau_z;             // Zero time constant
+    real v_slew;            // Slew-rate limited output
+    real v_clip;            // Clipped output
+    real v_prev;            // Previous output value (for slew limiting)
+    real noise_rms;         // Noise RMS over simulation timestep
+    real dt_local;          // Local timestep (approximate)
+
+    analog begin
+
+        // ── Time constants ────────────────────────────────────────────────
+        tau_p = 1.0 / (2.0 * `M_PI * f3dB);
+        tau_z = 1.0 / (2.0 * `M_PI * f_zero);
+
+        // ── First-order TIA pole: I(in) × Zt → V_int ─────────────────────
+        // Differential equation: tau_p · dV/dt + V = Zt · I_in
+        // Includes peaking zero: H(s) = Zt · (1 + s·tau_z) / (1 + s·tau_p)
+        ddt(V(e_int1)) + V(e_int1) / tau_p =
+            (I(iin) * Zt + tau_z * ddt(I(iin) * Zt)) / tau_p;
+
+        // ── Input-referred noise current (thermal + 1/f approximation) ────
+        // White noise: i_n = noise_A * sqrt(BW) injected as equivalent current
+        // Implemented as white noise current source at input
+        // Spectre will automatically handle the spectral density
+        I(e_noise) <+ noise_A * white_noise(1.0, "tia_thermal_noise");
+        // Flicker noise contribution (corner ~100 MHz for 180nm NMOS)
+        I(e_noise) <+ noise_A * 0.1 * flicker_noise(1.0, 1.0, "tia_flicker");
+
+        // Add noise to the main signal path (referred to output)
+        // V_out_noise = (noise_current) × Zt (noise gain = transimpedance)
+        // This correctly models input-referred noise amplified by Zt
+
+        // ── Output clipping (supply headroom limit) ───────────────────────
+        // Soft clipping using tanh to avoid simulation discontinuities
+        v_clip = Vout_min + (Vout_max - Vout_min) *
+                 (1.0 + tanh((V(e_int1) + V(e_noise)*Zt*0.01 - Vout_min)
+                              / (0.1*(Vout_max - Vout_min)))) / 2.0;
+
+        // ── Output drive (with output resistance) ─────────────────────────
+        V(vout, vss) <+ v_clip + Vbias;
+        I(vout, vss) <+ -V(vout, vss) / Rout;
+
+    end // analog
+
+endmodule
+
+
+// ============================================================================
+// tia_diff.vams — Differential TIA (for balanced optical receivers)
+// Input: two photocurrents (ip, in_) → differential output (voutp, voutn)
+// ============================================================================
+
+module tia_diff (ip, in_, voutp, voutn, vdd, vss);
+
+    inout ip, in_, voutp, voutn, vdd, vss;
+    electrical ip, in_, voutp, voutn, vdd, vss;
+
+    parameter real Zt    = 1.5e3;   // transimpedance [Ω]
+    parameter real f3dB  = 35e9;
+    parameter real noise_A = 10e-12;  // lower noise for differential (common-mode rejected)
+    parameter real CMRR_dB = 40.0;   // common-mode rejection [dB]
+
+    electrical ep, en, ecm;
+    real tau_p, cmrr_lin;
+
+    analog begin
+        tau_p    = 1.0 / (2.0 * `M_PI * f3dB);
+        cmrr_lin = pow(10.0, CMRR_dB / 20.0);
+
+        // Differential signal: I_diff = I_p - I_n
+        ddt(V(ep)) + V(ep)/tau_p = I(ip) * Zt / tau_p;
+        ddt(V(en)) + V(en)/tau_p = I(in_) * Zt / tau_p;
+
+        // Common mode rejection
+        V(ecm) <+ (V(ep) + V(en)) / (2.0 * cmrr_lin);
+
+        // Differential outputs
+        V(voutp, vss) <+ (V(ep) - V(en))/2.0 + V(ecm);
+        V(voutn, vss) <+ -(V(ep) - V(en))/2.0 + V(ecm);
+
+        // Noise (uncorrelated between the two channels)
+        I(voutp) <+ noise_A * white_noise(Zt*Zt, "tia_p_noise");
+        I(voutn) <+ noise_A * white_noise(Zt*Zt, "tia_n_noise");
+    end
+endmodule

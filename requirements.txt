@@ -1,0 +1,51 @@
+# ============================================================================
+# requirements.txt — SerDes DSP Framework Python dependencies
+# Python >= 3.9 recommended
+# Install: pip install -r requirements.txt
+# ============================================================================
+
+# ── Core scientific stack ─────────────────────────────────────────────────────
+numpy>=1.24.0
+scipy>=1.10.0
+matplotlib>=3.7.0
+pandas>=2.0.0
+
+# ── RF / microwave / S-parameter handling ────────────────────────────────────
+scikit-rf>=0.30.0          # Touchstone .sNp import, S-parameter manipulation
+
+# ── Machine learning (ML equalizer, neural DFE) ──────────────────────────────
+torch>=2.0.0               # PyTorch: LSTM/CNN equalizers, RL adaptation
+torchvision>=0.15.0        # optional: used in some signal imaging experiments
+# tensorflow>=2.12.0       # TF alternative — uncomment if preferred
+
+# ── Fixed-point simulation ────────────────────────────────────────────────────
+fxpmath>=0.4.9             # Fixed-point arithmetic (coefficient quantisation)
+
+# ── Parallel / batch simulation ──────────────────────────────────────────────
+joblib>=1.2.0              # Parallel Monte Carlo runs
+tqdm>=4.65.0               # Progress bars for long sweeps
+
+# ── Data I/O and reporting ────────────────────────────────────────────────────
+h5py>=3.8.0                # HDF5 for large simulation result storage
+openpyxl>=3.1.0            # Excel export for link budgets
+jinja2>=3.1.0              # HTML report generation
+
+# ── Interactive development ───────────────────────────────────────────────────
+ipython>=8.12.0
+jupyter>=1.0.0
+ipywidgets>=8.0.0          # Interactive parameter sliders in notebooks
+
+# ── Plotting extras ───────────────────────────────────────────────────────────
+seaborn>=0.12.0            # Statistical plots (BER distributions, MC violin)
+plotly>=5.14.0             # Interactive HTML plots
+
+# ── Signal processing extras ──────────────────────────────────────────────────
+commpy>=0.4.0              # Communication theory utilities (Viterbi, turbo)
+
+# ── Testing ───────────────────────────────────────────────────────────────────
+pytest>=7.3.0
+pytest-cov>=4.0.0
+
+# ── Code quality ──────────────────────────────────────────────────────────────
+black>=23.0.0
+flake8>=6.0.0

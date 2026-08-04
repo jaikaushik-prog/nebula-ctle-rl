@@ -1,0 +1,84 @@
+* Available differential output swing at the CORRECTED G1 bias — DC transfer
+*
+* PURPOSE. The compression analysis in HANDOFF session 9c used
+* "available differential swing = 2*IT*RL = 1.2 Vpp". That is a CURRENT-
+* STEERING limit (all the tail current in one branch) and it ignores the fact
+* that the input pair leaves saturation long before the branch current
+* reaches zero: the output can only fall until v(out) approaches v(source),
+* which is a SUPPLY-HEADROOM property, not a current property.
+*
+* So this netlist measures the swing instead of computing it: a DC sweep of
+* the differential input, from which Python extracts
+*   (a) the 1 dB gain-compression point   -> the honest linear swing
+*   (b) the point where vds < vdsat       -> the saturation limit
+*   (c) the steering limit                -> where a branch current hits 0
+*
+* Corrected bias (HANDOFF session 9c): W=40 nf=4 L=0.15, IT=1.5 mA PER SIDE,
+* VCM=1.25 V, VDD=1.8 V -> gm 12.62 mS, gm/I_D 8.42, v(s1) +0.343 V.
+* Passives: the first of the twelve S3-meeting configurations,
+* Rs=200 Cs=1.6p RL=400 CL=100f -> 4.63 dB peaking at 1.95 GHz.
+*
+* Run FROM THIS DIRECTORY so ./.spiceinit is read at parse time (G29):
+*   cd nebula/device/spice && ngspice_con -b g1_swing_dc.cir
+* Units: W/L are PLAIN NUMBERS IN MICRONS (scale=1.0u in the trimmed lib, G31).
+
+.lib "sky130_nfet_only.lib.spice" tt
+
+.param W=40 L=0.15 NF=4
+.param RL=400 RS=200 CS=1.6p IT=1.5m CL=100f
+.param VDD=1.8 VCM=1.25
+
+Vdd   vdd 0 {VDD}
+Vcm   cm  0 {VCM}
+
+* Differential drive built from ONE swept source so `.dc` can sweep it:
+* inp = cm + vid/2, inn = cm - vid/2, so v(inp,inn) = vid exactly.
+Vid   vid 0 dc 0
+Einp  inp cm vid 0 0.5
+Einn  inn cm vid 0 -0.5
+
+XM1   outp inp s1 0 sky130_fd_pr__nfet_01v8 W={W} L={L} nf={NF}
+XM2   outn inn s2 0 sky130_fd_pr__nfet_01v8 W={W} L={L} nf={NF}
+
+RLp   vdd outp {RL}
+RLn   vdd outn {RL}
+
+Rdeg  s1 s2 {RS}
+Cdeg  s1 s2 {CS}
+
+* Two separate ideal sinks, one per side (a single shared tail would short out
+* the degeneration network). IT is the PER-SIDE current: total = 2*IT.
+It1   s1 0 {IT}
+It2   s2 0 {IT}
+
+CLp   outp 0 {CL}
+CLn   outn 0 {CL}
+
+.control
+set noaskquit
+set filetype=ascii
+
+save all @m.xm1.msky130_fd_pr__nfet_01v8[id]
++ @m.xm1.msky130_fd_pr__nfet_01v8[vds]
++ @m.xm1.msky130_fd_pr__nfet_01v8[vdsat]
++ @m.xm2.msky130_fd_pr__nfet_01v8[id]
++ @m.xm2.msky130_fd_pr__nfet_01v8[vds]
++ @m.xm2.msky130_fd_pr__nfet_01v8[vdsat]
+
+dc vid -0.8 0.8 0.004
+
+* Primitives only. Every derived quantity (differential output, incremental
+* gain, compression point, saturation margin) is computed in Python from this
+* file — CLAUDEwa.md §8 rules 9/10, HANDOFF G26/G30.
+wrdata swing_dc.txt v(outp) v(outn) v(s1) v(s2)
++ @m.xm1.msky130_fd_pr__nfet_01v8[id]
++ @m.xm1.msky130_fd_pr__nfet_01v8[vds]
++ @m.xm1.msky130_fd_pr__nfet_01v8[vdsat]
++ @m.xm2.msky130_fd_pr__nfet_01v8[id]
++ @m.xm2.msky130_fd_pr__nfet_01v8[vds]
++ @m.xm2.msky130_fd_pr__nfet_01v8[vdsat]
+
+quit
+.endc
+
+.end

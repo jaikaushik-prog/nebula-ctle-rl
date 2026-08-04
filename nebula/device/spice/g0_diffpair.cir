@@ -1,0 +1,77 @@
+* G0 toolchain smoke test - source-degenerated differential pair
+* CLAUDEwa.md gate G0: does ngspice run .op, .ac, .noise and .disto?
+*
+* THIS IS NOT THE DESIGN. Generic BSIM4 cards, not a PDK. The only question
+* this netlist answers is which of the four analyses the toolchain supports,
+* and in particular whether .disto produces a usable HD3 (CLAUDEwa.md S4) or
+* whether HD3 has to come from a transient + FFT instead - which costs
+* materially more per RL evaluation and changes the fidelity-tier budget.
+
+.param VDD_V   = 1.2
+.param ITAIL   = 5m
+.param RS_OHM  = 800
+.param CS_F    = 0.8p
+.param RL_OHM  = 120
+.param CL_F    = 1.2p
+.param VCM_V   = 0.88
+.param WIN     = 40u
+.param LIN     = 0.35u
+
+vdd   vdd 0 {VDD_V}
+
+* Differential input, AC 1 V for .ac / .disto, biased at VCM
+vinp  inp 0 dc {VCM_V} ac 0.5 sin({VCM_V} 0.05 100MEG)
+vinn  inn 0 dc {VCM_V} ac -0.5 sin({VCM_V} -0.05 100MEG)
+
+* Input pair
+m1 outp inp src1 0 nch W={WIN} L={LIN}
+m2 outn inn src2 0 nch W={WIN} L={LIN}
+
+* Source degeneration: Rs || Cs between the two sources
+rs src1 src2 {RS_OHM}
+cs src1 src2 {CS_F}
+
+* Tail current, split so each half has its own sink (ideal source for G0)
+it1 src1 0 dc {ITAIL/2}
+it2 src2 0 dc {ITAIL/2}
+
+* Loads
+rl1 vdd outp {RL_OHM}
+rl2 vdd outn {RL_OHM}
+cl1 outp 0 {CL_F}
+cl2 outn 0 {CL_F}
+
+* Generic BSIM4 NMOS - PLACEHOLDER, NOT A PDK (CLAUDEwa.md G0 fallback)
+.model nch nmos level=54 version=4.8.2
++ tnom=27 vth0=0.35 k1=0.5 u0=0.045 tox=2.8n nch=2.4e17
++ lint=0.01u wint=0.01u rdsw=200 cgso=0.3n cgdo=0.3n cj=1m cjsw=0.2n
+
+.control
+set noaskquit
+set filetype=ascii
+
+echo "=== .OP ==="
+op
+print v(outp) v(outn) v(src1) v(src2)
+print @m1[gm] @m1[vgs] @m1[vds] @m1[vth] @m1[id]
+
+echo "=== .AC ==="
+ac dec 50 1meg 100g
+let vdiff = v(outp) - v(outn)
+meas ac gain_dc     find vdb(outp,outn) at=1meg
+meas ac gain_peak   MAX vdb(outp,outn) from=1meg to=100g
+meas ac f_at_peak   AT  vdb(outp,outn) WHEN vdb(outp,outn)=gain_peak
+meas ac gain_nyq    find vdb(outp,outn) at=2.5g
+
+echo "=== .NOISE ==="
+noise v(outp,outn) vinp dec 20 10meg 5g
+print inoise_total onoise_total
+
+echo "=== .DISTO ==="
+disto dec 10 10meg 1g
+
+echo "=== G0 REACHED END ==="
+quit
+.endc
+
+.end

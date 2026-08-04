@@ -1,0 +1,43 @@
+* G0 fallback: HD3 from transient + FFT, since .disto is dead for BSIM4.
+*
+* 20 cycles of a 100 MHz differential tone (S4), 10 ps step. The FFT window is
+* an exact integer number of cycles so there is no spectral leakage to hide
+* the third harmonic under.
+
+.param VCM_V  = 0.88
+.param VIN_PK = 0.05
+.param FTONE  = 100meg
+
+vdd  vdd 0 1.2
+vinp inp 0 dc {VCM_V} sin({VCM_V}  {VIN_PK} {FTONE})
+vinn inn 0 dc {VCM_V} sin({VCM_V} {-VIN_PK} {FTONE})
+
+m1 outp inp s1 0 nch W=40u L=0.35u
+m2 outn inn s2 0 nch W=40u L=0.35u
+rs s1 s2 800
+cs s1 s2 0.8p
+i1 s1 0 dc 2.5m
+i2 s2 0 dc 2.5m
+rl1 vdd outp 120
+rl2 vdd outn 120
+cl1 outp 0 1.2p
+cl2 outn 0 1.2p
+
+.model nch nmos level=54 version=4.8.2
++ tnom=27 vth0=0.35 k1=0.5 k2=0.05 u0=0.045 toxe=2.8n toxp=2.8n ndep=2.4e17
++ lint=0.01u wint=0.01u rdsw=200
+
+.control
+set noaskquit
+set filetype=ascii
+
+* Settle 5 cycles, then capture exactly 20 cycles of the 100 MHz tone.
+* Fixed step, no interpolation surprises: the FFT is done in Python so the
+* window is exactly an integer number of cycles and there is no leakage.
+tran 10p 250n 50n
+linearize
+let vd = v(outp) - v(outn)
+wrdata g0_tran.csv vd
+
+.endc
+.end
