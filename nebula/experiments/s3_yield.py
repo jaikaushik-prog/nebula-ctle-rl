@@ -313,7 +313,11 @@ class Row:
     peaking_db: Optional[float] = None
     f_pk_hz: Optional[float] = None
     nyquist_boost_db: Optional[float] = None
+    #: Whether |H| has a genuine INTERIOR maximum, measured by the runner
+    #: rather than inferred from where f_pk sits (G44). None on old data.
+    has_interior_peak: Optional[bool] = None
     g_dc_db: Optional[float] = None
+    g_top_db: Optional[float] = None
     g_nyq_db: Optional[float] = None
     vn_in_vrms: Optional[float] = None
     power_w: Optional[float] = None
@@ -339,7 +343,8 @@ def evaluate(params: dict[str, float]) -> Row:
         ok=True,
         peaking_db=r.peaking_db, f_pk_hz=r.f_pk_hz,
         nyquist_boost_db=r.nyquist_boost_db,
-        g_dc_db=r.g_dc_db, g_nyq_db=r.g_nyq_db,
+        has_interior_peak=r.has_interior_peak,
+        g_dc_db=r.g_dc_db, g_top_db=r.g_top_db, g_nyq_db=r.g_nyq_db,
         vn_in_vrms=r.vn_in_vrms, power_w=point.power_w,
         gm_over_id=r.gm_over_id, v_src_dc=r.v_src_dc,
         in_saturation=r.in_saturation,
@@ -566,10 +571,18 @@ def summarize(rows: Sequence[Row], cl_fixed: Optional[float] = None) -> YieldSta
 
     a = [pk_lo <= r.peaking_db <= pk_hi for r in sim]
     b = [f_lo <= r.f_pk_hz <= f_hi for r in sim]
-    # "A peak exists" = `meas ac MAX` found an interior maximum rather than
-    # returning the low-frequency end of the sweep. A monotonically falling
-    # response reports f_pk at the 10 MHz start point with 0 dB of peaking.
-    hp = [r.peaking_db > 0.25 and r.f_pk_hz > 50e6 for r in sim]
+    # "A peak exists" = |H| has a genuine INTERIOR maximum: higher at f_pk than
+    # at both ends of the MAX search range. The runner measures that directly
+    # (`Sky130Point.has_interior_peak`).
+    #
+    # G44: the previous test here was `peaking_db > 0.25 and f_pk_hz > 50e6`,
+    # which asks where the peak SITS. It catches a monotonically falling
+    # response but not one still RISING at the top of the search range, which
+    # reports f_pk at the range edge and a large fictitious peaking. Rows
+    # predating the fix carry has_interior_peak=None and fall back to the old
+    # heuristic so historical results files stay readable.
+    hp = [(r.has_interior_peak if r.has_interior_peak is not None
+           else (r.peaking_db > 0.25 and r.f_pk_hz > 50e6)) for r in sim]
 
     boot_lo, boot_hi = bootstrap_coupling_ci(a, b)
     a_hp = [x for x, h in zip(a, hp) if h]

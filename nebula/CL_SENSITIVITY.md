@@ -79,21 +79,28 @@ by bootstrapping synthetic independent data. That number is what makes
 pre-check, **1890 simulated per row, 0 non-convergences**. Runtime ≈ 3 min per
 row on 10 workers.
 
+**All numbers below are POST-G44-FIX** (see §9). The peak-detection bug found
+after the first pass inflated the has-peak population by up to 42 %, so every
+conditional statistic was re-measured. S3 itself barely moved.
+
 | `cl` | A: peaking 3–12 dB | B: f_peak 1.25–2.5 GHz | P(A)·P(B) | **S3 = A ∧ B** | **95 % CI** |
 |---|---|---|---|---|---|
 | *sampled, 10–500 fF* | 916 · 48.47 % | 303 · 16.03 % | 7.77 % | 165 · **8.73 %** | [7.54, 10.09] |
-| 50 fF | 995 · 52.65 % | 314 · 16.61 % | 8.75 % | 165 · **8.73 %** | [7.54, 10.09] |
-| 100 fF | 917 · 48.52 % | 414 · 21.90 % | 10.63 % | 213 · **11.27 %** | [9.92, 12.77] |
-| 150 fF | 872 · 46.14 % | 454 · 24.02 % | 11.08 % | 256 · **13.54 %** | [12.08, 15.16] |
+| 50 fF | 1046 · 55.34 % | 315 · 16.67 % | 9.22 % | 166 · **8.78 %** | [7.59, 10.14] |
+| 100 fF | 926 · 48.99 % | 415 · 21.96 % | 10.76 % | 213 · **11.27 %** | [9.92, 12.77] |
+| **150 fF** | 868 · 45.93 % | 455 · 24.07 % | 11.06 % | 256 · **13.54 %** | [12.08, 15.16] |
 
 ### Coupling factor at each
 
-| `cl` | raw coupling | bootstrap 95 % | has-peak subset | conditional coupling | bootstrap 95 % |
+| `cl` | raw coupling | bootstrap 95 % | has-peak subset | **conditional coupling** | bootstrap 95 % |
 |---|---|---|---|---|---|
 | *sampled* | 0.89× | [0.81, 0.98] | 1578 | 1.04× | [0.95, 1.15] |
-| 50 fF | **1.00×** | [0.92, 1.11] | 1673 | 1.08× | [0.99, 1.19] |
-| 100 fF | 0.94× | [0.87, 1.03] | 1559 | 1.10× | [1.02, 1.20] |
-| 150 fF | 0.82× | [0.76, 0.88] | 1469 | 1.01× | [0.94, 1.08] |
+| 50 fF | 1.05× | [0.96, 1.17] | 969 | 1.06× | **[0.98, 1.16]** |
+| 100 fF | 0.95× | [0.88, 1.04] | 1181 | 1.06× | **[0.99, 1.15]** |
+| 150 fF | 0.82× | [0.76, 0.88] | 1244 | 0.97× | **[0.91, 1.04]** |
+
+**Every conditional interval covers 1.00.** There is no adverse coupling at any
+pinned `cl`. See §4 — this retracts a wrinkle reported in the first pass.
 
 S5 (noise) and S6 (power) are 100 % — 1890/1890, [99.80, 100.00] — in every
 row, and the input pair is saturated in 1872/1890 = 99.05 % in every row.
@@ -122,14 +129,14 @@ explained above: the headroom pre-check does not read `cl`.
 
 Read down the two marginal columns. As `cl` goes 50 → 100 → 150 fF:
 
-- **B rises hard: 16.61 % → 21.90 % → 24.02 %.** More load capacitance pulls
+- **B rises hard: 16.67 % → 21.96 % → 24.07 %.** More load capacitance pulls
   f_p2 = 1/(2π·R_L·C_L) downward, and with it the peak, into S3's
   1.25–2.5 GHz window.
-- **A falls gently: 52.65 % → 48.52 % → 46.14 %.** The same load pole eats
+- **A falls gently: 55.34 % → 48.99 % → 45.93 %.** The same load pole eats
   peaking magnitude, exactly as session 9c found when it discovered that
   lowering f_p2 does not move the peak down so much as extinguish it.
-- The count of designs with any interior peak at all falls with `cl`: 1673 →
-  1559 → 1469.
+- The count of designs with a genuine interior peak *rises* over this range,
+  969 → 1181 → 1244, then falls again past the optimum (§7).
 
 So `cl` trades peak *magnitude* against peak *location*, and over 50–150 fF
 the location term wins by roughly 2:1. It does not keep winning — §7 extends
@@ -156,27 +163,38 @@ closed form will not carry it.
 
 ## 4. What this says about the coupling claim
 
-It reinforces G40 rather than complicating it, but the two statistics have to
-be read in the right order.
+It reinforces G40, and more cleanly after the G44 fix than before it.
 
-The **raw** coupling factor is at or below 1.00× everywhere (1.00 / 0.94 /
-0.82), i.e. the joint is *more* likely than independence predicts — the two
-S3 conditions, if anything, help each other. There is no adverse coupling to
-be found at any pinned `cl`.
+**A retraction first.** The first pass of this experiment reported a real
+adverse effect at one pinned value: conditional coupling 1.10× with a
+bootstrap interval of [1.02, 1.20] at `cl` = 100 fF, which excluded 1.0. **That
+does not survive.** With peak detection fixed it reads **1.06× [0.99, 1.15]**,
+which covers 1.0. The signal was an artifact of the inflated has-peak
+denominator — G44 was counting 1559 designs as having a peak where only 1181
+do, and diluting the conditional statistic with designs that have no interior
+maximum at all.
 
-The **conditional-on-a-peak-existing** factor is the one that survives
-argument, because designs with no peak at all fail A and B together and
-associate them for a reason unrelated to the claim. It reads 1.08 / 1.10 /
-1.01×, and at `cl` = 100 fF the interval [1.02, 1.20] does exclude 1.0. So
-there is a **real but ~10 % adverse effect** at one pinned value. State it
-honestly, and state its size: a 10 % effect cannot explain a yield of 8.73 %,
-and it is an order of magnitude too small to be the mechanism the retracted
-sentence claimed. G40 stands.
+Post-fix, **every conditional interval at every pinned `cl` covers 1.00**:
+1.06 [0.98, 1.16] · 1.06 [0.99, 1.15] · 0.97 [0.91, 1.04] · 1.00 [0.94, 1.08] ·
+1.05 [0.97, 1.15]. There is no measurable coupling anywhere in this sweep,
+adverse or otherwise. G40 does not merely stand; the one apparent
+counter-example to it was a measurement error.
 
-Note also that the raw factor moves 1.00 → 0.82 across this sweep while the
-conditional one stays at 1.0–1.1. The gap between them *is* the shared no-peak
-region, and it grows as `cl` grows because more designs lose their peak. That
-is G40's trap-inside-the-trap, visible as a trend rather than a footnote.
+**The raw factor, meanwhile, moves a great deal: 1.05 → 0.95 → 0.82 → 0.74 →
+0.68**, monotonically, while the conditional one stays inside 0.97–1.06. Two
+statistics computed from the same simulations, one swinging 35 % and one flat.
+The difference between them is entirely the no-peak population, which fails A
+and B together and makes them look positively associated for a reason that has
+nothing to do with S3.
+
+*A correction to how the first pass explained this.* It claimed the raw factor
+moved "in lockstep with the falling peak count". Post-fix that is not true —
+the peak count is **hump-shaped** (969 · 1181 · 1244 · 1210 · 1148, maximal at
+150 fF) while the raw factor falls monotonically, so it is not a one-to-one
+tracking relationship. What the data supports is the weaker and sufficient
+claim: **the raw statistic is contaminated by the no-peak population, is not
+stable under a change of box, and must never be quoted without the conditional
+one beside it.** How exactly it is contaminated is not established here.
 
 ---
 
@@ -239,13 +257,19 @@ Two further points beyond the requested three, to establish whether 150 fF is
 a maximum or merely the largest value tested. Recorded separately because they
 were not part of the specified experiment. Same 2000-sample paired design.
 
-| `cl` | A: peaking | B: f_peak | **S3** | 95 % CI | raw coupling | has-peak | cond. coupling |
+| `cl` | A: peaking | B: f_peak | **S3** | 95 % CI | raw coupling | has-peak | cond. coupling (95 %) |
 |---|---|---|---|---|---|---|---|
-| 50 fF | 52.65 % | 16.61 % | **8.73 %** | [7.54, 10.09] | 1.00× | 1673 | 1.08× |
-| 100 fF | 48.52 % | 21.90 % | **11.27 %** | [9.92, 12.77] | 0.94× | 1559 | 1.10× |
-| **150 fF** | 46.14 % | **24.02 %** | **13.54 %** | [12.08, 15.16] | 0.82× | 1469 | 1.01× |
-| 250 fF | 39.26 % | 22.80 % | **12.06 %** | [10.67, 13.61] | 0.74× | 1313 | 1.02× |
-| 400 fF | 33.54 % | 19.21 % | **9.52 %** | [8.28, 10.93] | 0.68× | 1168 | 1.05× |
+| 50 fF | 55.34 % | 16.67 % | **8.78 %** | [7.59, 10.14] | 1.05× | 969 | 1.06× [0.98, 1.16] |
+| 100 fF | 48.99 % | 21.96 % | **11.27 %** | [9.92, 12.77] | 0.95× | 1181 | 1.06× [0.99, 1.15] |
+| **150 fF** | 45.93 % | **24.07 %** | **13.54 %** | [12.08, 15.16] | 0.82× | 1244 | 0.97× [0.91, 1.04] |
+| 250 fF | 39.04 % | 22.94 % | **12.09 %** | [10.69, 13.64] | 0.74× | 1210 | 1.00× [0.94, 1.08] |
+| 400 fF | 33.49 % | 19.21 % | **9.52 %** | [8.28, 10.93] | 0.68× | 1148 | 1.05× [0.97, 1.15] |
+
+*(The 250 fF row was measured on 1870 rather than 1890 simulated designs: that
+run hit 20 transient ngspice failures under machine load, which did not
+reproduce at all on a quiet re-run — 0/1890, identical seed. The effect on the
+rate is immaterial, 12.09 % against 12.06 %, but it is why `s9_yield.py`
+retries. See §9.)*
 
 **150 fF is a genuine interior maximum, not an edge effect.** The yield rises
 to it and falls away on both sides, and the fall to 400 fF is on disjoint
@@ -258,23 +282,23 @@ supports is "the optimum lies in roughly 150–250 fF", not "the optimum is
 on the per-sample outcomes, and neither is worth doing for a parameter §6
 argues should be fixed by the load, not by yield-maximisation.
 
-Two mechanisms are now visible end to end:
+Two mechanisms are visible end to end:
 
-- **B is non-monotonic too**, peaking at 150 fF (24.02 %) and falling to
+- **B is non-monotonic too**, peaking at 150 fF (24.07 %) and falling to
   19.21 % at 400 fF. Beyond the optimum, extra load capacitance stops moving
-  the peak into the window and starts *extinguishing* it — the count of
-  designs with any interior peak falls monotonically, 1673 → 1168 — and an
-  extinguished response reports `f_pk` at the 10 MHz sweep start, so it fails
-  B as well as A. This is session 9c's "lowering f_p2 does not move the peak
-  down, it EXTINGUISHES it", measured across 9450 designs instead of two.
-- **The raw coupling factor falls monotonically with `cl`: 1.00 → 0.94 → 0.82
-  → 0.74 → 0.68, while the conditional one sits flat at 1.01–1.10.** That gap
-  is entirely the growing no-peak population, and seeing it move as a clean
-  trend across five points is the strongest available demonstration of G40's
-  trap-inside-the-trap: *the raw statistic tracks how many designs have no
-  peak, not how much the two S3 conditions fight.* Anyone quoting a raw
-  coupling factor without the conditional one next to it is quoting the
-  no-peak fraction in disguise.
+  the peak into the window and starts *extinguishing* it, and an extinguished
+  response reports `f_pk` at the 10 MHz sweep start, so it fails B as well as
+  A. This is session 9c's "lowering f_p2 does not move the peak down, it
+  EXTINGUISHES it", measured across 9450 designs instead of two.
+- **A falls monotonically throughout** (55.34 → 33.49 %), so past the optimum
+  both marginals are being eaten at once, which is why the yield falls away
+  faster on the high side than it climbed on the low side.
+
+The count of designs with a genuine interior peak is itself hump-shaped —
+969 · 1181 · 1244 · 1210 · 1148, maximal at 150 fF, the same place the yield
+is. That is the cleanest single statement of what `cl` does: **there is a load
+capacitance at which this topology is most able to produce a peak at all, and
+S3's yield tracks it.**
 
 ---
 
@@ -289,3 +313,53 @@ Two mechanisms are now visible end to end:
   what is proposed is removing it from the **search**.
 - The yields are S3-only. They are not conditioned on S8, on compression, or
   on the conjunction of the whole spec table, all of which are lower.
+
+---
+
+## 9. Revision: every number here was re-measured after the G44 fix
+
+The first pass of this experiment used a peak detector that could not tell a
+genuine interior maximum from the edge of the `meas ac ... MAX` search range.
+A response still rising at 50 GHz reported `f_pk` there, with a large and
+entirely fictitious `peaking_db`, and the has-peak test (`peaking > 0.25 dB
+and f_pk > 50 MHz`) passed it. Recorded as G44 at the time, fixed before the
+corner work because every conditional statistic here depends on it.
+
+The fix bounds the `MAX` search at 20 GHz and adds a `g_top` probe at the same
+frequency, so `has_interior_peak` asks the question directly: **is the gain at
+the peak above the gain at BOTH ends of the search range?** No frequency guard
+is involved — a "reject anything within a decade of the edge" rule would reject
+everything below 2 GHz, which lands inside S3's own 1.25–2.5 GHz window.
+
+What changed, and what did not:
+
+| | before | after |
+|---|---|---|
+| S3 yield, 50 fF | 165 · 8.73 % | 166 · 8.78 % |
+| S3 yield, 100 fF | 213 · 11.27 % | 213 · 11.27 % |
+| S3 yield, 150 fF | 256 · 13.54 % | 256 · 13.54 % |
+| has-peak, 50 fF | 1673 | **969** (−42 %) |
+| conditional coupling, 100 fF | 1.10× **[1.02, 1.20]** | 1.06× **[0.99, 1.15]** |
+
+**The headline is untouched and the one contested statistic is retracted.**
+150 fF remains the best tested value at 13.54 %, and the apparent adverse
+coupling at 100 fF is gone.
+
+One claim made while fixing it turned out to be **false**, and is recorded
+because it is the sort of thing that gets assumed rather than checked: that
+moving the search edge 50 → 20 GHz *cannot* change an S3 verdict, since a
+design peaking above 20 GHz fails the window either way. It can — S3 moved
+165 → 166 at 50 fF. `MAX` returns the largest sample in its range, so a design
+with a small in-band peak and a larger out-of-band one reported the out-of-band
+one before and reports the in-band one now. The bounded search is the more
+useful of the two, since an equaliser is judged on the peak it puts where the
+data is, but it is a behaviour change and not merely a guard.
+
+**A second operational finding, which is why `s9_yield.py` retries.** One
+2000-point run reported 20 ngspice failures; an identical re-run on a quiet
+machine reported **zero**. They are transient — process launch or
+temp-directory contention on Windows under load — not properties of any
+design. Harmless here, because a failed run is simply excluded from the
+denominator, but not harmless in a corner experiment, where scoring a
+transient failure as "this design fails at SS/125 C" would bias the corner
+yield downward and silently.

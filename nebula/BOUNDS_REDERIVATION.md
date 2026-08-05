@@ -221,9 +221,15 @@ stably reports is *no effect*.
    That is precisely the spec-conditioned policy in CLAUDEwa §7, and it is a
    task random search cannot perform at all — a much stronger framing than a
    hit rate. **Untested.**
-2. **S9, the 45 corners.** Everything above is TT/27 °C. The corner-robust
-   yield is the number that matters and is unmeasured. If it collapses, the
-   argument is there.
+2. ~~**S9, the 45 corners.**~~ **MEASURED 2026-08-05 (session 10d) —
+   `S9_YIELD.md`. It did not collapse, so this candidate is spent as an
+   argument.** 13.49 % at TT → 8.20 % across 3 corners → 8.10 % across all 45,
+   with **39.2 % of the nominal winners failing at a corner**. That is a real,
+   quotable tax on the baseline — *"an optimiser scored at nominal is wrong
+   about two of every five designs it calls a success"* — but it is not a
+   coupled constraint, and writing it as one would repeat exactly the error
+   this section documents. The run's own caveat is that the tail is still
+   ideal, so 8.10 % is an optimistic bound.
 3. **The full conjunction.** S3 ∧ S8 ∧ compression ∧ corners, not S3 alone.
 4. **Cost per hit**, honestly compared against Bayesian optimisation — which
    CLAUDEwa §12 already warns will be the first thing a judge asks about.
@@ -232,6 +238,14 @@ stably reports is *no effect*.
 (1), quote 8.73 % as a baseline rather than as evidence of coupling, and
 measure (2) next — it is the cheapest of the four and the most likely to
 produce a real constraint.
+
+> **Updated 2026-08-05 (session 10d).** (2) has now been measured and is
+> **not** a coupled constraint (see above). The recommendation is unchanged
+> and is now narrower: **lead with tunability (1)**, and use S9 for the one
+> sentence it does support — 39.2 % of nominal winners are corner-fragile,
+> which is why the reward is scored at corners rather than at TT. Candidates
+> (3) and (4) remain unmeasured; (4) is the one a judge is most likely to ask
+> about (CLAUDEwa §12).
 
 ## 5. `nf` is not a width multiplier on SKY130
 
@@ -305,8 +319,10 @@ nothing is obviously trimmable on this evidence — unlike the 1.2 V box, where
 
 1. **Decide the argument** (§4). Blocks the abstract, due 6 Aug.
 2. **Approve or amend the box** (§6), then it goes into `params.py`.
-3. **Measure the corner-robust yield** — the same 2000 samples over the S9
-   grid. Cheapest path to a real constraint, and it is the claimed
-   contribution #1 in CLAUDEwa §7.
-4. **Add the tail transistor**, which unblocks the three missing bounds.
+3. ~~**Measure the corner-robust yield**~~ **DONE 2026-08-05 —
+   `S9_YIELD.md`.** 13.49 % → 8.20 % → 8.10 %; 39.2 % of nominal winners are
+   corner-fragile; three corners are worth 98.7 % of forty-five.
+4. **Add the tail transistor**, which unblocks the three missing bounds —
+   **and is now the top item**, because it is the assumption that makes every
+   corner number in (3) an optimistic bound.
 5. **Replace `CHANNEL_DC_LOSS_DB`** with a measured channel (§2's caveat).

@@ -17,8 +17,10 @@ import numpy as np
 import pytest
 
 from nebula.device.sky130_runner import (
+    MAX_SEARCH_TOP_HZ,
     NFET_01V8,
     SizingPoint,
+    Sky130Point,
     swing_limits,
     textbook_swing_pp_v,
 )
@@ -377,6 +379,79 @@ def test_pin_param_rejects_an_unknown_parameter():
     rows = sample_box(PROPOSED_BOX, 5, seed=1)
     with pytest.raises(KeyError):
         pin_param(rows, "c_l", 100e-15)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# G44: an interior maximum is MEASURED, not inferred from where f_pk sits.
+# ─────────────────────────────────────────────────────────────────────────────
+
+
+def _pt(g_dc, g_pk, g_top, f_pk=2.0e9):
+    return Sky130Point(ok=True, g_dc_db=g_dc, g_pk_db=g_pk, g_top_db=g_top,
+                       f_pk_hz=f_pk, g_nyq_db=g_dc)
+
+
+def test_interior_peak_requires_the_response_to_come_back_down():
+    """THE G44 REGRESSION. A response still rising at the top of the MAX search
+    range reports f_pk AT the range edge with a large fictitious peaking. The
+    old test (`peaking > 0.25 and f_pk > 50 MHz`) passed it. Measured instance:
+    rl=111, cl=50f gave f_pk = 19.95 GHz with g_pk - g_top = -0.01 dB."""
+    edge = _pt(g_dc=-15.0, g_pk=-4.89, g_top=-4.88, f_pk=MAX_SEARCH_TOP_HZ)
+    assert edge.peaking_db > 0.25 and edge.f_pk_hz > 50e6   # old test passes
+    assert edge.has_interior_peak is False                   # new test does not
+
+
+def test_interior_peak_accepts_a_genuine_peak():
+    real = _pt(g_dc=-16.3, g_pk=-1.55 + 0.33, g_top=-1.55, f_pk=9.55e9)
+    assert real.has_interior_peak is True
+
+
+def test_interior_peak_rejects_a_monotonically_falling_response():
+    """The case the OLD test did catch — it must still be caught."""
+    falling = _pt(g_dc=0.0, g_pk=0.0, g_top=-4.26, f_pk=10e6)
+    assert falling.has_interior_peak is False
+
+
+def test_interior_peak_needs_margin_on_both_sides():
+    assert _pt(-10.0, -9.9, -20.0).has_interior_peak is False   # barely rises
+    assert _pt(-10.0, -5.0, -5.1).has_interior_peak is False    # barely falls
+    assert _pt(-10.0, -5.0, -8.0).has_interior_peak is True     # both clear
+
+
+def test_max_search_edge_sits_well_above_the_s3_window():
+    """20 GHz is not arbitrary: it must be far enough above S3 that no design
+    which could meet S3 has its maximum near the edge, and far enough that
+    moving the edge cannot change an S3 verdict."""
+    from nebula.common.types import SPEC_F_PEAK_HZ_RANGE
+    assert MAX_SEARCH_TOP_HZ >= 8 * SPEC_F_PEAK_HZ_RANGE[1]
+
+
+def test_a_decade_guard_would_have_eaten_the_spec_window():
+    """Why `has_interior_peak` is a measurement and not a frequency guard:
+    'reject any peak within one decade of the edge' means rejecting everything
+    below 2 GHz, which removes most of S3's own 1.25-2.5 GHz window."""
+    from nebula.common.types import SPEC_F_PEAK_HZ_RANGE
+    decade_guard = MAX_SEARCH_TOP_HZ / 10.0
+    lo, hi = SPEC_F_PEAK_HZ_RANGE
+    assert lo < decade_guard < hi        # the guard lands INSIDE the spec window
+
+
+def test_summarize_falls_back_for_rows_predating_the_fix():
+    """Historical results files carry has_interior_peak=None and must still
+    summarize, using the old heuristic, rather than crashing."""
+    old = Row(ok=True, peaking_db=6.0, f_pk_hz=2.0e9, nyquist_boost_db=1.0,
+              vn_in_vrms=2e-4, power_w=5e-3, in_saturation=True, params={},
+              has_interior_peak=None)
+    assert summarize([old]).n_has_peak == 1
+
+
+def test_summarize_prefers_the_measured_flag_over_the_heuristic():
+    """When the runner says 'no interior peak', that wins over the heuristic
+    — which is the entire point of the fix."""
+    r = Row(ok=True, peaking_db=10.16, f_pk_hz=19.95e9, nyquist_boost_db=1.0,
+            vn_in_vrms=2e-4, power_w=5e-3, in_saturation=True, params={},
+            has_interior_peak=False)
+    assert summarize([r]).n_has_peak == 0
 
 
 def test_summarize_records_the_pinned_value():

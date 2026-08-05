@@ -94,6 +94,34 @@ NFET_G5V0: str = "sky130_fd_pr__nfet_g5v0d10v5"
 
 VALID_CORNERS: tuple[str, ...] = ("tt", "ss", "ff", "sf", "fs")
 
+#: Top of the `meas ac ... MAX` search, and the frequency `g_top` is read at.
+#:
+#: WAS 50 GHz, WHICH PRODUCED A FALSE PEAK (G44). `meas ac MAX` returns the
+#: largest sample in its range; for a response still RISING at the top of that
+#: range it returns the range edge, and the caller cannot tell that from a
+#: genuine interior maximum. Measured example: rl=111, cl=50f reported
+#: `f_pk = 47.863 GHz` — the sweep edge, not a peak.
+#:
+#: 20 GHz is 8x above S3's 1.25-2.5 GHz window, so no design that could meet S3
+#: has its maximum anywhere near the edge.
+#:
+#: A CLAIM THAT WAS MADE HERE AND TURNED OUT TO BE FALSE, kept because it is
+#: the kind of thing that gets assumed: "moving the edge 50 -> 20 GHz cannot
+#: change an S3 verdict, since a design peaking above 20 GHz fails the window
+#: either way." It can, and it does — measured, S3 moved 165 -> 166 at
+#: cl = 50 fF. The reason is LOCAL maxima. `MAX` returns the largest sample in
+#: its range; a response with a small in-band peak at 2 GHz and a larger one at
+#: 30 GHz reported the 30 GHz one under the old edge and reports the 2 GHz one
+#: under the new. The bounded search is the more useful of the two — an
+#: equaliser is judged on the peak it puts where the data is — but it is a
+#: BEHAVIOUR CHANGE, not merely a guard. Measured deltas: nebula/S9_YIELD.md §1.
+MAX_SEARCH_TOP_HZ: float = 20e9
+
+#: How far below the peak the response must have fallen by MAX_SEARCH_TOP_HZ
+#: before the peak counts as interior, and how far it must have risen above
+#: DC. Same number both sides; 0.25 dB is the existing rise threshold.
+PEAK_MARGIN_DB: float = 0.25
+
 
 # ─────────────────────────────────────────────────────────────────────────────
 # The sizing point.
@@ -204,6 +232,10 @@ class Sky130Point:
     g_nyq_db: Optional[float] = None
     g_pk_db: Optional[float] = None
     f_pk_hz: Optional[float] = None
+    #: Gain at MAX_SEARCH_TOP_HZ. Exists solely so "is this an interior
+    #: maximum?" is a MEASUREMENT (did the response come back down?) rather
+    #: than a guess about where the peak sits relative to the sweep edge (G44).
+    g_top_db: Optional[float] = None
     # --- .noise ---
     vn_in_vrms: Optional[float] = None
     # --- .dc swing curve (raw, so Python owns every derived number) ---
@@ -235,6 +267,27 @@ class Sky130Point:
     @property
     def g_dc_linear(self) -> float:
         return 10.0 ** (self.g_dc_db / 20.0)    # type: ignore[operator]
+
+    @property
+    def has_interior_peak(self) -> bool:
+        """True iff |H| has a genuine interior maximum, not a sweep-edge one.
+
+        THE G44 FIX. The old test was `peaking_db > 0.25 and f_pk_hz > 50e6`,
+        which asks where the reported peak SITS. That catches a monotonically
+        FALLING response — it reports f_pk at the 10 MHz sweep start — but
+        sails straight past a response still RISING at the top of the range,
+        which reports f_pk at the range edge with a large, entirely fictitious
+        `peaking_db`.
+
+        This asks the question directly instead: a maximum is interior iff the
+        response is higher there than at BOTH ends of the search range. No
+        frequency guard is involved, so nothing in S3's 1.25-2.5 GHz window is
+        excluded by it — which a "reject anything within a decade of the edge"
+        rule would do, since a decade below 20 GHz is 2 GHz and lands inside
+        the spec window.
+        """
+        return (self.peaking_db > PEAK_MARGIN_DB
+                and (self.g_pk_db - self.g_top_db) > PEAK_MARGIN_DB)  # type: ignore[operator]
 
     @property
     def in_saturation(self) -> bool:
@@ -352,6 +405,7 @@ def swing_limits(
 
 _NETLIST = """* nebula sky130 sizing point (auto-generated; do not edit by hand)
 .lib "{lib}" {corner}
+.temp {temp_c}
 
 .param W={w} L={l} NF={nf}
 .param RL={rl} RS={rs} CS={cs} IT={it} CL={cl}
@@ -399,7 +453,11 @@ ac dec 50 1meg 100g
 let vd_db = db(v(outp) - v(outn))
 meas ac g_dc  FIND vd_db AT=1meg
 meas ac g_nyq FIND vd_db AT=2.5g
-meas ac g_pk  MAX  vd_db FROM=10meg TO=50g
+* MAX is bounded at 20 GHz and g_top read AT the same edge, so `has_interior_
+* peak` can test whether the response actually came back down (G44). The AC
+* sweep still runs to 100 GHz -- only the MAX SEARCH is bounded.
+meas ac g_pk  MAX  vd_db FROM=10meg TO={f_top}
+meas ac g_top FIND vd_db AT={f_top}
 
 noise v(outp,outn) Vid dec 20 10meg 5g
 print inoise_total
@@ -446,10 +504,16 @@ def run_point(
     vid_max: float = 0.8,
     vid_step: float = 0.004,
     timeout_s: float = 120.0,
+    temp_c: float = 27.0,
 ) -> Sky130Point:
     """Simulate one sizing point. Never raises — failures come back ok=False.
 
     CLAUDEwa.md §8 rule 2: a failed SPICE run is a bad reward, not a crash.
+
+    `corner` selects the PROCESS corner (the `.lib` section) and `temp_c` the
+    temperature. The third S9 axis, VDD, is carried by `point.vdd` — scale it
+    at the call site, because it is a property of the sizing point's supply,
+    not of the run.
     """
     if corner not in VALID_CORNERS:
         return Sky130Point(ok=False, fail_reason=f"unknown corner {corner!r}",
@@ -468,7 +532,8 @@ def run_point(
         w=point.w, l=point.l, nf=int(point.nf),
         rl=point.rl, rs=point.rs, cs=point.cs, cl=point.cl,
         it=point.i_tail_per_side_a, vdd=point.vdd, vcm=point.vcm,
-        swing_block=swing_block,
+        swing_block=swing_block, temp_c=temp_c,
+        f_top=f"{MAX_SEARCH_TOP_HZ / 1e9:g}g",
     )
 
     import time
@@ -525,10 +590,12 @@ def run_point(
     pt.g_dc_db, _ = parse_meas(out, "g_dc")
     pt.g_nyq_db, _ = parse_meas(out, "g_nyq")
     pt.g_pk_db, pt.f_pk_hz = parse_meas(out, "g_pk")
+    pt.g_top_db, _ = parse_meas(out, "g_top")
     pt.vn_in_vrms = parse_scalar(out, "inoise_total")
 
     required = ("gm", "gmbs", "vds", "vdsat", "id_a",
-                "g_dc_db", "g_nyq_db", "g_pk_db", "f_pk_hz", "vn_in_vrms")
+                "g_dc_db", "g_nyq_db", "g_pk_db", "f_pk_hz", "g_top_db",
+                "vn_in_vrms")
     missing = [n for n in required if getattr(pt, n) is None]
     if missing:
         return Sky130Point(ok=False, corner=corner, point=point, runtime_s=runtime,
