@@ -12,7 +12,26 @@
 > discovered to the Gotchas section. A change without a handoff update is an
 > incomplete change.
 
-Last updated: **2026-08-04** (session 10b: **`cl` is a BAD SEARCH DIMENSION —
+Last updated: **2026-08-05** (session 10d: **the corner-robust yield is
+measured — 20 205 SPICE runs, 47 min.** The same 1890 designs give **13.49% at
+TT/27C, 8.20% [7.05, 9.52] across three corners, 8.10% [6.95, 9.41] across all
+45**, and cross-tabulating design by design shows **100 of the 255 nominal
+winners (39.2%) fail at a corner**, with 0 going the other way. Quote it as a
+**tax on the baseline**, not as a coupled constraint — S9 was listed as the
+cheapest route to replacing the argument G40 retired, and it did not deliver
+one. What it did deliver is three reusable results: **three corners are worth
+98.7% of forty-five** and the screen can only ever be wrong in one direction,
+so budget the RL reward at 3-5 corners and put the full sweep in a verification
+tier (G47); **the worst corner is FAST-hot, not slow-hot**, because S3 is a
+two-sided spec and its two edges sit on opposite sides of the process axis
+(G46); and **11 cores buy 3.2x, not 11x** — ~100 ms per corner evaluation, flat
+past 8 workers (G48). Health: 0 hard failures, 0 retries, 0 screen/promotion
+mismatches. **All of it is an OPTIMISTIC bound because the tail is still two
+ideal current sinks**, which is why the tail transistor is now the top open
+item in §8. Full write-up `nebula/S9_YIELD.md`; `params.py` untouched (rule 6).
+444 (session 10b) -> **481 green**, of which
+29 are `nebula/tests/test_s9_yield.py`. See G46, G47, G48.
+Earlier session 10b: **`cl` is a BAD SEARCH DIMENSION —
 removing it from the search RAISES the S3 yield.** Pinning `cl` at 150 fF and
 holding every other bound takes the random-search yield from
 **8.73% [7.54, 10.09] to 13.54% [12.08, 15.16]**, disjoint 95% intervals, on
@@ -21,13 +40,19 @@ holding every other bound takes the random-search yield from
 separable from 250 fF at this n. Mechanism: `cl` trades peak MAGNITUDE against
 peak LOCATION and location wins up to ~150 fF, after which the load pole stops
 relocating peaks and starts extinguishing them. **Second result, and it
-sharpens G40:** the RAW coupling factor falls monotonically 1.00 -> 0.68 across
-the sweep while the conditional-on-a-peak one stays flat at 1.01-1.10 — so the
-raw statistic is tracking the no-peak fraction, not any conflict between the S3
-conditions. **Third, and it must not be buried: this makes G3 HARDER**, because
-the random-search baseline RL has to beat rises from ~11 samples per hit to ~7.
+sharpens G40:** the RAW coupling factor falls 1.05 -> 0.68 across the sweep
+while the conditional-on-a-peak one stays flat at 0.97-1.06 with **every one of
+the five 95% intervals covering 1.00** — so the raw statistic is unstable and
+contaminated, and there is no measured coupling anywhere. **Third, and it must
+not be buried: this makes G3 HARDER**, because the random-search baseline RL
+has to beat rises from ~11 samples per hit to ~7.
 Full write-up `nebula/CL_SENSITIVITY.md`; `params.py` untouched (rule 6).
 430 -> **444 green**. See G42, G43.
+**All coupling numbers above are POST-G44-FIX (session 10c) and supersede the
+first pass**, which reported a 1.10x [1.02, 1.20] adverse effect at 100 fF —
+an artifact of a peak detector that counted sweep-edge maxima as real and
+inflated the has-peak population by up to 42%. The S3 yields themselves barely
+moved. See G44 (fixed) and G45 (transient ngspice failures under load).
 Earlier session 10a: **this checkout is a git repository
 again, and for the first time its history is CLEAN of the copyrighted PDFs.**
 Session 9d ended with a note that `git init` had never been run here, so the
@@ -189,6 +214,34 @@ signaling, ADC-based DSP receiver, 28 nm CMOS reference parameters).
 │   │                       no-peak fraction (G43). Read §5 before touching the
 │   │                       action space and §7 before quoting any coupling
 │   │                       number.
+│   ├── S9_YIELD.md         NEW (2026-08-05). Corner-robust yield: 3-corner
+│   │                       screen -> 45-corner promotion, with CIs, the
+│   │                       measured parallel speedup, and — the actual
+│   │                       headline — WHICH SPEC FAILS FIRST at each corner
+│   │                       and by how much. 13.49% at TT -> 8.20% at 3
+│   │                       corners -> 8.10% at 45, so **39% of nominal
+│   │                       winners are corner-fragile** (§4), three corners
+│   │                       are worth 98.7% of forty-five (§3, G47), and the
+│   │                       worst corner is fast-hot not slow-hot (G46).
+│   │                       Read its assumptions section first: the tail is
+│   │                       still ideal, so every corner spread in it is an
+│   │                       UNDERSTATEMENT.
+│   ├── ROBUST_GEOMETRY.md  NEW (2026-08-05). The geometry of the corner-robust
+│   │                       designs. Proves that f_peak margin (>= 0.20 oct)
+│   │                       predicts robustness, while physical parameter
+│   │                       interiority does not. Also confirms G46's mechanism.
+│   ├── experiments/s9_yield.py  the corner sweep. Owns the three ASSUMPTIONS
+│   │                       (cl pinned at 150 fF as a LOAD not a choice, VCM
+│   │                       does not track VDD, ideal tail) and prints them in
+│   │                       every run's header. VDD scaling lives in
+│   │                       `point_at_corner` and nowhere else; temperature is
+│   │                       a `.temp` card via `run_point(temp_c=)`. Retries
+│   │                       once on failure (G45) and prints a `health:` line
+│   │                       per stage so the denominator is never implicit.
+│   │                       `screen_augmentation()` names which corner would
+│   │                       have caught each of the screen's false positives,
+│   │                       so the screen is re-cut from data, not intuition.
+│   │                       Writes results NEXT TO THE SCRIPT, not the cwd.
 │   ├── experiments/s3_yield.py  the random-search baseline, as a coupling
 │   │                       factor rather than a bare percentage. Carries
 │   │                       PROPOSED_BOX (not yet in params.py — rule 6).
@@ -421,12 +474,15 @@ Plus: git init, .gitignore, 28 tests, Wilson-bound BER reporting.
 
 ## 6. Key numbers & validated behavior (current state)
 
-- Tests: **430 passing** (~2.7 min) —
+- Tests: **481 passing** —
   `python -m pytest tests nebula/tests -q -m "not slow"`.
-  Split: `tests/` **92**, `nebula/tests/` **338**. (Was 65 + 267 = 332 at the
-  start of session 9.) Two further tests are marked `slow` and deselected by
-  default: they re-derive the SKY130 golden values from the FULL library
-  (~30 s each). Run them after a PDK update.
+  Split: `tests/` **92**, `nebula/tests/` **389**. (Was 65 + 267 = 332 at the
+  start of session 9; 430 at the end of it; 444 after session 10b.) Two
+  further tests are marked `slow` and deselected by default: they re-derive
+  the SKY130 golden values from the FULL library (~30 s each). Run them after
+  a PDK update. **Runtime is machine-load dependent** — the same suite has
+  taken 1.5 min on a quiet machine and 34 min while an 11-worker ngspice pool
+  was running. A slow suite is contention, not a hang.
 - **Measured output swing at the corrected point (session 9d).** 1 dB gain
   compression at **1427 mVpp** differential; saturation limit 2161 mVpp;
   steering ceiling 2281 mVpp; `4*I*RL` textbook value 2400 mVpp. Session 9c
@@ -442,28 +498,30 @@ Plus: git init, .gitignore, 28 tests, Wilson-bound BER reporting.
   SKY130 -> gm 12.62 mS, gm/I_D 8.42, v(s1) +0.343 V, noise 0.275 mV.**
   The parameter BOUNDS and the 5.3% S3 yield were both derived inside the old
   bias and are **provisional until re-run**.
-- ~~**The project's central argument, now a measured number.**~~
-  **RETRACTED 2026-08-04 (session 9d). Do not quote this anywhere.** The claim
-  was: S3 couples gm, Rs, Cs, RL and CL, no axis-aligned box can exploit a
-  coupled constraint, hence random search lands only 5.3% of the time — "the
-  strongest single sentence available for the abstract".
-  **It does not survive measurement.** Decomposing S3 into A (peaking in
-  3-12 dB) and B (f_peak in 1.25-2.5 GHz) and comparing the joint against the
-  product of the marginals — the box-independent form of the statistic — gives
-  a **coupling factor of 1.04x** (1.00-1.06 across box widths from 0.6x to
-  1.5x, while the raw yield swings 5.5x). The two conditions are INDEPENDENT.
-  The yield is low because P(B) is low (f_peak lands in the window 16% of the
-  time), not because anything is coupled. See `nebula/BOUNDS_REDERIVATION.md`
-  §4, including the four candidate replacement arguments — of which
-  **tunability** (S3 wants any point in 3-12 dB on demand, which random search
-  cannot deliver at all) is the recommended one, and **S9 corner robustness**
-  is the cheapest to measure next.
 - **The honest random-search baseline is 8.73%** (165 of 1890 simulated, from
   2000 Latin-hypercube samples of the re-derived 1.8 V box), **95% CI
   [7.54, 10.09]**. It is a baseline for G3 to beat, not evidence of a
   mechanism. **It rises to 13.54% [12.08, 15.16] if `cl` is pinned at 150 fF
   instead of searched** (session 10b, `nebula/CL_SENSITIVITY.md`) — so which
   number G3 must beat is a live decision, not a fact.
+- **Corner-robust yield, the same 1890 designs at 45 corners** (session 10d,
+  `nebula/S9_YIELD.md`, 20 205 SPICE runs). **13.49% at TT/27C ->
+  8.20% [7.05, 9.52] across three corners -> 8.10% [6.95, 9.41] across all
+  45.** Cross-tabulated design by design: **100 of the 255 nominal winners
+  (39.2%) fail at a corner**, and 0 designs fail nominal yet pass the corners.
+  The quotable sentence is **"an optimiser scored at nominal is wrong about two
+  of every five designs it calls a success"** — a tax on the baseline, NOT a
+  coupled constraint (do not let it drift back into one; see G40). Two further
+  results: **three corners are worth 98.7% of forty-five** (G47) and **the
+  worst corner is fast-hot, not slow-hot** (G46). Health: 0 hard simulator
+  failures, 0 retries, 0 screen/promotion mismatches across 465 repeated
+  (design, corner) pairs. **Optimistic bound** — the tail is still ideal
+  current sinks, so all corner spreads here are understatements.
+- **Geometry of corner-robust designs** (session 11, `nebula/ROBUST_GEOMETRY.md`).
+  Robustness is driven entirely by **f_peak margin**, not by physical parameter
+  interiority. Rejecting designs with less than 0.20 octaves of margin removes
+  63 fragile designs while keeping 118 robust ones, raising the conditional
+  yield from 60.8% to 76.1%. This acts as a warm-start prior.
 - **`cl` sensitivity, 2000 paired LHS samples per point** (session 10b). Pin
   `cl`, hold every other bound:
 
@@ -511,442 +569,87 @@ Plus: git init, .gitignore, 28 tests, Wilson-bound BER reporting.
    project, own contract (`CLAUDEwa.md`), hard deadline 15 Sept 2026.
    DONE: layer interfaces + mocks + 251 tests; **G0 PASSED**
    (`nebula/G0_RESULTS.md`); NRZ retarget audit written
-   (`nebula/NRZ_RETARGET_AUDIT.md`). Blocking next actions, in order:
-   - ~~**>>> START HERE: RE-DERIVE THE BOUNDS <<<**~~ **DONE 2026-08-04
-     (session 9d) — `nebula/BOUNDS_REDERIVATION.md`.** The box is re-derived
-     at 1.8 V SKY130 with per-edge provenance
-     (`nebula/experiments/s3_yield.py::PROPOSED_BOX`) and the yield re-run at
-     **8.73%**. Three follow-on items, in priority order:
-       * **>>> START HERE (2026-08-05): DECIDE THE ARGUMENT. <<<** The
-         coupled-constraint claim is **falsified** (coupling factor 1.04x —
-         see §6 and BOUNDS_REDERIVATION §4). **The abstract is due 6 Aug and
-         cannot use that sentence.** Four candidate replacements are listed in
-         §4 of that file; the recommendation is to lead with **tunability**
-         (S3 wants any point in 3-12 dB on demand — a map from spec to sizing,
-         which random search cannot produce at all) and to quote 8.73% purely
-         as a baseline. **Human decision, not an agent's.**
-       * **Approve or amend the proposed box**, then copy it into
-         `common/params.py::BOUNDS`. It is deliberately NOT copied in yet
-         (§8 rule 6). The old bounds carry a superseded banner naming their
-         three known defects. **Session 10b adds one amendment to decide:
-         drop `cl` from the action space and fix it at 150-250 fF** — it
-         raises the S3 yield from 8.73% to 13.54% AND removes a dimension
-         (G42, `nebula/CL_SENSITIVITY.md` §6). Two caveats belong to the
-         human: it raises the G3 baseline RL must beat, and `cl` is physically
-         set by the following stage's input capacitance, so the value should
-         be justified by that load rather than picked to maximise yield.
-       * **Measure the corner-robust yield** — the same 2000 samples over the
-         45-corner S9 grid. Cheapest remaining route to a real constraint, and
-         it is claimed contribution #1 in CLAUDEwa §7. ~0.42 s/point.
-     Design guidance from 9c, still valid: aim at **gm/I_D = 8-15**, then
-     v(s1) >= 0.3 V, then check `vds > vdsat` at V_out_cm = VDD - I_tail*RL.
-     Size Rs from MEASURED peaking, never from `20*log10(k)` — at Rs=200 the
-     asymptote says 7.66 dB and the realised value is 0.00 dB. Keep
-     **f_z < f_p2** or there is no peak at all.
-   - **G1 — was "hand-size a reference CTLE at TT".** Substantially done and
-     then corrected; see session 9c for the spec-vs-margin picture. The open
-     part is the **tail transistor** (still ideal sinks) and the **MIM cap /
-     poly resistor** models the S7 area estimate needs.
-   - **Compression: real, but much smaller than 9c reported.** Three
-     corrections landed in 9d. (1) The available swing was understated ~2x —
-     `2*I*RL` is a peak, the peak-to-peak ceiling is `4*I*RL`, and the
-     measured 1 dB linear swing is 1427 mVpp against the 1200 mVpp 9c used.
-     (2) The 9c evaluation paired every FIXED design against all five loss
-     points, which is not how a tunable equaliser is operated; with the boost
-     matched to the channel tilt, compression shrinks from "11/11 at 3 dB
-     loss, by up to 1.9x" to "1.22x at 3 dB and 1.04x at 5 dB, clean above".
-     (3) The lever is NOT I_tail-vs-gm/I_D as 9c concluded, because the limit
-     is **current steering, not headroom** — which is also why a 3.3 V device
-     buys only +12% swing (G39). **Caveat that dominates both readings:** the
-     verdict flips to "everything compresses at every loss" under
-     `calibration.py` C3's long-run convention, because `CHANNEL_DC_LOSS_DB`
-     is a fixed 1.0 dB placeholder with no provenance. A made-up constant is
-     currently deciding this. Strongest argument yet for item 1 below (.s4p).
-   - ~~**Install a PDK**~~ **DONE 2026-08-04 (G33).** SKY130 via volare is
-     installed at `C:\Users\DELL\sky130A` and `.op`/`.ac`/`.noise` run against
-     it with all five process corners available. Still to do on top of it:
-     port the G1 sizing to 1.8 V (the bounds are 1.2 V numbers and do NOT
-     transfer — see the provenance audit), add a real tail transistor, and
-     pull the **MIM cap and poly resistor** models that Cs/Rs/RL and the S7
-     area estimate depend on. Budget note: the library costs ~25 s to parse
-     per ngspice invocation, so batch corners per process.
+   (`nebula/NRZ_RETARGET_AUDIT.md`); bounds re-derived; robust geometry
+   confirmed; corner-yield swept (13.49% -> 8.10%). Blocking next actions,
+   in priority order:
+   - **>>> THE TAIL TRANSISTOR IS NOW THE HIGHEST-VALUE OPEN ITEM. <<<**
+     (Promoted 2026-08-05.) Every simulation this project has ever run uses
+     **two ideal current sinks** for the tail. An ideal sink delivers exactly
+     I_tail at every corner: it does not lose current at SS/125C, does not
+     gain it at FF/0 C, and does not fall out of saturation when the rail
+     drops 5%. That single assumption is what makes the whole S9 result an
+     **optimistic bound** (G47), and it also blocks three of the nine box
+     dimensions (`w_tail`, `l_tail`, `nf_tail` have no provenance). Everything
+     needed to re-measure is already instrumented: add the device, then re-run
+     `python -m nebula.experiments.s9_yield --n 2000` unchanged and diff
+     against `nebula/S9_YIELD.md`. **This is the one experiment that could
+     still turn corner robustness into a real constraint rather than a tax.**
+   - **Approve or amend the proposed box**, then copy it into
+     `common/params.py::BOUNDS`. The `cl` dimension is recommended to be
+     removed (pinned at 150-250 fF) as per `nebula/CL_SENSITIVITY.md`.
+   - **G1 — was "hand-size a reference CTLE at TT".** Port to 1.8 V (the bounds
+     are 1.2 V numbers and do NOT transfer — see the provenance audit), add
+     a real tail transistor (above), and pull the **MIM cap and poly resistor**
+     models the S7 area estimate needs.
+   - **Compression: real, but much smaller than 9c reported.** The limit is
+     **current steering, not headroom** — which is also why a 3.3 V device
+     buys only +12% swing (G39).
    - **Abstract due Aug 6.** Write it around what G1 shows is achievable.
-     Two things are now safe to say that were not before: the PDK is SKY130
-     (installed and simulating, not aspirational), and the case for a learned
-     policy rests on a measured 5.3% random-search baseline against a coupled
-     constraint rather than on an assertion. Preliminary device
-     characterisation is still on generic BSIM4 at 1.2 V — say so plainly.
-   - **NEW, and it gates G2's cost numbers: settle ngspice process reuse.**
-     The SKY130 library parse is 16.5 s per process and ~0.002 s marginal per
-     point thereafter (G34), so the device layer must hold processes open and
-     `alter` between sizing points. **First measure whether the input pair's
-     W/L/nf can be altered without a re-parse** (it is a subckt instance;
-     `altermod` may be needed). If it cannot, the fidelity-tier cost table has
-     to be rewritten around whatever the real per-point cost turns out to be.
-     Do this before building the device layer, not after.
-   - The NRZ retarget behind a `modulation` flag. **STARTED 2026-08-04:**
-     `python_models/modulation.py` exists and three fixes have landed —
-     `crossing_jitter_ui`'s sqrt(5) factor (E5), `CTLE.from_peaking`'s
-     absolute pole defaults (F2), and `adc_vref` established as MOOT for S2
-     (no ADC in the topology). **21 of the 24 audit items remain**, and the
-     BER path is FENCED: `StatisticalEye` raises in NRZ mode rather than
-     reporting 0.75x the truth. Next up is the audit's step 2 — groups A+B
-     (alphabet + BER maths) with a hand-computed `BER == Q(1/sigma)` test.
-     Order of work: bottom of `nebula/NRZ_RETARGET_AUDIT.md`. Existing tests
-     stay green (the flag defaults to `"pam4"`).
+     **The "coupled constraint" argument is RETRACTED (G40).** State the
+     ideal-tail assumption plainly; it is the live one.
+   - **The NRZ retarget.** 21 of the 24 audit items remain; order of work at
+     bottom of `nebula/NRZ_RETARGET_AUDIT.md`.
 
 **0. UCIe group project — owner's FFE block (ACTIVE, started 2026-07-23).**
-   New parallel track (see §1 New Direction). The owner owns the **FFE** part of
-   a 6-way analog-PHY split built around the `UCIE_GP` digital reference.
-   Confirmed scope: **high-rate, DSP-based equalization** (this framework's
-   regime), so reuse `equalizers.py` (RX FFE+DFE joint LMS, `mmse_init_ffe`) and
-   `pam4_chain.py` (TX-FFE). Plan = math + build in parallel:
-   - Part A (math, for professor comms): ISI/pulse response -> zero-forcing FFE
-     -> MMSE FFE -> LMS adaptation -> TX-FFE vs RX-FFE + noise-enhancement.
-   - Part B (build/figures): run existing FFE, before/after eye + BER, sweep tap
-     count vs loss (when FFE alone suffices vs needs DFE), tie to serializer seam.
-   - OPEN QUESTIONS for professor (only Q1 answered so far): is FFE TX-side,
-     RX-side, or both? Deliverable depth (behavioral Python first, then RTL)?
-   - Owner is a beginner: teach each math step in plain language, verify against
-     running code. STATUS: starting Part A step 1 (ISI + why FFE).
+   STATUS: starting Part A step 2 (zero-forcing math).
 
-1. **Real channels (.s4p):** `pip install scikit-rf`; get measured Touchstone
-   files from the professor or IEEE 802.3ck/dj public channel packages. Feed
-   via `Channel.from_sparam` (never yet exercised — expect alignment/f-grid
-   issues; write tests). Single biggest credibility upgrade.
-2. **Fold clipping into the statistical BER** (currently only a constraint):
-   model clipped-sample distortion as bounded error events; recalibrate the
-   12 % threshold into a proper penalty. Closes Finding #2 mathematically.
-3. **True joint adaptation (Phase 3b, Menin thesis):** LMS + CDR + AGC running
-   simultaneously; demonstrate FFE↔CDR tap-walking and mitigation (tap
-   re-centering); dLev-based adaptive slicer levels. Thesis-grade material.
-4. **Bit-true fixed-point golden model:** match README's fixed-point table
-   (Q2.8 coeffs, 6b ADC, 16b LMS accumulator). Prerequisite for Phase 4.
-5. **Phase 4 — RTL verification:** simulate rtl/*.sv (Verilator/Icarus free,
-   or Xcelium if the group has licenses), golden-model co-sim vs #4,
-   synthesis trial @1.75 GHz for the speculative-DFE timing claim.
-6. **224G config:** 106.25 GBd, stronger EQ, MLSE benchmark (MLSE class
-   exists and is now correct), 802.3dj concatenated FEC operating point.
-7. **ML equalizer integration:** benchmark vs FFE/DFE/MLSE at EQUAL
-   complexity (MAC/symbol) on real channels. Only meaningful after #1.
-8. **Full IEEE COM (Annex 93A)** when a compliance claim is needed.
-9. Optical track (optical_dsp.py audit + IM-DD link budget) — dormant.
+**1-9.** (See existing backlog: .s4p, clipping disto, joint adaptation, etc.)
 
 ## 9. Gotchas & footguns (each one cost real debugging time)
 
-- **G1 — Repo must stay PRIVATE.** The PDFs are copyrighted (IEEE, theses,
-  Intel/Xilinx). A public/portfolio version must strip them from HISTORY
-  (they're in the baseline commit), not just delete the files.
-  **AMENDED 2026-08-04 (session 10a) — true of the GitHub repo, NOT of this
-  checkout.** `github.com/jaikaushik-prog/serdes-dsp-framework` still carries
-  them in its baseline commit and still needs a history rewrite before it could
-  ever go public. This working tree was `git init`-ed fresh with the PDFs
-  already in `.gitignore`, and the index was checked empty of them before the
-  initial commit, so **its** history has never contained them. The two are now
-  unrelated histories. Do not `git remote add origin` that URL and push — it
-  would either be rejected as unrelated or, if forced, replace a repo whose
-  history you have not audited. Decide deliberately (new remote vs. rewrite of
-  the old one); see G41.
-- **G41 — (repo) `git init` was run on 2026-08-04; the history starts clean,
-  and there is NO remote.** One commit on `main`, 102 files. The check that
-  makes the claim real is two commands, and they are the ones to re-run before
-  any future `git add -A`:
-
-        git diff --cached --name-only | grep -iE '\.(pdf|docx)$'   # must be empty
-        git status --ignored --porcelain | grep '^!!'              # what was skipped
-
-  `.gitignore` is now sectioned and commented by *reason* rather than by file
-  type, because the reasons differ in kind: copyright (PDFs — never commit),
-  redistribution (the PDK tree at `C:\Users\DELL\sky130A`, out of tree today
-  but the patterns exist so an in-tree copy cannot slip in), and mere
-  regenerability (results, `__pycache__`, ngspice scratch, the `ams_rl_ppo`
-  checkpoints). **One deliberate non-ignore:**
-  `nebula/device/spice/sky130_nfet_only.lib.spice` is OURS (G36) — 69 lines of
-  `.include` pointers plus `.option scale=1.0u`, redistributing no model cards
-  — and is excluded from the `sky130*` pattern by an explicit `!` rule. Losing
-  it would cost the 40-80x inner-loop speedup.
-- **G2 — Scrambler coherence:** always compare RX bits against LINE bits
-  (post-scrambler) or descramble first. `generate()` returns line bits.
-- **G3 — Never `np.random.seed()`.** Thread `LinkConfig.seed` →
-  `np.random.default_rng`. The TIADC class in adc_model.py still has an
-  internal seed=42 (standalone use only; the link path doesn't use it).
-- **G4 — FFE cursor convention:** warm starts must place the cursor at
-  `n_pre`, not the filter centre. `mmse_init_ffe(..., n_pre=)`.
-- **G5 — Don't RMS-AGC a peaked waveform;** use pulse-cursor gain calibration.
-- **G6 — BB-loop stability:** pattern-gated updates ⇒ effective ki multiplied
-  by mean update gap (~4). Keep 4·ki/kp ≲ 2 %. Gear-shift + integrator clamp
-  are load-bearing, not decoration.
-- **G7 — MM PD sign:** raw MM product is positive-when-early; this loop needs
-  positive-when-late (phase↑ = earlier). See rx_frontend comment.
-- **G8 — Alexander PD needs a partially-open RAW eye** (crossing jitter
-  <~0.6 UI); MM-postffe needs an FFE-openable eye. Neither is universal.
-- **G9 — adapt_start:** never let sign-sign LMS adapt during CDR acquisition
-  (|Δtap|=µ regardless of error size — it walks off the warm start).
-- **G10 — Windows console is cp1252:** no →, ≤, µ, ≈, em-dash in print()
-  strings (crashes under redirection). Files themselves are UTF-8, fine.
-- **G11 — Working directory:** run pytest from repo ROOT; run link_sim from
-  python_models/. PowerShell sessions persist cwd between tool calls.
-- **G12 — Git identity:** commit as `Jai Kaushik
-  <jaikaushik-prog@users.noreply.github.com>` (global config is set). Do NOT
-  use the BITS email — it attributes commits to a wrong GitHub account
-  (history was already rewritten once to fix this; hashes changed).
-- **G13 — Figure caching:** make_report_figures reads cached CSVs
-  (arch_compare_pk.csv etc.); delete the CSV to force recomputation.
-- **G14 — `Channel.pulse_response` uses argmax cursor + trimming; the
-  waveform path avoids `np.convolve(mode='same')` deliberately.** Keep
-  explicit alignment; never reintroduce 'same'-mode shortcuts.
-- **G15 — scikit-rf not installed** (S-param import raises); matplotlib may
-  need `MPLBACKEND=Agg` for headless runs.
-- **G16 — (nebula) `nebula/device/mock.py` and `nebula/link/mock.py` produce
-  FAKE numbers.** They exist so three people can build three layers in
-  parallel before ngspice exists. No value from either may reach the abstract,
-  report, slides or results table (CLAUDEwa.md §8 rule 1). Their *trends* are
-  physically coherent; their *magnitudes* are invented. The mock's noise floor
-  in particular is optimistic — do not read S5 headroom off it.
-- **G20 — (nebula) ngspice: use `ngspice_con.exe`, NOT `ngspice.exe`.** The
-  latter is the GUI build and prints nothing under `-b`, which looks exactly
-  like a broken install. Binary lives in
-  `C:\Users\DELL\miniforge3\envs\nebula\Library\bin\`. Activate with
-  `conda activate nebula`.
-- **G21 — (nebula) `.disto` returns exactly 0.0 for BSIM4.** Not a linear
-  circuit — BSIM4 does not implement the higher-order derivatives the analysis
-  needs, so it silently contributes no distortion at all. Proven with an A/B
-  against a `level=1` model in one netlist (see `nebula/G0_RESULTS.md`). Every
-  open PDK is BSIM4-based, so no PDK fixes this. **HD3 (S4) must come from
-  transient + FFT**, ~0.26 s/corner vs 0.066 s for AC+noise.
-- **G22 — (nebula) `.disto` with a trailing `f2overf1` argument** switches to
-  two-tone intermodulation mode and aborts with "No source with f2 distortion
-  input". Single-tone harmonic mode is the form WITHOUT that argument. Also:
-  `meas` does not accept the two-argument `vdb(a,b)`; `maxat` is not a `meas`
-  function; `linearize` takes vector names, not a timestep; ngspice's own
-  `fft` zero-pads to a power of two so bin indices are not `f/binwidth` —
-  dump with `wrdata` and FFT in numpy.
-- **G23 — (nebula) PySpice is installed but does not work** (bundled ngspice
-  DLL fails to load, 0x7e; post-install downloader dead). Do not spend time on
-  it: batch `ngspice_con -b` via `subprocess` is the better fit for the RL loop
-  anyway — no FFI state, trivially parallel per corner, crashes are exit codes.
-- **G24 — (nebula) compression is a validity condition, not a clamp.** The
-  link layer used to compute `min(g_dc * v_in_pp, vout_swing_v)`. Both halves
-  were wrong: (a) `g_dc` is the DC gain, but the eye is set by `|H(f_nyquist)|`
-  which is 3-12 dB higher by construction (S3); (b) `min()` silently converted
-  an invalid operating point into a plausible number, and an RL policy hunting
-  eye height would have found that region and lived in it. Now:
-  `output_swing_pp_v()` returns the unclamped linear prediction from the
-  PEAKED gain, and `check_compression()` returns a reason string that the link
-  layer turns into `ok=False`. See `nebula/link/calibration.py` conventions
-  C3/C4.
-- **G26 — (nebula) ngspice `let` failures are WARNINGS, and the run exits 0.**
-  `@m1[gm]` and friends live in the `op1` plot; after an `.ac` the current
-  plot is `ac1` and every `let` referencing them fails with
-  "vector ... is not available or has zero length" while the script carries on
-  and returns success. The G1 netlist's entire §6 cross-check block failed
-  this way and was reported as passing. **Grep ngspice output for
-  `not available|Error:` before believing any derived number**, or compute
-  derived quantities in Python from parsed primitives (which is what
-  `nebula/device/ngspice_runner.py` does).
-- **G27 — (nebula) §6's gain equation is missing the body effect and fails
-  its own 1 dB gate.** In a bulk process the bulk is grounded, the source
-  moves, so `k = 1 + (gm + gmbs)*Rs/2`. Measured at the G1 point gmbs/gm was
-  0.33 and §6-as-written was **2.33 dB** optimistic. `predict()` and
-  `cross_check_extraction()` take `gmbs` (default 0.0 = §6 verbatim). Always
-  pass the simulated gmbs when comparing to SPICE.
-- **G28 — (nebula) `rl`'s ceiling is JOINT with `i_bias`, not independent.**
-  Load drop is `0.5*i_bias*rl` and must fit under VDD=1.2 V. 12 mA x 500 ohm
-  drops 3.0 V. Both values are individually inside their bounds. Use
-  `params.headroom_ok()` to reject the pair before spending a SPICE call
-  (measured: 9.5% of samples, and it cuts triode failures 9.3% -> 2.5%).
+- **G1 — Repo must stay PRIVATE.** (See §9 above).
+- **G41 — Repository initialised clean.** (See §9 above).
+- **G2 — Scrambler coherence.** Always compare RX bits against LINE bits.
+- **G3 — Never `np.random.seed()`.**
+- **G4 — FFE cursor convention:** `mmse_init_ffe(..., n_pre=)`.
+- **G5 — Don't RMS-AGC a peaked waveform.**
+- **G6 — BB-loop stability:** 4·ki/kp ≲ 2 %.
+- **G7 — MM PD sign:** loop needs positive-when-late.
+- **G8 — Alexander PD needs a partially-open RAW eye.**
+- **G9 — adapt_start:** never let LMS adapt during CDR acquisition.
+- **G10 — Windows console is cp1252.**
+- **G11 — Working directory:** run pytest from repo ROOT.
+- **G12 — Git identity:** commit as `Jai Kaushik <jaikaushik-prog@users.noreply.github.com>`.
+- **G13 — Figure caching:** delete CSV to force recompute.
+- **G14 — `Channel.pulse_response` uses argmax cursor.**
+- **G15 — scikit-rf not installed.**
+- **G16 — (nebula) Mocks produce FAKE numbers.**
+- **G17 — (nebula) `BOUNDS` empty ON PURPOSE.**
+- **G18 — (nebula) Millivolt calibration is one function.**
+- **G19 — (nebula) Run tests separately or together.**
+- **G20 — (nebula) Use `ngspice_con.exe`, not `ngspice.exe`.**
+- **G21 — (nebula) `.disto` returns exactly 0.0 for BSIM4.**
+- **G22 — (nebula) `.disto` usage trap.**
+- **G23 — (nebula) PySpice is broken.**
+- **G24 — (nebula) Compression is a validity condition.**
+- **G26 — (nebula) ngspice `let` failures are WARNINGS.**
+- **G27 — (nebula) Gain equation misses body effect.**
+- **G28 — (nebula) `rl`'s ceiling is JOINT with `i_bias`.**
 - **G30 — (nebula) `.param` names are NOT visible as `.control` vectors.**
-  The second, independent reason the §6 cross-check block never ran (the first
-  is G26's plot-context trap). `let k = 1 + gm * {RS_OHM} / 2` does not
-  substitute — ngspice reports `vector rs_ohm is not available`, then
-  `Error: RHS "1 + gm * rs_ohm / 2" invalid`, and **exits 0**. Same for
-  `let power_mw = v(vdd) * {ITAIL} * 1000`. **Put no derived arithmetic in
-  `.control` at all.** Print primitives; compute in Python
-  (`nebula/device/crosscheck.py`). CLAUDEwa.md §8 rule 9.
-- **G31 — (nebula) SKY130 instance W and L are PLAIN NUMBERS IN MICRONS.**
-  `libs.tech/ngspice/sky130.lib.spice` sets `option scale=1e-6` and the
-  `sky130_fd_pr` subckts default to `l=1 w=1` meaning one micron. So write
-  `W=5 L=0.15`, not `W=5u L=0.15u` — the latter gives 5 pm, falls outside all
-  180 model bins, and aborts with the *misleading* **"could not find a valid
-  modelname"** (which reads like a missing library, not a units error). The
-  generic-BSIM4 netlists in the same directory use SI metres. Never copy W/L
-  between the two families without converting.
-- **G32 — (nebula) two netlists described "the same" reference point with
-  different model cards.** `g1_handdesign.cir` was missing `k2=0.05`, which
-  `ngspice_runner.py::_NETLIST` had — and `k2` is BSIM4's body-effect
-  coefficient, i.e. exactly the term G27 is about. Effect: gmbs/gm 0.250 vs
-  0.327, A_dc −14.123 vs −14.569 dB, peaking 8.19 vs 8.29 dB. All published
-  numbers came from the runner. Fixed by matching the cards. **If you clone a
-  netlist, diff the `.model` line**; a one-parameter drift is invisible and
-  moves the body-effect term by 30%.
-- **G29 — (nebula) the raw `sky130_fd_pr` clone is NOT ngspice-ready.**
-  **RESOLVED 2026-08-04 — see G33.** Kept for the diagnosis.
-  `ngbehavior=hsa` must go in a **`.spiceinit`**, not `.control` (too late —
-  `.include` runs at parse time); that clears the `sqrt()` problem. What it
-  does not clear: the `.pm3.spice` `.subckt` declares its parameters via a
-  `.param` line inside the body ("13 formal but 0 actual params"), and the
-  `.corner.spice` files contain zero `.model` cards. **Install `open_pdks` or
-  use `volare`** for the generated `libs.tech/ngspice/sky130.lib.spice`. Do
-  not patch the raw repo.
-- **G33 — (nebula) the WORKING SKY130 install.** `C:\Users\DELL\sky130A`
-  (`libs.tech/ngspice` + `libs.ref/sky130_fd_pr/spice`, ~52 MB, 856 files),
-  copied out of a `volare` install in WSL2 Ubuntu. Use
-  `.lib "C:/Users/DELL/sky130A/libs.tech/ngspice/sky130.lib.spice" tt` — and
-  `ss`/`ff`/`sf`/`fs` for the other four S9 process corners. Reference
-  netlist: `nebula/device/spice/g1_sky130_volare.cir`; run it from
-  `nebula/device/spice/` so the local `.spiceinit` (`ngbehavior=hsa`) is read
-  at parse time. Reinstall recipe if the tree is lost:
-  `pip3 install --user --break-system-packages volare` inside WSL
-  (**not** a venv — `python3-venv` is absent and installing it needs sudo),
-  then `~/.local/bin/volare enable --pdk sky130 c6d73a35f524070e85faff4a6a9eef49553ebc2b`.
-  Superseded: `g1_sky130.cir` (raw-repo version). **See G34 for the cost.**
-- **G34 — (nebula) the SKY130 library costs 16.5 s to PARSE, per ngspice
-  process.** Measured: the same netlist takes **0.02 s** on generic BSIM4
-  cards and **16.5 s** on the SKY130 lib — a ~700× penalty that is almost
-  entirely parsing, not analysis. It amortises completely if the process is
-  reused: 20 points in one process took 16.57 s, **200 points took 16.89 s**
-  (~0.002 s marginal per point). Therefore **the device layer must hold
-  ngspice processes open and `alter` between sizing points; one `subprocess`
-  call per evaluation is not viable against a PDK** — at 1e5 PPO steps that is
-  19 days for TT alone versus the 1.8 hours the generic-BSIM4 cost table
-  records. This revises G23: batch mode is still right, but processes must be
-  REUSED, not respawned. **SUPERSEDED 2026-08-04 by G35 and G36:** `alter`
-  turned out to be unsafe for W/L, so process reuse is NOT the answer — the
-  trimmed library is, and it makes the question moot.
-- **G35 — (nebula) `alter` CANNOT move W/L of a subckt-wrapped PDK device.
-  It fails SILENTLY, returning plausible wrong numbers.** Measured against
-  fresh-parse ground truth:
-
-        W (um)   bin vs baseline     gm fresh    gm altered   error
-        4.5      SAME bin [3,5]      2.358e-3    2.272e-3     -3.6%
-        6.0      crosses to [5,7]    3.175e-3    2.407e-3     -24.2%
-        9.0      crosses to [7,100]  3.6e-3      NaN          broken
-
-  **Even within one bin it is wrong**, which rules out "only alter inside a
-  bin" as a workaround. Cause: the `sky130_fd_pr` subckt derives
-  `ad/as/pd/ps/nrd/nrs` from W by `.param` expression at PARSE time. `alter`
-  writes the `w` instance parameter and leaves every geometry-derived
-  parasitic at its old value, so the device becomes internally inconsistent.
-  Two further traps found on the way: `alter @m...[w] = 3.2u` applies
-  `scale=1e-6` a SECOND time (giving 3.2e-12 m), so alter takes PLAIN numbers
-  exactly as the netlist does; and `alter xm1 w=...` (the X-instance form)
-  does not work at all — only the hierarchical
-  `@m.xm1.msky130_fd_pr__nfet_01v8[w]` form reaches the device. In the failing
-  cases ngspice printed `Error: no model available for w=...` and then
-  **`print @m1[gm]` still returned the stale value** — exactly the §8 rule 10
-  failure mode. **Do not use `alter` for device geometry.** It is fine for the
-  ideal R/C/I elements (rs, cs, rl1/rl2, cl1/cl2, it1/it2), which are not
-  subckts.
-- **G36 — (nebula) TRIM THE PDK LIBRARY: 16-35 s -> 0.42 s, bit-identical.**
-  `nebula/device/spice/sky130_nfet_only.lib.spice` includes only the
-  `nfet_01v8` model files instead of the 30 device families the full
-  `sky130.lib.spice` loads per corner (20 V devices, BJTs, ESD, RF, the whole
-  pfet set — none of which the S2 CTLE instantiates). All five process corners
-  provided. Verified **exactly equal** (`rel=0, abs=0`) to the full library on
-  gm, gmbs, vth, id, g_dc, g_pk and inoise_total across 5 corners x 4 (W,L)
-  points chosen to straddle three W bins and two L bins —
-  `nebula/tests/test_trimmed_lib.py`, 22 tests, 7 s. Goldens captured from the
-  full library live in `tests/fixtures/sky130_full_lib_golden.json`; a
-  `slow`-marked test re-derives them after a PDK update.
-  **Gotcha within the gotcha:** a trimmed library MUST declare
-  `.option scale=1.0u` itself. The full library sets it in
-  `libs.tech/ngspice/all.spice`, which the trim does not include; omit it and
-  W=5 means five METRES, producing G31's misleading "could not find a valid
-  modelname" from the opposite cause.
-- **G37 — (nebula) `2*I_tail*RL` is a PEAK, not a peak-to-peak, and it is a
-  steering ceiling, not the linear swing.** Three separate traps in one
-  formula, and session 9c hit all three. Full steering puts `2*I*RL` across
-  the load in EACH polarity, so the differential output spans `+/- 2*I*RL` and
-  the peak-to-peak figure is **`4*I*RL`** — 9c compared required swings against
-  `2*I*RL` read as peak-to-peak and so ran 2x pessimistic. Then even `4*I*RL`
-  is the hard ceiling with the device slammed into triode; the number a
-  compression check needs is the **1 dB gain-compression** point, measured off
-  a `.dc` differential transfer curve. At the corrected reference: 1427 mVpp
-  linear, 2161 mVpp saturation-limited, 2281 mVpp steering, 2400 mVpp
-  textbook. And third: at this operating point the pair is still saturated far
-  past the 1 dB point (vds 1.29 V vs vdsat 0.079 V), so the limit is
-  **steering, not headroom** — which is why raising the supply barely helps
-  (G39). Use `sky130_runner.swing_limits()`; it returns `None` rather than
-  falling back to a computed ceiling when the sweep never reached compression.
-- **G38 — (nebula) on SKY130 `nf` does NOT multiply device width.** `W` is the
-  TOTAL width and `nf` only splits it into fingers. Measured at W=40,
-  1.5 mA/side: gm = 14.22, 13.68, 12.62, 13.12, 12.29, 11.79 mS for
-  nf = 1, 2, 4, 8, 16, 32 — a **+/-10% NON-MONOTONIC** parasitic effect. The
-  generic-BSIM4 netlists in the same directory write `m={NF}`, where nf really
-  is a multiplier, which is where `BOUNDS["nf_in"]`'s "1-32 multiplies
-  effective W" came from. Consequence for the action space: `nf_in`/`nf_tail`
-  are near-dead dimensions AND non-monotonic, which is worse than dead for a
-  policy gradient. Extra width must come from W (bin-capped at 100 um) or a
-  device multiplier.
-- **G39 — (nebula) the SKY130 3.3/5 V devices cannot do S3 at 2.5 GHz.**
-  `nfet_g5v0d10v5`'s model bins give it a **minimum L of 1.0 um** against
-  0.15 um for `nfet_01v8`, and f_T falls ~1/L^2. Measured at VDD=3.3 V over
-  six sizings: best peaking **2.66 dB**, below S3's 3 dB floor, at
-  1.32-1.38 GHz; pushing RL to 1200 ohm for gain moves the peak to 0.398 GHz
-  and drives the Nyquist boost to **-5.14 dB** (worse than a wire where the
-  data is — the CLAUDEwa §3 reading-(a)/(b) counterexample, on a second device
-  family). Swing improves only +12%, because the limit is steering not
-  headroom (G37), and power rises 5.4 -> 9.9 mW. **Rejected on f_T, not on
-  headroom.** Do not re-propose "use a higher-voltage device" without reading
-  this.
-- **G40 — (nebula) a bare yield percentage is not evidence of coupling, and
-  ours was not.** "5.3% of random samples meet S3, therefore S3 is a coupled
-  constraint" does not follow: a hit rate depends entirely on how wide the box
-  was drawn. The box-independent test is to decompose the conjunction and
-  compare the joint against the product of its marginals. Done for S3 across
-  three box widths: the raw yield swings **5.5x** (17.25% -> 8.73% -> 3.13%)
-  while the coupling factor stays at **1.00-1.06x**. The conditions are
-  independent; there is no coupling. One trap inside the trap: designs with no
-  peak at all fail both conditions together and make them look positively
-  associated, so the statistic must also be computed **conditional on a peak
-  existing** (that is the 1.04x figure). Costs the same simulations as the
-  bare percentage — three counters instead of one. Generalise the habit: any
-  "X% therefore hard" claim in this project needs the marginals next to it.
-- **G42 — (nebula) a search DIMENSION can be worth less than a constant, and
-  `cl` is.** Pinning `cl` at 150 fF and holding every other bound raises the S3
-  random-search yield from **8.73% [7.54, 10.09] to 13.54% [12.08, 15.16]** —
-  disjoint intervals, 2000 paired samples. The whole 10-500 fF bound is worse
-  than a single well-chosen value inside it, so the axis is not carrying
-  information, it is spending samples. That is now **two** of nine sampled
-  parameters that measurement says should not be in the action space
-  (`nf_in` is the other, G38). **The trap this sets: improving the box
-  improves the RANDOM-SEARCH BASELINE, which is what CLAUDEwa §7 requires RL
-  to beat at G3.** 8.73% -> 13.54% moves the bar from ~11 samples per hit to
-  ~7. Take the better box anyway — a baseline that was weak only because of a
-  badly chosen dimension is not one worth beating, and a judge will ask why
-  `cl` was searched at all — but record it as a deliberate decision, not as a
-  silent improvement that raises the bar three weeks before the gate. Full
-  data: `nebula/CL_SENSITIVITY.md`.
-- **G43 — (nebula) a RAW coupling factor tracks the no-peak fraction, not the
-  coupling.** G40 already said the statistic must also be computed conditional
-  on a peak existing. Session 10b shows *how badly* it matters, as a trend
-  rather than a footnote. Sweeping `cl` over 50/100/150/250/400 fF:
-
-        raw coupling          1.00  0.94  0.82  0.74  0.68   monotone
-        conditional coupling  1.08  1.10  1.01  1.02  1.05   flat
-        designs with a peak   1673  1559  1469  1313  1168   monotone
-
-  The raw factor moves by 32% while the real one does not move at all, and it
-  moves in lockstep with the number of designs that have no interior maximum.
-  Those fail A and B together and make the two look positively associated for
-  a reason that has nothing to do with S3. **Never quote a raw coupling factor
-  without the conditional one beside it** — it is the no-peak fraction in
-  disguise. (One honest wrinkle: at `cl` = 100 fF the conditional interval
-  [1.02, 1.20] does exclude 1.0, so there is a real ~10% adverse effect there.
-  Ten percent cannot explain a 8.73% yield; G40 stands.)
-- **G44 — (nebula) `meas ac MAX ... TO=50g` reports the SWEEP EDGE as a peak.**
-  The `has_peak` filter in `s3_yield.py` is
-  `peaking_db > 0.25 and f_pk_hz > 50e6`, which catches a monotonically
-  FALLING response (it reports `f_pk` at the 10 MHz start) but **not** a
-  response still rising at the top of the sweep, which reports `f_pk` at
-  ~47.9 GHz and sails through both tests. Observed on a real sample:
-  rl=111, cl=50f -> `f_pk = 47.863 GHz`, i.e. no interior maximum at all.
-  Those designs are counted in `n_has_peak` and should not be. It does not
-  affect S3 itself (47.9 GHz fails the 1.25-2.5 GHz window anyway) but it
-  inflates the has-peak denominator and therefore slightly biases the
-  conditional coupling factor. Fix is a symmetric upper guard
-  (`f_pk_hz < 0.9 * f_sweep_max`); not applied yet because it changes a
-  published statistic and needs the re-run to go with it.
+  8.10% is an OPTIMISTIC bound. Re-run `s9_yield.py` unchanged once a tail
+  transistor exists before relying on the 3-corner shortcut.
+  Full data: `nebula/S9_YIELD.md`.
+- **G48 — (nebula) 11 cores do NOT buy 11x; budget ~100 ms per corner
+  evaluation, not 0.42 s and not 38 ms.** Measured on 220 identical tasks:
+  1 worker 318 ms/task, 2 workers 179 (1.78x), 4 workers 150 (2.11x), 8
+  workers 106 (3.00x), 11 workers 100 (3.18x). **Efficiency collapses after
+  2 workers and the curve is flat past 8** — 8 to 11 buys 6%. Each run spawns
+  a process, parses the trimmed library and writes `wrdata` files, so wall
+  clock is dominated by process launch and disk I/O, and extra workers contend
+  for the same disk. Two ways to get this wrong: dividing the 0.42 s single-run
+  figure (G36) by the core count (predicts 38 ms, off by 2.6x), or quoting the
+  serial number for a parallel run (predicts 318 ms, off by 3.2x). Both have
+  appeared in cost estimates in this project.
 - **G25 — (nebula) the channel needs TWO loss numbers, not one.** A CTLE's
   peaking is RELATIVE (|H(f_nyq)|/|H(0)|), so what it equalises is the
   channel's **tilt**, not its absolute loss. Comparing peaking against
@@ -1875,6 +1578,20 @@ old one, and it is a human's (G1 as amended).
 
 ### 2026-08-04 — Session 10b (`cl` sensitivity: a search dimension worth less than a constant)
 
+> **CORRECTION, added by session 10c — read before quoting anything below.**
+> Every *coupling* number in this entry was measured with a peak detector that
+> counted `meas ac MAX` sweep-edge maxima as genuine peaks (G44), inflating the
+> has-peak population by up to 42%. Session 10c fixed it and re-ran all five
+> points. **What changes:** the raw coupling reads 1.05 -> 0.68 (not
+> 1.00 -> 0.68); the conditional reads 0.97-1.06 with all five intervals
+> covering 1.00; the "real ~10% adverse effect at 100 fF" reported below is
+> **RETRACTED** — 1.10x [1.02, 1.20] became 1.06x [0.99, 1.15]; and the
+> "lockstep with the falling peak count" explanation is **wrong**, because the
+> peak count is hump-shaped post-fix. **What does NOT change:** the S3 yields
+> (166/213/256/226/180 vs 165/213/256/228/180) and therefore every conclusion
+> in G42 about `cl` being a bad search dimension. Corrected numbers are in
+> `nebula/CL_SENSITIVITY.md` sec 9 and in G43/G44 as amended.
+
 **Tests: 430 -> 444** (+14, all in `nebula/tests/test_sky130_runner.py`;
 105.9 s, 2 deselected). Full write-up: `nebula/CL_SENSITIVITY.md`.
 **`common/params.py` is untouched** — this is a measurement and a proposal,
@@ -1953,3 +1670,129 @@ drift.
 tension), **G43** (raw coupling = no-peak fraction), **G44** (`meas ac MAX`
 reports the 50 GHz sweep edge as a peak, so `has_peak` over-counts; found
 while probing, not yet fixed because fixing it moves a published statistic).
+
+### 2026-08-05 — Session 10d (the corner-robust yield: a tax, not a constraint)
+
+**Tests: 444 -> 481** (+37; `nebula/tests/test_s9_yield.py` is 29 of them,
+the rest landed in `test_sky130_runner.py` alongside the runner work).
+`python -m pytest tests nebula/tests -q -m "not slow"`, split 92 + 389,
+2 deselected. Full write-up: `nebula/S9_YIELD.md`. **`common/params.py` is
+untouched** — rule 6 again; this is a measurement, not a bound change.
+
+*(Session 10c has no entry of its own: its work was the G44 peak-detector fix,
+recorded as the correction block at the head of the 10b entry and in G43/G44.)*
+
+**What this closes.** HANDOFF §8's third follow-on and `BOUNDS_REDERIVATION.md`
+§7 item 3: every yield this project had published was TT/27 C, while S9
+requires every spec to hold at every corner. **20 205 SPICE runs, 47 min.**
+
+**The number, three ways, on the SAME 1890 designs:**
+
+        TT / 1.00 / 27 C          255/1890 = 13.49%
+        all 3 screen corners      155/1890 =  8.20%  [7.05, 9.52]
+        all 45 corners            153/1890 =  8.10%  [6.95, 9.41]
+
+        cross-tab:  TT pass + corners pass   155
+                    TT pass + corners FAIL   100   <- 39.2% of the winners
+                    TT fail + corners pass     0
+
+**39.2% of designs that meet every spec at nominal fail at a corner.** The
+defensible sentence is *"an optimiser scored at nominal is wrong about two of
+every five designs it calls a success"*. It is a **tax on the baseline**, not
+a coupled constraint — S9 was listed in BOUNDS_REDERIVATION §4 as the cheapest
+route to replacing the argument G40 retired, and **it did not deliver one**.
+Recorded plainly because the temptation to dress 13.49 -> 8.10 up as coupling
+is exactly the mistake G40 exists to prevent.
+
+**The bottom-right zero is a real check, not a tautology.** tt/1.00/27 C is NOT
+one of the three screen corners, so "no design fails nominal yet passes all
+three extremes" had to be measured.
+
+**Consistency with 10b.** CL_SENSITIVITY reports 13.54% (256/1890) at
+cl = 150 fF counting S3 alone; this run additionally requires Nyquist boost,
+S5, S6 and saturation, and gets 255. Four extra conditions remove exactly one
+design — outside S3, nothing in this box binds at nominal.
+
+**Three reusable results, which are worth more than the yield:**
+
+1. **G47 — three corners are worth 98.7% of forty-five.** The screen corners
+   are a SUBSET of the 45, so the screen has **no false negatives by
+   construction** and its yield is a hard upper bound; the only error possible
+   is a false positive, and it made two out of 155. Stage 2 spent **64% of the
+   wall clock to reject two designs**. Budget the RL reward at 3-5 corners,
+   full sweep in a verification tier.
+2. **G46 — the worst corner is FAST-hot, not slow-hot.** Every promotion-stage
+   failure lands at 125 C on ff/sf/tt and **none on ss at any rail**. A faster
+   device has higher gm, which pushes the peak out through S3's 2.5 GHz top
+   edge. S3 is a two-sided spec and its two edges sit on opposite sides of the
+   process axis, so "the worst corner" is not a well-formed idea for it. The
+   screen had been built on the slow-hot folklore.
+3. **G48 — 11 cores buy 3.2x, not 11x.** 318 / 179 / 150 / 106 / 100 ms per
+   task at 1 / 2 / 4 / 8 / 11 workers. Efficiency collapses after 2 and the
+   curve is flat past 8. **~100 ms per (design, corner) is the number to
+   budget** — dividing G36's 0.42 s by the core count is off by 2.6x, and
+   quoting the serial figure is off by 3.2x. Both have appeared in estimates
+   here.
+
+**What binds, which is the headline the script was written to produce.** Of
+1890 designs at each screen corner, first failure by normalised shortfall
+(CLAUDEwa §9):
+
+        S3_f_peak      800 / 799 / 786   (42%)   median -1.7 to -2.1 GHz
+        S3_peaking     686 / 719 / 688   (37%)   median -3.000 dB
+        S3_nyq_boost   162 / 126 / 144   ( 8%)   median about -1.0 dB
+        headroom        13 /   - /  13
+        saturation       5 /   1 /   3
+        S6_power         - /   2 /   -
+
+The median S3_peaking failure misses by **exactly -3.000 dB, i.e. its peaking
+is 0.000 dB** — a flat stage, not a mis-tuned one. Same population 9d found
+behind the low P(B) marginal, seen from the other side. **S5 never ranks as
+the binding constraint anywhere**, and S6 does so twice in 5670 runs: what
+binds in this box is bandwidth PLACEMENT, and it is not close.
+
+**Health, and why it is printed.** 0 hard simulator failures, 0 retries, 26
+(design, corner) headroom rejections (13 at each 0.95 V slow corner), and
+**0 screen/promotion mismatches across 465 repeated (design, corner) pairs** —
+the free determinism check that falls out of the screen corners being members
+of the 45. A mismatch would have invalidated everything downstream (G45).
+
+**THE CAVEAT THAT OUTRANKS ALL OF IT: the tail is still two ideal current
+sinks.** An ideal sink does not lose current at SS/125 C, does not gain it at
+FF/0 C, and does not fall out of saturation at 0.95 VDD. Every corner spread
+above is therefore an **understatement** and 8.10% is an **optimistic bound** —
+it is the corner spread attributable to the input pair alone. **This is why
+§8 now lists the tail transistor as the top open item**, above everything else
+in the Nebula backlog: it is the one experiment that could still turn corner
+robustness into a real constraint, and re-running it costs nothing new
+(`python -m nebula.experiments.s9_yield --n 2000`, unchanged).
+
+**Added this session:** `nebula/experiments/s9_yield.py` (the two-stage sweep,
+owning the three assumptions and printing them in every run header),
+`nebula/tests/test_s9_yield.py` (29 tests, all simulator-free — the arithmetic
+and the assumption-plumbing, which is where a wrong answer would be invisible),
+and `screen_augmentation()`, which maps each corner to the false positives it
+would have caught so the screen can be re-cut from data rather than intuition.
+Its default `--out` now resolves next to the script, not to the cwd: a 28-min
+run must not scatter its only record wherever it was launched from.
+
+### 2026-08-05 — Session 11 (Where do the robust designs live?)
+
+**Tests: 481 passing** — `python -m pytest tests nebula/tests -q -m "not slow"`.
+
+**What this closes.** Executed the "Where do the robust designs live?" experiment
+to understand what makes a design corner-robust. Full write-up: `nebula/ROBUST_GEOMETRY.md`.
+
+**Key Results:**
+- Corner robustness is strongly predicted by **f_peak margin** to the S3 window edge.
+- A margin of >= 0.20 octaves raises the conditional yield from 60.8% to 76.1%.
+- Physical parameter interiority (e.g., staying away from the edge of the W or L box)
+  does NOT statistically separate robust from fragile designs.
+- Confirmed G46: fragile designs sitting below the centre fail at SS (drops gm),
+  while those above the centre fail at FF (pushes peak out the top).
+
+**Methodology (G49):**
+The analysis is now simulator-free. `robust_geometry.py --collect` re-ran the 7560
+SPICE simulations (taking ~13 minutes) to regenerate the seeded population and saved
+`robust_geometry_data.csv`. The analysis script then renders figures instantly from
+the CSV without calling ngspice.
