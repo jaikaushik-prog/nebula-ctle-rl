@@ -518,3 +518,115 @@ them.
   documents.
 - **The tail is still two ideal current sinks**, so 0.05 % remains an
   **optimistic** bound in exactly the same way 8.10 % was.
+
+---
+
+## 9. The tail was ideal, and now it is not
+
+**Session 13, 2026-08-06.** `python -m nebula.experiments.s9_yield --n 2000`
+re-run with a real current-mirror tail. **15 255 SPICE runs, 35.2 min.** Full
+device write-up: `nebula/TAIL_DEVICE.md`. Prediction vs outcome:
+`nebula/PREDICTIONS.md` entry 2, committed before the run.
+
+Every number in §1–§8 of this file carried the caveat *"optimistic bound — the
+tail is two ideal current sinks"* (G47). **That caveat is now discharged, and
+the answer is that it was worth less than expected.**
+
+### The headline: the yield did not move
+
+```
+                              12b (ideal tail)      13b (real tail)
+      nominal PVT, both loads     15 / 1890            15 / 1890   0.79 %
+      3 corners x 2 loads          1 / 1890             1 / 1890   0.05 %
+      45 corners x 3 loads         1 / 1890             1 / 1890   0.05 %
+```
+
+Same box, same seed, **same 1890 designs**, and **the same surviving design**
+(index 432, identical parameters). Health: 0 screen/promotion mismatches, 52
+headroom rejections (exactly 12b's — `headroom_ok_1v8` does not read the tail
+and was deliberately not changed), 12 hard failures in 15 255 runs (0.08 %, all
+G54 NaN).
+
+### What did move: 8.8 % of the corner-robust population
+
+```
+                              12b        13b       delta
+      robust at cl_lo alone    43         39         −4
+      robust at cl_hi alone   118        108        −10
+      robust at ANY load      160        146        −14   (−8.8 %)
+      robust at EVERY load      1          1         ±0
+```
+
+Per screen column: `−7, −7, +5, +7, +0, −8`. So the tail is **a real but
+second-order tax**, and the comparison that matters is against §8's:
+
+| what was assumed away | cost to the corner-robust population |
+|---|---|
+| the PVT corners (§4) | **39 %** of the nominal winners |
+| the **load range** (§8) | **99.4 %** |
+| the **ideal tail** (this section) | **8.8 %** |
+
+**The load remains the binding constraint by a wide margin.**
+
+### The mechanism, measured paired
+
+600 designs at `cl_hi`, the *same* design evaluated with an ideal tail and with
+the mirror:
+
+| corner | pass with both | gained | lost | net |
+|---|---|---|---|---|
+| `ff / 1.05 / 0 °C` | 53 | 6 | 5 | **+1** |
+| `ss / 0.95 / 125 °C` | 40 | 6 | **10** | **−4** |
+
+The slow-hot losses are the tail's own constraint (4 of 10 ranked
+`tail_saturation`, against 1 of 5 at fast-cold). The gains at both corners are
+mostly designs pulled back inside the S3 window by the mirror's ~2 % `gm`
+reduction. **The supportable statement is "the tail costs designs at slow-hot
+and is roughly neutral at fast-cold"** — +1 on 600 paired designs is noise.
+
+### A new spec row, and a new table that was needed to see it
+
+`tail_saturation` is `vds_tail > vdsat_tail`, and it is **the only row in the
+table that couples five box coordinates**: `vds_tail` *is* the input pair's
+source node, so the constraint reads
+
+```
+      VCM − Vgs(I_tail, W_in, L_in)   >   vdsat_tail(I_tail, W_tail, L_tail)
+```
+
+| screen corner | **violated** | ranked worst |
+|---|---|---|
+| `ss / 0.95 / 125 °C` | **13.3 %** | 0.6–1.5 % |
+| `ss / 0.95 / 0 °C` | 6.3 % | 0.4–0.8 % |
+| `tt / 1.00 / 27 °C` | 5.2 % | 0.2–0.7 % |
+| `ff / 1.05 / 0 °C` | 2.6 % | 0.1–0.2 % |
+
+**The two columns differ by an order of magnitude and the gap is a
+methodological finding, not a detail.** The first-failure ranking scores by
+normalised shortfall, so a constraint missing by tens of millivolts always
+loses to an `S3_f_peak` missing by 17 GHz. §2 of this file argues that *"which
+spec binds"* is the headline output — **it now has two meanings and they
+disagree**, so this script prints both. A constraint can bind on an eighth of
+the population and appear as a 1 % footnote.
+
+### What this settles, and what it retires
+
+- **RETIRE:** HANDOFF §8's *"this is the one experiment that could still turn
+  corner robustness into a real constraint rather than a tax."* It did not.
+  `tail_saturation` is a genuine coupled inequality but it costs 8.8 %, against
+  the load's 99.4 %. Retire it the way G40's coupling claim was retired, rather
+  than letting it drift into a deliverable.
+- **DISCHARGE:** every *"optimistic bound"* caveat in §1–§8. The optimism was
+  worth 8.8 % of the corner-robust-at-some-load population and **zero** of the
+  headline yield.
+- **SURVIVES:** G46, G47 and G48. The screen was again **exact** (1 promoted,
+  1 robust, 0 false positives) and the 45-corner promotion rejected nothing.
+- **NEW, and it lowers a planned cost:** session 11's margin thresholds were
+  flagged as lower bounds *because* the tail was ideal. A rule-sized tail moves
+  a design's peaking by ~0.05 dB — below the 0.0664-octave `f_peak`
+  quantisation. **Re-running `robust_geometry.py --collect` is now a low-value
+  experiment**, which is worth knowing before spending 23 minutes on it.
+- **STILL OPEN:** every design scored here is a FIXED sizing point, while S3
+  says the peaking is tunable via `R_s`/`C_s`. 0.05 % remains a lower bound on
+  what a tunable part achieves, and that experiment is still not written. It is
+  now unambiguously the highest-value one left.

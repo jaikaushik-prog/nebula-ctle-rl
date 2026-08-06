@@ -12,7 +12,48 @@
 > discovered to the Gotchas section. A change without a handoff update is an
 > incomplete change.
 
-Last updated: **2026-08-06** (session 12b: **the LOAD, not the corner set, is
+Last updated: **2026-08-06** (session 13: **the tail is a real transistor, and
+the assumption it replaced was worth 8.8% — not the missing coupled
+constraint.** The tail had been TWO IDEAL CURRENT SINKS in every simulation
+this project ever ran, which is why every corner spread was an UNDERSTATEMENT
+and every yield an OPTIMISTIC bound (G47), and why three of nine box dimensions
+had no provenance. It is now a **current mirror**: one device per side (a
+shared tail would short out the Rs/Cs degeneration), gates from a
+diode-connected reference at ratio N=8. **`I_ref` is the one remaining ideal
+element**, declared. **THE RESULT: the corner-and-load-robust yield did not
+move — 1/1890 before and after, and it is the SAME design** (index 432,
+identical parameters); 15 255 SPICE runs, 35.2 min. What the ideal tail cost is
+**8.8% of the corner-robust-at-some-load population** (160 -> 146) and **zero**
+of the headline. Next to what was already measured: **the PVT corners cost 39%,
+the LOAD range 99.4%, the ideal tail 8.8%** — the load is still binding by a
+wide margin, and **HANDOFF §8's claim that the tail was "the one experiment
+that could still turn corner robustness into a real constraint rather than a
+tax" is RETIRED**, on the same footing as G40. `tail_saturation` IS a genuine
+coupled inequality — `vds_tail` IS the input pair's source node, so it ties
+**VCM, W_in, L_in, i_bias and the tail geometry into ONE inequality**, the only
+row in the spec table coupling five box coordinates — but it binds on
+2.6-13.3% of the box. **The transferable finding is methodological: "which spec
+binds" has TWO meanings and they disagree by an order of magnitude** —
+`tail_saturation` is VIOLATED by 13.3% at ss/0.95/125C and RANKED WORST by
+1.5%, because it misses by tens of millivolts while `S3_f_peak` misses by
+17 GHz. The first-failure table systematically hides any constraint that
+travels with a larger one; `s9_yield.py` now prints a violation table beside
+it. Three further results: **the mirror delivers 4-8% LESS than requested and
+that is physics** (channel-length modulation across a 0.7 V vds mismatch), so
+S6 is billed on MEASURED supply current; **tail noise is NOT common-mode in
+this topology** — S5 rises 1.61x to 0.442 mV with the two tails at **66% of
+the noise POWER**, while the mirror REFERENCE (whose noise really is
+common-mode) is rejected to 2e-21, because S2 needs one sink per side and two
+devices have independent noise; and **`w_tail`/`l_tail`/`nf_tail` now have
+provenance and the recommendation is NOT to search them**, keeping the action
+space at nine dimensions (`TAIL_DEVICE.md` §6; `params.py` untouched, rule 6).
+7 of 9 pre-registered predictions held; **2e and half of 2g are recorded
+misses**. New gotchas **G53** (the SKY130 bin ceiling is on W per FINGER, not
+total width — so `w_in`'s own provenance describes a per-finger limit as a
+total) and **G54** (`.noise` can return `-nan(ind)` and exit 0; caught only by
+accident). **618 -> 679 green.** Full write-ups `nebula/TAIL_DEVICE.md`,
+`nebula/S9_YIELD.md` §9, `nebula/PREDICTIONS.md` entry 2.
+Earlier session 12b: **the LOAD, not the corner set, is
 the binding constraint — and it is not close.** Screening `cl` over the derived
 range instead of pinning it at 150 fF takes the corner-robust yield from
 **8.20% to 0.05% — one design in 1890** [0.01, 0.30]. Same box, same seed, same
@@ -308,6 +349,17 @@ signaling, ADC-based DSP receiver, 28 nm CMOS reference parameters).
 │   │                       corner-and-load-robust yield, against the stated
 │   │                       expectation of 8.73-13.54%. Precedent: G40 and
 │   │                       10b's failed f_p2 prediction.
+│   ├── TAIL_DEVICE.md      NEW (2026-08-06, session 13). The tail transistor,
+│   │                       measured. Closes the ideal-current-sink assumption
+│   │                       that made every S9 number an optimistic bound
+│   │                       (G47). Answer: it was worth **8.8%** of the
+│   │                       corner-robust population and **zero** of the
+│   │                       headline yield. Read §0 first (I_ref is still
+│   │                       ideal; matching is not modelled), §2 for the
+│   │                       coupling identity vds_tail == v(source), §4 before
+│   │                       repeating "tail noise is common-mode" (it is not,
+│   │                       in this topology), and §6 for the three box edges
+│   │                       — which recommend NOT searching any of them.
 │   ├── S9_YIELD.md         NEW (2026-08-05). Corner-robust yield: 3-corner
 │   │                       screen -> 45-corner promotion, with CIs, the
 │   │                       measured parallel speedup, and — the actual
@@ -656,10 +708,10 @@ Plus: git init, .gitignore, 28 tests, Wilson-bound BER reporting.
 
 ## 6. Key numbers & validated behavior (current state)
 
-- Tests: **618 passing** —
+- Tests: **679 passing** —
   `python -m pytest tests nebula/tests -q -m "not slow"`.
-  Split: `tests/` **92**, `nebula/tests/` **526**. (Was 65 + 267 = 332 at the
-  start of session 9; 430 at the end of it; 444 after 10b; 528 after 11.) Two
+  Split: `tests/` **92**, `nebula/tests/` **587**. (Was 65 + 267 = 332 at the
+  start of session 9; 430 at the end of it; 444 after 10b; 528 after 11; 618 after 12b.) Two
   further tests are marked `slow` and deselected by default: they re-derive
   the SKY130 golden values from the FULL library (~30 s each). Run them after
   a PDK update. **Runtime is machine-load dependent** — the same suite has
@@ -772,6 +824,52 @@ Plus: git init, .gitignore, 28 tests, Wilson-bound BER reporting.
   against G48's 106 ms on a quiet machine. **Still an OPTIMISTIC bound — the
   tail is ideal** — and still a fixed-sizing score, so it is a lower bound on
   what S3's own R_s/C_s tunability could achieve (unmeasured).
+- **The tail is a real transistor, and the ideal-tail assumption was worth
+  8.8%** (session 13, `nebula/TAIL_DEVICE.md`, 15 255 + 261 SPICE runs).
+  Every S9 number this project published carried "optimistic bound — the tail
+  is two ideal current sinks" (G47). **Discharged:**
+
+        corner-and-load-robust yield   1/1890 (ideal)  ->  1/1890 (real tail)
+        and it is the SAME design, index 432, identical parameters
+        robust at ANY load               160          ->    146   (-8.8%)
+        headroom rejections               52          ->     52   (unchanged)
+
+  What the tail cost, next to what was already known: **PVT corners 39%, the
+  LOAD range 99.4%, the ideal tail 8.8%.** The load is still the binding
+  constraint by a wide margin. Five things worth carrying:
+  - **The coupling identity is exact.** `vds_tail == v(source)` to 0 and
+    `v(source) == VCM - Vgs_in` to 6e-17, so `tail_saturation` ties **VCM,
+    W_in, L_in, i_bias and the tail geometry into one inequality** — the only
+    row in the spec table that couples five box coordinates. It binds on
+    **13.3% at ss/0.95/125C, 2.6% at ff/1.05/0C**.
+  - **"Which spec binds" now has two meanings and they DISAGREE by an order of
+    magnitude.** Ranked-worst vs ever-violated: `tail_saturation` is 13.3% of
+    the second and 1.5% of the first, because it misses by tens of millivolts
+    while `S3_f_peak` misses by 17 GHz. `s9_yield.py` prints both now; without
+    the second table the tail reads as a 1% footnote.
+  - **The mirror delivers 4-8% LESS than requested, and that is physics** —
+    channel-length modulation across a 0.7 V vds mismatch between reference and
+    tail. It moves with corner (-5.4% ff, -6.6% tt, -8.1% ss), which is exactly
+    what an ideal sink could not do. S6 is billed on **measured** supply current
+    now.
+  - **Tail noise is NOT common-mode in this topology, and S5 rises 1.61x**
+    (0.275 -> 0.442 mV_rms) with the **two tail devices at 66% of the noise
+    POWER**. The common-mode argument is real and visible — the mirror
+    REFERENCE is rejected to 2e-21 — but S2 needs one sink per side or the
+    degeneration is shorted, and two devices have independent noise. Still
+    passes: headroom 5.5x -> 3.4x against 1.5 mV.
+  - **`w_tail`, `l_tail`, `nf_tail` now have provenance and the recommendation
+    is NOT to search them** (`TAIL_DEVICE.md` §6): `w_tail` follows from
+    `i_bias` by a current density (**105-124k um/A**, 1.18x drift across a 4x
+    current change), `nf_tail` is near-dead (**0.6%**), `l_tail` spans one
+    octave. Keeps the action space at nine dimensions rather than twelve.
+    `params.py` untouched (rule 6).
+  Two new gotchas, **G53** (the SKY130 bin ceiling is on W per FINGER) and
+  **G54** (`.noise` can return `-nan(ind)` and exit 0). Also: session 11's
+  margin thresholds were flagged as lower bounds because the tail was ideal —
+  a rule-sized tail moves peaking by ~0.05 dB, below the 0.0664-octave
+  quantisation, so **re-running `robust_geometry.py --collect` is now a
+  low-value experiment.**
 - **`cl` has a derived range, and it is entirely below the value every corner
   number used** (session 12a, `nebula/CL_RANGE.md`, 180 SPICE runs / 16 s).
   Derived from what physically loads the CTLE output — the 1-tap DFE summer
@@ -857,7 +955,21 @@ Plus: git init, .gitignore, 28 tests, Wilson-bound BER reporting.
    (`nebula/NRZ_RETARGET_AUDIT.md`); bounds re-derived; robust geometry
    confirmed; corner-yield swept (13.49% -> 8.10%). Blocking next actions,
    in priority order:
-   - **>>> THE TAIL TRANSISTOR IS NOW THE HIGHEST-VALUE OPEN ITEM. <<<**
+   - **>>> THE TAIL TRANSISTOR IS DONE (session 13). <<<** Kept here in full
+     because the ARGUMENT it was promoted on turned out to be wrong, and that
+     is worth more than the closure. **Measured cost of the ideal-tail
+     assumption: 8.8% of the corner-robust-at-some-load population and ZERO of
+     the headline yield** (1/1890 before and after, and the SAME design).
+     `tail_saturation` IS a genuine coupled inequality — the only row in the
+     spec table tying five box coordinates together — but it binds on
+     2.6-13.3% of the box depending on corner. **The claim below that this was
+     "the one experiment that could still turn corner robustness into a real
+     constraint rather than a tax" is RETIRED**, on the same footing as G40's
+     coupling claim. Full write-up `nebula/TAIL_DEVICE.md`; S9 re-run
+     `nebula/S9_YIELD.md` §9; prediction vs outcome `nebula/PREDICTIONS.md`
+     entry 2. **The remaining ideal element is `I_ref`**, declared in
+     `TAIL_DEVICE.md` §0.
+     ORIGINAL ITEM, for the record:
      (Promoted 2026-08-05.) Every simulation this project has ever run uses
      **two ideal current sinks** for the tail. An ideal sink delivers exactly
      I_tail at every corner: it does not lose current at SS/125C, does not
@@ -3007,3 +3119,111 @@ different circuit in it. It already was once, during this session's plumbing
 checks, and was recoverable only because G49 had made it tracked.
 
 **Not done, by instruction:** the `--n 2000` re-run. It follows this commit.
+
+### 2026-08-06 — Session 13b (the tail transistor: the S9 re-run)
+
+**Tests: 679, unchanged** (nothing executable changed in this half; 13a added
+the +61). `python -m pytest tests nebula/tests -q -m "not slow"`, split
+92 + 587, 2 deselected, 81 s. Write-ups: `nebula/TAIL_DEVICE.md` §8,
+`nebula/S9_YIELD.md` §9, `nebula/PREDICTIONS.md` entry 2 outcome.
+**`common/params.py` untouched** — rule 6.
+
+**THE RESULT: the yield did not move. 1/1890 before, 1/1890 after, and it is
+the SAME design** (index 432, identical parameters). 15 255 SPICE runs,
+35.2 min, 8 workers.
+
+        pinned-ideal (12b)     real tail (13b)
+        nominal, both loads     15/1890  0.79%     15/1890  0.79%
+        3 corners x 2 loads      1/1890  0.05%      1/1890  0.05%
+        45 corners x 3 loads     1/1890  0.05%      1/1890  0.05%
+
+**What the ideal-tail assumption was actually worth: 8.8%** of the
+corner-robust-at-some-load population (160 -> 146), and **zero** of the
+headline yield. Put next to what was already measured, that is the sentence
+this session produces:
+
+        the PVT corners cost   39%   of the nominal winners  (10d)
+        the LOAD range costs   99.4%                         (12b)
+        the IDEAL TAIL cost     8.8%                         (13b)
+
+**So the argument the item was promoted on is RETIRED.** HANDOFF §8 called the
+tail *"the one experiment that could still turn corner robustness into a real
+constraint rather than a tax."* It did not. `tail_saturation` **is** a genuine
+coupled inequality — `vds_tail` IS the input pair's source node, so it ties
+**VCM, W_in, L_in, i_bias and the tail geometry into one inequality**, the only
+row in the spec table that couples five box coordinates — but it binds on
+2.6-13.3% of the box and costs 8.8%. Retired on the same footing as G40's
+coupling claim, and §8 of this file now says so in place rather than quietly
+dropping it.
+
+**The methodological finding, and it is the transferable part: "which spec
+binds" has TWO meanings and they disagree by an order of magnitude.**
+
+        tail_saturation at ss/0.95/125C:   VIOLATED 13.3%   RANKED WORST 1.5%
+
+The first-failure ranking scores by normalised shortfall, so a constraint
+missing by tens of millivolts always loses to an `S3_f_peak` missing by
+**17 GHz**. `S9_YIELD.md` §2 declares "which spec fails first" the headline
+output; on this evidence that table **systematically hides any constraint that
+travels with a larger one**, and a real 13% constraint reads as a 1% footnote.
+`s9_yield.py` now prints a violation table beside it. This was pre-registered
+(`PREDICTIONS.md` 2d vs 2e predicted the gap) and the gap is why the table was
+built before the run rather than after.
+
+**Prediction vs outcome: 7 of 9 held, 2 missed, both recorded.**
+- ✅ 2a yield 0-2 (**1**); 2b nominal 6-16 (**15**); 2c headroom **unchanged at
+  52**, exactly; 2d `tail_saturation` first-fail 0-3% (**0.1-1.5%**); 2f S5
+  never the first failure (**never, and never even violated**); 2g S6 first
+  failures ~2 (**exactly 2**); 2h `S3_f_peak` dominant and worse at `cl_lo`
+  (**84.4% vs 56.2%**).
+- ❌ **2e** predicted `tail_saturation` violated 10-20% **at every screen
+  point**; measured **2.6% to 13.3%, ordered by corner**. The reasoning was
+  right about the rule and wrong about where it applies: **the rule sizes the
+  tail at `ss/0.95/125C`, so at every other corner it is deliberately
+  oversized** (`vdsat_tail` 0.201 V at SS vs 0.134 V at FF for the survivor).
+  Sizing at the worst corner buys a **5x** reduction in tail-saturation
+  failures at the best one — a result, not an accident.
+- ❌ **2g's second half** predicted measured power within ±3% of requested;
+  it is **-7.3%**, and the arithmetic was available beforehand
+  (`1.971/2.125`). Against **12b's** billing it is only **-1.4%**, which is the
+  number the claim should have been about and why S6 did not get harder.
+- ⚠ 2i predicted a 0.1-1% G54 NaN rate; measured **0.07-0.11%**, at or just
+  below the bottom edge.
+
+**The pre-registered falsification mechanism is REAL but does not dominate.**
+I wrote that a yield rise would mean the mirror's current shortfall was pulling
+`f_peak` back under S3's top edge. Measured paired over 600 designs at `cl_hi`
+(same design, ideal tail vs mirror, so the tail is the only difference):
+
+        ff/1.05/0     6 gained,  5 lost   net +1
+        ss/0.95/125   6 gained, 10 lost   net -4
+
+4 of the 10 slow-hot losses are ranked `tail_saturation`, against 1 of 5 at
+fast-cold. **The supportable statement is "the tail costs designs at slow-hot
+and is roughly neutral at fast-cold"** — +1 on 600 paired designs is noise, and
+the full run's `+5, +7` at the two FF columns should not be read as a gain.
+
+**The survivor, now with a real tail under it.** Design 432 gets
+**W 180.8 um / L 0.5 um / nf 8**, reference 22.6 um / nf 1, `I_ref` 203 uA.
+Its tail margin is **+0.247 to +0.363 V** across the six screen points, so it
+did not survive by luck on that axis. What it spends is the WINDOW: `f_peak`
+ranges **1.259-2.399 GHz**, i.e. **0.93 of the 1.00-octave S3 window** —
+confirming 12b's "less than one ladder rung of margin" from an independent
+direction.
+
+**One planned experiment just got cheaper to skip.** Session 11's margin
+thresholds (0.133 octaves of `f_peak` margin, 1.0 dB of peaking margin) were
+flagged as LOWER bounds because the tail was ideal. A rule-sized tail moves a
+design's peaking by ~0.05 dB, below session 11's own 0.0664-octave `f_peak`
+quantisation. **Re-running `robust_geometry.py --collect` is now low-value**,
+which is worth knowing before spending 23 minutes on it.
+
+**Health:** 0 screen/promotion mismatches, 52 headroom rejections (exactly
+12b's), **12 hard failures in 15 255 runs (0.08%), all G54 NaN**. The screen
+was exact again — 1 promoted, 1 robust, 0 false positives — so G46, G47 and G48
+all survive.
+
+**Still open, and now unambiguously the highest-value item:** every design
+scored here is a **fixed sizing point**, while S3 says the peaking is tunable
+via `R_s`/`C_s`. **0.05% is a lower bound on what a tunable part achieves**, and
+that experiment is not written.

@@ -280,6 +280,119 @@ foresight.
   an already-failing one. More interesting than the yield.
 * **2c moving.** Would mean something reads the tail that should not.
 
-### Outcome
+### Outcome — 2026-08-06, 15 255 SPICE runs, 35.2 min, 8 workers
 
-*(to be filled in after the run, whichever way it goes)*
+**The yield did not move: 1 / 1890, and it is the SAME design** (index 432,
+identical parameters). 7 of 9 predictions held; **2e and half of 2g are
+misses** and are recorded as such.
+
+| # | predicted | measured | |
+|---|---|---|---|
+| 2a | 0/1890, band 0-2, "most likely 0" | **1 / 1890 = 0.05 %** [0.01, 0.30] | ✅ in band, though "most likely 0" was wrong |
+| 2b | 6-16 designs | **15 / 1890 = 0.79 %** | ✅ (and *identical* to 12b) |
+| 2c | headroom rejections UNCHANGED | **52, exactly as in 12b** (13 per 0.95-V column x 4) | ✅ |
+| 2d | `tail_saturation` in the first-failure table at 0-3 % | **0.1-1.5 %** across the six screen points | ✅ |
+| 2e | `tail_saturation` violated by 10-20 % **at every screen point** | **2.6 % (ff/1.05/0) to 13.3 % (ss/0.95/125)** | ❌ wrong as worded |
+| 2f | S5 never the first failure | **never** — and it never appears in the violation table either | ✅ |
+| 2g | S6 first failures still ~2 | **exactly 2**, both at `ff/1.05/0` | ✅ |
+| 2g | measured power within ±3 % of requested | **−7.3 %** | ❌ |
+| 2h | `S3_f_peak` dominant, worse at `cl_lo` | **84.4 % vs 56.2 %** at TT | ✅ |
+| 2i | G54 NaN rate 0.1-1 % | **0.07 %** (8/11 340) and **0.11 %** (4/3 780) | ⚠ at/below the bottom edge |
+
+### Why 2e missed, and it is the more interesting of the two
+
+I predicted 10-20 % from the fact that **12.2 % of the 1890 designs have
+`v(source) < 0.20 V` at TT**, reasoning that the sizing rule puts
+`vdsat_tail` at ~0.20 V. That was right about the *rule* and wrong about where
+it applies. **The rule sizes the tail at `ss/0.95/125 °C`, the corner that needs
+the most width**, so at every *other* corner the tail is deliberately
+oversized and its `vdsat` is well below 0.20 V — measured 0.134 V at
+`ff/1.05/0` against 0.201 V at `ss/0.95/125` for the surviving design. The
+violation rate therefore tracks the corner, not a single threshold:
+
+```
+        ss / 0.95 / 125 C      13.3 %      <- the corner the rule was sized at
+        ss / 0.95 /   0 C       6.3 %
+        tt / 1.00 /  27 C       5.2 %
+        ff / 1.05 /   0 C       2.6 %
+```
+
+**The conservative sizing choice is what bought that**, and it is a result
+rather than an accident: sizing at the worst corner costs width everywhere and
+buys a 5x reduction in tail-saturation failures at the best corner.
+
+### Why the second half of 2g missed
+
+I said measured power would land within ±3 % of requested. It is **−7.3 %**,
+and the arithmetic was available before the run: the mirror delivers −7.7 % into
+each of two sides while the reference branch adds +1/2N = +6.25 % of one side,
+so `1.971 / 2.125 = 0.928`. I compared against the wrong baseline. Against
+**12b's** billing (2.000 units) it is only **−1.4 %**, which is why S6 did not
+get harder — and that is the number the ±3 % claim should have been about.
+
+### The pre-registered falsification condition, and what actually happened
+
+I wrote:
+
+> *A yield ABOVE 12b's 1/1890 ... would mean the tail's perturbation is
+> systematically favourable — plausible in one specific way I do not expect to
+> dominate: at `cl_lo` the binding failure is `f_peak` too HIGH, and a mirror
+> that delivers less current lowers `f_peak`.*
+
+**The mechanism is real and it is present; it just does not dominate.** A
+paired run over 600 designs at `cl_hi` (same design, same corner, ideal tail vs
+mirror — so the only difference is the tail):
+
+```
+        ff / 1.05 / 0 C     6 GAINED,  5 LOST     net  +1
+        ss / 0.95 / 125 C   6 GAINED, 10 LOST     net  −4
+```
+
+and over the full 1890 the six screen columns moved
+`−7, −7, +5, +7, +0, −8`. So the tail is **a small roughly symmetric reshuffle
+across the S3 boundaries, plus a one-sided loss at slow-hot from
+`tail_saturation`** — 4 of the 10 SS losses are ranked `tail_saturation`,
+against 1 of the 5 at FF. The gains at both corners are mostly designs that had
+been failing `S3_peaking`, pulled back inside the window by the mirror's ~2 %
+`gm` reduction and ~0.05 dB peaking reduction.
+
+**I should not claim "the tail helps at FF".** +1 on 600 paired designs is
+noise; what the data supports is *"the tail costs designs at slow-hot and is
+roughly neutral at fast-cold"*.
+
+### What actually changed, given the headline did not
+
+The **corner-robust-at-some-load** population fell **160 → 146 (−8.8 %)**:
+
+```
+                                  12b (ideal tail)   13b (real tail)
+        robust at cl_lo alone            43                39
+        robust at cl_hi alone           118               108
+        robust at ANY load              160               146
+        robust at EVERY load              1                 1
+```
+
+So the tail is a **real but second-order** tax on this population — against the
+load range's 99.4 %. **The load remains the binding constraint by a wide
+margin**, and the tail did not turn corner robustness into a coupled constraint
+the way §8 of `S9_YIELD.md` hoped it might.
+
+### The survivor, now with a real tail under it
+
+Design 432 (`w_in 100 um, l_in 0.399 um, nf 8, i_bias 3.25 mA, rs 319,
+cs 1.90 p, rl 565, vcm 1.407`) gets a tail of **W 180.8 um / L 0.5 um / nf 8**,
+reference 22.6 um / nf 1, `I_ref` = 203 uA. Across the six screen points:
+
+| corner @ load | `vds_tail` | `vdsat_tail` | margin | peaking | `f_peak` | mirror err |
+|---|---|---|---|---|---|---|
+| ss/0.95/125 @ lo | 0.4479 | 0.2006 | **+0.2473** | 6.058 dB | 1.995 GHz | −4.7 % |
+| ss/0.95/125 @ hi | 0.4479 | 0.2006 | +0.2473 | 5.223 dB | **1.259 GHz** | −4.7 % |
+| ff/1.05/0 @ lo | 0.4973 | 0.1342 | +0.3631 | 8.499 dB | **2.399 GHz** | −4.0 % |
+| ff/1.05/0 @ hi | 0.4973 | 0.1342 | +0.3631 | 7.310 dB | 1.514 GHz | −4.0 % |
+| ss/0.95/0 @ lo | 0.4358 | 0.1444 | +0.2914 | 7.659 dB | 2.188 GHz | −5.3 % |
+| ss/0.95/0 @ hi | 0.4358 | 0.1444 | +0.2914 | 6.602 dB | 1.380 GHz | −5.3 % |
+
+**Its tail has comfortable headroom** (+0.25 to +0.36 V), so it did not survive
+by luck on that axis. What it does spend is the **window**: `f_peak` ranges
+1.259-2.399 GHz, i.e. **0.93 of the 1.00-octave S3 window**, confirming 12b's
+"less than one ladder rung of margin" from a second direction.

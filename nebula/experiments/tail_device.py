@@ -982,15 +982,21 @@ def bounds_main(args) -> int:
         print(f"        small-signal number above it describes a different "
               f"circuit.")
     imp = saved.get("tail_impedance", {})
-    over = [x for x in imp.get("vs_w", []) if abs(x["delta_db"]) > S11_PEAKING_MARGIN_DB]
+    # The CEILING is set by the tail ADDING peaking (its source-node
+    # capacitance), so only positive excursions count. Filtering on |delta| and
+    # then indexing [0] would pick a NEGATIVE one at the narrow end and report
+    # a ceiling below the floor.
+    over = sorted((x for x in imp.get("vs_w", [])
+                   if x["delta_db"] > S11_PEAKING_MARGIN_DB),
+                  key=lambda x: x["w_um"])
     if over:
-        w_hi = min(x["w_um"] for x in over if x["delta_db"] > 0)
+        w_hi = over[0]["w_um"]
         print(f"  CEIL  ~{w_hi:.0f} um at 1.5 mA/side "
               f"= {w_hi / 1.5e-3 / 1e3:.0f}k um/A -- at this width the tail's "
               f"own source-node")
         print(f"        capacitance moves S3 peaking by more than session 11's "
               f"{S11_PEAKING_MARGIN_DB:.1f} dB margin")
-        print(f"        requirement ({[x for x in over if x['delta_db'] > 0][0]['delta_db']:+.2f} dB), "
+        print(f"        requirement ({over[0]['delta_db']:+.2f} dB), "
               f"i.e. the tail alone consumes the whole corner-robustness")
         print(f"        budget. Noise agrees in direction: the tails are "
               f"already the largest")
@@ -998,12 +1004,17 @@ def bounds_main(args) -> int:
 
     print(f"\n  --- l_tail ---")
     vs_l = imp.get("vs_l", [])
-    short = [x for x in vs_l if x["delta_db"] < -S11_PEAKING_MARGIN_DB]
+    # The FLOOR is set by a SHORT tail giving peaking away (low r_o shunting the
+    # degeneration), so only negative excursions count, and the binding one is
+    # the LONGEST length that still overspends the budget. Sorted explicitly
+    # rather than trusting the order the JSON happens to carry.
+    short = sorted((x for x in vs_l if x["delta_db"] < -S11_PEAKING_MARGIN_DB),
+                   key=lambda x: x["l_um"])
     if short:
-        l_lo = max(x["l_um"] for x in short)
-        print(f"  FLOOR 0.5 um. At L={l_lo:g} um the tail's output resistance "
-              f"shunts the degeneration")
-        print(f"        and gives away {short[-1]['delta_db']:+.2f} dB of "
+        worst = short[-1]
+        print(f"  FLOOR 0.5 um. At L={worst['l_um']:g} um the tail's output "
+              f"resistance shunts the degeneration")
+        print(f"        and gives away {worst['delta_db']:+.2f} dB of "
               f"peaking against the ideal tail -- more than")
         print(f"        session 11's whole {S11_PEAKING_MARGIN_DB:.1f} dB "
               f"margin. At 0.5 um it is "
