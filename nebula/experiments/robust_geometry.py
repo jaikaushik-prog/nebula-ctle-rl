@@ -76,7 +76,7 @@ from nebula.experiments.s3_yield import (
     wilson_ci,
 )
 from nebula.experiments.s9_yield import (
-    CL_FIXED_F,
+    CL_LEGACY_PIN_F,
     NOMINAL_VDD,
     SCREEN_CORNERS,
     evaluate_at_corner,
@@ -423,7 +423,7 @@ def population(n: int = 2000, seed: int = 20260804) -> list[dict[str, float]]:
     inside `evaluate_at_corner`, so losing headroom at 0.95 VDD stays a corner
     failure rather than being screened out up front).
     """
-    params = pin_param(sample_box(PROPOSED_BOX, n, seed), "cl", CL_FIXED_F)
+    params = pin_param(sample_box(PROPOSED_BOX, n, seed), "cl", CL_LEGACY_PIN_F)
     return [p for p in params if headroom_ok_1v8(p, NOMINAL_VDD) is None]
 
 

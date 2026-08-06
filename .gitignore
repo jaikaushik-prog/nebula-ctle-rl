@@ -69,9 +69,22 @@ results/
 python_models/results/
 
 # nebula experiment output (regenerate: python -m nebula.experiments.<name>)
+#
+# G49, AS AMENDED 2026-08-06: "regenerable" is not the test. An experiment's
+# output is TRACKED if any deliverable quotes a number from it — a results file
+# that took longer to produce than it takes to review is an INPUT to the
+# write-up, not a build artifact. `s9_yield_results.json` was in this list, and
+# when session 11 wanted the per-design coordinates behind S9_YIELD.md §4 it
+# cost 7560 fresh SPICE runs / 23 min to get back. It has been REMOVED from
+# this list and is now tracked.
+#
+# The two still ignored here are ignored DELIBERATELY and at a known cost: the
+# copies on disk are stale relative to the numbers BOUNDS_REDERIVATION.md and
+# CL_SENSITIVITY.md publish, so tracking them would ship a file that disagrees
+# with its own write-up. Their published figures are re-derivable only by
+# re-running (~3 min per row, seeded).
 s3_yield_results.json
 cl_sensitivity_results.json
-s9_yield_results.json
 analytic_screen_results.json
 
 # ngspice scratch. run_point() works in a TemporaryDirectory, but interactive

@@ -1,8 +1,24 @@
 # S9 corner-robust yield: what 45 corners take away, and how few of them you need
 
-**Date:** 2026-08-05 (session 10d) · **Simulator:** ngspice 41, trimmed SKY130
-library (G36) · **20 205 SPICE runs, 47 min wall clock** (12 645 for the two
-stages, 7 560 for the TT baseline and its paired re-screen in §4).
+> ## ⚠ READ §8 FIRST — every number in §1–§7 was measured at `cl` = 150 fF
+>
+> **Session 12b (2026-08-06) re-ran this experiment with `cl` treated as a
+> physically derived context RANGE instead of a pinned constant, and the yield
+> fell from 8.20 % to 0.05 %.** `CL_RANGE.md` shows the 150 fF pin — chosen
+> because it maximised the S3 yield among five values tested — is **1.92×
+> above the top of the range the following stage can actually present**
+> (13.6–78.0 fF).
+>
+> §1–§7 below are **not retracted**: they are correct, and they remain the
+> reference for *what the PVT corners alone cost*, which is a real and separable
+> result. But **8.20 % and 8.10 % are conditional on a load the circuit will
+> not see**, and neither may be quoted as "the corner-robust yield" without
+> §8 beside it. The three reusable findings (G46, G47, G48) survive unchanged.
+
+**Date:** 2026-08-05 (session 10d), §8 added 2026-08-06 (session 12b) ·
+**Simulator:** ngspice 41, trimmed SKY130 library (G36) · **20 205 SPICE runs,
+47 min wall clock** (12 645 for the two stages, 7 560 for the TT baseline and
+its paired re-screen in §4); §8 adds **15 255 runs, 49.3 min**.
 
 Closes `BOUNDS_REDERIVATION.md` §7 item 3 and HANDOFF §8's third follow-on:
 every yield this project has published is TT / 27 °C, and **S9 requires every
@@ -32,9 +48,15 @@ Both headlines have to be re-measured once a tail transistor exists.
 Reproduce:
 
 ```
-python -m nebula.experiments.s9_yield --n 2000
+python -m nebula.experiments.s9_yield --n 2000 --no-bench   # §8, ~49 min
+python -m nebula.experiments.s9_yield --tolerance-only      # §8.4-8.5, ~3 min
 python -m pytest nebula/tests/test_s9_yield.py -q
 ```
+
+The §1–§7 numbers are NOT reproduced by that command any more — it screens the
+derived `cl` range. To reproduce them, pin `cl` at `CL_LEGACY_PIN_F`; that pin
+is kept in the script for exactly this reason and because
+`robust_geometry.py` rebuilds session 10d's population from it.
 
 `common/params.py` is untouched — this is a measurement, not a bound change
 (CLAUDEwa §8 rule 6).
@@ -77,6 +99,16 @@ has to be able to reject each one:
    input capacitance plus routing — a load handed to you by layout, not a knob.
    Every number here is conditional on that load. (`CL_SENSITIVITY.md` measured
    150 fF as the best of five values tested; that is not why it is fixed.)
+
+   > **SUPERSEDED 2026-08-06 — and this is the assumption that broke.** The
+   > paragraph above is right that `cl` is a load rather than a knob, and wrong
+   > that a single number describes it. `CL_RANGE.md` derives the load from the
+   > gate capacitance of the stages the CTLE drives and gets **13.6–78.0 fF**,
+   > so 150 fF is not merely "a" load, it is **1.92× above the highest load the
+   > following stage can present**. The parenthesis — *"that is not why it is
+   > fixed"* — was an honest disclaimer that turned out not to be enough: the
+   > value still came from a yield maximisation, and no other value had been
+   > justified. See §8.
 2. **VCM held constant as VDD moves ±5 %.** The alternative assumes a bias
    network that tracks the supply, i.e. a circuit that does not exist yet.
    Holding it is the more conservative reading.
@@ -286,8 +318,203 @@ supersedes any per-point figure derived from the 0.42 s single-run number
    the single assumption that could move both headlines, and it is the only way
    to turn "the corner spread of the input pair" into an S9 result. Everything
    here is instrumented to be re-run as-is.
-2. **Re-cut the screen** with a hot fast corner and confirm exactness on a
-   fresh seed. One seed proving a screen exact is one seed.
+2. ~~**Re-cut the screen** with a hot fast corner~~ — still open, but see §8:
+   the screen now has a **load** axis and was exact on this sample.
 3. **Replace the `CHANNEL_DC_LOSS_DB` = 1.0 dB placeholder** before any
    compression verdict is quoted — it is still a made-up constant deciding a
    result (HANDOFF §8).
+4. ~~**`cl` is pinned at a yield-maximising value**~~ — **DONE 2026-08-06,
+   §8 below.** It cost the headline.
+
+---
+
+## 8. The load was an assumption, and it was the one that mattered
+
+**Date:** 2026-08-06 (session 12b) · **15 255 SPICE runs, 49.3 min**, 8 workers.
+Same box, same seed, same spec checker, **same 1890 designs** — `headroom_ok_1v8`
+does not read `cl`, so the population is identical to §1's and the comparison
+below is **paired**, not between two samples.
+
+What changed is one assumption. `cl` is no longer pinned; it is a **context
+variable with a physically derived range**, screened like a PVT corner. A design
+counts only if it passes at **every (corner, load) pair**. The range comes from
+`CL_RANGE.md`: **`cl_lo` = 13.64 fF, `cl_mid` = 32.63 fF, `cl_hi` = 78.04 fF**,
+a 5.72× spread derived from the gate load of the 1-tap DFE summer and the slicer
+plus routing.
+
+### 8.1 The number
+
+| | pinned 150 fF (§4) | range 13.6–78.0 fF |
+|---|---|---|
+| nominal PVT, TT/1.00/27 °C | 255/1890 = **13.49 %** | 15/1890 = **0.79 %** [0.48, 1.31] |
+| screen (3 corners) | 155/1890 = **8.20 %** | 1/1890 = **0.05 %** [0.01, 0.30] |
+| full sweep (45 corners) | 153/1890 = **8.10 %** | 1/1890 = **0.05 %** [0.01, 0.30] |
+
+Grid: nominal 1 corner × 2 loads; screen 3 corners × 2 loads = 6 evaluations per
+design; promotion 45 corners × 3 loads = 135 per survivor.
+
+**The load range costs 99.4 % of the nominal winners. The PVT corners cost
+39 %.** Both are computed on the same population, so they are directly
+comparable, and the ordering is not close: **the load is now the binding
+constraint and the corner set is second.**
+
+Health: **0 hard simulator failures, 0 retries** across all 15 255 runs;
+52 (design, corner, load) headroom rejections in the screen — exactly 2× the 26
+of §1, which is the expected result because `headroom_ok_1v8` does not read
+`cl` and each rejection is therefore duplicated across the two loads.
+**0 screen/promotion mismatches.**
+
+Cost, for the record: **192–199 ms per (design, corner, load) at 8 workers**,
+against G48's 106 ms. G48 was measured on a quiet machine; this run shared the
+box. The G48 lesson stands (parallelism stops paying at ~8 workers); its
+absolute number is a floor, not a budget.
+
+### 8.2 Why: the per-load sets are large and DISJOINT
+
+This is the result, and it was pre-registered as the follow-up to run if the
+joint count came out near zero (`PREDICTIONS.md` entry 1). It costs nothing —
+it re-reads the same six evaluations.
+
+| | designs | of 1890 |
+|---|---|---|
+| corner-robust at `cl_lo` = 13.6 fF alone | 43 | 2.28 % |
+| corner-robust at `cl_hi` = 78.0 fF alone | 118 | 6.24 % |
+| corner-robust at **every** load | **1** | **0.05 %** |
+| corner-robust at **any** load | 160 | 8.47 % |
+| corner-robust at **exactly one** load | 159 | 8.41 % |
+
+**159 of the 160 designs that are corner-robust at one load edge are not
+corner-robust at the other.** The joint set is not small because the per-load
+sets are small: **8.47 % of the box is corner-robust *somewhere* in the load
+range** — essentially §3's 8.20 %. It is small because the two sets barely
+intersect. Under independence the joint would have been 2.68 designs; it is 1.
+
+The nominal-PVT numbers show the same shape one level down: 75 designs pass at
+`cl_lo`, 197 at `cl_hi`, **15 at both** against 7.8 expected under independence.
+So at nominal the two loads are ~1.9× *positively* associated and the overlap
+still only reaches 0.79 %; add corners and the overlap collapses to 1.
+
+### 8.3 Which spec binds, and how it moves with the load
+
+First failure by normalised shortfall (CLAUDEwa §9), of 1890 designs. The old
+150 fF column is §2's table; the two new ones are the screen's load edges,
+averaged over the three corners.
+
+| spec | at `cl_lo` 13.6 fF | at 150 fF (§2) | at `cl_hi` 78.0 fF |
+|---|---|---|---|
+| **S3_f_peak** | **82.5–84.9 %** | 42 % | 56.1–57.0 % |
+| S3_peaking | 10.4–12.0 % | 37 % | 29.9–31.1 % |
+| S3_nyq_boost | 0.2–0.8 % | 8 % | 1.7–3.2 % |
+| headroom | 0.7 % | 0.7 % | 0.7 % |
+| saturation | ~0.1 % | 0.2 % | 0.1–0.2 % |
+| S6_power | 0.1 % (2 runs) | 0.1 % (2 runs) | 0.1 % (2 runs) |
+
+**`S3_f_peak`'s share is monotone in the load: 42 % → 57 % → 84 % as `cl` falls
+from 150 to 78 to 13.6 fF.** The mechanism is the one the whole file is about —
+less load capacitance puts f_p2 higher, which puts the peak higher, which
+pushes it out through S3's 2.5 GHz top edge. **S5 is still never the first
+failure anywhere**, and S6 is still twice in the whole sweep.
+
+> **A number in that table needs reading carefully.** The median `S3_f_peak`
+> margin at `cl_lo` is **−17.453 GHz**, which corresponds to f_pk = 19.953 GHz
+> — and that is *exactly* the last `ac dec 50` grid point at or below the
+> `meas ac MAX` search ceiling of 20 GHz. It is the **search-range edge, not a
+> peak.** The honest reading is "the peak is above 20 GHz **or there is no peak
+> at all**", not "the median design peaks at 19.95 GHz". This does not corrupt
+> any verdict — such a design fails the 1.25–2.5 GHz window either way, which is
+> why it is not a repeat of G44 — but the *median margin* is a property of the
+> sweep setup at that end of the load range. §8.4 measures how much of it is
+> genuinely "no peak at all".
+
+### 8.4 Two failure modes, and the obvious model only explains one
+
+`PREDICTIONS.md` entry 1 predicted this yield at essentially zero (0–10 of 1890;
+measured 1) on the argument that f_peak moves as `cl^-0.5`, so a 5.72× load
+range would shift it 1.26 octaves through a 1.00-octave window. **The number was
+right and the argument was wrong**, which the follow-up measured directly on 200
+designs at 5 loads spanning the range:
+
+* **the median exponent is −0.349** (range −0.549 … −0.243), not −0.5. So the
+  real shift is **1.84× = 0.88 octaves — less than the window**, which by the
+  prediction's own logic should have left a few percent of designs alive;
+* **but 146 of the 200 (73 %) do not keep an interior maximum across the load
+  range at all.** They do not move out of the window; they **lose the peak**.
+  An exponent cannot see this failure mode, because a design with no peak has
+  no f_peak to differentiate. This is session 9c's *"lowering f_p2 does not move
+  the peak down, it EXTINGUISHES it"*, measured along the load axis;
+* and for the 27 % that do keep a peak, 0.88 octaves of movement inside a 1.00-
+  octave window leaves **0.12 octaves** of centring slack — about **2 of the 15
+  distinct f_peak values** the window holds at session 11's measured 0.0664-octave
+  quantisation. The design must be centred to within roughly one grid point.
+
+`CL_SENSITIVITY.md` §3's single probe measured −0.48 and was taken as
+representative; across 54 designs with a peak throughout, it is at the extreme
+end of the distribution. **One probed sample is one probed sample** — the same
+lesson as G43, one experiment later.
+
+### 8.5 How much load range this topology *can* absorb
+
+A yield of 0.05 % says the derived range cannot be absorbed. It does not say
+what range *could* be, and that is the number a designer needs — it is the
+tolerance the following stage's input capacitance must be specified to.
+
+Measured on the single surviving design (18-rung geometric ladder, 5–300 fF,
+with the screen's own loads merged in, at the 3 screen corners):
+
+```
+design 432   [....#########.....]   passes 13.6 - 78.0 fF = 5.72x
+             5 fF                300 fF        fails at 12.0 fF and 93.1 fF
+```
+
+**Its tolerance is at least 5.72× and at most 7.76×** (the next failing rungs).
+It fits the demanded range with **less than one ladder step of margin on either
+side**, and it is the only such design in 1890. Its sizing:
+
+```
+w_in 89.3 um   l_in 0.399 um   nf_in 8   i_bias 3.25 mA
+rs 318.6 ohm   cs 1.90 pF      rl 565.0 ohm   vcm_in 1.407 V
+```
+
+Note `l_in` = 0.399 µm, well above the 0.15 µm minimum bin — a *slower*, longer
+device than the box's centre. That is a single design and not evidence of a
+rule, but it is the obvious first hypothesis for anyone looking for more of
+them.
+
+> **The ladder's first version reported 4.32× and was wrong**, because it did
+> not contain `cl_lo` and `cl_hi` as rungs — so it contradicted the screen that
+> had passed this design at both. `cl_ladder(include=...)` now merges the
+> screen's own loads in, and a test pins it. A resolution artifact that
+> contradicts a measurement you already have is the cheapest kind to catch, and
+> it was nearly published.
+
+### 8.6 What this changes, and what it does not
+
+**Changes:**
+
+- **The binding constraint is the load range, not the corner set.** Corners cost
+  39 % of nominal winners; the load range costs 99.4 %. Any statement of the
+  form "S9 is what makes this hard" now needs the load beside it.
+- **`cl` must be specified, not assumed.** The actionable output is not 0.05 %,
+  it is §8.5's tolerance: this topology absorbs a load spread of roughly
+  6–8× *for one design in 1890*, so either the following stage's input
+  capacitance is pinned down much more tightly than 5.72×, or the CTLE needs a
+  knob (`CL_RANGE.md` §7b: capacitance can always be *added*, never removed).
+- **A tunable part was never scored here.** S3 says the peaking is tunable via
+  R_s/C_s, and `s9_yield.py` scores fixed sizing points. `CL_RANGE.md` §9 makes
+  the same point: requiring one fixed sizing to work across a 5.72× load range
+  is a harder question than silicon has to answer, and **0.05 % is a lower
+  bound on what a tunable part could do.** Measuring the tunable version is the
+  obvious next experiment and is not done.
+
+**Does not change:**
+
+- **G46, G47 and G48 all survive.** The screen was again **exact** (1 promoted,
+  1 robust, 0 false positives), and the load axis did not introduce a
+  mid-range blind spot on this sample — `cl_mid` caught nothing the edges
+  missed, though with one survivor that is a weak test.
+- **The coupling argument stays falsified** (G40). This is a *second* tax on the
+  baseline, larger than the first. It is not evidence that S3 is coupled, and
+  writing it as such would repeat the error §4 of `BOUNDS_REDERIVATION.md`
+  documents.
+- **The tail is still two ideal current sinks**, so 0.05 % remains an
+  **optimistic** bound in exactly the same way 8.10 % was.

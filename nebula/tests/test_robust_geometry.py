@@ -42,7 +42,7 @@ from nebula.experiments.robust_geometry import (
     window_margin_octaves,
 )
 from nebula.experiments.s3_yield import PROPOSED_BOX
-from nebula.experiments.s9_yield import CL_FIXED_F, SCREEN_CORNERS
+from nebula.experiments.s9_yield import CL_LEGACY_PIN_F, SCREEN_CORNERS
 
 # ─────────────────────────────────────────────────────────────────────────────
 # median
@@ -283,7 +283,7 @@ def _rec(idx=0, tt_pass=True, corner_pass=(True, True, True), f_pk=1.77e9,
          peaking=6.0, **overrides):
     params = {n: (math.sqrt(lo * hi) if log else 0.5 * (lo + hi))
               for n, (lo, hi, log, _p) in PROPOSED_BOX.items()}
-    params["cl"] = CL_FIXED_F
+    params["cl"] = CL_LEGACY_PIN_F
     params.update({k: v for k, v in overrides.items() if k in params})
     measured = {c: 0.0 for c in MEASURED_COLS}
     measured.update({"gm": 12.0e-3, "gmbs": 4.5e-3, "id_a": 1.5e-3,
@@ -399,7 +399,7 @@ def test_the_population_reproduces_without_a_simulator():
     is what makes the whole 'the raw results were lost' recovery possible."""
     designs = population()
     assert len(designs) == EXPECTED["n_designs"]
-    assert all(d["cl"] == CL_FIXED_F for d in designs)
+    assert all(d["cl"] == CL_LEGACY_PIN_F for d in designs)
     assert population() == designs                    # deterministic
 
 

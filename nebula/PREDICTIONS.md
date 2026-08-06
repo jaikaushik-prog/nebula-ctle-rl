@@ -103,7 +103,88 @@ measured on the union of the two sets only, which is cheap. That converts a
 0 % into a specification: *how tightly the load must be pinned down before this
 topology can be signed off.*
 
-### Outcome
+### Outcome — 2026-08-06, 15 255 SPICE runs, 49.3 min
 
-*(to be filled in after the run — prediction and outcome side by side,
-whichever way it goes)*
+**The number held. The reasoning behind it did not.** Both halves are worth
+more than the number.
+
+| | predicted | measured |
+|---|---|---|
+| **corner-and-load-robust yield** | **0 / 1890**, band 0–10 | **1 / 1890 = 0.05 %** [0.01, 0.30] | ✅ inside the band |
+| owner's stated expectation | 8.73–13.54 % | 0.05 % | ❌ low by ~170× |
+| 1a — 3 corners at `cl_lo` alone | 2–5 % | **2.28 %** (43/1890) | ✅ |
+| 1b — 3 corners at `cl_hi` alone | 5–8 % | **6.24 %** (118/1890) | ✅ |
+| 1c — nominal PVT at both loads | 0–15 designs (0–0.8 %) | **15 / 1890 = 0.79 %** | ✅ at the top edge of the band |
+| 1d — `S3_f_peak` share > 45 %, worse at `cl_lo` | > 45 %, `cl_lo` > `cl_hi` | **82.5–84.9 % at `cl_lo`, 56.1–57.0 % at `cl_hi`** (42 % at the old 150 fF pin) | ✅ |
+| 1e — promotion tier ≤ 10, ≥ 90 % survive | ≤ 10; ≥ 90 % | **1 promoted, 1/1 = 100 % survived** | ✅ |
+| 1f — S5/S6 never the first failure | never | S5 **never**; S6 **twice** in 11 340 runs | ⚠️ wrong as worded |
+
+**1f is a miss and is recorded as one.** "Never" is right for S5 and wrong for
+S6 by two rows — both at `ff/1.05/0`, missing by 0.06 mW, which is exactly what
+session 10d saw (2 occurrences in 5 670 runs). The claim should have been "S5
+never; S6 at the noise floor of the count".
+
+### The reasoning was wrong, and the follow-up measured how
+
+Step 2 of the prediction assumed f_peak moves as `cl^-0.5`. Measured on 200
+designs at 5 loads spanning the derived range:
+
+* **the median exponent is −0.349**, range −0.549 … −0.243 — materially weaker
+  than −0.5, and weaker than `CL_SENSITIVITY.md`'s single probe (−0.48), which
+  turns out not to have been representative;
+* so a 5.72× load range moves f_peak by **1.84× = 0.88 octaves**, *not* the
+  1.26 octaves the prediction computed — **less than S3's 1.00-octave window**,
+  which by the prediction's own logic should have left room for a few percent
+  of designs to survive.
+
+That is precisely the falsification condition pre-registered above ("a measured
+f_peak sensitivity materially weaker than `cl^-0.5`"), except it arrived
+alongside the predicted near-zero yield instead of alongside the few-percent
+yield it was supposed to imply. **The right answer for a wrong reason is a
+wrong reason.**
+
+**What actually kills the designs** — two mechanisms, and the prediction only
+had one:
+
+1. **The slack is real but tiny.** 0.88 octaves of movement inside a 1.00-octave
+   window leaves **0.12 octaves** of centring slack. Session 11 measured f_peak
+   as quantised at **0.0664 octaves** by `meas ac MAX` on an `ac dec 50` grid,
+   so that slack is about **2 of the 15 distinct f_peak values the window
+   holds**. The design has to be centred to within one grid point.
+2. **Most designs do not move out of the window — they lose the peak
+   entirely.** **146 of 200 designs (73 %) do not keep an interior maximum
+   across the load range at all.** This failure mode is invisible to an
+   exponent, because a design with no peak has no f_peak to differentiate. It
+   is session 9c's "lowering f_p2 does not move the peak down, it EXTINGUISHES
+   it", now measured across the load axis.
+
+### The result that turns 0.05 % into a specification
+
+The per-load-edge counts (free, from the same six evaluations):
+
+```
+corner-robust at cl_lo = 13.6 fF alone     43 / 1890 = 2.28 %
+corner-robust at cl_hi = 78.0 fF alone    118 / 1890 = 6.24 %
+corner-robust at EVERY load                 1 / 1890 = 0.05 %
+corner-robust at ANY load                 160 / 1890 = 8.47 %
+corner-robust at exactly ONE load         159 / 1890 = 8.41 %
+```
+
+**159 of the 160 designs that are corner-robust at one load edge are not
+corner-robust at the other.** The joint set is not small because the per-load
+sets are small — 8.47 % of the box is corner-robust *somewhere* in the load
+range, which is essentially session 10d's 8.20 %. It is small because the sets
+are **disjoint**. Under independence the joint would have been 2.68 designs;
+it is 1.
+
+And the ladder measurement on the single survivor: it passes across
+**13.6–78.0 fF = 5.72×** and fails at the next rung on both sides (12.0 fF and
+93.1 fF), so its tolerance is **at least 5.72× and at most 7.76×**. It fits the
+demanded range with **less than one ladder step of margin on either side**.
+There is exactly one such design in 1890.
+
+### What this changes
+
+The load range, not the PVT corner set, is now the binding constraint: corners
+cost 39 % of the nominal winners (session 10d), the load range costs **99.4 %**
+of them. Written up in `S9_YIELD.md` §8.

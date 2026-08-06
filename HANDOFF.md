@@ -12,7 +12,32 @@
 > discovered to the Gotchas section. A change without a handoff update is an
 > incomplete change.
 
-Last updated: **2026-08-06** (session 12a: **`cl` has a physically derived
+Last updated: **2026-08-06** (session 12b: **the LOAD, not the corner set, is
+the binding constraint — and it is not close.** Screening `cl` over the derived
+range instead of pinning it at 150 fF takes the corner-robust yield from
+**8.20% to 0.05% — one design in 1890** [0.01, 0.30]. Same box, same seed, same
+1890 designs (`headroom_ok_1v8` never reads `cl`, so the comparison is paired).
+15 255 SPICE runs, 49.3 min. **Corners cost 39% of the nominal winners; the
+load range costs 99.4%.** The mechanism is the useful part and it was
+pre-registered: the per-load sets are **large and DISJOINT** — 43 designs are
+corner-robust at `cl_lo` alone, 118 at `cl_hi` alone, **160 at SOME load
+(8.47%, i.e. essentially 10d's 8.20%) and 1 at BOTH.** 159 of 160 are robust at
+exactly one edge. **The prediction's NUMBER held (predicted 0-10, measured 1);
+its REASONING did not** — f_peak moves as `cl^-0.349`, not `cl^-0.5`, so the
+1.84x = 0.88-octave shift is SMALLER than S3's 1.00-octave window, and the
+yield is near zero for a different reason: **146 of 200 designs (73%) lose
+their interior peak entirely across the load range** rather than moving out of
+the window, and the 27% that keep it have only 0.12 octaves of centring slack —
+about 2 of the 15 distinct f_peak values the window holds (session 11). The
+single survivor tolerates 13.6-78.0 fF, i.e. **at least 5.72x and at most
+7.76x** — it fits with less than one ladder rung of margin. New gotcha **G52**
+(a resolution ladder that does not contain the points the verdict was made at
+can contradict it — the first tolerance number, 4.32x, did, and was nearly
+published). `.gitignore` amended: `s9_yield_results.json` is now TRACKED (G49's
+rule, applied). **592 -> 618 green** (+26 in `test_s9_yield.py`). Full write-up
+`nebula/S9_YIELD.md` §8; prediction vs outcome `nebula/PREDICTIONS.md`;
+`params.py` untouched (rule 6).
+Earlier session 12a: **`cl` has a physically derived
 range, and every corner number this project has published was measured
 1.92x above the top of it.** `cl` was pinned at 150 fF because that maximised
 the S3 yield among five values tested — `CL_SENSITIVITY.md` §6 flagged that as
@@ -31,7 +56,7 @@ LEAST gm**, the inverse of the device ordering; (3) a **half-rate front end
 gives cl_hi = 141.8 fF**, i.e. the 150 fF pin was the right number for a
 topology S2 does not describe. Full write-up `nebula/CL_RANGE.md`;
 `params.py` untouched (rule 6) and §8 of that file is the proposal.
-**528 -> 591 green** (+63: `test_cap_probe.py` 36, `test_cl_range.py` 27).
+**528 -> 592 green** (+64: `test_cap_probe.py` 36, `test_cl_range.py` 28).
 `nebula/PREDICTIONS.md` is new and carries the pre-registered prediction for
 session 12b, committed before that experiment runs.
 Earlier session 11 + 11b: **corner robustness is not a
@@ -330,10 +355,19 @@ signaling, ADC-based DSP receiver, 28 nm CMOS reference parameters).
 │   │                       one that carries session 11 on its own: all 255
 │   │                       designs pass S3 at TT, and only the ones away from
 │   │                       the window edges survive three corners.
-│   ├── experiments/s9_yield.py  the corner sweep. Owns the three ASSUMPTIONS
-│   │                       (cl pinned at 150 fF as a LOAD not a choice, VCM
-│   │                       does not track VDD, ideal tail) and prints them in
-│   │                       every run's header. VDD scaling lives in
+│   ├── experiments/s9_yield.py  the corner-AND-LOAD sweep. Owns the three
+│   │                       ASSUMPTIONS (since 12b: cl SCREENED over the
+│   │                       CL_RANGE.md range, not pinned; VCM does not track
+│   │                       VDD; ideal tail) and prints them in every run's
+│   │                       header. Three stages now: nominal x 2 loads,
+│   │                       screen 3 corners x 2 loads, promote 45 x 3.
+│   │                       `--tolerance-only` runs the PREDICTIONS.md
+│   │                       follow-up off the committed JSON in ~3 min.
+│   │                       `CL_LEGACY_PIN_F` = 150 fF is kept ONLY so 10d/11
+│   │                       stay reproducible.
+│   ├── experiments/s9_yield_results.json  TRACKED since 12b (G49's rule
+│   │                       applied, .gitignore amended): S9_YIELD.md §8 quotes
+│   │                       numbers from it, so it is an INPUT to the write-up. VDD scaling lives in
 │   │                       `point_at_corner` and nowhere else; temperature is
 │   │                       a `.temp` card via `run_point(temp_c=)`. Retries
 │   │                       once on failure (G45) and prints a `health:` line
@@ -605,9 +639,9 @@ Plus: git init, .gitignore, 28 tests, Wilson-bound BER reporting.
 
 ## 6. Key numbers & validated behavior (current state)
 
-- Tests: **591 passing** —
+- Tests: **618 passing** —
   `python -m pytest tests nebula/tests -q -m "not slow"`.
-  Split: `tests/` **92**, `nebula/tests/` **499**. (Was 65 + 267 = 332 at the
+  Split: `tests/` **92**, `nebula/tests/` **526**. (Was 65 + 267 = 332 at the
   start of session 9; 430 at the end of it; 444 after 10b; 528 after 11.) Two
   further tests are marked `slow` and deselected by default: they re-derive
   the SKY130 golden values from the FULL library (~30 s each). Run them after
@@ -636,7 +670,11 @@ Plus: git init, .gitignore, 28 tests, Wilson-bound BER reporting.
   instead of searched** (session 10b, `nebula/CL_SENSITIVITY.md`) — so which
   number G3 must beat is a live decision, not a fact.
 - **Corner-robust yield, the same 1890 designs at 45 corners** (session 10d,
-  `nebula/S9_YIELD.md`, 20 205 SPICE runs). **13.49% at TT/27C ->
+  `nebula/S9_YIELD.md`, 20 205 SPICE runs). **CONDITIONAL ON `cl` = 150 fF, a
+  load the following stage cannot present — see the 12b entry above and
+  S9_YIELD §8 before quoting any of it.** Not retracted: it is the right
+  measurement of what the PVT corners alone cost, and G46/G47/G48 stand.
+  **13.49% at TT/27C ->
   8.20% [7.05, 9.52] across three corners -> 8.10% [6.95, 9.41] across all
   45.** Cross-tabulated design by design: **100 of the 255 nominal winners
   (39.2%) fail at a corner**, and 0 designs fail nominal yet pass the corners.
@@ -679,6 +717,44 @@ Plus: git init, .gitignore, 28 tests, Wilson-bound BER reporting.
     than that quote the sweep setup, not the circuit.
   Proposal only — `params.py` untouched (rule 6). Still an optimistic bound:
   the tail is ideal, so the required margins are lower bounds.
+- **Corner-AND-LOAD-robust yield: 0.05%, one design in 1890** (session 12b,
+  `nebula/S9_YIELD.md` §8, 15 255 SPICE runs / 49.3 min). The same 1890 designs
+  as 10d, with `cl` screened over the derived range instead of pinned:
+
+        nominal PVT, both loads      15/1890 =  0.79%   (was 13.49% at 150 fF)
+        3 corners x 2 loads           1/1890 =  0.05%   (was  8.20%)
+        45 corners x 3 loads          1/1890 =  0.05%   (was  8.10%)
+
+  **Corners cost 39% of the nominal winners; the load range costs 99.4%.** The
+  load is the binding constraint and it is not close. Mechanism, and it is the
+  quotable part: **the per-load sets are large and DISJOINT** —
+
+        corner-robust at cl_lo 13.6f alone    43/1890 = 2.28%
+        corner-robust at cl_hi 78.0f alone   118/1890 = 6.24%
+        corner-robust at ANY load            160/1890 = 8.47%  <- ~10d's 8.20%
+        corner-robust at EVERY load            1/1890 = 0.05%
+
+  **159 of the 160 designs robust at one load edge are not robust at the
+  other.** The joint set is not small because the parts are small; it is small
+  because they barely intersect (independence would have given 2.68).
+  Two further results:
+  - **`S3_f_peak`'s share of first failures is monotone in the load: 42% at
+    150 fF, 57% at 78 fF, 84% at 13.6 fF.** Less load capacitance puts f_p2 and
+    the peak higher, out through S3's 2.5 GHz top edge. S5 is still never the
+    first failure; S6 twice in 11 340 runs.
+  - **73% of designs LOSE their interior peak across the load range** rather
+    than moving it out of the window, and f_peak moves as `cl^-0.349` (not the
+    `cl^-0.5` that `CL_SENSITIVITY.md`'s single probe suggested), so the 0.88
+    octaves of movement is SMALLER than the 1.00-octave window and leaves 0.12
+    octaves of slack — ~2 of the 15 distinct f_peak values session 11 measured.
+  The single survivor tolerates **13.6-78.0 fF, at least 5.72x and at most
+  7.76x** — it fits the demanded range with under one ladder rung of margin,
+  at `w_in 89.3 um, l_in 0.399 um, nf 8, i_bias 3.25 mA, rs 319, cs 1.90 p,
+  rl 565, vcm 1.407`. Health: 0 hard failures, 0 retries, 0 screen/promotion
+  mismatches; 192-199 ms per (design, corner, load) at 8 workers under load,
+  against G48's 106 ms on a quiet machine. **Still an OPTIMISTIC bound — the
+  tail is ideal** — and still a fixed-sizing score, so it is a lower bound on
+  what S3's own R_s/C_s tunability could achieve (unmeasured).
 - **`cl` has a derived range, and it is entirely below the value every corner
   number used** (session 12a, `nebula/CL_RANGE.md`, 180 SPICE runs / 16 s).
   Derived from what physically loads the CTLE output — the 1-tap DFE summer
@@ -805,6 +881,17 @@ Plus: git init, .gitignore, 28 tests, Wilson-bound BER reporting.
      the receiver is half-rate (two data + two edge slicers on the node), the
      range becomes 13.6-141.8 fF and the ratio 10.4x instead of 5.7x. S2 names
      no CDR, so the bound above assumes full rate.
+   - **>>> THE LOAD IS NOW THE BINDING CONSTRAINT, AHEAD OF THE CORNERS. <<<**
+     (Session 12b.) 0.05% corner-and-load-robust yield, against 8.20% at the
+     old pin. The actionable output is NOT that number, it is the tolerance:
+     this topology absorbs a 5.72-7.76x load spread for **one design in 1890**,
+     so either the following stage's input capacitance gets specified far more
+     tightly than 5.72x, or the CTLE needs a knob (`CL_RANGE.md` §7b —
+     capacitance can always be ADDED to the output node, never removed).
+     **The cheapest thing that could change this verdict is scoring a TUNABLE
+     design**: S3 says the peaking is tunable via R_s/C_s, and `s9_yield.py`
+     scores fixed sizing points, so 0.05% is a lower bound on what a real
+     tunable part achieves. That experiment is not written.
    - **The CTLE output common mode may not be able to bias the stage it
      drives** (`CL_RANGE.md` §7a). `headroom_ok_1v8()` lets v_out fall to
      0.5 V; the loading pair needs roughly 1.15 V or its source node goes
@@ -1308,6 +1395,27 @@ Plus: git init, .gitignore, 28 tests, Wilson-bound BER reporting.
   both sides and its `ctot` includes the m1-m2 coupling that makes it a
   capacitor. Prefer this to any remembered fF/um: it is in the repo's own PDK
   and it is parsed, not recalled.
+- **G52 — (nebula) a resolution ladder that does not contain the points the
+  verdict was made at can CONTRADICT that verdict, and it will look fine.**
+  Session 12b measured "how wide a `cl` range can this design tolerate?" on an
+  18-rung geometric ladder from 5 to 300 fF and reported **4.32x
+  (16.1-69.5 fF)** for the one corner-and-load-robust design — while the screen
+  that had just *found* that design passed it at **13.64 and 78.04 fF, i.e.
+  5.72x**. Nothing errored; the ladder simply had no rung at either screen load,
+  so the contiguous passing run stopped one step early on both sides. The
+  measurement was of the ladder, not of the circuit. **Fix: merge the points the
+  verdict was made at into any grid you then measure that verdict on** —
+  `s9_yield.cl_ladder(include=PROMOTION_LOADS)`, pinned by a test. With them in,
+  the answer is exactly 5.72x and consistent by construction. Generalise: when
+  a follow-up re-measures something an earlier stage already decided, make the
+  earlier stage's operating points members of the follow-up's grid, then
+  disagreement is a bug rather than a resolution artifact.
+  Related and worth pairing with it: the same run's median `S3_f_peak` margin at
+  `cl_lo` is **-17.453 GHz**, which is *exactly* the last `ac dec 50` grid point
+  at or below the `meas ac MAX` 20 GHz search ceiling. It is the **search edge,
+  not a peak** — the honest reading is "above 20 GHz or no peak at all". Harmless
+  to the verdict (either way it fails the window, unlike G44), but a median
+  margin quoted from it is a property of the sweep setup.
 
 ## 10. Environment
 
@@ -2538,9 +2646,9 @@ the experiment runs, and the owner reviews between tasks.
 
 ### 2026-08-06 — Session 12a (`cl` becomes a derived range, not a chosen constant)
 
-**Tests: 528 -> 591** (+63: `nebula/tests/test_cap_probe.py` 36,
-`nebula/tests/test_cl_range.py` 27). `python -m pytest tests nebula/tests -q
--m "not slow"`, split 92 + 499, 2 deselected, 150 s (baseline before the
+**Tests: 528 -> 592** (+64: `nebula/tests/test_cap_probe.py` 36,
+`nebula/tests/test_cl_range.py` 28). `python -m pytest tests nebula/tests -q
+-m "not slow"`, split 92 + 500, 2 deselected, 150 s (baseline before the
 session: 528, 130 s). Full write-up: `nebula/CL_RANGE.md`.
 **`common/params.py` untouched** — rule 6; §8 of that file is the proposal.
 
@@ -2636,3 +2744,112 @@ that holds or not, the outcome goes in that file next to the prediction.
 
 **Not started, by instruction:** the second half of task 2 (folding the range
 into `s9_yield.py` and re-running). The owner reviews between tasks.
+
+### 2026-08-06 — Session 12b (the load is the binding constraint, not the corners)
+
+**Tests: 592 -> 618** (+26 in `nebula/tests/test_s9_yield.py`, which goes
+29 -> 55). `python -m pytest tests nebula/tests -q -m "not slow"`, split
+92 + 526, 2 deselected, 94.6 s. *(Commit `6d07ca5`'s message says 591; the
+true post-12a figure was 592 — one test,
+`test_committed_cl_range_is_the_single_definition`, was added after that count
+was taken and before the commit. Corrected here rather than in history.)* Full write-up: `nebula/S9_YIELD.md` §8; prediction vs outcome in
+`nebula/PREDICTIONS.md`. **`common/params.py` untouched** — rule 6.
+
+**What was done.** `s9_yield.py`'s screen set became the cross product of the 3
+corners with `{cl_lo, cl_hi}` (6 evaluations per design) and its promotion tier
+45 corners x `{cl_lo, cl_mid, cl_hi}` (135 per survivor), using session 12a's
+derived range. A **stage 0** was added — nominal PVT at both load edges —
+because without it "the load costs X%" cannot be separated from "the corners
+cost X%". **15 255 SPICE runs, 49.3 min, 8 workers.**
+
+**THE NUMBER: 8.20% -> 0.05%.** One design in 1890, [0.01, 0.30].
+
+        pinned 150 fF (10d)          range 13.6-78.0 fF (12b)
+        nominal   255/1890  13.49%    15/1890   0.79%
+        3 corners 155/1890   8.20%     1/1890   0.05%
+        45 corners 153/1890  8.10%     1/1890   0.05%
+
+Same box, same seed, **same 1890 designs** — `headroom_ok_1v8` never reads
+`cl`, so the population is identical to 10d's and the comparison is paired, not
+between two samples. **Corners cost 39% of the nominal winners; the load range
+costs 99.4%.**
+
+**THE MECHANISM, and it is the part worth keeping: the per-load sets are large
+and DISJOINT.** 43 designs are corner-robust at `cl_lo` alone, 118 at `cl_hi`
+alone, **160 at SOME load (8.47% — essentially 10d's 8.20%) and 1 at BOTH**.
+159 of 160 are robust at exactly one edge. The joint set is not small because
+the parts are small; it is small because they barely intersect (independence
+would have predicted 2.68). At nominal PVT the same shape appears one level
+down: 75 and 197 pass at the two loads, 15 at both against 7.8 expected.
+
+**The prediction's NUMBER held and its REASONING did not, which is why the
+follow-up was worth running.** `PREDICTIONS.md` entry 1, committed before the
+run, predicted 0-10 designs against the stated expectation of 8.73-13.54%;
+measured 1. But it argued from f_peak moving as `cl^-0.5`. Measured on 200
+designs at 5 loads: **the median exponent is -0.349**, so the shift is
+**0.88 octaves — SMALLER than S3's 1.00-octave window**, which by the
+prediction's own logic should have left a few percent alive. Two things
+actually kill them:
+- **146 of 200 designs (73%) lose their interior peak entirely** across the
+  load range rather than moving it out of the window. An exponent cannot see
+  this — a design with no peak has no f_peak. Session 9c's "lowering f_p2
+  EXTINGUISHES the peak", measured along the load axis.
+- the 27% that keep a peak have **0.12 octaves of centring slack**, about
+  **2 of the 15 distinct f_peak values** the window holds at session 11's
+  measured 0.0664-octave quantisation.
+`CL_SENSITIVITY.md` §3's single probe measured -0.48 and was taken as
+representative; across 54 designs it sits at the extreme of the distribution.
+**One probed sample is one probed sample** — the same lesson as G43, one
+experiment later.
+
+**Which spec binds moves monotonically with the load.** `S3_f_peak`'s share of
+first failures: **42% at 150 fF, 57% at 78 fF, 84% at 13.6 fF.** Less load
+capacitance puts f_p2 and the peak higher, out through the 2.5 GHz top edge.
+S5 is still never the first failure anywhere; S6 twice in 11 340 runs (10d saw
+twice in 5670).
+
+**The number that turns 0.05% into a specification.** The single survivor
+passes across **13.6-78.0 fF** and fails at the next ladder rung on both sides
+(12.0 and 93.1 fF), so its load tolerance is **at least 5.72x and at most
+7.76x** — it fits the demanded range with under one rung of margin. Its sizing
+is `w_in 89.3 um, l_in 0.399 um, nf 8, i_bias 3.25 mA, rs 319, cs 1.90 p,
+rl 565, vcm 1.407` — note L well above the 0.15 um minimum bin, which is the
+obvious first hypothesis for anyone looking for more of them, on n = 1.
+
+**New gotcha G52, and it was nearly published.** The first tolerance ladder
+reported **4.32x** for that design — contradicting the screen that had just
+passed it across 5.72x — because the ladder had no rung at `cl_lo` or `cl_hi`.
+Nothing errored. **Merge the points a verdict was made at into any grid you
+then re-measure that verdict on.** `cl_ladder(include=...)` does, and a test
+pins it. G52 also records that the median `S3_f_peak` margin at `cl_lo`
+(-17.453 GHz) is exactly the `meas ac MAX` search edge, so it reads "above
+20 GHz or no peak at all", not "peaks at 19.95 GHz".
+
+**`.gitignore` amended — G49's rule finally applied.**
+`s9_yield_results.json` was on the ignore list under "regenerable"; S9_YIELD.md
+§8 quotes numbers from it, so it is an INPUT to the write-up and is now
+tracked. `s3_yield_results.json` and `cl_sensitivity_results.json` stay ignored
+**deliberately and at a stated cost**: the copies on disk are stale relative to
+what their write-ups publish, so tracking them would ship files that disagree
+with their own documents.
+
+**Renamed** `s9_yield.CL_FIXED_F` -> `CL_LEGACY_PIN_F` (with
+`robust_geometry.py` and its tests), because the constant no longer describes
+what the script does — it is kept only so sessions 10d and 11 stay
+reproducible, and `check_reproduction()` breaks loudly if it moves.
+
+**Health:** 0 hard simulator failures, 0 retries, 0 screen/promotion mismatches.
+52 headroom rejections in the screen = exactly 2x 10d's 26, as expected since
+`headroom_ok_1v8` does not read `cl`. Cost **192-199 ms per (design, corner,
+load) at 8 workers** against G48's 106 ms — G48 was measured on a quiet
+machine, so its number is a floor, not a budget; the shape of its conclusion is
+unchanged.
+
+**Still an OPTIMISTIC bound.** The tail is two ideal current sinks. And every
+design scored here is a FIXED sizing point, while S3 says the peaking is
+tunable via R_s/C_s — so 0.05% is a lower bound on what a tunable part could
+do, and measuring the tunable version is the cheapest thing that could change
+this verdict. Not written.
+
+**Not started, by instruction:** task 3 (the tail transistor). The owner
+reviews between tasks.

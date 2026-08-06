@@ -26,8 +26,12 @@ Three things fall out of it, in order of how much they matter:
    was the best of five values tested for S3 yield — but it has been the
    operating assumption behind 13.49 % / 8.20 % / 8.10 %.
 2. **The load spread is 2.52 octaves and S3's f_peak window is 1.00 octave.**
-   That is the number the next experiment turns into a yield, and it is why
-   the yield is expected to be small (`PREDICTIONS.md`, entry 1).
+   **Measured consequence (session 12b, `S9_YIELD.md` §8): the corner-robust
+   yield falls from 8.20 % to 0.05 % — one design in 1890.** The load range
+   costs 99.4 % of the nominal winners where the whole 45-corner PVT set costs
+   39 %, so **the load, not the corner set, is now the binding constraint**.
+   Prediction and outcome are in `PREDICTIONS.md` entry 1: the number held, the
+   reasoning behind it did not.
 3. **`@m[cgg]` — the obvious way to measure a gate load — understates it by
    1.9–2.7×** on these devices, silently, because it excludes the overlap
    capacitance and the Miller multiplication of C_gd. New gotcha **G50**.

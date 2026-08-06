@@ -22,14 +22,20 @@ from nebula.common.types import (
     all_corners,
 )
 from nebula.device.sky130_runner import Sky130Point
+from nebula.experiments.cl_range import committed_cl_range
 from nebula.experiments.s9_yield import (
-    CL_FIXED_F,
+    CL_LEGACY_PIN_F,
+    LEGACY_150FF,
+    NOMINAL_CORNER,
     NOMINAL_VDD,
+    PROMOTION_LOADS,
     SCREEN_CORNERS,
+    SCREEN_LOADS,
     TAIL_IS_IDEAL,
     UNSCREENED_SPECS,
     VCM_TRACKS_VDD,
     CornerResult,
+    LoadCorner,
     SpecCheck,
     _range_check,
     _shortfall_max,
@@ -37,9 +43,14 @@ from nebula.experiments.s9_yield import (
     _worst,
     assumptions_header,
     check_specs,
+    cl_ladder,
     first_fail_table,
+    fpeak_exponent,
+    load_edge_table,
+    load_grid,
     point_at_corner,
     screen_augmentation,
+    widest_passing_ratio,
 )
 
 BASE = dict(w_in=40e-6, l_in=0.15e-6, nf_in=4, i_bias=3.0e-3,
@@ -59,8 +70,40 @@ def _sky(peaking=6.0, f_pk=2.0e9, noise=2e-4, vds=1.0, vdsat=0.1, nyq=1.0):
 # ─────────────────────────────────────────────────────────────────────────────
 
 
-def test_cl_is_pinned_at_the_documented_value():
-    assert CL_FIXED_F == 150e-15
+def test_cl_is_screened_over_the_derived_range_not_pinned():
+    """Session 12b. `cl` used to be a single 150 fF pin -- the S3-yield maximum
+    of five values tested. It is now a CONTEXT RANGE, derived in CL_RANGE.md,
+    and the screen visits both of its edges."""
+    rng = committed_cl_range()
+    assert SCREEN_LOADS == (rng.cl_lo_f, rng.cl_hi_f)
+    assert PROMOTION_LOADS == (rng.cl_lo_f, rng.cl_mid_f, rng.cl_hi_f)
+    assert len(SCREEN_LOADS) == 2 and len(PROMOTION_LOADS) == 3
+
+
+def test_the_screened_range_lies_entirely_below_the_legacy_pin():
+    """THE FINDING behind the re-run, as a test: every number in S9_YIELD.md
+    was measured at a load 1.9x above the top of the physically derived
+    range."""
+    assert CL_LEGACY_PIN_F == 150e-15
+    assert max(SCREEN_LOADS) < CL_LEGACY_PIN_F
+    assert CL_LEGACY_PIN_F / max(SCREEN_LOADS) > 1.5
+
+
+def test_the_promotion_grid_adds_the_middle_of_the_range():
+    """Two-edge screening cannot see a design that fails in the MIDDLE of the
+    load range, and for a two-sided spec that is not impossible (G46's
+    mechanism, on the load axis). The promotion tier covers it."""
+    assert set(SCREEN_LOADS) < set(PROMOTION_LOADS)
+    mid = committed_cl_range().cl_mid_f
+    assert min(SCREEN_LOADS) < mid < max(SCREEN_LOADS)
+
+
+def test_legacy_figures_are_the_ones_S9_YIELD_published():
+    """Quoted in the comparison table so the new numbers sit next to the ones
+    they supersede. 13.49 / 8.20 / 8.10 %."""
+    assert LEGACY_150FF["TT / 1.00 / 27 C"] == (255, 1890)
+    assert LEGACY_150FF["all 3 screen corners"] == (155, 1890)
+    assert LEGACY_150FF["all 45 corners"] == (153, 1890)
 
 
 def test_the_three_assumptions_are_all_stated_in_the_printed_header():
@@ -68,7 +111,9 @@ def test_the_three_assumptions_are_all_stated_in_the_printed_header():
     assumption is not in it, it is not disclosed."""
     h = assumptions_header(2000, 1)
     assert "ASSUMPTION" in h
-    assert "150 fF" in h
+    assert "SCREENED CONTEXT RANGE" in h
+    assert "13.64" in h and "78.04" in h        # both edges, in fF
+    assert "150 fF" in h                        # and what it supersedes
     assert "IDEAL CURRENT SINKS" in h
     assert "UNDERSTATEMENT" in h        # the tail caveat, in the strong form
     assert "VCM held CONSTANT" in h
@@ -322,3 +367,224 @@ def test_screen_augmentation_ignores_designs_that_were_already_robust():
              [_cr(str(c), j != 1) for j, c in enumerate(corners)]]
     aug = screen_augmentation(per45, corners, non_robust_idx=[1])
     assert sum(len(v) for v in aug.values()) == 1
+
+
+# ---------------------------------------------------------------------------
+# The (corner x load) grid -- session 12b's second axis.
+# ---------------------------------------------------------------------------
+
+
+def test_load_corner_prints_both_axes():
+    """The tag is what `screen_augmentation` keys on and what lands in the
+    JSON, so a result attributed to the wrong load edge would look perfectly
+    well-formed. Both axes have to be in it."""
+    g = LoadCorner(Corner("ss", 0.95, 125.0), 13.642e-15)
+    assert "ss" in str(g) and "125" in str(g)
+    assert "13.6f" in str(g)
+
+
+def test_load_grid_is_corners_major():
+    """So a report reads corner by corner rather than load by load."""
+    corners = [Corner("tt", 1.0, 27.0), Corner("ss", 0.95, 125.0)]
+    grid = load_grid(corners, (1e-15, 2e-15))
+    assert len(grid) == 4
+    assert [g.corner for g in grid] == [corners[0], corners[0],
+                                        corners[1], corners[1]]
+    assert [g.cl_f for g in grid] == [1e-15, 2e-15, 1e-15, 2e-15]
+
+
+def test_the_screen_grid_is_a_subset_of_the_promotion_grid():
+    """That subsetting is what makes the screen unable to produce false
+    NEGATIVES (G47) and what makes the determinism check free. Adding a load
+    axis must not break it."""
+    screen = {str(g) for g in load_grid(SCREEN_CORNERS, SCREEN_LOADS)}
+    promo = {str(g) for g in load_grid(all_corners(), PROMOTION_LOADS)}
+    assert screen <= promo
+
+
+def test_nominal_corner_is_not_one_of_the_screen_corners():
+    """S9_YIELD sec 4: "0 designs fail nominal yet pass all three extremes"
+    is a MEASUREMENT only because TT/1.00/27 C is not among the screened
+    corners. Stage 0 relies on that too."""
+    assert NOMINAL_CORNER not in SCREEN_CORNERS
+    assert NOMINAL_CORNER in all_corners()
+
+
+def _grid_results(grid, met_flags):
+    return [CornerResult(corner=str(g), ok=True, cl_f=g.cl_f,
+                         all_specs_met=m) for g, m in zip(grid, met_flags)]
+
+
+def test_load_edge_table_separates_disjoint_from_empty():
+    """THE PRE-REGISTERED FOLLOW-UP (PREDICTIONS.md entry 1). A joint count of
+    zero means something completely different depending on whether each load's
+    set is also empty, or whether they are large and DISJOINT -- the second
+    says the topology works but the load has to be pinned down."""
+    grid = load_grid([Corner("tt", 1.0, 27.0)], (1e-15, 2e-15))
+    per_design = [
+        _grid_results(grid, [True, False]),     # 0: lo only
+        _grid_results(grid, [False, True]),     # 1: hi only
+        _grid_results(grid, [True, True]),      # 2: both
+        _grid_results(grid, [False, False]),    # 3: neither
+    ]
+    t = load_edge_table(per_design, grid, (1e-15, 2e-15))
+    assert t["robust at cl 1.0f alone"] == 2        # designs 0 and 2
+    assert t["robust at cl 2.0f alone"] == 2        # designs 1 and 2
+    assert t["robust at EVERY load"] == 1
+    assert t["robust at ANY load"] == 3
+    assert t["robust at exactly one load"] == 2
+
+
+def test_load_edge_table_requires_every_corner_at_that_load():
+    """"Robust at cl_lo" means robust at cl_lo across ALL corners, not at one
+    of them. Getting this wrong inflates both per-load counts."""
+    corners = [Corner("tt", 1.0, 27.0), Corner("ss", 0.95, 125.0)]
+    grid = load_grid(corners, (1e-15, 2e-15))
+    # passes at cl_lo under tt, fails at cl_lo under ss
+    per_design = [_grid_results(grid, [True, True, False, True])]
+    t = load_edge_table(per_design, grid, (1e-15, 2e-15))
+    assert t["robust at cl 1.0f alone"] == 0
+    assert t["robust at cl 2.0f alone"] == 1
+
+
+def test_evaluate_at_corner_task_may_carry_the_load():
+    """A 5-tuple sets `cl` for that evaluation; a 4-tuple keeps the design's
+    own, so `robust_geometry.py` -- which reproduces session 10d at its 150 fF
+    pin -- keeps working untouched."""
+    from nebula.experiments.s9_yield import evaluate_at_corner
+    # A headroom-rejecting design, so no simulator is needed to reach the
+    # return: rl x i_bias/2 drops the output below MIN_V_OUT_DC.
+    bad = dict(BASE, i_bias=8e-3, rl=800)
+    r4 = evaluate_at_corner((bad, "tt", 1.0, 27.0))
+    r5 = evaluate_at_corner((bad, "tt", 1.0, 27.0, 13.642e-15))
+    assert r4.first_fail == "headroom" and r5.first_fail == "headroom"
+    assert r4.cl_f == pytest.approx(BASE["cl"])
+    assert r5.cl_f == pytest.approx(13.642e-15)
+    assert "150.0f" in r4.corner and "13.6f" in r5.corner
+
+
+def test_evaluate_at_corner_does_not_mutate_the_caller_dict():
+    """The load is overwritten per evaluation and the same design dict is
+    reused across the whole grid, so a mutation would leak one point's load
+    into every later one."""
+    from nebula.experiments.s9_yield import evaluate_at_corner
+    bad = dict(BASE, i_bias=8e-3, rl=800)
+    before = dict(bad)
+    evaluate_at_corner((bad, "tt", 1.0, 27.0, 13.642e-15))
+    assert bad == before
+
+
+def test_comparison_table_puts_both_treatments_side_by_side():
+    from nebula.experiments.s9_yield import comparison_table
+    txt = comparison_table(1890, 40, 38, 120)
+    assert "13.49" in txt          # the legacy nominal figure
+    assert "8.20" in txt or "8.20%" in txt
+    assert "40/1890" in txt.replace(" ", "")
+    txt.encode("ascii")            # G10
+
+
+def test_comparison_table_says_not_measured_rather_than_zero():
+    """A stage that did not run must not read as a stage that yielded zero."""
+    from nebula.experiments.s9_yield import comparison_table
+    txt = comparison_table(1890, 0, None, None)
+    assert "not measured" in txt
+
+
+# ---------------------------------------------------------------------------
+# The pre-registered follow-up: how much load range CAN be absorbed.
+# ---------------------------------------------------------------------------
+
+
+def test_cl_ladder_is_geometric():
+    """`cl` enters f_p2 multiplicatively, so equal RATIOS between rungs is what
+    makes the ladder uniform in the coordinate the circuit responds to."""
+    rungs = cl_ladder(5, 10e-15, 160e-15)
+    assert rungs[0] == pytest.approx(10e-15)
+    assert rungs[-1] == pytest.approx(160e-15)
+    ratios = [b / a for a, b in zip(rungs, rungs[1:])]
+    assert all(r == pytest.approx(2.0) for r in ratios), ratios
+
+
+def test_cl_ladder_merges_the_included_loads_and_stays_sorted():
+    """LOAD-BEARING, and it caught a real contradiction. Without the screen's
+    own loads as rungs, the ladder reported the one corner-and-load-robust
+    design as tolerating 4.32x -- while the screen that found it had passed it
+    across 5.72x. The ladder was too coarse to contain the points the verdict
+    was made at."""
+    rungs = cl_ladder(5, 10e-15, 160e-15, include=(13.5e-15, 77.0e-15))
+    assert list(rungs) == sorted(rungs)
+    assert 13.5e-15 in rungs and 77.0e-15 in rungs
+    assert len(rungs) == 7
+
+
+def test_cl_ladder_does_not_duplicate_an_included_rung():
+    rungs = cl_ladder(5, 10e-15, 160e-15, include=(20e-15,))
+    assert len(rungs) == 5
+
+
+def test_cl_ladder_needs_at_least_two_rungs():
+    with pytest.raises(ValueError, match="at least two"):
+        cl_ladder(1)
+
+
+def test_widest_passing_ratio_requires_contiguity():
+    """A design that passes at 10 and 100 fF but fails at 30 does NOT tolerate
+    a 10x load range -- `cl` is a context it has to survive over an interval.
+    S3 is two-sided, so leaving the window mid-range is a real possibility."""
+    cls = (10e-15, 30e-15, 100e-15)
+    assert widest_passing_ratio([True, False, True], cls)[0] == 1.0
+    assert widest_passing_ratio([True, True, True], cls)[0] == pytest.approx(10.0)
+
+
+def test_widest_passing_ratio_reports_the_span_it_measured():
+    cls = (10e-15, 20e-15, 40e-15, 80e-15)
+    ratio, span = widest_passing_ratio([False, True, True, False], cls)
+    assert ratio == pytest.approx(2.0)
+    assert span == (20e-15, 40e-15)
+
+
+def test_widest_passing_ratio_picks_the_widest_of_several_runs():
+    cls = (1e-15, 2e-15, 4e-15, 8e-15, 16e-15, 32e-15)
+    ratio, span = widest_passing_ratio(
+        [True, False, True, True, True, False], cls)
+    assert ratio == pytest.approx(4.0)
+    assert span == (4e-15, 16e-15)
+
+
+def test_widest_passing_ratio_handles_a_run_reaching_the_last_rung():
+    """Off-by-one guard: the sentinel that closes the final run must not read
+    past the end of the ladder."""
+    cls = (1e-15, 2e-15, 4e-15)
+    assert widest_passing_ratio([False, True, True], cls)[0] == pytest.approx(2.0)
+
+
+def test_widest_passing_ratio_of_nothing_is_zero_not_one():
+    """"Passes nowhere" and "passes at exactly one load" are different facts."""
+    assert widest_passing_ratio([False, False], (1e-15, 2e-15)) == (0.0, None)
+    assert widest_passing_ratio([True, False], (1e-15, 2e-15))[0] == 1.0
+
+
+def test_widest_passing_ratio_rejects_mismatched_lengths():
+    with pytest.raises(ValueError, match="against"):
+        widest_passing_ratio([True], (1e-15, 2e-15))
+
+
+def test_fpeak_exponent_recovers_a_known_power_law():
+    """f = C * cl^-0.5 must come back as -0.5 exactly."""
+    cls = [10e-15, 20e-15, 40e-15, 80e-15]
+    f = [1e9 * (c / 10e-15) ** -0.5 for c in cls]
+    assert fpeak_exponent(cls, f) == pytest.approx(-0.5, abs=1e-12)
+
+
+def test_fpeak_exponent_is_none_without_two_usable_points():
+    assert fpeak_exponent([1e-15], [1e9]) is None
+    assert fpeak_exponent([1e-15, 2e-15], [1e9, 0.0]) is None
+    assert fpeak_exponent([], []) is None
+
+
+def test_fpeak_exponent_drops_non_positive_values_rather_than_crashing():
+    """A design with no peak reports f_pk = 0 or None; log of that is not a
+    number, and the sample must shrink rather than the run dying."""
+    cls = [10e-15, 20e-15, 40e-15]
+    assert fpeak_exponent(cls, [1e9, None, 0.5e9]) == pytest.approx(-0.5,
+                                                                   abs=1e-12)
