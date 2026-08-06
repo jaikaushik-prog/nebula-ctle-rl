@@ -338,3 +338,37 @@ def test_summary_mentions_both_predictions(bsim4: str) -> None:
     assert "gmbs/gm" in s
     assert "body-effect" in s
     assert math.isfinite(r.body_effect_db)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# G54 — a PRINTED VALUE THAT IS NOT A NUMBER. Session 13.
+#
+# ngspice's `.noise` returns `inoise_total = -nan(ind)` and exits 0 on some
+# (corner, geometry) points, when a perfectly-rejected common-mode noise source
+# underflows and the integrated-noise log-slope integration evaluates log(0).
+# Caught only by accident before this: the numeric regexes in crosscheck.py do
+# not match "nan", so the value parsed as None. A laxer parser would carry NaN
+# into a spec check, where `nan < tau` is False and reads as a genuine FAILURE
+# rather than as a broken run — biasing a yield downward, silently.
+# ─────────────────────────────────────────────────────────────────────────────
+
+
+def test_nan_valued_output_is_a_silent_failure():
+    assert scan_for_silent_failures("inoise_total = -nan(ind)")
+    assert scan_for_silent_failures("inoise_total = nan")
+    assert scan_for_silent_failures("x = inf")
+    assert scan_for_silent_failures("y = -inf")
+
+
+def test_the_nan_gate_does_not_fire_on_lookalikes():
+    """Anchored to `= value`, so a model parameter or a banner that merely
+    contains the letters cannot trip it. Without the anchor, `nfactor` and
+    `.param nano=1e-9` would both make every SKY130 run look broken."""
+    for benign in ("nfactor = 1.2", "* Infinity banner", "vth = 0.611",
+                   ".param nano = 1e-9", "info = 3", "vinf = 0.5"):
+        assert not scan_for_silent_failures(benign), benign
+
+
+def test_a_nan_run_raises_rather_than_returning_a_number():
+    with pytest.raises(SilentFailure, match="exit"):
+        assert_no_silent_failures("inoise_total = -nan(ind)")

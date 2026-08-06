@@ -165,10 +165,20 @@ def test_proposed_box_has_provenance_on_every_bound():
 
 
 def test_tail_parameters_are_absent_and_say_why():
-    """Rule 6 forbids inventing ranges for a device that does not exist yet."""
+    """Still absent, for a DIFFERENT reason since session 13.
+
+    It used to be that no tail transistor existed, so no range could be
+    derived. One exists now and all three edges are measured — and measurement
+    says they should not be SEARCHED: `w_tail` follows from `i_bias`, `nf_tail`
+    follows from `w_tail` and the bin ceiling, and both are near-dead as free
+    dimensions. Keeping them out of the box is now a proposal backed by data
+    rather than an admission of ignorance, and the reason strings must say so.
+    """
     for name in ("w_tail", "l_tail", "nf_tail"):
         assert name not in PROPOSED_BOX
         assert name in UNDERIVABLE
+        assert "TAIL_DEVICE.md" in UNDERIVABLE[name] or "G53" in UNDERIVABLE[name]
+        assert "does not exist" not in UNDERIVABLE[name]
 
 
 def test_scale_box_widens_and_narrows_about_the_centre():

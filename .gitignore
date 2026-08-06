@@ -78,6 +78,16 @@ python_models/results/
 # cost 7560 fresh SPICE runs / 23 min to get back. It has been REMOVED from
 # this list and is now tracked.
 #
+# Session 13 adds three more files that are TRACKED under the same rule, and
+# they are listed here rather than left to silence so the choice is visible:
+#   nebula/experiments/s9_yield_tail_results.json  (the re-run with a real tail)
+#   nebula/experiments/tail_device_data.csv        (261 rows, TAIL_DEVICE.md 3-6)
+#   nebula/experiments/tail_device_results.json
+# Note also that `s9_yield.py`'s DEFAULT output name now depends on whether the
+# tail is ideal, so session 12b's file cannot be overwritten by a later run with
+# a different circuit in it. It already was once, during session 13's plumbing
+# checks, and was only recoverable because it was tracked.
+#
 # The two still ignored here are ignored DELIBERATELY and at a known cost: the
 # copies on disk are stale relative to the numbers BOUNDS_REDERIVATION.md and
 # CL_SENSITIVITY.md publish, so tracking them would ship a file that disagrees

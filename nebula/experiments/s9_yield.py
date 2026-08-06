@@ -81,6 +81,7 @@ from nebula.common.types import (
     all_corners,
 )
 from nebula.device.sky130_runner import SizingPoint, run_point
+from nebula.device.tail import TailDevice, min_nf_for_width
 from nebula.experiments.cl_range import committed_cl_range
 from nebula.experiments.s3_yield import (
     PROPOSED_BOX,
@@ -152,19 +153,60 @@ NOMINAL_CORNER: Corner = Corner(process="tt", vdd_scale=1.00, temp_c=27.0)
 #: bias that a real RX generates itself. Flagged because it is a choice.
 VCM_TRACKS_VDD: bool = False
 
-#: The tail is TWO IDEAL CURRENT SINKS. No simulation in this project has ever
-#: contained a tail transistor (BOUNDS_REDERIVATION §6).
+#: THE TAIL IS A REAL TRANSISTOR — session 13. This flag used to read `True`
+#: and it was the assumption that mattered most in this script.
 #:
-#: THIS IS THE ASSUMPTION THAT MATTERS MOST HERE. An ideal sink delivers
-#: exactly I_tail at every corner: it does not lose current at SS/125 C, does
-#: not gain it at FF/0 C, and does not fall out of saturation when the rail
-#: drops 5%. A real tail transistor does all three, and its variation feeds
-#: straight into gm, gain, peaking and power. **Every corner spread reported by
-#: this script is therefore an UNDERSTATEMENT of the real one**, and the 45-
-#: corner yield is an OPTIMISTIC bound. Do not present it as a verified S9
-#: result; present it as the corner spread attributable to the input pair
-#: alone.
-TAIL_IS_IDEAL: bool = True
+#: Through session 12b the tail was two ideal current sinks. An ideal sink
+#: delivers exactly I_tail at every corner: it does not lose current at
+#: SS/125 C, does not gain it at FF/0 C, and does not fall out of saturation
+#: when the rail drops 5%. That is why every corner spread this project
+#: published was an UNDERSTATEMENT and every yield an OPTIMISTIC bound (G47).
+#:
+#: It is now a current mirror — an ideal reference current into a
+#: diode-connected `nfet_01v8`, mirrored to one tail device per side at ratio
+#: N. `I_ref` is STILL IDEAL and that is the one remaining ideal element; see
+#: `nebula/device/tail.py` for why a fixed gate bias would have been worse
+#: (it holds Vgs while vth moves with corner, which EXAGGERATES corner spread).
+TAIL_IS_IDEAL: bool = False
+
+#: The tail sizing RULE. `w_tail = i_side * TAIL_UM_PER_AMP`, at `TAIL_L_UM`.
+#:
+#: WHY A RULE AND NOT THREE MORE SEARCH DIMENSIONS. `i_bias` spans 0.5-8.0 mA
+#: total, a 16x range, and `vdsat_tail` moves as roughly `sqrt(I/W)`, so no
+#: single fixed width serves the box. Holding the current DENSITY constant
+#: holds `vdsat` constant, which is what the sizing target is actually about.
+#: `TAIL_DEVICE.md` §3 measures that this really is a density: the width per
+#: amp drifts only 105-124k across a 4x change in current.
+#:
+#: **The value is the ss/0.95/125 C one, deliberately.** That is the corner
+#: where the tail needs the most width for a given `vdsat` (111.2k um/A against
+#: 58.3k at TT and 43.7k at FF — a 2.5x spread), so sizing there is what makes
+#: the tail saturated at every corner rather than only at nominal. Measured at
+#: `L = 0.5 um` for `vdsat_tail = 0.20 V`; `TAIL_DEVICE.md` §3.
+#:
+#: **This is a stated design decision, not a searched parameter, and it is NOT
+#: a change to `common/params.py`** (rule 6). The bounds a human might put
+#: there instead are proposed in `TAIL_DEVICE.md` §6.
+TAIL_UM_PER_AMP: float = 111.2e3
+TAIL_L_UM: float = 0.5
+TAIL_MIRROR_RATIO: float = 8.0
+
+
+def tail_for_design(params: dict[str, float]) -> TailDevice:
+    """The tail this design gets, from the sizing rule. ONE definition (rule 9).
+
+    `nf_tail` is DERIVED, never chosen: it is the smallest multiple of the
+    mirror ratio that keeps the geometry inside SKY130's per-finger bin ceiling
+    (G53). `TAIL_DEVICE.md` §5 measures that `nf_tail` carries no design
+    information anyway — with matched fingers, nf 8 to 32 moves the delivered
+    current by 0.6% — so searching it would spend samples on nothing, exactly
+    as G38 found for `nf_in` and G42 for `cl`.
+    """
+    i_side = float(params["i_bias"]) / 2.0
+    w = i_side * TAIL_UM_PER_AMP
+    return TailDevice(w_tail=w, l_tail=TAIL_L_UM,
+                      nf_tail=min_nf_for_width(w, TAIL_MIRROR_RATIO),
+                      mirror_ratio=TAIL_MIRROR_RATIO)
 
 #: Specs this script does NOT screen, and why. Listed so their absence is
 #: explicit rather than inferred from what is missing.
@@ -213,10 +255,34 @@ def assumptions_header(n: int, seed: int) -> str:
         f"({'tracks VDD' if VCM_TRACKS_VDD else 'does not track'}).",
         "      The conservative reading; scaling it would assume a bias network",
         "      that does not exist yet.",
-        "   3. The tail is TWO IDEAL CURRENT SINKS -- no tail transistor exists.",
-        "      An ideal sink does not lose current at SS/125C or fall out of",
-        "      saturation at 0.95 VDD. EVERY CORNER SPREAD BELOW IS THEREFORE",
-        "      AN UNDERSTATEMENT, and the 45-corner yield is an OPTIMISTIC bound.",
+    ]
+    if TAIL_IS_IDEAL:
+        L += [
+            "   3. The tail is TWO IDEAL CURRENT SINKS -- no tail transistor exists.",
+            "      An ideal sink does not lose current at SS/125C or fall out of",
+            "      saturation at 0.95 VDD. EVERY CORNER SPREAD BELOW IS THEREFORE",
+            "      AN UNDERSTATEMENT, and the 45-corner yield is an OPTIMISTIC bound.",
+        ]
+    else:
+        L += [
+            "   3. The tail is a REAL CURRENT MIRROR (session 13). One tail device",
+            "      per side, gates driven by a diode-connected reference at ratio",
+            f"      N = {TAIL_MIRROR_RATIO:g}. Sized by RULE, not searched:",
+            f"      w_tail = i_side x {TAIL_UM_PER_AMP / 1e3:.1f}k um/A at "
+            f"L = {TAIL_L_UM:g} um,",
+            "      which is the ss/0.95/125C width for vdsat_tail = "
+            f"{0.20:.2f} V -- the",
+            "      corner that needs the MOST width, so the tail is saturated at",
+            "      every corner rather than only at nominal (TAIL_DEVICE.md sec 3).",
+            "      nf_tail is DERIVED from the per-finger bin ceiling (G53), never",
+            "      chosen: it carries no design information (TAIL_DEVICE.md sec 5).",
+            "      I_ref IS STILL IDEAL and is the one remaining ideal element.",
+            "      S6 is now billed on the MEASURED supply current, which includes",
+            "      the reference branch and the mirror's gain error.",
+            "      A new spec row, tail_saturation, is the COUPLED constraint:",
+            "      vds_tail IS v(source) = VCM - Vgs(I, W_in, L_in).",
+        ]
+    L += [
         "",
         "  NOT SCREENED:",
     ]
@@ -264,18 +330,22 @@ def load_grid(corners: Sequence[Corner],
     return [LoadCorner(c, cl) for c in corners for cl in loads]
 
 
-def point_at_corner(params: dict[str, float], corner: Corner) -> SizingPoint:
+def point_at_corner(params: dict[str, float], corner: Corner,
+                    tail: Optional[TailDevice] = None) -> SizingPoint:
     """Build the sizing point as seen at `corner`.
 
     VDD scaling lives here and nowhere else. VCM either tracks it or does not,
     per `VCM_TRACKS_VDD` — one flag, one place, so the assumption cannot end up
     being made differently in two spots (CLAUDEwa §8 rule 9).
+
+    `tail=None` keeps the two ideal sinks, which is what `robust_geometry.py`
+    needs to keep reproducing session 10d.
     """
     vdd = NOMINAL_VDD * corner.vdd_scale
     p = dict(params)
     if VCM_TRACKS_VDD:
         p["vcm_in"] = float(p["vcm_in"]) * corner.vdd_scale
-    return SizingPoint.from_params(p, vdd=vdd)
+    return SizingPoint.from_params(p, vdd=vdd, tail=tail)
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -341,6 +411,23 @@ def check_specs(r, power_w: float) -> list[SpecCheck]:
                   r.nyquist_boost_db, "dB",
                   _shortfall_min(r.nyquist_boost_db, 0.0)),
     ]
+    # THE ROW THE TAIL ADDS, and the reason session 13 exists. Like
+    # `saturation` it is a VALIDITY condition, not an S3-S8 spec: a tail in
+    # triode is not delivering its current, so every small-signal number above
+    # describes a different circuit from the one that was asked for.
+    #
+    # It is the COUPLED one. `vds_tail` IS the input pair's source node, and
+    # `v(source) = VCM - Vgs(I_tail, W_in, L_in)`, so this single row is where
+    # VCM, W_in, L_in, i_bias and the tail geometry meet. Nothing else in this
+    # table couples five box coordinates.
+    #
+    # Absent — not passing — when the tail is ideal, so a run with ideal sinks
+    # cannot silently score a constraint it does not contain.
+    if r.tail_margin_v is not None:
+        checks.append(SpecCheck(
+            "tail_saturation", bool(r.tail_in_saturation), r.tail_margin_v,
+            r.tail_margin_v, "V",
+            _shortfall_min(r.vds_tail, r.vdsat_tail)))
     return checks
 
 
@@ -413,18 +500,27 @@ def evaluate_at_corner(
     """
     params, process, vdd_scale, temp_c = task[:4]
     cl_f = task[4] if len(task) > 4 else float(params["cl"])
+    # A SIXTH element carries the tail. Absent => ideal sinks, which is what
+    # `robust_geometry.py` passes so its reproduction of session 10d is
+    # untouched by this change.
+    tail: Optional[TailDevice] = task[5] if len(task) > 5 else None
     if cl_f != params["cl"]:
         params = {**params, "cl": cl_f}
     corner = Corner(process=process, vdd_scale=vdd_scale, temp_c=temp_c)
     tag = str(LoadCorner(corner, cl_f))
 
+    # NOTE the analytic pre-check does NOT know about the tail, and cannot:
+    # the tail's requirement is `VCM - Vgs(I, W_in, L_in) > vdsat_tail`, and
+    # neither Vgs nor vdsat is available without simulating. It is enforced as
+    # the SPICE-measured `tail_saturation` row instead. So the headroom
+    # rejection count is expected to be UNCHANGED by fitting a tail.
     reason = headroom_ok_1v8(params, vdd=NOMINAL_VDD * vdd_scale)
     if reason is not None:
         return CornerResult(corner=tag, ok=False, cl_f=cl_f,
                             fail_reason=f"headroom: {reason}",
                             first_fail="headroom", first_fail_shortfall=-1.0)
 
-    point = point_at_corner(params, corner)
+    point = point_at_corner(params, corner, tail)
     # swing=False: the .dc transfer curve costs ~0.05 s/point and feeds the
     # compression check, which is a link-layer question. Nothing screened here
     # reads it.
@@ -438,7 +534,14 @@ def evaluate_at_corner(
                             first_fail="sim_failed", first_fail_shortfall=-1.0,
                             retried=retried)
 
-    checks = check_specs(r, power_w=point.power_w)
+    # S6 is scored on the MEASURED supply current, not the requested one. With
+    # an ideal tail the two are identical by construction; with a mirror they
+    # are not, because the reference branch is real current and the mirror
+    # delivers a few percent less than asked into each side. Billing the
+    # request would credit the design with current it does not draw and charge
+    # it for current it does (rule 1).
+    power = r.power_measured_w if r.power_measured_w is not None else point.power_w
+    checks = check_specs(r, power_w=power)
     worst = _worst(checks)
     measured = {
         "peaking_db": r.peaking_db, "f_pk_hz": r.f_pk_hz,
@@ -448,7 +551,12 @@ def evaluate_at_corner(
         "gm": r.gm, "gmbs": r.gmbs, "gds": r.gds, "vth": r.vth,
         "vds": r.vds, "vdsat": r.vdsat, "id_a": r.id_a,
         "v_src_dc": r.v_src_dc, "v_out_dc": r.v_out_dc,
-        "power_w": point.power_w,
+        "power_w": power, "power_requested_w": point.power_w,
+        # Tail primitives: None when the tail is ideal.
+        "i_tail_meas_a": r.i_tail_meas_a, "vds_tail": r.vds_tail,
+        "vdsat_tail": r.vdsat_tail, "tail_margin_v": r.tail_margin_v,
+        "gm_tail": r.gm_tail, "mirror_gain_error": r.mirror_gain_error,
+        "i_supply_a": r.i_supply_a,
     }
     return CornerResult(
         corner=tag, ok=True,
@@ -510,6 +618,44 @@ def first_fail_table(results: Sequence[CornerResult], title: str) -> str:
             mtxt, wtxt = " " * 16, " " * 14
         L.append(f"      {name:14} {len(rows):6d} {len(rows) / n * 100:6.1f}%   "
                  f"{mtxt}  {wtxt}")
+    return "\n".join(L)
+
+
+def spec_violation_counts(results: Sequence[CornerResult]) -> dict[str, int]:
+    """How many evaluations each spec is VIOLATED in — not just ranked worst.
+
+    `first_fail_table` answers "which spec is the worst violation", which is
+    what the reward cares about. It systematically UNDER-reports any constraint
+    that is usually accompanied by a larger one: a design whose `f_peak` misses
+    by 17 GHz and whose tail is 40 mV into triode is counted only against
+    `S3_f_peak`, so a constraint could bind on a fifth of the population and
+    never appear in that table at all.
+
+    Session 13 needs both, because `tail_saturation` is exactly such a
+    constraint: it is a hard validity condition with a small normalised
+    shortfall, so it loses the ranking to almost any S3 failure.
+    """
+    out: dict[str, int] = {}
+    for r in results:
+        for name, vals in (r.checks or {}).items():
+            if not vals[0]:
+                out[name] = out.get(name, 0) + 1
+        if r.first_fail in ("headroom", "sim_failed"):
+            out[r.first_fail] = out.get(r.first_fail, 0) + 1
+    return out
+
+
+def violation_table(results: Sequence[CornerResult], title: str) -> str:
+    n = len(results)
+    counts = spec_violation_counts(results)
+    L = [f"  --- {title}: how often each spec is VIOLATED "
+         f"(not just ranked worst; a design can violate several) ---"]
+    if not counts:
+        L.append("      (none)")
+        return "\n".join(L)
+    L.append(f"      {'spec':16} {'violations':>11} {'share':>8}")
+    for name, k in sorted(counts.items(), key=lambda kv: -kv[1]):
+        L.append(f"      {name:16} {k:11d} {k / n * 100:7.1f}%")
     return "\n".join(L)
 
 
@@ -659,7 +805,7 @@ def tolerance_main(args) -> int:
     tol_rows = []
     for i in robust_idx:
         p = feasible[i]
-        tasks = [(p, c.process, c.vdd_scale, c.temp_c, cl)
+        tasks = [(p, c.process, c.vdd_scale, c.temp_c, cl, tail_for_design(p))
                  for cl in ladder for c in SCREEN_CORNERS]
         res = run_tasks(tasks, workers=args.workers)
         flags = [all(r.all_specs_met for r in res[k * len(SCREEN_CORNERS):
@@ -680,7 +826,8 @@ def tolerance_main(args) -> int:
     print(f"\n  --- f_peak vs cl: is the prediction's cl^-0.5 model right? ---")
     probe_cls = cl_ladder(5, _CL.cl_lo_f, _CL.cl_hi_f)
     block = feasible[:args.exponent_n]
-    tasks = [(p, "tt", 1.00, 27.0, cl) for p in block for cl in probe_cls]
+    tasks = [(p, "tt", 1.00, 27.0, cl, tail_for_design(p))
+             for p in block for cl in probe_cls]
     res = run_tasks(tasks, workers=args.workers)
     nc = len(probe_cls)
     exps: list[float] = []
@@ -794,9 +941,18 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
                     help="designs sampled for the f_peak-vs-cl exponent")
     # Next to the script, not in the cwd: a long run must not scatter its only
     # record wherever it happened to be launched from.
+    #
+    # THE FILENAME CARRIES THE TAIL. Session 12b's results live in
+    # `s9_yield_results.json` and `S9_YIELD.md` §8 quotes numbers from them, so
+    # by G49's rule that file is an INPUT to a write-up and must not be
+    # overwritten by a later run with a different circuit in it. Making the
+    # default name depend on the topology means the two cannot collide by
+    # accident — which they already did once, during session 13's plumbing
+    # checks, and it was only recoverable because the file was tracked.
     ap.add_argument("--out", type=Path,
                     default=Path(__file__).resolve().parent
-                    / "s9_yield_results.json")
+                    / ("s9_yield_results.json" if TAIL_IS_IDEAL
+                       else "s9_yield_tail_results.json"))
     args = ap.parse_args(argv)
 
     if args.tolerance_only:
@@ -832,14 +988,18 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         "cl_legacy_pin_f": CL_LEGACY_PIN_F,
         "cl_range_ratio": _CL.ratio, "cl_range_octaves": _CL.octaves,
         "vcm_tracks_vdd": VCM_TRACKS_VDD,
-        "tail_is_ideal": TAIL_IS_IDEAL, "unscreened": UNSCREENED_SPECS,
+        "tail_is_ideal": TAIL_IS_IDEAL,
+        "tail_um_per_amp": TAIL_UM_PER_AMP, "tail_l_um": TAIL_L_UM,
+        "tail_mirror_ratio": TAIL_MIRROR_RATIO,
+        "unscreened": UNSCREENED_SPECS,
         "n_sampled": args.n, "seed": args.seed},
         "legacy_150ff": {k: list(v) for k, v in LEGACY_150FF.items()}}
 
     # ---- benchmark ---------------------------------------------------------
     if not args.no_bench:
         c0 = SCREEN_CORNERS[0]
-        bench = [(p, c0.process, c0.vdd_scale, c0.temp_c, SCREEN_LOADS[0])
+        bench = [(p, c0.process, c0.vdd_scale, c0.temp_c, SCREEN_LOADS[0],
+                  tail_for_design(p))
                  for p in feasible[:args.bench_n]]
         print(f"--- parallel scaling, {len(bench)} tasks "
               f"({LoadCorner(c0, SCREEN_LOADS[0])}) ---")
@@ -880,7 +1040,8 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         for g in nominal_grid:
             print(f"    {g}")
         tasks0 = [(p, g.corner.process, g.corner.vdd_scale, g.corner.temp_c,
-                   g.cl_f) for p in feasible for g in nominal_grid]
+                   g.cl_f, tail_for_design(p))
+                  for p in feasible for g in nominal_grid]
         t0 = time.perf_counter()
         flat0 = run_tasks(tasks0, workers=args.workers)
         t_nom = time.perf_counter() - t0
@@ -907,10 +1068,15 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
             "first_fail_counts": {
                 str(g): _count_first_fail([rs[j] for rs in per_nom])
                 for j, g in enumerate(nominal_grid)},
+            "violation_counts": {
+                str(g): spec_violation_counts([rs[j] for rs in per_nom])
+                for j, g in enumerate(nominal_grid)},
         }
         print()
         for j, g in enumerate(nominal_grid):
-            print(first_fail_table([rs[j] for rs in per_nom], str(g)))
+            col = [rs[j] for rs in per_nom]
+            print(first_fail_table(col, str(g)))
+            print(violation_table(col, str(g)))
             print()
 
     # ---- stage 1: screen at 3 corners x 2 loads ----------------------------
@@ -919,7 +1085,8 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
           f"(corner, load) points ({n_feas * len(screen_grid)} runs) ---")
     for g in screen_grid:
         print(f"    {g}")
-    tasks = [(p, g.corner.process, g.corner.vdd_scale, g.corner.temp_c, g.cl_f)
+    tasks = [(p, g.corner.process, g.corner.vdd_scale, g.corner.temp_c,
+              g.cl_f, tail_for_design(p))
              for p in feasible for g in screen_grid]
     t0 = time.perf_counter()
     flat = run_tasks(tasks, workers=args.workers)
@@ -951,7 +1118,9 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     print()
 
     for j, g in enumerate(screen_grid):
-        print(first_fail_table([rs[j] for rs in per_design], str(g)))
+        col = [rs[j] for rs in per_design]
+        print(first_fail_table(col, str(g)))
+        print(violation_table(col, str(g)))
         print()
 
     results["stage1"] = {
@@ -963,6 +1132,9 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
                           for j, g in enumerate(screen_grid)},
         "first_fail_counts": {
             str(g): _count_first_fail([rs[j] for rs in per_design])
+            for j, g in enumerate(screen_grid)},
+        "violation_counts": {
+            str(g): spec_violation_counts([rs[j] for rs in per_design])
             for j, g in enumerate(screen_grid)},
         "survivor_design_idx": list(survivors_idx),
     }
@@ -983,7 +1155,8 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         return 0
 
     tasks45 = [(p, g.corner.process, g.corner.vdd_scale, g.corner.temp_c,
-                g.cl_f) for p in promo for g in promo_grid]
+                g.cl_f, tail_for_design(p))
+               for p in promo for g in promo_grid]
     t0 = time.perf_counter()
     flat45 = run_tasks(tasks45, workers=args.workers)
     t45 = time.perf_counter() - t0

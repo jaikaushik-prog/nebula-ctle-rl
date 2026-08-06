@@ -55,6 +55,19 @@ _SILENT_FAILURE_PATTERNS: tuple[str, ...] = (
     r"doAnalyses: iteration limit reached",
     r"singular matrix",
     r"Simulation interrupted due to error",
+    # A PRINTED VALUE THAT IS NOT A NUMBER. ngspice's `.noise` can return
+    # `inoise_total = -nan(ind)` and exit 0 — measured on a current-mirror tail
+    # at ss/0.95/125 C, where the mirror reference device's noise is rejected
+    # to machine zero and the log-slope integration of the integrated noise
+    # hits log(0). See G54.
+    #
+    # This is anchored to `= value` rather than the bare word so it cannot fire
+    # on a model parameter or a comment that happens to contain "nan" or "inf"
+    # (`nfactor`, `Infinity` in a banner). Without it the NaN is caught only by
+    # accident, because the numeric regexes in this module do not match "nan" —
+    # and a laxer parser would carry NaN into a spec check, where `nan < tau`
+    # is False and reads as a genuine FAILURE rather than as a broken run.
+    r"=\s*[-+]?(?:nan|inf)\b",
 )
 
 #: Warnings that are normal for these netlists and carry no numeric meaning.

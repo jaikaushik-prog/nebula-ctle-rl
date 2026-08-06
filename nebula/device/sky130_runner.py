@@ -74,6 +74,7 @@ from nebula.device.crosscheck import (
     scan_for_silent_failures,
 )
 from nebula.device.ngspice_runner import ngspice_path
+from nebula.device.tail import TailDevice
 
 #: Directory holding `.spiceinit` (ngbehavior=hsa, needed at PARSE time, G29)
 #: and the trimmed SKY130 library (G36).
@@ -137,10 +138,15 @@ class SizingPoint:
     40 picometres and abort with the misleading "could not find a valid
     modelname" (G31/G36).
 
-    `i_tail_per_side_a` is the current in ONE branch. The topology uses two
-    ideal sinks (a single shared tail would short out the degeneration
-    network), so total supply current is `2 * i_tail_per_side_a` and that is
-    what `power_w` bills for.
+    `i_tail_per_side_a` is the current in ONE branch. The topology uses one
+    sink per side (a single shared tail would short out the degeneration
+    network), so total supply current is `2 * i_tail_per_side_a` plus, when a
+    real tail is fitted, the mirror's reference branch.
+
+    `tail` selects WHICH sink. `None` — the default — keeps the two ideal
+    current sinks every published result in this project was measured with, so
+    sessions 9d through 12b stay reproducible bit for bit. A `TailDevice`
+    replaces them with a real current mirror; see `nebula/device/tail.py`.
     """
 
     w: float                     # um
@@ -154,6 +160,10 @@ class SizingPoint:
     vcm: float                   # V
     vdd: float = 1.8             # V
     device: str = NFET_01V8
+    #: None => two IDEAL current sinks (legacy, and the default). A TailDevice
+    #: => a real current mirror. Every corner spread measured with `None` is an
+    #: UNDERSTATEMENT (G47); that is the whole reason this field exists.
+    tail: Optional[TailDevice] = None
 
     @classmethod
     def from_params(
@@ -161,6 +171,7 @@ class SizingPoint:
         params: "dict[str, float]",
         vdd: float = 1.8,
         device: str = NFET_01V8,
+        tail: Optional[TailDevice] = None,
     ) -> "SizingPoint":
         """Build a point from a `common/params.py`-style dict.
 
@@ -193,14 +204,29 @@ class SizingPoint:
             vcm=float(params["vcm_in"]),
             vdd=vdd,
             device=device,
+            tail=tail,
         )
 
     @property
+    def i_ref_a(self) -> float:
+        """The mirror's reference current. Zero when the tail is ideal."""
+        return (0.0 if self.tail is None
+                else self.tail.i_ref_a(self.i_tail_per_side_a))
+
+    @property
     def i_total_a(self) -> float:
-        return 2.0 * self.i_tail_per_side_a
+        """REQUESTED total supply current, including the mirror reference.
+
+        A prediction, not a measurement. What the mirror actually delivers is
+        `Sky130Point.i_supply_a`, read off the supply branch — and the two
+        differ by the mirror's gain error, which at TT is around -8 %. Use the
+        measured one for anything that reaches a deliverable (rule 1).
+        """
+        return 2.0 * self.i_tail_per_side_a + self.i_ref_a
 
     @property
     def power_w(self) -> float:
+        """Requested static power. See `i_total_a` on why it is a prediction."""
         return self.vdd * self.i_total_a
 
     @property
@@ -227,6 +253,21 @@ class Sky130Point:
     id_a: Optional[float] = None
     v_out_dc: Optional[float] = None
     v_src_dc: Optional[float] = None
+    #: Total current drawn from VDD, measured off the supply branch. Present on
+    #: every run; it is what `power_measured_w` bills. With an ideal tail it
+    #: equals `2 * i_tail_per_side_a` to rounding; with a mirror it also carries
+    #: the reference branch AND the mirror's gain error, neither of which the
+    #: requested `SizingPoint.power_w` knows about.
+    i_supply_a: Optional[float] = None
+    # --- .op primitives of the TAIL (None when the tail is ideal) ---
+    i_tail_meas_a: Optional[float] = None
+    vds_tail: Optional[float] = None
+    vdsat_tail: Optional[float] = None
+    vgs_tail: Optional[float] = None
+    vth_tail: Optional[float] = None
+    gm_tail: Optional[float] = None
+    i_ref_meas_a: Optional[float] = None
+    v_bias_dc: Optional[float] = None
     # --- .ac ---
     g_dc_db: Optional[float] = None
     g_nyq_db: Optional[float] = None
@@ -238,6 +279,9 @@ class Sky130Point:
     g_top_db: Optional[float] = None
     # --- .noise ---
     vn_in_vrms: Optional[float] = None
+    #: Per-instance integrated input-referred noise, RMS volts, only when
+    #: `run_point(noise_detail=True)`. Adds in QUADRATURE to `vn_in_vrms`.
+    noise_by_device: Optional[dict] = None
     # --- .dc swing curve (raw, so Python owns every derived number) ---
     vid: Optional[np.ndarray] = field(default=None, repr=False)
     vod: Optional[np.ndarray] = field(default=None, repr=False)
@@ -296,6 +340,82 @@ class Sky130Point:
     @property
     def gm_over_id(self) -> float:
         return self.gm / self.id_a              # type: ignore[operator]
+
+    # ---- derived: the tail ----
+    @property
+    def has_real_tail(self) -> bool:
+        return self.vdsat_tail is not None
+
+    @property
+    def tail_margin_v(self) -> Optional[float]:
+        """`vds_tail - vdsat_tail`. Negative => the tail is in triode.
+
+        THE COUPLED INEQUALITY. `vds_tail` IS the input pair's source node, so
+        this one number is where VCM, W_in, L_in, i_bias and the tail geometry
+        meet. `None` when the tail is ideal, because an ideal sink has no such
+        constraint — which is exactly the optimism G47 records.
+        """
+        if self.vds_tail is None or self.vdsat_tail is None:
+            return None
+        return self.vds_tail - self.vdsat_tail
+
+    @property
+    def tail_in_saturation(self) -> Optional[bool]:
+        m = self.tail_margin_v
+        return None if m is None else m > 0.0
+
+    @property
+    def mirror_gain_error(self) -> Optional[float]:
+        """Realised mirror ratio divided by the requested one, minus 1.
+
+        0.0 would be a perfect mirror. Measured around -8 % at TT, and it is
+        real physics: the reference device sits at `vds = vgs` ~ 1.0 V while the
+        tail sits at `v(source)` ~ 0.34 V, so channel-length modulation gives
+        the reference more current per micron than the tail.
+        """
+        if (self.i_tail_meas_a is None or self.point is None
+                or self.point.tail is None):
+            return None
+        asked = self.point.i_tail_per_side_a
+        return (self.i_tail_meas_a / asked - 1.0) if asked else None
+
+    def noise_share_power(self) -> dict:
+        """Each contributor's share of the total noise POWER, summing to ~1.
+
+        Squares first: the per-instance numbers are RMS volts and add in
+        quadrature, so a linear normalisation would over-report every small
+        contributor and under-report the dominant one.
+        """
+        if not self.noise_by_device:
+            return {}
+        sq = {k: v * v for k, v in self.noise_by_device.items() if v is not None}
+        tot = sum(sq.values())
+        return {k: v / tot for k, v in sq.items()} if tot > 0 else {}
+
+    def noise_quadrature_residual(self) -> Optional[float]:
+        """Relative gap between the quadrature sum of parts and `vn_in_vrms`.
+
+        The gate on the attribution: if the parts do not reconstruct the total,
+        the breakdown is missing a contributor and any share read off it is
+        wrong. Verified at 6e-8 on the reference point.
+        """
+        if not self.noise_by_device or not self.vn_in_vrms:
+            return None
+        s = math.sqrt(sum(v * v for v in self.noise_by_device.values()
+                          if v is not None))
+        return abs(s - self.vn_in_vrms) / self.vn_in_vrms
+
+    @property
+    def power_measured_w(self) -> Optional[float]:
+        """VDD x the MEASURED supply current. The number S6 should be scored on.
+
+        `SizingPoint.power_w` is what was asked for. With a real tail those are
+        not the same: the mirror adds a reference branch and delivers ~8 % less
+        than requested into each side, and both effects are real power.
+        """
+        if self.i_supply_a is None or self.point is None:
+            return None
+        return self.point.vdd * self.i_supply_a
 
     # ---- derived: the measured swing ----
     def swing(self, compression_db: float = 1.0) -> "SwingLimits":
@@ -432,10 +552,7 @@ RLn   vdd outn {{RL}}
 Rdeg  s1 s2 {{RS}}
 Cdeg  s1 s2 {{CS}}
 
-* Two separate ideal sinks. A single shared tail would short the degeneration.
-It1   s1 0 {{IT}}
-It2   s2 0 {{IT}}
-
+{tail_source}
 CLp   outp 0 {{CL}}
 CLn   outn 0 {{CL}}
 
@@ -448,6 +565,11 @@ print @m.xm1.m{device}[gm] @m.xm1.m{device}[gmbs] @m.xm1.m{device}[gds]
 print @m.xm1.m{device}[vth] @m.xm1.m{device}[vds] @m.xm1.m{device}[vdsat]
 print @m.xm1.m{device}[vgs] @m.xm1.m{device}[id]
 print v(outp) v(s1)
+* Supply branch current. The MEASURED power, so a mirror's reference branch and
+* its gain error are billed rather than assumed (rule 1). Negated in Python:
+* ngspice reports current INTO the source's + terminal.
+print i(Vdd)
+{tail_probe}
 
 ac dec 50 1meg 100g
 let vd_db = db(v(outp) - v(outn))
@@ -459,14 +581,105 @@ meas ac g_nyq FIND vd_db AT=2.5g
 meas ac g_pk  MAX  vd_db FROM=10meg TO={f_top}
 meas ac g_top FIND vd_db AT={f_top}
 
-noise v(outp,outn) Vid dec 20 10meg 5g
+noise v(outp,outn) Vid dec 20 10meg 5g{noise_summary}
 print inoise_total
+{noise_probe}
 {swing_block}
 quit
 .endc
 
 .end
 """
+
+# ── the two tails ───────────────────────────────────────────────────────────
+#
+# ONE definition each (CLAUDEwa.md §8 rule 9). `spice/ctle.cir` carries the same
+# two blocks for a human to read; if you change one, diff the other.
+
+#: LEGACY. Two ideal sinks — what every published number through session 12b was
+#: measured with, kept so those results stay reproducible. An ideal sink hands
+#: over exactly IT at every corner, which is precisely what makes those corner
+#: spreads understatements (G47).
+_TAIL_IDEAL = """
+* Two separate ideal sinks. A single shared tail would short the degeneration.
+It1   s1 0 {IT}
+It2   s2 0 {IT}
+"""
+
+#: The real tail: an ideal reference current into a diode-connected device,
+#: mirrored to one tail per side at ratio N. Only `Iref` is still ideal, and
+#: `nebula/device/tail.py` says why that one is defensible and a fixed gate bias
+#: would not be.
+_TAIL_MIRROR = """
+* Current-mirror tail. N = W_tail/W_ref = {n_mir}; the reference device is one
+* unit of the same finger width, so the mirror ratio is set by geometry and not
+* by a voltage that would drift against vth across corners.
+.param WT={w_tail} LT={l_tail} NFT={nf_tail}
+.param WREF={w_ref} NFREF={nf_ref} IREF={i_ref} CBYP={c_byp}
+
+Iref  vdd nbias {{IREF}}
+XMR   nbias nbias 0 0 {device} W={{WREF}} L={{LT}} nf={{NFREF}}
+XMT1  s1    nbias 0 0 {device} W={{WT}} L={{LT}} nf={{NFT}}
+XMT2  s2    nbias 0 0 {device} W={{WT}} L={{LT}} nf={{NFT}}
+* Bias-node bypass. A real element -- every current mirror grounds its gate
+* node at signal frequencies so supply and reference noise do not reach the
+* tail gates -- and it also removes an ngspice singularity (G54). It changes
+* nothing else: the .op is unaffected (nbias carries no DC current into it),
+* and the measured noise is IDENTICAL at 1 pF and 10 pF to seven digits.
+Cbyp  nbias 0 {{CBYP}}
+"""
+
+#: Tail primitives. Read with `parse_scalar` against the FULL literal name, not
+#: with `find_device_scalar`, which returns the first `@*[prop]` in the output
+#: and would silently hand back the INPUT PAIR's number for every tail query.
+_TAIL_PROBE = """print @m.xmt1.m{device}[id] @m.xmt1.m{device}[vds]
+print @m.xmt1.m{device}[vdsat] @m.xmt1.m{device}[vgs]
+print @m.xmt1.m{device}[vth] @m.xmt1.m{device}[gm]
+print @m.xmr.m{device}[id] v(nbias)
+"""
+
+#: Per-instance integrated input-referred noise, emitted when `.noise` is given
+#: a points-per-summary argument.
+#:
+#: **THE CONTRIBUTIONS ADD IN QUADRATURE, NOT LINEARLY**, and they are in RMS
+#: VOLTS like `inoise_total` itself. Verified on the reference point: the eight
+#: contributors sum linearly to 1.0825e-3 (2.4x the total, meaningless) and in
+#: quadrature to 4.424650e-04, which equals `inoise_total` to every printed
+#: digit. `noise_share_power` therefore squares before normalising. Getting this
+#: backwards is the same class of error as square-rooting `inoise_total`
+#: (`tests/test_noise_units.py`), and it flatters whichever contributor is
+#: largest.
+#:
+#: NOTE the naming is INCONSISTENT between element types and it is not a typo:
+#: devices use dots (`inoise_total.m.xm1.<model>`), resistors use underscores
+#: (`inoise_total_rlp`). A single `print` line containing one bad name loses
+#: the WHOLE line to a warning and exits 0 (G26), so each is printed separately.
+_NOISE_PROBE_PAIR = """print inoise_total.m.xm1.m{device}
+print inoise_total.m.xm2.m{device}
+print inoise_total_rlp
+print inoise_total_rln
+print inoise_total_rdeg
+"""
+
+_NOISE_PROBE_TAIL = """print inoise_total.m.xmt1.m{device}
+print inoise_total.m.xmt2.m{device}
+print inoise_total.m.xmr.m{device}
+"""
+
+#: The order the `print` lines above appear in, paired with the key each lands
+#: under in `Sky130Point.noise_by_device`. One definition (rule 9).
+_NOISE_KEYS_PAIR: tuple[tuple[str, str], ...] = (
+    ("in_pair_p", "inoise_total.m.xm1.m{device}"),
+    ("in_pair_n", "inoise_total.m.xm2.m{device}"),
+    ("rl_p", "inoise_total_rlp"),
+    ("rl_n", "inoise_total_rln"),
+    ("rs_deg", "inoise_total_rdeg"),
+)
+_NOISE_KEYS_TAIL: tuple[tuple[str, str], ...] = (
+    ("tail_p", "inoise_total.m.xmt1.m{device}"),
+    ("tail_n", "inoise_total.m.xmt2.m{device}"),
+    ("mirror_ref", "inoise_total.m.xmr.m{device}"),
+)
 
 _SWING_BLOCK = """
 save all @m.xm1.m{device}[vds] @m.xm1.m{device}[vdsat] @m.xm1.m{device}[id]
@@ -505,6 +718,7 @@ def run_point(
     vid_step: float = 0.004,
     timeout_s: float = 120.0,
     temp_c: float = 27.0,
+    noise_detail: bool = False,
 ) -> Sky130Point:
     """Simulate one sizing point. Never raises — failures come back ok=False.
 
@@ -527,12 +741,48 @@ def run_point(
     if swing:
         swing_block = _SWING_BLOCK.format(device=point.device, vid_max=vid_max,
                                           vid_step=vid_step)
+
+    # The tail: ideal sinks, or the mirror. A geometry outside the SKY130 bins
+    # raises here rather than reaching ngspice, which would report it as
+    # "could not find a valid modelname" — G31's misleading message.
+    tail_probe = ""
+    if point.tail is None:
+        tail_source = _TAIL_IDEAL.format(IT="{IT}")
+    else:
+        t = point.tail
+        tail_source = _TAIL_MIRROR.format(
+            device=t.device, n_mir=f"{t.mirror_ratio:g}",
+            w_tail=f"{t.w_tail:.6g}", l_tail=f"{t.l_tail:.6g}",
+            nf_tail=int(t.nf_tail), w_ref=f"{t.w_ref:.6g}",
+            nf_ref=int(t.nf_ref),
+            i_ref=f"{t.i_ref_a(point.i_tail_per_side_a):.9g}",
+            c_byp=f"{t.c_bypass_f:.9g}",
+        )
+        tail_probe = _TAIL_PROBE.format(device=t.device)
+
+    # Per-device noise attribution. `noise_keys` is built from the SAME tables
+    # the print lines come from, so a probe can never be parsed under the wrong
+    # label (rule 9).
+    noise_summary, noise_probe = "", ""
+    noise_keys: list[tuple[str, str]] = []
+    if noise_detail:
+        noise_summary = " 1"          # points per summary => per-instance plots
+        noise_probe = _NOISE_PROBE_PAIR.format(device=point.device)
+        noise_keys = [(k, v.format(device=point.device))
+                      for k, v in _NOISE_KEYS_PAIR]
+        if point.tail is not None:
+            noise_probe += _NOISE_PROBE_TAIL.format(device=point.tail.device)
+            noise_keys += [(k, v.format(device=point.tail.device))
+                           for k, v in _NOISE_KEYS_TAIL]
+
     text = _NETLIST.format(
         lib=lib.as_posix(), corner=corner, device=point.device,
         w=point.w, l=point.l, nf=int(point.nf),
         rl=point.rl, rs=point.rs, cs=point.cs, cl=point.cl,
         it=point.i_tail_per_side_a, vdd=point.vdd, vcm=point.vcm,
         swing_block=swing_block, temp_c=temp_c,
+        tail_source=tail_source, tail_probe=tail_probe,
+        noise_summary=noise_summary, noise_probe=noise_probe,
         f_top=f"{MAX_SEARCH_TOP_HZ / 1e9:g}g",
     )
 
@@ -587,15 +837,52 @@ def run_point(
     pt.id_a = find_device_scalar(out, "id")
     pt.v_out_dc = parse_scalar(out, "v(outp)")
     pt.v_src_dc = parse_scalar(out, "v(s1)")
+    # ngspice reports the current INTO the + terminal of a voltage source, so a
+    # supply DELIVERING current reports it negative. Flip once, here.
+    # ngspice lower-cases vector names on output: `print i(Vdd)` emits
+    # `i(vdd) = ...`. Matching the netlist's capitalisation finds nothing.
+    i_vdd = parse_scalar(out, "i(vdd)")
+    pt.i_supply_a = None if i_vdd is None else -i_vdd
+
+    if point.tail is not None:
+        d = point.tail.device
+        pt.i_tail_meas_a = parse_scalar(out, f"@m.xmt1.m{d}[id]")
+        pt.vds_tail = parse_scalar(out, f"@m.xmt1.m{d}[vds]")
+        pt.vdsat_tail = parse_scalar(out, f"@m.xmt1.m{d}[vdsat]")
+        pt.vgs_tail = parse_scalar(out, f"@m.xmt1.m{d}[vgs]")
+        pt.vth_tail = parse_scalar(out, f"@m.xmt1.m{d}[vth]")
+        pt.gm_tail = parse_scalar(out, f"@m.xmt1.m{d}[gm]")
+        pt.i_ref_meas_a = parse_scalar(out, f"@m.xmr.m{d}[id]")
+        pt.v_bias_dc = parse_scalar(out, "v(nbias)")
+
     pt.g_dc_db, _ = parse_meas(out, "g_dc")
     pt.g_nyq_db, _ = parse_meas(out, "g_nyq")
     pt.g_pk_db, pt.f_pk_hz = parse_meas(out, "g_pk")
     pt.g_top_db, _ = parse_meas(out, "g_top")
     pt.vn_in_vrms = parse_scalar(out, "inoise_total")
+    if noise_keys:
+        pt.noise_by_device = {key: parse_scalar(out, vec)
+                              for key, vec in noise_keys}
+        # A probe that came back empty means the attribution is INCOMPLETE, and
+        # an incomplete attribution silently re-weights every share computed
+        # from it. Fail the run instead (rule 1: a missing number is a failure,
+        # never a zero).
+        blank = [k for k, v in pt.noise_by_device.items() if v is None]
+        if blank:
+            return Sky130Point(ok=False, corner=corner, point=point,
+                               runtime_s=runtime,
+                               fail_reason=f"noise attribution missing {blank}")
 
-    required = ("gm", "gmbs", "vds", "vdsat", "id_a",
+    required = ["gm", "gmbs", "vds", "vdsat", "id_a", "i_supply_a",
                 "g_dc_db", "g_nyq_db", "g_pk_db", "f_pk_hz", "g_top_db",
-                "vn_in_vrms")
+                "vn_in_vrms"]
+    # A tail that was asked for but did not parse is a FAILED run, not a run
+    # with a missing extra. Without this the mirror could silently fall back to
+    # "no tail data" and every tail verdict would read as unmeasured rather
+    # than as broken (rule 10).
+    if point.tail is not None:
+        required += ["i_tail_meas_a", "vds_tail", "vdsat_tail", "gm_tail",
+                     "i_ref_meas_a"]
     missing = [n for n in required if getattr(pt, n) is None]
     if missing:
         return Sky130Point(ok=False, corner=corner, point=point, runtime_s=runtime,

@@ -184,10 +184,36 @@ PROPOSED_BOX: dict[str, tuple[float, float, bool, str]] = {
 }
 
 #: The three §5.2 names this box deliberately does not cover, and why.
+#:
+#: **The reason CHANGED in session 13 and the conclusion did not.** It used to
+#: be "no tail transistor exists yet — the netlist uses ideal sinks", i.e. the
+#: bounds were underivable. A tail now exists (`nebula/device/tail.py`) and all
+#: three edges have been measured (`TAIL_DEVICE.md` §6). They are still absent
+#: from this box, for a different and stronger reason: **measurement says they
+#: should not be SEARCHED at all.**
+#:
+#: - `w_tail` follows from `i_bias` by a current-density rule, because holding
+#:   `vdsat_tail` on target is what the dimension is for. Searching it
+#:   independently mostly produces tails that are the wrong size for their own
+#:   current, and can move S3 peaking by up to 2.15 dB — more than session 11's
+#:   entire 1.0 dB corner-robustness margin budget.
+#: - `nf_tail` follows from `w_tail` and the mirror ratio via SKY130's
+#:   per-finger bin ceiling (G53). Measured: with matched fingers, nf 8 to 32
+#:   moves the delivered current by 0.6 %. It is a near-dead dimension, the
+#:   same finding as G38 for `nf_in` and G42 for `cl`.
+#: - `l_tail` is the only one with a genuine trade (output resistance and
+#:   matching against width and area), and even it spans just 0.5-1.0 um.
+#:
+#: So this is a PROPOSAL to keep the action space at nine dimensions rather
+#: than twelve, and it is a human's to accept (rule 6). The measured ranges are
+#: in `TAIL_DEVICE.md` §6 for whoever decides otherwise.
 UNDERIVABLE: dict[str, str] = {
-    "w_tail": "no tail transistor exists yet — the netlist uses ideal sinks",
-    "l_tail": "no tail transistor exists yet — the netlist uses ideal sinks",
-    "nf_tail": "no tail transistor exists yet — the netlist uses ideal sinks",
+    "w_tail": "measured (TAIL_DEVICE.md sec 6) but DERIVED from i_bias by a "
+              "current-density rule, not searched",
+    "l_tail": "measured (TAIL_DEVICE.md sec 6); 0.5-1.0 um, fixed at 0.5 "
+              "rather than searched",
+    "nf_tail": "measured NEAR-DEAD (0.6% effect); derived from w_tail and the "
+               "per-finger bin ceiling, G53",
 }
 
 S5_NOISE_MAX_VRMS = 1.5e-3

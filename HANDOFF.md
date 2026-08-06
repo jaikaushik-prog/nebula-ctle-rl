@@ -406,6 +406,23 @@ signaling, ADC-based DSP receiver, 28 nm CMOS reference parameters).
 │   │                       capacitive. PDK constants are READ from the model
 │   │                       file, never re-declared (rule 9), and the reader
 │   │                       raises on a parameter the 180 bins disagree on.
+│   ├── device/tail.py       NEW (2026-08-06, session 13). The tail current
+│   │                       source as a REAL DEVICE: a mirror, one tail per
+│   │                       side (a shared tail would short the degeneration),
+│   │                       reference derived as N MATCHED UNIT FINGERS.
+│   │                       Owns the per-finger bin ceiling (G53) and the
+│   │                       bias-node bypass (G54). A geometry outside the bins
+│   │                       RAISES here rather than reaching ngspice.
+│   ├── experiments/tail_device.py  session 13. Five stages: --identity (three
+│   │                       checks that can each FAIL, incl. the coupling
+│   │                       identity vds_tail == v(source)), --sweep (261 runs,
+│   │                       the sizing rule), --noise (per-instance
+│   │                       attribution), --rout (what the tail does to S3),
+│   │                       --bounds (the three box edges, derived from the
+│   │                       CSV). `--report` re-runs the analysis with NO
+│   │                       simulator.
+│   ├── experiments/tail_device_data.csv  TRACKED ON PURPOSE (G49). 261 rows
+│   │                       behind TAIL_DEVICE.md sections 3-6.
 │   ├── device/sky130_runner.py  one SKY130 point, four analyses (.op .ac
 │   │                       .noise .dc), one call. Owns the two unit
 │   │                       conversions (metres->microns, i_bias->per-side)
@@ -1416,6 +1433,50 @@ Plus: git init, .gitignore, 28 tests, Wilson-bound BER reporting.
   not a peak** — the honest reading is "above 20 GHz or no peak at all". Harmless
   to the verdict (either way it fails the window, unlike G44), but a median
   margin quoted from it is a property of the sweep setup.
+
+- **G53 — (nebula) the SKY130 model-bin ceiling is on W PER FINGER, not on
+  total width.** Measured against the trimmed library at TT: `W=100 nf=1`
+  builds and `W=101 nf=1` aborts with "could not find a valid modelname";
+  `W=200 nf=2` and `W=400 nf=4` build, `W=210 nf=2` and `W=410 nf=4` abort. The
+  break is exactly at **W/nf = 100 um**, which is the `wmax = 1e-4` of the
+  widest bin in `sky130_fd_pr__nfet_01v8__tt.pm3.spice`. So `nf` does not
+  multiply width (G38 stands) but it DOES multiply the ceiling: total width up
+  to `nf x 100 um` is available.
+  **Why it matters:** a tail sinking several mA at `vdsat <= 0.2 V` with
+  `L >= 0.5 um` needs several hundred microns of width. Read the limit as a
+  total and that device looks unbuildable when it is routine. `PROPOSED_BOX`'s
+  `w_in` provenance says "the SKY130 nfet_01v8 W bin limit (wmax = 1.0e-4 m)",
+  which is the PER-FINGER limit described as if it were a total — at
+  `nf_in` = 8 the real ceiling is 800 um. **Reported, not folded into the
+  bound** (rule 6): widening `w_in` is a human's call and it would change the
+  sampled population.
+  `nebula/device/tail.py::W_PER_FINGER_MAX_UM` and `min_nf_for_width()` own it;
+  a geometry outside the bins RAISES rather than reaching ngspice, because
+  ngspice's message for it is G31's misleading one.
+- **G54 — (nebula) ngspice's `.noise` can return `inoise_total = -nan(ind)`,
+  and it exits 0.** Found on a current-mirror tail: the mirror's REFERENCE
+  device drives both tail gates equally, so its noise is perfectly common-mode
+  and is rejected to machine zero, and ngspice's integrated-noise log-slope
+  integration then evaluates `log(0)`. Only that one contributor is ever NaN;
+  every other stays finite, which is what identifies the mechanism. Knife-edge
+  in geometry — W = 141 um fine, 200 um NaN, 218 um fine — so it is numerics,
+  not physics.
+  **It was caught only by ACCIDENT**: `crosscheck.py`'s numeric regexes do not
+  match "nan", so the value parsed as `None` and the run failed as "could not
+  parse". A laxer parser would have carried NaN into a spec check, where
+  `nan < tau` is False and reads as a genuine FAILURE — biasing a yield
+  downward, silently. `_SILENT_FAILURE_PATTERNS` now carries an explicit
+  `=\s*[-+]?(nan|inf)` pattern, anchored to `= value` so `nfactor` and
+  `.param nano=1e-9` cannot trip it.
+  **The fix is a real circuit element, not a workaround:** a bias-node bypass
+  capacitor, which every current mirror has, to keep reference and supply noise
+  off the shared gate. `C_BYPASS_F = 10 pF`. **The value provably does not
+  change the answer** — 1p/10p/100p/1n give `inoise_total` identical to every
+  printed digit wherever they all compute — which is how we know it is not
+  buying the result. A residual ~0.4% of runs still NaN at extreme widths;
+  raising the bypass clears individual cases, so it is a bounded numerical
+  nuisance rather than a physical limit. **Its area is not yet in any S7
+  estimate** — there is no S7 estimate — and whoever builds one must include it.
 
 ## 10. Environment
 
@@ -2853,3 +2914,96 @@ this verdict. Not written.
 
 **Not started, by instruction:** task 3 (the tail transistor). The owner
 reviews between tasks.
+
+### 2026-08-06 — Session 13a (the tail transistor: device, measurements, pre-registration)
+
+**Tests: 618 -> 679** (+61: `nebula/tests/test_tail.py` 50, plus 8 in
+`test_s9_yield.py` and 3 in `test_crosscheck.py`).
+`python -m pytest tests nebula/tests -q -m "not slow"`, split 92 + 587,
+2 deselected, 63 s.
+
+**This commit is the PRE-REGISTRATION.** It carries the tail device, the four
+measurement stages, the tests, and `PREDICTIONS.md` entry 2 — and it is
+committed **before** `s9_yield.py --n 2000` is re-run, per the standing rule.
+The re-run and its write-up land in 13b.
+
+**What closes.** HANDOFF §8's top open item since 2026-08-05: every simulation
+this project had ever run used **two ideal current sinks** for the tail. That
+one assumption is why every corner spread was an UNDERSTATEMENT and every yield
+an OPTIMISTIC bound (G47), and it blocked three of the nine box dimensions.
+The tail is now a **current mirror** — one device per side, gates driven by a
+diode-connected reference at ratio N = 8. **`I_ref` is still ideal** and is the
+one remaining ideal element; a fixed gate bias was rejected because it holds
+`Vgs` while `vth` moves with corner, which would EXAGGERATE the corner spread.
+
+**Four results, in the order they were measured.**
+
+1. **The coupling identity holds exactly**, and it is what the experiment is
+   about: `vds_tail == v(source)` to 0, and `v(source) == VCM - Vgs_in` to
+   6e-17. So the tail's headroom requirement is **one inequality tying VCM,
+   W_in, L_in, i_bias and the tail geometry together** — the only constraint in
+   the spec table that couples five box coordinates. A test breaks each
+   identity by hand and requires the gate to go red (rule 10).
+2. **The mirror delivers 7.7% LESS than asked, and that is physics, not a bug.**
+   The reference sits at `vds = vgs` ~ 1.0 V and the tail at `v(source)`
+   ~ 0.34 V, so channel-length modulation gives the reference more current per
+   micron. Median error -6.6% at TT, **-8.1% at ss/0.95/125 C**, -5.4% at
+   ff/1.05/0 C. S6 is therefore billed on the **measured** supply current now,
+   which also carries the reference branch.
+3. **The tail is the LARGEST noise contributor, and the common-mode argument
+   fails for a topological reason.** S5 moves **0.275 -> 0.442 mV_rms (1.61x)**
+   and the two tail devices are **66.1% of the noise POWER**. The
+   common-mode-rejection intuition is REAL and is visible in the same data —
+   the mirror *reference* device's noise is rejected to **2e-21 of the total** —
+   but it does not apply to the tails, because S2 needs **one sink per side** (a
+   shared tail would short out the Rs/Cs degeneration) and two separate devices
+   have INDEPENDENT noise. S5 still passes: headroom 5.5x -> 3.4x against the
+   1.5 mV spec.
+4. **The tail moves S3 peaking by up to 2.15 dB if it is sized freely, and by
+   only -0.32 to +0.29 dB if it is sized by rule.** Small tails give peaking
+   away (low `r_o` shunts the degeneration); large tails ADD it (their
+   source-node capacitance degenerates less at high frequency, like Cs). The
+   two cancel near W = 200 um at L = 0.5 um. Against session 11's measured
+   **1.0 dB** peaking-margin requirement for corner robustness, a free `w_tail`
+   consumes the entire budget on its own. **That is the case for sizing the
+   tail, not searching it.**
+
+**The bounds, all three, with per-edge provenance** — `TAIL_DEVICE.md` §6,
+derived from the committed CSV by `--bounds`, and **NOT written into
+`params.py`** (rule 6). The recommendation is that none of the three should be
+SEARCHED: `w_tail` follows from `i_bias` by a current-density rule
+(**105-124k um/A**, only 1.18x drift across a 4x current change, so it really
+is a density), `nf_tail` follows from `w_tail` and the per-finger bin ceiling
+and is **near-dead (0.6%)**, and `l_tail` spans only 0.5-1.0 um. That keeps the
+action space at nine dimensions rather than twelve. Same shape of finding as
+G38 (`nf_in`) and G42 (`cl`).
+
+**Three new gotchas.**
+- **G53** — the SKY130 bin ceiling is on **W per FINGER**, not on total width.
+  `W=100 nf=1` builds, `W=101 nf=1` does not; `W=400 nf=4` builds, `W=410 nf=4`
+  does not. This matters because a tail sinking several mA at `vdsat <= 0.2 V`
+  and `L >= 0.5 um` needs several hundred microns of width, which reads as
+  unbuildable if the limit is believed to be on the total.
+- **G54** — ngspice's `.noise` can return **`inoise_total = -nan(ind)` and
+  exit 0.** Caught only by accident before this (the numeric regexes do not
+  match "nan"). A bias-node bypass capacitor — a real element in any mirror —
+  removes it, and the value provably does not change the answer. An explicit
+  non-finite pattern is now in `scan_for_silent_failures`.
+- **G52 applied again, and it caught a live error.** The tail's saturation
+  floor was first read off the width ladder and came out at 112.1k um/A —
+  *above* the vdsat-target rule's own 105.4k lower edge, which is impossible.
+  It was the ladder, not the device. Interpolated instead: **82.9k um/A**.
+
+**One reporting change that is load-bearing.** `s9_yield.py` now prints a
+**violation table** next to the first-failure table. The first-failure ranking
+systematically hides any constraint that is usually accompanied by a larger
+one, and `tail_saturation` is exactly that: in a 38-design pilot it was
+violated by **15.8%** of designs and ranked worst in **0%**, because it misses
+by tens of millivolts while `S3_f_peak` misses by 17 GHz.
+
+**`s9_yield.py`'s default output filename now depends on the topology**, so
+session 12b's `s9_yield_results.json` cannot be overwritten by a run with a
+different circuit in it. It already was once, during this session's plumbing
+checks, and was recoverable only because G49 had made it tracked.
+
+**Not done, by instruction:** the `--n 2000` re-run. It follows this commit.

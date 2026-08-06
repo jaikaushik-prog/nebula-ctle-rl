@@ -1,4 +1,4 @@
-* Source-degenerated CTLE, differential — HAND-SIZING SANDBOX
+* Source-degenerated CTLE, differential -- HAND-SIZING SANDBOX
 *
 * This file is for interactive exploration, not for producing deliverables.
 * Load it with:   ngspice_con ctle.cir      (NO -b, you want the prompt)
@@ -7,12 +7,23 @@
 * Units: the trimmed library sets `.option scale=1.0u`, so W and L below are
 * PLAIN NUMBERS IN MICRONS. W=5 means 5 um. Writing W=5u would mean 5 pm and
 * would fail with the misleading "could not find a valid modelname".
+*
+* ASCII ONLY. The Windows console is cp1252 and this file is read back by a
+* test that opens it as ascii (G10).
+*
+* THIS FILE AND `device/sky130_runner.py::_NETLIST` ARE THE SAME CIRCUIT.
+* CLAUDEwa.md sec 8 rule 9: one definition, referenced, never redeclared. G32
+* is what happened last time two netlists drifted apart by ONE model parameter
+* -- it moved the body-effect term by 30% and silently explained away a
+* discrepancy nobody could account for. If you change one, diff the other.
+* The runner's differences are deliberate and listed in its docstring (a single
+* differential drive source through two VCVSs, plus the analyses).
 
 .lib "sky130_nfet_only.lib.spice" tt
 
-.param W=5 L=0.15 NF=4
+.param W=40 L=0.15 NF=4
 .param RL=400 RS=600 CS=200f IT=1.5m CL=100f
-.param VDD=1.8 VCM=0.9
+.param VDD=1.8 VCM=1.25
 
 Vdd   vdd 0 {VDD}
 Vcm   cm  0 {VCM}
@@ -30,12 +41,79 @@ RLn   vdd outn {RL}
 Rdeg  s1 s2 {RS}
 Cdeg  s1 s2 {CS}
 
-* TWO separate ideal sinks, one per side. A single shared tail would short
-* out the degeneration network above.
-It1   s1 0 {IT}
-It2   s2 0 {IT}
+* ===========================================================================
+* THE TAIL. Two versions; exactly one may be active at a time.
+* ===========================================================================
+*
+* (A) LEGACY -- two ideal current sinks. Every number this project published
+*     through session 12b was measured with these. An ideal sink delivers
+*     exactly IT at every corner: it does not lose current at SS/125C, does not
+*     gain it at FF/0C, and does not fall out of saturation when the rail drops
+*     5%. That is why every one of those corner spreads is an UNDERSTATEMENT
+*     and every yield an OPTIMISTIC bound (G47). Kept, commented, so the
+*     superseded topology stays readable.
+*
+* It1   s1 0 {IT}
+* It2   s2 0 {IT}
+*
+* (B) ACTIVE -- a real current mirror (session 13, nebula/device/tail.py).
+*     An ideal reference current into a diode-connected device, mirrored to ONE
+*     TAIL PER SIDE at ratio N = W_tail/W_ref.
+*
+*     Why a mirror and not a fixed gate bias: a fixed Vgs holds while vth moves
+*     with process and temperature, so the delivered current would swing far
+*     more than silicon does -- it would EXAGGERATE the corner spread. A mirror
+*     tracks, because the reference device's vth moves with the tail's.
+*
+*     Why TWO tail devices: a single shared tail would put a low impedance
+*     across Rdeg/Cdeg and short out the degeneration. The consequence is not
+*     cosmetic -- two separate devices have INDEPENDENT noise, so the textbook
+*     "tail noise is common-mode and is rejected" argument does not apply to
+*     them. Measured: the tails are 66% of the input-referred noise POWER,
+*     while the mirror REFERENCE (whose noise really is common-mode) is
+*     rejected to 1e-21 of it. See nebula/TAIL_DEVICE.md sec 4.
+*
+*     IREF IS STILL IDEAL and is the one remaining ideal element in the tail.
+*     Generating it is a bandgap or a constant-gm cell, which S2 does not name.
+*
+*     The reference is ONE UNIT of the tail's own finger width (NFREF =
+*     NFT/NMIR), not a differently shaped device: SKY130 finger width shifts gm
+*     by +/-10% non-monotonically (G38), and with mismatched fingers that lands
+*     straight on the mirror ratio.
+*
+*     Bin ceiling is on W PER FINGER, 100 um, NOT on total width (G53).
+
+.param NMIR=8
+.param WT=100 LT=0.5 NFT=8
+.param WREF='WT/NMIR' NFREF='NFT/NMIR'
+.param IREF='IT/NMIR'
+.param CBYP=10p
+
+Iref  vdd nbias {IREF}
+XMR   nbias nbias 0 0 sky130_fd_pr__nfet_01v8 W={WREF} L={LT} nf={NFREF}
+XMT1  s1    nbias 0 0 sky130_fd_pr__nfet_01v8 W={WT} L={LT} nf={NFT}
+XMT2  s2    nbias 0 0 sky130_fd_pr__nfet_01v8 W={WT} L={LT} nf={NFT}
+
+* Bias-node bypass. A real element -- every mirror grounds its gate node at
+* signal frequencies so reference and supply noise do not reach the tails --
+* and it also removes an ngspice singularity (G54): without it `inoise_total`
+* comes back `-nan(ind)` on some (corner, geometry) points and ngspice EXITS 0.
+* The value does not change the answer: 1p/10p/100p/1n agree to every printed
+* digit wherever they all compute.
+Cbyp  nbias 0 {CBYP}
 
 CLp   outp 0 {CL}
 CLn   outn 0 {CL}
+
+* Useful at the prompt:
+*   op
+*   print v(s1) v(nbias) @m.xmt1.msky130_fd_pr__nfet_01v8[vds]
+*   + @m.xmt1.msky130_fd_pr__nfet_01v8[vdsat]
+*   ac dec 50 1meg 100g
+*   plot db(v(outp)-v(outn))
+*
+* The headroom inequality this circuit is really about:
+*   vds_tail == v(s1) == VCM - Vgs(I_tail, W, L)   must exceed   vdsat_tail
+* so VCM, W, L, IT and the tail geometry are ONE constraint, not five.
 
 .end

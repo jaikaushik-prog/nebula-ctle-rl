@@ -22,7 +22,9 @@ from nebula.common.types import (
     all_corners,
 )
 from nebula.device.sky130_runner import Sky130Point
+from nebula.device.tail import W_PER_FINGER_MAX_UM, TailDevice
 from nebula.experiments.cl_range import committed_cl_range
+from nebula.experiments.s3_yield import PROPOSED_BOX
 from nebula.experiments.s9_yield import (
     CL_LEGACY_PIN_F,
     LEGACY_150FF,
@@ -32,8 +34,12 @@ from nebula.experiments.s9_yield import (
     SCREEN_CORNERS,
     SCREEN_LOADS,
     TAIL_IS_IDEAL,
+    TAIL_L_UM,
+    TAIL_MIRROR_RATIO,
+    TAIL_UM_PER_AMP,
     UNSCREENED_SPECS,
     VCM_TRACKS_VDD,
+    tail_for_design,
     CornerResult,
     LoadCorner,
     SpecCheck,
@@ -114,8 +120,8 @@ def test_the_three_assumptions_are_all_stated_in_the_printed_header():
     assert "SCREENED CONTEXT RANGE" in h
     assert "13.64" in h and "78.04" in h        # both edges, in fF
     assert "150 fF" in h                        # and what it supersedes
-    assert "IDEAL CURRENT SINKS" in h
-    assert "UNDERSTATEMENT" in h        # the tail caveat, in the strong form
+    assert "REAL CURRENT MIRROR" in h           # the tail, since session 13
+    assert "tail_saturation" in h               # and the row it adds
     assert "VCM held CONSTANT" in h
     for spec in UNSCREENED_SPECS:
         assert spec.split()[0] in h     # S4, S7, S8 each named
@@ -127,11 +133,48 @@ def test_header_is_pure_ascii():
     assumptions_header(2000, 1).encode("ascii")
 
 
-def test_tail_ideal_flag_is_true_and_therefore_results_are_optimistic():
-    """If a tail transistor is ever added, this flips and the caveat in the
-    header must come out with it. The test exists to force that pairing."""
-    assert TAIL_IS_IDEAL is True
-    assert "OPTIMISTIC" in assumptions_header(1, 1)
+def test_tail_is_no_longer_ideal_and_the_optimistic_caveat_is_gone():
+    """Session 13 flipped this. The previous version of this test asserted
+    `TAIL_IS_IDEAL is True` and that the header said "OPTIMISTIC", precisely so
+    that adding a tail could not happen without the caveat coming out with it.
+    It worked: this is the pairing being honoured."""
+    assert TAIL_IS_IDEAL is False
+    h = assumptions_header(1, 1)
+    assert "OPTIMISTIC" not in h
+    assert "REAL CURRENT MIRROR" in h
+    # The ONE ideal element that remains must still be declared.
+    assert "I_ref IS STILL IDEAL" in h
+
+
+def test_the_tail_sizing_rule_is_a_current_density_and_is_stated_in_the_header():
+    """The rule has to be visible in the output, because it is a design
+    DECISION the reader may reject (rule 6) rather than a measurement."""
+    h = assumptions_header(1, 1)
+    assert f"{TAIL_UM_PER_AMP / 1e3:.1f}k um/A" in h
+    assert "ss/0.95/125C" in h          # sized at the worst corner, deliberately
+    assert "not searched" in h.lower() or "not searched" in h
+
+
+def test_tail_width_scales_with_current():
+    """A single fixed width cannot serve a 16x range of i_bias. Doubling the
+    bias must double the tail."""
+    a = tail_for_design({**BASE, "i_bias": 1.0e-3})
+    b = tail_for_design({**BASE, "i_bias": 2.0e-3})
+    assert b.w_tail == pytest.approx(2.0 * a.w_tail)
+    assert a.l_tail == b.l_tail == TAIL_L_UM
+
+
+def test_tail_sizing_rule_stays_inside_the_bin_ceiling_across_the_whole_box():
+    """G53: the SKY130 bin ceiling is on W PER FINGER. The rule must pick an
+    `nf` that honours it at the TOP of `i_bias`, or the widest designs in the
+    box abort with "could not find a valid modelname" -- which G31 records as
+    being read as a units error nine times out of ten."""
+    lo, hi = PROPOSED_BOX["i_bias"][0], PROPOSED_BOX["i_bias"][1]
+    for i_bias in (lo, hi, (lo + hi) / 2):
+        t = tail_for_design({**BASE, "i_bias": i_bias})
+        assert t.w_tail / t.nf_tail <= W_PER_FINGER_MAX_UM
+        assert t.w_ref / t.nf_ref <= W_PER_FINGER_MAX_UM
+        assert t.finger_matched          # else the mirror ratio drifts (sec 5)
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -588,3 +631,64 @@ def test_fpeak_exponent_drops_non_positive_values_rather_than_crashing():
     cls = [10e-15, 20e-15, 40e-15]
     assert fpeak_exponent(cls, [1e9, None, 0.5e9]) == pytest.approx(-0.5,
                                                                    abs=1e-12)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# `tail_saturation` — the row the tail adds, and the only one in the table that
+# couples five box coordinates. Session 13.
+# ─────────────────────────────────────────────────────────────────────────────
+
+
+def _sky_tail(vds_tail=0.30, vdsat_tail=0.19, **kw):
+    """A Sky130Point carrying tail primitives as well as the pair's."""
+    p = _sky(**kw)
+    p.vds_tail, p.vdsat_tail = vds_tail, vdsat_tail
+    return p
+
+
+def test_tail_saturation_row_is_absent_when_the_tail_is_ideal():
+    """An ideal sink has no headroom requirement, so scoring one would invent a
+    constraint the simulated circuit does not contain. Absent, not passing —
+    a passing row would make an ideal-tail run look as though it had been
+    checked."""
+    names = [c.name for c in check_specs(_sky(), power_w=5e-3)]
+    assert "tail_saturation" not in names
+
+
+def test_tail_saturation_row_appears_when_a_tail_is_fitted():
+    names = [c.name for c in check_specs(_sky_tail(), power_w=5e-3)]
+    assert "tail_saturation" in names
+
+
+def test_tail_saturation_passes_only_when_vds_exceeds_vdsat():
+    ok = [c for c in check_specs(_sky_tail(vds_tail=0.30, vdsat_tail=0.19),
+                                 power_w=5e-3) if c.name == "tail_saturation"][0]
+    bad = [c for c in check_specs(_sky_tail(vds_tail=0.15, vdsat_tail=0.19),
+                                  power_w=5e-3) if c.name == "tail_saturation"][0]
+    assert ok.ok and ok.margin == pytest.approx(0.11)
+    assert not bad.ok and bad.margin == pytest.approx(-0.04)
+    # Shortfall must be <= 0 for the failure and exactly 0 for the pass, so the
+    # "which spec binds" ranking can compare it against every other row.
+    assert bad.shortfall < 0 and ok.shortfall == 0.0
+
+
+def test_a_triode_tail_can_be_the_worst_failure_and_is_named_as_such():
+    """The coupled constraint has to be able to WIN the ranking, or it will
+    never appear in the binding-constraint table however often it fails."""
+    r = _sky_tail(vds_tail=0.01, vdsat_tail=0.40,   # deeply in triode
+                  peaking=6.0, f_pk=2.0e9)
+    worst = _worst(check_specs(r, power_w=5e-3))
+    assert worst is not None and worst.name == "tail_saturation"
+
+
+def test_tail_saturation_is_the_only_row_that_reads_the_tail():
+    """If any other check silently started reading tail primitives, an
+    ideal-tail run and a real-tail run would stop being comparable on that row.
+    Pin it: every other row must be identical with and without a tail."""
+    a = {c.name: (c.ok, c.value, c.margin)
+         for c in check_specs(_sky(), power_w=5e-3)}
+    b = {c.name: (c.ok, c.value, c.margin)
+         for c in check_specs(_sky_tail(), power_w=5e-3)}
+    assert set(b) - set(a) == {"tail_saturation"}
+    for name, vals in a.items():
+        assert b[name] == vals, name
