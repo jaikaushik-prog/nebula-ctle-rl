@@ -46,6 +46,10 @@ volare/
 *.pm3.spice
 *.corner.spice
 !nebula/device/spice/sky130_nfet_only.lib.spice
+# ... and its passive-carrying successor (task 4c). Same argument: 735 lines of
+# `.include` pointers plus `.option scale=1.0u`, redistributing no model cards.
+# 25 (MOS x passive) corner sections; see HANDOFF G58.
+!nebula/device/spice/sky130_ctle.lib.spice
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Python

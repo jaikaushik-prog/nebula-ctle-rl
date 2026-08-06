@@ -1,0 +1,735 @@
+* Trimmed SKY130 library - nfet_01v8 + poly resistors + MIM caps.
+*
+* EXTENDS the nfet-only trim (G36) with the PASSIVE devices task 4 needs, and
+* with the PASSIVE CORNER AXIS, which the nfet-only trim could not express at
+* all: all five MOS corners in the full library include the SAME
+* `res_typical__cap_typical`, so every corner number this project published
+* before this file existed held the passives at typical.
+*
+* 25 sections = 5 MOS corners x 5 passive corners, mirroring the full
+* library's own naming. First letter of a passive corner is the RESISTOR,
+* second the CAPACITOR; `hl` = res_high + cap_low.
+*
+*     tt ss ff sf fs          passives typical
+*     ll hh hl lh             MOS typical, passives varied
+*     ss_ll ... fs_lh         the full cross product
+*
+* CORRECTNESS: this includes the SAME model files the full library includes,
+* so results must be bit-identical to the corresponding `.lib <full> <sect>`.
+* nebula/tests/test_trimmed_lib_passives.py asserts that at rel=0, abs=0 over
+* 8 resistor geometries, 4 MIM plates and the nfet, across 6 sections, and
+* fails on any difference. G36's original verification covered nfet cards
+* ONLY and did NOT survive adding these devices - hence a fresh one.
+*
+* Usage:  .lib "sky130_ctle.lib.spice" ss_hh
+* Needs:  ngbehavior=hsa in .spiceinit (parse-time, G29)
+* Units:  instance W/L are PLAIN NUMBERS IN MICRONS (scale=1e-6, G31)
+*
+* `.option scale=1.0u` is NOT decoration - the full library sets it in
+* `libs.tech/ngspice/all.spice`, which a trim does not include. Omit it and
+* W=5 means five METRES (G36).
+*
+* TRAPS THIS LIBRARY CANNOT PROTECT YOU FROM (see device/passives.py):
+*   * `mult` and `mf` are MISMATCH parameters, not device multipliers. Use `m=`.
+*   * `w` is inert on the fixed-width `_0pXX` resistor families - the width is
+*     in the SUBCKT NAME. `res_high_po_0p69 w=2.85` is a 0.69 um device.
+
+.lib tt
+.option scale=1.0u
+.param mc_mm_switch=0
+.param mc_pr_switch=0
+* --- MOSFET ---
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__nfet_01v8__tt.pm3.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__nfet_01v8__mismatch.corner.spice"
+* --- Resistor / capacitor process parameters ---
+.include "C:/Users/DELL/sky130A/libs.tech/ngspice/r+c/res_typical__cap_typical.spice"
+.include "C:/Users/DELL/sky130A/libs.tech/ngspice/r+c/res_typical__cap_typical__lin.spice"
+* --- Passive devices ---
+.include "C:/Users/DELL/sky130A/libs.tech/ngspice/parasitics/sky130_fd_pr__model__parasitic__res_po.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_high_po.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_xhigh_po.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_xhigh_po__base.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_high_po_0p35.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_high_po_0p69.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_high_po_1p41.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_high_po_2p85.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_high_po_5p73.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_xhigh_po_0p35.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_xhigh_po_0p69.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_xhigh_po_1p41.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_xhigh_po_2p85.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_xhigh_po_5p73.model.spice"
+.include "C:/Users/DELL/sky130A/libs.tech/ngspice/capacitors/sky130_fd_pr__model__cap_mim.model.spice"
+.endl tt
+
+.lib ll
+.option scale=1.0u
+.param mc_mm_switch=0
+.param mc_pr_switch=0
+* --- MOSFET ---
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__nfet_01v8__tt.pm3.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__nfet_01v8__mismatch.corner.spice"
+* --- Resistor / capacitor process parameters ---
+.include "C:/Users/DELL/sky130A/libs.tech/ngspice/r+c/res_low__cap_low.spice"
+.include "C:/Users/DELL/sky130A/libs.tech/ngspice/r+c/res_low__cap_low__lin.spice"
+* --- Passive devices ---
+.include "C:/Users/DELL/sky130A/libs.tech/ngspice/parasitics/sky130_fd_pr__model__parasitic__res_po.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_high_po.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_xhigh_po.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_xhigh_po__base.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_high_po_0p35.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_high_po_0p69.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_high_po_1p41.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_high_po_2p85.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_high_po_5p73.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_xhigh_po_0p35.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_xhigh_po_0p69.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_xhigh_po_1p41.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_xhigh_po_2p85.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_xhigh_po_5p73.model.spice"
+.include "C:/Users/DELL/sky130A/libs.tech/ngspice/capacitors/sky130_fd_pr__model__cap_mim.model.spice"
+.endl ll
+
+.lib hh
+.option scale=1.0u
+.param mc_mm_switch=0
+.param mc_pr_switch=0
+* --- MOSFET ---
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__nfet_01v8__tt.pm3.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__nfet_01v8__mismatch.corner.spice"
+* --- Resistor / capacitor process parameters ---
+.include "C:/Users/DELL/sky130A/libs.tech/ngspice/r+c/res_high__cap_high.spice"
+.include "C:/Users/DELL/sky130A/libs.tech/ngspice/r+c/res_high__cap_high__lin.spice"
+* --- Passive devices ---
+.include "C:/Users/DELL/sky130A/libs.tech/ngspice/parasitics/sky130_fd_pr__model__parasitic__res_po.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_high_po.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_xhigh_po.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_xhigh_po__base.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_high_po_0p35.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_high_po_0p69.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_high_po_1p41.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_high_po_2p85.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_high_po_5p73.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_xhigh_po_0p35.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_xhigh_po_0p69.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_xhigh_po_1p41.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_xhigh_po_2p85.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_xhigh_po_5p73.model.spice"
+.include "C:/Users/DELL/sky130A/libs.tech/ngspice/capacitors/sky130_fd_pr__model__cap_mim.model.spice"
+.endl hh
+
+.lib hl
+.option scale=1.0u
+.param mc_mm_switch=0
+.param mc_pr_switch=0
+* --- MOSFET ---
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__nfet_01v8__tt.pm3.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__nfet_01v8__mismatch.corner.spice"
+* --- Resistor / capacitor process parameters ---
+.include "C:/Users/DELL/sky130A/libs.tech/ngspice/r+c/res_high__cap_low.spice"
+.include "C:/Users/DELL/sky130A/libs.tech/ngspice/r+c/res_high__cap_low__lin.spice"
+* --- Passive devices ---
+.include "C:/Users/DELL/sky130A/libs.tech/ngspice/parasitics/sky130_fd_pr__model__parasitic__res_po.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_high_po.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_xhigh_po.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_xhigh_po__base.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_high_po_0p35.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_high_po_0p69.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_high_po_1p41.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_high_po_2p85.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_high_po_5p73.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_xhigh_po_0p35.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_xhigh_po_0p69.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_xhigh_po_1p41.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_xhigh_po_2p85.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_xhigh_po_5p73.model.spice"
+.include "C:/Users/DELL/sky130A/libs.tech/ngspice/capacitors/sky130_fd_pr__model__cap_mim.model.spice"
+.endl hl
+
+.lib lh
+.option scale=1.0u
+.param mc_mm_switch=0
+.param mc_pr_switch=0
+* --- MOSFET ---
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__nfet_01v8__tt.pm3.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__nfet_01v8__mismatch.corner.spice"
+* --- Resistor / capacitor process parameters ---
+.include "C:/Users/DELL/sky130A/libs.tech/ngspice/r+c/res_low__cap_high.spice"
+.include "C:/Users/DELL/sky130A/libs.tech/ngspice/r+c/res_low__cap_high__lin.spice"
+* --- Passive devices ---
+.include "C:/Users/DELL/sky130A/libs.tech/ngspice/parasitics/sky130_fd_pr__model__parasitic__res_po.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_high_po.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_xhigh_po.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_xhigh_po__base.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_high_po_0p35.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_high_po_0p69.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_high_po_1p41.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_high_po_2p85.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_high_po_5p73.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_xhigh_po_0p35.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_xhigh_po_0p69.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_xhigh_po_1p41.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_xhigh_po_2p85.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_xhigh_po_5p73.model.spice"
+.include "C:/Users/DELL/sky130A/libs.tech/ngspice/capacitors/sky130_fd_pr__model__cap_mim.model.spice"
+.endl lh
+
+.lib ss
+.option scale=1.0u
+.param mc_mm_switch=0
+.param mc_pr_switch=0
+* --- MOSFET ---
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__nfet_01v8__ss.pm3.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__nfet_01v8__mismatch.corner.spice"
+* --- Resistor / capacitor process parameters ---
+.include "C:/Users/DELL/sky130A/libs.tech/ngspice/r+c/res_typical__cap_typical.spice"
+.include "C:/Users/DELL/sky130A/libs.tech/ngspice/r+c/res_typical__cap_typical__lin.spice"
+* --- Passive devices ---
+.include "C:/Users/DELL/sky130A/libs.tech/ngspice/parasitics/sky130_fd_pr__model__parasitic__res_po.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_high_po.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_xhigh_po.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_xhigh_po__base.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_high_po_0p35.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_high_po_0p69.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_high_po_1p41.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_high_po_2p85.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_high_po_5p73.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_xhigh_po_0p35.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_xhigh_po_0p69.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_xhigh_po_1p41.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_xhigh_po_2p85.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_xhigh_po_5p73.model.spice"
+.include "C:/Users/DELL/sky130A/libs.tech/ngspice/capacitors/sky130_fd_pr__model__cap_mim.model.spice"
+.endl ss
+
+.lib ss_ll
+.option scale=1.0u
+.param mc_mm_switch=0
+.param mc_pr_switch=0
+* --- MOSFET ---
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__nfet_01v8__ss.pm3.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__nfet_01v8__mismatch.corner.spice"
+* --- Resistor / capacitor process parameters ---
+.include "C:/Users/DELL/sky130A/libs.tech/ngspice/r+c/res_low__cap_low.spice"
+.include "C:/Users/DELL/sky130A/libs.tech/ngspice/r+c/res_low__cap_low__lin.spice"
+* --- Passive devices ---
+.include "C:/Users/DELL/sky130A/libs.tech/ngspice/parasitics/sky130_fd_pr__model__parasitic__res_po.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_high_po.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_xhigh_po.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_xhigh_po__base.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_high_po_0p35.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_high_po_0p69.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_high_po_1p41.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_high_po_2p85.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_high_po_5p73.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_xhigh_po_0p35.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_xhigh_po_0p69.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_xhigh_po_1p41.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_xhigh_po_2p85.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_xhigh_po_5p73.model.spice"
+.include "C:/Users/DELL/sky130A/libs.tech/ngspice/capacitors/sky130_fd_pr__model__cap_mim.model.spice"
+.endl ss_ll
+
+.lib ss_hh
+.option scale=1.0u
+.param mc_mm_switch=0
+.param mc_pr_switch=0
+* --- MOSFET ---
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__nfet_01v8__ss.pm3.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__nfet_01v8__mismatch.corner.spice"
+* --- Resistor / capacitor process parameters ---
+.include "C:/Users/DELL/sky130A/libs.tech/ngspice/r+c/res_high__cap_high.spice"
+.include "C:/Users/DELL/sky130A/libs.tech/ngspice/r+c/res_high__cap_high__lin.spice"
+* --- Passive devices ---
+.include "C:/Users/DELL/sky130A/libs.tech/ngspice/parasitics/sky130_fd_pr__model__parasitic__res_po.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_high_po.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_xhigh_po.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_xhigh_po__base.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_high_po_0p35.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_high_po_0p69.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_high_po_1p41.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_high_po_2p85.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_high_po_5p73.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_xhigh_po_0p35.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_xhigh_po_0p69.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_xhigh_po_1p41.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_xhigh_po_2p85.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_xhigh_po_5p73.model.spice"
+.include "C:/Users/DELL/sky130A/libs.tech/ngspice/capacitors/sky130_fd_pr__model__cap_mim.model.spice"
+.endl ss_hh
+
+.lib ss_hl
+.option scale=1.0u
+.param mc_mm_switch=0
+.param mc_pr_switch=0
+* --- MOSFET ---
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__nfet_01v8__ss.pm3.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__nfet_01v8__mismatch.corner.spice"
+* --- Resistor / capacitor process parameters ---
+.include "C:/Users/DELL/sky130A/libs.tech/ngspice/r+c/res_high__cap_low.spice"
+.include "C:/Users/DELL/sky130A/libs.tech/ngspice/r+c/res_high__cap_low__lin.spice"
+* --- Passive devices ---
+.include "C:/Users/DELL/sky130A/libs.tech/ngspice/parasitics/sky130_fd_pr__model__parasitic__res_po.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_high_po.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_xhigh_po.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_xhigh_po__base.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_high_po_0p35.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_high_po_0p69.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_high_po_1p41.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_high_po_2p85.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_high_po_5p73.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_xhigh_po_0p35.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_xhigh_po_0p69.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_xhigh_po_1p41.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_xhigh_po_2p85.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_xhigh_po_5p73.model.spice"
+.include "C:/Users/DELL/sky130A/libs.tech/ngspice/capacitors/sky130_fd_pr__model__cap_mim.model.spice"
+.endl ss_hl
+
+.lib ss_lh
+.option scale=1.0u
+.param mc_mm_switch=0
+.param mc_pr_switch=0
+* --- MOSFET ---
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__nfet_01v8__ss.pm3.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__nfet_01v8__mismatch.corner.spice"
+* --- Resistor / capacitor process parameters ---
+.include "C:/Users/DELL/sky130A/libs.tech/ngspice/r+c/res_low__cap_high.spice"
+.include "C:/Users/DELL/sky130A/libs.tech/ngspice/r+c/res_low__cap_high__lin.spice"
+* --- Passive devices ---
+.include "C:/Users/DELL/sky130A/libs.tech/ngspice/parasitics/sky130_fd_pr__model__parasitic__res_po.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_high_po.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_xhigh_po.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_xhigh_po__base.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_high_po_0p35.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_high_po_0p69.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_high_po_1p41.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_high_po_2p85.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_high_po_5p73.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_xhigh_po_0p35.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_xhigh_po_0p69.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_xhigh_po_1p41.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_xhigh_po_2p85.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_xhigh_po_5p73.model.spice"
+.include "C:/Users/DELL/sky130A/libs.tech/ngspice/capacitors/sky130_fd_pr__model__cap_mim.model.spice"
+.endl ss_lh
+
+.lib ff
+.option scale=1.0u
+.param mc_mm_switch=0
+.param mc_pr_switch=0
+* --- MOSFET ---
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__nfet_01v8__ff.pm3.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__nfet_01v8__mismatch.corner.spice"
+* --- Resistor / capacitor process parameters ---
+.include "C:/Users/DELL/sky130A/libs.tech/ngspice/r+c/res_typical__cap_typical.spice"
+.include "C:/Users/DELL/sky130A/libs.tech/ngspice/r+c/res_typical__cap_typical__lin.spice"
+* --- Passive devices ---
+.include "C:/Users/DELL/sky130A/libs.tech/ngspice/parasitics/sky130_fd_pr__model__parasitic__res_po.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_high_po.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_xhigh_po.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_xhigh_po__base.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_high_po_0p35.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_high_po_0p69.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_high_po_1p41.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_high_po_2p85.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_high_po_5p73.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_xhigh_po_0p35.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_xhigh_po_0p69.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_xhigh_po_1p41.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_xhigh_po_2p85.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_xhigh_po_5p73.model.spice"
+.include "C:/Users/DELL/sky130A/libs.tech/ngspice/capacitors/sky130_fd_pr__model__cap_mim.model.spice"
+.endl ff
+
+.lib ff_ll
+.option scale=1.0u
+.param mc_mm_switch=0
+.param mc_pr_switch=0
+* --- MOSFET ---
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__nfet_01v8__ff.pm3.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__nfet_01v8__mismatch.corner.spice"
+* --- Resistor / capacitor process parameters ---
+.include "C:/Users/DELL/sky130A/libs.tech/ngspice/r+c/res_low__cap_low.spice"
+.include "C:/Users/DELL/sky130A/libs.tech/ngspice/r+c/res_low__cap_low__lin.spice"
+* --- Passive devices ---
+.include "C:/Users/DELL/sky130A/libs.tech/ngspice/parasitics/sky130_fd_pr__model__parasitic__res_po.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_high_po.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_xhigh_po.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_xhigh_po__base.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_high_po_0p35.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_high_po_0p69.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_high_po_1p41.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_high_po_2p85.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_high_po_5p73.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_xhigh_po_0p35.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_xhigh_po_0p69.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_xhigh_po_1p41.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_xhigh_po_2p85.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_xhigh_po_5p73.model.spice"
+.include "C:/Users/DELL/sky130A/libs.tech/ngspice/capacitors/sky130_fd_pr__model__cap_mim.model.spice"
+.endl ff_ll
+
+.lib ff_hh
+.option scale=1.0u
+.param mc_mm_switch=0
+.param mc_pr_switch=0
+* --- MOSFET ---
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__nfet_01v8__ff.pm3.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__nfet_01v8__mismatch.corner.spice"
+* --- Resistor / capacitor process parameters ---
+.include "C:/Users/DELL/sky130A/libs.tech/ngspice/r+c/res_high__cap_high.spice"
+.include "C:/Users/DELL/sky130A/libs.tech/ngspice/r+c/res_high__cap_high__lin.spice"
+* --- Passive devices ---
+.include "C:/Users/DELL/sky130A/libs.tech/ngspice/parasitics/sky130_fd_pr__model__parasitic__res_po.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_high_po.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_xhigh_po.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_xhigh_po__base.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_high_po_0p35.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_high_po_0p69.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_high_po_1p41.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_high_po_2p85.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_high_po_5p73.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_xhigh_po_0p35.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_xhigh_po_0p69.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_xhigh_po_1p41.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_xhigh_po_2p85.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_xhigh_po_5p73.model.spice"
+.include "C:/Users/DELL/sky130A/libs.tech/ngspice/capacitors/sky130_fd_pr__model__cap_mim.model.spice"
+.endl ff_hh
+
+.lib ff_hl
+.option scale=1.0u
+.param mc_mm_switch=0
+.param mc_pr_switch=0
+* --- MOSFET ---
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__nfet_01v8__ff.pm3.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__nfet_01v8__mismatch.corner.spice"
+* --- Resistor / capacitor process parameters ---
+.include "C:/Users/DELL/sky130A/libs.tech/ngspice/r+c/res_high__cap_low.spice"
+.include "C:/Users/DELL/sky130A/libs.tech/ngspice/r+c/res_high__cap_low__lin.spice"
+* --- Passive devices ---
+.include "C:/Users/DELL/sky130A/libs.tech/ngspice/parasitics/sky130_fd_pr__model__parasitic__res_po.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_high_po.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_xhigh_po.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_xhigh_po__base.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_high_po_0p35.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_high_po_0p69.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_high_po_1p41.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_high_po_2p85.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_high_po_5p73.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_xhigh_po_0p35.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_xhigh_po_0p69.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_xhigh_po_1p41.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_xhigh_po_2p85.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_xhigh_po_5p73.model.spice"
+.include "C:/Users/DELL/sky130A/libs.tech/ngspice/capacitors/sky130_fd_pr__model__cap_mim.model.spice"
+.endl ff_hl
+
+.lib ff_lh
+.option scale=1.0u
+.param mc_mm_switch=0
+.param mc_pr_switch=0
+* --- MOSFET ---
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__nfet_01v8__ff.pm3.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__nfet_01v8__mismatch.corner.spice"
+* --- Resistor / capacitor process parameters ---
+.include "C:/Users/DELL/sky130A/libs.tech/ngspice/r+c/res_low__cap_high.spice"
+.include "C:/Users/DELL/sky130A/libs.tech/ngspice/r+c/res_low__cap_high__lin.spice"
+* --- Passive devices ---
+.include "C:/Users/DELL/sky130A/libs.tech/ngspice/parasitics/sky130_fd_pr__model__parasitic__res_po.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_high_po.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_xhigh_po.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_xhigh_po__base.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_high_po_0p35.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_high_po_0p69.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_high_po_1p41.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_high_po_2p85.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_high_po_5p73.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_xhigh_po_0p35.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_xhigh_po_0p69.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_xhigh_po_1p41.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_xhigh_po_2p85.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_xhigh_po_5p73.model.spice"
+.include "C:/Users/DELL/sky130A/libs.tech/ngspice/capacitors/sky130_fd_pr__model__cap_mim.model.spice"
+.endl ff_lh
+
+.lib sf
+.option scale=1.0u
+.param mc_mm_switch=0
+.param mc_pr_switch=0
+* --- MOSFET ---
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__nfet_01v8__sf.pm3.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__nfet_01v8__mismatch.corner.spice"
+* --- Resistor / capacitor process parameters ---
+.include "C:/Users/DELL/sky130A/libs.tech/ngspice/r+c/res_typical__cap_typical.spice"
+.include "C:/Users/DELL/sky130A/libs.tech/ngspice/r+c/res_typical__cap_typical__lin.spice"
+* --- Passive devices ---
+.include "C:/Users/DELL/sky130A/libs.tech/ngspice/parasitics/sky130_fd_pr__model__parasitic__res_po.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_high_po.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_xhigh_po.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_xhigh_po__base.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_high_po_0p35.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_high_po_0p69.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_high_po_1p41.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_high_po_2p85.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_high_po_5p73.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_xhigh_po_0p35.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_xhigh_po_0p69.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_xhigh_po_1p41.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_xhigh_po_2p85.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_xhigh_po_5p73.model.spice"
+.include "C:/Users/DELL/sky130A/libs.tech/ngspice/capacitors/sky130_fd_pr__model__cap_mim.model.spice"
+.endl sf
+
+.lib sf_ll
+.option scale=1.0u
+.param mc_mm_switch=0
+.param mc_pr_switch=0
+* --- MOSFET ---
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__nfet_01v8__sf.pm3.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__nfet_01v8__mismatch.corner.spice"
+* --- Resistor / capacitor process parameters ---
+.include "C:/Users/DELL/sky130A/libs.tech/ngspice/r+c/res_low__cap_low.spice"
+.include "C:/Users/DELL/sky130A/libs.tech/ngspice/r+c/res_low__cap_low__lin.spice"
+* --- Passive devices ---
+.include "C:/Users/DELL/sky130A/libs.tech/ngspice/parasitics/sky130_fd_pr__model__parasitic__res_po.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_high_po.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_xhigh_po.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_xhigh_po__base.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_high_po_0p35.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_high_po_0p69.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_high_po_1p41.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_high_po_2p85.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_high_po_5p73.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_xhigh_po_0p35.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_xhigh_po_0p69.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_xhigh_po_1p41.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_xhigh_po_2p85.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_xhigh_po_5p73.model.spice"
+.include "C:/Users/DELL/sky130A/libs.tech/ngspice/capacitors/sky130_fd_pr__model__cap_mim.model.spice"
+.endl sf_ll
+
+.lib sf_hh
+.option scale=1.0u
+.param mc_mm_switch=0
+.param mc_pr_switch=0
+* --- MOSFET ---
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__nfet_01v8__sf.pm3.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__nfet_01v8__mismatch.corner.spice"
+* --- Resistor / capacitor process parameters ---
+.include "C:/Users/DELL/sky130A/libs.tech/ngspice/r+c/res_high__cap_high.spice"
+.include "C:/Users/DELL/sky130A/libs.tech/ngspice/r+c/res_high__cap_high__lin.spice"
+* --- Passive devices ---
+.include "C:/Users/DELL/sky130A/libs.tech/ngspice/parasitics/sky130_fd_pr__model__parasitic__res_po.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_high_po.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_xhigh_po.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_xhigh_po__base.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_high_po_0p35.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_high_po_0p69.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_high_po_1p41.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_high_po_2p85.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_high_po_5p73.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_xhigh_po_0p35.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_xhigh_po_0p69.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_xhigh_po_1p41.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_xhigh_po_2p85.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_xhigh_po_5p73.model.spice"
+.include "C:/Users/DELL/sky130A/libs.tech/ngspice/capacitors/sky130_fd_pr__model__cap_mim.model.spice"
+.endl sf_hh
+
+.lib sf_hl
+.option scale=1.0u
+.param mc_mm_switch=0
+.param mc_pr_switch=0
+* --- MOSFET ---
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__nfet_01v8__sf.pm3.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__nfet_01v8__mismatch.corner.spice"
+* --- Resistor / capacitor process parameters ---
+.include "C:/Users/DELL/sky130A/libs.tech/ngspice/r+c/res_high__cap_low.spice"
+.include "C:/Users/DELL/sky130A/libs.tech/ngspice/r+c/res_high__cap_low__lin.spice"
+* --- Passive devices ---
+.include "C:/Users/DELL/sky130A/libs.tech/ngspice/parasitics/sky130_fd_pr__model__parasitic__res_po.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_high_po.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_xhigh_po.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_xhigh_po__base.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_high_po_0p35.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_high_po_0p69.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_high_po_1p41.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_high_po_2p85.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_high_po_5p73.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_xhigh_po_0p35.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_xhigh_po_0p69.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_xhigh_po_1p41.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_xhigh_po_2p85.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_xhigh_po_5p73.model.spice"
+.include "C:/Users/DELL/sky130A/libs.tech/ngspice/capacitors/sky130_fd_pr__model__cap_mim.model.spice"
+.endl sf_hl
+
+.lib sf_lh
+.option scale=1.0u
+.param mc_mm_switch=0
+.param mc_pr_switch=0
+* --- MOSFET ---
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__nfet_01v8__sf.pm3.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__nfet_01v8__mismatch.corner.spice"
+* --- Resistor / capacitor process parameters ---
+.include "C:/Users/DELL/sky130A/libs.tech/ngspice/r+c/res_low__cap_high.spice"
+.include "C:/Users/DELL/sky130A/libs.tech/ngspice/r+c/res_low__cap_high__lin.spice"
+* --- Passive devices ---
+.include "C:/Users/DELL/sky130A/libs.tech/ngspice/parasitics/sky130_fd_pr__model__parasitic__res_po.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_high_po.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_xhigh_po.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_xhigh_po__base.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_high_po_0p35.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_high_po_0p69.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_high_po_1p41.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_high_po_2p85.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_high_po_5p73.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_xhigh_po_0p35.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_xhigh_po_0p69.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_xhigh_po_1p41.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_xhigh_po_2p85.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_xhigh_po_5p73.model.spice"
+.include "C:/Users/DELL/sky130A/libs.tech/ngspice/capacitors/sky130_fd_pr__model__cap_mim.model.spice"
+.endl sf_lh
+
+.lib fs
+.option scale=1.0u
+.param mc_mm_switch=0
+.param mc_pr_switch=0
+* --- MOSFET ---
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__nfet_01v8__fs.pm3.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__nfet_01v8__mismatch.corner.spice"
+* --- Resistor / capacitor process parameters ---
+.include "C:/Users/DELL/sky130A/libs.tech/ngspice/r+c/res_typical__cap_typical.spice"
+.include "C:/Users/DELL/sky130A/libs.tech/ngspice/r+c/res_typical__cap_typical__lin.spice"
+* --- Passive devices ---
+.include "C:/Users/DELL/sky130A/libs.tech/ngspice/parasitics/sky130_fd_pr__model__parasitic__res_po.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_high_po.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_xhigh_po.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_xhigh_po__base.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_high_po_0p35.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_high_po_0p69.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_high_po_1p41.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_high_po_2p85.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_high_po_5p73.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_xhigh_po_0p35.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_xhigh_po_0p69.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_xhigh_po_1p41.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_xhigh_po_2p85.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_xhigh_po_5p73.model.spice"
+.include "C:/Users/DELL/sky130A/libs.tech/ngspice/capacitors/sky130_fd_pr__model__cap_mim.model.spice"
+.endl fs
+
+.lib fs_ll
+.option scale=1.0u
+.param mc_mm_switch=0
+.param mc_pr_switch=0
+* --- MOSFET ---
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__nfet_01v8__fs.pm3.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__nfet_01v8__mismatch.corner.spice"
+* --- Resistor / capacitor process parameters ---
+.include "C:/Users/DELL/sky130A/libs.tech/ngspice/r+c/res_low__cap_low.spice"
+.include "C:/Users/DELL/sky130A/libs.tech/ngspice/r+c/res_low__cap_low__lin.spice"
+* --- Passive devices ---
+.include "C:/Users/DELL/sky130A/libs.tech/ngspice/parasitics/sky130_fd_pr__model__parasitic__res_po.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_high_po.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_xhigh_po.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_xhigh_po__base.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_high_po_0p35.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_high_po_0p69.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_high_po_1p41.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_high_po_2p85.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_high_po_5p73.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_xhigh_po_0p35.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_xhigh_po_0p69.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_xhigh_po_1p41.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_xhigh_po_2p85.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_xhigh_po_5p73.model.spice"
+.include "C:/Users/DELL/sky130A/libs.tech/ngspice/capacitors/sky130_fd_pr__model__cap_mim.model.spice"
+.endl fs_ll
+
+.lib fs_hh
+.option scale=1.0u
+.param mc_mm_switch=0
+.param mc_pr_switch=0
+* --- MOSFET ---
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__nfet_01v8__fs.pm3.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__nfet_01v8__mismatch.corner.spice"
+* --- Resistor / capacitor process parameters ---
+.include "C:/Users/DELL/sky130A/libs.tech/ngspice/r+c/res_high__cap_high.spice"
+.include "C:/Users/DELL/sky130A/libs.tech/ngspice/r+c/res_high__cap_high__lin.spice"
+* --- Passive devices ---
+.include "C:/Users/DELL/sky130A/libs.tech/ngspice/parasitics/sky130_fd_pr__model__parasitic__res_po.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_high_po.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_xhigh_po.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_xhigh_po__base.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_high_po_0p35.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_high_po_0p69.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_high_po_1p41.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_high_po_2p85.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_high_po_5p73.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_xhigh_po_0p35.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_xhigh_po_0p69.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_xhigh_po_1p41.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_xhigh_po_2p85.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_xhigh_po_5p73.model.spice"
+.include "C:/Users/DELL/sky130A/libs.tech/ngspice/capacitors/sky130_fd_pr__model__cap_mim.model.spice"
+.endl fs_hh
+
+.lib fs_hl
+.option scale=1.0u
+.param mc_mm_switch=0
+.param mc_pr_switch=0
+* --- MOSFET ---
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__nfet_01v8__fs.pm3.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__nfet_01v8__mismatch.corner.spice"
+* --- Resistor / capacitor process parameters ---
+.include "C:/Users/DELL/sky130A/libs.tech/ngspice/r+c/res_high__cap_low.spice"
+.include "C:/Users/DELL/sky130A/libs.tech/ngspice/r+c/res_high__cap_low__lin.spice"
+* --- Passive devices ---
+.include "C:/Users/DELL/sky130A/libs.tech/ngspice/parasitics/sky130_fd_pr__model__parasitic__res_po.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_high_po.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_xhigh_po.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_xhigh_po__base.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_high_po_0p35.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_high_po_0p69.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_high_po_1p41.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_high_po_2p85.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_high_po_5p73.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_xhigh_po_0p35.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_xhigh_po_0p69.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_xhigh_po_1p41.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_xhigh_po_2p85.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_xhigh_po_5p73.model.spice"
+.include "C:/Users/DELL/sky130A/libs.tech/ngspice/capacitors/sky130_fd_pr__model__cap_mim.model.spice"
+.endl fs_hl
+
+.lib fs_lh
+.option scale=1.0u
+.param mc_mm_switch=0
+.param mc_pr_switch=0
+* --- MOSFET ---
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__nfet_01v8__fs.pm3.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__nfet_01v8__mismatch.corner.spice"
+* --- Resistor / capacitor process parameters ---
+.include "C:/Users/DELL/sky130A/libs.tech/ngspice/r+c/res_low__cap_high.spice"
+.include "C:/Users/DELL/sky130A/libs.tech/ngspice/r+c/res_low__cap_high__lin.spice"
+* --- Passive devices ---
+.include "C:/Users/DELL/sky130A/libs.tech/ngspice/parasitics/sky130_fd_pr__model__parasitic__res_po.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_high_po.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_xhigh_po.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_xhigh_po__base.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_high_po_0p35.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_high_po_0p69.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_high_po_1p41.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_high_po_2p85.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_high_po_5p73.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_xhigh_po_0p35.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_xhigh_po_0p69.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_xhigh_po_1p41.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_xhigh_po_2p85.model.spice"
+.include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__res_xhigh_po_5p73.model.spice"
+.include "C:/Users/DELL/sky130A/libs.tech/ngspice/capacitors/sky130_fd_pr__model__cap_mim.model.spice"
+.endl fs_lh

@@ -1668,6 +1668,64 @@ Plus: git init, .gitignore, 28 tests, Wilson-bound BER reporting.
   **Before publishing anything outward-facing, re-read it as a stranger would**
   — and check that every capability it claims has a test or a write-up behind
   it.
+- **G56 — (nebula) `mult` and `mf` are MISMATCH parameters, not device
+  multipliers. They do NOTHING, silently.** Every SKY130 resistor and MIM
+  subckt declares `mult` (or `mf` on the MIM), which reads exactly like a
+  parallel-device multiplier. In every one of them the parameter appears
+  **only inside mismatch terms**, all multiplied by `MC_MM_SWITCH`, which the
+  corner files set to 0. Measured on `res_high_po` w=1 l=1.78 at 10 uA:
+
+        mult=1   942.90 ohm
+        mult=4   942.90 ohm      <- IDENTICAL, a silent 4x error
+        m=4      235.72 ohm      <- exactly /4
+
+  and on `cap_mim_m3_1` w=l=30: `mf=4` gives 1.8197 pF, `m=4` gives 7.2789 pF.
+  **Use ngspice's native `m=`.** It agrees with four explicitly instantiated
+  parallel devices to every printed digit. Note the EXISTING netlists write
+  `mult=1` on nfet instances (`test_trimmed_lib.py`, `ngspice_runner.py`) —
+  harmless at 1, but do not read it as evidence that `mult` works.
+  `device/passives.py` and `test_passives.py` own this.
+- **G57 — (nebula) `w` is INERT on the fixed-width resistor families, and an
+  absurd value raises nothing.** `sky130_fd_pr__res_high_po_0p69` with
+  `w=0.69`, `w=2.85` and `w=99` all return **2893.64 ohm**, identical to every
+  digit. The width is encoded in the SUBCKT NAME and baked into that subckt's
+  `rsheet`; the `w` parameter survives only in mismatch terms. The device that
+  really is 2.85 um wide (`res_high_po_2p85`) reads **718.61 ohm** — so asking
+  the wrong subckt for a width is a **4.03x error, silently**. `l` IS honoured
+  on these families; only `w` is inert.
+  The five widths that exist are **0.35, 0.69, 1.41, 2.85, 5.73 um**, for both
+  `res_high_po_*` and `res_xhigh_po_*`. `passives.fixed_width_subckt()` raises
+  on anything else rather than letting it through.
+  **Related and separate:** ngspice DISCARDS the GENERIC families' `p2`, `q2`,
+  `p3`, `q3` ("unrecognized parameter - ignored"), which are the
+  voltage-coefficient terms — so `res_high_po` simulates as perfectly LINEAR
+  while the fixed-width families, which carry their voltage coefficients as
+  behavioural `r = {...}` expressions, do not. **The two families disagree
+  about whether a poly resistor is linear, and the generic one is optimistic.
+  Do not quote an S4 number off it.**
+- **G58 — (nebula) the PASSIVE corner axis is ORTHOGONAL to the MOS one, and
+  every corner number this project published held the passives at TYPICAL.**
+  All five MOS sections (`tt ss ff sf fs`) in `sky130.lib.spice` include the
+  same `r+c/res_typical__cap_typical.spice`. That was never a decision — the
+  MOS corner names simply do not touch the passives. The library provides the
+  **full 5 x 5 cross product** as named sections:
+
+        tt ss ff sf fs        MOS corner, passives typical
+        ll hh hl lh           passives varied, MOS TYPICAL (no `tt_` prefix!)
+        ss_ll ... fs_lh       every remaining combination
+
+  so **S9's 45 corners become 225**, not the 135 a three-passive-corner guess
+  gives. `passives.lib_section(mos, passive)` owns the naming, including the
+  dropped `tt_` prefix. Measured spreads: poly resistor **+/-12.5%**, MIM
+  **-11.7/+12.9%**.
+  **The trap inside the trap: the MIM capacitance depends on BOTH letters, and
+  the second one is not the capacitor.** `camimc` follows the capacitor letter
+  as expected, but `tol_m3` — the metal width tolerance, which sets the plate
+  SIZE — follows the **RESISTOR** letter, because it is the same metal layer
+  the resistor's interconnect is drawn in. Magnitudes are asymmetric too
+  (mixed corners +/-0.065 um, matched +/-0.0455 um). So `hh` and `lh` both
+  carry "cap_high" and differ by **0.7%**. A model validated at ONE corner
+  misses this entirely; it was caught only by measuring at four.
 
 ## 10. Environment
 
@@ -3438,3 +3496,87 @@ interactive and must be done by the owner (`gh auth login`); nothing was pushed
 without that.
 
 **New gotcha G55.** See §9.
+
+### 2026-08-07 — Session 15 (the passives: real SKY130 R and C, device layer only)
+
+**Tests 698 -> 725** (+27: `test_passives.py` 26, `test_trimmed_lib_passives.py`
+partly slow-marked), 9 deselected (was 2), 140 s. Full write-up
+`nebula/PASSIVES.md`. **No published number changes** — `s9_yield.py` and
+`tunable.py` still instantiate ideal R and C. What landed is the device layer
+they will need.
+
+**Four of task 4's ten parts are DONE (4a, 4b, 4c, 4i), one is structurally
+established (4f), and the rest are listed open rather than sketched.**
+
+**The MIM question 4a said to answer before anything else: MIM IS available**
+in this metal stack (`cap_mim_m3_1`/`_m3_2`), so the task proceeds as written.
+
+**Three silent traps, each measured, each now pinned by a test:**
+1. **`mult` and `mf` DO NOTHING** (G56). They read like device multipliers;
+   they appear only inside mismatch terms, all x `MC_MM_SWITCH` = 0. `mult=4`
+   gives 942.90 ohm against `mult=1`'s 942.90 ohm — a silent 4x error. **`m=`
+   is the multiplier that works**, and it equals four explicit parallel devices
+   to every printed digit.
+2. **`w` is INERT on the fixed-width families** (G57). `res_high_po_0p69` with
+   `w=0.69`, `w=2.85` and `w=99` all return 2893.64 ohm identically, and `w=99`
+   raises nothing. The real 2.85 um device reads 718.61 ohm — **4.03x apart**.
+3. **ngspice DISCARDS the generic families' non-linearity terms** — `p2`, `q2`,
+   `p3`, `q3` all print "unrecognized parameter - ignored", so `res_high_po`
+   simulates as perfectly LINEAR while the fixed-width families do not. **An S4
+   claim must not be quoted off the generic family.**
+
+**The structural 4f finding, and it is the important one: SKY130's passive
+corner axis is INDEPENDENT of the MOS one, and all five MOS corners hold the
+passives at TYPICAL** (G58). So **every corner number this project has
+published held `rs`, `cs`, `rl` fixed** — not by decision, but because the MOS
+corner names do not touch them. The library provides the **full 5 x 5 cross
+product**, so **S9's 45 corners become 225**, not the 135 a three-passive-corner
+guess would give. Measured spreads: poly resistor **+/-12.5%**, MIM
+**-11.7/+12.9%**. Arithmetic consequence, **pre-registered not measured**: f_z
+would move ~1.29x = **~0.37 octaves against 0.12 octaves of slack, ~3x** — which
+points the same way 4e's own arithmetic did, and could eliminate design 432.
+**The screen recommendation is deliberately NOT made** without the sweep.
+
+**4i is a NEGATIVE result and a clean one: quantisation is not first-order.**
+Over 4000 box samples, worst |f_z| rounding error is **1.04e-3 octaves =
+0.87% of the 0.12-octave slack**, 4000/4000 realisable, worst component error
+0.070%. `l` is free on a 5 nm grid while `f_z` depends on it through a ratio,
+so the grid is ~3 orders finer than the thing it resolves.
+`device/passives.py::to_geometry()` is the deliverable — it **rejects rather
+than clamps**, because a clamped geometry reaches a netlist that simulates fine.
+
+**The head resistance is why `to_geometry` widens instead of shortening.**
+`res_high_po` is not `rsheet*l/w`: a fixed head term puts the floor at
+**1444 ohm at w=0.35 um** and 58 ohm at w=10 um, so the whole `rs` bound is
+unreachable at minimum width.
+
+**4c: the extended trim is bit-identical but NOT free.**
+`device/spice/sky130_ctle.lib.spice`, 25 sections. **rel=0, abs=0** over 8
+resistor geometries, 4 MIM plates and the nfet, across 6 (MOS x passive)
+sections — G36's verification covered nfet cards only and did NOT survive
+adding these. Criterion did not need relaxing. **Cost: 634 ms -> 4655 ms, a
+7.3x regression** on the inner loop (full library 47 s). **Variability did NOT
+come back** — the extended trim's spread is 1.14x against nfet-only's 1.51x.
+Likely cause identified, not yet acted on: the R/C corner files pull in
+`parameters/typical.spice` (3023 lines) and `invariant.spice` (7340).
+
+**A real bug the four-corner measurement caught:** the MIM plate offset is
+**per corner and asymmetric**, and `tol_m3` follows the **RESISTOR** letter,
+not the capacitor one, because it is the same metal layer. `hh` and `lh` both
+have "cap_high" and differ by **0.7%**. A single-corner check would have missed
+it.
+
+**Also caught, and it is the project's own failure mode:** an equivalence
+comparison passed vacuously because both sides were empty — `/usr/bin/time`
+does not exist in Git Bash, so ngspice never ran and `diff` compared two empty
+sets. The test now asserts a minimum value count first.
+
+**First area numbers (4h, partial):** at design 432 the drawn passives are
+**1506 um^2 = 3% of the 0.05 mm^2 S7 budget**, of which **cs is 62%** —
+confirming 4h's expectation that cs leads, but **refuting any sense that S7 is
+tight**. Even 10 pF is under 10% of budget. Routing, enclosure, transistors and
+the ladder projection are NOT included, so it is a lower bound.
+
+**Not done, and listed in PASSIVES.md §6 in priority order:** 4d (the
+regression gate — nothing downstream is trustworthy until it passes), 4e, the
+4f sweep, 4g's fold into `CL_RANGE.md`, 4h's real budget.
