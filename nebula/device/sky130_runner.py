@@ -523,7 +523,16 @@ def swing_limits(
 #   * the analyses and the `wrdata` dump are added.
 # ─────────────────────────────────────────────────────────────────────────────
 
-_NETLIST = """* nebula sky130 sizing point (auto-generated; do not edit by hand)
+# The circuit is defined ONCE, in `_TOPOLOGY`, and the analyses are bolted on
+# separately. CLAUDEwa.md §8 rule 9 and G32: two netlists describing "the same"
+# point drifted by one model parameter and silently explained away a
+# discrepancy for a week. The tunable sweep (`run_tunable_sweep`) needs a
+# DIFFERENT control block over the SAME circuit, so the split is what stops a
+# second copy of the topology existing. `test_tail.py` asserts
+# `_TOPOLOGY + _CONTROL_SINGLE == ` the historical `_NETLIST` text, so the
+# split cannot drift either.
+
+_TOPOLOGY = """* nebula sky130 sizing point (auto-generated; do not edit by hand)
 .lib "{lib}" {corner}
 .temp {temp_c}
 
@@ -556,7 +565,9 @@ Cdeg  s1 s2 {{CS}}
 CLp   outp 0 {{CL}}
 CLn   outn 0 {{CL}}
 
-.control
+"""
+
+_CONTROL_SINGLE = """.control
 set noaskquit
 set filetype=ascii
 
@@ -590,6 +601,10 @@ quit
 
 .end
 """
+
+#: The historical single-point netlist, reassembled. Every existing caller uses
+#: this and its bytes are unchanged by the split above.
+_NETLIST = _TOPOLOGY + _CONTROL_SINGLE
 
 # ── the two tails ───────────────────────────────────────────────────────────
 #
@@ -904,6 +919,224 @@ def run_point(
     return pt
 
 
+# ─────────────────────────────────────────────────────────────────────────────
+# The tunable sweep: many (rs, cs) settings, ONE ngspice process.
+#
+# WHY THIS IS ALLOWED, AND WHY IT NEEDED PROVING. G35 measured `alter` to be
+# SILENTLY WRONG for subckt-wrapped device geometry — it writes the `w`
+# instance parameter and leaves every geometry-derived parasitic at its old
+# value, returning plausible numbers up to 24% off — and recorded that it is
+# fine for the ideal R/C/I elements. "Recorded" is not "verified", and this
+# path leans on it 67 times per process, so it was verified the way G35's
+# failure was found: fresh-parse ground truth, exact comparison.
+#
+# `nebula/tests/test_tail.py::test_alter_on_rs_cs_is_bit_identical_to_fresh_parse`
+# holds it to **rel=0, abs=0** on g_dc, g_nyq, g_pk, g_top, inoise_total,
+# v(s1), gm and vdsat_tail, across 3 corners x 4 target settings x 2 starting
+# settings. If that test goes red, this whole path is invalid.
+#
+# THE COST, MEASURED. One process doing N settings, serial:
+#
+#       settings      1       6      22      66
+#       s/process   0.30    0.35    0.52    0.90
+#       ms/setting   305      59      24    13.6
+#
+# So 66 settings cost 13.6 ms each against ~150 ms for one process per setting
+# (G48) — an 11x speedup, and it is what makes a tunable sweep over the whole
+# population affordable at all. This does NOT contradict G34/G35's conclusion
+# that process reuse is not the answer for GEOMETRY: geometry is not what is
+# being altered here.
+# ─────────────────────────────────────────────────────────────────────────────
+
+_CONTROL_SWEEP_HEAD = """.control
+set noaskquit
+set filetype=ascii
+"""
+
+#: One (rs, cs) setting. Repeated verbatim per setting, so the Nth block of
+#: output is the Nth setting's — the parser relies on that ordering and a test
+#: pins it.
+#:
+#: The `.op` prints come BEFORE `.ac`/`.noise` deliberately: after an analysis
+#: the current plot changes and every `@m...` reference fails as a WARNING with
+#: exit 0 (G26). That trap was re-hit while building this block.
+_SWEEP_STEP = """alter Rdeg = {rs}
+alter Cdeg = {cs}
+op
+print v(s1) i(Vdd)
+print @m.xm1.m{device}[gm] @m.xm1.m{device}[vds] @m.xm1.m{device}[vdsat]
+{tail_probe}ac dec 50 1meg 100g
+let vd_db = db(v(outp) - v(outn))
+meas ac g_dc  FIND vd_db AT=1meg
+meas ac g_nyq FIND vd_db AT=2.5g
+meas ac g_pk  MAX  vd_db FROM=10meg TO={f_top}
+meas ac g_top FIND vd_db AT={f_top}
+noise v(outp,outn) Vid dec 20 10meg 5g
+print inoise_total
+"""
+
+_SWEEP_TAIL_PROBE = """print @m.xmt1.m{device}[vds] @m.xmt1.m{device}[vdsat]
+"""
+
+
+@dataclass(frozen=True)
+class TunableSetting:
+    """One (rs, cs) the sweep visits."""
+
+    rs: float
+    cs: float
+
+    def tag(self) -> str:
+        return f"rs{self.rs:.4g}/cs{self.cs * 1e15:.4g}f"
+
+
+def run_tunable_sweep(
+    point: SizingPoint,
+    settings: Sequence[TunableSetting],
+    corner: str = "tt",
+    temp_c: float = 27.0,
+    timeout_s: float = 600.0,
+) -> "list[Sky130Point]":
+    """Evaluate ONE sizing point at MANY (rs, cs) settings, in one process.
+
+    Returns one `Sky130Point` per setting, in the order given. On a
+    process-level failure EVERY entry comes back `ok=False` with the same
+    reason — a partial result is never returned, because a caller handed 40 of
+    67 back would silently score a design on a grid it did not run.
+
+    `point.rs` and `point.cs` are what the netlist is BUILT with; the first
+    `alter` overwrites them, so they only have to be valid.
+    """
+    if not settings:
+        return []
+
+    def _all_failed(reason: str) -> "list[Sky130Point]":
+        return [Sky130Point(ok=False, point=point, corner=corner,
+                            fail_reason=reason) for _ in settings]
+
+    if corner not in VALID_CORNERS:
+        return _all_failed(f"unknown corner {corner!r}")
+    try:
+        lib = lib_for_device(point.device)
+    except FileNotFoundError as exc:
+        return _all_failed(str(exc))
+
+    if point.tail is None:
+        tail_source = _TAIL_IDEAL.format(IT="{IT}")
+        tail_probe = ""
+    else:
+        t = point.tail
+        tail_source = _TAIL_MIRROR.format(
+            device=t.device, n_mir=f"{t.mirror_ratio:g}",
+            w_tail=f"{t.w_tail:.6g}", l_tail=f"{t.l_tail:.6g}",
+            nf_tail=int(t.nf_tail), w_ref=f"{t.w_ref:.6g}",
+            nf_ref=int(t.nf_ref),
+            i_ref=f"{t.i_ref_a(point.i_tail_per_side_a):.9g}",
+            c_byp=f"{t.c_bypass_f:.9g}")
+        tail_probe = _SWEEP_TAIL_PROBE.format(device=t.device)
+
+    body = "".join(
+        _SWEEP_STEP.format(rs=f"{st.rs:.10g}", cs=f"{st.cs:.10g}",
+                           device=point.device, tail_probe=tail_probe,
+                           f_top=f"{MAX_SEARCH_TOP_HZ / 1e9:g}g")
+        for st in settings)
+    text = (_TOPOLOGY.format(
+                lib=lib.as_posix(), corner=corner, device=point.device,
+                w=point.w, l=point.l, nf=int(point.nf), rl=point.rl,
+                rs=point.rs, cs=point.cs, cl=point.cl,
+                it=point.i_tail_per_side_a, vdd=point.vdd, vcm=point.vcm,
+                temp_c=temp_c, tail_source=tail_source)
+            + _CONTROL_SWEEP_HEAD + body + "quit\n.endc\n\n.end\n")
+
+    import time
+    t0 = time.perf_counter()
+    with tempfile.TemporaryDirectory() as td:
+        tmp = Path(td)
+        shutil.copy(SPICE_DIR / ".spiceinit", tmp / ".spiceinit")
+        (tmp / "sw.cir").write_text(text, encoding="ascii")
+        try:
+            proc = subprocess.run([str(ngspice_path()), "-b", "sw.cir"],
+                                  cwd=str(tmp), capture_output=True, text=True,
+                                  timeout=timeout_s)
+        except (subprocess.TimeoutExpired, OSError) as exc:
+            return _all_failed(f"ngspice: {exc}")
+        out = proc.stdout + "\n" + proc.stderr
+    runtime = time.perf_counter() - t0
+
+    # NOTE the silent-failure scan is deliberately NOT applied to the whole
+    # output here. G54's `-nan(ind)` hits INDIVIDUAL settings, and a
+    # process-wide scan would throw away all 67 because one of them NaN'd —
+    # measured at 6.1% of processes lost, against a 0.08% per-evaluation rate.
+    # `_parse_sweep` scans each block separately; a truncated or malformed run
+    # still fails everything, because the block COUNT will not match.
+    return _parse_sweep(out, point, settings, corner, runtime)
+
+
+def _parse_sweep(out, point, settings, corner, runtime):
+    """Split one process's output into one `Sky130Point` per setting.
+
+    Splitting on the `v(s1)` print is what makes the Nth block the Nth setting.
+    If the count does not match, EVERY entry fails rather than the first N
+    succeeding — a short list would score a design on a grid it never ran.
+    """
+    n = len(settings)
+    blocks = re.split(r"(?=^\s*v\(s1\)\s*=)", out, flags=re.M)
+    head, blocks = blocks[0], blocks[1:]
+    # A process-level failure — bad library, a crash, a parse abort — shows up
+    # BEFORE the first block and truncates the rest, so it fails everything.
+    fatal = scan_for_silent_failures(head)
+    if fatal or len(blocks) != n:
+        why = (f"ngspice failed before the sweep: {fatal[0][:140]}" if fatal
+               else f"sweep returned {len(blocks)} blocks for {n} settings")
+        return [Sky130Point(ok=False, point=point, corner=corner,
+                            runtime_s=runtime, fail_reason=why)
+                for _ in settings]
+
+    pts = []
+    for st, blk in zip(settings, blocks):
+        p2 = SizingPoint(w=point.w, l=point.l, nf=point.nf, rs=st.rs, cs=st.cs,
+                         rl=point.rl, cl=point.cl,
+                         i_tail_per_side_a=point.i_tail_per_side_a,
+                         vcm=point.vcm, vdd=point.vdd, device=point.device,
+                         tail=point.tail)
+        # PER-SETTING silent-failure scan. One `-nan(ind)` (G54) fails ONE
+        # setting, not the whole grid.
+        bad = scan_for_silent_failures(blk)
+        if bad:
+            pts.append(Sky130Point(ok=False, point=p2, corner=corner,
+                                   runtime_s=runtime / n,
+                                   fail_reason=f"silent failure at "
+                                               f"{st.tag()}: {bad[0][:120]}"))
+            continue
+        r = Sky130Point(ok=True, point=p2, corner=corner, runtime_s=runtime / n)
+        r.v_src_dc = parse_scalar(blk, "v(s1)")
+        i_vdd = parse_scalar(blk, "i(vdd)")
+        r.i_supply_a = None if i_vdd is None else -i_vdd
+        r.gm = find_device_scalar(blk, "gm")
+        r.vds = find_device_scalar(blk, "vds")
+        r.vdsat = find_device_scalar(blk, "vdsat")
+        if point.tail is not None:
+            d = point.tail.device
+            r.vds_tail = parse_scalar(blk, f"@m.xmt1.m{d}[vds]")
+            r.vdsat_tail = parse_scalar(blk, f"@m.xmt1.m{d}[vdsat]")
+        r.g_dc_db, _ = parse_meas(blk, "g_dc")
+        r.g_nyq_db, _ = parse_meas(blk, "g_nyq")
+        r.g_pk_db, r.f_pk_hz = parse_meas(blk, "g_pk")
+        r.g_top_db, _ = parse_meas(blk, "g_top")
+        r.vn_in_vrms = parse_scalar(blk, "inoise_total")
+        need = ["gm", "vds", "vdsat", "v_src_dc", "i_supply_a", "g_dc_db",
+                "g_nyq_db", "g_pk_db", "f_pk_hz", "g_top_db", "vn_in_vrms"]
+        if point.tail is not None:
+            need += ["vds_tail", "vdsat_tail"]
+        missing = [k for k in need if getattr(r, k) is None]
+        if missing:
+            r = Sky130Point(ok=False, point=p2, corner=corner,
+                            runtime_s=runtime / n,
+                            fail_reason=f"could not parse {missing} at {st.tag()}")
+        pts.append(r)
+    return pts
+
+
 def measured_swing_pp_v(pt: Sky130Point, compression_db: float = 1.0) -> Optional[float]:
     """The number `DeviceResult.vout_swing_v` should carry, in Vpp.
 
@@ -921,8 +1154,9 @@ def measured_swing_pp_v(pt: Sky130Point, compression_db: float = 1.0) -> Optiona
 
 
 __all__: Sequence[str] = (
-    "SizingPoint", "Sky130Point", "SwingLimits",
-    "run_point", "swing_limits", "measured_swing_pp_v", "textbook_swing_pp_v",
+    "SizingPoint", "Sky130Point", "SwingLimits", "TunableSetting",
+    "run_point", "run_tunable_sweep",
+    "swing_limits", "measured_swing_pp_v", "textbook_swing_pp_v",
     "lib_for_device", "NFET_01V8", "NFET_G5V0", "VALID_CORNERS",
     "SPICE_DIR", "TRIMMED_LIB",
 )

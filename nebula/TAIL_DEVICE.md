@@ -281,7 +281,33 @@ backwards is the same class of error as square-rooting `inoise_total`
 | 800 | 0.0849 | +0.2662 | 26.38 | 0.489 mV | 78.6 % |
 
 16× more width buys **+168 mV** of headroom and costs **1.27×** in S5. Noise is
-therefore *not* what limits `w_tail` — S3 is (§5).
+therefore *not* what limits `w_tail` today — S3 is (§5).
+
+### This is a SECOND coupling through the tail, and it is currently slack
+
+`gm_tail = 2·I/vdsat_tail`, so **the tail's `vdsat` is a single knob with
+opposite signs on two constraints**:
+
+```
+        small vdsat  ->  more v(source) margin   AND  more gm_tail  ->  MORE noise
+        large vdsat  ->  less noise              AND  less margin   ->  tail_saturation
+```
+
+So the tail couples five box coordinates through *headroom* (§2) **and**
+trades headroom against noise through `vdsat` on the same device. The second
+coupling is slack right now — S5 sits 3.4× inside spec — which is exactly why
+it is worth writing down before it stops being slack:
+
+* **S5 headroom went 5.5× → 3.4×** when the tail became real. Still free; **no
+  longer free by a margin anyone should ignore.**
+* **It becomes live in the tunable experiment.** Raising `R_s` to get peaking
+  adds `4kT·R_s` directly to the input-referred noise, on top of a budget that
+  has just lost 1.61× to the two tails. `R_s` is already the largest passive
+  contributor at the reference point (31 % of the noise power with an ideal
+  tail; 9.3 % only because the tails swamped it).
+
+**If S5 ever binds in this project, this is the mechanism it will bind
+through**, and it will bind at the high-`R_s` end of the tuning range.
 
 ---
 
@@ -570,13 +596,28 @@ than one ladder rung of margin" from an independent direction.
 
 ### What this settles
 
-1. **The tail was NOT the missing coupled constraint.** HANDOFF §8 called it
-   *"the one experiment that could still turn corner robustness into a real
-   constraint rather than a tax"*. It did not. `tail_saturation` is a genuine
-   coupled inequality — it is the only row in the table tying five box
-   coordinates together — but it binds on 2.6-13.3 % of the box and costs 8.8 %
-   of the corner-robust population. **The load still costs 99.4 %.** That
-   sentence should be retired the same way G40's was.
+1. **The tail was not the missing coupled constraint — GIVEN THE CURRENT
+   SCREEN.** HANDOFF §8 called it *"the one experiment that could still turn
+   corner robustness into a real constraint rather than a tax"*. It did not.
+   `tail_saturation` is a genuine coupled inequality — the only row in the
+   table tying five box coordinates together — but it binds on 2.6-13.3 % of
+   the box and costs 8.8 % of the corner-robust population, against the load's
+   99.4 %.
+
+   **MASKED, NOT UNIMPORTANT — and the distinction is the point.** The 8.8 % is
+   measured on a population the LOAD screen had already reduced by 99.4 %, so it
+   is a **conditional** number: "what the tail costs, given that the load range is
+   already screened at its full 5.72x". `tail_saturation` binds on 2.6-13.3 % of
+   the box and is the only constraint coupling five box coordinates; those two
+   facts are unconditional. **The correct wording is "retired GIVEN THE CURRENT
+   SCREEN", not retired absolutely.**
+   
+   **The re-check trigger, stated so it is not forgotten:** when the load screen
+   narrows from the full derived range to a specification *tolerance band* — which
+   is what `CL_RANGE.md` §7b and the tunable experiment are both heading towards —
+   the surviving population grows, and `tail_saturation` should be re-read off the
+   **violation** table to see whether it moves up. A constraint that binds on 13 %
+   of the box cannot stay a footnote once the thing masking it is removed.
 2. **G47's caveat is discharged.** Every S9 number in this project carried
    *"optimistic bound — the tail is ideal"*. It is now measured: the optimism
    was worth **8.8 %** of the corner-robust-at-some-load population and **zero**

@@ -28,7 +28,10 @@ of the headline. Next to what was already measured: **the PVT corners cost 39%,
 the LOAD range 99.4%, the ideal tail 8.8%** — the load is still binding by a
 wide margin, and **HANDOFF §8's claim that the tail was "the one experiment
 that could still turn corner robustness into a real constraint rather than a
-tax" is RETIRED**, on the same footing as G40. `tail_saturation` IS a genuine
+tax" is RETIRED **GIVEN THE CURRENT SCREEN** — the 8.8% is measured on a
+population the LOAD had already cut by 99.4%, so **the tail is MASKED, not
+unimportant**, and it must be re-read off the VIOLATION table the moment the
+load screen narrows to a tolerance band. `tail_saturation` IS a genuine
 coupled inequality — `vds_tail` IS the input pair's source node, so it ties
 **VCM, W_in, L_in, i_bias and the tail geometry into ONE inequality**, the only
 row in the spec table coupling five box coordinates — but it binds on
@@ -836,7 +839,11 @@ Plus: git init, .gitignore, 28 tests, Wilson-bound BER reporting.
 
   What the tail cost, next to what was already known: **PVT corners 39%, the
   LOAD range 99.4%, the ideal tail 8.8%.** The load is still the binding
-  constraint by a wide margin. Five things worth carrying:
+  constraint by a wide margin. **But 8.8% is CONDITIONAL — it is measured on a
+  population the load screen had already cut by 99.4%, so the tail is MASKED,
+  not unimportant.** Unconditionally it binds on 2.6-13.3% of the box. Re-check
+  it off the VIOLATION table whenever the load screen narrows to a tolerance
+  band. Five things worth carrying:
   - **The coupling identity is exact.** `vds_tail == v(source)` to 0 and
     `v(source) == VCM - Vgs_in` to 6e-17, so `tail_saturation` ties **VCM,
     W_in, L_in, i_bias and the tail geometry into one inequality** — the only
@@ -964,8 +971,13 @@ Plus: git init, .gitignore, 28 tests, Wilson-bound BER reporting.
      spec table tying five box coordinates together — but it binds on
      2.6-13.3% of the box depending on corner. **The claim below that this was
      "the one experiment that could still turn corner robustness into a real
-     constraint rather than a tax" is RETIRED**, on the same footing as G40's
-     coupling claim. Full write-up `nebula/TAIL_DEVICE.md`; S9 re-run
+     constraint rather than a tax" is RETIRED **GIVEN THE CURRENT SCREEN**.
+     **The 8.8% is CONDITIONAL** on a population the load screen had already
+     reduced by 99.4%, so the tail is **masked, not unimportant**; what is
+     unconditional is that it binds on 2.6-13.3% of the box and is the only
+     constraint coupling five box coordinates. **RE-CHECK IT off the VIOLATION
+     table whenever the load screen narrows to a tolerance band** — which is
+     exactly what the tunable experiment does. Full write-up `nebula/TAIL_DEVICE.md`; S9 re-run
      `nebula/S9_YIELD.md` §9; prediction vs outcome `nebula/PREDICTIONS.md`
      entry 2. **The remaining ideal element is `I_ref`**, declared in
      `TAIL_DEVICE.md` §0.
@@ -988,6 +1000,31 @@ Plus: git init, .gitignore, 28 tests, Wilson-bound BER reporting.
      margins is a LOWER BOUND while the tail is ideal.** Re-running
      `robust_geometry.py --collect` afterwards is the cheapest way to see how
      far the requirement moves — 23 min, no new code.
+   - **>>> THE REWARD SHAPE IS DECIDED, AND IT IS NOT WORST-NORMALISED-MARGIN.
+     <<<** (Human decision, 2026-08-06, after session 13.) The earlier
+     recommendation — a pure `min` over specs and corners — is **withdrawn by
+     the person who proposed it**, on the evidence of session 13's violation
+     table. **`min` has the same pathology as the first-failure table, one
+     layer down:** it reports `S3_f_peak` for as long as that misses by
+     17 GHz, so the agent gets **no gradient on `tail_saturation`** — a
+     constraint binding on 13.3% of the box at slow-hot — until S3 is nearly
+     solved. Session 13 measured that ranked-worst and ever-violated disagree
+     by an order of magnitude; a `min` reward can only ever see the first.
+
+     **The shape to build instead:**
+
+         while ANY constraint is violated:   r = sum of clipped shortfalls
+         once ALL are satisfied:             r = max over policy of (min margin)
+
+     Every violated constraint contributes gradient; margin-seeking starts only
+     when the design is feasible. **And normalisation matters more than the
+     earlier note said:** express each margin in units where **1.0 means
+     "meaningfully off"** — `f_peak` in **octaves**, peaking in **dB**,
+     `tail_saturation` in **(vds - vdsat)/100 mV**. Raw magnitudes are
+     incomparable, which is precisely what the 17 GHz vs 40 mV comparison
+     demonstrates. Keep the `f_peak` term in LOG frequency
+     (`-|log2(f_peak/f_target)|`), per the original note.
+     This supersedes the worst-normalised-margin sketch for task 6.
    - **Session 11's two proposals, for a human** (`ROBUST_GEOMETRY.md` §7).
      Neither touches `params.py`; both are about the SEARCH, not the box.
      (a) **warm-start** the policy and the baselines from designs with
@@ -3154,7 +3191,14 @@ coupled inequality — `vds_tail` IS the input pair's source node, so it ties
 row in the spec table that couples five box coordinates — but it binds on
 2.6-13.3% of the box and costs 8.8%. Retired on the same footing as G40's
 coupling claim, and §8 of this file now says so in place rather than quietly
-dropping it.
+dropping it. **AMENDED after review, and the amendment matters: retired GIVEN
+THE CURRENT SCREEN, not absolutely.** The 8.8% is measured on a population the
+LOAD screen had already reduced by 99.4%, so it is a conditional number — the
+tail is **masked**, not unimportant. Unconditionally `tail_saturation` binds on
+2.6-13.3% of the box. **When the load screen narrows to a tolerance band, the
+surviving population grows and `tail_saturation` must be re-read off the
+VIOLATION table**; a constraint that binds on an eighth of the box cannot stay
+a footnote once the thing masking it is gone.
 
 **The methodological finding, and it is the transferable part: "which spec
 binds" has TWO meanings and they disagree by an order of magnitude.**
@@ -3227,3 +3271,67 @@ all survive.
 scored here is a **fixed sizing point**, while S3 says the peaking is tunable
 via `R_s`/`C_s`. **0.05% is a lower bound on what a tunable part achieves**, and
 that experiment is not written.
+
+### 2026-08-06 — Session 14a (the tunable experiment: build + pre-registration)
+
+**Tests: 679 -> 698** (+19, `nebula/tests/test_tunable.py`). Split 92 + 606,
+2 deselected, 137 s. **This commit is the PRE-REGISTRATION** — code, tests and
+`PREDICTIONS.md` entry 3, committed before `tunable.py --n 2000` runs.
+
+**What it closes.** Every yield this project has published scores a **fixed
+sizing point**, while S3 says the peaking is *tunable* via `R_s`/`C_s`. So
+12b's and 13's 0.05 % are both **lower bounds**, and both write-ups name the
+tunable version as the cheapest thing that could change the verdict.
+
+**The design vector now splits** — FIXED (`w_in, l_in, nf_in, i_bias, rl,
+vcm_in`, tail) vs TUNABLE (`rs, cs`) — and a design is *tunable-robust* iff
+**for every (corner, load) point there EXISTS an (rs, cs) meeting all specs.**
+
+**Three review corrections landed first, all from the human:**
+1. **The tail's retirement is CONDITIONAL.** 8.8 % was measured on a population
+   the LOAD screen had already cut by 99.4 %, so the tail is **masked, not
+   unimportant**. Amended in HANDOFF §6/§8, `S9_YIELD.md` §9 and
+   `TAIL_DEVICE.md` §8, with an explicit re-check trigger: **when the load
+   screen narrows to a tolerance band, re-read `tail_saturation` off the
+   VIOLATION table.**
+2. **A second coupling through the tail, recorded** (`TAIL_DEVICE.md` §4):
+   `gm_tail = 2*I/vdsat`, so `vdsat` trades headroom against noise on the same
+   device. Slack today (S5 3.4x inside spec) and **it becomes live in the
+   tunable experiment**, where high `R_s` adds `4kT*R_s` on top.
+3. **THE REWARD SHAPE IS DECIDED and it is NOT worst-normalised-margin**
+   (HANDOFF §8). A pure `min` has the same pathology as the first-failure
+   table: it reports `S3_f_peak` while that misses by 17 GHz, so the agent gets
+   **no gradient on `tail_saturation`** until S3 is nearly solved. Replaced by
+   *sum of clipped shortfalls while any constraint is violated, then max-min
+   once all are satisfied*, with margins normalised so **1.0 means
+   "meaningfully off"** (octaves, dB, 100 mV).
+
+**The enabling measurement: `alter` IS safe for `rs`/`cs`, and it is now
+proven.** G35 found `alter` **silently wrong** for device geometry and merely
+*asserted* it was fine for ideal R/C/I. Verified here to **rel=0, abs=0**
+against fresh-parse ground truth across 3 corners x 4 targets x 2 starting
+points on 8-12 quantities. That licenses sweeping the whole grid inside ONE
+process: **13.6 ms per setting against ~150 ms** (G48) — an **11x speedup**,
+and the only reason a tunable sweep over the whole population is affordable.
+`_NETLIST` was split into `_TOPOLOGY` + `_CONTROL_SINGLE` so the sweep puts a
+different control block on the SAME circuit (rule 9, G32); a test asserts the
+two halves still reassemble byte-identically.
+
+**Two bugs found and fixed while smoke-testing, both worth the space:**
+- **A process-wide silent-failure scan cost 6.1 % of processes.** One G54 NaN
+  in 67 settings failed all 67. The scan is now **per block**; a truncated or
+  malformed run still fails everything because the block COUNT will not match.
+  228/228 clean afterwards, from 214/228.
+- **The G52 consistency gate fired on smoke runs.** It compares against session
+  13's 1 and 146, which mean nothing at a different (n, seed). Now it only
+  applies on `(2000, 20260804)` and says so otherwise — a gate that cries wolf
+  on every smoke run is a gate that gets ignored.
+
+**`PointResult` records EVERY violated spec, not just the worst** — session
+13's lesson applied before the fact. The pre-registered S5 question is
+unanswerable from a `first_fail` column, because high `R_s` raises noise AND
+overshoots the 12 dB peaking ceiling, so S5 would nearly always lose the rank.
+
+**Not run yet, by design:** `--n 2000`. Predictions in `PREDICTIONS.md` entry 3
+— headline **10-25 % tunable-robust against 0.05 % fixed**, and **S5 predicted
+to be violated somewhere for the first time in this project.**

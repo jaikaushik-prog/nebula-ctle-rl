@@ -396,3 +396,97 @@ reference 22.6 um / nf 1, `I_ref` = 203 uA. Across the six screen points:
 by luck on that axis. What it does spend is the **window**: `f_peak` ranges
 1.259-2.399 GHz, i.e. **0.93 of the 1.00-octave S3 window**, confirming 12b's
 "less than one ladder rung of margin" from a second direction.
+
+---
+
+## 3. The tunable experiment — S3 says the peaking is tunable, so score that
+
+**Written:** 2026-08-06, session 14, **before** `experiments/tunable.py` was run
+at `--n 2000`. Code, tests and this entry are committed together, before the
+run.
+**Experiment:** the design vector splits into **FIXED** (`w_in, l_in, nf_in,
+i_bias, rl, vcm_in`, tail geometry) and **TUNABLE** (`rs, cs`). A design is
+*tunable-robust* iff, for **every** (corner, load) point, there **exists** an
+`(rs, cs)` setting meeting all specs. Grid: 11 x 6 geometric over the box
+bounds **plus each design's own setting** (67 total, G52), at the 3 screen
+corners x 2 load edges.
+
+### What this is compared against
+
+Session 13, same box, same seed, same 1890 designs, **fixed** sizing:
+
+```
+fixed setting, every (corner, load)      1 / 1890 = 0.05 %
+fixed setting, robust at SOME load     146 / 1890 = 7.72 %
+```
+
+### Pilot data I have seen, declared
+
+Two smoke runs (`--n 30` and `--n 40`) on **different** Latin-hypercube draws
+from the n = 2000 one, run while the plumbing was being checked. The n = 38
+one gave 15.8 % tunable-robust, adaptation class `load` for 100 % of them, an
+`R_s` span of 67.5-407 ohm, 2 settings per design, and **S5 violated nowhere**
+with a worst input-referred noise of 1.38 mV against the 1.5 mV spec. The
+predictions below are informed by that and it is stated here rather than
+presented afterwards as foresight.
+
+### Predictions
+
+| # | quantity | prediction |
+|---|---|---|
+| 3a | **tunable-robust yield** | **10-25 %**, point estimate **~16 %**. Against 0.05 % fixed — a **~300x** improvement |
+| 3b | G52 consistency gate | **PASSES**: the own-setting column reproduces exactly **1** and **146** |
+| 3c | dominant adaptation class | **`load`**, at **> 60 %** of tunable-robust designs. `none` present but a minority; `load+corner` **< 20 %** |
+| 3d | `R_s` tuning span | widens toward the full box, **> 5x**; `C_s` likewise |
+| 3e | settings per design | median **2-3**, max **<= 8**, i.e. a **<= 3-bit** DAC |
+| 3f | **S5 VIOLATED somewhere** (the pre-registered one) | **YES** — in **0.01-2 %** of failing evaluations, and the worst input-referred noise on the grid **exceeds 1.5 mV** |
+| 3g | S5 RANKED WORST | **< 0.1 %** of failing evaluations — nearly always hidden behind an S3 failure |
+
+### The reasoning
+
+1. **3a rests on the mechanism 12b identified.** The load range kills 99.4 % of
+   designs because the per-load robust sets are large (43 and 118) and almost
+   **disjoint** — 159 of 160 designs were robust at exactly one load edge.
+   Tuning is precisely the freedom to move *between* those two sets, so it
+   should recover a large fraction of the 7.72 % that worked at *some* load,
+   plus designs that worked at neither with their own `(rs, cs)` but do with
+   another. ~16 % is roughly "the union, plus some".
+2. **3c is the interesting one, and it is a claim about physics not statistics.**
+   `cl` moves `f_p2` and hence `f_peak`; `rs`/`cs` move the zero and `k`. If a
+   single setting per load holds across all three corners, the load-induced
+   shift is bigger than the corner-induced one — which is exactly what the
+   three-line cost table says (load 99.4 %, corners 39 %). **`load` dominating
+   is the tunable-domain echo of that table.**
+3. **3f is the first time noise has been predicted to bind anything in this
+   project.** `R_s` contributes `4kT*R_s` directly to the input-referred noise,
+   and the budget just lost 1.61x to the two tail devices (S5 headroom 5.5x ->
+   3.4x, `TAIL_DEVICE.md` §4). The smoke already reaches **1.38 mV at
+   `rs = 1000`, 92 % of the 1.5 mV spec**, on 28-38 designs. At 1890 designs
+   there will be samples with lower `gm` (small `W_in`, low `i_bias`), where the
+   same `R_s` refers more noise to the input. **This is the `vdsat` coupling in
+   `TAIL_DEVICE.md` §4 becoming live**, one experiment after it was written
+   down.
+4. **3g follows from session 13's lesson.** High `R_s` raises noise *and*
+   drives peaking through S3's 12 dB ceiling, so S5 will almost always travel
+   with a larger S3 violation and lose the first-failure ranking. This is why
+   `PointResult` records **every** violated spec and not just the worst — the
+   question is unanswerable from a `first_fail` column alone.
+
+### What would falsify the reasoning (as opposed to the number)
+
+* **A high yield with `none` as the dominant adaptation class.** That would mean
+  one setting covers both load edges, i.e. the load spread is *not* what tuning
+  is fixing — and the 12b mechanism (disjoint per-load sets) would need
+  re-examining.
+* **S5 violated nowhere, even at `R_s` = 1000 ohm over 1890 designs.** Then
+  noise has never bound anything in this project and the S5 spec is simply
+  loose for this topology at this supply. That is a legitimate finding and
+  should be stated as one rather than quietly dropped.
+* **3b failing.** The grid contains each design's own setting, so a disagreement
+  with session 13 means the `alter` path and the fresh-parse path differ —
+  which the bit-identical test says they do not. It would invalidate the whole
+  run, not just this line.
+
+### Outcome
+
+*(to be filled in after the run, whichever way it goes)*

@@ -611,11 +611,17 @@ the population and appear as a 1 % footnote.
 
 ### What this settles, and what it retires
 
-- **RETIRE:** HANDOFF §8's *"this is the one experiment that could still turn
-  corner robustness into a real constraint rather than a tax."* It did not.
-  `tail_saturation` is a genuine coupled inequality but it costs 8.8 %, against
-  the load's 99.4 %. Retire it the way G40's coupling claim was retired, rather
-  than letting it drift into a deliverable.
+- **RETIRE, CONDITIONALLY:** HANDOFF §8's *"this is the one experiment that
+  could still turn corner robustness into a real constraint rather than a
+  tax."* It did not — **given the current screen.** `tail_saturation` is a
+  genuine coupled inequality but it costs 8.8 %, against the load's 99.4 %.
+  **The 8.8 % is conditional on a population the load screen had already cut by
+  99.4 %: the tail is MASKED, not unimportant.** Its unconditional facts are
+  that it binds on 2.6-13.3 % of the box and is the only constraint coupling
+  five box coordinates. **Re-check it off the VIOLATION table whenever the load
+  screen narrows to a tolerance band** (see §10), because a constraint that
+  binds on an eighth of the box cannot stay a footnote once the thing masking
+  it is removed.
 - **DISCHARGE:** every *"optimistic bound"* caveat in §1–§8. The optimism was
   worth 8.8 % of the corner-robust-at-some-load population and **zero** of the
   headline yield.
