@@ -271,7 +271,25 @@ signaling, ADC-based DSP receiver, 28 nm CMOS reference parameters).
 │                             RL-driven CTLE sizing, 5 Gbps PCIe Gen2).
 │                             Separate project; own spec table, gates and
 │                             rules. Read it in full before touching nebula/.
-├── README.md               ← user-facing docs: structure, quickstart, params
+├── README.md               ← REWRITTEN 2026-08-06 (session 14b). The public
+│                             landing page. WAS the inherited starter-code
+│                             README, which advertised ten never-run
+│                             directories as working features and claimed 48
+│                             tests against 698 — see G55. Now carries the
+│                             two-project table, a measured-results table where
+│                             every row links to its write-up, gate status, and
+│                             an explicit "Not audited" section. If you add a
+│                             capability, add it here; if you retire one,
+│                             remove it here.
+├── docs/PROGRESS.md        ← NEW (2026-08-06, session 14b). The progress
+│                             board: session-by-session, question asked ->
+│                             what was found, for a reader with zero context.
+│                             This is what a mentor or teammate reads instead
+│                             of HANDOFF's 3,400 lines. A SUMMARY — where it
+│                             disagrees with HANDOFF, HANDOFF wins.
+├── nebula/README.md        ← NEW (2026-08-06, session 14b). Reading order for
+│                             the nine Nebula write-ups + the layout + the two
+│                             things that look like bugs and are not.
 ├── docs/ROADMAP.md         ← full audit of the original code + phased plan
 │                             with per-phase completion status. Keep in sync.
 ├── python_models/          ← THE CORE. All validated work lives here.
@@ -1626,6 +1644,30 @@ Plus: git init, .gitignore, 28 tests, Wilson-bound BER reporting.
   raising the bypass clears individual cases, so it is a bounded numerical
   nuisance rather than a physical limit. **Its area is not yet in any S7
   estimate** — there is no S7 estimate — and whoever builds one must include it.
+- **G55 — (repo) the root `README.md` was the INHERITED one, and it was the
+  most visible false claim in the project.** Rule 1 ("never fabricate a
+  number") was being enforced rigorously inside `nebula/` while the front page
+  of the repository advertised `rtl/`, `verification/`, `veriloga_models/`,
+  `matlab_models/`, `optical_dsp.py`, `ml_equalizer.py` and three Cadence/Ocean
+  flows as working features — every one of which §7 lists as **NEVER RUN / NOT
+  AUDITED**. It also stated **48 tests** against an actual **698**, and gave a
+  Cadence quick-start for a repository whose competition track **mandates
+  open-source tooling and forbids proposing commercial tools in deliverables**
+  (CLAUDEwa.md §2).
+  **Why it survived 14 sessions:** every session edited `HANDOFF.md`, which is
+  the file the working rules point at, and nobody had a reason to open
+  `README.md` — the rule says update the handoff, and the handoff was always
+  updated. **An inherited file that no rule points at does not get audited by a
+  rule that points somewhere else.** The generalisation, which is the useful
+  part: the Phase-0 audit assumed bugs in inherited *code* and found seven; it
+  never extended that assumption to inherited *documentation*, which cannot
+  fail a test and therefore cannot be caught by the test suite.
+  Fixed 2026-08-06 (session 14b): `README.md` rewritten with an explicit
+  "Not audited — treat as untrusted" section naming all ten items, plus
+  `docs/PROGRESS.md` and `nebula/README.md` as reader entry points.
+  **Before publishing anything outward-facing, re-read it as a stranger would**
+  — and check that every capability it claims has a test or a write-up behind
+  it.
 
 ## 10. Environment
 
@@ -3335,3 +3377,64 @@ overshoots the 12 dB peaking ceiling, so S5 would nearly always lose the rank.
 **Not run yet, by design:** `--n 2000`. Predictions in `PREDICTIONS.md` entry 3
 — headline **10-25 % tunable-robust against 0.05 % fixed**, and **S5 predicted
 to be violated somewhere for the first time in this project.**
+
+### 2026-08-06 — Session 14b (the repository is published; docs reorganised for readers)
+
+**No executable change. Tests 698 green before and after** (92 + 606, 2
+deselected). This session is documentation and repository plumbing only.
+
+**Why.** The owner asked for the work to go on GitHub in a form a mentor and
+two teammates can actually follow. Two problems blocked that, and the second
+was the real one.
+
+1. **There was no remote.** Session 10a `git init`-ed this checkout with the
+   PDFs already ignored, so its history is clean, but it has never been pushed
+   anywhere. The old private repo `jaikaushik-prog/serdes-dsp-framework` is an
+   **unrelated history** that still carries the ten copyrighted PDFs in its
+   baseline commit (G1 as amended). **Decision: a NEW repo, from this clean
+   history.** Force-pushing over the old one would discard a history nobody has
+   audited, and would not fix its PDF problem.
+
+2. **The root `README.md` was still the INHERITED starter-code one, and it
+   misrepresented the project.** It advertised `rtl/`, `verification/`,
+   `veriloga_models/`, `matlab_models/`, `optical_dsp.py` and three Cadence
+   flows as working features. §7 of this file lists every one of them as NEVER
+   RUN / NOT AUDITED. It also claimed 48 tests against an actual 698, gave a
+   Cadence quick-start for a project whose competition track **mandates
+   open-source tooling**, and did not mention Nebula at all. Publishing it
+   unchanged would have been the most visible fabricated claim in the repo —
+   rule 1, one level up from code.
+
+**What was written.**
+- **`README.md`**, rewritten as an honest landing page: the two-project table,
+  a measured-results table where every row links to the write-up it came from,
+  the gate status with G1 marked in progress and G2/G3 marked not started, and
+  an explicit **"Not audited — treat as untrusted"** section naming all ten
+  directories and files.
+- **`docs/PROGRESS.md`** (new): the session-by-session progress board, written
+  for a reader with zero context. Question asked -> what was found, per
+  session, plus the cost table, the two methodological findings, a glossary,
+  and an **honest-risk paragraph** stating plainly that the RL loop itself is
+  not built yet and G2/G3 are the gates that matter.
+- **`nebula/README.md`** (new): reading order for the nine write-ups, the
+  layout, the two things that look like bugs and are not (`BOUNDS` empty on
+  purpose; the mocks are fake by construction), and the three failure modes.
+
+**Facts checked rather than repeated, and one correction.** The gotcha count
+was verified with this file's own check (`grep -c '^- \*\*G'` gives 62 lines
+but only **54 unique IDs** — G41, G52, G53 and G54 are each defined twice).
+Test split re-counted: `tests/` 92, `nebula/tests/` 608 collected, 606 after
+the 2 slow deselections. **CLAUDEwa.md §4.3's "~7,200 lines" does not match
+this tree** — `python_models/` plus `tests/` measures **6,457**; the README
+says ~6,500 rather than repeating the contract's figure.
+
+**Also landed this session:** the session-14a work, which had been sitting
+uncommitted in the working tree, is now committed as `3a037b7` — its own log
+entry describes it as the pre-registration commit, and a pre-registration that
+is not committed before the run is worth nothing.
+
+**Tooling:** `gh` CLI 2.97.0 installed via winget (it was absent). Auth is
+interactive and must be done by the owner (`gh auth login`); nothing was pushed
+without that.
+
+**New gotcha G55.** See §9.

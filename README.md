@@ -1,264 +1,219 @@
-# SerDes DSP Framework
-## DSP-Assisted Wireline & Optical Transceiver Design Environment
+# SerDes DSP Framework · Nebula CTLE Sizing
 
-**Target:** 112G/224G PAM-4 SerDes | Silicon Photonics | Co-Packaged Optics  
-**Technology:** 28nm CMOS (methodology scales to FinFET)  
-**Tools:** Python · MATLAB · Verilog-A · SystemVerilog · Cadence Spectre AMS
+Two related projects share this repository. They share a test suite and a
+handoff document; they are otherwise independent by design.
 
----
+| | **SerDes framework** | **Nebula** |
+|---|---|---|
+| What | Behavioural link-design methodology for a DSP receiver | RL-driven transistor-level CTLE sizing, zero human in the loop |
+| Target | 112G PAM-4 RX, 28 nm reference parameters | 5 Gbps NRZ PCIe Gen2 CTLE, SkyWater SKY130 |
+| Code | [`python_models/`](python_models/) | [`nebula/`](nebula/) |
+| Contract | [`CLAUDE.md`](CLAUDE.md) | [`CLAUDEwa.md`](CLAUDEwa.md) |
+| Deadline | open-ended | **15 Sept 2026** (Astera Labs × BITS Goa) |
 
-## Repository Structure
+**Owner:** Jai Kaushik, BITS Pilani EEE.
+**Status as of 2026-08-06:** 698 tests green. Nebula gate G0 passed; G1 in
+progress.
 
-```
-serdes_dsp_framework/
-│
-├── python_models/              Python behavioral simulation
-│   ├── channel.py              S-parameter / loss-model channel + waveform apply()
-│   ├── pam4_chain.py           PRBS, scrambler, Gray coding, TX FFE,
-│   │                           oversampled TX waveform w/ RJ+SJ injection
-│   ├── equalizers.py           FFE, DFE (joint single-pass LMS), MLSE, MMSE init
-│   ├── statistical_eye.py      Semi-analytic BER engine (StatEye-class):
-│   │                           ISI PMF + Q-folding, bathtub to 1e-15,
-│   │                           CTLE optimizer w/ CDR-feasibility constraint
-│   ├── rx_frontend.py          CTLE (1z/2p), AGC, CDR-driven sampler
-│   │                           (Alexander BB PD + PI loop, TI mismatch, ADC)
-│   ├── cdr.py                  Standalone CDR study models (TEDs, loop filters)
-│   ├── adc_model.py            TI-ADC, aperture jitter, ENOB, mismatch
-│   ├── optical_dsp.py          CD compensation, coherent DSP, IM-DD
-│   ├── visualization.py        Eye diagrams, BER curves, bathtub plots
-│   └── link_sim.py             Waveform-level link harness + CLI sweeps
-│
-├── tests/                      pytest suite (48 tests) — run `pytest tests`
-│
-├── veriloga_models/            Cadence Spectre VerilogA behavioral models
-│   ├── tia.vams                TIA (single-ended + differential)
-│   └── analog_frontend.vams    CTLE, VGA, ADC, VCO, Photodiode, Loop filter
-│
-├── rtl/                        Synthesisable SystemVerilog RTL
-│   ├── ffe_dfe_lms.sv          32-parallel FFE + speculative DFE + SS-LMS
-│   └── bb_cdr_ber.sv           Bang-bang CDR + PRBS-31 BER checker
-│
-├── matlab_models/              MATLAB algorithm verification
-│   └── dsp_verify.m            FFE/DFE, fixed-point, BER sweeps, CDR Bode
-│
-├── scripts/
-│   └── cadence/
-│       └── ams_setup.ocn       Ocean: AMS setup, PVT corners, Monte Carlo
-│
-├── ams/                        Cadence AMS testbench configuration
-├── verification/               UVM testbenches (add per block)
-├── results/                    Simulation output CSVs (auto-created)
-└── docs/                       Block diagrams, link budgets
-```
+> **This repository is private and must stay private.** It sits alongside ten
+> copyrighted reference PDFs and the competition organisers' material, all of
+> which are `.gitignore`d and have **never** been committed to this history.
+> See [gotcha G1](HANDOFF.md#9-gotchas--footguns-each-one-cost-real-debugging-time).
 
 ---
 
-## Quick Start
+## Start here
 
-### 1. Install Python dependencies
-```bash
-pip install numpy scipy matplotlib pandas scikit-rf
+Depending on why you are reading:
+
+| You are… | Read this |
+|---|---|
+| **A mentor or teammate wanting the state of play** | [`docs/PROGRESS.md`](docs/PROGRESS.md) — every session, what question it asked, what it measured |
+| **Picking up the Nebula work** | [`nebula/README.md`](nebula/README.md) — index + reading order, then [`CLAUDEwa.md`](CLAUDEwa.md) |
+| **Picking up the SerDes work** | [`docs/ROADMAP.md`](docs/ROADMAP.md), then `python_models/` |
+| **Any agent or developer touching code** | [`HANDOFF.md`](HANDOFF.md) in full — it is the source of truth, including 54 numbered gotchas |
+
+`HANDOFF.md` is long (3,300+ lines) on purpose: it is the living state file,
+not an introduction. `docs/PROGRESS.md` is the introduction.
+
+---
+
+## Nebula — the competition track
+
+**The problem statement (Astera Labs):** demonstrate a fully automated
+framework that sizes an equalizer from a target specification using
+reinforcement learning, integrating with a SPICE simulator, reaching
+near-optimal solutions in far less time than sweeping the full MOS/R/C/L
+parameter space — with zero human intervention.
+
+**Topology (fixed by the spec):** one-stage differential CTLE with source
+degeneration (`Rs`, `Cs`) and a resistive load, plus a 1-tap DFE in the link
+layer.
+
+### What has actually been measured
+
+Every number below came from a simulation that was run; none is estimated.
+Simulator is ngspice 41 against the real SKY130 PDK.
+
+| Question | Answer | Where |
+|---|---|---|
+| Does the toolchain work at all? | **Yes** — `.op`/`.ac`/`.noise`/`.dc` all run. `.disto` returns exactly 0 for BSIM4, so HD3 must come from transient+FFT | [`nebula/G0_RESULTS.md`](nebula/G0_RESULTS.md) |
+| What fraction of the parameter box meets the peaking spec? | **8.73 %** [7.54, 10.09] — the honest random-search baseline RL has to beat | [`nebula/BOUNDS_REDERIVATION.md`](nebula/BOUNDS_REDERIVATION.md) |
+| Is the peaking spec a *coupled* constraint? | **No — falsified.** Coupling factor 1.00–1.06× across three box widths. The low yield is one low marginal | [`nebula/BOUNDS_REDERIVATION.md`](nebula/BOUNDS_REDERIVATION.md) §4 |
+| What do the PVT corners cost? | **39 %** of the designs that pass at nominal fail at a corner | [`nebula/S9_YIELD.md`](nebula/S9_YIELD.md) |
+| Are 45 corners needed? | **No — 3 corners are worth 98.7 % of 45**, and a screen can only err in one direction | [`nebula/S9_YIELD.md`](nebula/S9_YIELD.md) §3 |
+| Which corner is worst? | **Fast-hot, not slow-hot** — because the peaking spec is two-sided, so each edge has its own worst corner | gotcha G46 |
+| What separates corner-robust designs? | **Not where they sit in the parameter box** (every coordinate a null) **but where they sit in the spec window** | [`nebula/ROBUST_GEOMETRY.md`](nebula/ROBUST_GEOMETRY.md) |
+| Where does the load capacitance come from? | Derived from what physically loads the output: **13.6 / 32.6 / 78.0 fF**, entirely below the 150 fF every earlier result assumed | [`nebula/CL_RANGE.md`](nebula/CL_RANGE.md) |
+| What does that load range cost? | **99.4 %** — corner-and-load-robust yield is **1 design in 1890**. The load is the binding constraint, not the corners | [`nebula/S9_YIELD.md`](nebula/S9_YIELD.md) §8 |
+| The tail was two ideal current sinks. What did that hide? | **8.8 %** of the corner-robust population and **zero** of the headline yield — same surviving design before and after | [`nebula/TAIL_DEVICE.md`](nebula/TAIL_DEVICE.md) |
+
+**The one-line summary:** PVT corners cost 39 %, the load range costs 99.4 %,
+the ideal-tail assumption cost 8.8 %. The load dominates, and it dominates
+because the per-load robust sets are large and almost **disjoint** — 159 of the
+160 designs robust at one load edge are not robust at the other.
+
+### Method: predictions are pre-registered
+
+Predictions are written down and committed **before** the experiment runs, and
+the outcome is recorded afterwards whichever way it went. See
+[`nebula/PREDICTIONS.md`](nebula/PREDICTIONS.md). Three entries so far; the
+misses are recorded as misses.
+
+### Gate status
+
+| Gate | Due | Criterion | Status |
+|---|---|---|---|
+| G0 | 2 Aug | ngspice + PDK run all four analyses | **Passed** |
+| G1 | 3 Aug | Hand-designed reference CTLE meets specs at nominal | **In progress** — bias corrected, real tail added; poly-resistor and MIM-cap models still to land |
+| G2 | 20 Aug | One full evaluation end-to-end: params → ngspice → fit → eye → reward | Not started (link bridge is still a mock) |
+| G3 | 3 Sep | RL beats random **and** grid search at nominal | Not started |
+| G4 | 12 Sep | Corner-robust design generated and verified | Not started |
+| G5 | 15 Sep | Submitted | — |
+
+---
+
+## SerDes framework — the prior work
+
+~6,500 lines of test-validated behavioural link modelling (`python_models/`
+plus its 92 tests), originally targeting 112G PAM-4. Declared throughout as
+**pre-existing team infrastructure**, not as new work for the competition.
+
+**Signal chain (`python_models/link_sim.py`):**
+
+```
+PRBS → scramble → Gray/PAM4 → TX-FFE → ×OSR(8) → TX pole → TX jitter
+ → channel H(f) → +AWGN → CTLE → gain calibration
+ → CDR-driven sampler (closed loop, TI mismatch, 6-bit quantization)
+ → joint FFE+DFE single-pass LMS → Gray decode → BER + Wilson bound
 ```
 
-### 2. Run unit + end-to-end tests
-```bash
-python -m pytest tests
+Two engines are built from one `LinkConfig` and cross-validated against each
+other: a **time-domain** engine that counts errors, and a **statistical**
+engine that computes BER semi-analytically to 1e-15. They agree within ~3×
+where both operate.
+
+**Two findings worth the space:**
+
+1. The unconstrained optimum on a dispersive channel is 0 dB of CTLE peaking —
+   a long digital FFE equalizes with less noise boost than analog peaking — but
+   **that configuration cannot lock.** This motivated a pattern-dependent
+   zero-crossing jitter metric, calibrated against time-domain lock outcomes,
+   which is now a constraint in the optimizer.
+2. **ADC clipping, not equalization, is what limits the 0-dB-CTLE case**
+   (17 % of samples beyond full scale). So the CTLE earns its place twice: for
+   timing health and for ADC dynamic range. Only the first is engineerable away.
+
+---
+
+## Repository map
+
+```
+├── HANDOFF.md              Living state: history, current numbers, 54 gotchas
+├── CLAUDE.md               Working rules for the SerDes track
+├── CLAUDEwa.md             The Nebula contract: spec table, gates, standing rules
+├── docs/
+│   ├── PROGRESS.md         ← session-by-session progress board (start here)
+│   └── ROADMAP.md          Audit of the inherited code + phased plan
+│
+├── python_models/          VALIDATED. The SerDes framework core.
+├── tests/                  92 tests — the safety net for python_models/
+│
+├── nebula/                 The competition track. See nebula/README.md
+│   ├── common/             Frozen interface contracts, params, design equations
+│   ├── device/             ngspice wrappers, SKY130 netlists, corner runner
+│   ├── link/               device → eye bridge (mock only so far)
+│   ├── rl/                 reward function (no PPO loop yet)
+│   ├── experiments/        One script per measurement, with its data committed
+│   └── tests/              606 tests
+│
+└── ffe_learning/           Teaching sandbox for the UCIe group project
 ```
 
-### 3. Single link simulation (waveform engine, closed CDR loop)
+### Not audited — treat as untrusted
+
+These directories were inherited with the starter code. They have **never been
+simulated or run**, and the audit that found seven correctness bugs in the
+Python models has not been repeated on them. They are kept in the tree for
+reference and are **not** part of any deliverable:
+
+`rtl/` · `verification/` · `veriloga_models/` · `ams/` · `scripts/cadence/` ·
+`matlab_models/` · `python_models/optical_dsp.py` ·
+`python_models/ml_equalizer.py` · `python_models/visualization.py` · `Makefile`
+
+The Cadence and Spectre flows in particular are **out of scope** for Nebula,
+which mandates open-source tooling.
+
+---
+
+## Running things
+
+**Environment:** Windows 11, Python 3.13, numpy/scipy/pytest.
+ngspice 41 lives in the conda env `nebula`; SKY130 is installed at
+`C:\Users\DELL\sky130A`.
+
 ```bash
+# The full test suite — 698 tests, ~2 min. Run from the repo root.
+python -m pytest tests nebula/tests -q -m "not slow"
+
+# Either suite standalone
+python -m pytest tests -q
+python -m pytest nebula/tests -q
+
+# SerDes link simulation (run from python_models/)
 cd python_models
 python link_sim.py --channel_cm 3 --snr_db 26 --plot
+python link_sim.py --mode statistical --channel_cm 3 --snr_db 26
+python make_report_figures.py
 ```
 
-### 4. BER vs SNR sweep (with no-ISI theory overlay)
-```bash
-python link_sim.py --mode sweep_snr --channel_cm 3
-```
+`-m "not slow"` deselects 2 tests that re-derive golden values from the full
+SKY130 library (~30 s each). Run them after a PDK update.
 
-### 5. Channel loss sweep / Monte Carlo / jitter tolerance
-```bash
-python link_sim.py --mode sweep_loss --snr_db 28
-python link_sim.py --mode monte_carlo --n_runs 50
-python link_sim.py --mode jtol --channel_cm 3 --snr_db 26
-```
-
-### 6. Statistical (semi-analytic) BER + link optimization
-```bash
-python link_sim.py --mode statistical --channel_cm 3 --snr_db 26   # bathtub, eye width, CDR feasibility
-python link_sim.py --mode optimize   --channel_cm 6 --snr_db 28    # CTLE sweep w/ timing constraint
-python make_report_figures.py                                       # all report figures
-```
-
-> Two engines, one link: the **time-domain** engine counts errors (floor
-> ~1e-5, Wilson confidence bounds); the **statistical** engine computes BER
-> semi-analytically to 1e-15. They are built from the same LinkConfig and
-> cross-validated against each other (see tests/test_statistical_eye.py and
-> results/fig5_crossval.png).
-
-### 6. MATLAB verification
-```matlab
-cd matlab_models
-run('dsp_verify.m')
-run_all()          % runs all test suites
-ber_vs_snr()       % BER sweep only
-cdr_loop_analysis() % CDR Bode + JTOL
-```
-
-### 7. Cadence AMS simulation
-```
-Load ams_setup.ocn in Cadence IC Virtuoso:
-  CIW> load("scripts/cadence/ams_setup.ocn")
-  CIW> runAMSSim()
-  CIW> sweepCTLEPeaking()
-  CIW> runMonteCarlo(50)
-  CIW> runPVTCorners()
-```
+The Nebula tests skip cleanly when ngspice or the PDK is absent, so the suite
+is runnable on a machine without either.
 
 ---
 
-## Design Parameters (112G PAM-4 Reference Design, 28nm CMOS)
+## Working rules
 
-| Parameter | Value | Notes |
-|---|---|---|
-| Baud rate | 56 Gbaud | 2 b/sym PAM-4 |
-| Channel loss @ Nyquist | 25 dB | 30cm PCB, FR4 |
-| TIA transimpedance | 2 kΩ | 180nm SOI variant |
-| TIA bandwidth | 35 GHz | |
-| CTLE peaking | 0–15 dB (4-bit) | Active, tunable |
-| ADC | 6-bit, 56 GS/s, 16× TI | ENOB target 5.3 |
-| Aperture jitter | < 150 fs rms | |
-| FFE | 3 pre + 1 + 17 post | 32-parallel, SS-LMS |
-| DFE | 5 taps | Speculative tap 1 |
-| CDR | Type-II BB, PI filter | 1.75 GHz system clock |
-| Parallelism | 32× | fbaud/1.75GHz |
-| FEC | KP4 RS(544,514) | Pre-FEC target 2.4×10⁻⁴ (random errors, 802.3bs); design margin target 1×10⁻⁴. 224G/802.3dj concatenated Hamming(128,120)+KP4 relaxes this to ~10⁻³ |
-| Power budget | ~350 mW/lane | 3.1 pJ/bit |
+If you contribute, these are binding — each was written after a specific
+failure:
 
----
-
-## Fixed-Point Format Summary
-
-| Block | Word width | Format | Notes |
-|---|---|---|---|
-| ADC output | 6-bit signed | integer | ±32 LSB range |
-| FFE input buffer | 6-bit signed | integer | shift register |
-| FFE coefficients | 10-bit signed | Q2.8 | ±1.99, 1/256 LSB |
-| FFE output | 18-bit signed | extended | prevents MAC overflow |
-| DFE feedback | 10-bit signed | Q2.8 | same as FFE |
-| LMS accumulator | 16-bit signed | Q4.12 | high-precision update |
-| CDR phase acc | 10-bit | unsigned | 0.1° resolution |
-| CDR freq word | 20-bit signed | fractional | frequency offset |
+1. **Update `HANDOFF.md` in the same commit as any change.** A change without
+   a handoff update is an incomplete change.
+2. **Run the test suite before and after.** Report the count both times. Never
+   commit with failures.
+3. **Never fabricate a number.** If a value is unknown it stays `None` and
+   fails loudly. Every number in a deliverable traces to a simulation that was
+   actually run.
+4. **ngspice's exit code is not a success signal.** It reports many failures as
+   warnings and exits 0. Parse the output and assert.
+5. **Model cards have exactly one definition.** Netlists and runners reference
+   it; neither redeclares it.
+6. **Parameter ranges, reward weights and spec tolerances are human
+   decisions.** Propose them; do not set them autonomously.
 
 ---
 
-## Module API Reference
-
-### `channel.py`
-```python
-ch = Channel.from_loss_model(alpha_skin=0.30, alpha_diel=0.05, length_cm=30)
-ch = Channel.from_sparam('channel.s4p', port_pair=(1,2))
-ch = Channel.optical_imdd(bw_laser=30e9, bw_pd=35e9, cd_ps_nm=10.0)
-il_db  = ch.nloss_at_nyquist(fbaud=56e9)
-pr     = ch.pulse_response(fbaud=56e9, osr=8)
-taps   = ch.isi_taps(fbaud=56e9)
-rx_n   = Channel.add_awgn(rx, snr_db=20)
-```
-
-### `equalizers.py`
-```python
-rx = FFEDFEReceiver(n_ffe_pre=3, n_ffe_post=17, n_dfe=5, adc_bits=6)
-rx.ffe.init_from_channel(h_ch, snr_db=20)
-decisions, ber_trace = rx.process(r, ref_bits=bits, training_len=5000)
-# Standalone FFE:
-ffe = FFE(n_pre=3, n_post=17, mu=5e-4, ss_lms=True)
-y, e = ffe.process(r, ref=ref_syms, adapt=True)
-# MLSE:
-mlse = MLSE(h_ch[:4])
-d = mlse.detect(r[:2000])
-```
-
-### `cdr.py`
-```python
-cdr = MuellerMullerCDR(Kp=0.015, Ki=8e-4)
-phase, err = cdr.update(r_now, d_now)
-# BB CDR (2× oversampled):
-bb = BangBangCDR(Kp=0.01, Ki=5e-4, fbaud=56e9, step_ui=0.02)
-baud_out, result = bb.process(r_2x)
-print(f"RMS jitter: {result.rms_jitter_ui:.4f} UI")
-```
-
-### `adc_model.py`
-```python
-adc = ADC(n_bits=6, f_s=56e9, v_ref=0.5, jitter_rms_ps=0.15, n_sub=16)
-y = adc.convert(x, apply_ti_mismatch=True)
-sinad, enob = adc.characterise(f_in=1e9)
-```
-
-### `optical_dsp.py`
-```python
-# CD compensation:
-rx_comp = cd_compensate_freq_domain(rx_cd, f_s=64e9, D=17.0, L_km=80.0)
-# Coherent DSP chain:
-dsp = CoherentDSP(f_s=64e9, fbaud=32e9, D_ps_nm_km=17.0, L_km=80.0)
-rx_x, rx_y = dsp.process(sig_x, sig_y)
-# IM-DD link:
-link = IMDDLink(er_db=6.0, p_avg_dbm=-3.0, tia_noise_a_rthz=15e-12)
-I_pd = link.transmit(symbols, f_s=56e9)
-snr  = link.snr_db(fbaud=56e9)
-```
-
----
-
-## VerilogA Model Usage in Spectre
-
-```spice
-; TIA (optical receiver front-end)
-XTIA (net_iin net_vout vdd vss) tia
-+  Zt=2e3 f3dB=35e9 noise_A=15e-12 Vout_max=0.8
-
-; CTLE with 4-bit digital peaking control
-XCTLE (net_vout net_veq vdd vss net_ctle_ctrl) ctle
-+  f_zero=18e9 f_pole=45e9 peaking_max_db=15
-
-; 6-bit 56GS/s ADC
-XADC (net_veq net_clk<5:0> vdd vss) adc_6b_56g
-+  Vref_p=0.5 Vref_n=-0.5 tj_rms=150e-15 n_sub=16
-
-; Photodiode
-XPD (net_popt net_iphoto vbias vss) photodiode
-+  responsivity=0.8 f_bw=35e9
-```
-
----
-
-## RTL Integration Notes
-
-- **Synthesis target:** 1.75 GHz in 28nm (for 32-parallel 56G)
-- **Timing critical paths:**
-  - FFE adder tree: 3 pipeline stages (target < 570 ps/stage)
-  - DFE tap-1 speculation: must complete within 570 ps
-  - CDR phase accumulator: 1 cycle at 1.75 GHz
-- **Clock domains:**
-  - `clk_baud_div32` = 1.75 GHz — ADC + FFE + DFE + LMS
-  - `clk_fec`        = 437.5 MHz — FEC encoder/decoder (÷4)
-  - `clk_ref`        = 156.25 MHz — management, adaptation (÷32)
-- **CDC crossings:** elastic FIFOs at all domain boundaries (min depth: 16)
-
----
-
-## Research Extensions
-
-| Topic | Entry Point | Key Files |
-|---|---|---|
-| ML equalizer | Replace `FFEDFEReceiver` with PyTorch inference | `equalizers.py` |
-| Cryogenic CMOS | Scale noise params in VerilogA models to 4K | `analog_frontend.vams` |
-| 224G (112 Gbaud) | Double `fbaud`, increase FFE/DFE taps | `link_sim.py` config |
-| Co-packaged optics | Use `optical_imdd` channel, short reach | `optical_dsp.py` |
-| THP precoding | Add `thp_precoder.py` module to TX chain | `pam4_chain.py` |
-| ADC-aware CTLE | Joint optimisation in `link_sim.py` sweep | `link_sim.py` |
-
----
-
-*BITS Pilani, EEE Department — Analog/RF/Mixed-Signal VLSI Group*  
-*Contact: N. Mishra*
+*BITS Pilani, EEE Department — Analog/RF/Mixed-Signal VLSI Group*
