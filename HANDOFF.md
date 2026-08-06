@@ -12,7 +12,29 @@
 > discovered to the Gotchas section. A change without a handoff update is an
 > incomplete change.
 
-Last updated: **2026-08-05** (session 11 + 11b: **corner robustness is not a
+Last updated: **2026-08-06** (session 12a: **`cl` has a physically derived
+range, and every corner number this project has published was measured
+1.92x above the top of it.** `cl` was pinned at 150 fF because that maximised
+the S3 yield among five values tested — `CL_SENSITIVITY.md` §6 flagged that as
+choosing the answer. Deriving it instead from what actually loads the CTLE
+output (the 1-tap DFE summer input pair + the slicer input pair + routing)
+gives **cl_lo 13.64 fF, cl_mid 32.63 fF, cl_hi 78.04 fF — a 5.72x range, 2.52
+octaves**, entirely below the 150 fF pin. 180 SPICE runs, 16 s. Three results:
+(1) **`@m[cgg]` is NOT the gate load — it understates it 1.9-2.7x** by
+excluding the overlap capacitance and the Miller multiplication of C_gd, so
+the load is measured as the AC current the driver must supply into the gate,
+cross-checked against the primitives to 1.0% median (**G50**); (2) **the
+sizing sketch moves the load 5.9x while the process corner moves it 1.16x**,
+so the range is wide because the next stage is undesigned, not because silicon
+varies — and **the corner that loads the node most (`fs`) is the one with the
+LEAST gm**, the inverse of the device ordering; (3) a **half-rate front end
+gives cl_hi = 141.8 fF**, i.e. the 150 fF pin was the right number for a
+topology S2 does not describe. Full write-up `nebula/CL_RANGE.md`;
+`params.py` untouched (rule 6) and §8 of that file is the proposal.
+**528 -> 591 green** (+63: `test_cap_probe.py` 36, `test_cl_range.py` 27).
+`nebula/PREDICTIONS.md` is new and carries the pre-registered prediction for
+session 12b, committed before that experiment runs.
+Earlier session 11 + 11b: **corner robustness is not a
 property of where a design sits in the parameter BOX; it is a property of where
 it sits in the SPEC WINDOW** — 7560 SPICE runs, 23 min, re-simulating 10d's
 population from its seed and reproducing 10d's counts exactly. Splitting the
@@ -244,6 +266,23 @@ signaling, ADC-based DSP receiver, 28 nm CMOS reference parameters).
 │   │                       no-peak fraction (G43). Read §5 before touching the
 │   │                       action space and §7 before quoting any coupling
 │   │                       number.
+│   ├── CL_RANGE.md         NEW (2026-08-06, session 12a). Where `cl` comes
+│   │                       from. Derives it from the gate load of the stages
+│   │                       the CTLE drives instead of pinning it at the
+│   │                       yield-maximising 150 fF: **13.64 / 32.63 /
+│   │                       78.04 fF, a 5.72x range** whose TOP is 1.92x below
+│   │                       the value every published corner number used.
+│   │                       Read §2 before measuring any gate capacitance
+│   │                       (`@m[cgg]` is not it, G50), §3 for what actually
+│   │                       moves the load (the sketch, not the corners), and
+│   │                       §9 before quoting a yield derived from it.
+│   ├── PREDICTIONS.md      NEW (2026-08-06). Pre-registered predictions,
+│   │                       committed BEFORE the experiment they are about,
+│   │                       with the outcome written in afterwards whichever
+│   │                       way it went. Entry 1 predicts a near-ZERO
+│   │                       corner-and-load-robust yield, against the stated
+│   │                       expectation of 8.73-13.54%. Precedent: G40 and
+│   │                       10b's failed f_p2 prediction.
 │   ├── S9_YIELD.md         NEW (2026-08-05). Corner-robust yield: 3-corner
 │   │                       screen -> 45-corner promotion, with CIs, the
 │   │                       measured parallel speedup, and — the actual
@@ -311,6 +350,28 @@ signaling, ADC-based DSP receiver, 28 nm CMOS reference parameters).
 │   │                       are PAIRED. Every rate carries a two-sided Wilson
 │   │                       95% interval; the coupling factor carries a
 │   │                       percentile bootstrap (resolution ~+/-10% at n=2000).
+│   ├── experiments/cl_range.py  session 12a. The `cl` derivation: the sizing
+│   │                       SKETCH (4 loading stages, each with its reasoning
+│   │                       and a MIN_STAGE_GAIN >= 1 gate that fired for
+│   │                       real), the PDK-derived routing allowance (read out
+│   │                       of SKY130's own vpp cap model, one declared design
+│   │                       rule), and `derive_cl_range()` — pure, so the whole
+│   │                       thing re-runs from the CSV with no simulator.
+│   ├── experiments/cl_range_data.csv  TRACKED ON PURPOSE (G49). 180 rows:
+│   │                       every (stage, corner, temp, output common mode)
+│   │                       measurement behind CL_RANGE.md.
+│   ├── device/cap_probe.py  session 12a. What a following stage presents to
+│   │                       the CTLE output, measured as the AC current the
+│   │                       driver must supply into one gate under
+│   │                       DIFFERENTIAL drive — not `@m[cgg]`, which
+│   │                       understates it 1.9-2.7x (G50). Cross-checked
+│   │                       against parsed primitives + the model card's own
+│   │                       overlap constants (`analytic_load_ff`), and
+│   │                       `sanity_check_load` REJECTS a point that
+│   │                       disagrees, is out of saturation, or is not
+│   │                       capacitive. PDK constants are READ from the model
+│   │                       file, never re-declared (rule 9), and the reader
+│   │                       raises on a parameter the 180 bins disagree on.
 │   ├── device/sky130_runner.py  one SKY130 point, four analyses (.op .ac
 │   │                       .noise .dc), one call. Owns the two unit
 │   │                       conversions (metres->microns, i_bias->per-side)
@@ -544,10 +605,10 @@ Plus: git init, .gitignore, 28 tests, Wilson-bound BER reporting.
 
 ## 6. Key numbers & validated behavior (current state)
 
-- Tests: **528 passing** —
+- Tests: **591 passing** —
   `python -m pytest tests nebula/tests -q -m "not slow"`.
-  Split: `tests/` **92**, `nebula/tests/` **436**. (Was 65 + 267 = 332 at the
-  start of session 9; 430 at the end of it; 444 after session 10b.) Two
+  Split: `tests/` **92**, `nebula/tests/` **499**. (Was 65 + 267 = 332 at the
+  start of session 9; 430 at the end of it; 444 after 10b; 528 after 11.) Two
   further tests are marked `slow` and deselected by default: they re-derive
   the SKY130 golden values from the FULL library (~30 s each). Run them after
   a PDK update. **Runtime is machine-load dependent** — the same suite has
@@ -618,6 +679,41 @@ Plus: git init, .gitignore, 28 tests, Wilson-bound BER reporting.
     than that quote the sweep setup, not the circuit.
   Proposal only — `params.py` untouched (rule 6). Still an optimistic bound:
   the tail is ideal, so the required margins are lower bounds.
+- **`cl` has a derived range, and it is entirely below the value every corner
+  number used** (session 12a, `nebula/CL_RANGE.md`, 180 SPICE runs / 16 s).
+  Derived from what physically loads the CTLE output — the 1-tap DFE summer
+  input pair, the slicer input pair, and the wire:
+
+        cl_lo   13.64 fF   (11.67 device + 1.97 routing)
+        cl_mid  32.63 fF   (geometric mean; a screen point, not a claim)
+        cl_hi   78.04 fF   (63.74 device + 14.29 routing)
+        ratio    5.72x  =  2.52 octaves   vs S3's 1.00-octave f_peak window
+
+  **The 150 fF pin behind 13.49 / 8.20 / 8.10 % is 1.92x above `cl_hi`.**
+  Four things worth carrying:
+  - **`@m[cgg]` is not the gate load (G50).** It is the INTRINSIC capacitance
+    and excludes the overlap (`cgso = cgdo = 2.449e-10 F/m`) and the Miller
+    multiplication of C_gd by the loading stage's gain. Measured
+    understatement **2.00x / 2.52x / 2.70x** on the 4 / 12 / 16 um stages —
+    it grows with gain, which is the Miller signature. At the 16 um stage
+    **52% of the load is C_gd,overlap x (1 + |A|)**.
+  - **The sizing sketch moves the load 5.9x; the process corner moves it
+    1.16x, temperature 1.08x, the CTLE output common mode 1.04x.** The range
+    is wide because the following stage is undesigned, not because silicon
+    varies. Designing the slicer would narrow `cl` far more than any corner
+    analysis.
+  - **The corner that loads the node most has the LEAST gm.** C_in orders
+    `fs` > `ss` > `tt` > `ff` > `sf`, exactly inverse to gm. Do not screen the
+    load and the device at "the" worst corner — same shape as G46. (Also: for
+    the nfet, `sf` behaves fast and `fs` slow; the label order is not
+    (nfet, pfet).)
+  - **A half-rate front end gives `cl_hi` = 141.8 fF** — the 150 fF pin was
+    the right number for a topology S2 does not describe. Reported, NOT folded
+    into the bound (rule 5).
+  Cross-check: the AC measurement is reconstructed from `.op` primitives plus
+  the model card's overlap constants to **1.02% median / 2.20% worst** over
+  180 runs, and `sanity_check_load` rejects a point that disagrees by >5%.
+  0 of 180 rejected. Proposal only; `params.py` untouched.
 - **`cl` sensitivity, 2000 paired LHS samples per point** (session 10b). Pin
   `cl`, hold every other bound:
 
@@ -701,7 +797,20 @@ Plus: git init, .gitignore, 28 tests, Wilson-bound BER reporting.
      corner-robust AT ALL in this topology is unmeasured and worth asking.
    - **Approve or amend the proposed box**, then copy it into
      `common/params.py::BOUNDS`. The `cl` dimension is recommended to be
-     removed (pinned at 150-250 fF) as per `nebula/CL_SENSITIVITY.md`.
+     **removed from the SEARCH and replaced by a screened CONTEXT RANGE**,
+     `cl = 13.6-78.0 fF` (`nebula/CL_RANGE.md` §8, session 12a). This
+     supersedes `CL_SENSITIVITY.md`'s "pin at 150-250 fF": that value was the
+     S3-yield maximum of five tested, and the derived range's TOP is 1.92x
+     below it. **One topology question rides on this and is a human's**: if
+     the receiver is half-rate (two data + two edge slicers on the node), the
+     range becomes 13.6-141.8 fF and the ratio 10.4x instead of 5.7x. S2 names
+     no CDR, so the bound above assumes full rate.
+   - **The CTLE output common mode may not be able to bias the stage it
+     drives** (`CL_RANGE.md` §7a). `headroom_ok_1v8()` lets v_out fall to
+     0.5 V; the loading pair needs roughly 1.15 V or its source node goes
+     negative — session 9c's unbuildable-tail failure, one stage downstream.
+     Either the box needs a tighter v_out floor or the RX needs AC coupling /
+     a level shift. Nothing in the project currently notices this.
    - **G1 — was "hand-size a reference CTLE at TT".** Port to 1.8 V (the bounds
      are 1.2 V numbers and do NOT transfer — see the provenance audit), add
      a real tail transistor (above), and pull the **MIM cap and poly resistor**
@@ -1160,6 +1269,45 @@ Plus: git init, .gitignore, 28 tests, Wilson-bound BER reporting.
   splicing §9 out of commit `4a286a8` (44 gotchas, 347 lines) and re-appending
   G45–G49. **Before rewriting HANDOFF wholesale, diff the gotcha count**:
   `grep -c '^- \*\*G' HANDOFF.md`.
+- **G50 — (nebula) `@m[cgg]` is NOT the gate load a driver has to supply. It
+  understates it by 1.9-2.7x, silently.** BSIM4's `cgg` instance parameter is
+  the **intrinsic** gate charge derivative. Two real terms are missing:
+  (a) the gate **overlap** capacitance — SKY130's `nfet_01v8` card carries
+  `cgso = cgdo = 2.449e-10 F/m`, i.e. ~3.9 fF per side on a 16 um device;
+  (b) **Miller multiplication of C_gd** by the following stage's own voltage
+  gain. The trap is that the *intrinsic* C_gd of a saturated device really is
+  ~0 (measured 1.8e-17 F), which makes "C_gd is negligible" feel safe — but
+  the *overlap* C_gd is not, and it is multiplied by (1 + |A|). Measured on
+  the loading stages of `CL_RANGE.md`:
+
+        stage         W      |A|    @m[cgg]    real load    ratio
+        summer_min    4 um   1.34    3.27 fF     6.56 fF     2.00x
+        summer_max   12 um   3.00    9.68 fF    24.43 fF     2.52x
+        slicer_max   16 um   3.52   12.71 fF    34.34 fF     2.70x
+
+  The ratio grows with gain, which is the signature. **Measure it as the AC
+  current the driver must supply** into the gate under the drive the real
+  circuit applies (differential, here), through a zero-volt ammeter:
+  `C = Im{i(Vgp)} / (omega * v_gate)` — `nebula/device/cap_probe.py`. And
+  cross-check it against the primitives (`analytic_load_ff`), because an AC
+  current is not self-evidently a capacitance; agreement is 1.0% median.
+  Consequence if ignored: a `cl` that is 2x low moves f_p2 and hence f_peak by
+  ~0.5 octaves, half of S3's entire window, and nothing errors.
+- **G51 — (nebula) a routing/parasitic number cannot be measured from this
+  PDK install, but it can be DERIVED from it.** `C:\\Users\\DELL\\sky130A` carries
+  `libs.tech/ngspice` and `libs.ref/sky130_fd_pr/spice` only — no tech LEF, no
+  magic techfile — so there is no interconnect model to query. The route that
+  works: SKY130's own vpp finger capacitors state both their total capacitance
+  and their metal run length in squares
+  (`cap_vpp_01p8x01p8_m1m2_noshield`: `ctot_a = 7.833e-16`, `rat_m1 = 0.387`
+  over `22*rm1` squares, `rat_m2 = 0.596` over `28*rm2`), so capacitance per
+  micron = rat*ctot/(n_sq*width) = **0.0984 fF/um (m1), 0.1191 fF/um (m2)**.
+  The only declared input is the metal width (0.14 um, a design rule), and it
+  is a DIVISOR — assume it wrong high and the answer comes out low. The figure
+  is an UPPER bound for routing: a finger cap has a minimum-spaced neighbour on
+  both sides and its `ctot` includes the m1-m2 coupling that makes it a
+  capacitor. Prefer this to any remembered fF/um: it is in the repo's own PDK
+  and it is parsed, not recalled.
 
 ## 10. Environment
 
@@ -2387,3 +2535,104 @@ to delete itself once Task 1 was committed. Nothing else referenced it.
 **Task 2 (`cl` as a robustness axis) has NOT been started**, by instruction: it
 needs a pre-registered prediction committed to `nebula/PREDICTIONS.md` *before*
 the experiment runs, and the owner reviews between tasks.
+
+### 2026-08-06 — Session 12a (`cl` becomes a derived range, not a chosen constant)
+
+**Tests: 528 -> 591** (+63: `nebula/tests/test_cap_probe.py` 36,
+`nebula/tests/test_cl_range.py` 27). `python -m pytest tests nebula/tests -q
+-m "not slow"`, split 92 + 499, 2 deselected, 150 s (baseline before the
+session: 528, 130 s). Full write-up: `nebula/CL_RANGE.md`.
+**`common/params.py` untouched** — rule 6; §8 of that file is the proposal.
+
+**What this closes.** `CL_SENSITIVITY.md` §6's own caveat, open since session
+10b: *"`cl` is the one parameter here that is not really free... pinning it at
+whatever value maximises S3 yield, if that value is not physically
+justifiable, is choosing the answer."* Every corner number this project has
+published — 13.49 % / 8.20 % / 8.10 % — was measured with `cl` pinned at
+**150 fF**, which was the best of five values tested for S3 yield.
+
+**The decision this session implements** (human, taken for this task): `cl` is
+**neither a design variable nor a constant**. Nobody chooses the following
+stage's input capacitance, so it is not a knob (G42 already measured that
+searching it LOWERS the yield); but it is not known to one value either. It is
+a **context variable with a physically derived range**, to be screened like a
+PVT corner.
+
+**The range: `cl_lo` = 13.64 fF, `cl_mid` = 32.63 fF, `cl_hi` = 78.04 fF —
+5.72x, 2.52 octaves.** 180 SPICE runs, 16 s. Built from what actually loads
+the node under S2's topology: the 1-tap DFE summer input pair, the slicer
+input pair, and the wire between them.
+
+**`@m[cgg]` is NOT the gate load — new gotcha G50.** It is the obvious probe
+and it understates the load by **1.9-2.7x**, silently, because it is the
+INTRINSIC capacitance: no gate overlap (`cgso = cgdo = 2.449e-10 F/m`, ~3.9 fF
+per side on a 16 um device) and no Miller multiplication of C_gd. The trap is
+that the *intrinsic* C_gd of a saturated device really is ~0 (measured
+1.8e-17 F), which makes "C_gd is negligible" feel safe while the *overlap*
+C_gd gets multiplied by (1 + |A|). At the 16 um slicer, **52 % of the load is
+that one term.** So the load is measured as the AC current the driver has to
+supply into one gate under differential drive, through a zero-volt ammeter,
+and cross-checked against the parsed primitives plus the model card's own
+overlap constants: **1.02 % median disagreement, 2.20 % worst, over 180 runs.**
+`sanity_check_load()` rejects any point that disagrees by >5 %, is out of
+saturation, or is not capacitive; **0 of 180 rejected**, and a test corrupts
+the AC number by 1.5x and requires the check to go red.
+
+**The range is wide because of the SKETCH, not because of silicon.** Measured
+per axis: the sizing decision moves the load **5.9x**, the process corner
+1.16x, temperature 1.08x, the CTLE output common mode 1.04x. Stated plainly in
+the write-up because it is the honest headline — designing the slicer would
+narrow `cl` far more than any amount of corner analysis. Two smaller results
+from the same runs: capacitance dispersion across S3's window is **0.17 %**
+(so a lumped `cl` in the netlist is honest, previously assumed), and **the
+corner that loads the node most is the one with the LEAST gm** (`fs` > `ss` >
+`tt` > `ff` > `sf` for C_in, exactly inverse to gm) — the same shape of
+mistake G46 had to correct once for S3.
+
+**The minimum sizes were set by a gate that fired.** `MIN_STAGE_GAIN = 1.0`:
+a summer or slicer front end that attenuates is worse than the wire it
+replaced. The first sizing tried measured **|A| = 0.85 at TT**, the second
+**0.95 at ss/125 C**; only 0.5 mA into 800 ohm clears unity everywhere. The
+gate runs on every sweep and prints PASS/FAIL.
+
+**The routing allowance is derived from PDK data, with one declared input —
+new gotcha G51.** This install has no tech LEF and no magic techfile, so there
+is no interconnect model to query. SKY130's own vpp finger capacitors state
+both their total capacitance and their metal run length in squares, which
+gives **0.0984 fF/um (m1) and 0.1191 fF/um (m2)**; the only declared number is
+the 0.14 um metal width, and it is a divisor. Routing is 14-18 % of each edge,
+so doubling the whole allowance moves `cl_hi` by a fifth of an octave against
+a 2.52-octave range. **The routing assumption is not what makes the range
+wide.**
+
+**The comparison that matters, and the coincidence inside it.** The 150 fF pin
+is **1.92x above `cl_hi`** — outside the derived range entirely. But a
+**half-rate front end** (two data + two edge slicers on the node, which is
+what a real 5 Gbps receiver with a CDR looks like) gives `cl_hi` = **141.8 fF**.
+So the pinned value was not absurd; it was the right number **for a topology
+S2 does not describe**. Reported and deliberately NOT folded into the bound
+(rule 5) — that is a human's call and it changes the ratio from 5.7x to 10.4x.
+
+**One finding outside `cl`, recorded because nothing else in the project
+notices it:** `headroom_ok_1v8()` lets the CTLE output DC fall to 0.5 V, but
+the stage it drives needs roughly **1.15 V** or its source node goes negative
+— session 9c's unbuildable-tail failure, one stage downstream. Either the box
+needs a tighter v_out floor or the RX needs AC coupling / a level shift.
+
+**Added this session:** `nebula/device/cap_probe.py` (the measurement, with
+the PDK constants READ from the model file and a reader that raises on a
+parameter the 180 bins disagree on — `cgso` agrees, `u0` does not),
+`nebula/experiments/cl_range.py` (the sketch, the routing model, and
+`derive_cl_range()`, which is pure so the whole derivation re-runs from the
+CSV with no simulator), the tracked 180-row `cl_range_data.csv` (G49), and
+two ngspice fixtures so the parser is testable with no simulator.
+
+**`nebula/PREDICTIONS.md` is new**, and it is committed in this same commit
+**before** session 12b's experiment runs. Entry 1 predicts the
+corner-and-load-robust yield at **essentially zero (0-10 of 1890)**, against
+the stated expectation of 8.73-13.54 %, on the argument that S3's f_peak
+window is 1.00 octave and the derived `cl` range moves f_peak by 1.26. Whether
+that holds or not, the outcome goes in that file next to the prediction.
+
+**Not started, by instruction:** the second half of task 2 (folding the range
+into `s9_yield.py` and re-running). The owner reviews between tasks.

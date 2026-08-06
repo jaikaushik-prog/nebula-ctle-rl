@@ -1,0 +1,104 @@
+{
+ "cl_lo_f": 1.3642381525875377e-14,
+ "cl_mid_f": 3.262805963205924e-14,
+ "cl_hi_f": 7.803551552447169e-14,
+ "range": {
+  "cl_lo_f": 1.3642381525875377e-14,
+  "cl_hi_f": 7.803551552447169e-14,
+  "device_lo_ff": 11.673958798602648,
+  "device_hi_ff": 63.74428695304313,
+  "routing_lo_ff": 1.9684227272727273,
+  "routing_hi_ff": 14.291228571428569,
+  "lo_witness": {
+   "summer_min": {
+    "c_in_ff": 5.836979399301324,
+    "corner": "sf",
+    "temp_c": 125.0,
+    "vcm_out_v": 1.6
+   },
+   "slicer_min": {
+    "c_in_ff": 5.836979399301324,
+    "corner": "sf",
+    "temp_c": 125.0,
+    "vcm_out_v": 1.6
+   }
+  },
+  "hi_witness": {
+   "summer_max": {
+    "c_in_ff": 26.45867277064671,
+    "corner": "fs",
+    "temp_c": 0.0,
+    "vcm_out_v": 1.2
+   },
+   "slicer_max": {
+    "c_in_ff": 37.28561418239642,
+    "corner": "fs",
+    "temp_c": 0.0,
+    "vcm_out_v": 1.2
+   }
+  },
+  "n_rows_used": 180,
+  "n_rows_rejected": 0
+ },
+ "wire": {
+  "m1_ff_per_um": 0.09842113636363636,
+  "m2_ff_per_um": 0.11909357142857141,
+  "ctot_ff": 0.7833,
+  "rat_m1": 0.387,
+  "rat_m2": 0.596,
+  "n_sq_m1": 22.0,
+  "n_sq_m2": 28.0,
+  "width_um": 0.14
+ },
+ "routing": {
+  "lo": {
+   "length_um": 20.0,
+   "c_ff_per_um": 0.09842113636363636,
+   "why": "20 um: the summer and slicer abutted to the CTLE, which is how a bandwidth-critical node is laid out when nothing forces otherwise. The CTLE's own passives set the floor \u2014 its degeneration capacitor is 0.1-10 pF and its load resistors are 50-800 ohm, so the output node cannot be shorter than the height of that array. Capacitance per micron is the LOWER of the two metal layers read out of sky130_fd_pr__cap_vpp_01p8x01p8_m1m2_noshield (0.0984 fF/um)."
+  },
+  "hi": {
+   "length_um": 120.0,
+   "c_ff_per_um": 0.11909357142857141,
+   "why": "120 um: the following stages displaced by roughly a lane pitch, e.g. by a clock distribution or an offset-trim DAC sitting between them. Beyond this length a designer would buffer the node rather than drive it, so it is a ceiling on the plausible rather than on the possible. Capacitance per micron is the HIGHER of the two metal layers read out of sky130_fd_pr__cap_vpp_01p8x01p8_m1m2_noshield (0.1191 fF/um)."
+  }
+ },
+ "stages": {
+  "summer_min": {
+   "name": "summer_min",
+   "w_um": 4.0,
+   "l_um": 0.15,
+   "nf": 2,
+   "i_side_a": 0.0005,
+   "rld_ohm": 800.0,
+   "why": "1-tap DFE summer input pair, SMALLEST defensible. The summer's job is to re-amplify and provide the node where the tap current is subtracted, so unity gain is the floor and a wider device buys nothing: its own offset is divided by the CTLE gain ahead of it and so is not the sizing driver. 0.5 mA/side keeps the whole following stage inside a sensible share of S6's 15 mW. The 800 ohm load is SET BY THE GAIN GATE, not chosen: at 0.4 mA/500 ohm this stage measures |A| = 0.85 at TT and at 0.5 mA/700 ohm it measures 0.95 at ss/125 C, both attenuators. 0.5 mA/800 ohm is the smallest of the three that clears unity everywhere (1.07 at ss/125 C, 1.34 at TT)."
+  },
+  "summer_max": {
+   "name": "summer_max",
+   "w_um": 12.0,
+   "l_um": 0.15,
+   "nf": 6,
+   "i_side_a": 0.001,
+   "rld_ohm": 800.0,
+   "why": "1-tap DFE summer input pair, LARGEST defensible. A summer built for gain ~3 at 1 mA/side needs roughly 3x the width, and the higher gain also triples the Miller multiplication of Cgd. Both effects push the load up, which is why this is the upper edge rather than merely a wider device."
+  },
+  "slicer_min": {
+   "name": "slicer_min",
+   "w_um": 4.0,
+   "l_um": 0.15,
+   "nf": 2,
+   "i_side_a": 0.0005,
+   "rld_ohm": 800.0,
+   "why": "Slicer input pair, SMALLEST defensible: an OFFSET-TRIMMED receiver. At W=4 L=0.15 the pair's own 3-sigma input offset is ~18 mV, far too much against S8's 100 mV eye on its own \u2014 so this size is only available if the receiver carries an offset trim DAC, which is standard in a SerDes slicer. Sizing for matching is then unnecessary and the device shrinks to whatever gives MIN_STAGE_GAIN. IDENTICAL to summer_min, and deliberately not perturbed to look different: two stages whose minimum size is set by the same gm floor land on the same device."
+  },
+  "slicer_max": {
+   "name": "slicer_max",
+   "w_um": 16.0,
+   "l_um": 0.15,
+   "nf": 8,
+   "i_side_a": 0.001,
+   "rld_ohm": 800.0,
+   "why": "Slicer input pair, LARGEST defensible: an UNTRIMMED receiver, where matching alone has to deliver the offset. W=16 L=0.15 gives ~9 mV 3-sigma input offset, under a tenth of S8's 100 mV eye, which is the usual budget. This is the biggest the pair has any reason to be: A_VT/sqrt(WL) improves only as sqrt(W), so another 2x of width buys 30% of offset for 100% of load."
+  }
+ },
+ "n_rows": 180
+}
