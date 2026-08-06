@@ -12,7 +12,37 @@
 > discovered to the Gotchas section. A change without a handoff update is an
 > incomplete change.
 
-Last updated: **2026-08-05** (session 10d: **the corner-robust yield is
+Last updated: **2026-08-05** (session 11 + 11b: **corner robustness is not a
+property of where a design sits in the parameter BOX; it is a property of where
+it sits in the SPEC WINDOW** — 7560 SPICE runs, 23 min, re-simulating 10d's
+population from its seed and reproducing 10d's counts exactly. Splitting the
+255 nominal winners into the 155 corner-robust and the 100 corner-fragile:
+**every box coordinate is a null** (q > 0.16, and the two purpose-built
+interiority statistics are the LEAST significant rows at q = 0.98), so the
+"robust designs are interior in the box" hypothesis is **FALSIFIED**; but
+**both S3 axes separate the groups once FOLDED onto distance-to-nearer-edge**,
+and neither does before — f_peak margin **0.325 vs 0.126 octaves**
+(p = 2.8e-12), peaking margin **2.70 vs 0.86 dB** (p = 3.2e-11), while the raw
+medians are identical to four figures. The methodological lesson, which is the
+transferable part: **a two-sided spec makes its own raw coordinate
+uninformative**, because top-edge and bottom-edge failures sit on opposite
+sides of any median and cancel. The usable output is a **joint filter — f_peak
+margin >= 0.133 oct AND peaking margin >= 1.0 dB gives 92.1% [86.5, 95.6]
+corner-robust against a 60.8% base rate**, keeping 140 of 255; either alone
+reaches only ~75%, and both come free from an AC run the evaluator already
+does. Proposal only, for the SEARCH — `params.py` untouched (rule 6), and
+`ROBUST_GEOMETRY.md` §7 lists the three caveats a human must weigh (ideal tail,
+in-sample thresholds, and that a 1 dB peaking margin bans the endpoints of
+S3's own tunable range). Also: **f_peak is quantised at 0.0664 octaves** by
+`meas ac MAX` on an `ac dec 50` grid, so the one-octave window holds exactly 15
+distinct values and finer margins quote the sweep setup. Full write-up
+`nebula/ROBUST_GEOMETRY.md`. **481 -> 528 green** (+47, all
+`test_robust_geometry.py`; verified twice in 11b, 98 s and 95 s).
+Session 11b landed it as `de874db`, which also carries the sessions **10c and
+10d work that had never been committed** (the G44 peak-detector fix,
+`s9_yield.py`, `S9_YIELD.md`), and restores §9's gotchas, which an earlier
+commit had truncated from ~415 lines to 77. See G49.
+Earlier session 10d: **the corner-robust yield is
 measured — 20 205 SPICE runs, 47 min.** The same 1890 designs give **13.49% at
 TT/27C, 8.20% [7.05, 9.52] across three corners, 8.10% [6.95, 9.41] across all
 45**, and cross-tabulating design by design shows **100 of the 255 nominal
@@ -370,6 +400,15 @@ signaling, ADC-based DSP receiver, 28 nm CMOS reference parameters).
 │                           Does NOT touch validated python_models/. Not a test.
 ├── *.pdf, *.docx           Reference library (see §3). COPYRIGHTED — do not
 │                           redistribute; keep repo private.
+├── PCI.2/                  GITIGNORED (2026-08-05). Nebula competition material
+│                           supplied by the organisers: two handouts plus
+│                           `nebula_ctle_rl_1.zip`, a reference PPO+CTLE
+│                           implementation (src/env.py, reward.py, train.py, a
+│                           generic 130 nm lib, a trained agent, a PVT report).
+│                           On disk, out of history — not ours to redistribute.
+│                           Worth READING before the RL work starts; do NOT
+│                           anchor on its numbers (same rule as ams_rl_ppo,
+│                           CLAUDEwa §4.2).
 └── Makefile                Build automation (predates audit; NOT AUDITED).
 ```
 
@@ -2305,3 +2344,46 @@ evaluation (rule 9) at zero extra SPICE cost.
 margins above are the margins needed against the input pair's spread alone.
 The thresholds are also IN-SAMPLE; a fresh seed costs 23 min and has not been
 run.
+
+### 2026-08-05 — Session 11b (verification + the commit)
+
+Housekeeping session; **no analysis changed and no number moved.** Task 1 was
+complete on disk but uncommitted and unverified, so this session verified it
+and landed it.
+
+**Verified before committing, all four green:**
+- **Suite: 528 passed, 2 deselected, 98 s** (`python -m pytest tests
+  nebula/tests -q -m "not slow"`, split 92 + 436) — the count §6 already
+  claimed, now measured. Re-run after the commit: **528, 95 s.** Note the
+  runtime against §6's warning — 98 s here versus the 21.5 min the same suite
+  took in session 11 under an 11-worker ngspice pool. Contention, not a hang.
+- **Gotcha count 49, no duplicates**, by the §9 splice check — i.e. the
+  truncation `df2f7d4` caused is genuinely repaired, not just papered over.
+- **`ROBUST_GEOMETRY.md` regenerates from the committed CSV**, with no
+  simulator, including the reproduction gate (1890 / 255 / 155 / 100). Every
+  number in the write-up was re-derived, including the ones the default report
+  does not print: the t = 0.066 row (220 kept, 153 robust, 69.5%), 33-vs-2 and
+  51-vs-12 within one and two grid steps of a window edge, 0-vs-37 within
+  0.5 dB of a peaking edge, and the 60.9% / 60.7% symmetry about the centre.
+- **G41's staging check clean** — no PDF or DOCX in the index.
+
+**The commit (`de874db`) is wider than session 11.** Sessions **10c** (the G44
+peak-detector fix in `sky130_runner.py` + `s3_yield.py`) and **10d**
+(`s9_yield.py`, `S9_YIELD.md`, `test_s9_yield.py`, and `run_point(temp_c=)`)
+were on disk but had never been committed — `4a286a8` was 10b. They are in it,
+named in the message, and their absence from history was itself a small version
+of G49.
+
+**`PCI.2/` is now gitignored** (owner's call, asked before acting): competition
+material from the organisers — two handouts and `nebula_ctle_rl_1.zip`, a
+reference PPO+CTLE implementation with a trained agent and a PVT report. Not
+ours to redistribute. It stays on disk and is worth reading before the RL work;
+CLAUDEwa §4.2's "do not anchor on the reference implementation's numbers"
+applies to it exactly as it does to `ams_rl_ppo`.
+
+**Deleted `nebula/SESSION_11_HANDOFF.md`** — session-11 scaffolding that said
+to delete itself once Task 1 was committed. Nothing else referenced it.
+
+**Task 2 (`cl` as a robustness axis) has NOT been started**, by instruction: it
+needs a pre-registered prediction committed to `nebula/PREDICTIONS.md` *before*
+the experiment runs, and the owner reviews between tasks.
