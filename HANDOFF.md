@@ -5100,7 +5100,7 @@ and that is a human's call.
 
 ### 2026-08-08 - Session 18d (the ordered plan for whoever is next)
 
-** is new**, written because the owner is out of agent
+**`nebula/NEXT_STEPS.md` is new**, written because the owner is out of agent
 sessions for three days and the next continuation may be a chat agent with no
 repository access. It carries the ordered plan, a ready-to-use prompt per step,
 and the exact files to paste alongside each prompt for an agent that cannot
@@ -5111,8 +5111,8 @@ read the tree.
 **1. G2 is 12 days away and not started, and it is the deliverable.** The
 competition asks for a framework that takes target specs in and emits a sized
 schematic plus its specs. **The link half does not exist** -- the link layer is
-a mock end to end (G16), which is why  correctly refuses to score
-S8. Everything measured so far is device-layer. NEXT_STEPS puts G2 in parallel
+a mock end to end (G16), which is why `rl/reward_v1.py` correctly refuses to
+score S8. Everything measured so far is device-layer. NEXT_STEPS puts G2 in parallel
 with the sweep rather than behind it, because it depends on neither the trim
 nor the benchmark.
 
