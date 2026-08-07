@@ -4992,3 +4992,108 @@ counts stand — which is exactly why 7g asks for simulations as the headline.
 4.2 MB of real SPICE evaluations with a `design_id` on every row, and it is
 **free labelled training data for task 8's surrogate** — regenerating it costs
 7.4 hours.
+
+### 2026-08-08 — Session 18c (task 8 first cut: the closed form matches the black box)
+
+**Two scripts debugged and run** — `experiments/task8_blackbox.py` and
+`experiments/task8_symbolic.py`. Results tracked as
+`task8_blackbox_results.csv` and `task8_symbolic_results.csv`. Tests unchanged
+at **1292 green** (neither script is imported by the suite yet).
+
+**THE HEADLINE: an exact closed form with ONE fitted scalar matches gradient
+boosting on `f_peak`.**
+
+    exact closed form, calibrated k        4.25 % MdAPE   (1 fitted scalar)
+    the analytic pre-screen (grid argmax)  4.32 %
+    XGBoost, 17 features, 300 trees        4.64 % MdAPE   (held out)
+    Ridge on physics features, scaled     11.09 %
+
+On `peaking_db` the black boxes do win: XGBoost 0.227 dB against the closed
+form's 0.266 dB. On `f_peak` they do not.
+
+**PySR NEVER RAN AND CANNOT HERE.** `pysr` is installed but `juliapkg` dies
+with `OSError errno 22` on `WindowsApps\...\python.exe` — the Microsoft Store
+app-execution alias is a zero-byte reparse point that cannot be opened as a
+file. **This is an interpreter problem, not a code problem**; no conda is on
+PATH in this checkout. `task8_symbolic.run_pysr()` is kept, with two of its own
+bugs fixed (`parallelism=False` is not a valid value, it wants `"serial"`; and
+it fitted and scored on the SAME rows and then compared that in-sample number
+to the pre-screen's).
+
+**The search was unnecessary, because the answer is derivable.** For a
+one-zero/two-pole magnitude the peak is a stationary point; substituting
+`u = w^2` and setting `N'D = ND'` gives `u^2 + 2 a u + (ab + ac - bc) = 0`,
+hence
+
+    f_peak = sqrt( sqrt((f_z^2 - f_p1^2)(f_z^2 - f_p2^2)) - f_z^2 )
+
+with **no fitted constant at all**. A searched expression would have confounded
+model error with fit error; this separates them.
+
+**THE ERROR DECOMPOSITION IS THE USEFUL OUTPUT, and it bounds an open item.**
+The pre-screen's ~4.3 % `f_peak` error splits as:
+
+    grid discretisation (1200-point log argmax)   0.17 %
+    predicted k vs MEASURED gm/gmbs               1.20 %
+    the 1-zero/2-pole MODEL against SPICE         4.25 %
+
+**So the error is the topology model, not the gm surrogate and not the grid.**
+Consequence: re-fitting the gm/I_D model — HANDOFF §8's top item — can buy
+**at most ~1.2 %** of the f_peak spread, and nothing that keeps this transfer
+function goes below ~4.25 %. That bounds the improvement effort before anyone
+spends a day on it. **It does NOT retire the re-fit**, because that item is
+about the **+0.361 dB peaking BIAS** at benchmark conditions, which is a
+different failure from the f_peak spread.
+
+**The retracted `20 log10(k)` is now quantified over 1311 designs**, not one:
+closed form median |error| **0.266 dB**, asymptote **1.199 dB** — and the
+asymptote's median BIAS is **+1.199 dB**, i.e. it essentially always
+over-predicts. Session 9c saw 7.66 dB predicted against 0.00 dB realised at a
+single point; this is that effect measured across the box.
+
+**The existence condition falls out of the algebra**: the discriminant needs
+`f_z < f_p1` (automatic, `k > 1`) **and** `f_z < f_p2` — which is session 9c's
+bench finding *"f_z must sit BELOW f_p2 or there is no peak at all"*, derived
+rather than observed. **But it is SENSITIVE, not SPECIFIC**: it holds for
+99.9 % of designs that measured a peak and rejects only **56.6 %** of the 579
+that measured none, against the pre-screen's 84.3 %. So the existence test is
+not a free screen on its own; the f_peak-window test is what does the work.
+
+**FOUR BUGS FIXED IN `task8_blackbox.py`, one of which would have produced a
+wrong published conclusion:**
+1. **Ridge on UNSCALED features.** The matrix spans `cs` ~ 1e-12 to `f_z` ~ 1e9
+   and an L2 penalty is scale-dependent, so "physics regression loses" would
+   have been a numerical artifact. Now `StandardScaler` in a pipeline — and it
+   still loses, at 11.09 %, which is now a real result rather than an artifact.
+2. **The G44 filter was `1e6 < f_pk < 19e9`**, which admits sweep-edge maxima
+   below 19 GHz. Replaced by the interior-peak test `g_pk - g_top > 0.25`:
+   1867 rows -> **1311**.
+3. **One fold, not five**, and no untouched held-out split.
+4. **No boundary-restricted error and no fit wall-clock**, both of which 8b and
+   8f require.
+
+**8b's GroupKFold IS A NO-OP ON THIS FILE and the script now says so out
+loud.** `robust_geometry_data.csv` is **one row per design** — 1311 rows,
+1311 groups — so grouping degenerates to a plain K-fold. There was no leakage
+to prevent and none was prevented. The grouped split is kept so the protocol
+stays correct when per-corner rows arrive.
+
+**Boundary error is BETTER than average error, not worse** (ratio 0.73-0.86
+across every model), which is the opposite of 8b's stated worry and is reported
+as such rather than quietly passed.
+
+**AND THE BLOCKER FOR THE REST OF TASK 8: THE PER-CORNER DATA DOES NOT EXIST.**
+Task 8a's premise — *"we already have roughly 20 205 (design, corner) SPICE
+results from the S9 sweep"* — **is false for this repo.**
+`s9_yield_results.json` kept only COUNTS (`per_point_met`,
+`first_fail_counts`, index lists); the 20 205 individual measurements were
+never written to disk. That is **G49's failure mode one level up: the file is
+tracked, but it only ever stored aggregates.** Inventory of per-corner MEASURED
+rows on disk: `tail_device_data.csv` 261 (a tail-geometry study, not a box
+sample), `cl_range_data.csv` 180 (`gm` only), `baselines_pilot.jsonl` P3 arm
+~240, and the baselines sweep's P3 arm **4 500 when it runs**. **So 8d's
+accept-or-abandon rule — written against WORST-CORNER MAE — is NOT EVALUABLE
+today**, and `task8_blackbox.py` prints that rather than quietly scoring TT and
+calling it a verdict. Either run the sweep or re-run S9 with row-level logging;
+4 500 rows from a rung the pilot suggests is empty may be the worse of the two,
+and that is a human's call.
