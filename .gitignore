@@ -92,6 +92,20 @@ python_models/results/
 # a different circuit in it. It already was once, during session 13's plumbing
 # checks, and was only recoverable because it was tracked.
 #
+# Session 17 (task 6) adds three more, TRACKED, and the reason is stronger than
+# G49's: these are not only inputs to `nebula/RL_SMOKE.md`, they are FREE
+# TRAINING DATA. Every row is a real SKY130 evaluation with a `design_id`, which
+# is exactly what task 8's surrogate needs for a grouped train/test split. The
+# 500-step run cost 26.5 minutes of ngspice; regenerating it to recover rows
+# that were thrown away would cost that twice.
+#   nebula/experiments/rl_smoke_results.json           (gates, calibration, runs)
+#   nebula/experiments/rl_smoke_run_v0.jsonl           (765 evaluations, v0)
+#   nebula/experiments/rl_smoke_run_v1.jsonl           (319 evaluations, v1)
+#   nebula/experiments/rl_smoke_parallel_reversed.json (G71: the SAME sweep with
+#       the worker counts reversed. Kept as a SEPARATE file rather than folded
+#       into the results, because the pair is the evidence -- one of them is a
+#       cold-cache artifact and neither is interpretable alone.)
+#
 # The two still ignored here are ignored DELIBERATELY and at a known cost: the
 # copies on disk are stale relative to the numbers BOUNDS_REDERIVATION.md and
 # CL_SENSITIVITY.md publish, so tracking them would ship a file that disagrees

@@ -1,0 +1,539 @@
+"""
+rl/evaluator.py — one sizing point -> a VALIDATED measurement vector, or a
+named invalidity. Nothing in between.
+
+WHY THIS IS THE HIGHEST-RISK FILE IN THE TASK
+----------------------------------------------
+An RL policy is an adversarial search for regions where the reward is high.
+A garbage result that happens to score well is free reward, so the policy will
+find it and live there — and every one of this repo's documented ngspice
+failure modes produces exactly that: a plausible number, a clean parse, and
+exit code 0.
+
+The catalogue this file is written against, all measured, none of them
+raising anything on their own:
+
+  G26  `let` failures are WARNINGS and the run exits 0
+  G30  `.param` names are not visible as `.control` vectors; exits 0
+  G35  `alter` on subckt geometry returns STALE values; exits 0
+  G54  `.noise` can return `inoise_total = -nan(ind)`; exits 0
+  G56  `mult=` is silently ignored
+  G57  `w=` is silently ignored on the fixed-width resistor families
+  G44  `meas ac MAX` reports the SWEEP EDGE as a peak
+
+The last one is the one an optimiser loves most: a response still rising at
+20 GHz reports a large `peaking_db` at a frequency that is not a peak. Under
+reward v0 (S3 peaking) that is a high score for a circuit with no peak at all.
+
+THE RULE, AND IT HAS NO EXCEPTIONS
+-----------------------------------
+Every evaluation is either **VALID** — every required quantity present, finite,
+physically plausible, operating point inside the rails, both transistors in
+their intended region — or it is **INVALID**, which is a hard negative reward
+and a terminated episode.
+
+An invalid result is NEVER:
+  * a missing value the observation fills with a default,
+  * a clamped value ("the swing can't exceed the supply, so use the supply"),
+  * a retry that quietly succeeds with different numbers.
+
+The retry point deserves its own sentence, because `s9_yield.py` DOES retry
+once and is right to (G45: transient Windows process-launch failures do not
+reproduce). The difference is what the retry is allowed to do. There, a retry
+that succeeds replaces a failure. Here, a retry that succeeds with DIFFERENT
+numbers would mean the environment is non-deterministic in a way the policy
+can exploit, so this module retries only on a **launch-shaped** failure and
+counts every retry as a SPICE call in the cost accounting either way.
+"""
+
+from __future__ import annotations
+
+import math
+import re
+import time
+from dataclasses import dataclass, field
+from typing import Optional, Sequence
+
+from nebula.device.crosscheck import (
+    derived_ac,
+    find_device_scalar,
+    parse_meas,
+    parse_scalar,
+)
+from nebula.device.passives import PassiveGeometry, to_geometry
+from nebula.device.sky130_runner import (
+    Sky130Point,
+    SizingPoint,
+    run_point,
+)
+from nebula.device.tail import TailDevice, TailGeometryError
+from nebula.rl.contract import (
+    CL_CONTEXT_F,
+    TAIL_MIRROR_RATIO,
+    VDD_NOMINAL_V,
+    Sizing,
+    design_id,
+    f_peak_octaves,
+)
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Plausibility limits. Every one is a PHYSICAL bound, not a tuned threshold —
+# a number outside these describes a circuit that does not exist, not a bad
+# design. They are deliberately GENEROUS: this is a validity gate, not a spec
+# check, and tightening it would silently do the reward's job.
+# ─────────────────────────────────────────────────────────────────────────────
+
+#: |H| outside this at any measured frequency is not an amplifier.
+G_DB_LIMITS: tuple[float, float] = (-80.0, 60.0)
+
+#: `meas ac MAX` searches to 20 GHz (`MAX_SEARCH_TOP_HZ`). A peak within this
+#: factor of the edge is not distinguishable from the edge itself, so it is
+#: rejected regardless of `has_interior_peak` — belt and braces on G44, because
+#: G44's own guard is a 0.25 dB margin and 0.25 dB is inside the noise of a
+#: `dec 50` grid.
+F_PEAK_HZ_LIMITS: tuple[float, float] = (1e7, 1.8e10)
+
+#: Input-referred noise. 1 nV_rms would mean the integration collapsed; 1 V_rms
+#: means it diverged. S5's limit is 1.5 mV, three orders inside both.
+NOISE_VRMS_LIMITS: tuple[float, float] = (1e-9, 1.0)
+
+#: Supply current. The box tops out at 8 mA plus a mirror reference; 100 mA
+#: means a short, and <= 0 means the supply is SOURCING current, which for an
+#: NMOS-tail stage means the operating point is not the one requested.
+I_SUPPLY_A_LIMITS: tuple[float, float] = (1e-6, 0.1)
+
+#: How far outside the rails a DC node may sit before the operating point is
+#: rejected. 50 mV of slack absorbs the diode drop of a legitimately-biased
+#: node without admitting a node that has genuinely left the supply.
+RAIL_SLACK_V: float = 0.05
+
+
+class Invalidity(str):
+    """A named reason an evaluation may not become an observation."""
+
+
+@dataclass
+class EvalResult:
+    """One evaluation, validated. `valid=False` => trust NO field.
+
+    Deliberately mirrors `DeviceResult`'s ok/None invariant (`common/types.py`):
+    numeric fields are `None` on failure, never `nan`, because `nan` propagates
+    silently into a reward and `None` explodes on the first arithmetic.
+    """
+
+    valid: bool
+    reason: Optional[str] = None
+    #: The 8 channels of the observation's measurement block, in the units
+    #: `contract.OBS_SCALES` declares.
+    meas: Optional[dict] = None
+    #: Everything else the reward and the log need, raw.
+    raw: dict = field(default_factory=dict)
+    design_id: Optional[str] = None
+    geometry_tag: Optional[str] = None
+    #: SPICE invocations this evaluation consumed, INCLUDING retries. Counted
+    #: here so §6i's budget can never miss one.
+    n_spice: int = 0
+    seconds: float = 0.0
+    #: Raw ngspice stdout+stderr, kept only when `keep_raw_text=True`, for the
+    #: §6d independent cross-check sample.
+    text: Optional[str] = None
+
+    @classmethod
+    def invalid(cls, reason: str, n_spice: int = 0, seconds: float = 0.0,
+                design_id_: Optional[str] = None,
+                geometry_tag: Optional[str] = None) -> "EvalResult":
+        if not reason or not reason.strip():
+            raise ValueError("an invalid result must name its reason")
+        return cls(valid=False, reason=reason, meas=None, n_spice=n_spice,
+                   seconds=seconds, design_id=design_id_,
+                   geometry_tag=geometry_tag)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Geometry.
+# ─────────────────────────────────────────────────────────────────────────────
+
+
+def geometry_tag(geo: PassiveGeometry) -> str:
+    """A stable, human-readable key for one drawn passive set.
+
+    Used as part of `design_id` so two continuous `rs` values that quantise
+    onto the same resistor group together — they are the same silicon.
+    """
+    def _r(g) -> str:
+        return f"{g.subckt.rsplit('__', 1)[-1]}:w{g.w_um:g}l{g.l_um:g}m{g.m}"
+    return f"rs[{_r(geo.rs)}]cs[{_r(geo.cs)}]rl[{_r(geo.rl)}]"
+
+
+def build_point(sizing: Sizing, corner: str = "tt",
+                vdd_scale: float = 1.0) -> tuple[SizingPoint, PassiveGeometry]:
+    """Sizing -> a `SizingPoint` carrying a real tail and drawn passives.
+
+    Raises rather than returning a bad point: an ungrowable geometry is an
+    invalidity the CALLER must name, and swallowing it here would let it become
+    a silent default.
+    """
+    geo = to_geometry(sizing.params["rs"], sizing.params["cs"],
+                      sizing.params["rl"])
+    tail = TailDevice(w_tail=sizing.w_tail_um, l_tail=sizing.l_tail_um,
+                      nf_tail=sizing.nf_tail, mirror_ratio=TAIL_MIRROR_RATIO)
+    point = SizingPoint.from_params(sizing.params,
+                                    vdd=VDD_NOMINAL_V * vdd_scale,
+                                    tail=tail, passives=geo)
+    return point, geo
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Validation. Every check names what it rejects and why it is not a spec.
+# ─────────────────────────────────────────────────────────────────────────────
+
+
+def _finite(name: str, v) -> Optional[str]:
+    if v is None:
+        return f"{name} is missing from the ngspice output"
+    if not isinstance(v, (int, float)) or isinstance(v, bool):
+        return f"{name} parsed as {type(v).__name__}, not a number"
+    if not math.isfinite(float(v)):
+        return f"{name} is {v} — nan/inf must never reach an observation (G54)"
+    return None
+
+
+def validate(pt: Sky130Point, point: SizingPoint) -> Optional[str]:
+    """`None` if the result may become an observation, else the reason.
+
+    Order matters: presence, then finiteness, then plausibility, then the
+    operating point, then the device regions. A later check may assume the
+    earlier ones passed, which is what keeps each one readable.
+    """
+    if not pt.ok:
+        return f"ngspice: {pt.fail_reason}"
+
+    # ---- 1. required vectors present and finite -----------------------------
+    required = {
+        "gm": pt.gm, "gmbs": pt.gmbs, "vth": pt.vth, "vds": pt.vds,
+        "vdsat": pt.vdsat, "vgs": pt.vgs, "id_a": pt.id_a,
+        "v_out_dc": pt.v_out_dc, "v_src_dc": pt.v_src_dc,
+        "i_supply_a": pt.i_supply_a,
+        "g_dc_db": pt.g_dc_db, "g_nyq_db": pt.g_nyq_db, "g_pk_db": pt.g_pk_db,
+        "f_pk_hz": pt.f_pk_hz, "g_top_db": pt.g_top_db,
+        "vn_in_vrms": pt.vn_in_vrms,
+        # The tail is not optional here. `run_point` already fails a run whose
+        # tail did not parse, but an evaluator that would ACCEPT a missing tail
+        # margin is one `tail=None` away from scoring the coupled inequality as
+        # satisfied-by-absence.
+        "vds_tail": pt.vds_tail, "vdsat_tail": pt.vdsat_tail,
+        "i_tail_meas_a": pt.i_tail_meas_a, "gm_tail": pt.gm_tail,
+    }
+    for name, value in required.items():
+        why = _finite(name, value)
+        if why:
+            return why
+
+    # ---- 2. operating point inside the rails --------------------------------
+    #
+    # THE DC OPERATING POINT IS CHECKED BEFORE THE AC RESULT, and the order is
+    # load-bearing rather than stylistic. If the bias point is wrong then every
+    # small-signal number describes a different circuit, so "the pair is in
+    # triode" is the TRUE cause and "f_pk is at the search edge" is a
+    # downstream symptom of it. The first version of this function checked the
+    # AC plausibility first and reported design 432 with `rl` at the box
+    # ceiling as an f_peak-range failure, when what had actually happened was
+    # that the load drop took the pair out of saturation. A validity gate that
+    # names a symptom sends whoever reads the log to the wrong file.
+    vdd = float(point.vdd)
+    for name, v in (("v(outp)", pt.v_out_dc), ("v(s1)", pt.v_src_dc),
+                    ("v(nbias)", pt.v_bias_dc)):
+        if v is None:
+            continue
+        if not (-RAIL_SLACK_V <= float(v) <= vdd + RAIL_SLACK_V):
+            return (f"DC node {name} = {float(v):.4f} V is outside the rails "
+                    f"[{-RAIL_SLACK_V:.2f}, {vdd + RAIL_SLACK_V:.2f}] V")
+
+    # ---- 3. both transistors in the intended region -------------------------
+    #
+    # Saturation is a VALIDITY condition, not a spec: outside it the
+    # small-signal numbers describe a circuit that is not amplifying, so
+    # peaking and noise read off it are answers to a different question.
+    # `s9_yield.check_specs` gives it a row for exactly this reason.
+    if not (float(pt.vds) > float(pt.vdsat)):
+        return (f"input pair is in TRIODE: vds {float(pt.vds):.4f} V <= vdsat "
+                f"{float(pt.vdsat):.4f} V — the small-signal result describes "
+                f"a circuit that is not amplifying")
+    if not (float(pt.vds_tail) > float(pt.vdsat_tail)):
+        return (f"tail is in TRIODE: vds_tail {float(pt.vds_tail):.4f} V <= "
+                f"vdsat_tail {float(pt.vdsat_tail):.4f} V — the tail is not "
+                f"delivering its current")
+    if float(pt.gm) <= 0.0:
+        return f"gm = {float(pt.gm):.4g} S is not positive — the device is off"
+
+    # ---- 4. plausibility, and the G44 fictitious peak -----------------------
+    #
+    # **The G44 half only**, NOT `has_interior_peak`. The two halves of that
+    # property reject different things and only one of them is a broken
+    # measurement (see `Sky130Point.peak_is_sweep_edge`):
+    #
+    #   * still RISING at 20 GHz -> `meas ac MAX` returned the range edge and
+    #     `peaking_db` is FICTITIOUS AND LARGE. That is free reward for a
+    #     circuit with no peak, and it is exactly what an adversarial search
+    #     finds first. Reject.
+    #   * a genuine interior maximum that is merely SMALL (rs = 50 ohm gives
+    #     0.165 dB at 1.318 GHz) -> nothing is wrong with the measurement; the
+    #     circuit simply does not equalise. ACCEPT, and let the reward score it
+    #     as the large S3 shortfall it is.
+    #
+    # The first version of this gate rejected both, which made every low-boost
+    # design INVALID — i.e. it erased the reward gradient over the whole
+    # bottom of the box, which is where a randomly initialised policy starts,
+    # and it made §6f's "flat" reference indistinguishable from its "op fails"
+    # reference. Found by the §6f calibration, which is what §6f is for.
+    lo, hi = G_DB_LIMITS
+    for name, v in (("g_dc_db", pt.g_dc_db), ("g_nyq_db", pt.g_nyq_db),
+                    ("g_pk_db", pt.g_pk_db), ("g_top_db", pt.g_top_db)):
+        if not lo <= float(v) <= hi:
+            return f"{name} = {float(v):.3g} dB is outside [{lo}, {hi}] — not an amplifier"
+
+    # THE SWEEP-EDGE TEST COMES BEFORE THE f_peak RANGE TEST, for the same
+    # reason the operating point comes before the AC result: it names the
+    # MECHANISM rather than the symptom. A response still rising at 20 GHz
+    # reports `f_pk` near the edge, so the range test fires too — and then the
+    # log says "f_pk out of range", which reads as a numerical oddity, instead
+    # of "the peak is fictitious", which is what actually happened. Measured on
+    # the first trial run: 6 of 6 invalid evaluations were reported by the
+    # range test and the mechanism was invisible.
+    if pt.peak_is_sweep_edge:
+        return (f"the reported peak IS the sweep edge: f_pk "
+                f"{float(pt.f_pk_hz):.4g} Hz, g_pk - g_top "
+                f"{float(pt.g_pk_db) - float(pt.g_top_db):+.3f} dB. The "
+                f"response is still rising at the top of the search range, so "
+                f"peaking {pt.peaking_db:.3f} dB is fictitious (G44)")
+
+    lo, hi = F_PEAK_HZ_LIMITS
+    if not lo <= float(pt.f_pk_hz) <= hi:
+        return (f"f_pk = {float(pt.f_pk_hz):.4g} Hz is outside "
+                f"[{lo:.3g}, {hi:.3g}] — a peak below 10 MHz means `meas ac "
+                f"MAX` returned the BOTTOM of its range on a monotonically "
+                f"falling response (G44's other half)")
+
+    lo, hi = NOISE_VRMS_LIMITS
+    if not lo <= float(pt.vn_in_vrms) <= hi:
+        return (f"inoise_total = {float(pt.vn_in_vrms):.4g} V_rms is outside "
+                f"[{lo:.3g}, {hi:.3g}] — the integration collapsed or diverged")
+
+    lo, hi = I_SUPPLY_A_LIMITS
+    if not lo <= float(pt.i_supply_a) <= hi:
+        return (f"i_supply = {float(pt.i_supply_a):.4g} A is outside "
+                f"[{lo:.3g}, {hi:.3g}]; <= 0 means VDD is SOURCING current, "
+                f"i.e. this is not the requested operating point")
+
+    return None
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# The evaluator.
+# ─────────────────────────────────────────────────────────────────────────────
+
+#: Failure reasons that are LAUNCH-shaped and are the only ones retried (G45).
+#: A retry on anything else would let the environment be non-deterministic in a
+#: way the policy can exploit.
+_TRANSIENT = re.compile(
+    r"ngspice launch failed|ngspice timeout|unreadable swing\.txt", re.I)
+
+
+@dataclass
+class SpiceBudget:
+    """§6i's counter. EVERY invocation, including setup and discards.
+
+    Kept as an object rather than a module global so two environments in one
+    process cannot silently share a budget, and so a test can assert on it.
+    """
+
+    calls: int = 0
+    seconds: float = 0.0
+
+    def charge(self, n: int, seconds: float) -> None:
+        self.calls += int(n)
+        self.seconds += float(seconds)
+
+
+def evaluate(
+    sizing: Sizing,
+    budget: SpiceBudget,
+    corner: str = "tt",
+    temp_c: float = 27.0,
+    vdd_scale: float = 1.0,
+    keep_raw_text: bool = False,
+) -> EvalResult:
+    """One sizing point -> a validated measurement vector, or a named reason.
+
+    NEVER RAISES for anything a policy can cause. A geometry the PDK cannot
+    build, a target below the poly head-resistance floor, a tail outside the
+    bin ceiling — all of them are invalidities with names, because §8 rule 2
+    says the RL loop cannot tolerate exceptions and every one of these is
+    reachable from inside the box.
+    """
+    t0 = time.perf_counter()
+    try:
+        point, geo = build_point(sizing, corner=corner, vdd_scale=vdd_scale)
+    except (ValueError, TailGeometryError) as exc:
+        # `to_geometry` REJECTS rather than clamps (PASSIVES.md §4.3), and a
+        # clamped geometry is how an undrawable device ends up in a netlist
+        # that simulates fine. So this branch is the gate working, not a bug.
+        return EvalResult.invalid(
+            f"unrealisable geometry: {exc}", n_spice=0,
+            seconds=time.perf_counter() - t0,
+            design_id_=design_id(sizing))
+
+    tag = geometry_tag(geo)
+    did = design_id(sizing, tag)
+
+    n_spice = 0
+    pt = run_point(point, corner=corner, temp_c=temp_c, swing=False)
+    n_spice += 1
+    if not pt.ok and _TRANSIENT.search(pt.fail_reason or ""):
+        pt = run_point(point, corner=corner, temp_c=temp_c, swing=False)
+        n_spice += 1
+    dt = time.perf_counter() - t0
+    budget.charge(n_spice, dt)
+
+    why = validate(pt, point)
+    if why is not None:
+        return EvalResult.invalid(why, n_spice=n_spice, seconds=dt,
+                                  design_id_=did, geometry_tag=tag)
+
+    # Everything below is arithmetic on validated primitives, in Python
+    # (G26/G30: no derived quantity is computed in `.control`).
+    power_w = pt.power_measured_w
+    meas = {
+        "g_dc_db": float(pt.g_dc_db),
+        "peaking_db": float(pt.peaking_db),
+        "f_peak_oct": f_peak_octaves(float(pt.f_pk_hz)),
+        "nyq_boost_db": float(pt.nyquist_boost_db),
+        "inoise_vrms": float(pt.vn_in_vrms),
+        "power_w": float(power_w),
+        "pair_margin_v": float(pt.vds) - float(pt.vdsat),
+        "tail_margin_v": float(pt.tail_margin_v),
+    }
+    raw = {
+        "f_pk_hz": float(pt.f_pk_hz),
+        "g_nyq_db": float(pt.g_nyq_db), "g_pk_db": float(pt.g_pk_db),
+        "g_top_db": float(pt.g_top_db),
+        "gm": float(pt.gm), "gmbs": float(pt.gmbs), "gds": float(pt.gds),
+        "vth": float(pt.vth), "vds": float(pt.vds), "vdsat": float(pt.vdsat),
+        "vgs": float(pt.vgs), "id_a": float(pt.id_a),
+        "v_out_dc": float(pt.v_out_dc), "v_src_dc": float(pt.v_src_dc),
+        "i_supply_a": float(pt.i_supply_a),
+        "i_tail_meas_a": float(pt.i_tail_meas_a),
+        "vds_tail": float(pt.vds_tail), "vdsat_tail": float(pt.vdsat_tail),
+        "gm_tail": float(pt.gm_tail),
+        "mirror_gain_error": pt.mirror_gain_error,
+        # The REALISED passive values, not the requested ones. The reward and
+        # the log must be able to tell a quantisation error from a design move.
+        "rs_actual_ohm": geo.rs.r_actual_ohm,
+        "cs_actual_f": geo.cs.c_actual_f,
+        "rl_actual_ohm": geo.rl.r_actual_ohm,
+        "rs_rel_error": geo.rs.rel_error,
+        "cs_rel_error": geo.cs.rel_error,
+        "rl_rel_error": geo.rl.rel_error,
+        "f_zero_error_octaves": geo.f_zero_error_octaves(),
+        "w_tail_um": sizing.w_tail_um, "nf_tail": sizing.nf_tail,
+        "runtime_s": pt.runtime_s,
+    }
+    return EvalResult(valid=True, meas=meas, raw=raw, design_id=did,
+                      geometry_tag=tag, n_spice=n_spice, seconds=dt,
+                      text=None)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# §6d's independent cross-check.
+# ─────────────────────────────────────────────────────────────────────────────
+
+
+@dataclass(frozen=True)
+class CrossCheck:
+    """One evaluation re-derived from raw SPICE text by a second code path."""
+
+    design_id: str
+    agrees: bool
+    detail: str
+    worst_rel: float
+
+
+def independent_recompute(text: str) -> dict:
+    """Re-derive the AC quantities from raw ngspice output, via `crosscheck.py`.
+
+    Deliberately a DIFFERENT path from `evaluate`: `crosscheck.derived_ac`
+    parses the `meas` lines itself and computes `peaking_db` and
+    `nyquist_boost_db` from its own `DerivedAc`, so agreement is evidence that
+    the parse and the arithmetic are both right rather than that one function
+    is self-consistent.
+
+    Raises `SilentFailure` on warning-shaped failures, which is the point:
+    `derived_ac` refuses to run on output that printed one.
+    """
+    d = derived_ac(text)
+    return {
+        "g_dc_db": d.g_dc_db,
+        "peaking_db": d.peaking_db,
+        "nyq_boost_db": d.nyquist_boost_db,
+        "f_pk_hz": d.f_pk_hz,
+        "inoise_vrms": parse_scalar(text, "inoise_total"),
+        "gm": find_device_scalar(text, "gm"),
+    }
+
+
+def cross_check_sample(sizing: Sizing, budget: SpiceBudget,
+                       rel_tol: float = 1e-9) -> CrossCheck:
+    """Re-run one sizing point and recompute it independently.
+
+    This costs a SPICE call and it is CHARGED to the budget (§6i: every
+    invocation, including those spent on setup or discarded work). A
+    cross-check that did not appear in the cost accounting would flatter the
+    steps-per-hour number by exactly the sampling rate.
+    """
+    ev = evaluate(sizing, budget, keep_raw_text=True)
+    if not ev.valid:
+        return CrossCheck(ev.design_id or "?", False,
+                          f"evaluation invalid: {ev.reason}", math.nan)
+    # A SECOND RUN, not a cached one. Two things that only a re-run can catch:
+    # a simulator that is not deterministic for a fixed netlist, and a parse
+    # that depends on something outside the netlist. It costs a SPICE call and
+    # the call is CHARGED (§6i counts every invocation, including this one).
+    point, _ = build_point(sizing)
+    t0 = time.perf_counter()
+    pt = run_point(point, swing=False, keep_text=True)
+    budget.charge(1, time.perf_counter() - t0)
+    if not pt.ok:
+        return CrossCheck(ev.design_id or "?", False,
+                          f"cross-check re-run failed: {pt.fail_reason}", math.nan)
+
+    # THE INDEPENDENT PATH: `crosscheck.derived_ac` re-parses the raw text and
+    # forms `peaking_db` / `nyquist_boost_db` from its own `DerivedAc`, so
+    # agreement is evidence that the parse AND the arithmetic are right —
+    # rather than evidence that one function agrees with itself.
+    ref = independent_recompute(pt.raw_text or "")
+    mine = {
+        "g_dc_db": ev.meas["g_dc_db"], "peaking_db": ev.meas["peaking_db"],
+        "nyq_boost_db": ev.meas["nyq_boost_db"],
+        "f_pk_hz": ev.raw["f_pk_hz"], "inoise_vrms": ev.meas["inoise_vrms"],
+        "gm": ev.raw["gm"],
+    }
+    worst, where = 0.0, ""
+    for k in ref:
+        a, b = float(ref[k]), float(mine[k])
+        denom = max(abs(a), abs(b), 1e-30)
+        rel = abs(a - b) / denom
+        if rel > worst:
+            worst, where = rel, k
+    agrees = worst <= rel_tol
+    detail = ("exact" if worst == 0.0
+              else f"worst {worst:.3g} relative on {where}")
+    return CrossCheck(ev.design_id or "?", agrees, detail, worst)
+
+
+__all__: Sequence[str] = (
+    "EvalResult", "SpiceBudget", "CrossCheck",
+    "evaluate", "validate", "build_point", "geometry_tag",
+    "independent_recompute", "cross_check_sample",
+    "G_DB_LIMITS", "F_PEAK_HZ_LIMITS", "NOISE_VRMS_LIMITS",
+    "I_SUPPLY_A_LIMITS", "RAIL_SLACK_V",
+)

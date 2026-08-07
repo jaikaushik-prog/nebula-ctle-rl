@@ -12,7 +12,75 @@
 > discovered to the Gotchas section. A change without a handoff update is an
 > incomplete change.
 
-Last updated: **2026-08-07** (session 16: **the channel is a derived family
+Last updated: **2026-08-07** (session 17: **the RL loop runs end to end, and
+the six things that broke are the deliverable.** 500 PPO steps at TT with REAL
+drawn passives (`to_geometry()` in the loop from the outset, so the output is a
+schematic), 26.5 min, 793 SPICE calls, 765 evaluations. **NO CONCLUSION ABOUT
+LEARNING IS DRAWN** — mean episode return goes -2.98 / -6.16 / -4.54 / -3.09 /
+-0.50 across five buckets, non-monotone, and nothing was tuned to improve it.
+**THE HEADLINE IS THE FAILURE CATALOGUE.** Four of the six produce a plausible
+number and raise nothing. The worst: **`has_interior_peak` is a CONJUNCTION
+whose two terms reject different kinds of thing (G64)** — one is G44's
+fictitious peak (`rl`=800: 1.08 dB of "peaking" at 19.95 GHz, `g_pk-g_top` =
+-0.001), the other is a genuine-but-small maximum (`rs`=50: 0.165 dB at
+1.318 GHz, a correct measurement of a circuit that does not equalise) — so
+using it as a validity gate put the reward FLOOR across the whole low-peaking
+bottom of the box, which is exactly where a random policy starts. Split into
+`peak_is_sweep_edge`; `has_interior_peak` UNCHANGED because three experiments
+publish counts with it. Then **`alter` fails silently on an element the netlist
+no longer CONTAINS (G63)** — with drawn passives there is no `Rdeg`, so all 67
+sweep settings return the FIRST geometry's numbers, exit 0. Then **two gates
+that failed for the WRONG reason (G68)**: a one-sided sensitivity probe called
+`i_bias` INERT when it had merely left the feasible region, and validity checks
+ordered symptom-before-cause hid **159 of 203 invalidities** behind the wrong
+label. Then **`shutil.which` cannot find this project's ngspice (G69)**, so the
+only end-to-end test was silently skipping — and a skip reports as a pass.
+**THE MEASUREMENT THAT JUSTIFIES THE WHOLE POISON-SAFE EVALUATOR: 78% of
+everything the policy found was G44 (G65)** — 26.5% invalid overall, split
+`peak_is_sweep_edge` 159 / `tail_triode` 28 / `pair_triode` 16 / nothing else,
+and under a reward reading S3 peaking every one of those 159 would have scored
+HIGH for a circuit with no peak. **THE 4d REGRESSION IS RUN AND IT MOVES A
+PUBLISHED VERDICT (G66):** drawn passives shift `f_peak` by **0.1329 octaves
+against the 0.12 octaves of centring slack** that selected design 432, always
+in the same direction, via the `res_po` bottom plate putting **+1.4 to +24.3 fF
+on a 32.6 fF `cl` (up to +75%)** while `g_dc` moves 0.0006 dB — **so the load
+and corner screens both need re-running before "1 in 1890 is
+corner-and-load-robust" can be repeated.** Also **`to_geometry` is
+electrically stable and geometrically CHAOTIC (G67)**: 0.016% change in `rs`
+flips the device, **15x area spread across a 0.16% resistance spread**, so
+`PASSIVES.md`'s 1506 um^2 is a property of the quantiser. **WHERE THE WALL
+CLOCK GOES, measured for the first time: 99.7% is the simulator** (env 1585.8 s
+vs PPO update 3.5 s), and the extended trim costs **2.07 s/eval against
+~0.33 s** on the nfet-only one — **making `PASSIVES.md` §6 item 6 the highest-
+value throughput item in the project**, with a number behind it at last. Cost
+accounting DEFINED and binding afterwards: every invocation counted including
+setup and discards — **1.586 sims/step, 1132 steps/hour**. **G70: one
+concurrent ngspice makes each run 4.8x slower**, which invalidated this
+session's own reward-v1 timings (discarded; only its load-independent results
+are quoted). §6f's calibration orders correctly — 432 **+8.951 FEASIBLE**, flat
+**-1.155**, op-fail **-8.000 exactly at the floor** — but did NOT before the
+fixes above. §6e: **9/9 action dimensions live**, and `vcm_in` is a **6x
+stronger lever on the tail margin than `tail_j`**, which is evidence FOR
+`TAIL_DEVICE.md` §6's "do not search the tail". §6b: nothing broke removing the
+mocks (they were already test-only), and the check runs in a SUBPROCESS with a
+companion test proving it can fail; the real risk it pins is that **the link
+layer is a mock end to end, so S8 CANNOT be in the reward**. **THE SEVENTH
+FAILURE, caught by arithmetic rather than by a gate (G71): the parallel sweep
+reported 4.39x at 11 workers — BETTER than G48's 3.18x — and the tell was that
+2 workers reported 2.55x, which two processes cannot do.** The 1-worker pass
+ran FIRST on a cold file cache; reversing the order drops the baseline 2.7x and
+the honest answer is **2.64x at 8 workers with 11 SLOWER than 8**, i.e. the
+extended library scales WORSE than the nfet-only one and the curve turns down.
+**The v1 wiring pass found a third category §6h has no name for: `saturation`
+and `tail_saturation` are WIRED but structurally unable to be VIOLATED**, since
+a triode design is rejected by the validity gate before the reward sees it — so
+their gradient lives only in the feasible branch's margin term, and the
+retraction's "tail needs its own shortfall" argument is delivered instead by the
+ungraded invalid floor. Recommendation (a human's, rule 6): accept it, because
+grading a triode design's small-signal numbers would be grading fiction (G24's
+precedent). `params.py` untouched (rule 6). **1007 -> 1242 green.** Full
+write-up `nebula/RL_SMOKE.md`; new gotchas **G63-G71**.
+Earlier session 16: **the channel is a derived family
 now, not an invented constant — and the compression verdict it decided is
 worse than the number it replaces, not better.** `CHANNEL_DC_LOSS_DB = 1.0`
 had no provenance, its own docstring said a human had to replace it, and
@@ -658,6 +726,46 @@ signaling, ADC-based DSP receiver, 28 nm CMOS reference parameters).
 │   ├── link/mock.py        SYNTHETIC device->link bridge. Equalises the
 │   │                       BURDEN (channel tilt - TX tilt), not the raw tilt.
 │   ├── rl/reward.py        §9 shortfall reward, worst-corner aggregation.
+│   │                       KEPT: it is the CLAUDEwa §9 contract. Superseded
+│   │                       for the RL loop by reward_v1.py — see HANDOFF §8's
+│   │                       reward retraction.
+│   ├── rl/contract.py      THE ENVIRONMENT CONTRACT (session 17). Nine
+│   │                       ActionDims with per-edge provenance (7 copied
+│   │                       verbatim from s3_yield.PROPOSED_BOX, 2 from
+│   │                       TAIL_DEVICE.md §6 — params.py untouched, rule 6),
+│   │                       the 20-dim observation layout, and the FIXED
+│   │                       normalisation scales. nf_in is fixed at 4 (G38) and
+│   │                       the tail is a current DENSITY, not a width.
+│   ├── rl/evaluator.py     THE POISON-SAFE EVALUATOR. One sizing point -> a
+│   │                       validated measurement vector or a NAMED invalidity;
+│   │                       nothing in between. Checks run cause-before-symptom
+│   │                       (G68). Owns SpiceBudget, which counts EVERY
+│   │                       invocation including setup and discards.
+│   ├── rl/env.py           The episode: horizon 8, early-terminate on success,
+│   │                       terminate on an invalidity (never default, never
+│   │                       retry into a different answer). gym-SHAPED, no gym
+│   │                       dependency — neither gymnasium nor SB3 is installed.
+│   ├── rl/reward_v1.py     The §6h shape: sum of clipped shortfalls while
+│   │                       infeasible, B + min margin once feasible. Seven
+│   │                       tolerances in units where 1.0 means "meaningfully
+│   │                       off", each quoted. NO analytic quantity in the path.
+│   ├── rl/ppo.py           Minimal PPO in torch, ~150 lines. Every constant is
+│   │                       a PPO-paper or SB3 default, written down. NOTHING
+│   │                       TUNED. Worth 0.2% of a run's wall clock (G65 note).
+│   ├── rl/runlog.py        JSONL run log. Row 0 is a HEADER row, not a separate
+│   │                       file, so a log cannot be read without its conditions.
+│   ├── device/netlist_gates.py  §6a's two gates, on the ASSEMBLED netlist text:
+│   │                       `w` on a fixed-width resistor family (G57) and
+│   │                       `mult`/`mf` != 1 (G56). Both are ACCEPTED by ngspice,
+│   │                       IGNORED by the model, and followed by exit 0.
+│   ├── experiments/rl_smoke.py  session 17, task 6. Five stages, each gating
+│   │                       the next: --regression-4d (PASSIVES.md §6 item 1),
+│   │                       --sensitivity (BLOCKING), --calibrate, --train,
+│   │                       --parallel. Owns the three §6f reference designs.
+│   ├── experiments/rl_smoke_run_v0.jsonl  TRACKED ON PURPOSE (G49). 782 rows,
+│   │                       1.5 MB: every (action, sizing, geometry, raw result,
+│   │                       validated result, reward) with a design_id — free
+│   │                       training data for task 8's surrogate.
 │   └── tests/              228 tests, <1 s. Run: python -m pytest nebula/tests -q
 ├── tests/                  pytest suite — 92 tests, ~1.5 min. THE safety net.
 │   │                       Run from REPO ROOT: python -m pytest tests -q
@@ -1129,6 +1237,19 @@ Plus: git init, .gitignore, 28 tests, Wilson-bound BER reporting.
   fibre-weave skew. Reflections are the ISI a DFE handles worst, and the stated
   probe in `CHANNEL_MODEL.md` §8 shows they push the 12 dB channel-only eye
   below S8's 100 mV floor. Every ISI number from that family is a lower bound.
+- **(nebula) EVERY corner and load result in this project holds the passives
+  IDEAL, and session 17 measured that this is not a small assumption.** Drawn
+  SKY130 devices move `f_peak` by up to **0.1329 octaves** — more than the
+  **0.12 octaves** of centring slack that selected the sole load-robust design
+  — in a single direction, via the `res_po` bottom-plate parasitic
+  (G66, `RL_SMOKE.md` §7). The load screen and the corner screen both need
+  re-running before design 432 can be quoted as load-robust.
+- **(nebula) The RL results are TT-only, one seed, one spec target, 500
+  steps.** `RL_SMOKE.md` establishes that the plumbing works and what breaks;
+  it establishes **nothing about learning**, and its §11 says so explicitly.
+  S4, S7 and S8 are not in the reward — for stated reasons, and in S8's case
+  because the link layer is a mock end to end and a training run structurally
+  cannot reach it.
 - **(nebula) The peak-distortion compression bound is a WORST-CASE pattern.**
   Real PCIe traffic is 8b/10b-coded and run-length-limited, so the true peak
   excursion is smaller. Convention C is the right bound; the gap to typical
@@ -1223,6 +1344,44 @@ Plus: git init, .gitignore, 28 tests, Wilson-bound BER reporting.
      3 dB and 12 dB endpoints of S3's own tunable range, so the rule belongs
      on the search and not on the deliverable. Whether those endpoints are
      corner-robust AT ALL in this topology is unmeasured and worth asking.
+   - **>>> THE LOOP RUNS, AND THE 4d REGRESSION MOVED A PUBLISHED VERDICT.
+     <<<** (Session 17, task 6, `nebula/RL_SMOKE.md`.) 500 PPO steps at TT with
+     REAL drawn passives, 26.5 min, 793 SPICE calls. **No conclusion about
+     learning is drawn and none is offered.** What it established, in priority
+     order for whoever picks this up:
+     1. **RE-RUN THE LOAD AND CORNER SCREENS WITH DRAWN PASSIVES.** The 4d
+        regression `PASSIVES.md` §6 listed first had never been run. It now
+        has: drawn passives move `f_peak` by **0.1329 octaves** against the
+        **0.12 octaves of centring slack** that made design 432 the sole
+        load-robust survivor (G66). The mechanism is the predicted `res_po`
+        bottom plate — **+1.4 to +24.3 fF on a 32.6 fF `cl`, up to +75 %** —
+        and every shift is in the same direction. **Until this re-run happens,
+        "one design in 1890 is corner-and-load-robust" is an ideal-passive
+        statement.**
+     2. **`PASSIVES.md` §6 item 6 is the highest-value throughput item**, and
+        now there is a number behind it: **99.7 % of a training run is the
+        simulator** (environment 1585.8 s, PPO update 3.5 s, logging 0.9 s),
+        and the extended trim costs **2.07 s/evaluation against ~0.33 s** on
+        the nfet-only one for the same netlist. Trimming
+        `parameters/typical.spice` and `invariant.spice` is worth roughly 6x on
+        the inner loop; optimising the RL side is worth nothing.
+     3. **The G44 guard is load-bearing, not defensive.** 78 % of everything
+        the policy found — 159 of 203 invalid evaluations — was a fictitious
+        peak at the sweep edge (G65), each of which would have scored HIGH
+        under a reward that reads S3 peaking.
+     4. **`to_geometry` is geometrically chaotic** (G67): a 0.016 % change in
+        `rs` flips the device, giving a **15x area spread across a 0.16 %
+        resistance spread**. `PASSIVES.md` §4.5's 1506 um^2 is a property of
+        the quantiser as much as of design 432, and task 8's `design_id`
+        grouping will be fine-grained rather than coarse.
+     5. **The tail may not be worth searching after all, with a number.**
+        `vcm_in` is a **6x stronger lever on the tail margin** than `tail_j`
+        is, on the quantity the tail geometry exists to control — which is
+        evidence FOR `TAIL_DEVICE.md` §6's recommendation, and it is a human's
+        call.
+     Open from this task: `--parallel` against G48; a second seed; and the
+     obvious next experiment, which is **not** more PPO steps but the corner
+     axis, since every number above is TT-only.
    - **Approve or amend the proposed box**, then copy it into
      `common/params.py::BOUNDS`. The `cl` dimension is recommended to be
      **removed from the SEARCH and replaced by a screened CONTEXT RANGE**,
@@ -1989,6 +2148,183 @@ Plus: git init, .gitignore, 28 tests, Wilson-bound BER reporting.
   Markdown check uses an explicit allowlist of the files that record the
   history rather than banning the string outright. A gate that cannot pass is
   indistinguishable from a gate that is ignored.
+
+- **G63 — (nebula) `alter` fails silently on an element the netlist no longer
+  CONTAINS, and returns the previous geometry's numbers.** G35 is about `alter`
+  on a subckt-wrapped device. This is the other half: once
+  `SizingPoint.passives` carries drawn devices, the ideal `Rdeg`/`Cdeg`
+  instances do not exist at all, so `run_tunable_sweep`'s `alter Rdeg = ...`
+  matches nothing. ngspice reports it as a **warning**, carries on, and
+  **exits 0** (G26) — and all 67 settings come back carrying the FIRST
+  geometry's numbers. A converged-looking sweep of a single point, at 13.6 ms
+  per "setting", with a monotone-looking table at the end.
+  **`run_tunable_sweep` now REFUSES `passives is not None`** and says so in the
+  failure string; a test pins it. Generalise: `alter` is only safe on an
+  element you can prove is in the netlist you just wrote, and the netlist is
+  now a function of two independent switches (`tail`, `passives`).
+- **G64 — (nebula) a validity guard built for one failure was silently doing a
+  second job, and the second job erased the reward gradient over half the box.**
+  `Sky130Point.has_interior_peak` is a CONJUNCTION:
+
+        peaking_db > 0.25            AND        (g_pk_db - g_top_db) > 0.25
+
+  The right-hand condition is G44 — a response still RISING at 20 GHz, where
+  `meas ac MAX` returns the range edge and `peaking_db` is **fictitious and
+  large**. Measured: `rl` = 800 ohm at 3.25 mA reports **1.08 dB of "peaking"
+  at 19.95 GHz** with `g_pk - g_top` = -0.001 dB.
+  The left-hand condition rejects something completely different: a **genuine
+  interior maximum that is merely SMALL**. Measured: `rs` = 50 ohm reports
+  **0.165 dB at 1.318 GHz** with `g_pk - g_top` = 9.23 dB. Nothing about that
+  measurement is wrong — the circuit simply does not equalise.
+  Using the conjunction as an RL validity gate made **every low-boost design
+  INVALID**, i.e. it put the reward floor across the entire bottom of the
+  parameter box — which is exactly where a randomly initialised policy starts,
+  so the policy would have seen a flat floor and had nothing to climb. It also
+  made the "flat" and "operating point fails" calibration references score
+  IDENTICALLY, which is what surfaced it.
+  **Fix: `Sky130Point.peak_is_sweep_edge` carries the G44 half alone** and is
+  what `rl/evaluator.validate` uses. `has_interior_peak` keeps both halves
+  UNCHANGED, because `s3_yield.py`, `s9_yield.py` and `robust_geometry.py`
+  publish counts computed with it. **Generalise: before reusing a boolean as a
+  gate, check whether it is a conjunction, and whether every term of it rejects
+  the same KIND of thing.**
+- **G65 — (nebula) 78% of everything an RL policy finds is G44.** Measured over
+  a 500-step PPO run at TT with real passives: 765 evaluations, **203 invalid
+  (26.5%)**, of which
+
+        peak_is_sweep_edge   159   78.3%
+        tail_triode           28   13.8%
+        pair_triode           16    7.9%
+        everything else        0
+
+  Under a reward that scores S3 peaking, **every one of those 159 would have
+  been a HIGH reward for a circuit with no peak at all** — a large fictitious
+  `peaking_db` read off the sweep edge. So the G44 guard is not defensive
+  programming; it is load-bearing, and it is doing four fifths of its work
+  against one failure mode. The invalid rate did NOT rise over the run (28.8%
+  first half, 24.3% second), but 500 steps cannot distinguish a trend from
+  noise and the useful output is the histogram, not the trend. **Bucket
+  invalidities by MECHANISM from the first run**: a single aggregate rate says
+  the agent found holes and not which ones.
+- **G66 — (nebula) drawn passives move `f_peak` by MORE than the whole
+  load-robustness slack, and every published corner/load number held them
+  ideal.** `PASSIVES.md` §6 item 1 (the "4d regression") had not been run. Run
+  on six designs including 432, TT, ideal `R`/`C` vs `to_geometry()` devices:
+  worst **|d f_peak| = 0.1329 octaves** against the **0.12 octaves of centring
+  slack** session 12b measured for the sole load-robust survivor. Worst
+  |d peaking| = 0.2116 dB. **Every non-zero shift is NEGATIVE**, and the
+  mechanism is the one `PASSIVES.md` §4.4 predicted: the drawn load resistors
+  carry a `res_po` bottom-plate parasitic and **half of it lands on the output
+  node**, adding **1.4-24.3 fF to a `cl` of 32.6 fF — up to +75%** — which
+  lowers `f_p2`. `g_dc` moves at most 0.0006 dB and noise at most 0.27%, so
+  this is not general accuracy loss; it is one specific capacitance.
+  The deltas are exact multiples of **0.0664 octaves**, `meas ac MAX`'s own
+  quantisation on an `ac dec 50` grid (session 11), so the shift is 0, 1 or 2
+  grid steps and the measurement sits at its resolution limit — but the
+  headline does not depend on the resolution. **Consequence: the load screen
+  and the corner screen both need re-running with drawn passives before design
+  432 can be quoted as load-robust.**
+- **G67 — (nebula) `to_geometry` is ELECTRICALLY stable and GEOMETRICALLY
+  chaotic.** Near `rs` = 318.6 ohm a **0.016% change in the target flips the
+  chosen device entirely**:
+
+        318.50 ohm -> w=8     l=6.720   m=1     area  53.8 um^2
+        318.55 ohm -> w=10    l=18.780  m=2     area 375.6 um^2
+        318.58 ohm -> w=2.85  l=4.445   m=2     area  25.3 um^2
+        318.60 ohm -> w=10    l=8.730   m=1     area  87.3 um^2
+        319.00 ohm -> w=8     l=14.785  m=2     area 236.6 um^2  <- PASSIVES.md
+
+  Every one lands within 1e-4 relative of its target, so the resistance is
+  stable to four figures; `resistor_geometry` scans a width ladder and keeps
+  whichever candidate lands nearest after `l` snaps to the 5 nm grid, and which
+  one wins is arbitrary at that resolution. Two consequences:
+  **(a) `design_id` grouping by drawn geometry is FINE-GRAINED, not coarse** —
+  measured on the 500-step log, 765 step rows gave 765 distinct `design_id`s
+  and 764 distinct geometry tags. The grouping is still CORRECT for task 8's
+  grouped train/test split (identical geometry, identical id), but do not
+  expect it to collapse many continuous values into one group.
+  **(b) AREA is not a stable function of the electrical target** — a **15x area
+  spread across a 0.16% resistance spread**. `PASSIVES.md` §4.5's 1506 um^2
+  figure for design 432 is the `rs = 319` row; the `rs = 318.58` row is 25 um^2
+  for the same resistance. Any S7 number is a property of the quantiser as much
+  as of the design.
+- **G68 — (nebula) two ways to build a gate that fails for the WRONG reason,
+  both found in one session.**
+  **(a) A one-sided perturbation conflates "inert" with "leaves the feasible
+  region".** The §6e sensitivity gate perturbs each action dimension and asserts
+  the observation moves. Probing one direction only, it reported `i_bias` as a
+  FAILED dimension and blocked training — but `i_bias` is not inert: +0.15 of
+  the box takes 3.25 -> 4.93 mA, which raises gm enough to push the peak out of
+  the sweep, and the validity gate correctly rejected the result. Those two
+  diagnoses need opposite responses. **Try both directions; report `INVALID
+  BOTH` only if neither produces a circuit** — which is a finding about the
+  base point, not about the axis.
+  **(b) Order validity checks CAUSE BEFORE SYMPTOM.** The same gate reported
+  `rl` at the box ceiling as an *f_peak range* failure when what had happened
+  was that the load drop took the input pair **out of saturation**; the AC
+  plausibility checks ran before the DC operating-point checks. If the bias
+  point is wrong, every small-signal number describes a different circuit.
+  `validate()` now runs presence -> operating point -> device regions -> AC
+  plausibility -> G44. Same fix applied a second time: the G44 sweep-edge test
+  moved AHEAD of the `f_peak` range test, because both fire on the same results
+  and the range test was reporting a numerical oddity where the mechanism was a
+  fictitious peak — **hiding 159 of 203 invalidities behind the wrong label**
+  (G65).
+- **G69 — (nebula) `shutil.which("ngspice_con")` cannot find this project's
+  ngspice, and a skipped test reports as a PASS.** The binary lives in the
+  conda env (G20) and is not on PATH in a plain shell. A test guarded with
+  `pytest.mark.skipif(shutil.which(...) is None)` therefore SKIPS silently —
+  and the skipped test was the only one exercising the real simulator end to
+  end. **Use `nebula.device.ngspice_runner.ngspice_path()`**, which checks the
+  conda location first and falls back to PATH. Generalise: a skip condition is
+  a gate, and a gate that is always true is indistinguishable from a deleted
+  test. Check that your skip guard can be FALSE on the machine you are on.
+- **G70 — (nebula) ONE concurrent ngspice makes each run 4.8x slower against
+  the EXTENDED library, and G48's numbers do not transfer.** Measured on the
+  same netlist and the same machine: a bare `run_point` with drawn passives
+  costs **1.93 s alone and 9.28 s** with a single other ngspice process
+  running. G48 measured the nfet-only library at 318 ms serial and 179 ms/task
+  at 2 workers, i.e. per-task time rose only **1.13x** under one competitor.
+  The extended trim's per-task degradation is **4.8x** — four times worse —
+  because the R/C corner files pull in `parameters/typical.spice` (3023 lines)
+  and `invariant.spice` (7340), so two processes thrash the same files
+  (`PASSIVES.md` §6 item 6).
+  **Two things this breaks, both of which happened:**
+  (a) **A training run's wall-clock decomposition is meaningless if anything
+  else was simulating.** Session 17's reward-v1 pass overlapped a pytest run
+  that calls ngspice, and its per-evaluation times came out 7-40 s against the
+  clean run's 2.07 s. Its timings are DISCARDED and only its load-independent
+  results (invalid rate, shortfall distribution) are quoted.
+  (b) **Never probe a machine that is mid-experiment.** The diagnosis above was
+  itself made by running a timing probe alongside the training run, which is
+  why the probe read 9.28 s.
+  Practical rule: run one SPICE experiment at a time, and treat any
+  wall-clock number gathered otherwise as an upper bound on nothing.
+- **G71 — (nebula) a benchmark whose passes run in a fixed order MEASURES THE
+  ORDER, and it nearly published a wrong conclusion.** The §6i parallel sweep
+  runs 24 identical tasks at 1, 2, 4, 8 and 11 workers. Run in that order it
+  reported **4.39x at 11 workers — BETTER than G48's 3.18x** — and the
+  explanation was ready ("the extended library's longer compute phase amortises
+  process launch better"). It is an artifact: the **1-worker pass ran FIRST, on
+  a cold OS file cache**, and paid to read the PDK include tree from disk;
+  every later pass hit a warm cache.
+  **The tell was in the table and it is worth memorising: 2 workers reported
+  2.55x.** A super-linear speedup from two processes is not physics, so the
+  BASELINE was wrong, not the parallelism.
+  Re-run with the worker counts REVERSED, so the 1-worker pass runs last:
+
+        workers          1       2       4       8      11
+        forward  ms   6075.6  2380.5  1667.9  1518.8  1383.0
+        reversed ms   2224.0  1335.7   942.2   841.0   888.5
+        true speedup   1.00x   1.67x   2.36x   2.64x   2.50x
+
+  The serial baseline drops **2.7x**. **The honest answer is 2.64x at 8
+  workers, and 11 workers is SLOWER than 8** — so the extended library scales
+  WORSE than G48's nfet-only 3.18x, and the curve turns DOWN past 8 rather than
+  flattening. Same mechanism as G70. `n_valid` was 12/24 at every worker count
+  in both runs, which is what makes the timing comparison meaningful at all.
+  **Rule: randomise or reverse the order of any benchmark's passes, and treat a
+  super-linear speedup as a bug report rather than a result.**
 
 ## 10. Environment
 
@@ -4012,3 +4348,143 @@ bound on the wrong side of both proxies. Nothing was edited to match.
 the power-law test that distinguishes aliasing from a broken reconstruction),
 **G60**, **G61** ("compression ratio" has three definitions and they disagree
 1.8x) and **G62** (a grep test must not contain its own needle).
+
+### 2026-08-07 — Session 17 (task 6: the RL loop runs end to end, and six things broke)
+
+**Tests 1007 -> 1242 green** (92 + 1150), 9 deselected. Full write-up
+`nebula/RL_SMOKE.md`. Data: `experiments/rl_smoke_results.json` and
+`rl_smoke_run_v0.jsonl` / `_v1.jsonl` — **all three TRACKED** (G49, and the
+stronger reason that every row is free training data for task 8).
+**`common/params.py` untouched** (rule 6): the RL box is nine `ActionDim`s in
+`rl/contract.py`, seven copied verbatim from `s3_yield.PROPOSED_BOX` and two
+from `TAIL_DEVICE.md` §6, with a test asserting the seven against the box so
+the two documents cannot drift.
+
+**THE POINT OF THE TASK WAS THE FAILURES, AND THERE WERE SIX.** Four of them
+produce a plausible number and raise nothing; two of those would have produced
+a training run that reports a policy while scoring a circuit that does not
+exist. Cost 105 minutes in total. In order of how much they mattered:
+
+1. **`has_interior_peak` is a CONJUNCTION and its two terms reject different
+   kinds of thing (G64).** Used as an RL validity gate it rejected both the
+   G44 fictitious peak (`g_pk - g_top` ~ 0, response still rising at 20 GHz,
+   `peaking_db` large and fake) AND a genuine-but-small interior maximum
+   (`rs` = 50 ohm: 0.165 dB at 1.318 GHz, a perfectly good measurement of a
+   circuit that does not equalise). That put the reward FLOOR across the whole
+   low-peaking bottom of the box — which is exactly where a randomly
+   initialised policy starts. Split into `peak_is_sweep_edge`;
+   `has_interior_peak` is UNCHANGED because three experiments publish counts
+   with it. Found by the §6f calibration, which is what §6f is for.
+2. **`alter` fails silently on an element the netlist no longer CONTAINS
+   (G63).** With drawn passives there is no `Rdeg`, so `run_tunable_sweep`'s
+   `alter Rdeg` matches nothing, ngspice warns and exits 0 (G26), and all 67
+   settings return the FIRST geometry's numbers. Now refused outright.
+3. **Two gates that failed for the WRONG reason (G68):** a one-sided
+   sensitivity probe reported `i_bias` as INERT when it had merely left the
+   feasible region; and validity checks ordered symptom-before-cause reported
+   an out-of-saturation design as an `f_peak` range anomaly. The same ordering
+   fix, applied twice, moved **159 of 203 invalidities** out of the wrong
+   bucket.
+4. **`shutil.which` cannot find this project's ngspice (G69)** — the only test
+   exercising the real simulator end to end was silently skipping, and a skip
+   reports as a pass.
+
+**THE HEADLINE MEASUREMENT, and it justifies the whole poison-safe evaluator:
+78% of everything the policy found was G44 (G65).** Over 500 PPO steps / 765
+evaluations, **26.5% were invalid**, split `peak_is_sweep_edge` 159,
+`tail_triode` 28, `pair_triode` 16, everything else 0. Under a reward scoring
+S3 peaking, every one of those 159 would have been a HIGH reward for a circuit
+with no peak at all. The rate did NOT rise (28.8% -> 24.3%), but 500 steps
+cannot separate a trend from noise and the histogram is the useful output.
+
+**THE 4d REGRESSION IS RUN, AND IT MOVES A PUBLISHED VERDICT (G66).**
+`PASSIVES.md` §6 item 1 said nothing downstream is trustworthy until this
+passes; it had not been run, and §6a's "use `to_geometry()` from the outset"
+forces it. Six designs including 432, ideal R/C vs drawn SKY130 devices:
+**worst |d f_peak| = 0.1329 octaves against the 0.12 octaves of centring
+slack** session 12b measured for the sole load-robust survivor. Every non-zero
+shift is NEGATIVE and the mechanism is the predicted one — the `res_po`
+bottom-plate parasitic puts **1.4-24.3 fF on a `cl` of 32.6 fF, up to +75%** —
+while `g_dc` moves at most 0.0006 dB. **So the load screen and the corner
+screen both need re-running with drawn passives before design 432 can be
+quoted as load-robust.** Second finding: **`to_geometry` is electrically
+stable and geometrically chaotic (G67)** — a 0.016% change in `rs` flips the
+device, giving a **15x area spread across a 0.16% resistance spread**, which
+makes `PASSIVES.md` §4.5's 1506 um^2 a property of the quantiser, and makes
+`design_id` grouping fine-grained rather than coarse (765 rows, 765 ids, 764
+geometry tags).
+
+**WHERE THE WALL CLOCK GOES, measured for the first time: 99.7% is the
+simulator.** 500 steps = 1590 s = 26.5 min; environment 1585.83 s, policy
+forward + PPO update **3.52 s**, logging and cross-check 0.87 s. Optimising
+the RL side is worth nothing. **The library parse is the whole game**: 2.07 s
+per evaluation on the extended trim against ~0.33 s on the nfet-only trim for
+the same netlist, so **`PASSIVES.md` §6 item 6 (trim `parameters/typical.spice`
+and `invariant.spice`) is the highest-value open item for RL throughput** and
+this is the first number that says so. Cost accounting, defined here and
+binding afterwards — **every** SPICE invocation counted, including setup, warm
+start, discarded episodes and cross-check re-runs: **1.586 sims/step, 1132
+steps/hour, 793 calls for 500 steps.**
+
+**Also measured, and it invalidated one of this session's own runs (G70): ONE
+concurrent ngspice makes each run 4.8x slower** (1.93 s -> 9.28 s) against the
+extended library, four times worse than G48's 1.13x on the nfet-only one. The
+reward-v1 pass overlapped a pytest run that calls ngspice, so **its timings are
+DISCARDED** and only its load-independent results are quoted.
+
+**§6f's calibration orders correctly**: design 432 **+8.951 FEASIBLE**, flat
+(rs at the box floor) **-1.155 infeasible on 2**, op-fail (i_bias AND rl at
+their ceilings, both devices in triode) **-8.000, exactly the floor**. It did
+NOT order correctly before fixes 1 and 3 — flat and op-fail both sat on the
+floor and the test could not run.
+
+**§6e's sensitivity gate: 9/9 dimensions live**, each moving its expected
+channel in the expected direction under one `MAX_STEP`. Three things the table
+says that the count does not: the dimensions differ in strength by **21x**;
+**`vcm_in` is a 6x stronger lever on the tail margin than `tail_j` is**, which
+is evidence FOR `TAIL_DEVICE.md` §6's recommendation not to search the tail;
+and `w_in`/`l_in` are the two weakest axes, acting on peaking through gm where
+`rs` acts 4-10x harder.
+
+**§6b: nothing broke when the mocks were removed, and the check was made
+anyway.** They were already imported only by `tests/conftest.py` and five test
+modules. The verification runs in a SUBPROCESS — asserting on this process's
+`sys.modules` would be vacuous, since conftest imports the mock at collection
+time — and `test_the_gate_can_fail` runs the same probe against a script that
+imports one on purpose. **The real structural risk is different and is now
+pinned: the LINK layer is a mock end to end, so any future S8 reward term would
+score a fabricated eye height.** A test asserts the reward/env/evaluator import
+graph reaches no `nebula.link` module at all.
+
+**NO CONCLUSION ABOUT LEARNING IS DRAWN.** Mean episode return over five
+buckets: -2.98, -6.16, -4.54, -3.09, -0.50. Non-monotone, 142 episodes, one
+seed, one target, one corner. Nothing was tuned and nothing was adjusted to
+make the curve look better.
+
+**The parallel sweep needed running twice (G71).** Forward order reported
+**4.39x at 11 workers, better than G48's 3.18x**, with 2 workers at a
+physically impossible **2.55x** — the 1-worker pass ran first on a cold file
+cache. Reversed, the baseline drops 2.7x and the answer is **2.64x at 8
+workers, 11 SLOWER than 8**: the extended library scales WORSE than the
+nfet-only one and the curve turns DOWN past 8, same mechanism as G70.
+
+**The v1 wiring pass (200 steps, 319 evaluations) confirmed the wiring and
+found a third category.** All four added specs are identically zero and all
+four are WIRED — margins vary and never go negative: S5 +0.93 to +1.37 mV of
+headroom, S6 +1.2 to +14.1 mW, `saturation` +0.042 to +1.356 V,
+`tail_saturation` +0.013 to +0.595 V. But **`saturation` and `tail_saturation`
+can NEVER be violated on a valid evaluation**, because a triode design is
+rejected by the validity gate before the reward sees it. They contribute only
+to the feasible branch's `min(margin/tol)`. **This partly undercuts the reward
+retraction's own motivation**: the tail's "you are violating this" signal is
+delivered by the invalid FLOOR (-8.0), which is stronger than a shortfall but
+UNGRADED — 1 mV and 500 mV into triode score identically. Recommendation, and
+it is a human's (rule 6): **accept it**, because grading a triode design's
+small-signal numbers would be grading fiction, which is exactly what G24
+records the link layer doing with `min()`. The alternative — grade it from the
+`.op` `vds - vdsat` alone — is more code and a new failure surface and nothing
+measured says it is needed. The v1 invalid rate DID rise (25.2% -> 33.8%), the
+one place §6d's signal fired, but on 61 episodes that is weak evidence and is
+not offered as more.
+
+New gotchas **G63-G71**.

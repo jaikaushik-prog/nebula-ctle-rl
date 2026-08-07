@@ -73,7 +73,9 @@ from nebula.device.crosscheck import (
     parse_scalar,
     scan_for_silent_failures,
 )
+from nebula.device.netlist_gates import assert_no_inert_writes
 from nebula.device.ngspice_runner import ngspice_path
+from nebula.device.passives import PassiveGeometry
 from nebula.device.tail import TailDevice
 
 #: Directory holding `.spiceinit` (ngbehavior=hsa, needed at PARSE time, G29)
@@ -83,6 +85,13 @@ SPICE_DIR: Path = Path(__file__).resolve().parent / "spice"
 #: The trimmed nfet_01v8-only library: 0.42 s per invocation instead of
 #: 16-35 s, verified bit-identical on gm/gmbs/vth/id/g_dc/g_pk/inoise (G36).
 TRIMMED_LIB: Path = SPICE_DIR / "sky130_nfet_only.lib.spice"
+
+#: The EXTENDED trim: nfet_01v8 plus the poly resistor and MIM families, and
+#: the full 5x5 (MOS x passive) corner cross product as 25 named sections
+#: (G58). Verified rel=0 abs=0 against the full library
+#: (`test_trimmed_lib_passives.py`). Needed the moment `to_geometry()` output
+#: reaches a netlist. Costs 4655 ms against the nfet-only trim's 634 ms.
+CTLE_LIB: Path = SPICE_DIR / "sky130_ctle.lib.spice"
 
 #: SKY130's 1.8 V thin-oxide NMOS — the S2 input pair.
 NFET_01V8: str = "sky130_fd_pr__nfet_01v8"
@@ -147,6 +156,13 @@ class SizingPoint:
     current sinks every published result in this project was measured with, so
     sessions 9d through 12b stay reproducible bit for bit. A `TailDevice`
     replaces them with a real current mirror; see `nebula/device/tail.py`.
+
+    `passives` does the same for R and C, and for the same reason. `None`
+    keeps the ideal `R`/`C` elements every result through session 16 was
+    measured with; a `PassiveGeometry` from `passives.to_geometry()` replaces
+    them with drawn SKY130 devices. Note what does NOT move: `cl` stays ideal
+    either way, because it is the following stage's input capacitance — a
+    screened context variable (CL_RANGE.md), not a device this circuit draws.
     """
 
     w: float                     # um
@@ -164,6 +180,13 @@ class SizingPoint:
     #: => a real current mirror. Every corner spread measured with `None` is an
     #: UNDERSTATEMENT (G47); that is the whole reason this field exists.
     tail: Optional[TailDevice] = None
+    #: None => ideal R/C (legacy, and the default). A PassiveGeometry => drawn
+    #: SKY130 devices, which also pulls in the extended library
+    #: (`sky130_ctle.lib.spice`) and its 7.3x parse cost. `rs`/`cs`/`rl` above
+    #: stay the REQUESTED values; what the drawn devices actually measure is
+    #: `passives.rs.r_actual_ohm` and friends, and the two differ by the
+    #: quantisation error `to_geometry` reports.
+    passives: Optional[PassiveGeometry] = None
 
     @classmethod
     def from_params(
@@ -172,6 +195,7 @@ class SizingPoint:
         vdd: float = 1.8,
         device: str = NFET_01V8,
         tail: Optional[TailDevice] = None,
+        passives: Optional[PassiveGeometry] = None,
     ) -> "SizingPoint":
         """Build a point from a `common/params.py`-style dict.
 
@@ -205,6 +229,7 @@ class SizingPoint:
             vdd=vdd,
             device=device,
             tail=tail,
+            passives=passives,
         )
 
     @property
@@ -291,6 +316,13 @@ class Sky130Point:
     point: Optional[SizingPoint] = None
     corner: str = "tt"
     runtime_s: float = 0.0
+    #: Raw ngspice stdout+stderr, kept ONLY when `run_point(keep_text=True)`.
+    #: It exists so a second, independent code path can re-derive the numbers
+    #: from the text this run actually produced (`rl/evaluator.py`'s §6d
+    #: cross-check) instead of comparing a function against itself. Off by
+    #: default because a training run holding 500 copies of ngspice's output is
+    #: a memory leak with no reader.
+    raw_text: Optional[str] = field(default=None, repr=False)
 
     # ---- derived: S3 ----
     @property
@@ -331,7 +363,34 @@ class Sky130Point:
         the spec window.
         """
         return (self.peaking_db > PEAK_MARGIN_DB
-                and (self.g_pk_db - self.g_top_db) > PEAK_MARGIN_DB)  # type: ignore[operator]
+                and not self.peak_is_sweep_edge)
+
+    @property
+    def peak_is_sweep_edge(self) -> bool:
+        """True iff the reported maximum IS the top of the search range.
+
+        **The G44 condition on its own**, split out of `has_interior_peak`
+        because the two halves of that test reject different things and only
+        one of them is a broken measurement:
+
+        * `g_pk - g_top <= margin` — the response is still RISING at 20 GHz, so
+          `meas ac MAX` returned the range edge and `peaking_db` is FICTITIOUS
+          and LARGE. Measured example: rl=800 at 3.25 mA reports 1.08 dB of
+          "peaking" at 19.95 GHz with `g_pk - g_top` = -0.001 dB. That is free
+          reward for a circuit with no peak, and it must be rejected.
+        * `peaking_db <= margin` — the response has a genuine interior maximum
+          that is merely SMALL. Measured example: rs = 50 ohm gives 0.165 dB of
+          peaking at 1.318 GHz with `g_pk - g_top` = 9.23 dB. Nothing about
+          that measurement is wrong; the circuit simply does not equalise.
+
+        `has_interior_peak` keeps both halves, because `s3_yield.py`,
+        `s9_yield.py` and `robust_geometry.py` publish counts that use it and
+        those must not move. A VALIDITY gate wants only the first half — see
+        `rl/evaluator.validate`. Rejecting the second half as invalid would
+        erase the reward gradient over the entire low-peaking region of the
+        box, which is where a randomly initialised policy starts.
+        """
+        return (self.g_pk_db - self.g_top_db) <= PEAK_MARGIN_DB  # type: ignore[operator]
 
     @property
     def in_saturation(self) -> bool:
@@ -553,14 +612,7 @@ Einn  inn cm vid 0 -0.5
 XM1   outp inp s1 0 {device} W={{W}} L={{L}} nf={{NF}}
 XM2   outn inn s2 0 {device} W={{W}} L={{L}} nf={{NF}}
 
-RLp   vdd outp {{RL}}
-RLn   vdd outn {{RL}}
-
-* Between the two SOURCES, not source-to-ground: each half-circuit sees Rs/2,
-* which is where the factor of two in k = 1 + (gm+gmbs)*Rs/2 comes from.
-Rdeg  s1 s2 {{RS}}
-Cdeg  s1 s2 {{CS}}
-
+{passive_block}
 {tail_source}
 CLp   outp 0 {{CL}}
 CLn   outn 0 {{CL}}
@@ -605,6 +657,66 @@ quit
 #: The historical single-point netlist, reassembled. Every existing caller uses
 #: this and its bytes are unchanged by the split above.
 _NETLIST = _TOPOLOGY + _CONTROL_SINGLE
+
+# ── the two passive networks ────────────────────────────────────────────────
+#
+# ONE definition each (CLAUDEwa.md §8 rule 9), exactly as for the two tails
+# below. `_PASSIVES_IDEAL` is BYTE-IDENTICAL to what `_TOPOLOGY` carried inline
+# before the split, so every published number through session 16 reproduces.
+#
+# The `{RL}` / `{RS}` / `{CS}` here are `.param` references that ngspice
+# resolves, NOT Python format fields: these blocks are substituted INTO
+# `_TOPOLOGY` as a finished string, and `str.format` does not re-expand what it
+# substitutes.
+
+#: LEGACY, and the default. Ideal R and C — what every result through session 16
+#: was measured with.
+_PASSIVES_IDEAL = """RLp   vdd outp {RL}
+RLn   vdd outn {RL}
+
+* Between the two SOURCES, not source-to-ground: each half-circuit sees Rs/2,
+* which is where the factor of two in k = 1 + (gm+gmbs)*Rs/2 comes from.
+Rdeg  s1 s2 {RS}
+Cdeg  s1 s2 {CS}
+"""
+
+#: REAL SKY130 devices, from `passives.to_geometry()`. This is what makes the
+#: framework's output a SCHEMATIC rather than a parameter vector (PASSIVES.md
+#: §4.3) and it is what an RL run must use from the outset — deferring it means
+#: training a policy against a circuit nobody can draw.
+#:
+#: THREE THINGS THAT ARE NOT OBVIOUS FROM THE TEXT:
+#:
+#: 1. **The resistors have a THIRD terminal**, the substrate. That is not
+#:    decoration: it connects `sky130_fd_pr__model__parasitic__res_po`, which
+#:    puts half the body-to-bulk capacitance on each end (PASSIVES.md §4.4). So
+#:    `RL`'s bottom plate lands on the output node and adds to `cl` — a real
+#:    effect the ideal-R netlist does not have, and the reason the 4d
+#:    regression check has to exist.
+#: 2. **`m=` is the multiplier, never `mult=`** (G56). `mult` appears only
+#:    inside mismatch terms, all multiplied by `MC_MM_SWITCH` = 0, so it is
+#:    silently ignored. `device/netlist_gates.py` refuses to emit anything else.
+#: 3. **`w=` is written only to the GENERIC families** (`res_high_po`), where it
+#:    is honoured. On the `_0p69`-style fixed-width families it is INERT (G57)
+#:    and asking the wrong subckt for a width is a silent 4.03x error; the same
+#:    gate refuses those.
+#:
+#: `CL` stays an ideal capacitor deliberately. It is not a device we draw — it
+#: is the NEXT stage's input capacitance, a screened context variable with a
+#: derived range (CL_RANGE.md). Drawing it would be inventing a load.
+_PASSIVES_REAL = """* Load resistors: SKY130 poly, drawn geometry from passives.to_geometry().
+* Third terminal is the substrate -- it carries the res_po bottom-plate
+* parasitic, half of which lands on the output node (PASSIVES.md 4.4).
+Xrlp  vdd outp 0 {rl_subckt} w={rl_w:g} l={rl_l:g}{rl_m}
+Xrln  vdd outn 0 {rl_subckt} w={rl_w:g} l={rl_l:g}{rl_m}
+
+* Degeneration, between the two SOURCES (the /2 in k = 1 + (gm+gmbs)*Rs/2).
+Xrs   s1 s2 0 {rs_subckt} w={rs_w:g} l={rs_l:g}{rs_m}
+* MIM: two terminals, no bulk node -- the model carries no bottom plate at all
+* (PASSIVES.md 4.4), which is a modelling absence, not a physical one.
+Xcs   s1 s2 {cs_subckt} w={cs_w:g} l={cs_l:g}{cs_m}
+"""
+
 
 # ── the two tails ───────────────────────────────────────────────────────────
 #
@@ -706,16 +818,26 @@ wrdata swing.txt v(outp) v(outn)
 """
 
 
-def lib_for_device(device: str) -> Path:
+def lib_for_device(device: str, real_passives: bool = False) -> Path:
     """The library that carries `device`'s model cards.
 
-    The trimmed library (G36) includes **only** `nfet_01v8`. Anything else has
-    to come from the full library until its model files are added to the trim
+    The nfet-only trim (G36) includes **only** `nfet_01v8`. Anything else has
+    to come from the full library until its model files are added to a trim
     — and asking for it silently would produce "could not find a valid
     modelname", which G31 shows is read as a units error nine times out of ten.
+
+    `real_passives=True` selects the EXTENDED trim, which adds the poly
+    resistor and MIM families and the passive corner axis. It is verified
+    bit-identical to the full library (`test_trimmed_lib_passives.py`,
+    rel=0 abs=0) but it is **not free**: 634 ms -> 4655 ms, a 7.3x regression
+    on the inner loop, because the R/C corner files pull in
+    `parameters/typical.spice` (3023 lines) and `invariant.spice` (7340).
+    PASSIVES.md §6 item 6 is the open fix. Quote both numbers in any cost
+    table — the difference is the price of drawing the passives, and it is the
+    single largest lever on RL throughput that anyone has measured.
     """
     if device == NFET_01V8:
-        return TRIMMED_LIB
+        return CTLE_LIB if real_passives else TRIMMED_LIB
     full = Path(r"C:/Users/DELL/sky130A/libs.tech/ngspice/sky130.lib.spice")
     if not full.exists():
         raise FileNotFoundError(
@@ -723,6 +845,36 @@ def lib_for_device(device: str) -> Path:
             f"SKY130 library was not found at {full} (HANDOFF G33)."
         )
     return full
+
+
+def _m_suffix(m: int) -> str:
+    """` m=<n>` for n > 1, empty at 1.
+
+    `m=`, NEVER `mult=` (G56). `netlist_gates` enforces it on the assembled
+    text; this function is why there is nothing for it to catch.
+    """
+    if int(m) < 1:
+        raise ValueError(f"multiplier m must be >= 1, got {m}")
+    return f" m={int(m)}" if int(m) > 1 else ""
+
+
+def passive_block(passives: Optional[PassiveGeometry]) -> str:
+    """The R/C section of the netlist: ideal elements, or drawn devices.
+
+    ONE definition (rule 9) — `run_point` and `run_tunable_sweep` both call it,
+    so an ideal-vs-real difference can never appear in one path and not the
+    other.
+    """
+    if passives is None:
+        return _PASSIVES_IDEAL
+    return _PASSIVES_REAL.format(
+        rl_subckt=passives.rl.subckt, rl_w=passives.rl.w_um,
+        rl_l=passives.rl.l_um, rl_m=_m_suffix(passives.rl.m),
+        rs_subckt=passives.rs.subckt, rs_w=passives.rs.w_um,
+        rs_l=passives.rs.l_um, rs_m=_m_suffix(passives.rs.m),
+        cs_subckt=passives.cs.subckt, cs_w=passives.cs.w_um,
+        cs_l=passives.cs.l_um, cs_m=_m_suffix(passives.cs.m),
+    )
 
 
 def run_point(
@@ -734,6 +886,7 @@ def run_point(
     timeout_s: float = 120.0,
     temp_c: float = 27.0,
     noise_detail: bool = False,
+    keep_text: bool = False,
 ) -> Sky130Point:
     """Simulate one sizing point. Never raises — failures come back ok=False.
 
@@ -748,7 +901,7 @@ def run_point(
         return Sky130Point(ok=False, fail_reason=f"unknown corner {corner!r}",
                            point=point, corner=corner)
     try:
-        lib = lib_for_device(point.device)
+        lib = lib_for_device(point.device, real_passives=point.passives is not None)
     except FileNotFoundError as exc:
         return Sky130Point(ok=False, fail_reason=str(exc), point=point, corner=corner)
 
@@ -797,9 +950,16 @@ def run_point(
         it=point.i_tail_per_side_a, vdd=point.vdd, vcm=point.vcm,
         swing_block=swing_block, temp_c=temp_c,
         tail_source=tail_source, tail_probe=tail_probe,
+        passive_block=passive_block(point.passives),
         noise_summary=noise_summary, noise_probe=noise_probe,
         f_top=f"{MAX_SEARCH_TOP_HZ / 1e9:g}g",
     )
+
+    # THE TWO SILENT WRITES, GATED ON THE ASSEMBLED TEXT (G56, G57). This
+    # RAISES rather than returning ok=False on purpose: an inert write is a bug
+    # in this file, not a property of the sizing point, and returning a bad
+    # reward would let a training run absorb it as "that region scores poorly".
+    assert_no_inert_writes(text)
 
     import time
     t0 = time.perf_counter()
@@ -841,7 +1001,8 @@ def run_point(
         return Sky130Point(ok=False, corner=corner, point=point, runtime_s=runtime,
                            fail_reason=f"ngspice silent failure: {offenders[0][:160]}")
 
-    pt = Sky130Point(ok=True, corner=corner, point=point, runtime_s=runtime)
+    pt = Sky130Point(ok=True, corner=corner, point=point, runtime_s=runtime,
+                     raw_text=(out if keep_text else None))
     pt.gm = find_device_scalar(out, "gm")
     pt.gmbs = find_device_scalar(out, "gmbs")
     pt.gds = find_device_scalar(out, "gds")
@@ -1014,10 +1175,23 @@ def run_tunable_sweep(
         return [Sky130Point(ok=False, point=point, corner=corner,
                             fail_reason=reason) for _ in settings]
 
+    # `alter Rdeg` / `alter Cdeg` name the IDEAL elements. With drawn devices
+    # those instances do not exist, ngspice reports the failed alter as a
+    # WARNING and exits 0 (G26), and every setting would come back reporting
+    # the FIRST geometry's numbers — 67 identical results that look like a
+    # converged sweep. Refuse the combination rather than discover it later.
+    if point.passives is not None:
+        return _all_failed(
+            "run_tunable_sweep cannot alter drawn passives: `alter Rdeg`/"
+            "`alter Cdeg` name the ideal elements, and altering a subckt-"
+            "wrapped device is G35's silent-wrong-answer path anyway. Re-emit "
+            "the netlist per setting, or sweep with passives=None."
+        )
+
     if corner not in VALID_CORNERS:
         return _all_failed(f"unknown corner {corner!r}")
     try:
-        lib = lib_for_device(point.device)
+        lib = lib_for_device(point.device, real_passives=point.passives is not None)
     except FileNotFoundError as exc:
         return _all_failed(str(exc))
 
@@ -1045,8 +1219,10 @@ def run_tunable_sweep(
                 w=point.w, l=point.l, nf=int(point.nf), rl=point.rl,
                 rs=point.rs, cs=point.cs, cl=point.cl,
                 it=point.i_tail_per_side_a, vdd=point.vdd, vcm=point.vcm,
-                temp_c=temp_c, tail_source=tail_source)
+                temp_c=temp_c, tail_source=tail_source,
+                passive_block=passive_block(point.passives))
             + _CONTROL_SWEEP_HEAD + body + "quit\n.endc\n\n.end\n")
+    assert_no_inert_writes(text)
 
     import time
     t0 = time.perf_counter()
@@ -1155,8 +1331,8 @@ def measured_swing_pp_v(pt: Sky130Point, compression_db: float = 1.0) -> Optiona
 
 __all__: Sequence[str] = (
     "SizingPoint", "Sky130Point", "SwingLimits", "TunableSetting",
-    "run_point", "run_tunable_sweep",
+    "run_point", "run_tunable_sweep", "passive_block",
     "swing_limits", "measured_swing_pp_v", "textbook_swing_pp_v",
     "lib_for_device", "NFET_01V8", "NFET_G5V0", "VALID_CORNERS",
-    "SPICE_DIR", "TRIMMED_LIB",
+    "SPICE_DIR", "TRIMMED_LIB", "CTLE_LIB",
 )

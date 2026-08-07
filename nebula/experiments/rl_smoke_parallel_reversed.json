@@ -1,0 +1,45 @@
+{
+ "n_tasks": 24,
+ "rows": [
+  {
+   "workers": 11,
+   "wall_s": 21.325153599998885,
+   "ms_per_task": 888.5480666666202,
+   "n_valid": 12,
+   "spice_calls": 24,
+   "speedup": 1.0
+  },
+  {
+   "workers": 8,
+   "wall_s": 20.183949800000846,
+   "ms_per_task": 840.9979083333686,
+   "n_valid": 12,
+   "spice_calls": 24,
+   "speedup": 1.0565401624214301
+  },
+  {
+   "workers": 4,
+   "wall_s": 22.612770400002773,
+   "ms_per_task": 942.1987666667823,
+   "n_valid": 12,
+   "spice_calls": 24,
+   "speedup": 0.9430579810776423
+  },
+  {
+   "workers": 2,
+   "wall_s": 32.05573779999759,
+   "ms_per_task": 1335.6557416665662,
+   "n_valid": 12,
+   "spice_calls": 24,
+   "speedup": 0.6652523093697281
+  },
+  {
+   "workers": 1,
+   "wall_s": 53.37673609999911,
+   "ms_per_task": 2224.030670833296,
+   "n_valid": 12,
+   "spice_calls": 24,
+   "speedup": 0.39952149865527736
+  }
+ ]
+}

@@ -30,8 +30,9 @@ self-contained write-up of one experiment.
 | 7 | [`TAIL_DEVICE.md`](TAIL_DEVICE.md) | The tail as a real transistor. What the ideal-sink assumption was worth, and the one constraint that couples five box coordinates | repeating "tail noise is common-mode" |
 | 8 | [`PASSIVES.md`](PASSIVES.md) | R and C as real SKY130 devices; `mult`/`mf` do nothing and `w` is inert on the fixed-width families; the passive corner axis is **orthogonal** to the MOS one, so S9's 45 corners are really 225 | instantiating any passive, or quoting a corner count |
 | 9 | [`CHANNEL_MODEL.md`](CHANNEL_MODEL.md) | The channel as a **derived family**, not a constant. A 1-tap DFE is sufficient across 3-12 dB — but only 15 % of what it cannot reach is in `h2`. The TX de-emphasis is worth exactly 3.5 dB of the CTLE's job. The compression verdict, re-measured | quoting any compression, eye or ISI number |
-| 10 | [`PREDICTIONS.md`](PREDICTIONS.md) | Pre-registered predictions vs. outcomes, including the misses | — |
-| 11 | [`NRZ_RETARGET_AUDIT.md`](NRZ_RETARGET_AUDIT.md) | All 24 four-level assumptions in the inherited PAM-4 code, risk-marked | retargeting anything |
+| 10 | [`RL_SMOKE.md`](RL_SMOKE.md) | The RL loop, run end to end **badly on purpose**. The environment contract; the six integration bugs it surfaced; **78 % of what a policy finds is a fictitious peak at the sweep edge**; drawn passives move `f_peak` by more than the load-robustness slack; and where the wall clock actually goes (**99.7 % simulator**) | writing any RL code, or quoting any cost |
+| 11 | [`PREDICTIONS.md`](PREDICTIONS.md) | Pre-registered predictions vs. outcomes, including the misses | — |
+| 12 | [`NRZ_RETARGET_AUDIT.md`](NRZ_RETARGET_AUDIT.md) | All 24 four-level assumptions in the inherited PAM-4 code, risk-marked | retargeting anything |
 
 Each write-up opens with its **assumptions section**. Read it. Several results
 are explicitly bounds rather than answers, and the assumptions section is where
@@ -59,8 +60,12 @@ device/                Where the circuit meets the simulator.
   crosscheck.py        The accuracy gate, in Python where it can actually raise.
                        Refuses to run on output containing warning-shaped failures.
   ngspice_runner.py    Batch-mode driver: netlist template → subprocess → parsed result.
-  mock.py              SYNTHETIC. Fake numbers by construction. Never reaches a deliverable.
+  mock.py              SYNTHETIC. Fake numbers by construction. Never reaches a deliverable,
+                       and no longer reachable from a training run — a test asserts it.
   passives.py          R and C as real SKY130 devices, with the three silent traps pinned.
+  netlist_gates.py     Refuses to EMIT a parameter SKY130 accepts and then ignores:
+                       `w` on a fixed-width resistor, `mult`/`mf` other than 1. Gated on
+                       the assembled text, so no path through the device layer escapes it.
 
 link/                  Device result -> eye.
   channel.py           The channel FAMILY: IL(f) = A*sqrt(f) + B*f, parameterised by
@@ -80,8 +85,16 @@ link/                  Device result → eye. calibration.py owns the normalised
                        conversion, which is the highest-risk silent bug in the project.
                        Still a mock end to end.
 
-rl/                    reward.py — the shortfall reward with worst-corner aggregation.
-                       No PPO loop yet.
+rl/                    THE LOOP. contract.py is the environment contract — the nine-
+                       dimensional box (copied from the experiments, never re-derived),
+                       the 20-dim observation, and FIXED normalisation scales.
+                       evaluator.py validates every result before it becomes an
+                       observation; an invalid one is a hard negative and a terminated
+                       episode, never a default. env.py owns the episode; ppo.py is a
+                       minimal torch PPO (neither SB3 nor gymnasium is installed);
+                       runlog.py writes the tracked JSONL. reward.py is CLAUDEwa §9's
+                       form; reward_v1.py is the shape that replaced it, scoring EVERY
+                       violated constraint rather than only the worst.
 
 experiments/           One script per measurement. Each owns its assumptions and prints
                        them in every run's header. Data files are committed alongside.
@@ -93,17 +106,24 @@ tests/                 606 tests. Those needing a simulator skip cleanly without
 
 ## Two things that look like bugs and are not
 
-**`common/params.py::BOUNDS` is empty and raises when read.** This is
-deliberate. Choosing parameter ranges is a human decision: too wide and the
-simulator will not converge over most of the box, too narrow and the optimum is
-outside it — and *neither failure announces itself*. Both just look like "the RL
-didn't work". The proposed box lives in the experiment scripts and in
-`BOUNDS_REDERIVATION.md`, awaiting approval.
+**`common/params.py::BOUNDS` is not what the RL loop reads.** Choosing
+parameter ranges is a human decision: too wide and the simulator will not
+converge over most of the box, too narrow and the optimum is outside it — and
+*neither failure announces itself*. Both just look like "the RL didn't work".
+So `params.py` still carries the superseded 1.2 V box and is **untouched**; the
+proposed box lives in `experiments/s3_yield.py::PROPOSED_BOX` and in
+`BOUNDS_REDERIVATION.md`, awaiting approval, and `rl/contract.py` copies seven
+of its nine edges verbatim with a test asserting they have not drifted apart.
 
 **The mocks produce fake numbers.** `device/mock.py` and `link/mock.py` exist so
 that three layers could be built in parallel before the simulator was working.
 Their *trends* are physically coherent; their *magnitudes* are invented. No
-value from either may reach a report, a slide, or a results table.
+value from either may reach a report, a slide, or a results table — and since
+session 17 there is **no import path from a training run to either of them**,
+checked in a subprocess by `tests/test_no_mocks_in_training_path.py`. That test
+also pins the consequence: because the whole link layer is synthetic, **S8
+cannot be scored by the RL reward at all**, which is a conclusion rather than a
+gap.
 
 ---
 

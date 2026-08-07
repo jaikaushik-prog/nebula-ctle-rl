@@ -409,10 +409,18 @@ def test_the_reference_point_still_reproduces_what_HANDOFF_publishes():
 # ─────────────────────────────────────────────────────────────────────────────
 
 
-def _netlist(tail) -> str:
-    """Render the runner's netlist for a point with/without a tail."""
+def _netlist(tail, passives=None) -> str:
+    """Render the runner's netlist for a point with/without a tail.
+
+    `passives` defaults to None — the IDEAL R/C block — so every assertion
+    below still describes the circuit session 13 measured. The runner grew a
+    second independent switch in session 17 (drawn SKY130 passives), and
+    `passive_block` is the one function that renders it, so this helper calls
+    it rather than growing a second copy (rule 9).
+    """
     import nebula.device.sky130_runner as R
-    p = SizingPoint(**{**REFERENCE_INPUT, "nf": 4}, tail=tail)  # type: ignore[arg-type]
+    p = SizingPoint(**{**REFERENCE_INPUT, "nf": 4}, tail=tail,  # type: ignore[arg-type]
+                    passives=passives)
     if tail is None:
         src, probe = R._TAIL_IDEAL.format(IT="{IT}"), ""
     else:
@@ -428,8 +436,27 @@ def _netlist(tail) -> str:
         lib="lib", corner="tt", device=p.device, w=p.w, l=p.l, nf=int(p.nf),
         rl=p.rl, rs=p.rs, cs=p.cs, cl=p.cl, it=p.i_tail_per_side_a,
         vdd=p.vdd, vcm=p.vcm, swing_block="", temp_c=27.0,
-        tail_source=src, tail_probe=probe, noise_summary="", noise_probe="",
-        f_top="20g")
+        tail_source=src, tail_probe=probe,
+        passive_block=R.passive_block(passives),
+        noise_summary="", noise_probe="", f_top="20g")
+
+
+def test_the_ideal_passive_block_is_still_what_session_13_measured():
+    """The two switches are INDEPENDENT, and the tail results must not have
+    moved when the passives became switchable.
+
+    Session 17 split `RLp`/`RLn`/`Rdeg`/`Cdeg` out of `_TOPOLOGY` so drawn
+    SKY130 devices could take their place. The ideal branch has to render
+    BYTE-IDENTICALLY, or every number in TAIL_DEVICE.md and S9_YIELD.md §9 is a
+    measurement of a slightly different circuit.
+    """
+    n = _netlist(None)
+    assert "RLp   vdd outp {RL}" in n
+    assert "RLn   vdd outn {RL}" in n
+    assert "Rdeg  s1 s2 {RS}" in n
+    assert "Cdeg  s1 s2 {CS}" in n
+    assert "sky130_fd_pr__res_high_po" not in n
+    assert "cap_mim" not in n
 
 
 def test_the_ideal_netlist_still_has_two_ideal_sinks_and_no_mirror():
