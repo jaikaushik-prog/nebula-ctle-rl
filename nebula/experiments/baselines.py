@@ -105,6 +105,7 @@ from nebula.rl.contract import (
 )
 from nebula.rl.evaluator import EvalResult, SpiceBudget, Verdict, evaluate
 from nebula.rl.runlog import RunLog
+from nebula.rl.runlog import read as runlog_read
 
 HERE = Path(__file__).resolve().parent
 
@@ -130,10 +131,32 @@ WORKERS: int = 8
 SEC_PER_SIM_TRAJECTORY: float = 2.071
 SEC_PER_SIM_UNIFORM: float = 3.999
 #: Wall seconds per simulation at `WORKERS`, measured directly (not divided).
-SEC_PER_SIM_AT_8: float = 1.341
+#:
+#: **REVISED 2026-08-08 from session 17's 1.341 to this benchmark's OWN
+#: measurement, and the revision is a finding rather than a correction.**
+#: The session-17 number came from 24 isolated evaluations dispatched to a
+#: pool. This one comes from 33 real benchmark runs, 1992 simulations, 27 064
+#: summed worker-seconds:
+#:
+#:     single process (the discarded warm-up)   3.060 s/sim
+#:     8 workers, aggregate                     1.698 s/sim
+#:     speed-up                                 1.80x   <- not 2.98x
+#:
+#: **8 workers buy 1.80x on the benchmark's own task mix**, because each worker
+#: now runs Python between simulations — CMA-ES's eigendecomposition, GP-BO's
+#: O(n^3) fit, PPO's torch forward — where session 17's probe ran nothing but
+#: ngspice. Sizing to 1.341 would plan a 12-hour run that takes 15.
+SEC_PER_SIM_AT_8: float = 1.698
 
-#: Session 17's own throughput ratio, for the record: 8 workers over 1 worker.
-SPEEDUP_AT_8: float = 2.982
+#: Measured on the same 33 runs: single-process 3.060 s/sim over 8-worker
+#: aggregate 1.698 s/sim. Session 17's 2.98x stands for ITS task set and does
+#: not transfer to this one; both are quoted in `BASELINES.md` §1.
+SPEEDUP_AT_8: float = 1.802
+
+#: Session 17 §6i, on 24 isolated evaluations. Kept because `BASELINES.md`
+#: quotes both and the difference between them is the point.
+SEC_PER_SIM_AT_8_SESSION_17: float = 1.341
+SPEEDUP_AT_8_SESSION_17: float = 2.982
 
 #: The seed protocol. Every run's seed is `BASE_SEED + PROBLEM_OFFSET[problem]
 #: + METHOD_OFFSET[method] + replicate`, so a seed identifies its run and two
@@ -391,6 +414,11 @@ class Objective:
         """The invalid reward. The global minimum of the four bands."""
         return R.invalid_reward(len(self.specs))
 
+    @property
+    def ceiling(self) -> float:
+        """The best score the AC sweep grid permits. See `reward_ceiling`."""
+        return reward_ceiling(self.target_f_peak_hz, self.specs)
+
     # -- scoring --------------------------------------------------------------
 
     def _score_one(self, sizing: Sizing, pt: EvalPoint
@@ -527,6 +555,8 @@ class Objective:
             "n_feasible": sum(1 for t in s if t.feasible),
             "sims_to_first_feasible": (first.cum_sims if first else None),
             "censored": first is None,
+            "reward_ceiling": self.ceiling,
+            "sims_to_ceiling": sims_to_ceiling(self.trials, self.ceiling),
             "invalid_rate": self.invalid_rate,
             "invalid_reasons": dict(self.invalid_reasons),
         }
@@ -803,6 +833,16 @@ class _ObjectiveEnv:
     `SpiceBudget`, and its `on_step` callback converts each `StepRecord` into a
     `Trial`. The budget check happens in the callback, which is why
     `BudgetExhausted` has to be an exception: it fires inside PPO's rollout.
+
+    **The pre-screen wraps PPO's ACTIONS but not its episode RESETS, and that
+    asymmetry is a limitation rather than a choice.** `CtleSizingEnv.reset`
+    draws its own start point and retries up to 25 times, and its seeded form
+    RAISES on a start that does not simulate ("a seeded start must be measured
+    before it is used, not assumed") — so screening the draw would mean
+    reimplementing reset, not passing a flag. The consequence, stated so it is
+    not read off the numbers as a property of PPO: the screened PPO arm still
+    spends simulations on unscreened episode starts, roughly one per episode,
+    which makes it a WEAKER wrapper than the one the other four methods get.
     """
 
     def __init__(self, obj: Objective, cfg):
@@ -949,6 +989,22 @@ BUDGET_SIMS: int = 150
 REPLICATES: dict[str, int] = {"uniform": 20, "lhs": 20, "cmaes": 10,
                               "gp_bo": 10, "ppo": 10}
 
+#: Which methods run on P3, and this list is where the SECOND cut fell.
+#:
+#: **Re-cut 2026-08-08** after the pilot measured 8 workers buying 1.80x rather
+#: than 2.98x: at 1.698 s/sim the previous allocation was 14.2 h, not 11.2 h,
+#: and no longer fit. Per 7a the cut falls on problems, not on the per-run
+#: budget and not on the seed counts, so P3 lost `lhs` and `gp_bo`.
+#:
+#: Why those two and not the others: the pilot found **0 of 2 seeds feasible on
+#: P3 for both methods it ran**, at 60 simulations. P3's job is to establish
+#: whether anything feasible exists at all and to keep the anytime metric
+#: defined — `uniform` supplies the reference rate and `cmaes` is the strongest
+#: classical optimiser on P1, so between them the rung is answered. Adding
+#: `lhs` and `gp_bo` would spend 4 500 simulations to produce two more rows
+#: reading "never found one". `ppo` cannot run P3 at all — see `method_ppo`.
+P3_METHODS: tuple[str, ...] = ("uniform", "cmaes")
+
 
 def default_allocation() -> tuple[Allocation, ...]:
     """The overnight sweep, as three blocks. **What was cut is in the name.**
@@ -983,10 +1039,8 @@ def default_allocation() -> tuple[Allocation, ...]:
         out.append(Allocation("P1", m, False, n, BUDGET_SIMS))
     for m, n in REPLICATES.items():
         out.append(Allocation("P1", m, True, n, BUDGET_SIMS))
-    for m, n in REPLICATES.items():
-        if m == "ppo":
-            continue
-        out.append(Allocation("P3", m, False, n, BUDGET_SIMS))
+    for m in P3_METHODS:
+        out.append(Allocation("P3", m, False, REPLICATES[m], BUDGET_SIMS))
     return tuple(out)
 
 
@@ -998,10 +1052,7 @@ def budget_report(alloc: Optional[Sequence[Allocation]] = None) -> dict:
     def _hours(sims: int, sec: float) -> float:
         return sims * sec / 3600.0
 
-    full = 0
-    for p in ("P1", "P2", "P3"):
-        for m, n in REPLICATES.items():
-            full += 2 * n * BUDGET_SIMS
+    full = 3 * 2 * sum(REPLICATES.values()) * BUDGET_SIMS
     return {
         "budget_sims_per_run": BUDGET_SIMS,
         "replicates": dict(REPLICATES),
@@ -1017,6 +1068,8 @@ def budget_report(alloc: Optional[Sequence[Allocation]] = None) -> dict:
         "hours_optimistic": _hours(total,
                                    SEC_PER_SIM_TRAJECTORY / SPEEDUP_AT_8),
         "sec_per_sim_at_8_workers": SEC_PER_SIM_AT_8,
+        "sec_per_sim_at_8_workers_session_17": SEC_PER_SIM_AT_8_SESSION_17,
+        "speedup_at_8_session_17": SPEEDUP_AT_8_SESSION_17,
         "sec_per_sim_serial_uniform": SEC_PER_SIM_UNIFORM,
         "sec_per_sim_serial_trajectory": SEC_PER_SIM_TRAJECTORY,
         "workers": WORKERS,
@@ -1036,6 +1089,70 @@ def budget_report(alloc: Optional[Sequence[Allocation]] = None) -> dict:
 # ─────────────────────────────────────────────────────────────────────────────
 # 7c / 7h — metrics and statistics.
 # ─────────────────────────────────────────────────────────────────────────────
+
+
+# ── THE REWARD CEILING, and why it is a finding rather than a detail ────────
+#
+# Every netlist in this project sweeps `ac dec 50 1meg 100g`, so `meas ac MAX`
+# can only ever report a frequency on the lattice
+#
+#     f_k = 1e6 * 10^(k/50)   ->   0.066439 octaves apart (session 11)
+#
+# `reward_v1`'s feasible branch scores `B + min_i(margin_i / tol_i)`, and on P1
+# the binding row is essentially always `S3_f_peak`, whose margin is
+# `0.5 - |log2(f_peak / f_target)|` in octaves. **So the reward a design can
+# reach is capped by how close the LATTICE gets to the target**, not by the
+# circuit: with the target at the geometric centre of S3's octave, the nearest
+# grid point is 0.02466 octaves away and no design can score above
+#
+#     8 + (0.5 - 0.02466) / 0.5 = 8.95068
+#
+# Measured in the pilot: four independent runs, four DIFFERENT designs, all
+# scoring 8.950670 to six decimals. That is the ceiling, and it means
+# best-reward-at-budget saturates on P1 and cannot separate methods there. The
+# metric that can is SIMULATIONS TO REACH THE CEILING, which is why it is
+# computed beside the anytime curve rather than instead of it.
+AC_GRID_START_HZ: float = 1e6
+AC_GRID_PER_DECADE: int = 50
+#: One grid step, in octaves. Session 11 measured exactly this and used it to
+#: say S3's one-octave window holds 15 distinct f_peak values.
+AC_GRID_OCTAVES: float = math.log2(10.0 ** (1.0 / AC_GRID_PER_DECADE))
+
+
+def nearest_grid_offset_octaves(target_f_peak_hz: float) -> float:
+    """|target - nearest AC grid point|, in octaves. The ceiling's whole cause."""
+    from nebula.rl.contract import f_peak_octaves
+
+    base = f_peak_octaves(AC_GRID_START_HZ)
+    k = (f_peak_octaves(target_f_peak_hz) - base) / AC_GRID_OCTAVES
+    return float(min(abs(k - math.floor(k)), abs(math.ceil(k) - k))
+                 * AC_GRID_OCTAVES)
+
+
+def reward_ceiling(target_f_peak_hz: float,
+                   specs: Sequence[str] = R.V1_SPECS) -> float:
+    """The highest reward any design can score, given the AC sweep grid.
+
+    Assumes `S3_f_peak` is the binding row, which is what makes it a CEILING
+    and not a prediction: any other binding row gives a LOWER score, because
+    the feasible branch takes the minimum.
+    """
+    off = nearest_grid_offset_octaves(target_f_peak_hz)
+    return float(R.feasible_bonus(len(specs))
+                 + (R.TOL["S3_f_peak"] - off) / R.TOL["S3_f_peak"])
+
+
+def sims_to_ceiling(trials: Sequence[Trial], ceiling: float,
+                    tol: float = 1e-6) -> Optional[int]:
+    """Simulations spent before the ceiling was first reached. `None` = never.
+
+    Censored exactly like `sims_to_first_feasible`, and reported the same way
+    (7c): fraction of seeds that got there, and a median CONDITIONAL on that.
+    """
+    for t in trials:
+        if t.n_sims > 0 and t.reward >= ceiling - tol:
+            return int(t.cum_sims)
+    return None
 
 
 def anytime_curve(trials: Sequence[Trial], budget: int) -> np.ndarray:
@@ -1079,7 +1196,8 @@ def bootstrap_median(x: Sequence[float], n_boot: int = 10_000,
             float(np.percentile(meds, 100 * (1 - alpha / 2))))
 
 
-def censored_table(runs: Sequence[dict]) -> dict:
+def censored_table(runs: Sequence[dict], key: str = "sims_to_first_feasible"
+                   ) -> dict:
     """7c's secondary metric, handled as the censored data it is.
 
     *"Do not substitute the budget, or infinity, or drop the censored seeds and
@@ -1091,10 +1209,10 @@ def censored_table(runs: Sequence[dict]) -> dict:
     conditional — and the count it was taken over.
     """
     n = len(runs)
-    hits = [r["sims_to_first_feasible"] for r in runs
-            if r["sims_to_first_feasible"] is not None]
+    hits = [r[key] for r in runs if r.get(key) is not None]
     med, lo, hi = bootstrap_median(hits) if hits else (None, None, None)
     return {
+        "metric": key,
         "n_seeds": n,
         "n_found": len(hits),
         "frac_found": (len(hits) / n) if n else float("nan"),
@@ -1147,68 +1265,121 @@ def separable(ci_a: tuple[float, float], ci_b: tuple[float, float]) -> bool:
 CONTROL_RATIO_LIMIT: tuple[float, float] = (0.8, 1.25)
 
 
-def run_one(problem: str, method: str, replicate: int, budget_sims: int,
-            prescreen: bool, log: Optional[RunLog] = None) -> dict:
-    """One (problem, method, replicate). Returns its summary row."""
-    prob = PROBLEMS[problem]
-    seed = run_seed(problem, method, replicate)
+@dataclass(frozen=True)
+class Job:
+    """One unit of work. Picklable, so a worker process can be handed one."""
+
+    problem: str
+    method: str
+    replicate: int
+    budget_sims: int
+    prescreen: bool
+    #: "measured" rows enter the analysis; "warmup" and "control" carry only
+    #: timing, and 7g's control compares the two.
+    role: str = "measured"
+
+    @property
+    def config(self) -> str:
+        return f"{self.problem}/{self.method}{'+screen' if self.prescreen else ''}"
+
+
+def run_one(job: Job) -> dict:
+    """One (problem, method, replicate). Returns its summary AND its trials.
+
+    Trials come back rather than being written here because this runs in a
+    worker process (7f: `WORKERS` = 8 everywhere) and eight processes appending
+    to one JSONL is how a log gets interleaved rows. The parent writes them.
+    """
+    # One BLAS/torch thread per worker. Eight workers each spawning a thread
+    # pool oversubscribes the machine and would make the wall clock a
+    # measurement of the thread scheduler.
+    try:                                                    # pragma: no cover
+        import torch
+
+        torch.set_num_threads(1)
+    except Exception:                                       # pragma: no cover
+        pass
+
+    prob = PROBLEMS[job.problem]
+    seed = run_seed(job.problem, job.method, job.replicate)
     rng = np.random.default_rng(seed)
 
-    rows: list[dict] = []
-
-    def _on_trial(t: Trial) -> None:
-        if log is not None:
-            log.event("trial", problem=problem, method=method,
-                      replicate=replicate, seed=seed, prescreen=prescreen,
-                      **asdict(t))
-
-    obj = Objective(prob, budget_sims, prescreen=prescreen, on_trial=_on_trial)
+    obj = Objective(prob, job.budget_sims, prescreen=job.prescreen)
     t0 = time.perf_counter()
     try:
-        METHODS[method](obj, rng)
+        METHODS[job.method](obj, rng)
     except BudgetExhausted:
         pass
     wall = time.perf_counter() - t0
 
     s = obj.summary()
-    s.update(method=method, replicate=replicate, seed=seed,
-             prescreen=prescreen, wall_s=wall,
+    s.update(problem=job.problem, method=job.method, replicate=job.replicate,
+             seed=seed, prescreen=job.prescreen, role=job.role, wall_s=wall,
              model_seconds=float(getattr(obj, "model_seconds", 0.0)),
              sec_per_sim=(wall / obj.n_sims if obj.n_sims else float("nan")),
-             curve=[float(v) for v in anytime_curve(obj.trials, budget_sims)])
-    if log is not None:
-        log.event("run_summary", **{k: v for k, v in s.items() if k != "curve"})
+             curve=[float(v) for v in anytime_curve(obj.trials,
+                                                    job.budget_sims)],
+             trials=[asdict(t) for t in obj.trials])
     return s
+
+
+def jobs_for(alloc: Sequence[Allocation], seed: int) -> list[Job]:
+    """Every measured run, INTERLEAVED (7g).
+
+    The shuffle is over individual jobs, not over blocks, so no method is
+    systematically early and no method is systematically late — a block-level
+    shuffle would still put all twenty `uniform` replicates next to each other
+    and let a thermal drift land on one method.
+    """
+    out = [Job(a.problem, a.method, rep, a.budget_sims, a.prescreen)
+           for a in alloc for rep in range(a.replicates)]
+    np.random.default_rng(seed).shuffle(out)
+    return out
 
 
 def sweep(alloc: Optional[Sequence[Allocation]] = None,
           log_path: Optional[Path] = None,
           seed: int = BASE_SEED,
-          control: bool = True) -> dict:
+          control: bool = True,
+          workers: int = WORKERS,
+          out_path: Optional[Path] = None) -> dict:
     """The whole benchmark. ONE command, fixed seeds (7j).
+
+    **The parallelism is across RUNS, not inside them, and that is a fairness
+    decision.** Parallelising inside a run would help the batch methods
+    (uniform, LHS, one CMA-ES generation) and be impossible for GP-BO, whose
+    every proposal depends on the previous answer — so the comparison would
+    become a comparison of how batchable each method is. Across runs, every
+    method keeps its own sequential decision structure and every one of them
+    sees the same `WORKERS` = 8 machine.
 
     **7g's timing discipline, enforced here rather than remembered:**
 
-    * the block order is INTERLEAVED — shuffled with `seed`, so no method is
-      systematically first and no method is systematically last;
-    * the FIRST configuration is re-run LAST as a control, and its
-      per-simulation wall clock is compared with its own first pass;
-    * if the control disagrees by more than `CONTROL_RATIO_LIMIT`, the result
-      carries `timing_void = True` and the WALL-CLOCK numbers are void. The
-      SIMULATION counts are not, and that asymmetry is the reason 7g asks for
-      simulations as the headline: they are immune to this entirely.
+    * jobs are INTERLEAVED (`jobs_for`);
+    * a **warm-up** run of the first configuration executes first, alone, and
+      is **discarded from the analysis**. Session 17 measured that this is the
+      defence that actually works: with randomisation and a control but no
+      warm-up, on an idle machine, the control still came back at 1.60x,
+      because *the first configuration always pays the cold file cache,
+      whichever one it is* (G71);
+    * the **control** re-runs that same configuration LAST, also alone, and is
+      compared with the warm-up. Both are single-process, one before and one
+      after the pool, so the comparison measures MACHINE DRIFT and is not
+      confounded by a draining pool having fewer competitors;
+    * if they disagree by more than `CONTROL_RATIO_LIMIT` the result carries
+      `timing_void = True`. The WALL-CLOCK numbers for that sweep are then void
+      and the sweep is **repeated, not adjusted**. The SIMULATION counts are
+      unaffected, which is exactly why 7g asks for simulations as the headline.
 
-    The cold-cache effect this guards against is measured, not hypothetical:
-    session 17 found the same 8-worker configuration reporting 2497 ms/task
-    running first and 1558 ms/task running last, on an idle machine, with
-    randomisation already in place (G71).
+    Both the warm-up and the control cost real simulations and both are counted
+    (7f: every simulation, including ones whose results are discarded).
     """
-    alloc = list(alloc if alloc is not None else default_allocation())
-    rng = np.random.default_rng(seed)
-    rng.shuffle(alloc)
+    from concurrent.futures import ProcessPoolExecutor, as_completed
 
+    alloc = list(alloc if alloc is not None else default_allocation())
+    jobs = jobs_for(alloc, seed)
     log_path = log_path or (HERE / "baselines_run.jsonl")
-    header = {"task": "7 — baselines sweep", "base_seed": seed,
+    header = {"task": "7 - baselines sweep", "base_seed": seed,
               "allocation": [asdict(a) for a in alloc],
               "budget": budget_report(alloc),
               "problems": {k: {"note": v.note,
@@ -1216,51 +1387,157 @@ def sweep(alloc: Optional[Sequence[Allocation]] = None,
                            for k, v in PROBLEMS.items()},
               "tunable_seam": TUNABLE_SEAM,
               "designer_baseline": DESIGNER_BASELINE,
+              "job_order": [j.config for j in jobs],
               "started": time.strftime("%Y-%m-%d %H:%M:%S"),
               **provenance()}
 
     runs: list[dict] = []
+    t_sweep = time.perf_counter()
     with RunLog(log_path, header) as log:
-        for a in alloc:
-            for rep in range(a.replicates):
-                runs.append(run_one(a.problem, a.method, rep, a.budget_sims,
-                                    a.prescreen, log))
-                print(f"  {a.problem} {a.method}"
-                      f"{'+screen' if a.prescreen else '':>8} rep {rep:>2}  "
-                      f"best {runs[-1]['best_reward']}  "
-                      f"sims {runs[-1]['n_sims']}  "
-                      f"{runs[-1]['wall_s']:.1f} s", flush=True)
+
+        def _emit(r: dict) -> None:
+            trials = r.pop("trials", [])
+            for t in trials:
+                log.event("trial", problem=r["problem"], method=r["method"],
+                          replicate=r["replicate"], seed=r["seed"],
+                          prescreen=r["prescreen"], role=r["role"], **t)
+            log.event("run_summary",
+                      **{k: v for k, v in r.items() if k != "curve"})
+
+        warm = None
+        if control and jobs:
+            j0 = jobs[0]
+            warm = run_one(Job(j0.problem, j0.method, 0, j0.budget_sims,
+                               j0.prescreen, role="warmup"))
+            _emit(warm)
+            print(f"  warm-up {j0.config}: {warm['sec_per_sim']:.3f} s/sim, "
+                  f"{warm['n_sims']} sims, DISCARDED from the analysis",
+                  flush=True)
+
+        if workers <= 1:
+            for j in jobs:
+                r = run_one(j)
+                runs.append(r)
+                _emit(dict(r))
+        else:
+            with ProcessPoolExecutor(max_workers=workers) as ex:
+                futs = {ex.submit(run_one, j): j for j in jobs}
+                for i, fut in enumerate(as_completed(futs), start=1):
+                    r = fut.result()
+                    runs.append(r)
+                    _emit(dict(r))
+                    print(f"  [{i:>3}/{len(jobs)}] {futs[fut].config:<18} "
+                          f"rep {r['replicate']:>2}  best "
+                          f"{r['best_reward']:.3f}  sims {r['n_sims']:>4}  "
+                          f"{r['wall_s']:.1f} s", flush=True)
 
         ctrl = None
-        if control and runs:
-            a0 = alloc[0]
-            first = [r for r in runs if r["problem"] == a0.problem
-                     and r["method"] == a0.method
-                     and r["prescreen"] == a0.prescreen][0]
-            re_run = run_one(a0.problem, a0.method, 0, a0.budget_sims,
-                             a0.prescreen, log)
-            ratio = (first["sec_per_sim"] / re_run["sec_per_sim"]
-                     if re_run["sec_per_sim"] else float("nan"))
+        if control and warm is not None:
+            j0 = jobs[0]
+            last = run_one(Job(j0.problem, j0.method, 0, j0.budget_sims,
+                               j0.prescreen, role="control"))
+            _emit(dict(last))
+            ratio = (warm["sec_per_sim"] / last["sec_per_sim"]
+                     if last["sec_per_sim"] else float("nan"))
             lo, hi = CONTROL_RATIO_LIMIT
-            ctrl = {"config": f"{a0.problem}/{a0.method}"
-                             f"{'+screen' if a0.prescreen else ''}",
-                    "first_sec_per_sim": first["sec_per_sim"],
-                    "last_sec_per_sim": re_run["sec_per_sim"],
-                    "ratio": ratio,
-                    "limit": list(CONTROL_RATIO_LIMIT),
+            ctrl = {"config": j0.config,
+                    "warmup_sec_per_sim": warm["sec_per_sim"],
+                    "control_sec_per_sim": last["sec_per_sim"],
+                    "ratio": float(ratio), "limit": list(CONTROL_RATIO_LIMIT),
                     "timing_void": bool(not (lo <= ratio <= hi)),
-                    "note": "if timing_void, the WALL-CLOCK numbers for this "
-                            "sweep are void and the sweep is repeated, not "
-                            "adjusted. Simulation counts are unaffected."}
+                    "note": "warm-up and control are both SINGLE-PROCESS runs "
+                            "of the same configuration, before and after the "
+                            "pool, so the ratio is machine drift and not pool "
+                            "contention. If timing_void, the WALL-CLOCK "
+                            "numbers are void and the sweep is repeated, not "
+                            "adjusted; the simulation counts stand."}
             log.event("timing_control", **ctrl)
 
+        analysis = analyse([r for r in runs if r.get("role", "measured")
+                            == "measured"])
+        total = sum(r["n_sims"] for r in runs) + \
+            (warm["n_sims"] if warm else 0) + \
+            (last["n_sims"] if ctrl else 0)
         out = {"header": header, "runs": runs, "control": ctrl,
-               "analysis": analyse(runs)}
-        log.event("sweep_summary", control=ctrl,
-                  n_runs=len(runs),
-                  total_sims=sum(r["n_sims"] for r in runs))
-    _save(out, HERE / "baselines_results.json")
+               "warmup": {k: v for k, v in (warm or {}).items()
+                          if k != "curve"},
+               "wall_s": time.perf_counter() - t_sweep,
+               "total_sims_including_discarded": total,
+               "analysis": analysis}
+        log.event("sweep_summary", control=ctrl, n_runs=len(runs),
+                  total_sims_including_discarded=total,
+                  wall_s=out["wall_s"])
+    _save(out, out_path or (HERE / "baselines_results.json"))
     return out
+
+
+def analyse_log(path: Path) -> dict:
+    """Rebuild the analysis from a run log alone. **The recovery path.**
+
+    Why this exists rather than only `sweep()` returning its own analysis: a
+    12-hour sweep that is interrupted in its last minute would otherwise have
+    produced 30 000 simulations and no result. It happened on the first pilot —
+    33 of 34 runs finished and the process was killed before it printed
+    anything — and the log had every row.
+
+    So the analysis is reconstructed from the `trial` rows, not from the
+    `run_summary` rows: the summaries omit the anytime curve (it is 150 floats
+    per run and would triple the log), and the trials contain strictly more
+    information than the summaries do. A summary that disagrees with its own
+    trials would be two definitions of one thing (rule 9); this way there is
+    one.
+    """
+    rows = list(runlog_read(path))
+    header = next((r for r in rows if r.get("kind") == "header"), {})
+    trials: dict[tuple, list[dict]] = {}
+    budgets: dict[tuple, int] = {}
+    alloc = {(a["problem"], a["method"], a["prescreen"]): a["budget_sims"]
+             for a in header.get("allocation", [])}
+    for r in rows:
+        if r.get("event") != "trial" or r.get("role") != "measured":
+            continue
+        key = (r["problem"], r["method"], bool(r["prescreen"]), r["replicate"])
+        trials.setdefault(key, []).append(r)
+        budgets[key] = alloc.get(key[:3], 0)
+
+    runs = []
+    for key, ts in sorted(trials.items()):
+        prob, method, screen, rep = key
+        ts.sort(key=lambda t: t["index"])
+        budget = budgets[key] or max(t["cum_sims"] for t in ts)
+        sim = [t for t in ts if t["n_sims"] > 0]
+        first = next((t for t in sim if t["feasible"]), None)
+        ceil = reward_ceiling(
+            math.sqrt(SPEC_F_PEAK_HZ_RANGE[0] * SPEC_F_PEAK_HZ_RANGE[1]))
+        hit = next((t for t in sim if t["reward"] >= ceil - 1e-6), None)
+        curve = np.full(budget, -np.inf)
+        best = -np.inf
+        for t in sim:
+            best = max(best, t["reward"])
+            lo = min(int(t["cum_sims"]), budget)
+            curve[lo - 1:] = np.maximum(curve[lo - 1:], best)
+        runs.append({
+            "problem": prob, "method": method, "prescreen": screen,
+            "replicate": rep, "seed": ts[0].get("seed"),
+            "curve": [float(v) for v in curve],
+            "n_sims": sum(t["n_sims"] for t in ts),
+            "n_simulated": len(sim), "n_trials": len(ts),
+            "n_feasible": sum(1 for t in sim if t["feasible"]),
+            "best_reward": (max(t["reward"] for t in sim) if sim else None),
+            "sims_to_first_feasible": (first["cum_sims"] if first else None),
+            "sims_to_ceiling": (hit["cum_sims"] if hit else None),
+            "reward_ceiling": ceil,
+            "n_screened_out": sum(1 for t in ts if t["screened_out"]),
+            "invalid_rate": (sum(1 for t in sim if t["verdict"] == "invalid")
+                             / len(sim) if sim else 0.0),
+            "wall_s": sum(t["seconds"] for t in ts),
+            "model_seconds": 0.0,
+            "sec_per_sim": (sum(t["seconds"] for t in ts)
+                            / max(sum(t["n_sims"] for t in ts), 1)),
+        })
+    return {"header": header, "runs": runs, "analysis": analyse(runs),
+            "control": next((r for r in rows
+                             if r.get("event") == "timing_control"), None)}
 
 
 def analyse(runs: Sequence[dict]) -> dict:
@@ -1293,6 +1570,8 @@ def analyse(runs: Sequence[dict]) -> dict:
             "band_at": band,
             "final": bootstrap_median(curves[:, -1], rng=rng),
             "censored": censored_table(rs),
+            "censored_ceiling": censored_table(rs, "sims_to_ceiling"),
+            "reward_ceiling": rs[0].get("reward_ceiling"),
             "invalid_rate": float(np.median([r["invalid_rate"] for r in rs])),
             "wall_s": float(np.median([r["wall_s"] for r in rs])),
             "model_s": float(np.median([r["model_seconds"] for r in rs])),
@@ -1359,12 +1638,16 @@ def print_budget(b: dict) -> None:
     print("\n" + "=" * 78)
     print("7a BUDGET ARITHMETIC -- computed, not asserted")
     print("=" * 78)
-    print(f"  measured cost, session 17 sec 6i, warm-up + control + interleave:")
-    print(f"    serial, uniform box draws     {b['sec_per_sim_serial_uniform']:.3f} s/sim")
-    print(f"    serial, policy trajectory     {b['sec_per_sim_serial_trajectory']:.3f} s/sim")
-    print(f"    {b['workers']} workers, uniform box draws  "
-          f"{b['sec_per_sim_at_8_workers']:.3f} s/sim   "
-          f"({b['speedup_at_8']:.2f}x; 11 workers is SLOWER)")
+    print(f"  measured cost. Session 17 sec 6i for the serial rows; THIS")
+    print(f"  benchmark's own 33 runs / 1992 sims for the 8-worker row:")
+    print(f"    serial, uniform box draws     {b['sec_per_sim_serial_uniform']:.3f} s/sim  (session 17)")
+    print(f"    serial, policy trajectory     {b['sec_per_sim_serial_trajectory']:.3f} s/sim  (session 17)")
+    print(f"    {b['workers']} workers, THIS task mix        "
+          f"{b['sec_per_sim_at_8_workers']:.3f} s/sim  "
+          f"({b['speedup_at_8']:.2f}x over its own 3.060 s single process)")
+    print(f"    {b['workers']} workers, isolated evals    "
+          f"{b['sec_per_sim_at_8_workers_session_17']:.3f} s/sim  "
+          f"({b['speedup_at_8_session_17']:.2f}x, session 17 -- does NOT transfer)")
     print()
     print(f"  budget per run  {b['budget_sims_per_run']} simulations "
           f"(the x-axis; held across every method and rung)")
@@ -1462,6 +1745,91 @@ def print_prescreen(r: dict, margins: Sequence[dict],
     print()
 
 
+def print_sweep(out: dict, label: str = "SWEEP") -> None:
+    """7c + 7h, on one screen. Simulations are the headline; wall clock is a
+    secondary column, because only one of the two is immune to G71."""
+    a = out["analysis"]
+    print("\n" + "=" * 78)
+    print(f"7c/7h {label} RESULTS")
+    print("=" * 78)
+    print(f"  {out['total_sims_including_discarded']:,} simulations including "
+          f"the discarded warm-up and the control, "
+          f"{out['wall_s'] / 60:.1f} min wall")
+    c = out.get("control")
+    if c:
+        print(f"  TIMING CONTROL ({c['config']}): warm-up "
+              f"{c['warmup_sec_per_sim']:.3f} s/sim -> control "
+              f"{c['control_sec_per_sim']:.3f} s/sim, ratio {c['ratio']:.3f} "
+              f"(limit {c['limit'][0]}-{c['limit'][1]})")
+        print(f"  -> {'TIMING VOID; repeat the sweep, do not adjust it'if c['timing_void'] else 'clean'}")
+    print()
+    print("  ANYTIME CURVE -- best reward at the budget, median over seeds")
+    print(f"  {'group':<20} {'n':>3} {'median':>9} {'95% CI':>20} "
+          f"{'invalid':>8} {'screened':>9} {'s/sim':>7} {'model s':>8}")
+    print("  " + "-" * 92)
+    for k in sorted(a["groups"]):
+        g = a["groups"][k]
+        m, lo, hi = g["final"]
+        print(f"  {k:<20} {g['n_seeds']:>3} {m:>9.3f} "
+              f"[{lo:>8.3f},{hi:>8.3f}] {100 * g['invalid_rate']:>7.1f}% "
+              f"{g['screened_out']:>9} {g['sec_per_sim']:>7.2f} "
+              f"{g['model_s']:>8.1f}")
+    print()
+    print("  SIMULATIONS TO FIRST FEASIBLE -- CENSORED DATA, read all three "
+          "columns")
+    print(f"  {'group':<20} {'found/seeds':>12} {'median|found':>13} "
+          f"{'95% CI':>20}")
+    print("  " + "-" * 70)
+    for k in sorted(a["groups"]):
+        cz = a["groups"][k]["censored"]
+        med = ("--" if cz["median_conditional"] is None
+               else f"{cz['median_conditional']:.1f}")
+        ci = ("--" if cz["ci_lo_conditional"] is None
+              else f"[{cz['ci_lo_conditional']:.1f},{cz['ci_hi_conditional']:.1f}]")
+        print(f"  {k:<20} {cz['n_found']:>5}/{cz['n_seeds']:<6} {med:>13} "
+              f"{ci:>20}")
+    print("    The median is CONDITIONAL on having found one. Censored seeds "
+          "are NOT")
+    print("    substituted with the budget, with infinity, or dropped from a "
+          "mean.")
+    print()
+    ceil = next((g.get("reward_ceiling") for g in a["groups"].values()
+                 if g.get("reward_ceiling") is not None), None)
+    if ceil is not None:
+        print(f"  SIMULATIONS TO THE REWARD CEILING (+{ceil:.5f}) -- also "
+              f"censored")
+        print("    The ceiling is a property of the `ac dec 50 1meg 100g` grid, "
+              "not of the circuit:")
+        print(f"    the nearest grid point to the target is "
+              f"{nearest_grid_offset_octaves(math.sqrt(SPEC_F_PEAK_HZ_RANGE[0] * SPEC_F_PEAK_HZ_RANGE[1])):.5f} "
+              f"octaves away, and S3_f_peak is the binding row.")
+        print(f"  {'group':<20} {'reached/seeds':>14} {'median|reached':>15} "
+              f"{'95% CI':>20}")
+        print("  " + "-" * 72)
+        for k in sorted(a["groups"]):
+            cz = a["groups"][k]["censored_ceiling"]
+            med = ("--" if cz["median_conditional"] is None
+                   else f"{cz['median_conditional']:.1f}")
+            ci = ("--" if cz["ci_lo_conditional"] is None
+                  else f"[{cz['ci_lo_conditional']:.1f},{cz['ci_hi_conditional']:.1f}]")
+            print(f"  {k:<20} {cz['n_found']:>6}/{cz['n_seeds']:<7} "
+                  f"{med:>15} {ci:>20}")
+        print()
+    print("  RANKING -- only where the intervals do not overlap (7h)")
+    for prob, rows in a["ranking"].items():
+        print(f"    {prob}:")
+        for r in rows:
+            sep = r["separable_from_next"]
+            tag = ("" if sep is None else
+                   ("  > (separable)" if sep else
+                    "  ~ NOT SEPARABLE AT THIS SAMPLE SIZE"))
+            print(f"      {r['group']:<20} {r['median_final']:>9.3f} "
+                  f"[{r['ci'][0]:.3f}, {r['ci'][1]:.3f}]{tag}")
+    print()
+    print("  " + a["multiple_comparisons"].replace(". ", ".\n  "))
+    print()
+
+
 def print_designer() -> None:
     d = DESIGNER_BASELINE
     print("\n" + "=" * 78)
@@ -1491,13 +1859,19 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     ap.add_argument("--pilot", action="store_true",
                     help="a small real sweep: validates the harness end to end")
     ap.add_argument("--sweep", action="store_true", help="the full run")
+    ap.add_argument("--analyse", type=Path, default=None,
+                    help="re-analyse a run log (the recovery path; "
+                         "works on a PARTIAL log)")
     ap.add_argument("--pilot-budget", type=int, default=40)
     ap.add_argument("--pilot-reps", type=int, default=3)
+    ap.add_argument("--pilot-methods", type=str,
+                    default="uniform,lhs,cmaes,gp_bo,ppo")
+    ap.add_argument("--workers", type=int, default=WORKERS)
     ap.add_argument("--out", type=Path, default=None)
     args = ap.parse_args(argv)
 
     if not any((args.budget, args.prescreen, args.designer, args.pilot,
-                args.sweep)):
+                args.sweep, args.analyse)):
         ap.error("choose at least one stage; see the module docstring")
 
     results: dict = {}
@@ -1515,21 +1889,42 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     if args.designer:
         print_designer()
         results["designer"] = DESIGNER_BASELINE
+    if args.analyse:
+        out = analyse_log(args.analyse)
+        out["total_sims_including_discarded"] = sum(r["n_sims"]
+                                                    for r in out["runs"])
+        out["wall_s"] = sum(r["wall_s"] for r in out["runs"])
+        print_sweep(out, f"RE-ANALYSIS of {args.analyse.name}")
+        results["analysis"] = {"control": out["control"],
+                               "analysis": out["analysis"],
+                               "n_runs": len(out["runs"]),
+                               "source": str(args.analyse)}
+
     if args.pilot:
+        ms = [m.strip() for m in args.pilot_methods.split(",") if m.strip()]
         alloc = tuple(Allocation("P1", m, s, args.pilot_reps,
                                  args.pilot_budget)
-                      for s in (False, True)
-                      for m in ("uniform", "lhs", "cmaes", "gp_bo"))
-        out = sweep(alloc, log_path=HERE / "baselines_pilot.jsonl")
-        results["pilot"] = {"runs": out["runs"], "control": out["control"],
-                            "analysis": out["analysis"]}
+                      for s in (False, True) for m in ms)
+        out = sweep(alloc, log_path=HERE / "baselines_pilot.jsonl",
+                    workers=args.workers,
+                    out_path=HERE / "baselines_pilot_results.json")
+        print_sweep(out, "PILOT")
+        results["pilot"] = {"control": out["control"],
+                            "analysis": out["analysis"],
+                            "wall_s": out["wall_s"],
+                            "total_sims_including_discarded":
+                                out["total_sims_including_discarded"]}
     if args.sweep:
-        out = sweep()
+        out = sweep(workers=args.workers)
+        print_sweep(out, "SWEEP")
         results["sweep"] = {"control": out["control"],
-                            "analysis": out["analysis"]}
+                            "analysis": out["analysis"],
+                            "wall_s": out["wall_s"],
+                            "total_sims_including_discarded":
+                                out["total_sims_including_discarded"]}
 
     if results:
-        _save(results, args.out or (HERE / "baselines_results.json"))
+        _save(results, args.out or (HERE / "baselines_summary.json"))
     return 0
 
 

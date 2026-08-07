@@ -72,6 +72,9 @@ Simulator is ngspice 41 against the real SKY130 PDK.
 | Is the mandated 1-tap DFE enough? | **Yes across 3–12 dB** — the eye never closes. But only **14.7 %** of what it cannot reach is in `h₂` and **31 %** is beyond 20 UI, so more taps would not help: the CTLE has to do this work | [`nebula/CHANNEL_MODEL.md`](nebula/CHANNEL_MODEL.md) §5 |
 | How much of the equalisation does the transmitter do? | **Exactly 3.5 dB** — PCIe Gen2's mandated de-emphasis. So the CTLE's burden is −0.5…+8.5 dB and **the top 3.5 dB of the tunable range is never called for** | [`nebula/CHANNEL_MODEL.md`](nebula/CHANNEL_MODEL.md) §4 |
 | Does the stage compress? | **At 5 of 7 loss points**, worst at *low* loss (1.51× at 3 dB). Measured as peak distortion through the real pulse response — the earlier 1.22× was a different, weaker convention | [`nebula/CHANNEL_MODEL.md`](nebula/CHANNEL_MODEL.md) §6 |
+| Can physics alone solve the sizing problem? | **No.** An analytic pre-screen predicts the peak frequency to **4.93 %** and rejects **61.7 %** of the box for free at a **0.39 %** false-rejection rate — but the yield among the designs it keeps is **34.9 %**, not the >50 % that would make search unnecessary. A **2.60× multiplier, not a solution** | [`nebula/BASELINES.md`](nebula/BASELINES.md) §5 |
+| What does a benchmark of this problem cost? | Fully crossed, **23.5 h**; what fits an overnight run is **30 000 simulations = 11.2 h**. The cut fell on problems and screen arms, never on seeds or the per-run budget | [`nebula/BASELINES.md`](nebula/BASELINES.md) §1 |
+| Is the reward's best score a property of the circuit? | **No — of the AC sweep.** `meas ac MAX` reports on a lattice 0.066 octaves wide, so no design can score above **+8.95067** at nominal. Four different designs measured exactly that | [`nebula/BASELINES.md`](nebula/BASELINES.md) §3 |
 
 **The one-line summary:** PVT corners cost 39 %, the load range costs 99.4 %,
 the ideal-tail assumption cost 8.8 %. The load dominates, and it dominates
@@ -87,8 +90,10 @@ needs.
 
 Predictions are written down and committed **before** the experiment runs, and
 the outcome is recorded afterwards whichever way it went. See
-[`nebula/PREDICTIONS.md`](nebula/PREDICTIONS.md). Four entries so far; the
-misses are recorded as misses.
+[`nebula/PREDICTIONS.md`](nebula/PREDICTIONS.md). Six entries so far; the
+misses are recorded as misses. Entry 6 — the predicted ordering of five search
+methods — was committed before the benchmark harness had run a single
+simulation, and the commit timestamp is the evidence.
 
 ### Gate status
 

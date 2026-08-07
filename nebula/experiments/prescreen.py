@@ -296,6 +296,15 @@ def predict_response(params: Mapping[str, float],
             rl = geo.rl.r_actual_ohm
             cl = cl + 0.5 * geo.rl.parasitic_to_bulk_f()
 
+    # A non-positive passive is a PROGRAMMING error, not a policy move: `rs`,
+    # `cs` and `rl` are log-scaled box axes with positive floors and `cl` is
+    # CONTEXT. So this raises rather than returning a named invalidity, which
+    # is the opposite of `evaluator.evaluate`'s contract and deliberately so.
+    for nm, v in (("rs", rs), ("cs", cs), ("rl", rl), ("cl", cl)):
+        if not (math.isfinite(v) and v > 0.0):
+            raise ValueError(f"prescreen: {nm} = {v!r} must be positive and "
+                             f"finite; it is not something a policy can choose")
+
     gm, gmbs = predict_gm(params)
     k = 1.0 + K_ALPHA * (gm + gmbs) * rs / 2.0
     fz = 1.0 / (2.0 * math.pi * rs * cs)
@@ -592,8 +601,78 @@ def margin_scan(margins: Sequence[tuple[float, float]] = (
     return out
 
 
+def accuracy_from_log(path, problem: str = "P1",
+                      margin_oct: float = MARGIN_OCT,
+                      margin_db: float = MARGIN_DB) -> dict:
+    """Re-measure the screen on a BENCHMARK RUN LOG, not the calibration set.
+
+    **This is the transfer test, and it is the reason it exists as a function
+    rather than as a paragraph.** The calibration set (`robust_geometry_data.
+    csv`) sits at `cl` = 150 fF with `nf_in` varying 1-8 and IDEAL R/C
+    elements. The benchmark runs `nf_in` = 4 at `cl_mid` = 32.63 fF with DRAWN
+    passives and a real current mirror. Those are different populations, and
+    `PREDICTIONS.md` entry 6 pre-registered "the calibration does not transfer"
+    as falsification condition 2.
+
+    Only UNSCREENED rows are read: a screened arm's evaluations are the
+    accepted subset by construction, so measuring the screen on them would be
+    measuring it on its own output.
+    """
+    import json
+    from pathlib import Path as _P
+
+    rows = []
+    for line in _P(path).open("r", encoding="utf-8"):
+        d = json.loads(line)
+        if (d.get("event") == "trial" and not d.get("prescreen")
+                and d.get("problem") == problem
+                and d.get("role", "measured") == "measured"):
+            rows.append(d)
+    if not rows:
+        raise ValueError(f"{path} has no unscreened {problem} trials")
+
+    valid = [r for r in rows if r.get("verdict") == "valid" and r.get("predicted")]
+    f_hat = np.array([r["predicted"]["f_peak_hz"] for r in valid])
+    pk_hat = np.array([r["predicted"]["peaking_db"] for r in valid])
+    f_true = np.array([2.5e9 * 2 ** r["meas"]["f_peak_oct"] for r in valid])
+    pk_true = np.array([r["meas"]["peaking_db"] for r in valid])
+    ape = np.abs(f_hat - f_true) / f_true
+    band = (f_true >= 0.5e9) & (f_true <= 5.0e9)
+
+    target = math.sqrt(SPEC_F_PEAK_HZ_RANGE[0] * SPEC_F_PEAK_HZ_RANGE[1])
+    acc = np.array([screen(r["params"], margin_oct=margin_oct,
+                           margin_db=margin_db,
+                           target_f_peak_hz=target).accept for r in rows])
+    feas = np.array([bool(r["feasible"]) for r in rows])
+    return {
+        "source": str(path), "problem": problem, "n": len(rows),
+        "n_valid": len(valid),
+        "f_peak_mdape_global": float(np.median(ape)) if len(ape) else float("nan"),
+        "f_peak_mdape_band": (float(np.median(ape[band])) if band.any()
+                              else float("nan")),
+        "peaking_mae_db": float(np.median(np.abs(pk_hat - pk_true))),
+        "peaking_bias_db": float(np.median(pk_hat - pk_true)),
+        "free_rejection_rate": float(1.0 - acc.mean()),
+        # NOTE this is feasibility under reward v1's SEVEN rows, not S3 alone,
+        # so it is not the same quantity `accuracy()` reports and the two are
+        # labelled differently everywhere they appear.
+        "feasible_base_rate": float(feas.mean()),
+        "false_rejection_rate": (float((feas & ~acc).sum() / feas.sum())
+                                 if feas.sum() else float("nan")),
+        "n_false_rejected": int((feas & ~acc).sum()),
+        "n_feasible": int(feas.sum()),
+        "effective_yield": (float(feas[acc].mean()) if acc.sum()
+                            else float("nan")),
+        "yield_lift": (float(feas[acc].mean() / feas.mean())
+                       if acc.sum() and feas.mean() > 0 else float("nan")),
+        "within_budget": bool((feas & ~acc).sum() / feas.sum()
+                              <= FALSE_REJECTION_BUDGET) if feas.sum() else None,
+    }
+
+
 __all__: Sequence[str] = (
     "Prediction", "ScreenVerdict", "FALSE_REJECTION_BUDGET", "margin_scan",
+    "accuracy_from_log",
     "GM_LOG_BETA", "GMBS_RATIO_BETA", "GM_FEATURES", "K_ALPHA",
     "MARGIN_OCT", "MARGIN_DB", "CALIBRATION_CSV",
     "predict_gm", "predict_response", "screen", "accept",

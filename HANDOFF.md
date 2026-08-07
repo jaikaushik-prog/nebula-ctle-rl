@@ -12,7 +12,46 @@
 > discovered to the Gotchas section. A change without a handoff update is an
 > incomplete change.
 
-Last updated: **2026-08-07** (session 17: **the RL loop runs end to end, and
+Last updated: **2026-08-08** (session 18: **the benchmark the final claim
+rests on is built, and it moved two of its own inputs.** Task 7. **7e's LOUD
+VERDICT DOES NOT FIRE**: the analytic pre-screen predicts `f_peak` to **4.93 %**
+MdAPE (4.80 % in the 0.5-5 GHz decision region), rejects **61.7 % of the box for
+free** at a 0.39 % false-rejection rate, and lifts the S3 rate among accepted
+designs from **13.44 % to 34.94 %** -- a **2.60x multiplier, not the >50 % that
+would mean physics solves the nominal problem**. So a learned method is still
+needed for SEARCH. It CAN be pushed to 76.4 % at zero widening, but only by
+discarding **15.75 %** of the designs that meet S3, and a test pins the verdict
+in BOTH directions. What it actually removes is **84.3 % of the G44 population**
+(488 of 579 designs with no interior peak). **A FINDING THE BRIEF DID NOT ASK
+FOR: the primary metric has a CEILING that belongs to the AC sweep, not the
+circuit** -- `meas ac MAX` reports on a 0.066439-octave lattice and `S3_f_peak`
+is the binding reward row, so **no design can score above +8.950669**; derived
+analytically, then measured as **four different designs all scoring 8.950670**.
+Best-reward-at-budget therefore SATURATES on P1, so the harness also reports
+simulations-to-ceiling. **A 1992-simulation PILOT (7.4 h, 33 runs) moved two
+inputs: 8 workers buy 1.80x, NOT session 17's 2.98x** (that number came from
+isolated evaluations; here each worker also runs CMA-ES/GP/torch between
+simulations), which took the sweep from 11.2 h to 14.2 h and forced a re-cut to
+**25 500 simulations = 12.0 h** -- the cut falling on PROBLEMS, never on seeds
+or the per-run budget; and **A PRE-REGISTERED FALSIFICATION CONDITION FIRED --
+the pre-screen does not fully transfer.** Its population rates hold
+(free rejection 61.7 -> 63.9 %, lift 2.60 -> 2.66x) but its ACCURACY does not
+(f_peak MdAPE 4.93 -> **15.85 %**, peaking bias -0.009 -> **+0.361 dB**, false
+rejection 0.39 -> **3.88 %**, 10x over its declared budget), and **widening
+cannot fix it** -- at 2.5x the widening it is still 2.33 % while free rejection
+falls 64 -> 40 %. **A window cannot absorb a bias.** The mechanism is specific
+and checkable: the gm/I_D model was fitted on an IDEAL-TAIL population where
+`I_D` is exactly `i_bias/2`, and the real mirror delivers **4-8 % less**
+(session 13). The re-fit is deliberately NOT done on a 3-seed pilot. **The
+sweep is specified, costed, tested and reproducible by one command, and has NOT
+been run.** The pilot was killed one job from the end and **every row survived
+because the log streams** -- `--analyse` now rebuilds the whole analysis from
+it, which matters far more for a 12-hour sweep. Its timing control never ran,
+so **this pilot's wall-clock numbers are unvalidated by 7g's own rule** and its
+simulation counts stand. **1246 -> 1292 green.** Full write-up
+`nebula/BASELINES.md`; pre-registration `nebula/PREDICTIONS.md` entry 6,
+committed BEFORE the run.
+Earlier session 17: **the RL loop runs end to end, and
 the six things that broke are the deliverable.** 500 PPO steps at TT with REAL
 drawn passives (`to_geometry()` in the loop from the outset, so the output is a
 schematic), 26.5 min, 793 SPICE calls, 765 evaluations. **NO CONCLUSION ABOUT
@@ -1269,6 +1308,35 @@ Plus: git init, .gitignore, 28 tests, Wilson-bound BER reporting.
    (`nebula/NRZ_RETARGET_AUDIT.md`); bounds re-derived; robust geometry
    confirmed; corner-yield swept (13.49% -> 8.10%). Blocking next actions,
    in priority order:
+   - **>>> RE-FIT THE PRE-SCREEN AT BENCHMARK CONDITIONS. FIRST. <<<**
+     (Session 18, `nebula/BASELINES.md` §11 and §12 item 1.) The analytic
+     pre-screen is calibrated on `robust_geometry_data.csv` -- `cl` = 150 fF,
+     `nf_in` varying, IDEAL R/C, IDEAL tail. Moved to the benchmark's own
+     conditions (`cl_mid`, `nf_in` = 4, drawn passives, real mirror) its
+     population rates transfer but **its accuracy does not**: `f_peak` MdAPE
+     **4.93 % -> 15.85 %**, peaking bias **-0.009 -> +0.361 dB**, and the
+     false-rejection rate **0.39 % -> 3.88 %**, ten times the 1 % budget the
+     operating point was chosen against. **Widening does not fix a bias** --
+     measured, at 2.5x the widening it is still 2.33 % while the free-rejection
+     rate falls from 64 % to 40 %. The first thing to try is the mechanism the
+     numbers point at: the gm/I_D model assumes `I_D = i_bias/2`, which is true
+     of an ideal tail and **4-8 % optimistic against the real mirror**
+     (session 13). The data to re-fit on already exists -- 457 valid rows in
+     `baselines_pilot.jsonl` -- and `prescreen.accuracy_from_log()` is the
+     measurement to beat. **Until this lands, every screened arm in the
+     benchmark carries a known 3.9 % false-rejection rate and must be read with
+     it.**
+   - **>>> RUN THE BASELINE SWEEP. <<<** `python -m
+     nebula.experiments.baselines --sweep`. **25 500 simulations, ~12.0 h at
+     the measured 1.698 s/sim at 8 workers**, machine otherwise idle. It
+     streams `baselines_run.jsonl`, so an interrupted run is recovered with
+     `--analyse FILE.jsonl` rather than lost -- which is not hypothetical, the
+     pilot was killed one job from the end. Afterwards, fill in
+     `PREDICTIONS.md` entry 6's outcome **from the sweep, not from the pilot**.
+     Note the ordering question this raises and does not answer: re-fitting the
+     screen first changes what the screened arms measure, so either re-fit
+     first and run once, or run now and treat the screened arms as a
+     measurement of THIS screen. **That is a human's call.**
    - **>>> THE TAIL TRANSISTOR IS DONE (session 13). <<<** Kept here in full
      because the ARGUMENT it was promoted on turned out to be wrong, and that
      is worth more than the closure. **Measured cost of the ideal-tail
@@ -2436,6 +2504,53 @@ Plus: git init, .gitignore, 28 tests, Wilson-bound BER reporting.
   **The habit: read a sensitivity table for REDUNDANCY, not only for zeros.**
   A table that only reports pass/fail against an inert threshold cannot see
   this, which is why §6e's table reports `|d_obs|` per dimension per channel.
+
+- **G73 -- (nebula) a "peak at the sweep edge" test written as an ARGMAX test
+  can never fire on a one-zero/two-pole response.** That magnitude falls as
+  1/f eventually, so its maximum is ALWAYS interior and an
+  argmax-at-the-top-of-the-grid check is dead code that looks like a guard. It
+  fired **zero times on 1890 designs**, which is how it was caught. What the
+  SIMULATOR reports as an edge is a peak above ITS OWN search top, so the
+  analytic predictor must use `evaluator.F_PEAK_HZ_LIMITS[1]` -- the same
+  number, one definition (rule 9). The G44 population is caught anyway, 84.3 %
+  of it, under the f_peak-out-of-window label. **The general form: a guard
+  whose condition is unreachable is indistinguishable from a guard that was
+  deleted. Count how often each one fires.**
+- **G74 -- (nebula) the reward has a CEILING set by the AC sweep grid, not by
+  the circuit, and it is worth +8.950669.** `meas ac MAX` can only report
+  frequencies on `ac dec 50 1meg 100g`, i.e. a lattice **0.066439 octaves**
+  apart, and `reward_v1`'s feasible branch is `B + min_i(margin_i/tol_i)` with
+  `S3_f_peak` binding at nominal. The nearest lattice point to the mid-window
+  target is 0.024665 octaves away, so `8 + (0.5-0.024665)/0.5 = 8.950669` is
+  unreachable-from-above. **Measured: four independent runs found four
+  DIFFERENT designs all scoring 8.950670.** Consequence for any benchmark:
+  best-reward-at-budget SATURATES and cannot separate methods at nominal --
+  report simulations-to-CEILING beside it. It is not a defect in the reward; it
+  is the reward faithfully reporting the resolution of the measurement
+  underneath it. **Before using any "best score" as a discriminator, work out
+  whether the measurement can resolve it.**
+- **G75 -- (nebula) a parallel speed-up measured on isolated evaluations does
+  not transfer to a workload whose workers also compute.** Session 17 measured
+  **2.98x at 8 workers** on 24 bare ngspice evaluations. The same 8 workers on
+  the baseline benchmark -- where each also runs CMA-ES's eigendecomposition,
+  GP-BO's O(n^3) fit or PPO's torch forward between simulations -- measure
+  **1.80x** (3.060 s/sim single process against 1.698 s/sim aggregate, over 33
+  runs and 1992 simulations). Sizing an overnight run to the first number plans
+  12 hours and takes 15. **Measure the speed-up on the workload you are going
+  to run, not on the simulator alone.**
+- **G76 -- (nebula) a screen's population rates can transfer while its
+  ACCURACY does not, and widening cannot fix a bias.** The analytic pre-screen
+  moved from its calibration population to the benchmark's kept its
+  free-rejection rate (61.7 -> 63.9 %) and its yield lift (2.60 -> 2.66x) --
+  both of which look like "it transfers" -- while its `f_peak` MdAPE went
+  **4.93 -> 15.85 %** and its false-rejection rate **0.39 -> 3.88 %**, ten
+  times its declared budget. Widening the accept window 2.5x left the false
+  rejection at 2.33 % and cost 24 points of free rejection, because **a window
+  absorbs VARIANCE and this was BIAS** (+0.361 dB of peaking, traced to a gm
+  model fitted where `I_D = i_bias/2` exactly against a real mirror delivering
+  4-8 % less). **Validate a calibration on the population you will USE it on,
+  and check the bias separately from the spread -- an aggregate rate can hide
+  a systematic offset completely.**
 
 ## 10. Environment
 
@@ -4738,3 +4853,142 @@ checking that a gate can fire:**
 **1246 green before and after** (nothing executable was changed in an existing
 module). The sweep, the tests for `baselines.py`, and `nebula/BASELINES.md`
 follow in 18b.
+
+### 2026-08-08 — Session 18b (task 7: the benchmark runs, and it moved two of its own inputs)
+
+**Tests 1246 -> 1292 green** (+46: `test_baselines.py` 28, `test_prescreen.py`
+18). Full write-up `nebula/BASELINES.md`; pre-registration `PREDICTIONS.md`
+entry 6, committed in 18a **before** any of this ran.
+
+**WHAT WAS RUN: a 1992-simulation PILOT, not the sweep.** 33 runs, 7.4 h,
+60 simulations per run against the sweep's 150, 3 seeds against 10-20. It
+exists to validate the harness end to end and to test whether the pre-screen
+transfers. **Nothing in it is separable at 3 seeds and every table says so.**
+The 25 500-simulation sweep is specified, costed, tested and reproducible by
+one command; it has not been run.
+
+**THE PILOT MOVED TWO OF THE BENCHMARK'S OWN INPUTS, which is the most useful
+thing it did.**
+
+**1. 8 workers buy 1.80x, not 2.98x — and the difference is what the workers
+are doing.** Measured on 33 real runs / 1992 simulations / 27 064 summed
+worker-seconds: single process **3.060 s/sim**, 8-worker aggregate **1.698
+s/sim**. Session 17's 2.98x came from 24 ISOLATED evaluations dispatched to a
+pool, where a worker ran nothing but ngspice. Here each worker also runs
+CMA-ES's eigendecomposition, GP-BO's O(n^3) fit and PPO's torch forward between
+simulations. **Sizing to 1.341 would have planned a 12-hour run that takes 15.**
+The allocation was re-cut on the spot: 30 000 sims was 14.2 h, so P3 lost its
+LHS and GP-BO arms (the pilot found 0/2 seeds feasible there for both methods
+it ran) giving **25 500 simulations = 12.0 h**. Per 7a the cut fell on
+PROBLEMS, never on the per-run budget and never on the seed counts, and a test
+enforces that.
+
+**2. THE PRE-SCREEN DOES NOT FULLY TRANSFER, AND A PRE-REGISTERED
+FALSIFICATION CONDITION FIRED.** Measured on the pilot's 900 unscreened P1
+evaluations against the calibration set:
+
+    free-rejection rate    61.7 % -> 63.9 %     transfers
+    effective yield        34.9 % -> 38.2 %     transfers
+    yield lift              2.60x -> 2.66x      transfers
+    f_peak MdAPE           4.93 % -> 15.85 %    3.2x WORSE
+    peaking bias         -0.009 dB -> +0.361 dB the bias is BACK
+    false rejection        0.39 % -> 3.88 %     10x OVER its 1 % budget
+
+**The population-level rates transfer and the predictor's ACCURACY does not.**
+And **widening cannot fix it**: at 2.5x the chosen widening the false-rejection
+rate is still 2.33 % while free rejection falls 64 % -> 40 %. **A window cannot
+absorb a bias.** The likely mechanism is checkable and specific: the gm/I_D
+model was fitted on an IDEAL-TAIL population where `I_D` is exactly
+`i_bias / 2`, and the real mirror delivers **4-8 % less** (session 13) — so
+`I_D`, `gm`, `k` and the peaking are all over-estimated, +0.361 dB being the
+right direction and about the right size. Drawn passives add a second term:
+`to_geometry` quantises `rs` by up to ~6 % and `k` is linear in `rs`.
+**The re-fit is deliberately NOT done here** — re-fitting a calibrated constant
+on a 3-seed pilot without the ability to re-verify it is what rule 6 exists to
+prevent — and it is item 1 of `BASELINES.md` §12. Until it happens **every
+screened arm carries a known 3.9 % false-rejection rate and must be read with
+it.**
+
+**7e's LOUD VERDICT, measured before any of the above and on already-paid-for
+data: IT DOES NOT FIRE.** The analytic pre-screen predicts `f_peak` to
+**4.93 %** MdAPE (**4.80 %** in the 0.5-5 GHz decision region), rejects
+**61.7 %** of the box for free at a **0.39 %** false-rejection rate, and lifts
+the S3 rate among accepted designs from **13.44 % to 34.94 %** — **2.60x, and
+not the >50 % that would mean physics solves the nominal problem.** So a
+learned method is still needed for SEARCH and the RL contribution does not
+collapse onto amortisation alone. **The nuance that must travel with it:** the
+screen CAN be pushed to **76.4 %** effective yield at zero widening, but only
+by discarding **15.75 %** of the designs that actually meet S3, and a rejected
+design is gone from the run while a false acceptance costs one simulation and
+is then caught by the evaluator. A test pins the verdict IN BOTH DIRECTIONS, so
+if a future change clears 50 % it fails loudly rather than updating a number.
+**What the screen actually removes: 84.3 % of the G44 population (488 of 579
+designs with no interior peak at all)** — the class session 17 measured as 78 %
+of everything its policy found.
+
+**A NEW FINDING THE BRIEF DID NOT ASK FOR AND THE BENCHMARK NEEDED: THE PRIMARY
+METRIC HAS A CEILING, AND IT BELONGS TO THE AC SWEEP RATHER THAN TO THE
+CIRCUIT.** `meas ac MAX` can only report a frequency on the `ac dec 50 1meg
+100g` lattice — **0.066439 octaves apart** — and `S3_f_peak` is reward v1's
+binding row on P1. With the target at the geometric centre of S3's octave the
+nearest grid point is **0.024665 octaves** away, so **no design can score above
++8.950669**. Derived analytically, then measured: **four independent pilot
+runs found four DIFFERENT designs all scoring 8.950670.** Consequences:
+best-reward-at-budget SATURATES on P1 — six of ten P1 groups sit exactly at the
+ceiling and no P1 pair is separable — so the harness also reports **simulations
+to reach the ceiling**, censored and handled identically to
+simulations-to-first-feasible. This is not a defect in the reward; it is the
+reward faithfully reporting that the measurement cannot resolve `f_peak` more
+finely than 0.066 octaves.
+
+**7a's arithmetic, computed rather than asserted.** Fully crossed (3 rungs x
+5 methods x 2 screen arms) is **63 000 simulations = 29.7 h** at the revised
+rate. Allocated: **170 runs, 25 500 simulations, 12.0 h**. **P2 cut entirely**
+(the split it would resolve is already measured twice: corners 39 %, load
+99.4 %); **P3 cut to uniform + CMA-ES**; **P3's screened arm cut** (the screen
+is calibrated at TT and its corner behaviour is unmeasured — a screened P3 arm
+would confound "the screen helps" with "the screen is miscalibrated off
+nominal"); **P3's PPO arm cut structurally**, because `CtleSizingEnv` takes one
+corner and one load and inventing a worst-over-corners environment for one
+method would make the comparison about corner handling rather than about
+search.
+
+**Pilot indications, none of them conclusions at 3 seeds.** On P1 every method
+found a feasible design on every seed; medians to first feasible were uniform
+**3.0**, +screen **1.0**; CMA-ES **6.0**, +screen **1.5**; GP-BO **6.0**,
++screen **1.0**; PPO **4.0**; LHS **38.0**. Two are worth watching:
+**PPO was pre-registered to lose and did not obviously lose** on
+time-to-feasible (3/3 seeds, median 4.0) while having the worst FINAL reward of
+the ten groups (8.252) — which is the shape the pre-registration's reasoning
+predicted, reached feasibility fast and then failed to climb; and **LHS is the
+worst method here**, against the pre-registration, on an interval of [3, 41]
+that may be noise. **On P3, 0 of 4 seeds found anything feasible**, consistent
+with the prediction that the robust rung is empty.
+**`PREDICTIONS.md` entry 6's outcome section stays EMPTY until the sweep runs**
+— a pilot must not close a pre-registration.
+
+**Invalid rates, per method (7f).** P1 unscreened 13.3 % (GP-BO) to 38.3 %
+(LHS); P3 44.9-52.1 %; all far above session 17's 10.5 % on a uniform box
+sample. The mechanism is overwhelmingly one thing: **392 of ~430 invalid
+evaluations — 91 % — are `peak_is_sweep_edge`**, against G65's 78 % on a policy
+trajectory. The pre-screen removes 84.3 % of that population for free, which is
+why screened arms roughly halve their invalid rate and GP-BO+screen reaches
+**3.3 %**.
+
+**THE RUN DID NOT FINISH CLEANLY, AND THE RECOVERY IS NOW PART OF THE TOOL.**
+33 of 34 jobs completed and the process was killed before it wrote a summary or
+ran the timing control. **Every row survived because the log streams**, and
+`baselines.analyse_log()` was written to rebuild the whole analysis from the
+`trial` rows — which is now the documented recovery path
+(`--analyse FILE.jsonl`) and matters far more for a 12-hour sweep than for a
+7-hour pilot. It rebuilds from trials rather than from the logged run summaries
+on purpose: the summaries omit the anytime curve, and a summary that disagreed
+with its own trials would be two definitions of one thing (rule 9).
+**Consequence stated rather than hidden: the timing control never ran, so by
+7g's own rule this pilot's WALL-CLOCK numbers are unvalidated.** The simulation
+counts stand — which is exactly why 7g asks for simulations as the headline.
+
+**Everything is tracked, not gitignored (G49):** `baselines_pilot.jsonl` is
+4.2 MB of real SPICE evaluations with a `design_id` on every row, and it is
+**free labelled training data for task 8's surrogate** — regenerating it costs
+7.4 hours.

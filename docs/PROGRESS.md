@@ -49,7 +49,7 @@ central results meaningless. Everything after this point is written test-first.
 
 ---
 
-## Part 2 — Nebula (sessions 6–16)
+## Part 2 — Nebula (sessions 6–18)
 
 A competition track with a hard deadline: automate transistor-level CTLE sizing
 with reinforcement learning, on an open-source PDK, with no human in the loop.
@@ -81,6 +81,10 @@ with reinforcement learning, on an open-source PDK, with no human in the loop.
 | 16 | What channel are we actually equalising? | It had been a **single invented number with no provenance** — and by the project's own admission that number, not the circuit, decided the compression verdict. Replaced by a **family derived from the spec itself**. Its own name encoded the error: a transmission line's loss at DC is essentially **zero** |
 | 16 | **Is the mandated 1-tap equaliser feedback enough?** | **Yes, across the whole 3–12 dB range** — the eye never closes. But only **15 %** of the interference it cannot cancel sits in the next symbol, and **31 % arrives more than 20 symbols later**, so extra taps would barely help. The continuous-time equaliser is the block that has to do this work |
 | 16 | How much of the job does the *transmitter* do? | **Exactly 3.5 dB** — PCIe Gen2 mandates transmitter de-emphasis and specifies no receiver equaliser at all. Leaving it out had been overstating the equaliser's task by that much, and it means **the top quarter of the specified tuning range is never called for** |
+| 17 | Does the whole RL loop actually run? | Yes, end to end — and **the deliverable was the failure catalogue, not the curve**. Seven integration bugs, four of which produced a plausible number and raised nothing. The largest: **78 % of everything the policy found was a fictitious peak** at the edge of the frequency sweep, which a reward reading "peaking" would have scored highly |
+| 18 | **Can physics alone solve the sizing problem?** | **No, and this is the answer the project needed now rather than in September.** An analytic pre-screen predicts the peak frequency to **4.9 %** and rejects **62 % of the search space for free**, but the success rate among what it keeps is **35 %**, not the >50 % that would make a learned search method unnecessary. It is a **2.6× multiplier, not a solution** |
+| 18 | Is the benchmark's best score a property of the circuit? | **No — of the measurement.** The simulator can only report peak frequencies on a fixed grid, so the reward has a hard ceiling nothing can beat. **Four different designs scored the identical number to six decimals.** The consequence is that "best score" cannot rank methods at nominal, and the benchmark had to add a second metric |
+| 18 | Does a calibration transfer between populations? | **Its headline rates did and its accuracy did not** — the screen kept its rejection rate and its yield lift while its prediction error tripled and it started discarding **ten times** as many good designs as it was budgeted for. **Widening the tolerance could not fix it, because the error was a bias rather than a spread** |
 | 16 | Does the stage overload? | **At 5 of 7 channel-loss points**, and worst where the channel is *easiest* — because there the equaliser's own minimum setting is more boost than the link needs. The earlier, milder reading survives, but only under a weaker definition of the question |
 
 ---
