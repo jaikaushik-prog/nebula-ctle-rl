@@ -612,6 +612,86 @@ one above, every reflection number, and the entire `--compression` stage.
   S8 vertical from "not binding" to "binding", and would be the first time an
   eye-height spec constrained anything in this project.
 
-### Outcome
+### Outcome — 2026-08-07, 21 channels x 3 de-emphasis settings + 66 SPICE runs
 
-*(to be filled in after the run, whichever way it goes)*
+**The headline held; four of the nine supporting predictions did not.** The
+misses are the more useful half and two of them changed a published number.
+Full write-up: `nebula/CHANNEL_MODEL.md`.
+
+| # | predicted | measured | |
+|---|---|---|---|
+| **4a headline** | eye OPEN everywhere in 3-12 dB; a 1-tap DFE is sufficient | **open at all 21 members, all 3 de-emphasis settings, with and without a CTLE** | ✅ |
+| 4a band | worst residual **0.55-0.70** at (12 dB, r = 0.8), no de-emphasis | **0.8467** at exactly that point | ❌ location right, band wrong |
+| 4b | worst residual with a matched CTLE **< 0.40** across the family | **0.4914** (12 dB, dielectric, no de-emphasis); **0.3007** under the Gen2 mandate | ❌ as worded |
+| 4c | split ratio at 12 dB **1.5-1.8x**, holding to +/-0.2 at 9 and 6 dB | **1.598** at 12 dB ✅; 1.660 at 9 dB ✅; **1.804** at 6 dB and **1.985** at 3 dB | ⚠ number right, "roughly constant" wrong |
+| 4d | `h1/h0` falls **40-70%** with de-emphasis; residual moves **< 25%** | h1/h0 **0.3334 -> 0.1405 = -57.9%** ✅; residual **0.8467 -> 0.6133 = -27.6%** ❌ | ⚠ half |
+| 4e | reflection probe adds **+0.05 to +0.09** absolute | **+0.064 … +0.122**, median +0.085 | ⚠ true at low loss, exceeded at high |
+| 4f | S8 met everywhere, required A_dc **0.15-0.45 V/V** | **0.181-0.217 V/V** (-13.3 to -14.9 dB) | ✅ |
+| 4g | convention C lands **between** A and B; **2-5 of 7** compress | **5/7 compress** ✅; but **C exceeds BOTH** A and B at 3-7.5 dB | ⚠ count right, ordering wrong |
+| 4h | 1.22x at 3 dB does **not** survive; C at 3 dB in **0.9-1.6** | C at 3 dB = **1.51** ✅; **1.22x survives EXACTLY under convention A** ❌ | ⚠ half |
+| 4i | burden **-0.5 … +8.5 dB**; top 3.5 dB of S3 never called for | exactly that (it is arithmetic, and is recorded as such, not as foresight) | ✅ |
+
+### The four things I got wrong, and why each one matters
+
+**1. The 4a band was computed from the wrong configuration.** I quoted 0.55-0.70
+from a pilot measured **with** the mandated de-emphasis and then attached it to a
+row **without** de-emphasis. With de-emphasis the measurement is **0.6133** —
+dead centre of my band. Without it, 0.8467. The location was right, the number
+was an apples-to-oranges slip, and it is recorded as a miss rather than
+retro-fitted with the qualifier that would rescue it.
+
+**2. 4c's mechanism was wrong in an interesting direction.** I predicted the
+skin/dielectric ratio would be roughly constant across the loss axis. It is
+**monotonically decreasing**: 1.985 at 3 dB down to 1.598 at 12 dB. The reason is
+that at high loss *both* mechanisms have spread the pulse over many UI and the
+residual is dominated by the shared long tail, while at low loss the difference
+between "a small early spread" and "a small late spread" is proportionally
+larger. **The split axis matters MOST where the channel is easiest** — which is
+the opposite of where I would have said to look.
+
+**3. 4d underestimated what a TX FIR does.** I reasoned that a 2-tap FIR is a
+`h1` pre-canceller and therefore cannot move a residual that excludes `h1` by
+definition. It moved it **27.6%**, not "< 25%". The reasoning is not wrong so
+much as incomplete: the FIR reshapes the whole pulse, so `h2, h3, ...` all move
+too. A separate observation from the same table, not predicted: at **-6 dB**
+de-emphasis, `h1/h0` on a 12 dB skin channel is **+0.0066** — the Gen2 option
+almost exactly annihilates the first post-cursor on its own.
+
+**4. 4g/4h — the peak-distortion number is the biggest miss and the most
+valuable result.** I predicted convention C would land *between* A and B.
+It **exceeds both** at 3-7.5 dB (1.51 vs 1.22 and 1.16 at 3 dB). And 4h's first
+clause is simply wrong: **the 1.22x at 3 dB survives digit for digit** under its
+own convention, because that convention reads Nyquist content through Nyquist
+gain and neither the deleted constant nor the de-emphasis touches either one.
+So `BOUNDS_REDERIVATION.md` §2's blockquote was right that a made-up constant
+decided the *C3* table, and wrong to imply the headline 1.22x hung on it.
+**The honest measurement is worse than either proxy: 1.51x at 3 dB, and 5 of 7
+loss points compress.**
+
+### The pre-registered falsification conditions, and what happened to them
+
+* *"An eye that closes channel-only at 12 dB but opens with the CTLE"* — did not
+  occur; the eye never closes.
+* *"4c near 1.0 — then the split axis is decoration"* — **did not occur.** The
+  ratio is 1.60-1.99, so the split axis carries real information and "a scalar
+  cannot represent a channel" is now **measured** rather than asserted.
+* *"4e materially above +0.09 — then reflections are not a small correction"* —
+  **FIRED, at the top of the family.** +0.122 at 12 dB skin-dominated, which
+  takes the channel-only eye from 118 mV to **81 mV, below S8's floor**. The
+  mechanism I had not stated: an echo is a copy of the *whole* response, so at
+  high loss it brings its own spread tail. **Every residual in this task is
+  therefore a lower bound**, and `CHANNEL_MODEL.md` §8 and §12 say so.
+* *"4f failing"* — did not occur. S8 vertical is met with the CTLE
+  **attenuating** by 13-15 dB, i.e. 8.6x more gain available than needed.
+
+### One thing measured that no prediction covered, and it should have
+
+The §6 design equations **over-predict the Nyquist boost by +0.77 to +1.47 dB**
+on this sweep, growing with `R_s`, because they neglect `r_o`. Convention C
+integrates the pulse response *through* that model, so using it uncalibrated put
+3 dB at **1.93x** instead of 1.51x — **a 28% error in the headline from a 1.5 dB
+error in a gain.** The fix is a one-parameter calibration to the measured boost
+with the peaking and peak frequency left as independent checks (residuals
++0.094-0.232 dB against §5.3b's 0.5 dB limit). I should have predicted that the
+analytic model would need checking before being integrated; I did not, and the
+first version of the compression table was wrong because of it.

@@ -12,7 +12,53 @@
 > discovered to the Gotchas section. A change without a handoff update is an
 > incomplete change.
 
-Last updated: **2026-08-06** (session 13: **the tail is a real transistor, and
+Last updated: **2026-08-07** (session 16: **the channel is a derived family
+now, not an invented constant — and the compression verdict it decided is
+worse than the number it replaces, not better.** `CHANNEL_DC_LOSS_DB = 1.0`
+had no provenance, its own docstring said a human had to replace it, and
+`BOUNDS_REDERIVATION.md` §2 says in a blockquote that **that constant, not the
+circuit, decided the compression verdict**. It is **DELETED, not re-valued**
+(a test greps every executable file in the tree), because **the name encoded
+the mistake**: a lossy line's insertion loss at DC is essentially ZERO, and the
+real low-frequency correction is not a channel property at all — it is the
+transmitter's **specified -3.5 dB de-emphasis**. Replaced by
+`IL_dB(f) = A*sqrt(f) + B*f` parameterised by **(loss at Nyquist,
+skin/dielectric split)**, 7 x 3 = 21 members, **minimum-phase** via the
+real-cepstrum fold of `ln|H|` and **gated** on pre-`t=0` energy. **THE DECISIVE
+RESULT: a 1-tap DFE IS SUFFICIENT across the whole 3-12 dB family** — the eye
+is open at all 21 members, all three de-emphasis settings, with and without a
+CTLE (worst residual 0.847 bare / 0.613 with the Gen2 mandate / 0.276 with a
+matched CTLE), so **S3's top of range and S8 can both be met with S2's
+topology**. **But the mechanism is not reassuring: only 14.7% of what the DFE
+cannot reach is in `h2`, and 31.2% sits BEYOND 20 UI** — a second tap buys 15%,
+a twenty-tap DFE still leaves 31%, so **the CTLE is the block that has to do
+this work**. **The mandated de-emphasis is worth EXACTLY 3.5 dB of the CTLE's
+job**, so the burden spans **-0.5 to +8.5 dB**: the **top 3.5 dB of S3 is never
+called for**, and at 3/4.5/6 dB of loss the burden is BELOW S3's 3 dB floor.
+**THE COMPRESSION RE-RUN (66 SPICE runs, reproduction gate 5/5 on the published
+reference device): the 1.22x at 3 dB SURVIVES VERBATIM under its own
+convention** — because that convention reads Nyquist content through Nyquist
+gain and neither the deleted constant nor the de-emphasis touches either — **so
+§2's blockquote was right about the C3 table and wrong to imply the headline
+hung on it. Measured honestly (peak distortion through the real pulse
+response), 3 dB is 1.51x and 5 of 7 loss points compress**, against the old
+"two lowest points, 1.22x and 1.04x". **HANDOFF §8's compression line is
+REPLACED IN PLACE.** Two further results: **S8's 100 mV vertical is met with
+the CTLE ATTENUATING 13-15 dB** (8.6x more gain available than needed — S8
+vertical has never been binding and now we can say so with a pulse response
+behind it); and **the §6 design equations over-predict the Nyquist boost by
++0.77 to +1.47 dB** because they neglect `r_o`, which put the first compression
+table 28% high before it was calibrated out (**G60**). New gotchas **G59** (a
+magnitude-only channel is non-causal — 48% of its energy at t<0 — and raises
+nothing; the power-law test that tells aliasing from a broken reconstruction),
+**G60**, **G61** ("compression ratio" has three definitions here and they
+disagree by 1.8x) and **G62**. **725 -> 1007 green.** Full write-up
+`nebula/CHANNEL_MODEL.md`; prediction vs outcome `nebula/PREDICTIONS.md` entry
+4, where **four of nine supporting predictions are recorded misses** and one
+pre-registered falsification condition **FIRED**: the stated reflection probe
+adds +0.122 at 12 dB, taking the channel-only eye to **81 mV, below S8's
+floor** — so **every residual in this task is a LOWER BOUND**.
+Earlier session 13: **the tail is a real transistor, and
 the assumption it replaced was worth 8.8% — not the missing coupled
 constraint.** The tail had been TWO IDEAL CURRENT SINKS in every simulation
 this project ever ran, which is why every corner spread was an UNDERSTATEMENT
@@ -363,6 +409,18 @@ signaling, ADC-based DSP receiver, 28 nm CMOS reference parameters).
 │   │                       (`@m[cgg]` is not it, G50), §3 for what actually
 │   │                       moves the load (the sketch, not the corners), and
 │   │                       §9 before quoting a yield derived from it.
+│   ├── CHANNEL_MODEL.md    NEW (2026-08-07, session 16). The channel, DERIVED
+│   │                       from S3 instead of invented. Retires
+│   │                       `CHANNEL_DC_LOSS_DB`. Read §0 (the four sentences),
+│   │                       §2 before trusting any phase (the causality gate
+│   │                       and how it tells aliasing from a broken
+│   │                       reconstruction, G59), §5 for THE answer — a 1-tap
+│   │                       DFE is sufficient across 3-12 dB, but only 15% of
+│   │                       what it cannot reach is in h2 — §6 before quoting
+│   │                       any compression number (three conventions, they
+│   │                       disagree 1.8x, G61), and §8 + §12 before quoting
+│   │                       ANYTHING: reflections are excluded and they push
+│   │                       the 12 dB eye below S8's floor.
 │   ├── PREDICTIONS.md      NEW (2026-08-06). Pre-registered predictions,
 │   │                       committed BEFORE the experiment they are about,
 │   │                       with the outcome written in afterwards whichever
@@ -555,9 +613,50 @@ signaling, ADC-based DSP receiver, 28 nm CMOS reference parameters).
 │   │                       number fake. Physically coherent trends only.
 │   ├── link/calibration.py THE normalised->volts conversion (§5.3a). The
 │   │                       single highest-risk silent bug in that project.
-│   ├── link/config.py      LinkConfig for the nebula flow. v_in_diff_pp_v
-│   │                       and channel_loss_db_at_nyquist have NO defaults.
-│   ├── link/mock.py        SYNTHETIC device->link bridge.
+│   ├── link/config.py      LinkConfig for the nebula flow.
+│   │                       channel_loss_db_at_nyquist has NO default (it is
+│   │                       the swept axis). Owns the PCIe Gen2 anchors: the
+│   │                       0.8 Vpp swing and the -3.5/-6 dB de-emphasis, each
+│   │                       with its provenance note. `channel_loss_db_at_dc`
+│   │                       is a DERIVED property returning exactly 0.0 since
+│   │                       session 16 — it was a field defaulting to an
+│   │                       invented 1.0 dB constant.
+│   ├── link/channel.py     NEW (2026-08-07, session 16). The channel FAMILY:
+│   │                       IL_dB(f) = A*sqrt(f) + B*f, parameterised by
+│   │                       (loss at Nyquist, skin/dielectric split), with
+│   │                       minimum-phase reconstruction and CAUSALITY,
+│   │                       PASSIVITY and MONOTONICITY gates. Also `Stackup`
+│   │                       (loss -> equivalent length, never the reverse), a
+│   │                       stated two-reflection probe, and the Touchstone
+│   │                       ingestion path for real data. NO random element at
+│   │                       all, so LinkConfig.seed never enters it.
+│   ├── link/tx.py          NEW (2026-08-07). The PCIe Gen2 transmitter as the
+│   │                       2-tap FIR it is: -3.5 dB mandated, -6 dB option,
+│   │                       normalised so the TRANSITION bit carries full
+│   │                       swing. Supplies EXACTLY -de_emphasis_db of tilt at
+│   │                       Nyquist, so `equalisation_burden_db` is an exact
+│   │                       subtraction. Imports the swing anchor; never
+│   │                       redeclares it (rule 9).
+│   ├── link/cursors.py     NEW (2026-08-07). Pulse response -> UI sampling at
+│   │                       the h0-maximising phase -> h_-2..h_4 -> residual
+│   │                       ISI after an ideal 1-tap DFE -> eye. Owns the
+│   │                       CLOSED-FORM CTLE peak location and the exact
+│   │                       peak-existence condition 1/fz^2 > 1/fp1^2 + 1/fp2^2
+│   │                       (session 9c's finding, stated exactly).
+│   ├── experiments/channel_family.py  session 16. Four stages: --gates
+│   │                       (causality/passivity per member), --cursors (the
+│   │                       headline table), --reflections, and --compression
+│   │                       (the ONLY stage needing ngspice). The compression
+│   │                       stage REPRODUCES the published reference device
+│   │                       before analysing anything and aborts on a mismatch
+│   │                       (5/5, G52's shape), and calibrates the CTLE model
+│   │                       to the MEASURED boost because §6 is 0.8-1.5 dB
+│   │                       optimistic (G60).
+│   ├── experiments/channel_family_data.csv  TRACKED ON PURPOSE (G49). 114
+│   │                       rows: every (channel, de-emphasis, CTLE) cursor set
+│   │                       behind CHANNEL_MODEL.md §5.
+│   ├── link/mock.py        SYNTHETIC device->link bridge. Equalises the
+│   │                       BURDEN (channel tilt - TX tilt), not the raw tilt.
 │   ├── rl/reward.py        §9 shortfall reward, worst-corner aggregation.
 │   └── tests/              228 tests, <1 s. Run: python -m pytest nebula/tests -q
 ├── tests/                  pytest suite — 92 tests, ~1.5 min. THE safety net.
@@ -944,6 +1043,63 @@ Plus: git init, .gitignore, 28 tests, Wilson-bound BER reporting.
   window, then extinguishes it). 150 fF is a genuine interior maximum but is
   NOT separable from 250 fF at this n. S5, S6 and the saturated fraction do
   not move at all with `cl`, as expected.
+- **The channel is a derived family, and a 1-tap DFE is sufficient across it**
+  (session 16, `nebula/CHANNEL_MODEL.md`; 21 channels x 3 de-emphasis settings,
+  pure numpy, plus 66 SPICE runs for the compression re-run). `IL_dB(f) =
+  A*sqrt(f) + B*f`, parameterised by **(loss at Nyquist, skin/dielectric
+  split)** — 7 losses x 3 splits — with minimum-phase reconstruction and a
+  stated causality gate. Loss at Nyquist read off S3's own 3-12 dB tunable
+  range; **loss at DC is 0.0 by construction**, which is what the deleted
+  constant got wrong.
+
+        residual ISI a 1-tap DFE cannot reach, as a fraction of the cursor:
+        worst anywhere (12 dB, skin, no de-emphasis)        0.847   eye OPEN
+        worst in the PCIe Gen2 config (12 dB, skin, -3.5)   0.613   eye OPEN
+        worst with a matched CTLE in front                  0.276   eye OPEN
+
+  **The eye is open at every one of the 21 members, in every configuration**, so
+  S3's top of range and S8 can both be met with S2's mandated topology.
+  Five things worth carrying:
+  - **A second DFE tap buys 15%; a twenty-tap DFE still leaves 31%.** At 12 dB
+    skin-dominated only **14.7% of the residual is in `h2`** and **31.2% sits
+    beyond 20 UI** — the `sqrt(f)` algebraic tail, which is exactly what a
+    decision-feedback architecture is worst at. **The CTLE is the block that
+    has to do this work**, not the DFE.
+  - **A scalar cannot represent a channel, and it is now measured.** At a fixed
+    loss at Nyquist, skin-dominated leaves **1.60x** the residual of
+    dielectric-dominated at 12 dB and **1.99x** at 3 dB. The ratio is largest
+    where the channel is EASIEST, which is the opposite of where one would look.
+  - **The mandated -3.5 dB TX de-emphasis is worth exactly 3.5 dB** of the
+    CTLE's job (the 2-tap FIR has gain `d` at DC and 1 at Nyquist by
+    construction), so the burden spans **-0.5 to +8.5 dB**: the **top 3.5 dB of
+    S3's range is never called for** on this family, and at 3/4.5/6 dB the
+    burden is BELOW S3's 3 dB floor — the minimum setting over-equalises.
+  - **S8's 100 mV vertical is met with the CTLE ATTENUATING by 13-15 dB**
+    (required A_dc 0.181-0.217 V/V against a measured 1.79). S8 vertical is not
+    binding and never has been.
+  - **Every residual above is a LOWER BOUND.** A stated two-reflection probe
+    (rho 0.05 at 2 UI, 0.02 at 5 UI) adds **+0.064 to +0.122**, and at 12 dB
+    that takes the channel-only eye from 118 mV to **81 mV, below S8's floor**.
+    Reflections are the ISI a DFE handles worst and the smooth form cannot
+    represent them (`CHANNEL_MODEL.md` §8).
+- **Compression, re-measured against the derived channel** (session 16,
+  `CHANNEL_MODEL.md` §6). Reproduction gate on the published reference device
+  passed 5/5 (gm 12.623 vs 12.62 mS, 1 dB swing 1426.9 vs 1427 mVpp). Matched
+  boost, 14 of 66 (Rs, Cs) settings meeting S3:
+
+        convention                                        compressing
+        A  Nyquist content in, Nyquist gain out (9c/9d)      2 / 7
+        B  long-run level in, peak gain out (C3)             7 / 7
+        C  peak distortion through the REAL pulse response   5 / 7   <- use C
+
+  **The 1.22x at 3 dB survives VERBATIM under convention A** — that convention
+  never read the deleted constant, so `BOUNDS_REDERIVATION.md` §2's blockquote
+  was right about the C3 table and wrong to imply the headline hung on it.
+  **The honest number is 1.51x at 3 dB, and compression binds at 5 of 7 loss
+  points**, still worst at LOW loss (where S3's floor forces boost the link does
+  not need). **Prerequisite finding: the §6 design equations over-predict the
+  Nyquist boost by +0.77 to +1.47 dB** (they neglect `r_o`), which put the first
+  version of that table 28% high — see G60.
 - Reference operating point: 3 cm (9 dB) channel, SNR 26 dB, CTLE 6 dB,
   Alexander: BER ≈ 1e-4; SNR 28: 0 errors (bound ~1e-4→ 8.7e-5 at 30k syms).
 - Loss sweep (SNR 28, CTLE 6 dB): clean ≤12 dB; ~1e-2 at 24 dB; lock lost
@@ -965,6 +1121,18 @@ Plus: git init, .gitignore, 28 tests, Wilson-bound BER reporting.
 - Time-domain: no CDR loop latency modeled (RTL has ~32-symbol parallelism
   latency → lower usable kp); TI gain error applied post-AGC; single-pole TX
   model; loss-model channel only (no reflections/crosstalk until .s4p data).
+- **(nebula) The channel family is a CONSTRUCTION, not a measurement.** It is
+  derived from S3 defensibly, and `link/channel.py::fit_from_touchstone` is the
+  seam a real `.s4p` enters through — but any deliverable must say "constructed
+  from the specification", never "the channel". It also contains **no impedance
+  discontinuities**: no connectors, vias, stubs, crosstalk, mode conversion or
+  fibre-weave skew. Reflections are the ISI a DFE handles worst, and the stated
+  probe in `CHANNEL_MODEL.md` §8 shows they push the 12 dB channel-only eye
+  below S8's 100 mV floor. Every ISI number from that family is a lower bound.
+- **(nebula) The peak-distortion compression bound is a WORST-CASE pattern.**
+  Real PCIe traffic is 8b/10b-coded and run-length-limited, so the true peak
+  excursion is smaller. Convention C is the right bound; the gap to typical
+  traffic is unmeasured.
 - JTOL amplitude grid is coarse (0.05/0.1/0.2/0.4/0.7/1.0 UI).
 - Power numbers are PLACEHOLDERS (literature-based), never simulated.
 - rtl/, verification/, veriloga_models/, matlab_models/, optical_dsp.py,
@@ -1086,9 +1254,27 @@ Plus: git init, .gitignore, 28 tests, Wilson-bound BER reporting.
      are 1.2 V numbers and do NOT transfer — see the provenance audit), add
      a real tail transistor (above), and pull the **MIM cap and poly resistor**
      models the S7 area estimate needs.
-   - **Compression: real, but much smaller than 9c reported.** The limit is
-     **current steering, not headroom** — which is also why a 3.3 V device
-     buys only +12% swing (G39).
+   - **>>> COMPRESSION: RE-MEASURED, AND IT IS WORSE THAN THE LINE THIS
+     REPLACES. <<<** (Session 16, `CHANNEL_MODEL.md` §6.) **The line that used
+     to sit here — "real, but much smaller than 9c reported; localised at the
+     two lowest-loss points, 1.22x and 1.04x" — is REPLACED, not amended.**
+     Measured against the derived channel family and the mandated -3.5 dB TX
+     de-emphasis, with the reproduction gate passing 5/5 on the published
+     reference device: **compression binds at 5 of 7 loss points, and 3 dB is
+     1.51x.** The old **1.22x survives VERBATIM** under its own convention
+     (Nyquist content through Nyquist gain) — which the deleted DC-loss
+     constant never touched, so `BOUNDS_REDERIVATION.md` §2's blockquote was
+     right about the C3 table and wrong to imply the headline hung on it.
+     **"Worst at LOW loss" survives and is now explained**: below 6.5 dB of
+     channel loss the CTLE's burden is *below* S3's 3 dB floor, so a compliant
+     CTLE adds boost the link does not need, on top of an input the channel has
+     barely attenuated. **Still true, unchanged:** the limit is **current
+     steering, not headroom** — which is also why a 3.3 V device buys only +12%
+     swing (G39). **The actionable item is now S3's floor**, not the device:
+     either the tunable range needs to reach below 3 dB, or the low-loss end of
+     the channel family has to be declared out of scope, and that is a human's
+     call. Read G61 before quoting any compression ratio — the word has three
+     definitions in this repo and they disagree by 1.8x.
    - **Abstract due Aug 6.** Write it around what G1 shows is achievable.
      **The "coupled constraint" argument is RETRACTED (G40).** State the
      ideal-tail assumption plainly; it is the live one.
@@ -1726,6 +1912,73 @@ Plus: git init, .gitignore, 28 tests, Wilson-bound BER reporting.
   (mixed corners +/-0.065 um, matched +/-0.0455 um). So `hh` and `lh` both
   carry "cap_high" and differ by **0.7%**. A model validated at ONE corner
   misses this entirely; it was caught only by measuring at four.
+- **G59 — (nebula) a channel model with a magnitude and no phase is
+  NON-CAUSAL, and nothing raises.** `|H(f)| = 10**(-IL_dB(f)/20)` with zero
+  phase has an impulse response symmetric about `t = 0`: **48.0% of its energy
+  arrives before the pulse was launched.** Every cursor, residual-ISI and eye
+  number computed from it is finite, plausible and wrong. This is the repo's
+  failure mode #1 in its purest form — the pulse response even *looks* right,
+  because it is the correct shape smeared symmetrically.
+  **Fix:** reconstruct minimum phase from `ln|H|` (`link/channel.py`
+  `_min_phase_from_magnitude`, the standard real-cepstrum fold) and then GATE
+  on the measured energy at `t < 0`.
+  **The part that is genuinely useful, and it generalises to any FFT-based
+  channel work: how to tell time-domain ALIASING from a broken reconstruction.**
+  A correct min-phase response in a finite buffer still shows some pre-`t=0`
+  energy, because the tail wraps. Sweep the buffer length:
+
+        n_fft   4096     8192    16384    32768    65536
+        pre E  8.7e-5   1.3e-5   1.8e-6   2.5e-7   3.5e-8
+
+  A **clean power law is aliasing** and is fixed by lengthening the buffer. A
+  **floor** is a phase error and lengthening does nothing. `DEFAULT_N_FFT`
+  (32768 = 512 UI at 64 samples/UI) was chosen this way, and the threshold
+  (1e-6) was stated BEFORE the measurement and not moved to fit it.
+- **G60 — (nebula) §6's design equations over-predict the Nyquist boost by
+  0.8-1.5 dB, and the error GROWS with `R_s`.** Measured over the 14
+  S3-meeting settings of the session-16 compression sweep:
+  **+0.77 dB at Rs=150 up to +1.47 dB at Rs=600.** The cause is the same
+  omission that makes §6's `A_dc` gate marginal — it neglects `r_o`, so the
+  degeneration factor `k` comes out too large — but the CONSEQUENCE is
+  different in kind. `cross_check_extraction()` only compares `A_dc`, so a
+  1.5 dB shape error passes a gate aimed at gain.
+  **Why it bit:** the compression re-run integrates the whole pulse response
+  *through* the analytic model, so a 1.5 dB boost error became a **28% error in
+  the headline compression ratio** (3 dB read 1.93x instead of 1.51x). It was
+  caught only by comparing the model's boost against the measured one.
+  **Rule: never integrate a waveform through `deq.predict()`.** Calibrate first
+  — `f_z = 1/(2*pi*Rs*Cs)` and `f_p2 = 1/(2*pi*RL*CL)` are EXACT (passives),
+  `g_dc` comes from the measurement, and only `k` is fitted, from the measured
+  boost at Nyquist. Then the peaking and the peak frequency are INDEPENDENT
+  checks and §5.3b's 0.5 dB reject threshold applies to them (measured
+  +0.094-0.232 dB, and f_peak -8.6 to -4.8% against `meas ac MAX`'s own 4.7%
+  quantisation).
+- **G61 — (nebula) "compression ratio" has THREE definitions in this repo and
+  they disagree by up to 1.8x.** All three are "required output swing / measured
+  1 dB limit"; they differ in what pattern they assume:
+
+        A  Nyquist content in, Nyquist gain out   (session 9c/9d)   2/7 compress
+        B  long-run level in, PEAK gain out       (calibration C3)  7/7 compress
+        C  peak distortion through the real pulse response          5/7 compress
+
+  At 3 dB of channel loss they read **1.22 / 1.16 / 1.51**. A and B are
+  *proxies* for a worst-case data pattern; **C computes it** — the worst pattern
+  puts every UI-spaced sample of the pulse response on the same side, so the
+  excursion is `sum_k |pr(t + kT)|` maximised over `t`. **Use C, and say which
+  one you used.** The trap that makes this a gotcha rather than a preference:
+  A and B respond to DIFFERENT inputs, so a change to the model can move one and
+  leave the other untouched — the deleted DC-loss constant moved B and never
+  touched A, which is why the published 1.22x survived a change that was
+  supposed to invalidate it.
+- **G62 — (nebula) a test that greps the tree for a forbidden identifier must
+  not contain that identifier.** `test_channel_model.py` asserts the retired
+  DC-loss constant appears in no executable file; written with the name as a
+  literal, it finds ITSELF and fails forever. Assemble it from pieces
+  (`RETIRED_CONSTANT = "CHANNEL_DC" + "_LOSS_DB"`). Same applies to the
+  documentation sweep: the retirement has to be written down somewhere, so the
+  Markdown check uses an explicit allowlist of the files that record the
+  history rather than banning the string outright. A gate that cannot pass is
+  indistinguishable from a gate that is ignored.
 
 ## 10. Environment
 
@@ -3657,3 +3910,91 @@ open across the whole 3-12 dB family, so a 1-tap DFE is sufficient**, plus
 eight supporting predictions and four falsification conditions. Pilot data seen
 while checking the numerics is declared in that entry rather than presented
 afterwards as foresight.
+
+### 2026-08-07 — Session 16b (the run: the answer, and a verdict replaced)
+
+**Tests 1007 green before and after** (92 + 915, 9 deselected). Full write-up
+`nebula/CHANNEL_MODEL.md`; prediction vs outcome `PREDICTIONS.md` entry 4.
+Data: `experiments/channel_family_data.csv` (114 rows, tracked, G49) and
+`channel_family_results.json`.
+
+**THE ANSWER TO THE PRE-REGISTERED QUESTION: a 1-tap DFE is sufficient across
+the whole 3-12 dB family.** The eye is open at all 21 members, all three
+de-emphasis settings, with and without a CTLE. Worst residual **0.847** bare,
+**0.613** in the actual PCIe Gen2 configuration, **0.276** with a matched CTLE.
+So **S3's top of range and S8 can both be met with S2's mandated topology** —
+which is the opposite of the finding the task allowed for, and it is clean.
+
+**But the mechanism is what to carry, and it is not reassuring.** At 12 dB
+skin-dominated, of the 0.613 the DFE cannot reach: **14.7% is in `h2`**, 66.3%
+is in `h2..h20`, and **31.2% sits beyond 20 UI**. **A second DFE tap buys 15%;
+a twenty-tap DFE still leaves 31%.** That is the `sqrt(f)` algebraic tail —
+precisely what a decision-feedback architecture is worst at, since a DFE's cost
+is linear in taps while the tail decays as a power law. **The CTLE is the block
+that has to do this work.**
+
+**"A scalar cannot represent a channel" is now MEASURED, not asserted.** At a
+fixed loss at Nyquist, skin-dominated leaves **1.60x** the residual of
+dielectric-dominated at 12 dB — and **1.99x** at 3 dB. The ratio is largest
+where the channel is EASIEST, which is the opposite of where I predicted to
+look, and it is recorded as a miss.
+
+**The transmitter is worth exactly 3.5 dB of the CTLE's job**, so the burden
+spans **-0.5 to +8.5 dB**. Two consequences pointing opposite ways: the **top
+3.5 dB of S3's tunable range is never called for** on this family, and at
+3/4.5/6 dB the burden is **below S3's 3 dB floor**, so a compliant CTLE
+over-equalises. Also visible only because the TX is modelled: **`h1` changes
+sign** below ~8 dB of loss — the fixed de-emphasis over-cancels the first
+post-cursor and the DFE has to put energy back.
+
+**THE COMPRESSION RE-RUN (66 SPICE runs, 64.6 s, reproduction gate 5/5).**
+The gate re-simulates the published reference device before analysing anything
+and matched all five published numbers (gm 12.623 vs 12.62 mS, 1 dB swing
+**1426.9 vs 1427 mVpp**). Result:
+
+        A  Nyquist in / Nyquist out (9c/9d)   3 dB = 1.22x   2/7 compress
+        B  long-run in / peak out (C3)        3 dB = 1.16x   7/7 compress
+        C  peak distortion, REAL pulse resp.  3 dB = 1.51x   5/7 compress
+
+**The 1.22x SURVIVES VERBATIM under convention A** — 1689 mVpp against 1389,
+digit for digit — because that convention reads Nyquist content through Nyquist
+gain and **neither the deleted constant nor the de-emphasis touches either**.
+So `BOUNDS_REDERIVATION.md` §2's blockquote was right that a made-up constant
+decided the **C3** table, and wrong to imply the headline hung on it. **The
+honest number is 1.51x, and compression binds at 5 of 7 loss points** — worse
+than the line it replaces, not better. **HANDOFF §8's compression bullet is
+REPLACED IN PLACE**, on the same footing as G40 and the retired tail claim.
+"Worst at low loss" survives and is now explained: below 6.5 dB the burden is
+under S3's floor, so a compliant CTLE adds boost the link does not need.
+
+**A correction that had to be made before that table could be trusted (G60):
+§6's design equations over-predict the Nyquist boost by +0.77 to +1.47 dB**,
+growing with `R_s`, because they neglect `r_o`. Convention C integrates the
+pulse response *through* that model, so the first version of the table was
+**28% high** (3 dB read 1.93x). Fixed by calibrating `k` to the measured boost
+with `f_z` and `f_p2` exact from the passives, leaving peaking and `f_peak` as
+independent checks (+0.094 to +0.232 dB against §5.3b's 0.5 dB limit).
+
+**S8's vertical floor is met with the CTLE ATTENUATING 13-15 dB** (required
+A_dc 0.181-0.217 V/V against a measured 1.79 — 8.6x more gain than needed).
+S8 vertical is not binding, and this is the first time the project can say so
+with a real pulse response behind it.
+
+**A pre-registered falsification condition FIRED.** The stated two-reflection
+probe adds **+0.064 to +0.122** to the residual — within the predicted band at
+low loss, well above it at high loss, because an echo is a copy of the *whole*
+response and at high loss that response is itself spread. At 12 dB it takes the
+channel-only eye from 118 mV to **81 mV, below S8's floor**. **Every ISI number
+in this session is therefore a LOWER BOUND**, and that is now in §7,
+`CHANNEL_MODEL.md` §8 and §12.
+
+**Four of nine supporting predictions are recorded misses** (`PREDICTIONS.md`
+entry 4): the 4a band was quoted from a pilot in the wrong de-emphasis
+configuration; 4c's "roughly constant" was wrong; 4d underestimated how much a
+TX FIR reshapes cursors it is not aimed at; and 4g/4h had the peak-distortion
+bound on the wrong side of both proxies. Nothing was edited to match.
+
+**New gotchas G59** (a magnitude-only channel is non-causal and raises nothing;
+the power-law test that distinguishes aliasing from a broken reconstruction),
+**G60**, **G61** ("compression ratio" has three definitions and they disagree
+1.8x) and **G62** (a grep test must not contain its own needle).

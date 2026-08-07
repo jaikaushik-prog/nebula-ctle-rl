@@ -320,9 +320,12 @@ supersedes any per-point figure derived from the 0.42 s single-run number
    here is instrumented to be re-run as-is.
 2. ~~**Re-cut the screen** with a hot fast corner~~ — still open, but see §8:
    the screen now has a **load** axis and was exact on this sample.
-3. **Replace the `CHANNEL_DC_LOSS_DB` = 1.0 dB placeholder** before any
-   compression verdict is quoted — it is still a made-up constant deciding a
-   result (HANDOFF §8).
+3. ~~**Replace the `CHANNEL_DC_LOSS_DB` = 1.0 dB placeholder**~~ — **DONE
+   2026-08-07 (session 16), `nebula/CHANNEL_MODEL.md`.** The constant is
+   deleted, not re-valued, and the compression verdict re-measured: 3 dB is
+   **1.51x** and **5 of 7 loss points compress**. Nothing in THIS file depended
+   on it — S9 is a device-layer sweep — but the item was listed here, so it is
+   closed here.
 4. ~~**`cl` is pinned at a yield-maximising value**~~ — **DONE 2026-08-06,
    §8 below.** It cost the headline.
 

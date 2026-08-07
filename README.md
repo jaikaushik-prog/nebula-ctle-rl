@@ -31,7 +31,7 @@ Depending on why you are reading:
 | **A mentor or teammate wanting the state of play** | [`docs/PROGRESS.md`](docs/PROGRESS.md) — every session, what question it asked, what it measured |
 | **Picking up the Nebula work** | [`nebula/README.md`](nebula/README.md) — index + reading order, then [`CLAUDEwa.md`](CLAUDEwa.md) |
 | **Picking up the SerDes work** | [`docs/ROADMAP.md`](docs/ROADMAP.md), then `python_models/` |
-| **Any agent or developer touching code** | [`HANDOFF.md`](HANDOFF.md) in full — it is the source of truth, including 54 numbered gotchas |
+| **Any agent or developer touching code** | [`HANDOFF.md`](HANDOFF.md) in full — it is the source of truth, including 63 numbered gotchas |
 
 `HANDOFF.md` is long (3,300+ lines) on purpose: it is the living state file,
 not an introduction. `docs/PROGRESS.md` is the introduction.
@@ -67,17 +67,27 @@ Simulator is ngspice 41 against the real SKY130 PDK.
 | Where does the load capacitance come from? | Derived from what physically loads the output: **13.6 / 32.6 / 78.0 fF**, entirely below the 150 fF every earlier result assumed | [`nebula/CL_RANGE.md`](nebula/CL_RANGE.md) |
 | What does that load range cost? | **99.4 %** — corner-and-load-robust yield is **1 design in 1890**. The load is the binding constraint, not the corners | [`nebula/S9_YIELD.md`](nebula/S9_YIELD.md) §8 |
 | The tail was two ideal current sinks. What did that hide? | **8.8 %** of the corner-robust population and **zero** of the headline yield — same surviving design before and after | [`nebula/TAIL_DEVICE.md`](nebula/TAIL_DEVICE.md) |
+| Are R and C real devices yet? | **In the device layer, yes.** Three silent traps measured — `mult`/`mf` do nothing, `w` is inert on the fixed-width families, and the **passive corner axis is orthogonal to the MOS one**, so S9's 45 corners are really **225** | [`nebula/PASSIVES.md`](nebula/PASSIVES.md) |
+| What channel are we equalising? | A **family derived from the spec**, not a constant: `IL(f) = A·√f + B·f`, 3–12 dB at Nyquist × three skin/dielectric splits, minimum-phase and causality-gated | [`nebula/CHANNEL_MODEL.md`](nebula/CHANNEL_MODEL.md) |
+| Is the mandated 1-tap DFE enough? | **Yes across 3–12 dB** — the eye never closes. But only **14.7 %** of what it cannot reach is in `h₂` and **31 %** is beyond 20 UI, so more taps would not help: the CTLE has to do this work | [`nebula/CHANNEL_MODEL.md`](nebula/CHANNEL_MODEL.md) §5 |
+| How much of the equalisation does the transmitter do? | **Exactly 3.5 dB** — PCIe Gen2's mandated de-emphasis. So the CTLE's burden is −0.5…+8.5 dB and **the top 3.5 dB of the tunable range is never called for** | [`nebula/CHANNEL_MODEL.md`](nebula/CHANNEL_MODEL.md) §4 |
+| Does the stage compress? | **At 5 of 7 loss points**, worst at *low* loss (1.51× at 3 dB). Measured as peak distortion through the real pulse response — the earlier 1.22× was a different, weaker convention | [`nebula/CHANNEL_MODEL.md`](nebula/CHANNEL_MODEL.md) §6 |
 
 **The one-line summary:** PVT corners cost 39 %, the load range costs 99.4 %,
 the ideal-tail assumption cost 8.8 %. The load dominates, and it dominates
 because the per-load robust sets are large and almost **disjoint** — 159 of the
 160 designs robust at one load edge are not robust at the other.
 
+**And on the link side:** the mandated topology is adequate for the channel the
+spec implies, so the fight is not the DFE. It is compression at *low* channel
+loss, where the equaliser's own minimum setting is more boost than the link
+needs.
+
 ### Method: predictions are pre-registered
 
 Predictions are written down and committed **before** the experiment runs, and
 the outcome is recorded afterwards whichever way it went. See
-[`nebula/PREDICTIONS.md`](nebula/PREDICTIONS.md). Three entries so far; the
+[`nebula/PREDICTIONS.md`](nebula/PREDICTIONS.md). Four entries so far; the
 misses are recorded as misses.
 
 ### Gate status

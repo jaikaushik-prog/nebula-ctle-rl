@@ -28,8 +28,10 @@ self-contained write-up of one experiment.
 | 5 | [`S9_YIELD.md`](S9_YIELD.md) | Corner-robust yield, which spec fails first at each corner, and the corner-screen cost model | quoting any yield number |
 | 6 | [`ROBUST_GEOMETRY.md`](ROBUST_GEOMETRY.md) | Robustness is a property of position in the **spec window**, not in the parameter box | touching the reward shape |
 | 7 | [`TAIL_DEVICE.md`](TAIL_DEVICE.md) | The tail as a real transistor. What the ideal-sink assumption was worth, and the one constraint that couples five box coordinates | repeating "tail noise is common-mode" |
-| 8 | [`PREDICTIONS.md`](PREDICTIONS.md) | Pre-registered predictions vs. outcomes, including the misses | — |
-| 9 | [`NRZ_RETARGET_AUDIT.md`](NRZ_RETARGET_AUDIT.md) | All 24 four-level assumptions in the inherited PAM-4 code, risk-marked | retargeting anything |
+| 8 | [`PASSIVES.md`](PASSIVES.md) | R and C as real SKY130 devices; `mult`/`mf` do nothing and `w` is inert on the fixed-width families; the passive corner axis is **orthogonal** to the MOS one, so S9's 45 corners are really 225 | instantiating any passive, or quoting a corner count |
+| 9 | [`CHANNEL_MODEL.md`](CHANNEL_MODEL.md) | The channel as a **derived family**, not a constant. A 1-tap DFE is sufficient across 3-12 dB — but only 15 % of what it cannot reach is in `h2`. The TX de-emphasis is worth exactly 3.5 dB of the CTLE's job. The compression verdict, re-measured | quoting any compression, eye or ISI number |
+| 10 | [`PREDICTIONS.md`](PREDICTIONS.md) | Pre-registered predictions vs. outcomes, including the misses | — |
+| 11 | [`NRZ_RETARGET_AUDIT.md`](NRZ_RETARGET_AUDIT.md) | All 24 four-level assumptions in the inherited PAM-4 code, risk-marked | retargeting anything |
 
 Each write-up opens with its **assumptions section**. Read it. Several results
 are explicitly bounds rather than answers, and the assumptions section is where
@@ -58,6 +60,20 @@ device/                Where the circuit meets the simulator.
                        Refuses to run on output containing warning-shaped failures.
   ngspice_runner.py    Batch-mode driver: netlist template → subprocess → parsed result.
   mock.py              SYNTHETIC. Fake numbers by construction. Never reaches a deliverable.
+  passives.py          R and C as real SKY130 devices, with the three silent traps pinned.
+
+link/                  Device result -> eye.
+  channel.py           The channel FAMILY: IL(f) = A*sqrt(f) + B*f, parameterised by
+                       (loss at Nyquist, skin/dielectric split). Minimum-phase
+                       reconstruction, then causality / passivity / monotonicity GATES.
+                       Equivalent length is reported from a stated stackup, never used
+                       to derive the loss. Touchstone ingestion for real data.
+  tx.py                The PCIe Gen2 transmitter as the 2-tap FIR it actually is.
+                       Supplies exactly -de_emphasis_dB of tilt at Nyquist.
+  cursors.py           Pulse response -> UI sampling -> h_-2..h_4 -> residual ISI after
+                       an ideal 1-tap DFE -> eye. Closed-form CTLE peak location.
+  calibration.py       Normalised amplitude -> volts. THE conversion, in one place.
+  config.py            LinkConfig + the PCIe Gen2 anchors (swing, de-emphasis).
   spice/               Netlists, the trimmed SKY130 library, and .spiceinit.
 
 link/                  Device result → eye. calibration.py owns the normalised→volts

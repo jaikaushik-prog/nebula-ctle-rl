@@ -85,6 +85,25 @@ an unmeasured linear limit is the substitution this whole exercise is about.
 
 ## 2. Fixed-boost vs matched-boost pairing
 
+> **SUPERSEDED 2026-08-07 (session 16) — read `nebula/CHANNEL_MODEL.md` §6
+> before quoting anything in this section.** The blockquote at the end of it
+> said a made-up constant decided the compression verdict. That constant is
+> now deleted and the verdict re-measured, and the outcome is not what the
+> blockquote implies:
+>
+> * **the 1.22x at 3 dB SURVIVES VERBATIM** (1689 mVpp against 1389, digit for
+>   digit) — because this section's convention reads *Nyquist content through
+>   Nyquist gain*, and the DC-loss constant never entered it. The blockquote
+>   was right about the `calibration.py` C3 table and wrong to imply the
+>   headline hung on it;
+> * **measured honestly it is worse, not better.** Peak distortion through the
+>   real pulse response puts 3 dB at **1.51x** and **5 of 7 loss points
+>   compress**, against this section's "two lowest points, 1.22x and 1.04x";
+> * the matched-boost *setup* below is still the right one, and session 16
+>   reproduces this device's published numbers 5/5 before using it.
+
+
+
 S3 says the peaking is **tunable** 3–12 dB and S2 says the knobs are Rs and
 Cs. Session 9c evaluated twelve *fixed* designs against all five channel-loss
 points, which is not how a tunable equaliser is operated: at 3 dB of loss you
@@ -325,4 +344,8 @@ nothing is obviously trimmable on this evidence — unlike the 1.2 V box, where
 4. **Add the tail transistor**, which unblocks the three missing bounds —
    **and is now the top item**, because it is the assumption that makes every
    corner number in (3) an optimistic bound.
-5. **Replace `CHANNEL_DC_LOSS_DB`** with a measured channel (§2's caveat).
+5. ~~**Replace the DC-loss constant**~~ — **DONE 2026-08-07 (session 16),
+   `nebula/CHANNEL_MODEL.md`.** Deleted, not re-valued, and replaced by a
+   channel FAMILY derived from S3 rather than by a single measured channel;
+   `link/channel.py::fit_from_touchstone` is the seam a real `.s4p` enters
+   through. See §2's superseded banner for what it did to the verdict.

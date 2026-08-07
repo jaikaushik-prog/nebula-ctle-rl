@@ -349,6 +349,53 @@ def run_reflections(verbose: bool = True) -> list[dict]:
 # ─────────────────────────────────────────────────────────────────────────────
 
 
+#: §5.3b: a pole-zero model that misses the measured response by more than
+#: this is garbage and must be rejected rather than passed downstream.
+FIT_REJECT_PEAKING_DB: float = 0.5
+
+#: How far the model's peak frequency may sit from the measured one. Session 11
+#: measured `meas ac MAX` as quantised at 0.0664 octaves (4.7%) on an
+#: `ac dec 50` grid, so anything at or below ~10% is the sweep setup rather
+#: than the model.
+FIT_REJECT_F_PEAK_RATIO: float = 0.15
+
+
+def calibrated_ctle_model(rs: float, cs: float, rl: float, cl: float,
+                          g_dc_linear: float, nyquist_boost_db: float
+                          ) -> deq.SmallSignal:
+    """A 1-zero/2-pole model tied to the MEASURED response, not predicted from §6.
+
+    WHY THIS IS NOT `deq.predict(...)`. Measured on this very sweep, the §6
+    equations over-predict the Nyquist boost by **+0.79 to +1.57 dB**, growing
+    with `rs` — they neglect `r_o`, so the degeneration factor `k` comes out too
+    large. Convention C below integrates the whole pulse response through this
+    model, so a 1.5 dB error in the boost is a 1.5 dB error in the output swing
+    it demands, and the compression verdict would inherit it.
+
+    Two of the three time constants are set by PASSIVES and are exact:
+
+        f_z  = 1 / (2*pi*Rs*Cs)          f_p2 = 1 / (2*pi*RL*CL)
+
+    so only the degeneration factor `k = f_p1/f_z` is fitted, from ONE measured
+    number (the boost at Nyquist), and `g_dc` is taken from the measurement
+    directly. The peaking and the peak frequency are then **independent**
+    checks — the caller gates on them.
+    """
+    from scipy.optimize import brentq
+
+    f_z = 1.0 / (2.0 * math.pi * rs * cs)
+    f_p2 = 1.0 / (2.0 * math.pi * rl * cl)
+
+    def boost(k: float) -> float:
+        probe = deq.SmallSignal(g_dc=1.0, f_zero_hz=f_z, f_pole1_hz=k * f_z,
+                                f_pole2_hz=f_p2, peaking_db=0.0)
+        return deq.transfer_db(NYQUIST_HZ, probe)
+
+    k = brentq(lambda k: boost(k) - nyquist_boost_db, 1.0 + 1e-9, 1e4, xtol=1e-12)
+    return deq.SmallSignal(g_dc=g_dc_linear, f_zero_hz=f_z, f_pole1_hz=k * f_z,
+                           f_pole2_hz=f_p2, peaking_db=20.0 * math.log10(k))
+
+
 def _peak_distortion_output_pp_v(ch: ChannelModel, tx: TxDeEmphasis,
                                  ss: deq.SmallSignal) -> float:
     """The output swing the stage ACTUALLY has to produce, differential Vpp.
@@ -425,11 +472,36 @@ def run_compression(verbose: bool = True) -> dict:
             swing = r.swing().linear_pp_v
             if swing is None:
                 continue
-            ss = deq.predict(gm=r.gm, rs=rs, cs=cs, rl=REFERENCE_DEVICE["rl"],
-                             cl=REFERENCE_DEVICE["cl"], gmbs=r.gmbs)
-            agrees, delta = deq.cross_check_extraction(
+            # §6 as written, kept as an INFORMATIONAL number: it neglects r_o
+            # and is measurably optimistic here, which is why it is not what
+            # convention C runs on.
+            _, s6_delta = deq.cross_check_extraction(
                 r.g_dc_linear, gm=r.gm, rs=rs, rl=REFERENCE_DEVICE["rl"],
                 gmbs=r.gmbs)
+            predicted = deq.predict(gm=r.gm, rs=rs, cs=cs,
+                                    rl=REFERENCE_DEVICE["rl"],
+                                    cl=REFERENCE_DEVICE["cl"], gmbs=r.gmbs)
+            pred_boost = (deq.transfer_db(NYQUIST_HZ, predicted)
+                          - 20.0 * math.log10(predicted.g_dc))
+
+            # The model the pulse response actually runs through: tied to the
+            # measurement, with the peaking and peak frequency left as
+            # independent checks.
+            ss = calibrated_ctle_model(rs, cs, REFERENCE_DEVICE["rl"],
+                                       REFERENCE_DEVICE["cl"], r.g_dc_linear,
+                                       r.nyquist_boost_db)
+            fit_pk, fit_fpk = deq.realised_peaking_db(ss, 40000)
+            d_peaking = fit_pk - r.peaking_db
+            d_fpk = fit_fpk / r.f_pk_hz - 1.0
+            if (abs(d_peaking) > FIT_REJECT_PEAKING_DB
+                    or abs(d_fpk) > FIT_REJECT_F_PEAK_RATIO):
+                raise RuntimeError(
+                    f"calibrated CTLE model rejected at rs={rs} cs={cs * 1e12:g}p: "
+                    f"peaking off by {d_peaking:+.3f} dB (limit "
+                    f"{FIT_REJECT_PEAKING_DB}), f_peak off by {d_fpk:+.1%} "
+                    f"(limit {FIT_REJECT_F_PEAK_RATIO:.0%}). §5.3b: a bad fit is "
+                    f"a failed evaluation, not a result to pass downstream."
+                )
             settings.append(dict(rs=rs, cs=cs, peaking_db=r.peaking_db,
                                  nyquist_boost_db=r.nyquist_boost_db,
                                  f_pk_ghz=r.f_pk_hz / 1e9,
@@ -437,7 +509,10 @@ def run_compression(verbose: bool = True) -> dict:
                                  g_nyq_lin=r.g_nyq_linear,
                                  g_pk_lin=10.0 ** (r.g_pk_db / 20.0),
                                  swing_1db_mVpp=swing * 1e3,
-                                 s6_gate_agrees=agrees, s6_delta_db=delta,
+                                 s6_delta_db=s6_delta,
+                                 s6_boost_error_db=pred_boost - r.nyquist_boost_db,
+                                 fit_peaking_error_db=d_peaking,
+                                 fit_f_peak_error=d_fpk,
                                  ss=ss))
     runtime = time.perf_counter() - t0
     n_runs = len(RS_GRID) * len(CS_GRID)
@@ -445,12 +520,19 @@ def run_compression(verbose: bool = True) -> dict:
           f"{len(settings)} meet S3 (peaking {SPEC_PEAKING_DB_RANGE[0]}-"
           f"{SPEC_PEAKING_DB_RANGE[1]} dB, interior peak in "
           f"{SPEC_F_PEAK_HZ_RANGE[0] / 1e9:g}-{SPEC_F_PEAK_HZ_RANGE[1] / 1e9:g} GHz)")
-    bad_gate = [s for s in settings if not s["s6_gate_agrees"]]
-    print(f"  §6 cross-check (A_dc vs gm*RL/k): "
-          f"{len(settings) - len(bad_gate)}/{len(settings)} within 1 dB, worst "
-          f"{max((s['s6_delta_db'] for s in settings), default=float('nan')):.3f} dB")
     if not settings:
         raise RuntimeError("no setting meets S3 — the sweep grid is wrong")
+    e6 = [s["s6_boost_error_db"] for s in settings]
+    ef = [s["fit_peaking_error_db"] for s in settings]
+    ep = [s["fit_f_peak_error"] for s in settings]
+    print(f"  §6 AS WRITTEN over-predicts the Nyquist boost by "
+          f"{min(e6):+.2f} .. {max(e6):+.2f} dB (it neglects r_o), so it is NOT "
+          f"what convention C runs on.")
+    print(f"  CALIBRATED model (k fitted to the measured boost; f_z and f_p2 "
+          f"exact from the passives): independent residuals — peaking "
+          f"{min(ef):+.3f} .. {max(ef):+.3f} dB against a {FIT_REJECT_PEAKING_DB} dB "
+          f"reject limit, f_peak {min(ep):+.1%} .. {max(ep):+.1%} "
+          f"(session 11 measured `meas ac MAX` as quantised at 4.7%).")
 
     # --- the matched-boost verdict, three conventions ---------------------
     tx = TxDeEmphasis(DE_EMPHASIS_SETTINGS_DB[1])
