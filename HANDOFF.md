@@ -5097,3 +5097,29 @@ today**, and `task8_blackbox.py` prints that rather than quietly scoring TT and
 calling it a verdict. Either run the sweep or re-run S9 with row-level logging;
 4 500 rows from a rung the pilot suggests is empty may be the worse of the two,
 and that is a human's call.
+
+### 2026-08-08 - Session 18d (the ordered plan for whoever is next)
+
+** is new**, written because the owner is out of agent
+sessions for three days and the next continuation may be a chat agent with no
+repository access. It carries the ordered plan, a ready-to-use prompt per step,
+and the exact files to paste alongside each prompt for an agent that cannot
+read the tree.
+
+**The two things it says that are not obvious from HANDOFF alone:**
+
+**1. G2 is 12 days away and not started, and it is the deliverable.** The
+competition asks for a framework that takes target specs in and emits a sized
+schematic plus its specs. **The link half does not exist** -- the link layer is
+a mock end to end (G16), which is why  correctly refuses to score
+S8. Everything measured so far is device-layer. NEXT_STEPS puts G2 in parallel
+with the sweep rather than behind it, because it depends on neither the trim
+nor the benchmark.
+
+**2. The ordering is: trim the library, then close the loop.** Everything else
+-- the sweep, the pre-screen re-fit, the surrogate -- is an improvement to
+measurement the project already has in abundance. The recommended cut order if
+time runs short is task 8 first, then the spec-conditioned policy, then the
+depth of PPO tuning; never G2.
+
+Nothing executable changed. **1292 green, unchanged.**
