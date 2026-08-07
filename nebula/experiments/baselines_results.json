@@ -1,0 +1,151 @@
+{
+ "prescreen": {
+  "accuracy": {
+   "n": 1890,
+   "n_interior_peak": 1311,
+   "k_alpha": 0.9,
+   "margin_oct": 0.4,
+   "margin_db": 2.0,
+   "f_peak_mdape_global": 0.049319467604237444,
+   "f_peak_mdape_band": 0.04801441385217369,
+   "f_peak_p90_ape_global": 0.2007007788573305,
+   "f_peak_abs_oct_p99": 1.078063047644676,
+   "f_peak_oct_bias": -0.02274639852063589,
+   "n_band": 1121,
+   "peaking_mae_db": 0.28419198931065814,
+   "peaking_bias_db": -0.008994966757757794,
+   "peaking_abs_db_p99": 2.61429853523996,
+   "accept_rate": 0.38306878306878306,
+   "free_rejection_rate": 0.6169312169312169,
+   "reject_reasons": {
+    "predicted_f_peak": 1018,
+    "predicted_peaking": 148
+   },
+   "s3_base_rate": 0.1343915343915344,
+   "false_rejection_rate": 0.003937007874015748,
+   "n_false_rejected": 1,
+   "n_s3_true": 254,
+   "effective_yield": 0.3494475138121547,
+   "yield_lift": 2.600219689389655,
+   "n_no_interior_peak": 579,
+   "g44_free_rejection_rate": 0.842832469775475,
+   "n_g44_accepted": 91
+  },
+  "margin_scan": [
+   {
+    "margin_oct": 0.0,
+    "margin_db": 0.0,
+    "free_rejection_rate": 0.8518518518518519,
+    "false_rejection_rate": 0.15748031496062992,
+    "n_false_rejected": 40,
+    "effective_yield": 0.7642857142857142,
+    "yield_lift": 5.687007874015747
+   },
+   {
+    "margin_oct": 0.1,
+    "margin_db": 0.5,
+    "free_rejection_rate": 0.801058201058201,
+    "false_rejection_rate": 0.047244094488188976,
+    "n_false_rejected": 12,
+    "effective_yield": 0.6436170212765957,
+    "yield_lift": 4.78911878036522
+   },
+   {
+    "margin_oct": 0.2,
+    "margin_db": 1.0,
+    "free_rejection_rate": 0.7555555555555555,
+    "false_rejection_rate": 0.03543307086614173,
+    "n_false_rejected": 9,
+    "effective_yield": 0.5303030303030303,
+    "yield_lift": 3.9459556191839655
+   },
+   {
+    "margin_oct": 0.3,
+    "margin_db": 1.5,
+    "free_rejection_rate": 0.6904761904761905,
+    "false_rejection_rate": 0.015748031496062992,
+    "n_false_rejected": 4,
+    "effective_yield": 0.42735042735042733,
+    "yield_lift": 3.1798909751665656
+   },
+   {
+    "margin_oct": 0.4,
+    "margin_db": 2.0,
+    "free_rejection_rate": 0.6169312169312169,
+    "false_rejection_rate": 0.003937007874015748,
+    "n_false_rejected": 1,
+    "effective_yield": 0.3494475138121547,
+    "yield_lift": 2.600219689389655
+   },
+   {
+    "margin_oct": 0.5,
+    "margin_db": 2.5,
+    "free_rejection_rate": 0.555026455026455,
+    "false_rejection_rate": 0.003937007874015748,
+    "n_false_rejected": 1,
+    "effective_yield": 0.30083234244946494,
+    "yield_lift": 2.238476878856255
+   },
+   {
+    "margin_oct": 0.75,
+    "margin_db": 3.0,
+    "free_rejection_rate": 0.4285714285714286,
+    "false_rejection_rate": 0.0,
+    "n_false_rejected": 0,
+    "effective_yield": 0.2351851851851852,
+    "yield_lift": 1.75
+   },
+   {
+    "margin_oct": 1.0,
+    "margin_db": 4.0,
+    "free_rejection_rate": 0.3391534391534392,
+    "false_rejection_rate": 0.0,
+    "n_false_rejected": 0,
+    "effective_yield": 0.2033626901521217,
+    "yield_lift": 1.5132105684547636
+   }
+  ],
+  "alpha_scan": [
+   {
+    "k_alpha": 0.8,
+    "f_peak_mdape_global": 0.07015508796158773,
+    "f_peak_mdape_band": 0.06887390320551026,
+    "peaking_bias_db": -0.2883574729874905,
+    "effective_yield": 0.3494475138121547,
+    "false_rejection_rate": 0.003937007874015748
+   },
+   {
+    "k_alpha": 0.85,
+    "f_peak_mdape_global": 0.05595950190140546,
+    "f_peak_mdape_band": 0.05526980095338208,
+    "peaking_bias_db": -0.13992297190536185,
+    "effective_yield": 0.3494475138121547,
+    "false_rejection_rate": 0.003937007874015748
+   },
+   {
+    "k_alpha": 0.9,
+    "f_peak_mdape_global": 0.049319467604237444,
+    "f_peak_mdape_band": 0.04801441385217369,
+    "peaking_bias_db": -0.008994966757757794,
+    "effective_yield": 0.3494475138121547,
+    "false_rejection_rate": 0.003937007874015748
+   },
+   {
+    "k_alpha": 0.95,
+    "f_peak_mdape_global": 0.04911980679016085,
+    "f_peak_mdape_band": 0.04871048182225966,
+    "peaking_bias_db": 0.11756605478751037,
+    "effective_yield": 0.3494475138121547,
+    "false_rejection_rate": 0.003937007874015748
+   },
+   {
+    "k_alpha": 1.0,
+    "f_peak_mdape_global": 0.05526980095338208,
+    "f_peak_mdape_band": 0.05483621199380959,
+    "peaking_bias_db": 0.26672558808407487,
+    "effective_yield": 0.3494475138121547,
+    "false_rejection_rate": 0.003937007874015748
+   }
+  ]
+ }
+}

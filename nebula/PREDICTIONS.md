@@ -766,3 +766,152 @@ corner-and-load-robust count **at or above** session 12b's 1/1890.
 *Not yet run.* Blocked behind `PASSIVES.md` §6 item 6 (the R/C corner-file
 trim), per the session-17 re-run ordering in HANDOFF §8: re-running the screen
 before the `cl` range is corrected would re-run it with the wrong range.
+
+---
+
+## 6. The baseline benchmark — which search method wins, per problem rung
+
+**Written:** 2026-08-07, session 18, **before** `experiments/baselines.py` was
+run against ngspice for the first time. The 7e pre-screen numbers below were
+measured first, on already-paid-for data (`robust_geometry_data.csv`, session
+11), and they are declared as seen data rather than predicted.
+
+**Experiment:** `python -m nebula.experiments.baselines --sweep` —
+150 simulations per run, five methods (uniform random, Latin hypercube,
+CMA-ES, GP-BO, untuned PPO), with and without the analytic pre-screen, on
+P1 (TT, `cl_mid`) and P3 (3 screen corners × {`cl_lo`, `cl_hi`}). Scored by
+`reward_v1` on all seven spec rows, worst case over the problem's evaluation
+points. Seeds by the rule in `baselines.run_seed`.
+
+### The owner's stated expectation
+
+> *"CMA-ES and BO ahead of pre-screened random, ahead of random, ahead of
+> untuned PPO at this budget."*
+
+### Pilot data I have seen, declared
+
+* The **pre-screen's own numbers**, measured before this was written: f_peak
+  MdAPE **4.93 %** globally and **4.80 %** in 0.5–5 GHz; the screen rejects
+  **61.7 %** of the box for free at a **0.39 %** false-rejection rate, taking
+  the S3 rate among accepted designs from **13.44 % to 34.94 %** — a **2.60×**
+  lift that does **not** clear 7e's 50 % threshold.
+* **Session 17's** measured invalid rate (26.5 % on a policy trajectory, of
+  which 78 % was the G44 fictitious peak) and its reward calibration
+  (design 432 **+8.951**, flat **−1.155**, op-fail **−8.000**).
+* Nothing from `baselines.py` itself. It has never touched ngspice.
+
+### Predictions
+
+**P1 — ordering, best final reward at 150 simulations.**
+
+> **CMA-ES ≈ GP-BO > pre-screened uniform ≈ pre-screened LHS > LHS ≈ uniform
+> > PPO**, with *CMA-ES and GP-BO not separable from each other* at 10 seeds.
+
+**P1 — the numbers each of those rests on.**
+
+| quantity | prediction | band I would accept as consistent |
+|---|---|---|
+| uniform, fraction of seeds finding a feasible design | **≥ 0.95** | 0.85–1.00 |
+| uniform, median simulations to first feasible | **≈ 5** | 2–12 |
+| pre-screened uniform, median simulations to first feasible | **≈ 2** | 1–5 |
+| CMA-ES / GP-BO, median simulations to first feasible | **5–20** | 1–40 |
+| PPO, fraction of seeds finding a feasible design | **≤ 0.5** | 0.0–0.8 |
+| every method's median best-reward at 150 sims | **feasible band, ≥ +8** | — |
+| pre-screen's measured free-rejection rate inside the sweep | **55–70 %** | 45–80 % |
+
+**P2 is not run** and no prediction is offered for it.
+
+**P3 — I predict it is EMPTY, and that this is the informative outcome.**
+
+> **No method finds a feasible design in 150 simulations on any seed**, so the
+> censored table reads 0/20 and 0/10 everywhere and the *only* defined
+> comparison is the anytime curve. On that curve I predict the same ordering as
+> P1 but with **no pair separable**, because 150 simulations buys only 25
+> designs at 6 simulations each and the reward differences between methods will
+> be inside the seed-to-seed spread.
+
+**Cross-cutting.**
+
+> The **pre-screen helps every method it wraps**, and it helps *uniform random
+> most and CMA-ES least* — because CMA-ES's covariance adaptation already
+> learns the same region the screen encodes, so the screen is partly redundant
+> with it, while uniform random has no memory at all.
+
+> **Wall clock will not rank the same as simulations.** GP-BO's model fitting
+> is O(n³) and it will end the run fitting a GP to ~150 observations every
+> proposal; I predict GP-BO's median wall clock is **≥ 1.15×** its own
+> simulation-implied time while every other method is within 1.05×.
+
+### The reasoning
+
+1. **P1 is easy and the sanity rung says so.** The base rate is 13.44 %, so
+   uniform random's simulations-to-first-feasible is geometric with p ≈ 0.134
+   and a median of `ln 2 / 0.134` ≈ **5**. Any method that needs materially
+   more than that on P1 is broken, not weak, which is what makes P1 a gate.
+2. **The pre-screen is a 2.60× yield multiplier, measured.** 0.134 → 0.349
+   gives a median of `ln 2 / 0.349` ≈ **2**. That is the whole prediction for
+   the screened arms; it needs no assumption about search at all.
+3. **CMA-ES and BO win on the ANYTIME curve, not on time-to-first.** Both need
+   an initialisation phase — GP-BO burns 2d+2 = 16 designs on its initial
+   design before it models anything, and CMA-ES's first generation is a draw
+   from an isotropic Gaussian — so on time-to-FIRST-feasible neither should
+   beat uniform random on a 13 % problem. Where they should win is the *best*
+   reward at 150, because reward v1's feasible branch keeps rewarding margin
+   after feasibility and only a method that models the objective climbs it.
+4. **PPO loses, and it is expected to.** 150 simulations is ~19 episodes at
+   horizon 8, against the 142 episodes session 17 ran and drew no conclusion
+   from. A policy gradient with 19 episodes of experience on a 7-dimensional
+   continuous problem is an untrained network; its proposals are close to its
+   random initialisation and it pays the horizon's early-termination cost
+   (an invalid evaluation ends the episode) that no other method pays.
+5. **P3 is empty because 12b measured it empty and G66 made it worse.** One
+   design in 1890 with ideal passives; drawn passives shift `f_peak` by 0.1329
+   octaves against 0.12 octaves of slack, always in the same direction. At
+   150 simulations a method evaluates 25 designs — I would not expect to find
+   a 1-in-1890 design in 25 draws even if it still exists.
+
+### What would falsify the reasoning (as opposed to the number)
+
+1. **PPO beats uniform random on P1.** That would mean either the policy is
+   learning something in 19 episodes — which would contradict session 17's
+   refusal to draw a conclusion from 142 — or that PPO's *episodic structure*
+   (edit an existing design rather than draw a fresh one) is worth more than
+   its untrained policy costs. The second would be a genuinely interesting
+   result and would say the comparison should be against a local-search
+   baseline, not against random search.
+2. **The pre-screen does not help, or hurts.** The screen is calibrated at
+   TT with `nf_in` varying and `cl` = 150 fF; the benchmark runs `nf_in` = 4
+   at `cl_mid` = 32.63 fF with drawn passives. If the free-rejection rate
+   measured inside the sweep is far from 61.7 %, the calibration does not
+   transfer and every screened number is about the calibration set rather than
+   about the box.
+3. **Uniform random's median time-to-feasible is far from 5.** That would mean
+   reward v1's seven-row feasibility is materially harder than the S3 rate the
+   prediction is built on — i.e. that noise, power or a saturation margin binds
+   more often than "90.7 % free" implies. That is a fact about the box worth
+   more than the ordering.
+4. **P3 turns out non-empty.** Then session 12b's 1/1890 understates the
+   tunable-free robust population and the load screen needs re-reading, which
+   is HANDOFF §8's decided re-run anyway.
+5. **CMA-ES and GP-BO separate from each other at 10 seeds.** I predict they
+   do not. If they do, the effect is larger than I think and the sample size
+   argument in 7h is too conservative.
+
+### Guard against over-claiming, in both directions
+
+If PPO loses, that is **the expected result and must be reported as such**. It
+is evidence that untuned PPO at this budget on a 7-dimensional problem loses to
+a tuned classical optimiser — which is unsurprising — and it is **not** evidence
+about the amortised, spec-conditioned claim, because that claim is not being
+tested here: every run in this sweep optimises ONE fixed spec target from
+scratch, which is the setting classical optimisers are built for and the
+setting a learned policy has no opportunity to amortise over.
+
+Equally, if PPO were to win it would **not** establish the amortised claim
+either. It would establish that on one spec target, at 150 simulations, one
+untuned configuration beat four classical ones — which is a much smaller
+statement than the one the project wants to make in September.
+
+### Outcome
+
+*Filled in after the sweep runs. Nothing above is edited.*

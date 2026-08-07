@@ -4677,3 +4677,64 @@ the sweep is clean (control 0.85x) and the answer is **2.98x at 8 workers with
 3.18x and its curve turns DOWN past 8. Standing rule, from the owner: *"keep
 looking for the impossible number rather than the disappointing one"* — 2.55x
 at two workers was the tell precisely because it was impossible.
+
+### 2026-08-07 — Session 18a (task 7 PRE-REGISTRATION, committed before the run)
+
+**This commit exists so that its timestamp is evidence.** `PREDICTIONS.md`'s
+own rule: *"Any experiment whose result could be argued for after the fact gets
+a prediction committed to git BEFORE it runs."* Task 7 builds the benchmark the
+final claim rests on, so the predicted ordering goes in first and the sweep
+runs afterwards.
+
+**Landed here, none of it yet run against ngspice:**
+
+* `nebula/experiments/baselines.py` — the benchmark harness. Problem ladder
+  P1/P2/P3 (P4 a declared seam), five methods against ONE evaluator, ONE
+  scalar (`reward_v1`, seven rows, worst case over evaluation points) and ONE
+  geometry mapping; every simulation charged including retries; seeds by a
+  stated rule; evaluator commit pinned into every artifact.
+* `nebula/experiments/prescreen.py` — 7e's analytic pre-screen, **calibrated
+  and measured on already-paid-for data** (`robust_geometry_data.csv`, 1890
+  simulated designs from session 11). No new simulation was run to produce it.
+* `nebula/PREDICTIONS.md` entry 6 — the predicted ordering per rung, the
+  numbers it rests on, and five falsification conditions.
+
+**7a's arithmetic, computed rather than asserted** (`--budget`): the fully
+crossed design (3 rungs x 5 methods x 2 screen arms) is **63 000 simulations =
+23.5 h** at the measured 1.341 s/simulation at 8 workers, so it does not fit an
+overnight run. The cut falls on **problems and pre-screen arms, never on the
+per-run budget and never on the seed counts**: P2 is dropped entirely, P3 loses
+its screened arm and its PPO arm. What remains is **200 runs, 30 000
+simulations, 11.2 h** at the pessimistic rate and 5.8 h at the optimistic one.
+
+**7e's headline, measured before this was written and therefore declared as
+seen data in the prediction: the loud verdict DOES NOT FIRE.** The analytic
+pre-screen predicts `f_peak` to **4.93 % MdAPE** globally and **4.80 %** in the
+0.5-5 GHz decision region, rejects **61.7 %** of the box for free at a
+**0.39 %** false-rejection rate, and takes the S3 rate among accepted designs
+from **13.44 % to 34.94 %** — a **2.60x** lift that does **not** clear 7e's
+50 % threshold. **Physics does not solve the nominal problem; it removes
+three-fifths of the box for free.** The nuance that must travel with that
+number: the screen CAN be pushed to **76.4 %** effective yield at zero
+widening, but only by discarding **15.75 %** of the designs that actually meet
+S3, and a rejected design is gone from the run while a false acceptance costs
+one simulation and is then caught by the evaluator.
+
+**Two corrections earned while building it, both from the same habit of
+checking that a gate can fire:**
+
+* the G60 correction is **one scalar on `k`, fitted from the measured PEAKING
+  and nothing else**, exactly as G60 prescribes — which leaves the f_peak error
+  as an INDEPENDENT check rather than a fit target. `alpha` = 0.90; `alpha` =
+  1.0 is §6 verbatim and biases peaking by **+0.27 dB**, the same direction as
+  G60's +0.77 to +1.47 dB on a higher-`Rs` population.
+* a **"peak is at the grid edge" test can never fire on a one-zero/two-pole
+  response**, because that magnitude falls as 1/f and its maximum is always
+  interior. It fired zero times on 1890 designs. What the SIMULATOR reports as
+  an edge is a peak above its own 20 GHz search top, so the predictor uses
+  `evaluator.F_PEAK_HZ_LIMITS[1]` — and the G44 population is caught anyway,
+  **84.3 % of it (488 of 579)**, under the f_peak label.
+
+**1246 green before and after** (nothing executable was changed in an existing
+module). The sweep, the tests for `baselines.py`, and `nebula/BASELINES.md`
+follow in 18b.
