@@ -49,7 +49,7 @@ central results meaningless. Everything after this point is written test-first.
 
 ---
 
-## Part 2 — Nebula (sessions 6–14)
+## Part 2 — Nebula (sessions 6–16)
 
 A competition track with a hard deadline: automate transistor-level CTLE sizing
 with reinforcement learning, on an open-source PDK, with no human in the loop.
@@ -77,6 +77,11 @@ with reinforcement learning, on an open-source PDK, with no human in the loop.
 | 12b | What does the real load range cost? | **99.4 %.** Yield falls to **1 design in 1890**. The per-load robust sets are large but almost **disjoint** — 159 of 160 designs robust at one load edge fail at the other. **The load, not the corner set, is the binding constraint** |
 | 13 | The tail was two ideal current sinks. What did that hide? | **8.8 %** of the corner-robust population and **zero** of the headline — same surviving design, before and after. But the 8.8 % is *conditional* on a population the load screen had already cut by 99.4 %, so the tail is **masked, not unimportant** |
 | 14a | The spec says the peaking is *tunable*. Score that | Built and **pre-registered**; the large run has not been executed yet |
+| 15 | Are the resistors and capacitors real devices? | In the device layer, now yes. Three traps measured: two "multiplier" parameters that **do nothing**, a width parameter that is **inert** on the fixed-width families (4× error, silently), and — structurally — the **passive corner axis is independent of the transistor one**, so every corner number so far held the passives at typical, and the real sweep is **225 corners, not 45** |
+| 16 | What channel are we actually equalising? | It had been a **single invented number with no provenance** — and by the project's own admission that number, not the circuit, decided the compression verdict. Replaced by a **family derived from the spec itself**. Its own name encoded the error: a transmission line's loss at DC is essentially **zero** |
+| 16 | **Is the mandated 1-tap equaliser feedback enough?** | **Yes, across the whole 3–12 dB range** — the eye never closes. But only **15 %** of the interference it cannot cancel sits in the next symbol, and **31 % arrives more than 20 symbols later**, so extra taps would barely help. The continuous-time equaliser is the block that has to do this work |
+| 16 | How much of the job does the *transmitter* do? | **Exactly 3.5 dB** — PCIe Gen2 mandates transmitter de-emphasis and specifies no receiver equaliser at all. Leaving it out had been overstating the equaliser's task by that much, and it means **the top quarter of the specified tuning range is never called for** |
+| 16 | Does the stage overload? | **At 5 of 7 channel-loss points**, and worst where the channel is *easiest* — because there the equaliser's own minimum setting is more boost than the link needs. The earlier, milder reading survives, but only under a weaker definition of the question |
 
 ---
 
@@ -89,6 +94,8 @@ with reinforcement learning, on an open-source PDK, with no human in the loop.
 | PVT corners | **39 %** of designs that pass at nominal |
 | The load-capacitance range | **99.4 %** |
 | An ideal (transistor-free) tail | **8.8 %**, and masked by the above |
+| Typical-only passives | unmeasured — but the real corner count is **225, not 45** |
+| A single-number channel | changed the overload verdict from **2 of 7** loss points to **5 of 7** |
 
 The load dominates by a wide margin. The actionable consequence is *not* the
 yield number — it is the tolerance: this topology absorbs a 5.7× load spread
