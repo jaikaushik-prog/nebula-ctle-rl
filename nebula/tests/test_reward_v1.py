@@ -159,15 +159,122 @@ def test_any_feasible_design_outranks_any_infeasible_one(specs):
 
 
 @pytest.mark.parametrize("specs", [R.V0_SPECS, R.V1_SPECS])
-def test_invalid_is_strictly_below_every_valid_score(specs):
+def test_the_four_bands_are_separated_and_derived_from_n(specs):
+    """CALL 1. Four bands, no overlap, every boundary a function of N alone.
+
+        feasible      >= N + 1
+        infeasible    [-N, 0)
+        headroom-only (-(N+2), -(N+1)]
+        invalid       -(N+3)
+    """
+    n = len(specs)
+    assert R.feasible_bonus(n) == n + 1.0
+    assert R.headroom_band_top(n) == -(n + 1.0)
+    assert R.invalid_reward(n) == -(n + 3.0)
+    # Strictly ordered, with a gap at every boundary.
+    assert (R.feasible_bonus(n) > 0.0 > -float(n)
+            > R.headroom_band_top(n)
+            > R.headroom_band_top(n) - 1.0
+            > R.invalid_reward(n))
+
+
+@pytest.mark.parametrize("specs", [R.V0_SPECS, R.V1_SPECS])
+def test_invalid_is_strictly_below_every_other_band(specs):
     n = len(specs)
     floor = R.invalid_reward(n)
-    assert floor == -(n + 1.0)
-    assert floor < -float(n), (
-        "an invalid evaluation must be worse than violating every spec "
-        "maximally, or the policy can prefer a broken circuit to a bad one")
     rb = R.reward(None, TARGET_F, specs=specs)
     assert rb.reward == floor and not rb.valid and not rb.feasible
+    assert not rb.headroom_only
+    # Below the whole headroom band, whose floor is `top - 1`.
+    assert floor < R.headroom_band_top(n) - 1.0, (
+        "a result nothing can be believed from must score below one where the "
+        "operating point IS believable, or the policy prefers a crash to a "
+        "triode design it could climb out of")
+
+
+# ── CALL 1: the graded headroom band ────────────────────────────────────────
+
+def _headroom(pair=-0.05, tail=0.33):
+    return {"pair_margin_v": pair, "tail_margin_v": tail}
+
+
+@pytest.mark.parametrize("specs", [R.V0_SPECS, R.V1_SPECS])
+def test_a_triode_design_is_graded_not_floored(specs):
+    """*'.op converged, device out of saturation -> graded penalty below the
+    infeasible floor, ordered by (vds - vdsat).'*"""
+    n = len(specs)
+    rb = R.reward(None, TARGET_F, specs=specs, headroom=_headroom())
+    assert rb.headroom_only and not rb.valid and not rb.feasible
+    assert R.invalid_reward(n) < rb.reward <= R.headroom_band_top(n)
+
+
+def test_the_headroom_band_orders_strictly_by_how_far_into_triode():
+    """The whole point of the band. A design 1 mV into triode must score above
+    one 500 mV in, at EVERY depth — not just inside the first tolerance."""
+    depths = [-0.001, -0.005, -0.02, -0.05, -0.1, -0.3, -1.0, -5.0]
+    rewards = [R.reward(None, TARGET_F, headroom=_headroom(pair=d)).reward
+               for d in depths]
+    assert rewards == sorted(rewards, reverse=True), rewards
+    assert len(set(rewards)) == len(rewards), (
+        "two different triode depths scored identically — the band is clipped "
+        "somewhere and the policy has no direction out of the deep end")
+
+
+def test_the_headroom_band_is_not_clipped_at_one_tolerance():
+    """A `clip(h, 0, 1)` here would make everything past 100 mV identical.
+
+    The clip exists in the INFEASIBLE branch so one catastrophic spec cannot
+    drown out the others in a sum. There is no sum here — this is a single
+    ordering quantity — so a clip buys nothing and costs the ordering.
+    """
+    a = R.reward(None, TARGET_F, headroom=_headroom(pair=-0.1)).reward
+    b = R.reward(None, TARGET_F, headroom=_headroom(pair=-1.0)).reward
+    assert a > b, "clipped at one tolerance"
+
+
+def test_the_worse_of_the_two_devices_sets_the_grade():
+    """`vds - vdsat` for pair and tail; the band grades the worse one."""
+    a = R.reward(None, TARGET_F, headroom=_headroom(pair=-0.2, tail=0.3))
+    b = R.reward(None, TARGET_F, headroom=_headroom(pair=0.3, tail=-0.2))
+    assert a.reward == pytest.approx(b.reward)
+    assert a.worst_spec == "saturation" and b.worst_spec == "tail_saturation"
+
+
+def test_the_band_meets_the_infeasible_floor_without_overlapping():
+    """At an infinitesimal violation the graded score approaches the band top,
+    which is strictly below the worst infeasible score."""
+    n = len(R.V1_SPECS)
+    r = R.reward(None, TARGET_F, headroom=_headroom(pair=-1e-12)).reward
+    assert r == pytest.approx(R.headroom_band_top(n), abs=1e-9)
+    assert r < -float(n)
+
+
+def test_a_saturated_design_routed_into_the_band_raises():
+    """A positive margin here means the caller misrouted a GOOD circuit into
+    the band, which would score it below every bad one."""
+    with pytest.raises(ValueError, match="POSITIVE margin"):
+        R.headroom_reward(+0.05, len(R.V1_SPECS))
+
+
+def test_the_graded_band_uses_the_saturation_tolerance():
+    """Band and feasible branch speak the same unit, so a design 100 mV into
+    triode and one with 100 mV of margin are one tolerance either side of the
+    same boundary."""
+    n = len(R.V1_SPECS)
+    h = 1.0                                    # exactly one tolerance in
+    expected = R.headroom_band_top(n) - h / (1.0 + h)
+    got = R.headroom_reward(-R.TOL["saturation"], n)
+    assert got == pytest.approx(expected)
+
+
+def test_headroom_and_invalid_are_distinguishable_in_the_breakdown():
+    """They are both `valid=False`; only `headroom_only` separates them."""
+    h = R.reward(None, TARGET_F, headroom=_headroom())
+    i = R.reward(None, TARGET_F)
+    assert h.headroom_only and not i.headroom_only
+    assert h.margins and not i.margins, (
+        "the graded band must carry the margins it was graded on; the floor "
+        "must carry nothing")
 
 
 def test_invalid_is_a_distinct_branch_not_a_maxed_out_shortfall():

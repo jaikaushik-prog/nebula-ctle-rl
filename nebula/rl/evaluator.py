@@ -25,12 +25,39 @@ The last one is the one an optimiser loves most: a response still rising at
 20 GHz reports a large `peaking_db` at a frequency that is not a peak. Under
 reward v0 (S3 peaking) that is a high score for a circuit with no peak at all.
 
-THE RULE, AND IT HAS NO EXCEPTIONS
------------------------------------
-Every evaluation is either **VALID** — every required quantity present, finite,
-physically plausible, operating point inside the rails, both transistors in
-their intended region — or it is **INVALID**, which is a hard negative reward
-and a terminated episode.
+THE RULE THAT REPLACED THE FIRST ONE
+-------------------------------------
+The first version of this module was two-valued: VALID or INVALID. That was
+wrong in a specific and costly way, and the correction is the organising idea
+of the file.
+
+**A validity gate answers "can I trust this measurement?" A reward answers "is
+this circuit good?" Conflating them destroys the gradient exactly where a
+fresh policy lives.** Two results can look identical — no usable AC spec set —
+and need opposite handling:
+
+  * a peak reported at 19.95 GHz is an UNTRUSTWORTHY measurement. `meas ac MAX`
+    returned the edge of its own search range; the number is fiction. Nothing
+    can be scored from it.
+  * a device in TRIODE is a trustworthy measurement of a bad circuit. `.op`
+    converged; `vds` and `vdsat` are both real. What is untrustworthy is only
+    the AC-derived spec set, because the small-signal response of a device in
+    triode describes a circuit nobody asked for.
+
+So trustworthiness is **per analysis**, not per evaluation, and there are three
+verdicts:
+
+    VALID          .op and .ac both trustworthy. Full measurement vector.
+    HEADROOM_ONLY  .op converged and its primitives are trustworthy, but a
+                   device is out of saturation, so the AC spec set is DROPPED
+                   and only the DC headroom margins survive. Graded reward,
+                   ordered by how far into triode it is.
+    INVALID        nothing is trustworthy. Floor, no gradient, nothing to say.
+
+Why this matters rather than being tidy: `tail_saturation` binds on 2.6-13.3 %
+of the box, so a fresh policy lands in triode often, and a FLAT floor there
+gives it no direction out. The graded band is the way out, and it is graded on
+`vds - vdsat`, which is a `.op` quantity and therefore still true.
 
 An invalid result is NEVER:
   * a missing value the observation fills with a default,
@@ -52,6 +79,7 @@ import math
 import re
 import time
 from dataclasses import dataclass, field
+from enum import Enum
 from typing import Optional, Sequence
 
 from nebula.device.crosscheck import (
@@ -108,24 +136,41 @@ I_SUPPLY_A_LIMITS: tuple[float, float] = (1e-6, 0.1)
 RAIL_SLACK_V: float = 0.05
 
 
-class Invalidity(str):
-    """A named reason an evaluation may not become an observation."""
+class Verdict(str, Enum):
+    """How much of one evaluation may be believed. See the module docstring."""
+
+    VALID = "valid"
+    HEADROOM_ONLY = "headroom_only"
+    INVALID = "invalid"
 
 
 @dataclass
 class EvalResult:
-    """One evaluation, validated. `valid=False` => trust NO field.
+    """One evaluation, classified. Read `verdict` before reading anything else.
 
     Deliberately mirrors `DeviceResult`'s ok/None invariant (`common/types.py`):
-    numeric fields are `None` on failure, never `nan`, because `nan` propagates
-    silently into a reward and `None` explodes on the first arithmetic.
+    numeric fields are `None` when they may not be believed, never `nan`,
+    because `nan` propagates silently into a reward and `None` explodes on the
+    first arithmetic.
+
+        verdict           meas          headroom
+        VALID             populated     populated
+        HEADROOM_ONLY     **None**      populated
+        INVALID           None          None
+
+    `meas` is `None` on HEADROOM_ONLY **by construction, not by convention**:
+    the AC spec set of a device in triode describes a different circuit, and
+    the only way to guarantee nothing scores it is for it not to exist.
     """
 
-    valid: bool
+    verdict: Verdict = Verdict.INVALID
     reason: Optional[str] = None
     #: The 8 channels of the observation's measurement block, in the units
-    #: `contract.OBS_SCALES` declares.
+    #: `contract.OBS_SCALES` declares. Populated ONLY on VALID.
     meas: Optional[dict] = None
+    #: `.op`-derived headroom, populated on VALID and HEADROOM_ONLY. These are
+    #: trustworthy whenever `.op` converged, in triode or out.
+    headroom: Optional[dict] = None
     #: Everything else the reward and the log need, raw.
     raw: dict = field(default_factory=dict)
     design_id: Optional[str] = None
@@ -138,15 +183,30 @@ class EvalResult:
     #: §6d independent cross-check sample.
     text: Optional[str] = None
 
+    @property
+    def valid(self) -> bool:
+        """True only for a fully trustworthy evaluation.
+
+        Kept so every existing caller and test keeps meaning what it meant: a
+        HEADROOM_ONLY result is NOT valid, and must never reach code that
+        expects `meas`.
+        """
+        return self.verdict is Verdict.VALID
+
+    @property
+    def scorable(self) -> bool:
+        """True when the reward has SOMETHING real to grade — i.e. not the floor."""
+        return self.verdict in (Verdict.VALID, Verdict.HEADROOM_ONLY)
+
     @classmethod
     def invalid(cls, reason: str, n_spice: int = 0, seconds: float = 0.0,
                 design_id_: Optional[str] = None,
                 geometry_tag: Optional[str] = None) -> "EvalResult":
         if not reason or not reason.strip():
             raise ValueError("an invalid result must name its reason")
-        return cls(valid=False, reason=reason, meas=None, n_spice=n_spice,
-                   seconds=seconds, design_id=design_id_,
-                   geometry_tag=geometry_tag)
+        return cls(verdict=Verdict.INVALID, reason=reason, meas=None,
+                   headroom=None, n_spice=n_spice, seconds=seconds,
+                   design_id=design_id_, geometry_tag=geometry_tag)
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -198,75 +258,121 @@ def _finite(name: str, v) -> Optional[str]:
     return None
 
 
-def validate(pt: Sky130Point, point: SizingPoint) -> Optional[str]:
-    """`None` if the result may become an observation, else the reason.
+def validate(pt: Sky130Point, point: SizingPoint) -> tuple[Verdict, Optional[str]]:
+    """Classify one result. Returns `(verdict, reason)`; reason is None on VALID.
 
-    Order matters: presence, then finiteness, then plausibility, then the
-    operating point, then the device regions. A later check may assume the
-    earlier ones passed, which is what keeps each one readable.
+    **Trustworthiness is per ANALYSIS, not per evaluation.** The stages below
+    run in order and each may only assume the earlier ones passed:
+
+        A. `.op` parsed and is finite            -> else INVALID
+        B. DC nodes inside the rails             -> else INVALID
+        C. the device is ON                      -> else INVALID
+        D. both devices in saturation            -> else HEADROOM_ONLY
+        E. `.ac` / `.noise` parsed and plausible -> else INVALID
+
+    Stage D is the one that changed. It used to return INVALID, which threw
+    away a trustworthy `.op` because an untrusted `.ac` came with it — and a
+    flat floor over a region that binds on 2.6-13.3 % of the box leaves a fresh
+    policy no direction out. `vds` and `vdsat` both come from `.op`; if `.op`
+    converged they are true whether or not the device is saturated. What is
+    untrustworthy is only the AC spec set.
+
+    The A-before-B-before-D ordering is load-bearing for a second reason: it
+    reports the CAUSE rather than a symptom. `rl` at the box ceiling takes the
+    pair out of saturation AND pushes the peak to the sweep edge; checked the
+    other way round the log says "f_pk out of range", which sends whoever reads
+    it to the wrong file.
     """
     if not pt.ok:
-        return f"ngspice: {pt.fail_reason}"
+        return Verdict.INVALID, f"ngspice: {pt.fail_reason}"
 
-    # ---- 1. required vectors present and finite -----------------------------
-    required = {
+    # ---- A. the `.op` primitives, present and finite ------------------------
+    #
+    # The tail is not optional. `run_point` already fails a run whose tail did
+    # not parse, but an evaluator that would ACCEPT a missing tail margin is one
+    # `tail=None` away from scoring the coupled inequality as
+    # satisfied-by-absence.
+    op_required = {
         "gm": pt.gm, "gmbs": pt.gmbs, "vth": pt.vth, "vds": pt.vds,
         "vdsat": pt.vdsat, "vgs": pt.vgs, "id_a": pt.id_a,
         "v_out_dc": pt.v_out_dc, "v_src_dc": pt.v_src_dc,
         "i_supply_a": pt.i_supply_a,
-        "g_dc_db": pt.g_dc_db, "g_nyq_db": pt.g_nyq_db, "g_pk_db": pt.g_pk_db,
-        "f_pk_hz": pt.f_pk_hz, "g_top_db": pt.g_top_db,
-        "vn_in_vrms": pt.vn_in_vrms,
-        # The tail is not optional here. `run_point` already fails a run whose
-        # tail did not parse, but an evaluator that would ACCEPT a missing tail
-        # margin is one `tail=None` away from scoring the coupled inequality as
-        # satisfied-by-absence.
         "vds_tail": pt.vds_tail, "vdsat_tail": pt.vdsat_tail,
         "i_tail_meas_a": pt.i_tail_meas_a, "gm_tail": pt.gm_tail,
     }
-    for name, value in required.items():
+    for name, value in op_required.items():
         why = _finite(name, value)
         if why:
-            return why
+            return Verdict.INVALID, why
 
-    # ---- 2. operating point inside the rails --------------------------------
+    # ---- B. DC nodes inside the rails ---------------------------------------
     #
-    # THE DC OPERATING POINT IS CHECKED BEFORE THE AC RESULT, and the order is
-    # load-bearing rather than stylistic. If the bias point is wrong then every
-    # small-signal number describes a different circuit, so "the pair is in
-    # triode" is the TRUE cause and "f_pk is at the search edge" is a
-    # downstream symptom of it. The first version of this function checked the
-    # AC plausibility first and reported design 432 with `rl` at the box
-    # ceiling as an f_peak-range failure, when what had actually happened was
-    # that the load drop took the pair out of saturation. A validity gate that
-    # names a symptom sends whoever reads the log to the wrong file.
+    # A node outside the rails on a converged `.op` means the netlist or the
+    # topology is wrong, not that a device is in triode — so this is INVALID and
+    # not HEADROOM_ONLY. There is no trustworthy headroom to grade when the bias
+    # point is not physical.
     vdd = float(point.vdd)
     for name, v in (("v(outp)", pt.v_out_dc), ("v(s1)", pt.v_src_dc),
                     ("v(nbias)", pt.v_bias_dc)):
         if v is None:
             continue
         if not (-RAIL_SLACK_V <= float(v) <= vdd + RAIL_SLACK_V):
-            return (f"DC node {name} = {float(v):.4f} V is outside the rails "
-                    f"[{-RAIL_SLACK_V:.2f}, {vdd + RAIL_SLACK_V:.2f}] V")
+            return Verdict.INVALID, (
+                f"DC node {name} = {float(v):.4f} V is outside the rails "
+                f"[{-RAIL_SLACK_V:.2f}, {vdd + RAIL_SLACK_V:.2f}] V")
 
-    # ---- 3. both transistors in the intended region -------------------------
-    #
-    # Saturation is a VALIDITY condition, not a spec: outside it the
-    # small-signal numbers describe a circuit that is not amplifying, so
-    # peaking and noise read off it are answers to a different question.
-    # `s9_yield.check_specs` gives it a row for exactly this reason.
-    if not (float(pt.vds) > float(pt.vdsat)):
-        return (f"input pair is in TRIODE: vds {float(pt.vds):.4f} V <= vdsat "
-                f"{float(pt.vdsat):.4f} V — the small-signal result describes "
-                f"a circuit that is not amplifying")
-    if not (float(pt.vds_tail) > float(pt.vdsat_tail)):
-        return (f"tail is in TRIODE: vds_tail {float(pt.vds_tail):.4f} V <= "
-                f"vdsat_tail {float(pt.vdsat_tail):.4f} V — the tail is not "
-                f"delivering its current")
+    # ---- C. the device is on ------------------------------------------------
     if float(pt.gm) <= 0.0:
-        return f"gm = {float(pt.gm):.4g} S is not positive — the device is off"
+        return Verdict.INVALID, (
+            f"gm = {float(pt.gm):.4g} S is not positive — the device is off, so "
+            f"there is no operating point to grade")
 
-    # ---- 4. plausibility, and the G44 fictitious peak -----------------------
+    # ---- D. saturation -> HEADROOM_ONLY, not INVALID -------------------------
+    #
+    # THE CALL 1 CHANGE. A device in triode is a TRUSTWORTHY measurement of a
+    # BAD circuit: `.op` converged and `vds`/`vdsat` are real. Only the
+    # AC-derived spec set has to be dropped, because the small-signal response
+    # of a device in triode describes a circuit nobody asked for.
+    pair_margin = float(pt.vds) - float(pt.vdsat)
+    tail_margin = float(pt.vds_tail) - float(pt.vdsat_tail)
+    if pair_margin <= 0.0 or tail_margin <= 0.0:
+        who = []
+        if pair_margin <= 0.0:
+            who.append(f"input pair {pair_margin * 1e3:+.1f} mV")
+        if tail_margin <= 0.0:
+            who.append(f"tail {tail_margin * 1e3:+.1f} mV")
+        return Verdict.HEADROOM_ONLY, (
+            f"out of saturation ({', '.join(who)} of vds - vdsat). The `.op` is "
+            f"trustworthy and is graded on headroom; the AC spec set is dropped "
+            f"because a device in triode is not the circuit that was asked for")
+
+    # ---- E. the `.ac` / `.noise` result -------------------------------------
+    ac_required = {
+        "g_dc_db": pt.g_dc_db, "g_nyq_db": pt.g_nyq_db, "g_pk_db": pt.g_pk_db,
+        "f_pk_hz": pt.f_pk_hz, "g_top_db": pt.g_top_db,
+        "vn_in_vrms": pt.vn_in_vrms,
+    }
+    for name, value in ac_required.items():
+        why = _finite(name, value)
+        if why:
+            return Verdict.INVALID, why
+
+    lo, hi = G_DB_LIMITS
+    for name, v in (("g_dc_db", pt.g_dc_db), ("g_nyq_db", pt.g_nyq_db),
+                    ("g_pk_db", pt.g_pk_db), ("g_top_db", pt.g_top_db)):
+        if not lo <= float(v) <= hi:
+            return Verdict.INVALID, (
+                f"{name} = {float(v):.3g} dB is outside [{lo}, {hi}] — "
+                f"not an amplifier")
+
+    # THE SWEEP-EDGE TEST COMES BEFORE THE f_peak RANGE TEST, for the same
+    # reason the operating point comes before the AC result: it names the
+    # MECHANISM rather than the symptom. A response still rising at 20 GHz
+    # reports `f_pk` near the edge, so the range test fires too — and then the
+    # log says "f_pk out of range", which reads as a numerical oddity, instead
+    # of "the peak is fictitious". Measured on the first trial run: 6 of 6
+    # invalid evaluations were reported by the range test and the mechanism was
+    # invisible.
     #
     # **The G44 half only**, NOT `has_interior_peak`. The two halves of that
     # property reject different things and only one of them is a broken
@@ -274,58 +380,45 @@ def validate(pt: Sky130Point, point: SizingPoint) -> Optional[str]:
     #
     #   * still RISING at 20 GHz -> `meas ac MAX` returned the range edge and
     #     `peaking_db` is FICTITIOUS AND LARGE. That is free reward for a
-    #     circuit with no peak, and it is exactly what an adversarial search
-    #     finds first. Reject.
+    #     circuit with no peak, and it is what an adversarial search finds
+    #     first. Reject.
     #   * a genuine interior maximum that is merely SMALL (rs = 50 ohm gives
     #     0.165 dB at 1.318 GHz) -> nothing is wrong with the measurement; the
     #     circuit simply does not equalise. ACCEPT, and let the reward score it
     #     as the large S3 shortfall it is.
     #
-    # The first version of this gate rejected both, which made every low-boost
-    # design INVALID — i.e. it erased the reward gradient over the whole
-    # bottom of the box, which is where a randomly initialised policy starts,
-    # and it made §6f's "flat" reference indistinguishable from its "op fails"
-    # reference. Found by the §6f calibration, which is what §6f is for.
-    lo, hi = G_DB_LIMITS
-    for name, v in (("g_dc_db", pt.g_dc_db), ("g_nyq_db", pt.g_nyq_db),
-                    ("g_pk_db", pt.g_pk_db), ("g_top_db", pt.g_top_db)):
-        if not lo <= float(v) <= hi:
-            return f"{name} = {float(v):.3g} dB is outside [{lo}, {hi}] — not an amplifier"
-
-    # THE SWEEP-EDGE TEST COMES BEFORE THE f_peak RANGE TEST, for the same
-    # reason the operating point comes before the AC result: it names the
-    # MECHANISM rather than the symptom. A response still rising at 20 GHz
-    # reports `f_pk` near the edge, so the range test fires too — and then the
-    # log says "f_pk out of range", which reads as a numerical oddity, instead
-    # of "the peak is fictitious", which is what actually happened. Measured on
-    # the first trial run: 6 of 6 invalid evaluations were reported by the
-    # range test and the mechanism was invisible.
+    # Rejecting both made every low-boost design INVALID — erasing the reward
+    # gradient over the whole bottom of the box, which is where a randomly
+    # initialised policy starts. Found by the sec 6f calibration.
     if pt.peak_is_sweep_edge:
-        return (f"the reported peak IS the sweep edge: f_pk "
-                f"{float(pt.f_pk_hz):.4g} Hz, g_pk - g_top "
-                f"{float(pt.g_pk_db) - float(pt.g_top_db):+.3f} dB. The "
-                f"response is still rising at the top of the search range, so "
-                f"peaking {pt.peaking_db:.3f} dB is fictitious (G44)")
+        return Verdict.INVALID, (
+            f"the reported peak IS the sweep edge: f_pk "
+            f"{float(pt.f_pk_hz):.4g} Hz, g_pk - g_top "
+            f"{float(pt.g_pk_db) - float(pt.g_top_db):+.3f} dB. The response is "
+            f"still rising at the top of the search range, so peaking "
+            f"{pt.peaking_db:.3f} dB is fictitious (G44)")
 
     lo, hi = F_PEAK_HZ_LIMITS
     if not lo <= float(pt.f_pk_hz) <= hi:
-        return (f"f_pk = {float(pt.f_pk_hz):.4g} Hz is outside "
-                f"[{lo:.3g}, {hi:.3g}] — a peak below 10 MHz means `meas ac "
-                f"MAX` returned the BOTTOM of its range on a monotonically "
-                f"falling response (G44's other half)")
+        return Verdict.INVALID, (
+            f"f_pk = {float(pt.f_pk_hz):.4g} Hz is outside [{lo:.3g}, {hi:.3g}] "
+            f"— a peak below 10 MHz means `meas ac MAX` returned the BOTTOM of "
+            f"its range on a monotonically falling response (G44's other half)")
 
     lo, hi = NOISE_VRMS_LIMITS
     if not lo <= float(pt.vn_in_vrms) <= hi:
-        return (f"inoise_total = {float(pt.vn_in_vrms):.4g} V_rms is outside "
-                f"[{lo:.3g}, {hi:.3g}] — the integration collapsed or diverged")
+        return Verdict.INVALID, (
+            f"inoise_total = {float(pt.vn_in_vrms):.4g} V_rms is outside "
+            f"[{lo:.3g}, {hi:.3g}] — the integration collapsed or diverged")
 
     lo, hi = I_SUPPLY_A_LIMITS
     if not lo <= float(pt.i_supply_a) <= hi:
-        return (f"i_supply = {float(pt.i_supply_a):.4g} A is outside "
-                f"[{lo:.3g}, {hi:.3g}]; <= 0 means VDD is SOURCING current, "
-                f"i.e. this is not the requested operating point")
+        return Verdict.INVALID, (
+            f"i_supply = {float(pt.i_supply_a):.4g} A is outside [{lo:.3g}, "
+            f"{hi:.3g}]; <= 0 means VDD is SOURCING current, i.e. this is not "
+            f"the requested operating point")
 
-    return None
+    return Verdict.VALID, None
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -395,10 +488,37 @@ def evaluate(
     dt = time.perf_counter() - t0
     budget.charge(n_spice, dt)
 
-    why = validate(pt, point)
-    if why is not None:
+    verdict, why = validate(pt, point)
+    if verdict is Verdict.INVALID:
         return EvalResult.invalid(why, n_spice=n_spice, seconds=dt,
                                   design_id_=did, geometry_tag=tag)
+
+    # The `.op` headroom. Trustworthy on BOTH surviving verdicts, because it is
+    # built only from `.op` primitives that stage A proved present and finite.
+    headroom = {
+        "pair_margin_v": float(pt.vds) - float(pt.vdsat),
+        "tail_margin_v": float(pt.vds_tail) - float(pt.vdsat_tail),
+        "v_src_dc": float(pt.v_src_dc),
+        "v_out_dc": float(pt.v_out_dc),
+        "i_supply_a": float(pt.i_supply_a),
+        "power_w": float(point.vdd) * float(pt.i_supply_a),
+    }
+
+    if verdict is Verdict.HEADROOM_ONLY:
+        # `meas=None` is the WHOLE mechanism, not a convention: the AC spec set
+        # of a device in triode cannot be scored because it does not exist on
+        # this object. `headroom` is what the graded band grades.
+        return EvalResult(verdict=verdict, reason=why, meas=None,
+                          headroom=headroom,
+                          raw={"vds": float(pt.vds), "vdsat": float(pt.vdsat),
+                               "vds_tail": float(pt.vds_tail),
+                               "vdsat_tail": float(pt.vdsat_tail),
+                               "gm": float(pt.gm), "id_a": float(pt.id_a),
+                               "w_tail_um": sizing.w_tail_um,
+                               "nf_tail": sizing.nf_tail,
+                               "runtime_s": pt.runtime_s},
+                          design_id=did, geometry_tag=tag,
+                          n_spice=n_spice, seconds=dt)
 
     # Everything below is arithmetic on validated primitives, in Python
     # (G26/G30: no derived quantity is computed in `.control`).
@@ -438,9 +558,9 @@ def evaluate(
         "w_tail_um": sizing.w_tail_um, "nf_tail": sizing.nf_tail,
         "runtime_s": pt.runtime_s,
     }
-    return EvalResult(valid=True, meas=meas, raw=raw, design_id=did,
-                      geometry_tag=tag, n_spice=n_spice, seconds=dt,
-                      text=None)
+    return EvalResult(verdict=Verdict.VALID, meas=meas, headroom=headroom,
+                      raw=raw, design_id=did, geometry_tag=tag,
+                      n_spice=n_spice, seconds=dt, text=None)
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -531,7 +651,7 @@ def cross_check_sample(sizing: Sizing, budget: SpiceBudget,
 
 
 __all__: Sequence[str] = (
-    "EvalResult", "SpiceBudget", "CrossCheck",
+    "Verdict", "EvalResult", "SpiceBudget", "CrossCheck",
     "evaluate", "validate", "build_point", "geometry_tag",
     "independent_recompute", "cross_check_sample",
     "G_DB_LIMITS", "F_PEAK_HZ_LIMITS", "NOISE_VRMS_LIMITS",

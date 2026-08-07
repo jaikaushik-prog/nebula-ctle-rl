@@ -59,7 +59,7 @@ from nebula.rl.contract import (
     build_observation,
     sizing_from_u,
 )
-from nebula.rl.evaluator import EvalResult, SpiceBudget, evaluate
+from nebula.rl.evaluator import EvalResult, SpiceBudget, Verdict, evaluate
 
 # ─────────────────────────────────────────────────────────────────────────────
 # The construction-time proof that the two §6a gates are live.
@@ -127,8 +127,14 @@ class StepRecord:
     tail_j_um_per_a: float
     l_tail_um: float
     valid: bool
+    #: "valid" | "headroom_only" | "invalid". `valid` alone cannot distinguish
+    #: a broken measurement from a trustworthy measurement of a triode design,
+    #: and those need opposite handling downstream.
+    verdict: str
     invalid_reason: Optional[str]
     meas: Optional[dict]
+    #: `.op` headroom. Present on VALID and HEADROOM_ONLY, None on INVALID.
+    headroom: Optional[dict]
     raw: dict
     reward: float
     feasible: bool
@@ -200,6 +206,9 @@ class CtleSizingEnv:
         #: finding the holes, which is exactly what this smoke run is for.
         self.n_eval = 0
         self.n_invalid = 0
+        #: §Call 1: `.op` good, device in triode. Tracked apart from
+        #: `n_invalid` because the two mean different things about the box.
+        self.n_headroom = 0
         self.invalid_reasons: dict = {}
         self.records: list = []
 
@@ -237,13 +246,21 @@ class CtleSizingEnv:
         ev = evaluate(sizing, self.budget, corner=self.cfg.corner,
                       temp_c=self.cfg.temp_c, vdd_scale=self.cfg.vdd_scale)
         self.n_eval += 1
-        if not ev.valid:
+        if ev.verdict is Verdict.HEADROOM_ONLY:
+            # Counted SEPARATELY from invalid. It is not a broken measurement —
+            # `.op` converged — so folding it into the invalid rate would
+            # overstate how much of the box the simulator cannot describe, and
+            # would hide the one band that carries a gradient out of triode.
+            self.n_headroom += 1
+        elif not ev.valid:
             self.n_invalid += 1
             bucket = self._classify(ev.reason or "")
             self.invalid_reasons[bucket] = self.invalid_reasons.get(bucket, 0) + 1
         rb = R.reward(ev.meas, self.cfg.target_f_peak_hz, specs=self.cfg.specs,
                       lambda_cost=self.cfg.lambda_cost, sim_cost=ev.n_spice,
-                      target_peaking_db=self.cfg.target_peaking_db)
+                      target_peaking_db=self.cfg.target_peaking_db,
+                      headroom=(ev.headroom
+                                if ev.verdict is Verdict.HEADROOM_ONLY else None))
         return ev, rb, sizing
 
     def _observation(self, ev: EvalResult) -> np.ndarray:
@@ -272,8 +289,10 @@ class CtleSizingEnv:
             params=dict(sizing.params),
             tail_j_um_per_a=sizing.tail_j_um_per_a,
             l_tail_um=sizing.l_tail_um,
-            valid=ev.valid, invalid_reason=ev.reason,
-            meas=(dict(ev.meas) if ev.meas else None), raw=dict(ev.raw),
+            valid=ev.valid, verdict=ev.verdict.value, invalid_reason=ev.reason,
+            meas=(dict(ev.meas) if ev.meas else None),
+            headroom=(dict(ev.headroom) if ev.headroom else None),
+            raw=dict(ev.raw),
             reward=rb.reward, feasible=rb.feasible,
             margins=dict(rb.margins), shortfalls=dict(rb.shortfalls),
             worst_spec=rb.worst_spec,
@@ -353,15 +372,26 @@ class CtleSizingEnv:
         info = {
             "design_id": ev.design_id, "valid": ev.valid,
             "invalid_reason": ev.reason, "feasible": rb.feasible,
+            "verdict": ev.verdict.value, "headroom_only": rb.headroom_only,
             "worst_spec": rb.worst_spec, "n_spice": ev.n_spice,
             "seconds": ev.seconds, "margins": rb.margins,
             "shortfalls": rb.shortfalls,
         }
 
         if not ev.valid:
-            # §6d: an invalid result is a hard negative reward AND a terminated
-            # episode. Never a missing value, never a substituted default,
-            # never a retry that quietly succeeds with different numbers.
+            # §6d: a result that cannot become an observation is a negative
+            # reward AND a terminated episode. Never a missing value, never a
+            # substituted default, never a retry that quietly succeeds with
+            # different numbers.
+            #
+            # HEADROOM_ONLY lands here too, and it should: there is no AC
+            # measurement block to observe, because the whole point is that the
+            # AC spec set was dropped. What differs is the REWARD — graded and
+            # ordered by how far into triode the design is, rather than a flat
+            # floor — which is where the gradient out of triode lives. The
+            # episode still ends, because continuing to edit a design whose
+            # observation cannot be built would mean feeding the policy a stale
+            # measurement and calling it current.
             assert self._last is not None
             return self._observation(self._last), rb.reward, True, False, info
 
@@ -375,11 +405,24 @@ class CtleSizingEnv:
 
     @property
     def invalid_rate(self) -> float:
+        """Fraction of evaluations nothing could be believed from.
+
+        HEADROOM_ONLY is NOT counted here — see `headroom_rate`. The headline
+        "a quarter of evaluations return a number that looks valid and isn't"
+        is about untrustworthy MEASUREMENTS, and a converged `.op` on a triode
+        device is not one of those.
+        """
         return self.n_invalid / self.n_eval if self.n_eval else 0.0
+
+    @property
+    def headroom_rate(self) -> float:
+        return self.n_headroom / self.n_eval if self.n_eval else 0.0
 
     def invalid_report(self) -> str:
         lines = [f"invalid {self.n_invalid}/{self.n_eval} "
-                 f"= {100 * self.invalid_rate:.2f}%"]
+                 f"= {100 * self.invalid_rate:.2f}%   "
+                 f"headroom-only {self.n_headroom}/{self.n_eval} "
+                 f"= {100 * self.headroom_rate:.2f}%"]
         for k, v in sorted(self.invalid_reasons.items(), key=lambda kv: -kv[1]):
             lines.append(f"    {k:<24s} {v:5d}  ({100 * v / max(self.n_eval, 1):5.2f}%)")
         return "\n".join(lines)

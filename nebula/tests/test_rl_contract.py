@@ -37,7 +37,7 @@ def test_every_action_bound_has_a_provenance():
             f"{d.provenance!r}")
 
 
-def test_seven_of_nine_edges_match_the_proposed_box_exactly():
+def test_every_edge_matches_the_proposed_box_exactly():
     """The box is COPIED from `s3_yield.PROPOSED_BOX`, not re-derived.
 
     If these drift apart, two documents describe "the same" box differently —
@@ -46,31 +46,47 @@ def test_seven_of_nine_edges_match_the_proposed_box_exactly():
     from nebula.experiments.s3_yield import PROPOSED_BOX
 
     for d in C.ACTION_SPACE:
-        if d.name in ("tail_j", "l_tail"):
-            continue
         lo, hi, log, _ = PROPOSED_BOX[d.name]
         assert (d.lo, d.hi, d.log) == (lo, hi, log), (
             f"{d.name} differs from PROPOSED_BOX: contract has "
             f"({d.lo}, {d.hi}, {d.log}), box has ({lo}, {hi}, {log})")
 
 
-def test_the_two_tail_edges_match_tail_device_md():
-    """82.9k and 267k um/A, 0.5 and 1.0 um — TAIL_DEVICE.md §6 verbatim."""
-    j = {d.name: d for d in C.ACTION_SPACE}["tail_j"]
-    lt = {d.name: d for d in C.ACTION_SPACE}["l_tail"]
-    assert (j.lo, j.hi) == (82.9e3, 267e3)
-    assert (lt.lo, lt.hi) == (0.5, 1.0)
+def test_the_tail_is_not_in_the_action_space():
+    """CALL 2. The §6e gate measured `vcm_in` as a **6x stronger lever on the
+    tail margin** than either tail axis — 0.605 against 0.1008 and 0.0982 of a
+    channel scale under one `MAX_STEP`. Both tail axes were live, and both were
+    redundant with a dimension that has to be in the space anyway; a policy
+    gradient on a weak, redundant axis learns noise (the G38 argument)."""
+    assert "tail_j" not in C.ACTION_NAMES
+    assert "l_tail" not in C.ACTION_NAMES
+    assert "nf_tail" not in C.ACTION_NAMES
+    assert C.N_ACTIONS == 7
+    assert set(C.ACTION_NAMES) == {"w_in", "l_in", "i_bias", "rs", "cs", "rl",
+                                   "vcm_in"}
 
 
-def test_the_tail_rule_value_is_inside_the_tail_j_box():
-    """`s9_yield.TAIL_UM_PER_AMP` must be reachable, or the reference designs
-    sit outside the space the policy searches."""
+def test_the_tail_rule_is_s9_yields_and_is_not_restated():
+    """ONE definition (rule 9). If these drift apart, the RL loop and the
+    corner sweep are sizing different tails and nothing says so."""
     from nebula.experiments.s9_yield import TAIL_L_UM, TAIL_UM_PER_AMP
 
-    j = {d.name: d for d in C.ACTION_SPACE}["tail_j"]
-    assert j.lo <= TAIL_UM_PER_AMP <= j.hi
-    lt = {d.name: d for d in C.ACTION_SPACE}["l_tail"]
-    assert lt.lo <= TAIL_L_UM <= lt.hi
+    assert C.tail_sizing_rule() == (float(TAIL_UM_PER_AMP), float(TAIL_L_UM))
+
+
+def test_the_derived_tail_is_a_function_of_i_bias_alone():
+    """Removing the degrees of freedom must not leave the tail free-floating."""
+    a = C.sizing_from_u(np.full(C.N_ACTIONS, 0.5))
+    b = C.sizing_from_u(np.full(C.N_ACTIONS, 0.5))
+    assert a.w_tail_um == b.w_tail_um == pytest.approx(
+        0.5 * a.params["i_bias"] * a.tail_j_um_per_a)
+    # Two designs differing ONLY in i_bias must differ only in w_tail.
+    i = C.ACTION_NAMES.index("i_bias")
+    u2 = np.full(C.N_ACTIONS, 0.5); u2[i] = 0.9
+    c = C.sizing_from_u(u2)
+    assert c.l_tail_um == a.l_tail_um
+    assert c.tail_j_um_per_a == a.tail_j_um_per_a
+    assert c.w_tail_um != a.w_tail_um
 
 
 def test_nf_in_is_fixed_and_inside_the_proposed_range():
@@ -154,6 +170,15 @@ def test_observation_width_matches_the_declared_contract():
     obs = C.build_observation([0.5] * C.N_ACTIONS, _meas(), 7.5, 1.7678e9, 0)
     assert obs.shape == (C.N_OBS,)
     assert C.N_OBS == C.N_ACTIONS + C.N_MEAS + C.N_TARGET + 1
+    assert C.N_OBS == 18, "7 sizing + 8 measurement + 2 target + 1 step"
+
+
+def test_the_measurement_block_still_carries_the_tail_margin():
+    """The tail left the ACTION space, not the OBSERVATION. Its headroom is a
+    consequence of `vcm_in`, `w_in`, `l_in` and `i_bias`, all of which the
+    policy does move, so it is exactly the coupled feedback the observation
+    exists to provide."""
+    assert "tail_margin_v" in C.MEAS_NAMES
 
 
 def test_observation_blocks_do_not_overlap_and_cover_everything():
@@ -210,8 +235,16 @@ def test_step_index_is_normalised_by_the_horizon():
 def test_sizing_round_trips_through_u():
     u = np.linspace(0.1, 0.9, C.N_ACTIONS)
     s = C.sizing_from_u(u)
-    u2 = C.u_from_params(s.params, s.tail_j_um_per_a, s.l_tail_um)
-    assert np.allclose(u, u2, atol=1e-12)
+    assert np.allclose(u, C.u_from_params(s.params), atol=1e-12)
+
+
+def test_u_from_params_takes_no_tail_arguments():
+    """The old signature took two. A caller still passing them is calling the
+    pre-Call-2 API and must be told, not silently ignored."""
+    import inspect
+
+    sig = inspect.signature(C.u_from_params)
+    assert list(sig.parameters) == ["params"]
 
 
 def test_sizing_fixes_nf_in_and_carries_the_context_load():
@@ -222,7 +255,7 @@ def test_sizing_fixes_nf_in_and_carries_the_context_load():
 
 def test_w_tail_follows_i_bias_by_the_current_density_rule():
     """`w_tail = i_side * tail_j`. TAIL_DEVICE.md §3: holding the DENSITY is
-    what holds vdsat, and `i_bias` spans 16x."""
+    what holds vdsat, and `i_bias` spans 16x, so a fixed WIDTH could not."""
     u = np.full(C.N_ACTIONS, 0.5)
     s = C.sizing_from_u(u)
     assert s.w_tail_um == pytest.approx(

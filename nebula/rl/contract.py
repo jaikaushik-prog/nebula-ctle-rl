@@ -11,10 +11,10 @@ so the assembly lives here and both callers import it.
 1. ACTION — what the policy may move
 ═══════════════════════════════════════════════════════════════════════════
 
-**Nine continuous dimensions**, each a DELTA in normalised space, clipped to
+**Seven continuous dimensions**, each a DELTA in normalised space, clipped to
 `MAX_STEP`. The policy never proposes an absolute sizing; it proposes an edit
 to the current one, and sees the result before the next edit. That is what
-makes the episode a design session rather than nine independent bandit pulls.
+makes the episode a design session rather than seven independent bandit pulls.
 
 Normalised space is `[0, 1]` per dimension, LOG-scaled where the box spans
 decades and LINEAR where it does not — the `log` column below. A delta of
@@ -31,8 +31,6 @@ a current, and on a linear axis a fixed increment, which is right for a width.
     cs          100e-15    10e-12   yes    F       f_zero
     rl           50        800      yes    ohm     g_dc, f_p2
     vcm_in        1.1        1.6    no     V       source node, tail headroom
-    tail_j       82.9e3   267e3     yes    um/A    tail width per amp
-    l_tail        0.5        1.0    yes    um      tail r_o vs width
 
     (*) `w_in`/`l_in` are stored in SI METRES in the box, like everywhere else
         in this repo; `SizingPoint.from_params` does the single conversion to
@@ -48,35 +46,52 @@ gradient on a non-monotonic +/-10 % axis learns the noise, not the axis, and
 it costs samples to do it. 4 is inside `PROPOSED_BOX`'s 1-8 range and is the
 value the existing reference points use.
 
-**THE TAIL IS PARAMETERISED AS A CURRENT DENSITY, NOT AS A WIDTH.** `tail_j` is
-microns of tail width per amp of side current; `w_tail = i_side * tail_j`.
-Measured reason (`TAIL_DEVICE.md` §3): `i_bias` spans 0.5-8.0 mA total, a 16x
-range, and `vdsat_tail` moves as roughly `sqrt(I/W)`, so no single fixed width
-serves the box. Holding the DENSITY is what holds `vdsat` — the width per amp
-drifts only 105-124k across a 4x change in current, which is what makes it a
-density rather than a coincidence. Searching absolute `w_tail` would decouple
-the tail from the current it has to sink, which is precisely the failure
-`TAIL_DEVICE.md` §6 records.
+**THE WHOLE TAIL IS DERIVED, NOT SEARCHED — and this is a REVERSAL.** The
+first version of this contract followed task 6c and made `tail_j` (tail width
+per amp of side current) and `l_tail` actions, on the grounds that
+`TAIL_DEVICE.md` §6's recommendation against searching them had no measurement
+behind it in an RL setting. The §6e gate supplied that measurement, and it
+argues the other way:
 
-Its bounds are the two edges that document measures: **82.9k um/A** is the
-interpolated triode floor at `ss/0.95/125 C` (below it the tail is not
-delivering its current at all), and **267k um/A** is where the tail's own
-source-node capacitance moves S3 peaking by +1.06 dB. Note that the FLOOR IS A
-FAILURE BOUNDARY BY CONSTRUCTION — the box edge is the thing that breaks — and
-that is left in deliberately, because §6d wants the invalid rate measured
-rather than designed away.
+    dim       channel          |d_obs| under one MAX_STEP
+    vcm_in    tail_margin_v    0.6050
+    tail_j    tail_margin_v    0.1008
+    l_tail    tail_margin_v    0.0982
 
-**`nf_tail` IS NOT AN ACTION AND MUST NOT BECOME ONE.** It is derived as the
+**`vcm_in` is a 6x stronger lever on the tail margin than either tail axis is**,
+on the quantity the tail geometry exists to control. That is the `nf_in`
+argument again (G38): a policy gradient on a weak, REDUNDANT dimension learns
+noise, and spends samples doing it. The tail axes are live — the gate proved
+that — but they are redundant with a dimension that has to be in the space
+anyway. Human decision, 2026-08-07: **remove them.**
+
+What replaces them is the practice the rest of this project already uses: fix
+the current, fix a target `vdsat_tail`, size the device from those, then
+VERIFY. `w_tail = i_side * TAIL_UM_PER_AMP` at `l_tail = TAIL_L_UM`, imported
+from `experiments/s9_yield.py` so there is exactly ONE definition (rule 9).
+`TAIL_UM_PER_AMP` = 111.2k um/A is the **`ss/0.95/125 C`** width for
+`vdsat_tail` = 0.20 V — deliberately the corner where the tail needs the most
+width for a given `vdsat` (111.2k against 58.3k at TT and 43.7k at FF, a 2.5x
+spread), so sizing there keeps the tail saturated at every corner rather than
+only at nominal.
+
+**Removing the degrees of freedom does NOT remove the constraint.**
+`tail_saturation` remains an active, scored constraint, and it is still the
+only row in the spec table coupling five box coordinates — `vds_tail` IS the
+input pair's source node, so VCM, `w_in`, `l_in`, `i_bias` and the tail sizing
+all meet in it. What is gone is the redundant freedom to move the tail
+INDEPENDENTLY of the current it has to sink, which `TAIL_DEVICE.md` §6 records
+as producing "tails that are the wrong size for their own current".
+
+**`nf_tail` IS NOT AN ACTION EITHER, and never was.** It is derived as the
 smallest multiple of the mirror ratio keeping `W/nf <= 100 um` (G53). Writing
 it independently produces geometries with no SKY130 model bin, whose error
 message is G31's misleading "could not find a valid modelname".
 
-**Standing disagreement, recorded rather than resolved.** `TAIL_DEVICE.md` §6
-recommends that NONE of the tail dimensions enter the action space, keeping it
-at nine dimensions of pure input-pair/passive sizing. Task 6c asks for tail
-geometry as an action. This contract follows task 6c; the §6e sensitivity
-table measures what the two tail axes actually buy, which is the evidence the
-recommendation was missing.
+So the action space is **seven dimensions**: the input pair (`w_in`, `l_in`),
+the bias (`i_bias`, `vcm_in`), and the three passives that place the poles and
+the zero (`rs`, `cs`, `rl`). At ~142 episodes per 500 steps, dropping two of
+nine axes is worth a great deal.
 
 ═══════════════════════════════════════════════════════════════════════════
 2. CONTEXT — what the policy is TOLD but may not move
@@ -91,14 +106,19 @@ recommendation was missing.
 * **the target spec** — one fixed point inside S3.
 
 ═══════════════════════════════════════════════════════════════════════════
-3. OBSERVATION — 20 dimensions, all normalised by FIXED scales
+3. OBSERVATION — 18 dimensions, all normalised by FIXED scales
 ═══════════════════════════════════════════════════════════════════════════
 
     idx    block                    dims
-    0-8    current sizing           9    normalised box coordinate, [0,1]
-    9-16   last measurement         8    see the scale table below
-    17-18  target spec              2    peaking target, f_peak target
-    19     step index               1    step / horizon, [0,1]
+    0-6    current sizing           7    normalised box coordinate, [0,1]
+    7-14   last measurement         8    see the scale table below
+    15-16  target spec              2    peaking target, f_peak target
+    17     step index               1    step / horizon, [0,1]
+
+The measurement block still carries `tail_margin_v` even though the tail is no
+longer an action. That is deliberate: the tail's headroom is a CONSEQUENCE of
+`vcm_in`, `w_in`, `l_in` and `i_bias`, all of which the policy does move, so it
+is exactly the kind of coupled feedback the observation exists to provide.
 
 **Scales are FIXED and derived from the box and the spec, never from running
 statistics.** A running normaliser makes the observation depend on the history
@@ -220,11 +240,11 @@ class ActionDim:
 
 #: The box. **This is NOT `common/params.py::BOUNDS` and does not write to it**
 #: — CLAUDEwa.md §8 rule 6 makes the box a human decision and rule 6 is why
-#: `params.py` is untouched by this session. Seven of the nine edges are
-#: `s3_yield.PROPOSED_BOX` verbatim (session 9d, measured against SKY130
-#: nfet_01v8 at 1.8 V); the two tail edges are `TAIL_DEVICE.md` §6 verbatim.
-#: Nothing here was chosen by an agent; every number is copied from a document
-#: that measured it.
+#: `params.py` is untouched by this session. **All seven edges are
+#: `s3_yield.PROPOSED_BOX` verbatim** (session 9d, measured against SKY130
+#: nfet_01v8 at 1.8 V). Nothing here was chosen by an agent; every number is
+#: copied from a document that measured it. The two tail edges that used to sit
+#: here are gone — the tail is derived, see the module docstring.
 ACTION_SPACE: tuple[ActionDim, ...] = (
     ActionDim("w_in", 20e-6, 100e-6, False, "m",
               "s3_yield.PROPOSED_BOX: gm/I_D 5.62 at W=20 um rising to 14.36 "
@@ -247,14 +267,6 @@ ACTION_SPACE: tuple[ActionDim, ...] = (
     ActionDim("vcm_in", 1.1, 1.6, False, "V",
               "s3_yield.PROPOSED_BOX: v(s1) tracks VCM almost 1:1; floor needs "
               "v(s1) >= ~0.2 V for a real tail"),
-    ActionDim("tail_j", 82.9e3, 267e3, True, "um/A",
-              "TAIL_DEVICE.md sec 6: 82.9k is the INTERPOLATED triode floor at "
-              "ss/0.95/125 C, 267k is where the tail's own source capacitance "
-              "moves S3 peaking by +1.06 dB. The rule value is 111.2k"),
-    ActionDim("l_tail", 0.5, 1.0, True, "um",
-              "TAIL_DEVICE.md sec 6: at 0.15 um the tail r_o gives away "
-              "-1.45 dB of peaking; past 1.0 um the headroom costs 2.27x the "
-              "width"),
 )
 
 ACTION_NAMES: tuple[str, ...] = tuple(d.name for d in ACTION_SPACE)
@@ -439,22 +451,48 @@ def nf_tail_for_width(w_um: float, mirror_ratio: float = TAIL_MIRROR_RATIO) -> i
     return min_nf_for_width(w_um, mirror_ratio)
 
 
+def tail_sizing_rule() -> tuple[float, float]:
+    """`(um of tail width per amp, l_tail in um)`. ONE definition (rule 9).
+
+    Imported from `experiments/s9_yield.py` rather than restated, because that
+    is where the rule's provenance lives and a second copy is G32's failure
+    mode applied to a sizing rule. `TAIL_UM_PER_AMP` is the `ss/0.95/125 C`
+    width for `vdsat_tail` = 0.20 V — the corner where the tail needs the most
+    width for a given `vdsat`, so sizing there keeps it saturated everywhere
+    rather than only at nominal.
+    """
+    from nebula.experiments.s9_yield import TAIL_L_UM, TAIL_UM_PER_AMP
+
+    return float(TAIL_UM_PER_AMP), float(TAIL_L_UM)
+
+
 @dataclass(frozen=True)
 class Sizing:
     """One point of the search, in every representation anyone needs.
 
-    `u` is what the policy moves, `params` is what the device layer eats, and
-    `tail_j_um_per_a` / `l_tail_um` are carried separately because the tail is
-    not part of the `params` dict contract in `common/params.py`.
+    `u` is what the policy moves (SEVEN coordinates) and `params` is what the
+    device layer eats. **The tail is DERIVED from `i_bias`**, not carried as
+    free state — see the module docstring for why the two tail axes were
+    removed from the action space. Both tail properties are computed, so there
+    is no way to construct a `Sizing` whose tail disagrees with its current.
     """
 
     u: tuple[float, ...]
     params: dict            # w_in, l_in, nf_in, i_bias, rs, cs, rl, cl, vcm_in
-    tail_j_um_per_a: float
-    l_tail_um: float
+
+    @property
+    def tail_j_um_per_a(self) -> float:
+        return tail_sizing_rule()[0]
+
+    @property
+    def l_tail_um(self) -> float:
+        return tail_sizing_rule()[1]
 
     @property
     def w_tail_um(self) -> float:
+        """`i_side * TAIL_UM_PER_AMP`. Holding the current DENSITY is what
+        holds `vdsat_tail`; `i_bias` spans 16x, so a fixed WIDTH could not
+        (TAIL_DEVICE.md §3)."""
         return 0.5 * float(self.params["i_bias"]) * self.tail_j_um_per_a
 
     @property
@@ -474,17 +512,18 @@ def sizing_from_u(u: Sequence[float], cl_f: float = CL_CONTEXT_F) -> Sizing:
         "i_bias": phys["i_bias"], "rs": phys["rs"], "cs": phys["cs"],
         "rl": phys["rl"], "cl": float(cl_f), "vcm_in": phys["vcm_in"],
     }
-    return Sizing(u=tuple(float(x) for x in u), params=params,
-                  tail_j_um_per_a=phys["tail_j"], l_tail_um=phys["l_tail"])
+    return Sizing(u=tuple(float(x) for x in u), params=params)
 
 
-def u_from_params(params: Mapping[str, float], tail_j_um_per_a: float,
-                  l_tail_um: float) -> np.ndarray:
-    """Inverse of `sizing_from_u`, for seeding from a known design."""
-    src = dict(params)
-    src["tail_j"] = float(tail_j_um_per_a)
-    src["l_tail"] = float(l_tail_um)
-    return np.array([d.to_normalised(src[d.name]) for d in ACTION_SPACE], dtype=float)
+def u_from_params(params: Mapping[str, float]) -> np.ndarray:
+    """Inverse of `sizing_from_u`, for seeding from a known design.
+
+    Takes no tail arguments: the tail is derived, so there is nothing to seed.
+    A caller that passes one is calling the OLD signature and should be told,
+    rather than having the argument silently ignored.
+    """
+    return np.array([d.to_normalised(params[d.name]) for d in ACTION_SPACE],
+                    dtype=float)
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -508,6 +547,9 @@ def design_id(sizing: Sizing, geometry_tag: Optional[str] = None) -> str:
     """
     parts = [f"{name}={sizing.params[name]!r}"
              for name in sorted(sizing.params)]
+    # The tail is derived, but it is still part of the DEVICE, so it stays in
+    # the key: if the sizing rule is ever re-measured, ids must not collide
+    # across the change.
     parts.append(f"tail_j={sizing.tail_j_um_per_a!r}")
     parts.append(f"l_tail={sizing.l_tail_um!r}")
     if geometry_tag:
@@ -518,6 +560,7 @@ def design_id(sizing: Sizing, geometry_tag: Optional[str] = None) -> str:
 
 __all__: Sequence[str] = (
     "ActionDim", "ACTION_SPACE", "ACTION_NAMES", "N_ACTIONS",
+    "tail_sizing_rule",
     "MAX_STEP", "HORIZON", "NF_IN_FIXED", "TAIL_MIRROR_RATIO",
     "VDD_NOMINAL_V", "CL_CONTEXT_F",
     "ObsScale", "OBS_SCALES", "MEAS_NAMES", "N_MEAS", "N_TARGET", "N_OBS",

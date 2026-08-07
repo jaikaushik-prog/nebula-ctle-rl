@@ -151,13 +151,35 @@ def _clean(**over) -> Sky130Point:
     return pt
 
 
+# ── the two readings of `validate`, so assertions stay about the circuit ─────
+
+def _why_invalid(pt, point) -> str:
+    """Assert the result is INVALID and hand back the reason."""
+    verdict, reason = E.validate(pt, point)
+    assert verdict is E.Verdict.INVALID, (
+        f"expected INVALID, got {verdict.value}: {reason}")
+    return reason
+
+
+def _why_headroom(pt, point) -> str:
+    """Assert the result is HEADROOM_ONLY and hand back the reason."""
+    verdict, reason = E.validate(pt, point)
+    assert verdict is E.Verdict.HEADROOM_ONLY, (
+        f"expected HEADROOM_ONLY, got {verdict.value}: {reason}")
+    return reason
+
+
+def _verdict(pt, point):
+    return E.validate(pt, point)[0]
+
+
 def test_a_healthy_result_validates():
-    assert E.validate(_clean(), _point()) is None
+    assert _verdict(_clean(), _point()) is E.Verdict.VALID
 
 
 def test_a_failed_run_is_rejected_with_its_own_reason():
     bad = Sky130Point(ok=False, fail_reason="singular matrix", point=_point())
-    assert "singular matrix" in E.validate(bad, _point())
+    assert "singular matrix" in _why_invalid(bad, _point())
 
 
 @pytest.mark.parametrize("field", [
@@ -168,8 +190,7 @@ def test_a_failed_run_is_rejected_with_its_own_reason():
 ])
 def test_every_required_vector_is_actually_required(field):
     """A missing vector must be a failure, never a zero (rule 1)."""
-    why = E.validate(_clean(**{field: None}), _point())
-    assert why and field in why
+    assert field in _why_invalid(_clean(**{field: None}), _point())
 
 
 @pytest.mark.parametrize("bad", [float("nan"), float("inf"), -float("inf")])
@@ -177,15 +198,14 @@ def test_a_nan_or_inf_never_reaches_an_observation(bad):
     """G54: `.noise` can return `inoise_total = -nan(ind)` and exit 0. A laxer
     parser would carry NaN into a spec check, where `nan < tau` is False and
     reads as a genuine FAILURE — biasing a yield downward, silently."""
-    why = E.validate(_clean(vn_in_vrms=bad), _point())
-    assert why and "vn_in_vrms" in why
+    assert "vn_in_vrms" in _why_invalid(_clean(vn_in_vrms=bad), _point())
 
 
 def test_the_tail_is_not_optional():
     """An evaluator that ACCEPTS a missing tail margin is one `tail=None` away
     from scoring the coupled inequality as satisfied-by-absence."""
-    assert E.validate(_clean(vds_tail=None), _point())
-    assert E.validate(_clean(vdsat_tail=None), _point())
+    assert "vds_tail" in _why_invalid(_clean(vds_tail=None), _point())
+    assert "vdsat_tail" in _why_invalid(_clean(vdsat_tail=None), _point())
 
 
 # ---- G44: the fictitious peak ----------------------------------------------
@@ -194,9 +214,9 @@ def test_a_response_still_rising_at_the_search_edge_is_rejected():
     """`meas ac MAX` returns the RANGE EDGE, and the caller cannot tell that
     from a real maximum. Measured: rl=800 at 3.25 mA reports 1.08 dB of
     peaking at 19.95 GHz with g_pk - g_top = -0.001 dB."""
-    why = E.validate(_clean(g_pk_db=7.09, g_top_db=7.09, f_pk_hz=1.995e10),
-                     _point())
-    assert why and "sweep edge" in why
+    why = _why_invalid(_clean(g_pk_db=7.09, g_top_db=7.09, f_pk_hz=1.995e10),
+                       _point())
+    assert "sweep edge" in why
 
 
 def test_a_SMALL_but_GENUINE_peak_is_accepted():
@@ -212,41 +232,86 @@ def test_a_SMALL_but_GENUINE_peak_is_accepted():
     assert not pt.has_interior_peak, (
         "this test is not exercising what it claims: `has_interior_peak` "
         "should reject this design and the validity gate should not")
-    assert E.validate(pt, _point()) is None
+    assert _verdict(pt, _point()) is E.Verdict.VALID
 
 
 # ---- operating point --------------------------------------------------------
 
 def test_the_operating_point_is_checked_BEFORE_the_ac_result():
-    """The order is load-bearing. `rl` at the box ceiling takes the pair out of
-    saturation AND pushes the peak to the sweep edge; if the AC checks ran
-    first the log would say 'f_pk out of range', which sends whoever reads it
-    to the wrong file."""
-    why = E.validate(_clean(vds=0.055, vdsat=0.349,
-                            g_pk_db=7.09, g_top_db=7.09, f_pk_hz=1.995e10),
-                     _point())
-    assert "TRIODE" in why and "sweep edge" not in why
+    """The order is load-bearing, and under Call 1 it decides the VERDICT too.
+
+    `rl` at the box ceiling takes the pair out of saturation AND pushes the
+    peak to the sweep edge. Checked AC-first, this reports "f_pk out of range"
+    and lands in INVALID — a flat floor. Checked `.op`-first it reports the
+    triode and lands in HEADROOM_ONLY, which is graded. So the ordering is not
+    only about which file the reader is sent to; it is about whether the
+    policy gets a gradient at all.
+    """
+    why = _why_headroom(_clean(vds=0.055, vdsat=0.349,
+                               g_pk_db=7.09, g_top_db=7.09, f_pk_hz=1.995e10),
+                        _point())
+    assert "out of saturation" in why and "sweep edge" not in why
 
 
-def test_a_pair_in_triode_is_rejected():
-    why = E.validate(_clean(vds=0.05, vdsat=0.35), _point())
-    assert "input pair is in TRIODE" in why
+def test_a_pair_in_triode_is_HEADROOM_ONLY_not_invalid():
+    """CALL 1. `.op` converged, so `vds` and `vdsat` are trustworthy; only the
+    AC spec set is not. Returning INVALID here put a FLAT floor over the whole
+    triode region, and `tail_saturation` binds on 2.6-13.3 % of the box, so a
+    fresh policy lands there often and had no direction out."""
+    why = _why_headroom(_clean(vds=0.05, vdsat=0.35), _point())
+    assert "input pair" in why and "out of saturation" in why
 
 
-def test_a_tail_in_triode_is_rejected():
-    why = E.validate(_clean(vds_tail=0.10, vdsat_tail=0.20), _point())
-    assert "tail is in TRIODE" in why
+def test_a_tail_in_triode_is_HEADROOM_ONLY_not_invalid():
+    why = _why_headroom(_clean(vds_tail=0.10, vdsat_tail=0.20), _point())
+    assert "tail" in why and "out of saturation" in why
+
+
+def test_both_devices_in_triode_names_both():
+    why = _why_headroom(_clean(vds=0.05, vdsat=0.35,
+                               vds_tail=0.10, vdsat_tail=0.20), _point())
+    assert "input pair" in why and "tail" in why
+
+
+def test_a_triode_result_carries_headroom_and_NO_measurement():
+    """`meas is None` is the mechanism, not a convention: the AC spec set of a
+    device in triode must not be scorable, and the only way to guarantee that
+    is for it not to exist on the object."""
+    import numpy as np
+
+    from nebula.rl.contract import N_ACTIONS as NA
+    from nebula.rl.contract import sizing_from_u as sfu
+
+    class _Stub:
+        def __call__(self, *a, **k):
+            return _clean(vds=0.05, vdsat=0.35)
+
+    import nebula.rl.evaluator as EV
+    orig = EV.run_point
+    EV.run_point = _Stub()
+    try:
+        b = E.SpiceBudget()
+        ev = EV.evaluate(sfu(np.full(NA, 0.5)), b)
+    finally:
+        EV.run_point = orig
+    assert ev.verdict is E.Verdict.HEADROOM_ONLY
+    assert ev.meas is None, "the AC spec set must not survive a triode design"
+    assert ev.headroom is not None
+    assert ev.headroom["pair_margin_v"] < 0.0
+    assert not ev.valid and ev.scorable
 
 
 @pytest.mark.parametrize("node,value", [("v_out_dc", -0.5), ("v_out_dc", 2.5),
                                         ("v_src_dc", -0.4), ("v_bias_dc", 3.0)])
 def test_a_dc_node_outside_the_rails_is_rejected(node, value):
-    why = E.validate(_clean(**{node: value}), _point())
-    assert why and "outside the rails" in why
+    """INVALID, not HEADROOM_ONLY: a node outside the rails on a converged
+    `.op` means the netlist or the topology is wrong, so there is no
+    trustworthy headroom to grade."""
+    assert "outside the rails" in _why_invalid(_clean(**{node: value}), _point())
 
 
 def test_a_device_that_is_off_is_rejected():
-    assert "not positive" in E.validate(_clean(gm=0.0), _point())
+    assert "not positive" in _why_invalid(_clean(gm=0.0), _point())
 
 
 # ---- plausibility -----------------------------------------------------------
@@ -255,27 +320,24 @@ def test_a_device_that_is_off_is_rejected():
     ("g_dc_db", 999.0), ("g_dc_db", -999.0), ("g_pk_db", 1e4),
 ])
 def test_an_implausible_gain_is_rejected(field, value):
-    why = E.validate(_clean(**{field: value}), _point())
-    assert why and "not an amplifier" in why
+    assert "not an amplifier" in _why_invalid(_clean(**{field: value}), _point())
 
 
 def test_a_collapsed_or_diverged_noise_integration_is_rejected():
-    assert "collapsed or diverged" in E.validate(_clean(vn_in_vrms=1e-15), _point())
-    assert "collapsed or diverged" in E.validate(_clean(vn_in_vrms=99.0), _point())
+    assert "collapsed or diverged" in _why_invalid(_clean(vn_in_vrms=1e-15), _point())
+    assert "collapsed or diverged" in _why_invalid(_clean(vn_in_vrms=99.0), _point())
 
 
 def test_a_supply_sourcing_current_is_rejected():
     """`i_supply <= 0` means VDD is SOURCING, i.e. this is not the requested
     operating point."""
-    why = E.validate(_clean(i_supply_a=-1e-3), _point())
-    assert why and "SOURCING" in why
+    assert "SOURCING" in _why_invalid(_clean(i_supply_a=-1e-3), _point())
 
 
 def test_a_peak_below_the_sweep_floor_is_rejected():
     """G44's other half: a monotonically falling response reports f_pk at the
     10 MHz sweep START."""
-    why = E.validate(_clean(f_pk_hz=1e6), _point())
-    assert why and "f_pk" in why
+    assert "f_pk" in _why_invalid(_clean(f_pk_hz=1e6), _point())
 
 
 # ─────────────────────────────────────────────────────────────────────────────

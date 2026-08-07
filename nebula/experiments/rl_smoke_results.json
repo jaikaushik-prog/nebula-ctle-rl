@@ -167,7 +167,7 @@
   ]
  },
  "gate_spice_calls": 0,
- "total_wall_s": 312.6749825000006,
+ "total_wall_s": 325.81090550000044,
  "sensitivity": {
   "base_meas": {
    "g_dc_db": 5.988989,
@@ -179,7 +179,7 @@
    "pair_margin_v": 0.26288860000000003,
    "tail_margin_v": 0.3266414
   },
-  "base_design_id": "4459f243a4ba3f18",
+  "base_design_id": "7240b50317525ba5",
   "rows": [
    {
     "dim": "w_in",
@@ -272,7 +272,7 @@
      {
       "sign": 1.0,
       "valid": false,
-      "reason": "f_pk = 1.995e+10 Hz is outside [1e+07, 1.8e+10] \u2014 at the top it is the `meas ac MAX` search edge, not a peak (G44)"
+      "reason": "out of saturation (input pair -101.0 mV of vds - vdsat). The `.op` is trustworthy and is graded on headroom; the AC spec set is dropped because a device in triode is not the circuit that was asked for"
      },
      {
       "sign": -1.0,
@@ -451,86 +451,10 @@
      "pair_margin_v": -0.24170666666666674,
      "tail_margin_v": 0.6050039999999995
     }
-   },
-   {
-    "dim": "tail_j",
-    "channel": "tail_margin_v",
-    "expected_sign": 1,
-    "reasoning": "more tail width per amp -> lower current density -> lower vdsat_tail",
-    "delta_u": 0.15,
-    "applied_sign": 1.0,
-    "u_before": 0.2511045704449874,
-    "u_after": 0.4011045704449874,
-    "phys_before": 111200.00000000004,
-    "phys_after": 132525.14768348573,
-    "attempts": [
-     {
-      "sign": 1.0,
-      "valid": true,
-      "reason": null
-     }
-    ],
-    "valid": true,
-    "raw_delta": 0.01008479999999995,
-    "norm_delta": 0.1008479999999995,
-    "observed_sign": 1,
-    "wanted_sign": 1,
-    "big_enough": true,
-    "right_way": true,
-    "passed": true,
-    "verdict": "PASS",
-    "all_deltas": {
-     "g_dc_db": -0.00021439999999999236,
-     "peaking_db": 0.00039422222222216006,
-     "f_peak_oct": 0.0,
-     "nyq_boost_db": 0.000184000000000036,
-     "inoise_vrms": 0.0020713333333333304,
-     "power_w": 0.0006600000000000125,
-     "pair_margin_v": -0.004884333333333528,
-     "tail_margin_v": 0.1008479999999995
-    }
-   },
-   {
-    "dim": "l_tail",
-    "channel": "tail_margin_v",
-    "expected_sign": -1,
-    "reasoning": "longer tail needs more Vgs for the same current at fixed width, which raises vdsat_tail and closes the margin",
-    "delta_u": 0.15,
-    "applied_sign": 1.0,
-    "u_before": 0.0,
-    "u_after": 0.15,
-    "phys_before": 0.5,
-    "phys_after": 0.5547847360339225,
-    "attempts": [
-     {
-      "sign": 1.0,
-      "valid": true,
-      "reason": null
-     }
-    ],
-    "valid": true,
-    "raw_delta": -0.009820800000000018,
-    "norm_delta": -0.09820800000000018,
-    "observed_sign": -1,
-    "wanted_sign": -1,
-    "big_enough": true,
-    "right_way": true,
-    "passed": true,
-    "verdict": "PASS",
-    "all_deltas": {
-     "g_dc_db": -0.002089849999999993,
-     "peaking_db": 0.002206333333333236,
-     "f_peak_oct": 0.0,
-     "nyq_boost_db": 0.00175474999999999,
-     "inoise_vrms": -0.0012893333333333415,
-     "power_w": 0.0022044,
-     "pair_margin_v": -0.01631233333333334,
-     "tail_margin_v": -0.09820800000000018
-    }
    }
   ],
-  "n_pass": 9,
-  "n_total": 9
+  "n_pass": 7,
+  "n_total": 7
  },
  "calibration": {
   "rows": [
@@ -539,11 +463,12 @@
     "note": "the sole corner-and-load-robust survivor (session 12b)",
     "valid": true,
     "reason": null,
-    "design_id": "4459f243a4ba3f18",
+    "design_id": "7240b50317525ba5",
     "v0": {
      "reward": 4.95066958011037,
      "feasible": true,
      "valid": true,
+     "headroom_only": false,
      "worst": "S3_f_peak",
      "n_violated": 0,
      "shortfalls": {
@@ -556,6 +481,7 @@
      "reward": 8.95066958011037,
      "feasible": true,
      "valid": true,
+     "headroom_only": false,
      "worst": "S3_f_peak",
      "n_violated": 0,
      "shortfalls": {
@@ -568,6 +494,7 @@
       "tail_saturation": 0.0
      }
     },
+    "verdict": "valid",
     "meas": {
      "g_dc_db": 5.988989,
      "peaking_db": 7.209141000000001,
@@ -577,6 +504,14 @@
      "power_w": 0.005968224,
      "pair_margin_v": 0.26288860000000003,
      "tail_margin_v": 0.3266414
+    },
+    "headroom": {
+     "pair_margin_v": 0.26288860000000003,
+     "tail_margin_v": 0.3266414,
+     "v_src_dc": 0.4784533,
+     "v_out_dc": 0.920693,
+     "i_supply_a": 0.00331568,
+     "power_w": 0.005968224
     }
    },
    {
@@ -584,11 +519,12 @@
     "note": "rs at the box floor: 0.165 dB of peaking, a wire with gain",
     "valid": true,
     "reason": null,
-    "design_id": "7c25b21f58bec853",
+    "design_id": "92dc321e1ca89919",
     "v0": {
      "reward": -1.1553900000000006,
      "feasible": false,
      "valid": true,
+     "headroom_only": false,
      "worst": "S3_peaking",
      "n_violated": 2,
      "shortfalls": {
@@ -601,6 +537,7 @@
      "reward": -1.1553900000000006,
      "feasible": false,
      "valid": true,
+     "headroom_only": false,
      "worst": "S3_peaking",
      "n_violated": 2,
      "shortfalls": {
@@ -613,6 +550,7 @@
       "tail_saturation": 0.0
      }
     },
+    "verdict": "valid",
     "meas": {
      "g_dc_db": 12.76313,
      "peaking_db": 0.16541999999999923,
@@ -622,29 +560,54 @@
      "power_w": 0.005968224,
      "pair_margin_v": 0.26288860000000003,
      "tail_margin_v": 0.3266414
+    },
+    "headroom": {
+     "pair_margin_v": 0.26288860000000003,
+     "tail_margin_v": 0.3266414,
+     "v_src_dc": 0.4784533,
+     "v_out_dc": 0.920693,
+     "i_supply_a": 0.00331568,
+     "power_w": 0.005968224
     }
    },
    {
     "name": "op_fail",
     "note": "i_bias AND rl at their ceilings: both devices in triode",
     "valid": false,
-    "reason": "input pair is in TRIODE: vds 0.0553 V <= vdsat 0.3486 V \u2014 the small-signal result describes a circuit that is not amplifying",
-    "design_id": "ca086c4104bd600e",
+    "reason": "out of saturation (input pair -293.4 mV, tail -80.7 mV of vds - vdsat). The `.op` is trustworthy and is graded on headroom; the AC spec set is dropped because a device in triode is not the circuit that was asked for",
+    "design_id": "7c4d2ca0cadbb35e",
     "v0": {
-     "reward": -4.0,
+     "reward": -4.745794410008908,
      "feasible": false,
      "valid": false,
-     "worst": null,
-     "n_violated": 3,
-     "shortfalls": {}
+     "headroom_only": true,
+     "worst": "saturation",
+     "n_violated": 2,
+     "shortfalls": {
+      "saturation": 2.9338238,
+      "tail_saturation": 0.8073801
+     }
     },
     "v1": {
-     "reward": -8.0,
+     "reward": -8.745794410008909,
      "feasible": false,
      "valid": false,
-     "worst": null,
-     "n_violated": 7,
-     "shortfalls": {}
+     "headroom_only": true,
+     "worst": "saturation",
+     "n_violated": 2,
+     "shortfalls": {
+      "saturation": 2.9338238,
+      "tail_saturation": 0.8073801
+     }
+    },
+    "verdict": "headroom_only",
+    "headroom": {
+     "pair_margin_v": -0.29338238,
+     "tail_margin_v": -0.08073801000000001,
+     "v_src_dc": 0.06921519,
+     "v_out_dc": 0.1244772,
+     "i_supply_a": 0.0046886,
+     "power_w": 0.008439480000000001
     }
    }
   ],
@@ -653,21 +616,46 @@
     "rewards": {
      "design_432": 4.95066958011037,
      "flat": -1.1553900000000006,
-     "op_fail": -4.0
+     "op_fail": -4.745794410008908
     },
     "ordered": true,
-    "op_fail_at_floor": true,
-    "floor": -4.0
+    "op_fail_in_headroom_band": true,
+    "headroom_band": [
+     -5.0,
+     -4.0
+    ],
+    "floor": -6.0
    },
    "v1": {
     "rewards": {
      "design_432": 8.95066958011037,
      "flat": -1.1553900000000006,
-     "op_fail": -8.0
+     "op_fail": -8.745794410008909
     },
     "ordered": true,
-    "op_fail_at_floor": true,
-    "floor": -8.0
+    "op_fail_in_headroom_band": true,
+    "headroom_band": [
+     -9.0,
+     -8.0
+    ],
+    "floor": -10.0
+   }
+  },
+  "band_order": {
+   "n_specs": 7,
+   "feasible_min": 8.0,
+   "infeasible_worst": -7.0,
+   "headroom_top": -8.0,
+   "headroom_floor_limit": -9.0,
+   "invalid": -10.0,
+   "separated": true,
+   "example_grading": {
+    "-1 mV": -8.009900990099009,
+    "-10 mV": -8.090909090909092,
+    "-50 mV": -8.333333333333334,
+    "-100 mV": -8.5,
+    "-300 mV": -8.75,
+    "-1000 mV": -8.909090909090908
    }
   }
  },
@@ -1282,271 +1270,222 @@
   "log_path": "nebula\\experiments\\rl_smoke_run_v0.jsonl"
  },
  "train_v1": {
-  "wall_s": 1744.7300495000018,
-  "env_s": 1722.2612514000393,
-  "policy_s": 2.7887709000169707,
-  "update_s": 1.3052038000023458,
-  "spice_calls": 329,
-  "spice_s": 1764.98592379997,
+  "wall_s": 1118.0644782,
+  "env_s": 1098.3656228,
+  "policy_s": 2.0937456999986352,
+  "update_s": 1.6979888999994728,
+  "spice_calls": 286,
+  "spice_s": 1126.4831936999985,
   "steps": 200,
-  "episodes": 61,
-  "invalid_rate": 0.2946708463949843,
+  "episodes": 44,
+  "invalid_rate": 0.10507246376811594,
+  "headroom_rate": 0.06521739130434782,
+  "n_headroom": 18,
   "invalid_reasons": {
-   "peak_is_sweep_edge": 75,
-   "pair_triode": 10,
-   "tail_triode": 9
+   "peak_is_sweep_edge": 28,
+   "ngspice": 1
   },
-  "invalid_first_half": 0.25157232704402516,
-  "invalid_second_half": 0.3375,
+  "invalid_first_half": 0.17391304347826086,
+  "invalid_second_half": 0.16666666666666666,
   "episode_return": [
-   -8.0,
-   -9.0,
-   -8.0,
-   -10.23259810505137,
-   6.524589268731228,
-   3.9959165154031195,
-   -8.0,
-   8.552037450776254,
-   8.684914697793566,
-   -15.821290000000001,
-   8.036425788325351,
-   3.9520981413162612,
-   8.95066958011037,
-   -8.0,
-   8.119190740254481,
-   -11.718049,
-   -9.146563418821383,
-   -8.719130898314926,
-   -8.0,
-   -8.0,
-   -9.278334189774725,
-   -12.119071959704286,
-   -8.0,
-   -15.7094827,
    -11.0,
-   -10.14603291518874,
-   -19.642972999999998,
    -8.0,
-   8.384944589286802,
-   8.817792332906567,
-   8.671228735594823,
+   -9.2611872673448,
+   6.5943082582266825,
+   -9.900398096065407,
+   -9.454019291550354,
+   -21.678285000000002,
+   -22.106238,
+   -12.279440844515547,
+   8.153407125243884,
+   -21.515087,
    8.650699788325351,
-   4.6526981,
-   -11.2808482,
-   -11.988613999999998,
-   -8.0,
-   -10.02375,
-   -8.0,
-   -14.162344561878658,
    8.552037450776254,
-   -14.0,
-   -13.0,
-   -8.0,
-   -12.351623089774725,
+   -20.154723,
+   -18.476818565015627,
+   7.4602183841158,
+   -8.283183411143774,
+   -10.24837178538008,
+   7.187048125243884,
+   -8.493343985455079,
+   -11.082829391494958,
+   8.769890239094396,
+   -10.943826565015625,
+   -17.522364632176888,
+   -22.786507,
+   -8.045011474187138,
+   4.3849445892868015,
+   8.286283123699477,
+   4.405474531653455,
+   -9.0,
+   4.763046309877,
+   -10.0,
+   -7.404654867183683,
    8.384944589286802,
-   -8.013685790462448,
-   8.671229489055989,
-   -12.431733,
-   -12.51097782062194,
-   -8.0,
-   -8.0,
-   -13.054392561878657,
-   -12.0,
-   -10.656124838919364,
-   -10.545195048456915,
-   -11.0,
-   -11.146563418821383,
-   8.020528485392266,
-   -8.0,
-   -11.0,
-   2.1968814346577394
+   -26.6867424673062,
+   -5.2381435145717266,
+   4.480178543164504,
+   8.0834888,
+   -11.4593197,
+   -13.125897993120947,
+   7.662956798179843,
+   -10.364140581971002,
+   4.392178075857912,
+   -1.517831600000001
   ],
   "episode_length": [
-   8,
    2,
+   8,
+   3,
+   4,
+   2,
+   8,
+   8,
+   8,
+   3,
    1,
    8,
-   5,
-   8,
-   1,
    1,
    1,
    6,
-   2,
-   5,
-   1,
-   1,
+   7,
+   4,
    1,
    3,
    2,
-   5,
-   1,
-   1,
    2,
    8,
-   1,
+   2,
+   2,
    8,
-   4,
-   3,
-   5,
+   8,
    1,
-   1,
-   1,
-   2,
-   1,
-   6,
-   3,
-   3,
-   1,
-   2,
-   1,
-   4,
-   1,
-   4,
    5,
    1,
    6,
-   1,
-   2,
-   2,
    8,
    5,
    1,
-   1,
-   5,
-   5,
    8,
+   1,
+   8,
+   8,
+   5,
+   1,
+   8,
+   6,
    3,
-   4,
-   5,
-   1,
-   1,
-   4,
-   6
+   2,
+   6,
+   7
   ],
   "episode_end_step": [
-   8,
+   2,
    10,
-   11,
+   13,
+   17,
    19,
-   24,
-   32,
-   33,
-   34,
+   27,
    35,
-   41,
    43,
-   48,
-   49,
-   50,
-   51,
-   54,
+   46,
+   47,
+   55,
    56,
-   61,
-   62,
+   57,
    63,
-   65,
-   73,
+   70,
    74,
+   75,
+   78,
+   80,
    82,
-   86,
-   89,
+   90,
+   92,
    94,
-   95,
-   96,
-   97,
-   99,
-   100,
-   106,
-   109,
-   112,
-   113,
-   115,
+   102,
+   110,
+   111,
    116,
-   120,
-   121,
-   125,
-   130,
+   117,
+   123,
    131,
+   136,
    137,
-   138,
-   140,
-   142,
-   150,
-   155,
-   156,
-   157,
+   145,
+   146,
+   154,
    162,
    167,
-   175,
-   178,
+   168,
+   176,
    182,
+   185,
    187,
-   188,
-   189,
    193,
-   199
+   200
   ],
   "policy_loss": [
-   -0.07760919155552984,
-   -0.04119224888272584,
-   -0.042134201247245075,
-   -0.08980618547648192
+   -0.07222640432883054,
+   -0.056117814034223557,
+   -0.05572714093141258,
+   -0.06435353178530931
   ],
   "value_loss": [
-   50.484426498413086,
-   65.4252745628357,
-   39.041469526290896,
-   58.52864660024643
+   89.95414838790893,
+   69.7049090385437,
+   55.67930164337158,
+   52.15755131244659
   ],
   "entropy": [
-   12.764674305915833,
-   12.753052616119385,
-   12.74866862297058,
-   12.748962450027467
+   9.925747919082642,
+   9.923768424987793,
+   9.925128936767578,
+   9.918100786209106
   ],
   "cross_checks": [
    {
-    "design_id": "1314216b5da974b5",
+    "design_id": "1fbaec7f8d9b9aec",
     "agrees": true,
     "detail": "exact",
     "worst_rel": 0.0
    },
    {
-    "design_id": "dec75b7fffcfeb54",
+    "design_id": "a261361c07420e6c",
     "agrees": true,
     "detail": "exact",
     "worst_rel": 0.0
    },
    {
-    "design_id": "904fdc54ca283cb1",
+    "design_id": "5a7c0d79467eb506",
     "agrees": true,
     "detail": "exact",
     "worst_rel": 0.0
    },
    {
-    "design_id": "8fde3d5beb888410",
+    "design_id": "ff378d8df8a15e15",
     "agrees": true,
     "detail": "exact",
     "worst_rel": 0.0
    },
    {
-    "design_id": "7fe5257ef0a37c30",
+    "design_id": "1640fa51a298569f",
     "agrees": true,
     "detail": "exact",
     "worst_rel": 0.0
    }
   ],
-  "n_records": 319,
-  "n_feasible": 33,
+  "n_records": 276,
+  "n_feasible": 27,
   "shortfall_stats": {
    "S3_f_peak": {
-    "n": 225,
-    "n_violated": 160,
-    "frac_violated": 0.7111111111111111,
+    "n": 229,
+    "n_violated": 169,
+    "n_headroom_violated": 0,
+    "frac_violated": 0.7379912663755459,
     "shortfall_max": 13.931568569324174,
-    "shortfall_mean": 2.0620728071587915,
-    "shortfall_p90": 3.8671229184389793,
+    "shortfall_mean": 3.893396658488058,
+    "shortfall_p90": 13.931568569324174,
     "margin_min": -6.965784284662087,
     "margin_max": 0.47533479005518486,
     "margin_spread": 7.441119074717272,
@@ -1554,82 +1493,88 @@
     "note": "binds"
    },
    "S3_peaking": {
-    "n": 225,
-    "n_violated": 121,
-    "frac_violated": 0.5377777777777778,
-    "shortfall_max": 5.932698000000002,
-    "shortfall_mean": 0.9367556376444446,
-    "shortfall_p90": 2.8681687999999994,
-    "margin_min": -5.932698000000002,
-    "margin_max": 4.484828,
-    "margin_spread": 10.417526000000002,
+    "n": 229,
+    "n_violated": 124,
+    "n_headroom_violated": 0,
+    "frac_violated": 0.5414847161572053,
+    "shortfall_max": 5.9984709999999986,
+    "shortfall_mean": 1.2805282231441049,
+    "shortfall_p90": 3.0000234,
+    "margin_min": -5.9984709999999986,
+    "margin_max": 4.46983301,
+    "margin_spread": 10.468304009999999,
     "wired": true,
     "note": "binds"
    },
    "S3_nyq_boost": {
-    "n": 225,
-    "n_violated": 17,
-    "frac_violated": 0.07555555555555556,
-    "shortfall_max": 2.6208230000000006,
-    "shortfall_mean": 0.048182683999999996,
-    "shortfall_p90": 0.0,
-    "margin_min": -2.6208230000000006,
-    "margin_max": 17.901301,
-    "margin_spread": 20.522124,
+    "n": 229,
+    "n_violated": 53,
+    "n_headroom_violated": 0,
+    "frac_violated": 0.2314410480349345,
+    "shortfall_max": 2.270402,
+    "shortfall_mean": 0.17991310480349346,
+    "shortfall_p90": 0.7726922000000007,
+    "margin_min": -2.270402,
+    "margin_max": 17.967401,
+    "margin_spread": 20.237803,
     "wired": true,
     "note": "binds"
    },
    "S5_noise": {
-    "n": 225,
+    "n": 229,
     "n_violated": 0,
+    "n_headroom_violated": 0,
     "frac_violated": 0.0,
     "shortfall_max": 0.0,
     "shortfall_mean": 0.0,
     "shortfall_p90": 0.0,
-    "margin_min": 0.0009338363000000001,
-    "margin_max": 0.0013691864,
-    "margin_spread": 0.00043535009999999996,
+    "margin_min": 0.0008440127,
+    "margin_max": 0.0013433075,
+    "margin_spread": 0.0004992947999999999,
     "wired": true,
-    "note": "correctly free: margin varies over +0.0009338..+0.001369 and never goes negative"
+    "note": "correctly free: margin varies over +0.000844..+0.001343 and never goes negative"
    },
    "S6_power": {
-    "n": 225,
+    "n": 229,
     "n_violated": 0,
+    "n_headroom_violated": 0,
     "frac_violated": 0.0,
     "shortfall_max": 0.0,
     "shortfall_mean": 0.0,
     "shortfall_p90": 0.0,
-    "margin_min": 0.001216103999999999,
-    "margin_max": 0.014099031599999999,
-    "margin_spread": 0.0128829276,
+    "margin_min": 0.00041744399999999945,
+    "margin_max": 0.0141025254,
+    "margin_spread": 0.0136850814,
     "wired": true,
-    "note": "correctly free: margin varies over +0.001216..+0.0141 and never goes negative"
+    "note": "correctly free: margin varies over +0.0004174..+0.0141 and never goes negative"
    },
    "saturation": {
-    "n": 225,
+    "n": 229,
     "n_violated": 0,
+    "n_headroom_violated": 10,
     "frac_violated": 0.0,
     "shortfall_max": 0.0,
     "shortfall_mean": 0.0,
     "shortfall_p90": 0.0,
-    "margin_min": 0.0423183,
-    "margin_max": 1.3560331,
-    "margin_spread": 1.3137148,
+    "margin_min": 0.034085599999999994,
+    "margin_max": 1.29791881,
+    "margin_spread": 1.26383321,
     "wired": true,
-    "note": "correctly free: margin varies over +0.04232..+1.356 and never goes negative"
+    "note": "correctly free: margin varies over +0.03409..+1.298 and never goes negative"
    },
    "tail_saturation": {
-    "n": 225,
+    "n": 229,
     "n_violated": 0,
+    "n_headroom_violated": 10,
     "frac_violated": 0.0,
     "shortfall_max": 0.0,
     "shortfall_mean": 0.0,
     "shortfall_p90": 0.0,
-    "margin_min": 0.012933799999999995,
-    "margin_max": 0.5949612,
-    "margin_spread": 0.5820274,
+    "margin_min": 0.008335599999999999,
+    "margin_max": 0.6209094,
+    "margin_spread": 0.6125738,
     "wired": true,
-    "note": "correctly free: margin varies over +0.01293..+0.595 and never goes negative"
+    "note": "correctly free: margin varies over +0.008336..+0.6209 and never goes negative"
    }
   },
   "log_path": "nebula\\experiments\\rl_smoke_run_v1.jsonl"
@@ -1639,44 +1584,76 @@
   "rows": [
    {
     "workers": 1,
-    "wall_s": 145.81346010000198,
-    "ms_per_task": 6075.560837500082,
-    "n_valid": 12,
+    "wall_s": 95.97944800000005,
+    "ms_per_task": 3999.1436666666687,
+    "n_valid": 17,
     "spice_calls": 24,
+    "position": 4,
     "speedup": 1.0
    },
    {
     "workers": 2,
-    "wall_s": 57.13193660000252,
-    "ms_per_task": 2380.497358333438,
-    "n_valid": 12,
+    "wall_s": 48.17978900000071,
+    "ms_per_task": 2007.491208333363,
+    "n_valid": 17,
     "spice_calls": 24,
-    "speedup": 2.5522233058697954
+    "position": 1,
+    "speedup": 1.9921101771533003
    },
    {
     "workers": 4,
-    "wall_s": 40.03039080000235,
-    "ms_per_task": 1667.932950000098,
-    "n_valid": 12,
+    "wall_s": 39.067348599999605,
+    "ms_per_task": 1627.8061916666502,
+    "n_valid": 17,
     "spice_calls": 24,
-    "speedup": 3.6425689878599288
+    "position": 3,
+    "speedup": 2.456768924420968
    },
    {
     "workers": 8,
-    "wall_s": 36.450557899999694,
-    "ms_per_task": 1518.7732458333205,
-    "n_valid": 12,
+    "wall_s": 32.18465590000051,
+    "ms_per_task": 1341.0273291666879,
+    "n_valid": 17,
     "spice_calls": 24,
-    "speedup": 4.0003080474113455
+    "position": 0,
+    "speedup": 2.9821492669740963
    },
    {
     "workers": 11,
-    "wall_s": 33.19208179999987,
-    "ms_per_task": 1383.0034083333278,
-    "n_valid": 12,
+    "wall_s": 37.14493399999992,
+    "ms_per_task": 1547.70558333333,
+    "n_valid": 17,
     "spice_calls": 24,
-    "speedup": 4.39301942489195
+    "position": 2,
+    "speedup": 2.583917580793124
    }
-  ]
+  ],
+  "order": [
+   8,
+   2,
+   11,
+   4,
+   1
+  ],
+  "randomised": true,
+  "control": {
+   "workers": 8,
+   "wall_s": 37.870011500000146,
+   "ms_per_task": 1577.9171458333394,
+   "n_valid": 17,
+   "spice_calls": 24,
+   "position": 5,
+   "first_pass_ms_per_task": 1341.0273291666879,
+   "ratio_to_first_pass": 0.8498718280030199,
+   "contaminated": false
+  },
+  "warmup": {
+   "workers": 8,
+   "wall_s": 35.334456300000056,
+   "ms_per_task": 1472.2690125000024,
+   "n_valid": 17,
+   "spice_calls": 24,
+   "discarded": true
+  }
  }
 }

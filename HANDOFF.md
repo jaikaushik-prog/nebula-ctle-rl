@@ -78,7 +78,7 @@ their gradient lives only in the feasible branch's margin term, and the
 retraction's "tail needs its own shortfall" argument is delivered instead by the
 ungraded invalid floor. Recommendation (a human's, rule 6): accept it, because
 grading a triode design's small-signal numbers would be grading fiction (G24's
-precedent). `params.py` untouched (rule 6). **1007 -> 1242 green.** Full
+precedent). `params.py` untouched (rule 6). **1007 -> 1246 green.** Full
 write-up `nebula/RL_SMOKE.md`; new gotchas **G63-G71**.
 Earlier session 16: **the channel is a derived family
 now, not an invented constant — and the compression verdict it decided is
@@ -1379,9 +1379,36 @@ Plus: git init, .gitignore, 28 tests, Wilson-bound BER reporting.
         is, on the quantity the tail geometry exists to control — which is
         evidence FOR `TAIL_DEVICE.md` §6's recommendation, and it is a human's
         call.
-     Open from this task: `--parallel` against G48; a second seed; and the
-     obvious next experiment, which is **not** more PPO steps but the corner
-     axis, since every number above is TT-only.
+     Open from this task: a second seed; and the obvious next experiment,
+     which is **not** more PPO steps but the corner axis, since every number
+     above is TT-only.
+   - **>>> THE RE-RUN ORDER, DECIDED. DO NOT RE-RUN THE SCREENS FIRST. <<<**
+     (Human decision, 2026-08-07, session 17 review.) G66 says the load and
+     corner screens need re-running with drawn passives. They do — but
+     **re-running before the `cl` range is corrected means re-running with the
+     WRONG range**, and each screen is tens of minutes of ngspice. The order:
+
+     1. **Trim `parameters/typical.spice` and `invariant.spice` out of the
+        extended library** (`PASSIVES.md` §6 item 6) and re-verify bit-identity.
+        This is first because it is now measured, not guessed: **99.7 % of a
+        training run is the simulator**, and the extended trim costs 2.07 s per
+        evaluation against ~0.33 s on the nfet-only one. Everything downstream
+        is bought at that rate.
+     2. **Update the `cl` budget with the `RL` bottom-plate parasitic**
+        (`PASSIVES.md` §6 item 4). Session 17 measured it at **+1.4 to
+        +24.3 fF on a 32.6 fF `cl`**, so `CL_RANGE.md`'s 13.64-78.04 fF is
+        stale by up to +75 % at the bottom end. **A prediction is registered
+        before this runs** — `PREDICTIONS.md` entry 5: the parasitic adds a
+        floor to BOTH ends, and since the load's damage comes from its RATIO
+        (5.72x) rather than its width, the direction is COMPRESSION, nominally
+        to ~3.7x. Compression is what design 432 needed, so this may HELP.
+     3. **Collapse the passive corner axis** (`PASSIVES.md` §6 item 3, G58's
+        5 x 5 = 225 corners) to a screen set, the way G47 did for the MOS axis.
+     4. **Then re-run the load and corner screens** and diff against
+        `S9_YIELD.md`.
+
+     Doing 4 before 2 would produce a number that has to be thrown away, and
+     G49 is the standing reminder of what that costs.
    - **Approve or amend the proposed box**, then copy it into
      `common/params.py::BOUNDS`. The `cl` dimension is recommended to be
      **removed from the SEARCH and replaced by a screened CONTEXT RANGE**,
@@ -2318,13 +2345,97 @@ Plus: git init, .gitignore, 28 tests, Wilson-bound BER reporting.
         reversed ms   2224.0  1335.7   942.2   841.0   888.5
         true speedup   1.00x   1.67x   2.36x   2.64x   2.50x
 
-  The serial baseline drops **2.7x**. **The honest answer is 2.64x at 8
-  workers, and 11 workers is SLOWER than 8** — so the extended library scales
-  WORSE than G48's nfet-only 3.18x, and the curve turns DOWN past 8 rather than
-  flattening. Same mechanism as G70. `n_valid` was 12/24 at every worker count
-  in both runs, which is what makes the timing comparison meaningful at all.
-  **Rule: randomise or reverse the order of any benchmark's passes, and treat a
+  The serial baseline drops **2.7x**.
+  **AMENDED after two further runs: RANDOMISING IS NECESSARY BUT NOT
+  SUFFICIENT.** With the configuration order randomised AND a control re-run of
+  the first configuration at the end, on a completely IDLE machine, the control
+  still came back at **1.60x** — 8 workers measured 2497 ms/task running first
+  and 1558 ms/task running last. **The first configuration always pays,
+  whichever one it is**, because the penalty is the OS file cache warming on the
+  PDK include tree, not a competing process. Shuffling only stops the penalty
+  from always landing on the same configuration and looking like a property of
+  it.
+  **The fix is a DISCARDED WARM-UP PASS; the control is the DETECTOR.**
+  `parallel_throughput` now does three things by default — warm up and discard,
+  randomise the order, re-run the first configuration last and flag a ratio
+  outside [0.8, 1.25]. With all three, clean:
+
+        workers          1       2       4       8      11
+        ms/task     3999.1  2007.5  1627.8  1341.0  1547.7
+        speedup      1.00x   1.99x   2.46x   2.98x   2.58x
+        control: 8 workers re-run last 1577.9 vs 1341.0 = 0.85x, CLEAN
+
+  **The honest answer is 2.98x at 8 workers, and 11 workers is SLOWER than 8** —
+  so the extended library scales worse than G48's nfet-only 3.18x AND its curve
+  turns DOWN past 8 rather than flattening. Same mechanism as G70. `n_valid` was
+  identical at every worker count in every run, which is what makes the timing
+  comparison meaningful at all.
+  **Rules: (1) warm up and discard before measuring; (2) randomise the pass
+  order; (3) re-run the first configuration last as a control; (4) treat a
   super-linear speedup as a bug report rather than a result.**
+- **G72 — (nebula) A VALIDITY GATE AND A REWARD ANSWER DIFFERENT QUESTIONS,
+  AND CONFLATING THEM DESTROYS THE GRADIENT WHERE A FRESH POLICY LIVES.**
+  The generalisation of G64, promoted to its own gotcha because it is the rule
+  and G64 is one instance of it.
+
+        a validity gate asks:  "can I TRUST this measurement?"
+        a reward asks:         "is this CIRCUIT good?"
+
+  Two results can look identical — no usable AC spec set — and need OPPOSITE
+  handling:
+
+        peak reported at 19.95 GHz    UNTRUSTWORTHY measurement. `meas ac MAX`
+                                      returned its own search edge; the number
+                                      is fiction. Nothing may be scored.
+        device in TRIODE              TRUSTWORTHY measurement of a BAD circuit.
+                                      `.op` converged; vds and vdsat are real.
+                                      Only the AC spec set is untrustworthy.
+
+  **So trustworthiness is per ANALYSIS, not per evaluation.** `rl/evaluator.py`
+  returns three verdicts — VALID, HEADROOM_ONLY (`.op` good, device in triode,
+  AC dropped, graded on `vds - vdsat`), INVALID — and `rl/reward_v1.py` has
+  four exactly-separated bands to match, every boundary a function of the spec
+  count `N` alone:
+
+        feasible       >= N+1
+        infeasible     [-N, 0)
+        headroom-only  (-(N+2), -(N+1)]     graded, ordered by triode depth
+        invalid        -(N+3)
+
+  **Why it matters rather than being tidy:** `tail_saturation` binds on
+  2.6-13.3 % of the box, so a fresh policy lands in triode often. A flat floor
+  there gives it no direction out; a graded band does. Measured on design 432
+  with `i_bias` and `rl` both at their ceilings — 293 mV into triode on the
+  pair, 81 mV on the tail — the score moves from the floor (-10.0) to **-8.746**,
+  and 1 mV / 10 / 50 / 100 / 300 / 1000 mV grade to -8.010 / -8.091 / -8.333 /
+  -8.500 / -8.750 / -8.909, strictly ordered at every depth.
+  **One design detail that is not a preference:** the graded band uses the
+  bounded map `h/(1+h)` and **not** the `clip(h, 0, 1)` used everywhere else.
+  The clip exists in the infeasible branch so one catastrophic spec cannot
+  drown out the others in a SUM; here there is no sum, so a clip buys nothing
+  and costs exactly what the band exists for — a design 500 mV into triode
+  would score identically to one 50 mV in.
+- **G73 — (nebula) a weak-but-live action dimension is worse than a dead one,
+  and the test for "worse" is REDUNDANCY, not effect size.** The §6e gate
+  cleared `tail_j` and `l_tail` as live: both moved `tail_margin_v` by ~0.10 of
+  a channel scale under one `MAX_STEP`, well above the inert threshold. They
+  were removed anyway, because `vcm_in` moves the SAME channel by **0.605** —
+  a **6x stronger lever on the quantity the tail geometry exists to control**.
+  A policy gradient on a weak dimension that is redundant with a strong one
+  learns noise and spends samples doing it; this is G38's `nf_in` argument
+  (+/-10 % non-monotonic) generalised from "the axis barely moves anything" to
+  "the axis moves something another axis already moves better".
+  **The action space went 9 -> 7** (`w_in`, `l_in`, `i_bias`, `rs`, `cs`, `rl`,
+  `vcm_in`), the tail is DERIVED — `w_tail = i_side * TAIL_UM_PER_AMP` at
+  `TAIL_L_UM`, imported from `s9_yield.py` so there is one definition — and
+  `tail_saturation` REMAINS an active scored constraint. **Removing the degrees
+  of freedom does not remove the coupling**: `vds_tail` is still the input
+  pair's source node, so VCM, `w_in`, `l_in` and `i_bias` still meet in one
+  inequality. This closes `TAIL_DEVICE.md` §6's recommendation, which had been
+  a proposal without an RL measurement behind it.
+  **The habit: read a sensitivity table for REDUNDANCY, not only for zeros.**
+  A table that only reports pass/fail against an inert threshold cannot see
+  this, which is why §6e's table reports `|d_obs|` per dimension per channel.
 
 ## 10. Environment
 
@@ -4351,7 +4462,7 @@ the power-law test that distinguishes aliasing from a broken reconstruction),
 
 ### 2026-08-07 — Session 17 (task 6: the RL loop runs end to end, and six things broke)
 
-**Tests 1007 -> 1242 green** (92 + 1150), 9 deselected. Full write-up
+**Tests 1007 -> 1246 green** (92 + 1154), 9 deselected. Full write-up
 `nebula/RL_SMOKE.md`. Data: `experiments/rl_smoke_results.json` and
 `rl_smoke_run_v0.jsonl` / `_v1.jsonl` — **all three TRACKED** (G49, and the
 stronger reason that every row is free training data for task 8).
@@ -4487,4 +4598,82 @@ measured says it is needed. The v1 invalid rate DID rise (25.2% -> 33.8%), the
 one place §6d's signal fired, but on 61 episodes that is weak evidence and is
 not offered as more.
 
-New gotchas **G63-G71**.
+New gotchas **G63-G73**.
+
+---
+
+**SESSION 17b — the review, and three decisions that changed the code.**
+The owner reviewed the above and made four calls. Three of them are now
+implemented; the fourth is an ordering decision recorded in §8.
+
+**The headline was re-framed, and it is not a diagnostic.** *"A quarter of
+evaluations in a naive RL loop return a number that looks valid and isn't, and
+78% of those score high under a reward that measures peaking"* is **the
+verification contribution, quantified, on real artifacts** — it belongs in the
+abstract and on a slide. Nobody in this literature reports it because nobody
+checks: the reference implementation (`ams_rl_ppo`) runs against a synthetic
+analytic simulator with no PDK, so the failure mode cannot arise there.
+
+**CALL 1 — the §9.3 recommendation was REJECTED, and the graded band built
+(G72).** The rule: **a validity gate asks "can I trust this measurement?", a
+reward asks "is this circuit good?"** A 0.165 dB peak is a trustworthy
+measurement of a bad circuit; a peak at 19.95 GHz is an untrustworthy
+measurement. Same-looking output, opposite handling. So **trustworthiness is
+per ANALYSIS**: `vds`/`vdsat` come from `.op` and are true whether or not the
+device is saturated, so a triode design keeps its DC headroom and loses only
+its AC spec set. Three verdicts (VALID / HEADROOM_ONLY / INVALID), four
+exactly-separated reward bands, every boundary a function of the spec count:
+feasible >= N+1, infeasible [-N, 0), **headroom (-(N+2), -(N+1)] graded by
+`vds - vdsat`**, invalid -(N+3). Measured: the `op_fail` reference moves from
+the -10.0 floor to **-8.746**, and 1/10/50/100/300/1000 mV of triode depth
+grade to -8.010/-8.091/-8.333/-8.500/-8.750/-8.909. The band uses `h/(1+h)`
+and NOT the `clip(h,0,1)` used elsewhere — there is no sum here, so a clip
+would make 500 mV and 50 mV score identically and leave no direction out of the
+deep end.
+
+**CALL 2 — the tail LEFT the action space, 9 -> 7 dimensions (G73).** The §6e
+gate had cleared `tail_j` and `l_tail` as live (|d_obs| 0.1008 and 0.0982), but
+`vcm_in` moves the SAME channel by **0.605** — a **6x stronger lever on the
+quantity the tail geometry exists to control**. A weak dimension that is
+REDUNDANT with a strong one is worse than a dead one: the policy gradient
+learns noise and spends samples doing it. The tail is now derived
+(`w_tail = i_side * TAIL_UM_PER_AMP` at `TAIL_L_UM`, imported from `s9_yield`,
+one definition) and **`tail_saturation` remains an active scored constraint** —
+removing degrees of freedom does not remove the coupling.
+
+**The re-run on the new contract (200 steps, 276 evaluations) produced an
+unpredicted second argument for Call 2.** Invalid rate **29.5% -> 10.5%**, and
+only 19 of that is the triode reclassification: `peak_is_sweep_edge` fell
+**75 -> 28**, because a tail sized from its own current cannot be starved into
+a bias point that pushes the peak out of the sweep. The graded band was
+exercised **18 times, spanning -1.0 to -188.1 mV, producing 18 DISTINCT
+rewards** — strict ordering at every depth, no ties.
+**And it exposed a reporting bug in this session's own write-up:**
+`saturation`/`tail_saturation` still show 0 violations among valid rows, which
+17a called "correctly free". It is **wrong** — they are violated 10 times each
+and the violations are routed to the graded band, because violating either is
+what MAKES a design HEADROOM_ONLY. `_shortfall_stats` now reports
+`n_headroom_violated` beside `n_violated` and says "BINDS VIA THE GRADED BAND".
+
+**CALL 3 — the re-run ORDER, in §8.** Trim the R/C corner files first (99.7% of
+a run is the simulator), then correct the `cl` budget with the resistor
+parasitic, then collapse the passive corner axis, THEN re-run the screens.
+Re-running before the `cl` range is corrected means re-running with the wrong
+range. **A prediction is pre-registered before step 2** (`PREDICTIONS.md`
+entry 5, the owner's): the parasitic adds a floor to BOTH ends of the load
+range, and since the load's damage comes from its RATIO (5.72x) rather than its
+width, the direction is **COMPRESSION** — nominally to ~3.7x — so **it may
+HELP**, which is the opposite of how G66 reads on first sight.
+
+**The benchmark is now order-safe, and making it so produced a stronger
+finding than the original (G71, amended).** Randomising the configuration order
+and adding a control re-run was NOT ENOUGH: on a completely idle machine the
+control still reported **1.60x**, because **the first configuration always pays
+the cold file cache, whichever one it is.** Randomising only stops the penalty
+always landing on the same configuration. The fix is a **discarded warm-up
+pass**; the control is the **detector**. With warm-up + randomisation + control
+the sweep is clean (control 0.85x) and the answer is **2.98x at 8 workers with
+11 SLOWER than 8** — the extended library scales worse than G48's nfet-only
+3.18x and its curve turns DOWN past 8. Standing rule, from the owner: *"keep
+looking for the impossible number rather than the disappointing one"* — 2.55x
+at two workers was the tell precisely because it was impossible.

@@ -59,10 +59,16 @@ from nebula.rl.contract import (
     TAIL_MIRROR_RATIO,
     Sizing,
     sizing_from_u,
+    tail_sizing_rule,
     u_from_params,
 )
 from nebula.rl.env import CtleSizingEnv, EnvConfig
-from nebula.rl.evaluator import SpiceBudget, cross_check_sample, evaluate
+from nebula.rl.evaluator import (
+    SpiceBudget,
+    Verdict,
+    cross_check_sample,
+    evaluate,
+)
 from nebula.rl.ppo import PPOConfig, train
 from nebula.rl.runlog import RunLog
 
@@ -95,20 +101,29 @@ DESIGN_432: dict = {
     "vcm_in": 1.4069295334468683,
 }
 
-#: The tail sizing rule, `s9_yield.py`'s value. One definition (rule 9) — this
-#: script imports the constant rather than restating it.
+#: The tail sizing rule. ONE definition (rule 9) — `rl/contract.py` re-exports
+#: `s9_yield`'s constants, and this script asks IT rather than the experiment,
+#: so the RL loop and this script can never disagree about the tail.
 def _tail_rule_j() -> float:
-    from nebula.experiments.s9_yield import TAIL_UM_PER_AMP
-    return float(TAIL_UM_PER_AMP)
+    return tail_sizing_rule()[0]
 
 
 def _tail_rule_l() -> float:
-    from nebula.experiments.s9_yield import TAIL_L_UM
-    return float(TAIL_L_UM)
+    return tail_sizing_rule()[1]
+
+
+def _bound(name: str):
+    """Look a bound up by NAME, never by index.
+
+    `ACTION_SPACE[3]` was `rs` when the space had nine dimensions and is `rs`
+    again at seven only by luck. An index into a space whose length is a
+    decision is a silent-wrong-answer waiting to happen.
+    """
+    return {d.name: d for d in ACTION_SPACE}[name]
 
 
 def design_432_u() -> np.ndarray:
-    return u_from_params(DESIGN_432, _tail_rule_j(), _tail_rule_l())
+    return u_from_params(DESIGN_432)
 
 
 def flat_design_u() -> np.ndarray:
@@ -120,8 +135,8 @@ def flat_design_u() -> np.ndarray:
     different draw. That is the same paired-comparison discipline
     `s3_yield.pin_param` uses.
     """
-    p = dict(DESIGN_432, rs=ACTION_SPACE[3].lo)
-    return u_from_params(p, _tail_rule_j(), _tail_rule_l())
+    p = dict(DESIGN_432, rs=_bound("rs").lo)
+    return u_from_params(p)
 
 
 def op_fail_design_u() -> np.ndarray:
@@ -142,8 +157,8 @@ def op_fail_design_u() -> np.ndarray:
     diagnosis was wrong, which is why `validate` now checks the DC operating
     point before the AC result.
     """
-    p = dict(DESIGN_432, rl=ACTION_SPACE[5].hi, i_bias=ACTION_SPACE[2].hi)
-    return u_from_params(p, _tail_rule_j(), _tail_rule_l())
+    p = dict(DESIGN_432, rl=_bound("rl").hi, i_bias=_bound("i_bias").hi)
+    return u_from_params(p)
 
 
 REFERENCE_DESIGNS: tuple[tuple[str, str], ...] = (
@@ -322,11 +337,20 @@ SENSITIVITY: tuple[tuple[str, str, int, str], ...] = (
     ("vcm_in", "tail_margin_v", +1,
      "v(source) tracks VCM almost 1:1 while vdsat_tail barely moves, so the "
      "tail's vds - vdsat opens up"),
-    ("tail_j", "tail_margin_v", +1,
-     "more tail width per amp -> lower current density -> lower vdsat_tail"),
-    ("l_tail", "tail_margin_v", -1,
-     "longer tail needs more Vgs for the same current at fixed width, which "
-     "raises vdsat_tail and closes the margin"),
+)
+
+#: REMOVED from this table when the tail left the action space (Call 2). Kept
+#: as a record, because the numbers are the EVIDENCE for the removal and a
+#: table that silently loses rows loses the argument with them:
+#:
+#:      tail_j   tail_margin_v  +1  |d_obs| 0.1008   PASS
+#:      l_tail   tail_margin_v  -1  |d_obs| 0.0982   PASS
+#:
+#: Both were live. Both were ~6x weaker than `vcm_in` on the SAME channel,
+#: which is what made them redundant rather than useless.
+RETIRED_SENSITIVITY: tuple[tuple[str, str, int, float], ...] = (
+    ("tail_j", "tail_margin_v", +1, 0.1008),
+    ("l_tail", "tail_margin_v", -1, -0.0982),
 )
 
 #: The perturbation, in normalised box units. One `MAX_STEP` — the largest edit
@@ -488,26 +512,64 @@ def calibrate(budget: SpiceBudget, cfg: EnvConfig) -> dict:
                "reason": ev.reason, "design_id": ev.design_id}
         for label, specs in (("v0", R.V0_SPECS), ("v1", R.V1_SPECS)):
             rb = R.reward(ev.meas, cfg.target_f_peak_hz, specs=specs,
-                          target_peaking_db=cfg.target_peaking_db)
+                          target_peaking_db=cfg.target_peaking_db,
+                          headroom=ev.headroom if ev.verdict is Verdict.HEADROOM_ONLY
+                          else None)
             row[label] = {"reward": rb.reward, "feasible": rb.feasible,
-                          "valid": rb.valid, "worst": rb.worst_spec,
+                          "valid": rb.valid, "headroom_only": rb.headroom_only,
+                          "worst": rb.worst_spec,
                           "n_violated": rb.n_violated,
                           "shortfalls": rb.shortfalls}
+        row["verdict"] = ev.verdict.value
         if ev.valid:
             row["meas"] = dict(ev.meas)
+        if ev.headroom:
+            row["headroom"] = dict(ev.headroom)
         out.append(row)
 
     verdict = {}
     for label in ("v0", "v1"):
+        n = len(R.V0_SPECS if label == "v0" else R.V1_SPECS)
         r = {x["name"]: x[label]["reward"] for x in out}
         ordered = (r["design_432"] > r["flat"] > r["op_fail"])
-        floor = R.invalid_reward(len(R.V0_SPECS if label == "v0" else R.V1_SPECS))
+        top, floor = R.headroom_band_top(n), R.invalid_reward(n)
         verdict[label] = {
             "rewards": r, "ordered": bool(ordered),
-            "op_fail_at_floor": bool(abs(r["op_fail"] - floor) < 1e-9),
-            "floor": floor,
+            # CALL 1: op_fail is no longer AT the floor. `.op` converged, so it
+            # is graded in the headroom band -- strictly below every infeasible
+            # score and strictly above the invalid floor.
+            "op_fail_in_headroom_band": bool(floor < r["op_fail"] <= top),
+            "headroom_band": [top - 1.0, top], "floor": floor,
         }
-    return {"rows": out, "verdict": verdict}
+    return {"rows": out, "verdict": verdict,
+            "band_order": _band_order_check()}
+
+
+def _band_order_check() -> dict:
+    """Prove the four bands are separated, arithmetically and by example.
+
+    Not a unit test standing in for a measurement: the calibration's job is to
+    show the reward ORDERS known designs, and the bands are the coarsest part
+    of that ordering. Printing it beside the three designs is what makes
+    "op_fail is in the headroom band" checkable by eye.
+    """
+    n = len(R.V1_SPECS)
+    return {
+        "n_specs": n,
+        "feasible_min": R.feasible_bonus(n),
+        "infeasible_worst": -float(n),
+        "headroom_top": R.headroom_band_top(n),
+        "headroom_floor_limit": R.headroom_band_top(n) - 1.0,
+        "invalid": R.invalid_reward(n),
+        "separated": bool(R.feasible_bonus(n) > 0.0 > -float(n)
+                          > R.headroom_band_top(n)
+                          > R.headroom_band_top(n) - 1.0
+                          > R.invalid_reward(n)),
+        "example_grading": {
+            f"{mv * 1e3:+.0f} mV": R.headroom_reward(mv, n)
+            for mv in (-0.001, -0.01, -0.05, -0.1, -0.3, -1.0)
+        },
+    }
 
 
 def print_calibration(res: dict) -> None:
@@ -517,7 +579,13 @@ def print_calibration(res: dict) -> None:
     for x in res["rows"]:
         print(f"  {x['name']:<12} {x['note']}")
         if not x["valid"]:
-            print(f"               INVALID: {x['reason'][:64]}")
+            label = ("HEADROOM-ONLY" if x["verdict"] == "headroom_only"
+                     else "INVALID")
+            print(f"               {label}: {x['reason'][:62]}")
+            if x.get("headroom"):
+                h = x["headroom"]
+                print(f"               pair {h['pair_margin_v'] * 1e3:+8.1f} mV   "
+                      f"tail {h['tail_margin_v'] * 1e3:+8.1f} mV of vds - vdsat")
         else:
             m = x["meas"]
             print(f"               peaking {m['peaking_db']:+7.3f} dB   "
@@ -526,18 +594,31 @@ def print_calibration(res: dict) -> None:
                   f"tail {m['tail_margin_v']:+6.3f} V")
         for label in ("v0", "v1"):
             v = x[label]
-            state = ("INVALID" if not v["valid"]
-                     else ("FEASIBLE" if v["feasible"]
-                           else f"infeasible on {v['n_violated']}, worst {v['worst']}"))
+            state = ("HEADROOM-ONLY (graded)" if v["headroom_only"]
+                     else "INVALID (floor)" if not v["valid"]
+                     else "FEASIBLE" if v["feasible"]
+                     else f"infeasible on {v['n_violated']}, worst {v['worst']}")
             print(f"               reward {label}: {v['reward']:+9.4f}   {state}")
         print()
+    b = res["band_order"]
+    print(f"  THE FOUR BANDS at N = {b['n_specs']}, all derived from N:")
+    print(f"    feasible      >= {b['feasible_min']:+6.2f}")
+    print(f"    infeasible       [{b['infeasible_worst']:+.2f}, 0)")
+    print(f"    headroom-only    ({b['headroom_floor_limit']:+.2f}, "
+          f"{b['headroom_top']:+.2f}]   <- CALL 1: .op good, device in triode")
+    print(f"    invalid          {b['invalid']:+6.2f}          <- nothing trustworthy")
+    print(f"    separated: {b['separated']}")
+    print("    graded by how far into triode:")
+    for k, v in b["example_grading"].items():
+        print(f"      {k:>8} -> {v:+8.4f}")
+    print()
     for label in ("v0", "v1"):
         w = res["verdict"][label]
         r = w["rewards"]
         print(f"  {label}: 432 {r['design_432']:+8.4f} > flat {r['flat']:+8.4f} "
-              f"> op_fail {r['op_fail']:+8.4f}   "
-              f"ordered={w['ordered']}  op_fail at floor "
-              f"({w['floor']:+.1f})={w['op_fail_at_floor']}")
+              f"> op_fail {r['op_fail']:+8.4f}   ordered={w['ordered']}   "
+              f"op_fail in the headroom band {w['headroom_band']}"
+              f"={w['op_fail_in_headroom_band']}")
     print()
 
 
@@ -604,6 +685,8 @@ def run_training(steps: int, seed: int, reward_name: str,
             "spice_calls": budget.calls, "spice_s": budget.seconds,
             "steps": steps, "episodes": len(stats.episode_return),
             "invalid_rate": env.invalid_rate,
+            "headroom_rate": env.headroom_rate,
+            "n_headroom": env.n_headroom,
             "invalid_reasons": dict(env.invalid_reasons),
             "invalid_first_half": halves[0], "invalid_second_half": halves[1],
             "episode_return": stats.episode_return,
@@ -640,19 +723,33 @@ def _shortfall_stats(records, specs) -> dict:
     *"a spec whose shortfall is identically zero for every step may be
     correctly free, or may be unwired. Distinguish the two."*
 
-    The distinguishing evidence is `n_margin_finite`: a spec that is WIRED
-    produces a finite MARGIN on every valid step even when its shortfall is
-    zero, because the margin is computed and merely happens to be positive.
-    An UNWIRED spec has no margin at all. So `shortfall == 0 everywhere` plus
-    `margin present and varying` means correctly free; `margin absent or
-    constant` means look again.
+    The distinguishing evidence is the MARGIN, not the shortfall: a spec that
+    is WIRED produces a finite margin on every valid step even when its
+    shortfall is zero, because the margin is computed and merely happens to be
+    positive. An UNWIRED spec has no margin at all. So `shortfall == 0
+    everywhere` plus `margin present and varying` means correctly free;
+    `margin absent or constant` means look again.
+
+    **A THIRD CASE, and Call 1 is what created it.** `saturation` and
+    `tail_saturation` used to be a category this function had no name for:
+    wired, and structurally unable to be VIOLATED, because a triode design was
+    rejected as invalid before the reward saw it. Under Call 1 that is no
+    longer true — a triode design is now HEADROOM_ONLY and IS scored on those
+    two margins — so their violations show up in `n_headroom_violated`, which
+    counts the graded band rather than the infeasible one. A zero in
+    `n_violated` beside a non-zero `n_headroom_violated` is the correct and
+    expected shape, not a wiring bug.
     """
     out = {}
+    headroom_rows = [r for r in records
+                     if getattr(r, "verdict", "") == "headroom_only"]
     for name in specs:
         sf = [r.shortfalls[name] for r in records
               if r.valid and name in r.shortfalls]
         mg = [r.margins[name] for r in records
               if r.valid and name in r.margins]
+        hv = sum(1 for r in headroom_rows
+                 if name in r.margins and r.margins[name] <= 0.0)
         if not sf:
             out[name] = {"n": 0, "wired": False,
                          "note": "NO ROWS -- the spec is not wired at all"}
@@ -663,6 +760,10 @@ def _shortfall_stats(records, specs) -> dict:
         out[name] = {
             "n": int(arr.size),
             "n_violated": n_pos,
+            # Violations that landed in the GRADED headroom band rather than
+            # the infeasible one. Only `saturation`/`tail_saturation` can be
+            # non-zero here, by construction.
+            "n_headroom_violated": int(hv),
             "frac_violated": float(n_pos / arr.size),
             "shortfall_max": float(arr.max()),
             "shortfall_mean": float(arr.mean()),
@@ -670,12 +771,22 @@ def _shortfall_stats(records, specs) -> dict:
             "margin_min": float(marr.min()), "margin_max": float(marr.max()),
             "margin_spread": float(marr.max() - marr.min()),
             "wired": bool(marr.max() != marr.min() or n_pos > 0),
-            "note": ("binds" if n_pos else
-                     ("correctly free: margin varies over "
-                      f"{marr.min():+.4g}..{marr.max():+.4g} and never goes "
-                      f"negative"
-                      if marr.max() != marr.min() else
-                      "SUSPECT: shortfall zero AND margin constant -- check wiring")),
+            "note": (
+                "binds" if n_pos else
+                # A zero here beside a non-zero headroom count is NOT "free":
+                # the violations exist, they were just routed to the graded
+                # band because a triode design is HEADROOM_ONLY (Call 1).
+                # Calling that "correctly free" would report a constraint that
+                # binds 18 times as one that never binds at all.
+                (f"BINDS VIA THE GRADED BAND: 0 violations among valid rows, "
+                 f"but {hv} in the headroom band. Violating this spec makes a "
+                 f"design HEADROOM_ONLY, so it can never appear as an "
+                 f"infeasible shortfall -- by construction, not by luck"
+                 if hv else
+                 (f"correctly free: margin varies over "
+                  f"{marr.min():+.4g}..{marr.max():+.4g} and never goes negative"
+                  if marr.max() != marr.min() else
+                  "SUSPECT: shortfall zero AND margin constant -- check wiring"))),
         }
     return out
 
@@ -705,6 +816,12 @@ def print_run(summary: dict, reward_name: str) -> None:
     print(f"    simulations per hour    {s['spice_calls'] / hrs:,.0f}")
     print()
     print("  INVALID-EVALUATION RATE (6d)")
+    print("    'invalid' means the MEASUREMENT cannot be believed. A converged")
+    print("    .op on a device in triode is NOT one of those -- it is a")
+    print("    trustworthy measurement of a bad circuit, graded separately.")
+    print(f"    headroom-only (graded, .op good, in triode)  "
+          f"{100 * s.get('headroom_rate', 0.0):6.2f}%  "
+          f"({s.get('n_headroom', 0)} evaluations)")
     print(f"    overall     {100 * s['invalid_rate']:6.2f}%")
     print(f"    first half  {100 * s['invalid_first_half']:6.2f}%")
     print(f"    second half {100 * s['invalid_second_half']:6.2f}%   "
@@ -735,9 +852,11 @@ def print_run(summary: dict, reward_name: str) -> None:
         if st["n"] == 0:
             print(f"    {name:<18s} {st['note']}")
             continue
+        hv = st.get("n_headroom_violated", 0)
         print(f"    {name:<18s} violated {st['n_violated']:>4}/{st['n']:<4} "
               f"({100 * st['frac_violated']:5.1f}%)  max {st['shortfall_max']:6.3f}  "
-              f"mean {st['shortfall_mean']:6.3f}")
+              f"mean {st['shortfall_mean']:6.3f}"
+              + (f"   +{hv} in the graded band" if hv else ""))
         print(f"    {'':<18s}   {st['note']}")
     print()
 
@@ -754,22 +873,59 @@ def _one_task(u_list):
     return (ev.valid, b.calls, b.seconds)
 
 
-def parallel_throughput(n_tasks: int = 24, worker_counts: Sequence[int] = (1, 2, 4, 8, 11),
-                        seed: int = 20260807) -> dict:
-    """§6i. Measure the speedup curve, against G48's measured 3.2x at 11 cores.
+def parallel_throughput(n_tasks: int = 24,
+                        worker_counts: Sequence[int] = (1, 2, 4, 8, 11),
+                        seed: int = 20260807,
+                        randomise: bool = True,
+                        control: bool = True,
+                        warmup: bool = True) -> dict:
+    """sec 6i. The speedup curve, against G48's measured 3.18x at 11 cores.
 
-    G48 measured that on the NFET-ONLY library at ~318 ms serial. This run uses
-    the EXTENDED library at ~4x that, so the arithmetic prediction is that the
-    curve improves: a longer compute phase per process amortises the same
-    process-launch and disk contention over more work. Whether it does is the
-    measurement.
+    **THIS FUNCTION IS ORDER-SAFE BY CONSTRUCTION, AND IT DID NOT USED TO BE.**
+    Run with the configurations in ascending order it reported **4.39x at 11
+    workers -- BETTER than G48's 3.18x** -- and the explanatory sentence was
+    already written ("the extended library's longer compute phase amortises
+    process launch better"). It was an artifact: the 1-worker pass ran FIRST,
+    on a cold OS file cache, and paid to read the PDK include tree from disk.
+    Every later pass hit a warm cache. Reversing the order dropped the serial
+    baseline **2.7x** and turned the answer into 2.64x at 8 workers with 11
+    SLOWER than 8 -- i.e. the extended library scales WORSE, not better (G71).
+
+    **The tell was in the table: 2 workers reported 2.55x.** A super-linear
+    speedup from two processes is not physics, so the BASELINE was wrong rather
+    than the parallelism. That is the transferable habit: look for the
+    IMPOSSIBLE number, not the disappointing one.
+
+    THREE defences, all on by default, and the third was added because the
+    first two were NOT ENOUGH:
+
+    * `warmup` runs one pass and **throws it away** before any measurement.
+      This is the one that actually fixes it. Measured: with randomisation and
+      a control but no warm-up, on a completely idle machine, the control still
+      came back at **1.60x** — the 8-worker configuration measured 2497 ms/task
+      when it ran first and 1558 ms/task when re-run last. **The first
+      configuration always pays**, whichever one it is, because the penalty is
+      the OS file cache warming on the PDK include tree rather than a competing
+      process.
+    * `randomise` shuffles the configuration order. Necessary but NOT
+      sufficient: it stops the penalty from always landing on the same
+      configuration, which would make it look like a property of that
+      configuration, but it does not remove it.
+    * `control` re-runs the FIRST configuration again at the END and reports
+      both. This is the DETECTOR, and it is what caught the above. If the two
+      disagree the sweep is contaminated and the function says so rather than
+      leaving it to be noticed.
     """
     from concurrent.futures import ProcessPoolExecutor
 
     rng = np.random.default_rng(seed)
     tasks = [rng.uniform(0.0, 1.0, N_ACTIONS).tolist() for _ in range(n_tasks)]
-    out = []
-    for w in worker_counts:
+
+    order = list(worker_counts)
+    if randomise:
+        rng.shuffle(order)
+
+    def _measure(w: int) -> dict:
         t0 = time.perf_counter()
         if w <= 1:
             res = [_one_task(t) for t in tasks]
@@ -777,13 +933,42 @@ def parallel_throughput(n_tasks: int = 24, worker_counts: Sequence[int] = (1, 2,
             with ProcessPoolExecutor(max_workers=w) as ex:
                 res = list(ex.map(_one_task, tasks, chunksize=1))
         dt = time.perf_counter() - t0
-        out.append({"workers": w, "wall_s": dt, "ms_per_task": 1e3 * dt / n_tasks,
-                    "n_valid": sum(1 for r in res if r[0]),
-                    "spice_calls": sum(r[1] for r in res)})
-    base = out[0]["ms_per_task"]
-    for r in out:
+        return {"workers": w, "wall_s": dt, "ms_per_task": 1e3 * dt / n_tasks,
+                "n_valid": sum(1 for r in res if r[0]),
+                "spice_calls": sum(r[1] for r in res)}
+
+    # THE WARM-UP, discarded. Without it the first measured configuration pays
+    # the cold-cache penalty and reports ~1.6x slow -- measured, on an idle
+    # machine, with randomisation and a control already in place.
+    warm = None
+    if warmup:
+        warm = _measure(order[0])
+        warm["discarded"] = True
+
+    measured = [_measure(w) for w in order]
+    for i, row in enumerate(measured):
+        row["position"] = i
+
+    ctrl = None
+    if control and measured:
+        ctrl = _measure(order[0])
+        ctrl["position"] = len(measured)
+        first = measured[0]["ms_per_task"]
+        ratio = first / ctrl["ms_per_task"] if ctrl["ms_per_task"] else float("nan")
+        ctrl["first_pass_ms_per_task"] = first
+        ctrl["ratio_to_first_pass"] = ratio
+        # A cold-cache penalty shows up here as a ratio well above 1. The
+        # threshold is deliberately loose: this flags CONTAMINATION, it does not
+        # measure it.
+        ctrl["contaminated"] = bool(ratio > 1.25 or ratio < 0.8)
+
+    rows = sorted(measured, key=lambda r: r["workers"])
+    base = next(r["ms_per_task"] for r in rows if r["workers"] == min(
+        r2["workers"] for r2 in rows))
+    for r in rows:
         r["speedup"] = base / r["ms_per_task"]
-    return {"n_tasks": n_tasks, "rows": out}
+    return {"n_tasks": n_tasks, "rows": rows, "order": order,
+            "randomised": randomise, "control": ctrl, "warmup": warm}
 
 
 def print_parallel(res: dict) -> None:
@@ -791,12 +976,27 @@ def print_parallel(res: dict) -> None:
     print("6i PARALLEL THROUGHPUT -- against G48's 3.2x at 11 cores")
     print("=" * 78)
     print(f"  {res['n_tasks']} identical-cost tasks, real passives, extended library")
+    print(f"  configuration order: {res['order']}"
+          f"{'  (RANDOMISED -- G71)' if res.get('randomised') else '  (FIXED)'}")
+    w = res.get("warmup")
+    if w:
+        print(f"  warm-up: {w['workers']} workers, {w['ms_per_task']:.1f} ms/task, "
+              f"DISCARDED (the first pass always pays the cold file cache)")
     print()
-    print(f"  {'workers':>8} {'ms/task':>10} {'speedup':>9} {'valid':>7}")
-    print("  " + "-" * 38)
+    print(f"  {'workers':>8} {'ms/task':>10} {'speedup':>9} {'valid':>7} {'pos':>5}")
+    print("  " + "-" * 46)
     for r in res["rows"]:
         print(f"  {r['workers']:>8} {r['ms_per_task']:>10.1f} "
-              f"{r['speedup']:>9.2f}x {r['n_valid']:>7}")
+              f"{r['speedup']:>9.2f}x {r['n_valid']:>7} {r['position']:>5}")
+    print("  " + "-" * 46)
+    c = res.get("control")
+    if c:
+        verdict = ("CONTAMINATED -- the sweep measured its own ORDER (G71)"
+                   if c["contaminated"] else "clean")
+        print(f"  CONTROL: {c['workers']} workers re-run LAST -> "
+              f"{c['ms_per_task']:.1f} ms/task against the same configuration's "
+              f"first pass at {c['first_pass_ms_per_task']:.1f}")
+        print(f"           ratio {c['ratio_to_first_pass']:.2f}x  -> {verdict}")
     print()
     print("  G48 measured, on the NFET-ONLY library: 318 / 179 / 150 / 106 / 100")
     print("  ms/task at 1 / 2 / 4 / 8 / 11 workers -- 3.18x, flat past 8.")

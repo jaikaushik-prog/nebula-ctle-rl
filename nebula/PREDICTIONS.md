@@ -695,3 +695,74 @@ with the peaking and peak frequency left as independent checks (residuals
 +0.094-0.232 dB against §5.3b's 0.5 dB limit). I should have predicted that the
 analytic model would need checking before being integrated; I did not, and the
 first version of the compression table was wrong because of it.
+
+---
+
+## 5. The `RL` bottom-plate parasitic COMPRESSES the load range, and may help
+
+**Written:** 2026-08-07, session 17, **before** the `cl` budget is re-derived
+and before the load screen is re-run with drawn passives. Registered by the
+owner in the session-17 review; recorded here in their words and reasoning
+rather than paraphrased, because the prediction is theirs.
+
+**Experiment it applies to:** `PASSIVES.md` §6 item 4 — fold the `res_po`
+bottom-plate parasitic into `CL_RANGE.md`'s budget, then re-run
+`s9_yield.py`'s load screen against the corrected range.
+
+### The state of play that makes this worth predicting
+
+Session 17 measured (G66) that drawn passives move `f_peak` by up to **0.1329
+octaves**, against the **0.12 octaves of centring slack** that made design 432
+the sole load-and-corner-robust survivor. The obvious reading is that this is
+bad news: a systematic shift larger than the slack should eliminate the one
+design the project has.
+
+**The prediction says the opposite, and the mechanism is the interesting part.**
+
+### The prediction
+
+> *"The parasitic may help. It adds a floor to both ends of the load range, and
+> the range's damage comes from its RATIO, not its width. If it adds ~10 fF,
+> 13.64–78 fF becomes roughly 24–88 fF — 3.7× instead of 5.72×. It won't be a
+> constant offset since it scales with RL geometry, but the direction is
+> compression, and compression is what design 432 needed."*
+
+The reasoning rests on what session 12b actually measured: the load range
+costs **99.4 %** of the corner-robust population, and it does so because of a
+**5.72× ratio**, not because of an absolute capacitance. `f_peak` moves as
+`cl^-0.349` (measured, session 12b), so what a design has to survive is the
+ratio between the ends. **A parasitic that is present at BOTH ends raises both,
+and a floor raises the small end proportionally more.** 13.64 → 23.6 is 1.73×;
+78.0 → 88.0 is 1.13×.
+
+### What would falsify the reasoning
+
+1. **The parasitic is not roughly constant across the range.** It scales with
+   the `RL` geometry, and G67 measured `to_geometry` choosing geometries that
+   vary by 15× in area across a 0.16 % resistance span — so "adds ~10 fF" may
+   be "adds 1.4 to 24.3 fF depending on which resistor the quantiser picked",
+   which is the spread session 17 actually measured. If the parasitic tracks
+   the design rather than sitting under it, it is not a floor and the ratio
+   does not compress.
+2. **The ratio compresses but the yield does not improve.** Session 12b's
+   mechanism was that **146 of 200 designs (73 %) LOSE their interior peak
+   entirely** across the load range, rather than moving out of the window. A
+   narrower ratio does not obviously rescue a design whose peak is
+   extinguished, and if the 73 % is the binding effect then compression buys
+   little.
+3. **The shift moves `f_peak` out of the window before the ratio helps.** The
+   parasitic lowers `f_p2` and pulls `f_peak` down at BOTH ends. Design 432
+   sits at −0.525 octaves relative to Nyquist, inside the window; a systematic
+   −0.13 octave shift on top of a compressed range could still put it outside.
+
+### The number to check it against
+
+`cl_lo` = 13.64 fF and `cl_hi` = 78.04 fF today, ratio **5.72×**. The
+prediction is a ratio **materially below 5.72×** — nominally ~3.7× — and a
+corner-and-load-robust count **at or above** session 12b's 1/1890.
+
+### Outcome
+
+*Not yet run.* Blocked behind `PASSIVES.md` §6 item 6 (the R/C corner-file
+trim), per the session-17 re-run ordering in HANDOFF §8: re-running the screen
+before the `cl` range is corrected would re-run it with the wrong range.

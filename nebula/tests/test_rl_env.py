@@ -30,7 +30,7 @@ from nebula.rl.contract import (
     sizing_from_u,
 )
 from nebula.rl.env import CtleSizingEnv, EnvConfig
-from nebula.rl.evaluator import EvalResult, SpiceBudget
+from nebula.rl.evaluator import EvalResult, SpiceBudget, Verdict
 
 def _have_ngspice() -> bool:
     """Ask the runner, not PATH.
@@ -60,14 +60,36 @@ def _good(**over):
     return m
 
 
+def _headroom(pair=0.26, tail=0.33) -> dict:
+    return {"pair_margin_v": pair, "tail_margin_v": tail,
+            "v_src_dc": 0.465, "v_out_dc": 0.881,
+            "i_supply_a": 3.3e-3, "power_w": 6.0e-3}
+
+
 def _ok(meas=None, did="d0") -> EvalResult:
-    return EvalResult(valid=True, meas=meas or _good(), raw={"gm": 0.012},
+    m = meas or _good()
+    return EvalResult(verdict=Verdict.VALID, meas=m,
+                      headroom=_headroom(m["pair_margin_v"], m["tail_margin_v"]),
+                      raw={"gm": 0.012},
                       design_id=did, geometry_tag="g", n_spice=1, seconds=0.01)
 
 
-def _bad(reason="tail is in TRIODE: vds_tail 0.0 V <= vdsat_tail 0.2 V") -> EvalResult:
+def _bad(reason="ngspice: singular matrix") -> EvalResult:
+    """INVALID: nothing trustworthy. Note the default reason is deliberately
+    NOT a triode one any more — a triode design is HEADROOM_ONLY under Call 1,
+    and using it here would have made every 'invalid' test secretly test the
+    graded band instead."""
     return EvalResult.invalid(reason, n_spice=1, seconds=0.01,
                               design_id_="dX", geometry_tag="g")
+
+
+def _triode(pair=-0.05, tail=0.33) -> EvalResult:
+    """HEADROOM_ONLY: `.op` converged, a device is out of saturation."""
+    return EvalResult(verdict=Verdict.HEADROOM_ONLY,
+                      reason=f"out of saturation (input pair {pair * 1e3:+.1f} mV)",
+                      meas=None, headroom=_headroom(pair, tail),
+                      raw={"vds": 0.05}, design_id="dT", geometry_tag="g",
+                      n_spice=1, seconds=0.01)
 
 
 class _Script:

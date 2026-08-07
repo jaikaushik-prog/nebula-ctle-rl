@@ -182,13 +182,52 @@ def feasible_bonus(n_specs: int) -> float:
     return float(n_specs) + 1.0
 
 
-#: The reward for an evaluation that may not become an observation (§6d).
-#: **Strictly below every valid score, and only just.** The worst valid score
-#: is `-N` (every spec maximally violated), so `-(N + 1)` is one unit below it.
-#: Making it more negative would be a tuned penalty; making it equal would let
-#: the policy prefer a broken circuit to a bad one.
-def invalid_reward(n_specs: int) -> float:
+#: Top of the HEADROOM band: the reward an out-of-saturation design gets when
+#: it is only infinitesimally into triode. **Strictly below the worst
+#: infeasible score, which is `-N`.**
+def headroom_band_top(n_specs: int) -> float:
     return -(float(n_specs) + 1.0)
+
+
+#: The reward for an evaluation nothing can be believed from (§6d).
+#: **Strictly below the whole headroom band**, whose floor is
+#: `headroom_band_top - 1`. Every boundary here is derived from `N`; none is a
+#: tuned number, and changing `N` moves all four together.
+def invalid_reward(n_specs: int) -> float:
+    return -(float(n_specs) + 3.0)
+
+
+#: Scale on which "how far into triode" is measured, in volts of `vds - vdsat`.
+#: Reuses `TOL["saturation"]`, so the graded band and the feasible branch's
+#: margin term speak the SAME unit — a design 100 mV into triode and one with
+#: 100 mV of margin are one tolerance either side of the same boundary.
+def headroom_reward(worst_margin_v: float, n_specs: int) -> float:
+    """The §Call-1 graded band. Ordered by `vds - vdsat`, strictly.
+
+    `worst_margin_v` is the MORE NEGATIVE of the pair and tail margins — "how
+    far into triode is the worse device". It must be <= 0; a positive value
+    means the caller has misrouted a saturated design into this branch.
+
+        r = headroom_band_top - h / (1 + h),   h = -worst_margin / tol >= 0
+
+    **The bounded map, not the clip used everywhere else, and the reason is the
+    whole point of the band.** `clip(h, 0, 1)` appears in the infeasible branch
+    so that one catastrophic spec cannot drown out the others in a SUM. Here
+    there is no sum — this is a single ordering quantity — so a clip buys
+    nothing and costs exactly what the band exists to provide: a design 500 mV
+    into triode would score identically to one 50 mV in, and the policy would
+    have no direction out of the deep end. `h/(1+h)` is strictly monotone on
+    [0, inf), maps into [0, 1), introduces no new constant, and keeps the band
+    inside `(top - 1, top]`.
+    """
+    if worst_margin_v > 0.0:
+        raise ValueError(
+            f"headroom_reward got a POSITIVE margin ({worst_margin_v:+.4g} V). "
+            f"A saturated design belongs in the feasible/infeasible bands; "
+            f"routing it here would score a good circuit below every bad one."
+        )
+    h = -float(worst_margin_v) / TOL["saturation"]
+    return headroom_band_top(n_specs) - h / (1.0 + h)
 
 
 #: Reporting axis rather than a hidden setting, in the spirit of
@@ -258,6 +297,11 @@ class RewardBreakdown:
     reward: float
     feasible: bool
     valid: bool
+    #: True for the CALL 1 band: `.op` trustworthy, device in triode, AC spec
+    #: set dropped. Distinct from `valid` (which is False here too) because the
+    #: two need opposite handling — this one carries a graded score and a real
+    #: headroom margin, the other carries nothing.
+    headroom_only: bool
     spec_reward: float
     cost_penalty: float
     margins: dict
@@ -266,6 +310,10 @@ class RewardBreakdown:
     n_violated: int
 
     def summary(self) -> str:
+        if self.headroom_only:
+            return (f"HEADROOM-ONLY r={self.reward:+.4f} "
+                    f"(worst {self.worst_spec} "
+                    f"{self.margins[self.worst_spec] * 1e3:+.1f} mV into triode)")
         if not self.valid:
             return f"INVALID r={self.reward:+.4f}"
         if self.feasible:
@@ -283,28 +331,61 @@ def reward(
     lambda_cost: float = 0.0,
     sim_cost: float = 0.0,
     target_peaking_db: Optional[float] = None,
+    headroom: Optional[Mapping[str, float]] = None,
 ) -> RewardBreakdown:
-    """The §6h scalar plus its full decomposition.
+    """The §6h scalar plus its full decomposition. FOUR bands, exactly ordered.
 
-    `meas=None` means the evaluation was INVALID (§6d) and the reward is the
-    floor. It is a distinct branch, not a shortfall of 1.0 everywhere, so an
-    invalid result can never be confused with a design that merely misses
-    everything.
+        feasible          >= B = N + 1        every spec met; seek margin
+        infeasible        [-N, 0)             gradient on EVERY violation
+        headroom-only     (-(N+2), -(N+1)]    .op good, device in triode
+        invalid           -(N+3)              nothing trustworthy
 
-    `lambda_cost * sim_cost` is subtracted from BOTH branches. It is 0.0 by
-    default: for this smoke run the cost per step is constant (one SPICE call,
-    one corner), so a cost term would be a constant offset that changes no
-    ranking and only obscures the reward curve. The parameter exists because
-    the term becomes real the moment the fidelity scheduler makes cost vary
-    per step, and it should not be introduced later as a new idea.
+    The bands cannot overlap and the separation is arithmetic rather than
+    tuned: the worst infeasible score is `-N` because each of `N` shortfalls
+    is clipped to 1, the headroom band is bounded by construction, and every
+    boundary is a function of `N` alone.
+
+    Three ways to enter the non-scoring bands, and they are DIFFERENT:
+
+    * `meas=None, headroom=<dict>` — `.op` converged, a device is out of
+      saturation. **Graded**, ordered by `vds - vdsat`. This is Call 1.
+    * `meas=None, headroom=None` — nothing is trustworthy. Floor, no gradient.
+    * `meas=<dict>` — normal scoring.
+
+    `lambda_cost * sim_cost` is subtracted from every branch, invalid included;
+    otherwise crashing becomes cheaper than simulating. It is 0.0 by default:
+    for this smoke run cost per step is constant (one SPICE call, one corner),
+    so the term would be a constant offset that changes no ranking and only
+    obscures the curve. It exists because the term becomes real the moment a
+    fidelity scheduler makes cost vary per step, and it should not appear later
+    as a new idea.
     """
     specs = tuple(specs)
     n = len(specs)
     penalty = float(lambda_cost) * float(sim_cost)
 
+    if meas is None and headroom is not None:
+        # CALL 1: .op converged, the device is in triode. The AC spec set is
+        # gone by construction (`meas is None`), so nothing can score it; what
+        # survives is the DC headroom, which is what we grade.
+        worst = min(float(headroom["pair_margin_v"]),
+                    float(headroom["tail_margin_v"]))
+        spec_r = headroom_reward(worst, n)
+        m = {"saturation": float(headroom["pair_margin_v"]),
+             "tail_saturation": float(headroom["tail_margin_v"])}
+        return RewardBreakdown(
+            reward=spec_r - penalty, feasible=False, valid=False,
+            headroom_only=True, spec_reward=spec_r, cost_penalty=penalty,
+            margins=m, shortfalls={k: -v / TOL[k] for k, v in m.items()},
+            worst_spec=("saturation"
+                        if m["saturation"] <= m["tail_saturation"]
+                        else "tail_saturation"),
+            n_violated=sum(1 for v in m.values() if v <= 0.0))
+
     if meas is None:
         r = invalid_reward(n) - penalty
         return RewardBreakdown(reward=r, feasible=False, valid=False,
+                               headroom_only=False,
                                spec_reward=invalid_reward(n),
                                cost_penalty=penalty, margins={}, shortfalls={},
                                worst_spec=None, n_violated=n)
@@ -319,7 +400,7 @@ def reward(
         worst = max(s, key=lambda k: s[k])
         return RewardBreakdown(
             reward=spec_r - penalty, feasible=False, valid=True,
-            spec_reward=spec_r, cost_penalty=penalty,
+            headroom_only=False, spec_reward=spec_r, cost_penalty=penalty,
             margins=m, shortfalls=s, worst_spec=worst,
             n_violated=len(violated))
 
@@ -328,7 +409,7 @@ def reward(
     spec_r = feasible_bonus(n) + scaled[worst]
     return RewardBreakdown(
         reward=spec_r - penalty, feasible=True, valid=True,
-        spec_reward=spec_r, cost_penalty=penalty,
+        headroom_only=False, spec_reward=spec_r, cost_penalty=penalty,
         margins=m, shortfalls=s, worst_spec=worst, n_violated=0)
 
 
@@ -347,7 +428,8 @@ def reward_v1(meas: Optional[Mapping[str, float]],
 __all__: Sequence[str] = (
     "Tol", "TOLERANCES", "TOL", "SPEC_NAMES", "N_SPECS",
     "V0_SPECS", "V1_SPECS", "TOLERANCE_SCAN",
-    "feasible_bonus", "invalid_reward",
+    "feasible_bonus", "invalid_reward", "headroom_band_top",
+    "headroom_reward",
     "margins", "shortfalls", "RewardBreakdown",
     "reward", "reward_v0", "reward_v1",
 )
