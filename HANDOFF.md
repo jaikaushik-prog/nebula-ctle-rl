@@ -1301,10 +1301,20 @@ Plus: git init, .gitignore, 28 tests, Wilson-bound BER reporting.
   would either be rejected as unrelated or, if forced, replace a repo whose
   history you have not audited. Decide deliberately (new remote vs. rewrite of
   the old one); see G41.
-- **G41 — (repo) `git init` was run on 2026-08-04; the history starts clean,
-  and there is NO remote.** One commit on `main`, 102 files. The check that
-  makes the claim real is two commands, and they are the ones to re-run before
-  any future `git add -A`:
+- **G41 — (repo) `git init` was run on 2026-08-04 and the history starts
+  clean.** One initial commit on `main`, 102 files.
+  **AMENDED 2026-08-07: there IS a remote now** —
+  `origin = https://github.com/jaikaushik-prog/nebula-ctle-rl.git`, a **NEW,
+  PRIVATE** repo built from this clean history, not the old
+  `serdes-dsp-framework` one (which is an unrelated history and still carries
+  the PDFs in its baseline commit — see G1 as amended). Credentials are cached
+  in Windows Credential Manager, so `git push` works; `gh` is installed but
+  **not authenticated**, and authenticating it is interactive and the owner's.
+  **Before any push, re-run the two checks below**, plus
+  `curl -s -o /dev/null -w "%{http_code}" https://api.github.com/repos/jaikaushik-prog/nebula-ctle-rl`
+  — **404 means still private, 200 means it went public and G1 is violated.**
+  The checks that make the clean-history claim real are two commands, and they
+  are the ones to re-run before any future `git add -A`:
 
         git diff --cached --name-only | grep -iE '\.(pdf|docx)$'   # must be empty
         git status --ignored --porcelain | grep '^!!'              # what was skipped
@@ -1986,11 +1996,15 @@ Plus: git init, .gitignore, 28 tests, Wilson-bound BER reporting.
   numpy 2.2.6, scipy 1.15.3, pytest 9.1.1, matplotlib, pandas. No scikit-rf,
   no torch verified in current env (ml_equalizer imports torch — untested).
 - git 2.52 for Windows. **This checkout: `main`, initial commit 2026-08-04,
-  NO remote configured** (session 10a / G41). The private GitHub repo
+  pushing to `origin` = https://github.com/jaikaushik-prog/nebula-ctle-rl.git —
+  a NEW, PRIVATE repo built from this clean history** (the decision session 14b
+  recorded, now carried out; verified private on 2026-08-07 and last pushed at
+  `4b63021`). The older
   https://github.com/jaikaushik-prog/serdes-dsp-framework.git still exists and
   still has the PDFs in its baseline commit; it is an **unrelated history** to
-  this one and wiring them together is a decision, not a chore — see G1 as
-  amended. Credentials for `jaikaushik-prog` are in Windows Credential Manager.
+  this one and must not be pushed to — see G1 as amended and G41.
+  Credentials for `jaikaushik-prog` are in Windows Credential Manager, so
+  `git push` works non-interactively; `gh` is installed but NOT authenticated.
   Commit identity comes from the global config (G12); never pass `-c user.*`.
 - Cadence/Xcelium NOT available on this machine (Phase 4 blocked on access
   or open-source simulators).
