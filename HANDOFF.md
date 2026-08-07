@@ -3580,3 +3580,80 @@ the ladder projection are NOT included, so it is a lower bound.
 **Not done, and listed in PASSIVES.md §6 in priority order:** 4d (the
 regression gate — nothing downstream is trustworthy until it passes), 4e, the
 4f sweep, 4g's fold into `CL_RANGE.md`, 4h's real budget.
+
+### 2026-08-07 — Session 16a (the channel becomes a family; pre-registration)
+
+**Tests: 725 -> 1007** (+282: `test_channel_model.py` 133,
+`test_cursors.py` 157, plus rewrites in `test_link_interface.py`), 9 deselected,
+4 min 38 s. **This commit is the PRE-REGISTRATION** — code, tests and
+`PREDICTIONS.md` entry 4, committed before `channel_family.py` runs the full
+grid and before `--compression` runs at all.
+
+**What it retires.** `link/config.py` carried
+`<the invented DC-loss constant> = 1.0` — a placeholder whose own docstring
+admitted it had no measured provenance — and `BOUNDS_REDERIVATION.md` §2 says
+in a blockquote that **that constant, not the circuit, decided the compression
+verdict**. It is **deleted, not re-valued**, and the symbol is gone from every
+executable file in the tree (a test greps for it, and assembles the identifier
+from pieces so it does not match itself).
+
+**The constant's own name encoded the mistake.** For a lossy transmission line
+the insertion loss at DC is essentially zero. What is non-zero is the loss at
+**Nyquist**, and the correct low-frequency correction is not a channel property
+at all: it is the transmitter's **specified -3.5 dB de-emphasis**.
+
+**What replaces it, and where it comes from.** There is no PCIe Gen2 reference
+receiver to copy — Gen1/Gen2 specify TX de-emphasis only, and receiver CTLE/DFE
+enter at Gen3 — so the channel is ours to define. Industry practice sets CTLE
+boost at Nyquist ~= channel IL at Nyquist, so **S3's own 3-12 dB tunable range
+implies a channel family spanning 3-12 dB of IL at 2.5 GHz**. The specification
+we were given defines the channel we have to equalise; that is a defensible
+construction and an invented scalar is not.
+
+**Three new modules.**
+- `link/channel.py` — `IL_dB(f) = A*sqrt(f) + B*f`, parameterised by
+  **(IL at Nyquist, skin/dielectric split)** with IL at Nyquist as the primary
+  constructor argument and a first-class attribute (it is the conditioning
+  variable the RL layer will index on — design note only, no RL plumbing).
+  **Minimum-phase reconstruction** via the real-cepstrum fold of `ln|H|`, then
+  **gated** on pre-`t=0` energy, passivity and monotonicity. Plus `Stackup`
+  (loss -> equivalent length, never the other way), an optional stated
+  two-reflection probe, and a Touchstone ingestion path.
+- `link/tx.py` — the 2-tap FIR at the mandated -3.5 dB (and the -6 dB option),
+  normalised so the TRANSITION bit carries full swing. It supplies **exactly**
+  `-de_emphasis_db` of tilt at Nyquist, so `equalisation_burden_db =
+  channel IL - TX tilt` is an exact subtraction, not an approximation.
+- `link/cursors.py` — pulse response -> UI sampling at the phase maximising
+  `h0` -> `h_-2..h_4` -> residual ISI after an ideal 1-tap DFE -> eye. Plus a
+  **closed-form CTLE peak location**: a peak exists iff
+  `1/fz^2 > 1/fp1^2 + 1/fp2^2`, which is session 9c's measured "f_z must sit
+  below f_p2 or there is no peak at all" in exact form.
+
+**Two numerical findings that are the reason to trust the rest.**
+1. **The causality threshold was stated first and then MET by lengthening the
+   grid, not by moving the threshold.** Pre-`t=0` energy falls as a clean power
+   law with buffer length (8.7e-5 / 1.3e-5 / 1.8e-6 / 2.5e-7 / 3.5e-8 at
+   n_fft = 4096..65536), which is how you tell tail ALIASING from a broken
+   phase reconstruction — a broken one would sit at a floor. `DEFAULT_N_FFT` is
+   32768 (512 UI) because that is the first power of two clearing 1e-6
+   everywhere. **The zero-phase control puts 48.5% of the energy at t < 0** and
+   raises nothing on its own, which is exactly the failure this gate exists for.
+2. **Two hand-checkable references pin the whole chain.** A lossless channel
+   reproduces the TX pulse to 1e-12 (`h0 = c0*A`, `h1 = c1*A`, nothing else);
+   and **the UI-spaced cursors sum to the transmitter's long-run level to seven
+   figures** for every family member, which is the physical statement that
+   replaced the deleted constant, checked end to end.
+
+**Also landed:** `LinkConfig` gains `channel`, `tx`, `tx_tilt_db` and
+`equalisation_burden_db`; `channel_loss_db_at_dc` is now a derived property
+returning **exactly 0.0**; `link/mock.py` equalises the BURDEN rather than the
+raw channel tilt; the `link_cfg` fixture moved 8 -> 12 dB, because with 3.5 dB
+of the work done by the transmitter an 8 dB channel leaves a badly
+OVER-equalised link that the bridge tests were not written to exercise.
+
+**Not run yet, by design:** the 21-member grid and the ngspice compression
+re-run. Predictions are in `PREDICTIONS.md` entry 4 — headline **the eye stays
+open across the whole 3-12 dB family, so a 1-tap DFE is sufficient**, plus
+eight supporting predictions and four falsification conditions. Pilot data seen
+while checking the numerics is declared in that entry rather than presented
+afterwards as foresight.

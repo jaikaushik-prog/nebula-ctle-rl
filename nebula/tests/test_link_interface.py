@@ -63,16 +63,21 @@ def boost_at_nyquist_db(dev: DeviceResult) -> float:
 
 
 def cfg_with_tilt(dev: DeviceResult, tilt_offset_db: float, **kw) -> LinkConfig:
-    """A LinkConfig whose channel TILT is the device's boost + `tilt_offset_db`.
+    """A LinkConfig whose CTLE BURDEN is the device's boost + `tilt_offset_db`.
 
-    The equalisation tests are written against tilt, not absolute loss,
-    because tilt is what the CTLE actually undoes. `tilt_offset_db=0` is a
-    perfectly matched channel; positive is under-equalised, negative is over.
+    The equalisation tests are written against the burden, not absolute loss,
+    because the burden is what the CTLE actually undoes. `tilt_offset_db=0` is
+    a perfectly matched channel; positive is under-equalised, negative is over.
+
+    `tx_de_emphasis_db` defaults to 0 HERE and nowhere else in the codebase.
+    These tests isolate the CTLE against the channel, and PCIe Gen2's mandated
+    -3.5 dB would otherwise shift every requested burden by 3.5 dB and clamp
+    against `il >= 0` at the over-equalised end. The de-emphasis subtraction
+    itself is tested directly in `TestTransmitterIsPartOfTheLink`.
     """
-    dc = kw.pop("channel_loss_db_at_dc", 1.0)
-    tilt = max(boost_at_nyquist_db(dev) + tilt_offset_db, 0.0)
-    return LinkConfig(channel_loss_db_at_nyquist=dc + tilt,
-                      channel_loss_db_at_dc=dc, **kw)
+    kw.setdefault("tx_de_emphasis_db", 0.0)
+    burden = max(boost_at_nyquist_db(dev) + tilt_offset_db, 0.0)
+    return LinkConfig(channel_loss_db_at_nyquist=burden, **kw)
 
 
 class TestProtocolConformance:
@@ -100,30 +105,49 @@ class TestLinkConfig:
         assert isinstance(LinkConfig.v_in_diff_pp_v, property)
 
     def test_low_frequency_amplitude_hand_computed(self):
-        # v_in_diff_pp_v is the LONG-RUN level, so it is set by the BROADBAND
-        # loss, not the loss at Nyquist. 0.8 V TX, 6.02 dB of DC loss ->
-        # factor of exactly 2 -> 0.4 V, regardless of what Nyquist does.
-        cfg = LinkConfig(channel_loss_db_at_nyquist=12.0,
-                         channel_loss_db_at_dc=20 * math.log10(2.0))
-        assert cfg.tx_swing_diff_pp_v == pytest.approx(0.8)
-        assert cfg.v_in_diff_pp_v == pytest.approx(0.4)
+        # v_in_diff_pp_v is the LONG-RUN level: the transmitter's DE-EMPHASISED
+        # level, attenuated by the channel at DC. The channel contributes
+        # exactly 0 dB there (A*sqrt(0) + B*0), so with de-emphasis switched
+        # off the long-run level IS the TX swing...
+        flat = LinkConfig(channel_loss_db_at_nyquist=12.0, tx_de_emphasis_db=0.0)
+        assert flat.tx_swing_diff_pp_v == pytest.approx(0.8)
+        assert flat.v_in_diff_pp_v == pytest.approx(0.8)
+        # ...and at exactly -6.0206 dB of de-emphasis it is halved, by hand.
+        half = LinkConfig(channel_loss_db_at_nyquist=12.0,
+                          tx_de_emphasis_db=-20 * math.log10(2.0))
+        assert half.v_in_diff_pp_v == pytest.approx(0.4)
 
     def test_nyquist_amplitude_hand_computed(self):
-        # The Nyquist content is attenuated by the FULL loss:
+        # The Nyquist content is attenuated by the FULL channel loss and NOT
+        # by the de-emphasis: the 2-tap FIR has unity gain at Nyquist by
+        # construction, because the transition bit carries full swing.
         # 0.8 V, 12.04 dB -> factor of exactly 4 -> 0.2 V.
-        cfg = LinkConfig(channel_loss_db_at_nyquist=40 * math.log10(2.0),
-                         channel_loss_db_at_dc=1.0)
+        cfg = LinkConfig(channel_loss_db_at_nyquist=40 * math.log10(2.0))
         assert cfg.v_in_nyquist_pp_v == pytest.approx(0.2)
+        assert cfg.tx.gain_at_nyquist == pytest.approx(1.0)
 
-    def test_tilt_is_what_the_ctle_equalises(self):
-        # The CTLE's boost is relative (|H(fny)|/|H(0)|), so what it undoes is
-        # the tilt. Comparing peaking against ABSOLUTE loss silently assumes a
-        # channel that is lossless at DC — which was a real bug here.
-        cfg = LinkConfig(channel_loss_db_at_nyquist=9.0, channel_loss_db_at_dc=1.0)
-        assert cfg.channel_tilt_db == pytest.approx(8.0)
+    def test_the_dc_loss_is_now_derived_and_is_exactly_zero(self):
+        # THE RETIRED CONSTANT. The invented 1.0 dB DC-loss placeholder had
+        # no provenance
+        # and decided every compression verdict this project published. It is
+        # deleted, not re-valued: a lossy transmission line's insertion loss at
+        # DC is A*sqrt(0) + B*0 = 0, so the model answers the question the
+        # constant was standing in for.
+        for il in (0.0, 3.0, 12.0):
+            for r in (0.0, 0.5, 1.0):
+                cfg = LinkConfig(channel_loss_db_at_nyquist=il,
+                                 channel_skin_fraction=r)
+                assert cfg.channel_loss_db_at_dc == 0.0
+                assert cfg.channel_tilt_db == pytest.approx(il)
+
+    def test_tilt_is_what_the_ctle_equalises_and_the_tx_supplies_some_of_it(self):
+        cfg = LinkConfig(channel_loss_db_at_nyquist=9.0)
+        assert cfg.channel_tilt_db == pytest.approx(9.0)
+        assert cfg.tx_tilt_db == pytest.approx(3.5)
+        assert cfg.equalisation_burden_db == pytest.approx(5.5)
 
     def test_a_lossless_channel_passes_the_tx_swing_through_unchanged(self):
-        cfg = LinkConfig(channel_loss_db_at_nyquist=0.0, channel_loss_db_at_dc=0.0)
+        cfg = LinkConfig(channel_loss_db_at_nyquist=0.0, tx_de_emphasis_db=0.0)
         assert cfg.v_in_diff_pp_v == pytest.approx(cfg.tx_swing_diff_pp_v)
         assert cfg.v_in_nyquist_pp_v == pytest.approx(cfg.tx_swing_diff_pp_v)
         assert cfg.channel_tilt_db == 0.0
@@ -131,23 +155,22 @@ class TestLinkConfig:
     def test_more_loss_shrinks_the_nyquist_content_not_the_dc_level(self):
         lo = LinkConfig(channel_loss_db_at_nyquist=3.0)
         hi = LinkConfig(channel_loss_db_at_nyquist=12.0)
-        # Broadband loss is unchanged, so the long-run level is unchanged...
+        # The channel is transparent at DC, so the long-run level is unchanged...
         assert hi.v_in_diff_pp_v == pytest.approx(lo.v_in_diff_pp_v)
         # ...and it is the Nyquist content that the extra loss eats.
         assert hi.v_in_nyquist_pp_v < lo.v_in_nyquist_pp_v
         assert hi.channel_tilt_db > lo.channel_tilt_db
 
-    def test_a_high_pass_channel_is_rejected(self):
-        with pytest.raises(ValueError, match="high-pass channel"):
-            LinkConfig(channel_loss_db_at_nyquist=1.0, channel_loss_db_at_dc=6.0)
-
-    def test_dc_loss_default_is_flagged_as_a_placeholder(self):
-        from nebula.link.config import CHANNEL_DC_LOSS_DB
-
-        # No measured provenance — a human replaces it, ideally with a real
-        # .s4p (HANDOFF §8 item 1), which would retire this parameterisation.
-        assert CHANNEL_DC_LOSS_DB == 1.0
-        assert LinkConfig(channel_loss_db_at_nyquist=8.0).channel_loss_db_at_dc == 1.0
+    def test_a_high_pass_channel_cannot_be_constructed_at_all(self):
+        # The old guard compared two configured loss numbers and rejected the
+        # inverted pair. It is gone because the question can no longer be
+        # asked: A*sqrt(f) + B*f with A, B >= 0 is monotone by construction.
+        # The surviving failure mode is an out-of-range split.
+        for il in (0.0, 3.0, 12.0):
+            cfg = LinkConfig(channel_loss_db_at_nyquist=il)
+            assert cfg.channel.passivity_report().passes
+        with pytest.raises(ValueError, match="skin_fraction"):
+            LinkConfig(channel_loss_db_at_nyquist=8.0, channel_skin_fraction=1.5)
 
     def test_tx_anchor_is_the_pcie_gen2_minimum(self):
         from nebula.link.config import PCIE_GEN2_TX_DIFF_PP_MIN_V
@@ -192,6 +215,37 @@ class TestLinkConfig:
         cfg = LinkConfig(channel_loss_db_at_nyquist=8.0)
         with pytest.raises(NotImplementedError, match="no NRZ mode yet"):
             cfg.to_link_sim_config()
+
+
+class TestTransmitterIsPartOfTheLink:
+    """PCIe Gen1/Gen2 specify TX de-emphasis and no receiver equaliser at all.
+
+    So the CTLE is equalising a channel plus a partially pre-equalised
+    transmitter, and leaving the transmitter out overstates its job by exactly
+    the de-emphasis.
+    """
+
+    def test_the_default_is_the_gen2_mandate(self):
+        from nebula.link.config import PCIE_GEN2_DE_EMPHASIS_DB
+
+        assert PCIE_GEN2_DE_EMPHASIS_DB == -3.5
+        assert LinkConfig(channel_loss_db_at_nyquist=8.0).tx_de_emphasis_db == -3.5
+
+    @pytest.mark.parametrize("de_emph, expected", [(0.0, 0.0), (-3.5, 3.5), (-6.0, 6.0)])
+    def test_the_tx_supplies_exactly_its_de_emphasis_as_tilt(self, de_emph, expected):
+        cfg = LinkConfig(channel_loss_db_at_nyquist=12.0, tx_de_emphasis_db=de_emph)
+        assert cfg.tx_tilt_db == pytest.approx(expected)
+        assert cfg.equalisation_burden_db == pytest.approx(12.0 - expected)
+
+    def test_the_burden_can_go_negative_and_that_is_a_real_answer(self):
+        # At the bottom of the family the mandated de-emphasis already
+        # over-equalises, so S3's 3 dB FLOOR is more boost than the link needs.
+        cfg = LinkConfig(channel_loss_db_at_nyquist=3.0)
+        assert cfg.equalisation_burden_db == pytest.approx(-0.5)
+
+    def test_pre_emphasis_is_rejected(self):
+        with pytest.raises(ValueError, match="de_emphasis_db must be <= 0"):
+            LinkConfig(channel_loss_db_at_nyquist=8.0, tx_de_emphasis_db=+3.5)
 
 
 class TestHappyPath:

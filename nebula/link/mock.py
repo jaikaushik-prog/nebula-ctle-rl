@@ -79,11 +79,15 @@ def evaluate_link(dev: DeviceResult, cfg: LinkConfig) -> LinkResult:
 
         # ── residual ISI after the CTLE, before the DFE ─────────────────────
         # The CTLE's boost is RELATIVE (|H(f_nyq)|/|H(0)|), so what it
-        # equalises is the channel's TILT, not its absolute loss. Comparing
-        # against absolute loss assumes a channel that is lossless at DC.
+        # equalises is a TILT, not an absolute loss. And the tilt left for it
+        # is the channel's MINUS the transmitter's: PCIe Gen2 mandates -3.5 dB
+        # of TX de-emphasis, which is 3.5 dB of tilt the CTLE does not have to
+        # supply. `equalisation_burden_db` is that subtraction; using
+        # `channel_tilt_db` here would overstate the CTLE's job by exactly the
+        # de-emphasis.
         # > 0 : under-equalised, energy spills into postcursors
         # < 0 : over-equalised, energy spills into the precursor
-        mismatch_db = cfg.channel_tilt_db - boost_at_nyquist_db
+        mismatch_db = cfg.equalisation_burden_db - boost_at_nyquist_db
         if mismatch_db >= 0.0:
             h_post1 = min(mismatch_db * _ISI_PER_DB, _ISI_TAP_CAP)
             h_pre = 0.0

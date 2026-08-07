@@ -490,3 +490,128 @@ presented afterwards as foresight.
 ### Outcome
 
 *(to be filled in after the run, whichever way it goes)*
+
+---
+
+## 4. The channel family — is a 1-tap DFE enough?
+
+**Written:** 2026-08-07, session 16, **before** `experiments/channel_family.py`
+was run over the full grid and before `--compression` was run at all. Code,
+tests and this entry are committed together, before the run.
+
+**Experiment:** the invented 1.0 dB DC-loss constant is deleted and replaced by
+a derived channel family, `IL_dB(f) = A*sqrt(f) + B*f`, parameterised by
+**insertion loss at 2.5 GHz** (7 points, 3-12 dB, read off S3's own tunable
+range) crossed with the **skin/dielectric split** `r` (0.8 / 0.5 / 0.2) — 21
+members. Phase is minimum-phase, reconstructed from `ln|H|` by the
+real-cepstrum fold, and gated on pre-`t = 0` energy. The PCIe Gen2 transmitter
+enters as a 2-tap FIR at the mandated **-3.5 dB** de-emphasis, with the -6 dB
+option and a no-de-emphasis control. Cursors `h_-2..h_4` are sampled at 64
+samples/UI at the phase maximising `h0`; residual ISI after an ideal 1-tap DFE
+is `(sum|h_k|, k<0) + (sum|h_k|, k>=2)` over the whole 512 UI buffer, `/ h0`.
+
+### THE PRE-REGISTERED QUESTION (task 5e, verbatim)
+
+> *At what insertion loss, if any, does a 1-tap DFE become insufficient? If the
+> answer is "below 12 dB", say so plainly — it means S3's top of range and S8
+> cannot both be met with the mandated topology.*
+
+### My answer, committed before the grid was run: **nowhere in 3-12 dB.**
+
+The eye stays **open** at every member of the family, channel-only and with a
+matched CTLE, at every de-emphasis setting. **S2's mandated topology is
+adequate for the channel S3 implies**, and the interesting number is not a
+failure point but how little margin is left at the top of the range.
+
+### Pilot data I have seen, declared
+
+Four family members were run while the numerics were being checked, and they
+inform everything below. Stated here rather than presented afterwards as
+foresight:
+
+* channel-only residual, mandated de-emphasis: **0.612 at (12 dB, r = 0.8)**,
+  **0.383 at (12 dB, r = 0.2)**, **0.080 at (3 dB, r = 0.8)**;
+* (12 dB, r = 0.5) with an 8.5 dB matched CTLE: residual **0.280**, eye
+  **484 mV** at unity CTLE DC gain, against **159 mV** channel-only;
+* pre-`t = 0` energy falls as a clean power law with buffer length —
+  8.7e-05 / 1.3e-05 / 1.8e-06 / 2.5e-07 / 3.5e-08 at n_fft = 4096 ... 65536 —
+  so it is tail aliasing, not a phase error, and 32768 clears the 1e-6 gate;
+* `FR4_MICROSTRIP.natural_skin_fraction(2.5 GHz) = 0.654`, and a balanced
+  12 dB member is **17.3 inch** of it;
+* a lossless channel reproduces the TX pulse to 1e-12, and the UI-spaced
+  cursors sum to the transmitter's long-run level to 7 figures;
+* the reference device reproduces its published numbers exactly at
+  `l = 0.15 um` — gm 12.62 mS, gm/I_D 8.42, v(src) +0.343 V, A_dc 5.05 dB,
+  1 dB swing **1426.9** mVpp against a published **1427**.
+
+**Not seen:** the full 21-member grid, any CTLE-in-front number other than the
+one above, every reflection number, and the entire `--compression` stage.
+
+### Predictions
+
+| # | quantity | prediction |
+|---|---|---|
+| 4a | **eye closed anywhere in the family** (any split, any de-emphasis, channel-only) | **NO.** Worst residual **0.55-0.70**, at (12 dB, r = 0.8), no de-emphasis |
+| 4b | worst residual **with a matched CTLE** in front | **< 0.40** across the whole family |
+| 4c | split sensitivity at fixed 12 dB: residual(r = 0.8) / residual(r = 0.2) | **1.5-1.8x**, and the ratio holds to within +/-0.2 at 9 dB and 6 dB too |
+| 4d | de-emphasis effect on the DFE tap at 12 dB | `h1/h0` falls **40-70%** from no-de-emphasis to -3.5 dB, while the residual (which a 1-tap FIR barely touches) moves **< 25% relative** |
+| 4e | the stated reflection probe (rho 0.05 @ 2 UI, 0.02 @ 5 UI) | residual rises by **+0.05 to +0.09 absolute** — two modest echoes worth as much as the entire smooth tail beyond ~5 UI |
+| 4f | **S8 vertical (100 mV)** at the matched CTLE, unity-DC-gain normalisation | met everywhere, with **required A_dc in 0.15-0.45 V/V** — comfortably below the reference device's measured 1.79 V/V. S8 vertical is **not** the binding spec |
+| 4g | compression, convention C (peak distortion through the real pulse response) | lands **between** conventions A and B; **2-5 of the 7 loss points compress** |
+| 4h | the "1.22x at 3 dB" reading | **does not survive as 1.22x.** Under C at 3 dB I expect **0.9-1.6**; under B it should fall ~25% from its old value, because de-emphasis cuts the long-run level from 0.713 V to 0.535 V |
+| 4i | how much of S3's range is actually called for | with the mandate the burden spans **-0.5 to +8.5 dB**, so **the top 3.5 dB of S3 is never required on this family**, and at 3 / 4.5 / 6 dB of loss the burden sits BELOW S3's 3 dB floor |
+
+### The reasoning
+
+1. **4a rests on arithmetic that was available before the run.** 12 dB at
+   Nyquist is a *mild* channel at 5 Gbps: one UI is 200 ps, and a channel whose
+   loss at the symbol rate is a factor of four spreads a pulse over a handful of
+   UI, not tens. The pilot's 0.612 at the worst corner of the family is already
+   the answer; the prediction is that no other member exceeds it, because the
+   residual rises monotonically in loss and in `r`, and (12 dB, r = 0.8) is the
+   corner of both.
+2. **4c is the claim that a scalar cannot represent a channel**, and it is the
+   one genuinely reusable idea in the APCCAS paper. Skin effect's `sqrt(f)`
+   spends its loss early and rolls off slowly, leaving a long algebraic tail a
+   DFE cannot reach; dielectric loss is linear in `f`, rolls off faster in-band
+   and leaves a shorter one. Same headline number, different DFE problem. **If
+   4c comes out near 1.0, the split axis is decoration** and the family should
+   collapse back to seven members.
+3. **4d follows from what the FIR is.** A 2-tap TX FIR with one post-cursor tap
+   is a post-cursor pre-canceller: it subtracts `|c1|` of the previous symbol,
+   which is exactly what `h1` describes. It cannot touch `h2` and beyond, so the
+   residual — which excludes `h1` by definition — should barely move.
+4. **4e is where the honest limit of this model sits.** `A*sqrt(f) + B*f` has no
+   impedance discontinuities, and reflections are the ISI a DFE handles worst.
+   Two echoes with round-trip amplitudes summing to 0.07 land at 2 and 5 UI,
+   both outside a 1-tap DFE's reach, so to first order they add ~0.07 to the
+   residual directly. If they add materially MORE, the echo is interacting with
+   the smooth tail and "reflections are a small correction" is wrong.
+5. **4g/4h are the ones I am least confident about**, and the reason is worth
+   stating: conventions A and B are both *proxies* for a worst-case pattern, and
+   nobody in this project has ever computed the actual worst-case pattern. C
+   does. I expect C to exceed B, because B pairs a long-run level (a DC
+   quantity) with the peak gain (an AC quantity) and that combination is not a
+   real waveform; and to exceed A, because A ignores the low-frequency content
+   entirely. **If C comes out BELOW both, I have the direction of the
+   peak-distortion bound wrong and should say so.**
+
+### What would falsify the reasoning (as opposed to the number)
+
+* **An eye that closes channel-only at 12 dB but opens with the CTLE.** That
+  would mean the residual is dominated by content the CTLE can equalise, which
+  contradicts the framing that a long smooth tail is what a 1-tap DFE cannot
+  reach — and it would make the CTLE, not the DFE, the load-bearing block.
+* **4c near 1.0.** Then the split axis carries no information, and "a scalar
+  cannot represent a channel" is *our assertion* rather than a measurement. It
+  must not then be presented as measured.
+* **4e materially above +0.09.** Then reflections are not a small correction,
+  and the whole analytic family is a lower bound on the DFE's difficulty — a
+  bigger caveat than the one currently written into `link/channel.py`.
+* **4f failing** — a required DC gain above the measured 1.79 V/V — would move
+  S8 vertical from "not binding" to "binding", and would be the first time an
+  eye-height spec constrained anything in this project.
+
+### Outcome
+
+*(to be filled in after the run, whichever way it goes)*

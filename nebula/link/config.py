@@ -32,9 +32,34 @@ into a result, and answers "what channel did you assume?" with a curve.
 **Input amplitude is anchored to the PCIe Gen2 transmitter, not invented.**
 See `PCIE_GEN2_TX_DIFF_PP_MIN_V` below, including what is and is not verified
 about that number. The amplitude at the CTLE input is then *derived* from the
-TX swing and the channel loss rather than being a second free constant, so
-sweeping the loss moves the input amplitude too — which is what physically
-happens.
+TX swing, the transmitter's mandated de-emphasis and the channel response
+rather than being a free constant, so sweeping the loss moves the input
+amplitude too — which is what physically happens.
+
+WHAT WAS DELETED HERE, AND WHY IT IS NOT BEING RE-VALUED
+---------------------------------------------------------
+This file used to carry a hard-coded 1.0 dB "channel loss at DC" constant,
+a placeholder with no
+measured provenance whose own docstring said a human had to replace it. It
+decided every compression verdict this project published
+(`BOUNDS_REDERIVATION.md` §2's blockquote). **It is deleted, and the symbol is
+gone from every executable file in the tree** — `nebula/tests/test_channel_model.py`
+asserts that.
+
+The name encoded the mistake: a lossy transmission line has essentially **zero**
+insertion loss at DC. What is non-zero is the loss at Nyquist, and the correct
+low-frequency correction is not a channel property at all — it is the
+transmitter's **specified -3.5 dB de-emphasis**, which is a fact about PCIe
+Gen2 rather than a number someone picked.
+
+So the two properties that used to read the constant now read a model:
+
+    channel_loss_db_at_dc  ->  ChannelModel.il_db_at_dc, which is 0.0 by
+                               construction (A*sqrt(0) + B*0)
+    v_in_diff_pp_v         ->  the TX long-run level (swing * de-emphasis
+                               ratio) attenuated by the channel at DC
+
+See `link/channel.py` for the family and `link/tx.py` for the transmitter.
 """
 
 from __future__ import annotations
@@ -46,6 +71,7 @@ from typing import Any, Sequence
 import numpy as np
 
 from nebula.common.types import BAUD_RATE_HZ, NYQUIST_HZ, SPEC_PEAKING_DB_RANGE
+from nebula.link.channel import BALANCED, ChannelModel
 
 # ─────────────────────────────────────────────────────────────────────────────
 # The PCIe Gen2 transmit anchor.
@@ -73,35 +99,39 @@ from nebula.common.types import BAUD_RATE_HZ, NYQUIST_HZ, SPEC_PEAKING_DB_RANGE
 
 PCIE_GEN2_TX_DIFF_PP_MIN_V: float = 0.8
 
+# ─────────────────────────────────────────────────────────────────────────────
+# The PCIe Gen2 transmit de-emphasis anchor.
+#
+# Gen1 and Gen2 specify TRANSMITTER de-emphasis and nothing else: there is no
+# reference receiver equaliser in those generations, and receiver CTLE and DFE
+# enter the specification at Gen3. The mandated value is -3.5 dB, with a -6 dB
+# option selected during link training for longer channels.
+#
+# Same provenance caveat as the swing above: the Base Specification is
+# paywalled and not in `resources/`, so these are secondary-source figures and
+# a human must confirm them before they appear in a deliverable.
+#
+# They live HERE, next to the swing, because this file is where the PCIe Gen2
+# anchors are defined. `link/tx.py` imports them; it does not redeclare them
+# (CLAUDEwa.md §8 rule 9).
+# ─────────────────────────────────────────────────────────────────────────────
+
+PCIE_GEN2_DE_EMPHASIS_DB: float = -3.5
+PCIE_GEN2_DE_EMPHASIS_OPTION_DB: float = -6.0
+
 #: Channel-loss sweep axis, TOTAL loss in dB at 2.5 GHz. Read off S3's tunable
 #: peaking range (3-12 dB) on the reasoning that a CTLE is sized to undo
 #: roughly the tilt it can boost. Report pass rate as a function of this, do
 #: not pick a point.
 DEFAULT_LOSS_SWEEP_DB: tuple[float, ...] = (3.0, 5.0, 7.0, 9.0, 12.0)
 
-# ─────────────────────────────────────────────────────────────────────────────
-# Broadband (DC / low-frequency) channel loss.
-#
-# WHY THIS FIELD EXISTS. An earlier version of this model carried only the
-# loss at Nyquist and compared it directly against the CTLE's *boost*, which
-# is a RELATIVE quantity — |H(f_nyq)| / |H(0)|. Comparing an absolute loss to
-# a relative tilt is only self-consistent for a channel with exactly 0 dB loss
-# at DC, and no real channel has that: conductor resistance, dielectric loss
-# and connector/via losses are all broadband.
-#
-# So the channel is now described by TWO numbers and the CTLE equalises the
-# difference:
-#
-#     tilt_dB = loss_at_nyquist_dB - loss_at_dc_dB      <- what the CTLE undoes
-#     amplitude at the CTLE input = TX swing attenuated by loss_at_dc_dB
-#
-# The default of 1.0 dB is a PLACEHOLDER for a short PCIe Gen2 channel
-# (conductor + connector, low frequency). It has no measured provenance and a
-# human must replace it — ideally with a real .s4p, which is HANDOFF §8 item 1
-# and would make this whole parameterisation unnecessary.
-# ─────────────────────────────────────────────────────────────────────────────
-
-CHANNEL_DC_LOSS_DB: float = 1.0
+#: Split ratio `r` used when a `LinkConfig` builds its own channel: the share
+#: of the Nyquist loss carried by the sqrt(f) skin term. Balanced by default,
+#: which is the middle of the family grid rather than a claim about any
+#: particular board — see `channel.FR4_MICROSTRIP.natural_skin_fraction()` for
+#: what a stated stackup actually gives, and sweep `channel_skin_fraction` if
+#: the answer depends on it.
+DEFAULT_SKIN_FRACTION: float = BALANCED
 
 
 @dataclass(frozen=True)
@@ -113,10 +143,23 @@ class LinkConfig:
     channel_loss_db_at_nyquist
         Channel insertion loss at 2.5 GHz, dB, positive. REQUIRED: this is the
         swept axis, so every config must say which point of the sweep it is.
+        It is also the conditioning variable the rest of the project indexes
+        on, and it is a first-class attribute of `ChannelModel` for that reason.
+    channel_skin_fraction
+        The share of that loss carried by the sqrt(f) skin-effect term,
+        evaluated at Nyquist. Two channels with the same loss at Nyquist and
+        different splits have materially different pulse responses, so this is
+        a real axis and not a refinement — see `link/channel.py`.
+    tx_de_emphasis_db
+        Transmitter de-emphasis, dB, <= 0. Defaults to the PCIe Gen2 mandate of
+        -3.5 dB. Gen1/Gen2 specify TX de-emphasis and no receiver equaliser at
+        all, so this is part of the link whether or not we model it, and
+        leaving it out overstates the CTLE's job by exactly 3.5 dB.
     tx_swing_diff_pp_v
-        Transmitter differential peak-to-peak swing, volts. Defaults to the
-        PCIe Gen2 minimum — see the provenance note above; it is an assumption
-        pending confirmation against the Base Spec, not a verified fact.
+        Transmitter differential peak-to-peak swing on the TRANSITION bit,
+        volts. Defaults to the PCIe Gen2 minimum — see the provenance note
+        above; it is an assumption pending confirmation against the Base Spec,
+        not a verified fact.
     n_dfe_taps
         Fixed at 1 by S2. Present so the assumption is visible in every log,
         not so it can be tuned.
@@ -140,7 +183,8 @@ class LinkConfig:
     """
 
     channel_loss_db_at_nyquist: float
-    channel_loss_db_at_dc: float = CHANNEL_DC_LOSS_DB
+    channel_skin_fraction: float = DEFAULT_SKIN_FRACTION
+    tx_de_emphasis_db: float = PCIE_GEN2_DE_EMPHASIS_DB
     tx_swing_diff_pp_v: float = PCIE_GEN2_TX_DIFF_PP_MIN_V
     n_dfe_taps: int = 1
     fbaud_hz: float = BAUD_RATE_HZ
@@ -156,19 +200,18 @@ class LinkConfig:
                 f"channel_loss_db_at_nyquist is an insertion LOSS and must be "
                 f">= 0 dB, got {self.channel_loss_db_at_nyquist!r}"
             )
-        if (not math.isfinite(self.channel_loss_db_at_dc)
-                or self.channel_loss_db_at_dc < 0.0):
-            raise ValueError(
-                f"channel_loss_db_at_dc is an insertion LOSS and must be "
-                f">= 0 dB, got {self.channel_loss_db_at_dc!r}"
-            )
-        if self.channel_loss_db_at_nyquist < self.channel_loss_db_at_dc:
-            raise ValueError(
-                f"channel loss at Nyquist ({self.channel_loss_db_at_nyquist} dB) "
-                f"is less than at DC ({self.channel_loss_db_at_dc} dB). That is a "
-                f"high-pass channel, which is not a thing — and it would give the "
-                f"CTLE a negative tilt to equalise."
-            )
+        # The old "is this a high-pass channel?" guard is gone because the
+        # question can no longer be asked: `A*sqrt(f) + B*f` with A, B >= 0 is
+        # monotonically increasing in loss by construction, so the channel is
+        # low-pass or it does not exist. `ChannelModel.assert_passive()` is the
+        # real version of that check, and it gates the magnitude everywhere
+        # rather than at two frequencies. The constructor below raises on an
+        # out-of-range split fraction, which is the surviving failure mode.
+        # Both sub-models validate in their own constructors; touch them here
+        # so a bad split fraction or a positive (pre-emphasis) de-emphasis
+        # fails where it was configured rather than at first use.
+        self.channel
+        self.tx
         if not math.isfinite(self.tx_swing_diff_pp_v) or self.tx_swing_diff_pp_v <= 0.0:
             raise ValueError(
                 f"tx_swing_diff_pp_v must be positive and finite, got "
@@ -196,29 +239,98 @@ class LinkConfig:
         return self.fbaud_hz / 2.0
 
     @property
+    def channel(self) -> ChannelModel:
+        """The channel this config describes, as a response rather than a number.
+
+        Built fresh each access from the two stored parameters; `ChannelModel`
+        is frozen and stateless, so this is a pure function and two configs
+        with equal parameters give bit-identical responses. There is no random
+        element anywhere in it, so `seed` never enters — the strongest form of
+        the repo's determinism rule.
+        """
+        return ChannelModel(
+            il_db_at_nyquist=self.channel_loss_db_at_nyquist,
+            skin_fraction=self.channel_skin_fraction,
+            f_nyquist_hz=self.nyquist_hz,
+        )
+
+    @property
+    def tx(self):
+        """The transmitter, as the 2-tap FIR PCIe Gen2 actually specifies.
+
+        Imported lazily: `link/tx.py` imports the PCIe anchors from this
+        module, so a module-level import here would be circular.
+        """
+        from nebula.link.tx import TxDeEmphasis
+
+        return TxDeEmphasis(de_emphasis_db=self.tx_de_emphasis_db,
+                            swing_diff_pp_v=self.tx_swing_diff_pp_v,
+                            fbaud_hz=self.fbaud_hz)
+
+    @property
+    def channel_loss_db_at_dc(self) -> float:
+        """The channel's own loss at DC — 0.0, and that is the point.
+
+        This used to be a stored field defaulting to the invented
+        the invented 1.0 dB DC-loss placeholder. It is now the MODEL's answer:
+        `A*sqrt(0) + B*0 = 0`. A lossy transmission line has essentially no
+        insertion loss at DC, which is why the deleted constant's own name
+        encoded its mistake.
+        """
+        return self.channel.il_db_at_dc
+
+    @property
     def channel_tilt_db(self) -> float:
-        """Loss the CTLE actually has to undo, dB.
+        """Loss the CHANNEL alone presents as a tilt, dB.
 
         The CTLE's peaking is a RELATIVE quantity — |H(f_nyq)| / |H(0)| — so
-        the thing it equalises is the channel's tilt, not its absolute loss.
-        Comparing peaking against absolute loss silently assumes a channel
-        that is lossless at DC.
+        what it equalises is a tilt, not an absolute loss. With the DC loss now
+        derived and equal to zero, the channel's tilt equals its Nyquist loss;
+        the two properties are kept separate because the transmitter's tilt is
+        a third thing, and conflating any two of them is the error this whole
+        parameterisation exists to prevent. See `equalisation_burden_db`.
         """
         return self.channel_loss_db_at_nyquist - self.channel_loss_db_at_dc
 
     @property
-    def v_in_diff_pp_v(self) -> float:
-        """Low-frequency differential amplitude at the CTLE input, volts.
+    def tx_tilt_db(self) -> float:
+        """Tilt the TRANSMITTER supplies at Nyquist, dB, positive.
 
-        This is the long-run / DC level — the transmitter swing attenuated by
-        the channel's BROADBAND loss. It is what sets how much output swing a
-        run of identical bits demands, and therefore what the compression
-        check has to survive.
-
-        DERIVED, not configured, so that sweeping the channel moves the input
-        amplitude with it — which is what physically happens.
+        Exactly `-tx_de_emphasis_db`: the 2-tap FIR has gain `d` at DC and 1 at
+        Nyquist by construction. This is not an approximation.
         """
-        return self.tx_swing_diff_pp_v * 10.0 ** (
+        return self.tx.tilt_db
+
+    @property
+    def equalisation_burden_db(self) -> float:
+        """Boost the CTLE actually has to supply at Nyquist, dB.
+
+        `channel tilt - TX tilt`. **This, not the channel loss, is what S3's
+        3-12 dB range should be compared against.** May be negative at the
+        bottom of the loss family, which is a real answer: the mandated
+        de-emphasis already over-equalises a short channel, and a CTLE pinned
+        at S3's 3 dB floor is then adding boost the link does not need.
+        """
+        return self.channel_tilt_db - self.tx_tilt_db
+
+    @property
+    def v_in_diff_pp_v(self) -> float:
+        """Long-run differential amplitude at the CTLE input, volts.
+
+        The level a run of identical bits settles to: the transmitter's
+        DE-EMPHASISED level, attenuated by the channel at DC. It is what sets
+        how much output swing the worst low-frequency pattern demands, and
+        therefore what the compression check has to survive.
+
+        Both factors changed when the DC-loss placeholder was deleted, and in
+        opposite directions: the channel's DC attenuation went from an invented
+        1.0 dB to a derived 0 dB (raising this), and the transmitter's
+        specified -3.5 dB de-emphasis entered (lowering it by more). Net at the
+        defaults: 0.713 V under the placeholder, **0.535 V** now.
+
+        DERIVED, not configured.
+        """
+        return self.tx.long_run_diff_pp_v * 10.0 ** (
             -self.channel_loss_db_at_dc / 20.0
         )
 
@@ -226,11 +338,13 @@ class LinkConfig:
     def v_in_nyquist_pp_v(self) -> float:
         """Differential amplitude of the Nyquist content at the CTLE input, V.
 
-        The alternating-bit pattern, attenuated by the full channel loss. This
-        is the component the eye opening is built from, and it is smaller than
-        `v_in_diff_pp_v` by exactly the tilt.
+        The alternating-bit pattern, attenuated by the full channel loss. The
+        transmitter's FIR has unity gain at Nyquist by construction (the
+        transition bit is full swing), so de-emphasis does NOT reduce this —
+        which is exactly what makes de-emphasis useful rather than merely a
+        loss of amplitude.
         """
-        return self.tx_swing_diff_pp_v * 10.0 ** (
+        return self.tx_swing_diff_pp_v * self.tx.gain_at_nyquist * 10.0 ** (
             -self.channel_loss_db_at_nyquist / 20.0
         )
 
