@@ -818,7 +818,8 @@ wrdata swing.txt v(outp) v(outn)
 """
 
 
-def lib_for_device(device: str, real_passives: bool = False) -> Path:
+def lib_for_device(device: str, real_passives: bool = False,
+                   section: Optional[str] = None) -> Path:
     """The library that carries `device`'s model cards.
 
     The nfet-only trim (G36) includes **only** `nfet_01v8`. Anything else has
@@ -827,17 +828,36 @@ def lib_for_device(device: str, real_passives: bool = False) -> Path:
     modelname", which G31 shows is read as a units error nine times out of ten.
 
     `real_passives=True` selects the EXTENDED trim, which adds the poly
-    resistor and MIM families and the passive corner axis. It is verified
-    bit-identical to the full library (`test_trimmed_lib_passives.py`,
-    rel=0 abs=0) but it is **not free**: 634 ms -> 4655 ms, a 7.3x regression
-    on the inner loop, because the R/C corner files pull in
-    `parameters/typical.spice` (3023 lines) and `invariant.spice` (7340).
-    PASSIVES.md §6 item 6 is the open fix. Quote both numbers in any cost
-    table — the difference is the price of drawing the passives, and it is the
-    single largest lever on RL throughput that anyone has measured.
+    resistor and MIM families and the passive corner axis (G58). It is
+    verified bit-identical to the full library
+    (`test_trimmed_lib_passives.py`, rel=0 abs=0).
+
+    `section` names the `.lib` section the netlist will ask for. **Pass it.**
+    ngspice expands EVERY section in a `.lib` file, not only the requested one
+    (G78), so the 25-section extended library costs 1.386 s to parse where one
+    section costs 0.093 s. `device/pdk_trim.py` generates a one-section file
+    per section and this returns it when one exists, falling back to the
+    monolithic library otherwise — so an unsplit or not-yet-regenerated tree
+    still runs, just slowly.
+
+    TWO NUMBERS THAT USED TO BE HERE AND WERE WRONG, kept because both were
+    quoted in `PASSIVES.md` and in G70 and both were believed for four
+    sessions: the extended library's cost was attributed to the R/C corner
+    files pulling in `parameters/typical.spice` (3023 lines) *and*
+    `invariant.spice` (7340). **`invariant.spice` is not in the include tree at
+    all** — only `parameters/montecarlo.spice` includes it, which no section
+    this project uses reaches. And `typical.spice` was real but minor: removing
+    8823 of its 8909 parameters bought 1.55x, against the 15x the section split
+    bought. See `nebula/LIB_COST.md`.
     """
     if device == NFET_01V8:
-        return CTLE_LIB if real_passives else TRIMMED_LIB
+        mono = CTLE_LIB if real_passives else TRIMMED_LIB
+        if section:
+            from nebula.device.pdk_trim import section_library_path
+            per_section = section_library_path(section, mono.name.split(".")[0])
+            if per_section.exists():
+                return per_section
+        return mono
     full = Path(r"C:/Users/DELL/sky130A/libs.tech/ngspice/sky130.lib.spice")
     if not full.exists():
         raise FileNotFoundError(
@@ -901,7 +921,9 @@ def run_point(
         return Sky130Point(ok=False, fail_reason=f"unknown corner {corner!r}",
                            point=point, corner=corner)
     try:
-        lib = lib_for_device(point.device, real_passives=point.passives is not None)
+        lib = lib_for_device(point.device,
+                             real_passives=point.passives is not None,
+                             section=corner)
     except FileNotFoundError as exc:
         return Sky130Point(ok=False, fail_reason=str(exc), point=point, corner=corner)
 
@@ -1191,7 +1213,9 @@ def run_tunable_sweep(
     if corner not in VALID_CORNERS:
         return _all_failed(f"unknown corner {corner!r}")
     try:
-        lib = lib_for_device(point.device, real_passives=point.passives is not None)
+        lib = lib_for_device(point.device,
+                             real_passives=point.passives is not None,
+                             section=corner)
     except FileNotFoundError as exc:
         return _all_failed(str(exc))
 

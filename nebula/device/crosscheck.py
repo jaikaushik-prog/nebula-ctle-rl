@@ -50,8 +50,21 @@ from nebula.common.design_equations import cross_check_extraction
 #: shell". Exit code 0 alongside any of these is the G26 failure mode.
 _SILENT_FAILURE_PATTERNS: tuple[str, ...] = (
     r"is not available or has zero length",
-    r"^\s*Error[:,]",
+    r"(?i)^\s*Error[:,]",
     r"could not find a valid modelname",
+    # A `.param` name a model card references but nothing defines. ngspice
+    # prints `Undefined parameter [x]` followed by `ERROR: fatal error in
+    # ngspice, exit(1)`, and NEITHER line matched this list before session 19 —
+    # the second because it is upper-case and `^\s*Error[:,]` was anchored
+    # case-sensitively. Found while trimming the R/C parameter decks
+    # (`device/pdk_trim.py`): the equivalence probe was reading a run that had
+    # aborted and comparing the empty result set. G26 inside the G26 guard.
+    #
+    # The asymmetry is worth knowing on its own: a `.model` card whose
+    # parameters are undefined is accepted in SILENCE as long as nothing
+    # instantiates it, and is FATAL the moment something does.
+    r"Undefined parameter",
+    r"fatal error in ngspice",
     r"doAnalyses: iteration limit reached",
     r"singular matrix",
     r"Simulation interrupted due to error",
