@@ -132,6 +132,21 @@ nebula/device/spice/*.out
 policy*.zip
 train_summary*.json
 
+# ...but OUR OWN measured tables are results, and G49 is the standing reminder
+# that a gitignored result costs the time it took to make. The rule above
+# exists to exclude ams_rl_ppo's SHIPPED CHECKPOINTS, not our measurements, so
+# the un-ignore is explicit and narrow -- same treatment as our trimmed SKY130
+# library above.
+#
+# gmid_lut_*.npz is 27.6 MB and IS regenerable, deterministically, by
+#   python -m nebula.device.gmid_lut --build --workers 6      (510 s measured)
+# It is tracked anyway because GMID_MAP.md's numbers are derived through it and
+# because its provenance header pins the library SHA that produced it. If the
+# size ever becomes the binding problem, the regeneration command above is the
+# thing to fall back on -- but make that decision deliberately, in the handoff,
+# rather than by adding an ignore rule.
+!nebula/device/data/gmid_lut_*.npz
+
 # ─────────────────────────────────────────────────────────────────────────────
 # Simulators / EDA (mostly Phase 4, none of it run yet)
 # ─────────────────────────────────────────────────────────────────────────────

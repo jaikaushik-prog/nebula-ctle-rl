@@ -110,6 +110,14 @@ class TestTheInventedConstantIsGone:
             "nebula/PREDICTIONS.md",            # the pre-registration
             "nebula/BOUNDS_REDERIVATION.md",    # where it decided the verdict
             "nebula/S9_YIELD.md",               # where it was listed as a blocker
+            # Added 2026-08-17. The decision register's §F1 entry IS a record
+            # of the retirement — "delete it rather than re-value it, because
+            # the NAME encoded the mistake" — which is the case this test's own
+            # comment allows. It was caught by this test on the day it was
+            # written, which is the gate working, and the allowlist is extended
+            # rather than the text reworded because the entry is exactly the
+            # historical record the exemption exists for.
+            "decisions.md",
         }
         found = set()
         for path in REPO_ROOT.rglob("*.md"):

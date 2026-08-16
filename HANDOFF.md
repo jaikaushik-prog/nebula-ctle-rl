@@ -12,7 +12,40 @@
 > discovered to the Gotchas section. A change without a handoff update is an
 > incomplete change.
 
-Last updated: **2026-08-08** (session 18: **the benchmark the final claim
+Last updated: **2026-08-17** (session 20: **a teammate's reparameterization
+idea, built and measured -- its benefit is real and small, its stated mechanism
+is false.** A gm/I_D lookup table built by direct `.dc` sweep
+(`device/gmid_lut.py`, 3000 invocations / 510 s, 100 % monotone, `gmbs` on its
+own axis) and a pure inverse map `(gm/I_D, L, I, f_z, k, R_L, VCM) -> device
+coordinates` (`common/design_space.py`, seven in / seven out, every failure
+NAMED and nothing clamped). **THE HYPOTHESIS -- that making `f_z` a coordinate
+puts G44 out of reach -- IS MEASURED FALSE: G44 among designs that reach the
+simulator is 38.07 % in device coordinates and 37.74 % in design coordinates,
+unchanged**, on 1500 LHS samples per arm with the same sampler and evaluator.
+What the map does buy is **89.40 % free rejection** -- but **65 % of that is
+`current_unreachable`**, the request not being representable in the device box,
+which is not a physics screen -- netting **1.90 -> 1.64 simulations per valid
+design, 1.16x**. **THE PRE-SIMULATION G44 FILTER SCORED TN = 0** and the reason
+generalises (**G82**): the closed form asks "is there a peak ANYWHERE" while the
+guard asks "is the max within the 20 GHz SEARCH RANGE at its edge", so a design
+peaking at 37 GHz has a real peak and trips the guard correctly; adding the
+ceiling took TN 0 -> 8, and the other 52 misses are model error. **Read TN on
+any pre-simulation filter, not accuracy.** What the map gets RIGHT: `f_z` and
+`k` round-trip algebraically and `g_dc` lands at a median **-0.20 dB**, inside
+§6's own gate. `f_peak` is over-predicted by **0.355 octaves**, and a
+`k_alpha = 0.90` re-run quantifies a trade nobody had priced: peaking bias
+**-0.816 -> -0.157 dB** while `g_dc` goes **-0.181 -> -0.663 dB**, because both
+read the same `k`. **THREE NEW PDK GOTCHAS: G79** -- the gm/I_D method's
+W-independence premise is FALSE on SKY130 at fixed `nf` (`I_D/W` moves **1.56x**
+across the `w_in` box via G53's per-finger bins, smoothly, so textbook linear-in-W
+scaling is a **56 % width error**); **G80** -- you write MICRONS and read back
+METRES; **G81** -- SKY130 refuses an out-of-bin WIDTH and silently
+EXTRAPOLATES an out-of-bin LENGTH. **`params.py`, `contract.py` and `env.py`
+UNTOUCHED** (rules 5, 6) -- adopting this invalidates every baseline, so it is a
+human decision, and `GMID_MAP.md` §8 recommends **not before G2** while noting
+the one argument the other way: the sweep has not run, so now is the only moment
+the change is free. **1314 -> 1389 green.** Full write-up `nebula/GMID_MAP.md`.
+Earlier session 18: **the benchmark the final claim
 rests on is built, and it moved two of its own inputs.** Task 7. **7e's LOUD
 VERDICT DOES NOT FIRE**: the analytic pre-screen predicts `f_peak` to **4.93 %**
 MdAPE (4.80 % in the 0.5-5 GHz decision region), rejects **61.7 % of the box for
@@ -434,6 +467,20 @@ signaling, ADC-based DSP receiver, 28 nm CMOS reference parameters).
 │                             an explicit "Not audited" section. If you add a
 │                             capability, add it here; if you retire one,
 │                             remove it here.
+├── decisions.md            ← NEW (2026-08-17, session 19b). The decision
+│                             register: what was decided, why, what it cost,
+│                             and where it is written down. Grouped framing /
+│                             spec-reading / method / device / toolchain /
+│                             link / RL / benchmark. Two sections exist nowhere
+│                             else: §I the eight RETRACTIONS, §J the eight
+│                             decisions still waiting on a human (rule 6).
+│                             Introduces no number of its own.
+├── flow.md                 ← NEW (2026-08-17, session 19b). The pipeline, with
+│                             the state of every arrow marked — including the
+│                             one that is a MOCK (device→link, i.e. G2). Also
+│                             the 13-step single-evaluation walkthrough, the
+│                             experiment protocol, and what is uncommitted in
+│                             the working tree. A reading aid, not a contract.
 ├── docs/PROGRESS.md        ← NEW (2026-08-06, session 14b). The progress
 │                             board: session-by-session, question asked ->
 │                             what was found, for a reader with zero context.
@@ -661,6 +708,68 @@ signaling, ADC-based DSP receiver, 28 nm CMOS reference parameters).
 │   │                       simulator.
 │   ├── experiments/tail_device_data.csv  TRACKED ON PURPOSE (G49). 261 rows
 │   │                       behind TAIL_DEVICE.md sections 3-6.
+│   ├── device/pdk_trim.py   NEW (2026-08-12, session 19). Generates
+│   │                       device/spice/pdk_trim/. The R/C corner decks drag
+│   │                       in parameters/typical.spice — 3023 lines defining
+│   │                       8909 named parameters, of which the extended
+│   │                       library references 86. Keeps those 86, closed over
+│   │                       right-hand sides; drops 8823. The keep-set is READ
+│   │                       OUT OF THE LIBRARY's own include list, so adding a
+│   │                       device widens it automatically and the regeneration
+│   │                       test goes red until someone reruns the module
+│   │                       (rule 9, and the answer to G32). `--write` to
+│   │                       regenerate; no argument to report and check.
+│   ├── experiments/lib_cost.py  NEW (2026-08-12, session 19). What the trim
+│   │                       bought, on 50 real designs through run_point, with
+│   │                       G71's full protocol (discarded warm-up, arm order
+│   │                       re-shuffled PER DESIGN, control re-run last). Also
+│   │                       asserts the two extended arms agree at rel=0 abs=0
+│   │                       on 11 fields and exits non-zero if not. FIVE arms,
+│   │                       each differing from its neighbour in ONE thing, so
+│   │                       the differences decompose an evaluation's cost
+│   │                       additively. `_no_section_libraries()` is not
+│   │                       optional -- without it the "before" arms are served
+│   │                       the split library (G77).
+│   ├── experiments/lib_cost_results.json  TRACKED ON PURPOSE (G49). The five-arm
+│   │                       timing + the equivalence check behind LIB_COST.md.
+│   ├── LIB_COST.md         NEW (2026-08-17, session 19a write-up). Where an
+│   │                       evaluation's time goes, and the correction of a
+│   │                       cost explanation that was wrong in both halves for
+│   │                       four sessions (G78). Read §2 before quoting any
+│   │                       per-evaluation cost, and §7 before dividing this
+│   │                       ratio into anything parallel (G75).
+│   ├── device/gmid_lut.py   NEW (2026-08-17, session 20). The SKY130 nfet as a
+│   │                       MEASURED table: `.dc` V_gs sweeps indexed on
+│   │                       (process, temp, W, L, V_ds, V_sb), storing nine .op
+│   │                       PRIMITIVES; gm/I_D, f_T, gm*ro computed in Python
+│   │                       (rule 10). 3000 invocations, 510 s at 6 workers.
+│   │                       **W is an AXIS, not a scaling reference** -- the
+│   │                       classical W-independence premise is measured FALSE
+│   │                       here (G79). NOT a replacement for
+│   │                       prescreen.predict_gm; they answer different
+│   │                       questions and a test holds them together.
+│   ├── device/data/gmid_lut_sky130_nfet01v8.npz  TRACKED ON PURPOSE (G49),
+│   │                       27.6 MB, un-ignored explicitly in .gitignore.
+│   │                       Regenerable: `--build --workers 6`.
+│   ├── common/design_space.py  NEW (2026-08-17, session 20). The inverse map,
+│   │                       PURE: (gm_over_id, l_in, i_bias, f_z, k, rl,
+│   │                       vcm_in) -> the seven device coordinates. Seven in,
+│   │                       seven out, SAME dimension as ACTION_SPACE on
+│   │                       purpose. Bias solve is a fixed point with an
+│   │                       explicit cap; every failure NAMED, nothing clamped.
+│   │                       Imports GmidLut TYPE-ONLY so common/ keeps no
+│   │                       runtime dependency on device/.
+│   │                       **NOT WIRED INTO THE RL LOOP** (rules 5, 6).
+│   ├── experiments/exp_gmid_validation.py  NEW (2026-08-17, session 20). Two
+│   │                       arms, same sampler and evaluator: the approved
+│   │                       device box against the design box. 1500 each.
+│   │                       Design box DERIVED as the measured image of the
+│   │                       device box, not chosen (rule 6). `--analyse` runs
+│   │                       with no simulator.
+│   ├── GMID_MAP.md         NEW (2026-08-17, session 20). The write-up. Read
+│   │                       §0 and §8 first: the motivating mechanism is
+│   │                       measured FALSE and the recommendation is not to
+│   │                       adopt before G2.
 │   ├── device/sky130_runner.py  one SKY130 point, four analyses (.op .ac
 │   │                       .noise .dc), one call. Owns the two unit
 │   │                       conversions (metres->microns, i_bias->per-side)
@@ -678,6 +787,19 @@ signaling, ADC-based DSP receiver, 28 nm CMOS reference parameters).
 │   │                       sky130_nfet_only.lib.spice  TRIMMED SKY130, all 5
 │   │                                           corners. 0.42 s vs 16-35 s,
 │   │                                           bit-identical (G36). USE THIS.
+│   │                       sky130_ctle.lib.spice  the EXTENDED trim: nfet +
+│   │                                           poly R + MIM, 25 sections =
+│   │                                           5 MOS x 5 PASSIVE corners
+│   │                                           (G58). Needed the moment
+│   │                                           to_geometry() output reaches a
+│   │                                           netlist.
+│   │                       pdk_trim/           GENERATED, do not edit (G77).
+│   │                                           The 5 R/C corner decks with
+│   │                                           their parameter includes cut
+│   │                                           from 3021 lines to 43. Derived
+│   │                                           by device/pdk_trim.py and
+│   │                                           re-derived byte for byte by
+│   │                                           test_pdk_trim.py.
 │   │                       ctle.cir            hand-sizing sandbox, interactive
 │   │                       g1_handdesign.cir   generic BSIM4 1.2 V reference
 │   │                       g1_sky130_volare.cir  SKY130 1.8 V, full lib
@@ -975,15 +1097,37 @@ Plus: git init, .gitignore, 28 tests, Wilson-bound BER reporting.
 
 ## 6. Key numbers & validated behavior (current state)
 
-- Tests: **679 passing** —
+- Tests: **1389 passing** (session 20) —
   `python -m pytest tests nebula/tests -q -m "not slow"`.
-  Split: `tests/` **92**, `nebula/tests/` **587**. (Was 65 + 267 = 332 at the
-  start of session 9; 430 at the end of it; 444 after 10b; 528 after 11; 618 after 12b.) Two
-  further tests are marked `slow` and deselected by default: they re-derive
-  the SKY130 golden values from the FULL library (~30 s each). Run them after
-  a PDK update. **Runtime is machine-load dependent** — the same suite has
+  (Was 65 + 267 = 332 at the start of session 9; 430 at the end of it; 444
+  after 10b; 528 after 11; 618 after 12b; 679 after 13; 1007 after 16; 1246
+  after 17; 1292 after 18; **1314** with session 19a's uncommitted trim tests;
+  **1389** after session 20.) **11** further tests are marked `slow` and
+  deselected by default — they re-derive golden values from the FULL SKY130
+  library (~30 s each). Run them after a PDK update. **Note `CLAUDE.md` is
+  STALE on this**: it says 407 tests and 2 deselected. **Runtime is machine-load dependent** — the same suite has
   taken 1.5 min on a quiet machine and 34 min while an 11-worker ngspice pool
   was running. A slow suite is contention, not a hang.
+- **The gm/I_D design space: measured, not adopted** (session 20,
+  `nebula/GMID_MAP.md`; 3000 LUT sweeps + 1810 evaluation SPICE invocations).
+  Two arms, 1500 LHS samples each, same sampler and evaluator, TT/27,
+  `cl_mid`, drawn passives and a real mirror:
+
+        G44 % of designs that REACHED the simulator
+          device coordinates   38.07 %
+          design coordinates   37.74 %     <- the hypothesis, MISSED
+        free rejection (design arm)   89.40 %, but 65 % of it is
+                                      `current_unreachable` -- not a screen
+        simulations per VALID design  1.90 -> 1.64   (1.16x, the real benefit)
+        pre-simulation G44 filter     TN = 0 bare, TN = 8 with the ceiling
+
+  Accuracy of the map against SPICE, design-arm VALID rows, measured minus
+  requested: `g_dc` median **-0.20 dB** (inside CLAUDEwa §6's own 1 dB gate),
+  `f_peak` median **-0.355 octaves**, `peaking` median **-0.933 dB**. At
+  `k_alpha = 0.90` (G60-calibrated) the S3-window peaking bias improves
+  **-0.816 -> -0.157 dB** while `g_dc` degrades **-0.181 -> -0.663 dB** --
+  both read the same `k`, and that trade had not been priced before.
+  **Not wired in; `params.py`/`contract.py`/`env.py` untouched.**
 - **Measured output swing at the corrected point (session 9d).** 1 dB gain
   compression at **1427 mVpp** differential; saturation limit 2161 mVpp;
   steering ceiling 2281 mVpp; `4*I*RL` textbook value 2400 mVpp. Session 9c
@@ -1289,6 +1433,18 @@ Plus: git init, .gitignore, 28 tests, Wilson-bound BER reporting.
   S4, S7 and S8 are not in the reward — for stated reasons, and in S8's case
   because the link layer is a mock end to end and a training run structurally
   cannot reach it.
+- **(nebula) The gm/I_D design-space map is TT-only, one seed, one load, and
+  ITS TWO ARMS DO NOT SAMPLE THE SAME SET.** (Session 20,
+  `nebula/GMID_MAP.md` §6.) The table carries three more corners; the
+  validation experiment uses none of them. And the design box is the image of
+  the device box under **independent-coordinate** sampling, so it contains
+  corner combinations that never co-occur -- which is why 65 % of its
+  rejections are `current_unreachable`. The cost metrics ("simulations per
+  valid design") price that correctly because they charge only for simulations
+  actually spent, but the *distributions over the feasible region* are not
+  identical between arms and no claim depends on their being so. Also: the
+  device arm gets **no free filter**, where a fair comparison would put
+  `experiments/prescreen.py` in front of it. That experiment is not done.
 - **(nebula) The peak-distortion compression bound is a WORST-CASE pattern.**
   Real PCIe traffic is 8b/10b-coded and run-length-limited, so the true peak
   excursion is smaller. Convention C is the right bound; the gap to typical
@@ -1308,6 +1464,22 @@ Plus: git init, .gitignore, 28 tests, Wilson-bound BER reporting.
    (`nebula/NRZ_RETARGET_AUDIT.md`); bounds re-derived; robust geometry
    confirmed; corner-yield swept (13.49% -> 8.10%). Blocking next actions,
    in priority order:
+   - **>>> A DECISION IS WAITING, AND IT HAS A DEADLINE THAT IS NOT ITS OWN.
+     <<<** (Session 20, `nebula/GMID_MAP.md`.) A gm/I_D table and a
+     design-space inverse map are **built, tested and measured**, and
+     **nothing is wired in** -- `params.py`, `contract.py` and `env.py` are
+     untouched (rules 5, 6). The measurement: the idea's stated mechanism is
+     **false** (G44 among simulated designs is 38.07 % in device coordinates
+     against 37.74 % in design coordinates, unchanged), its actual benefit is
+     **1.16x** on simulations per valid design, and its pre-simulation G44
+     filter scored **TN = 0** (G82). §8 of that file recommends **not adopting
+     before G2**. **The deadline is the sweep, not the gate:** adopting would
+     invalidate the 8.73 % baseline, the +8.950669 ceiling and every benchmark
+     arm, so the only moment this is free is BEFORE
+     `baselines --sweep` runs. Decide before that, either way, and record it.
+     **What to keep regardless of the decision:** the table is the natural
+     input to the pre-screen re-fit below -- `solve_bias` already takes
+     `mirror_efficiency` for exactly the 4-8 % mechanism that item names.
    - **>>> RE-FIT THE PRE-SCREEN AT BENCHMARK CONDITIONS. FIRST. <<<**
      (Session 18, `nebula/BASELINES.md` §11 and §12 item 1.) The analytic
      pre-screen is calibrated on `robust_geometry_data.csv` -- `cl` = 150 fF,
@@ -2551,6 +2723,131 @@ Plus: git init, .gitignore, 28 tests, Wilson-bound BER reporting.
   4-8 % less). **Validate a calibration on the population you will USE it on,
   and check the bias separately from the spread -- an aggregate rate can hide
   a systematic offset completely.**
+
+- **NUMBERING NOTE, 2026-08-17.** Two entries above are BOTH numbered **G73**
+  (the weak-but-live action dimension, and the ARGMAX peak test). Left as they
+  are on purpose -- other files cite "G73" and renumbering would break those
+  references silently, which is worse than the duplicate. **G77 and G78 were
+  cited in code before they existed here; both are now written in below**, so
+  the gap session 20 left open is closed.
+
+- **G77 -- (nebula) a GENERATED artifact that a caller silently PREFERS is a
+  second definition, and it can make a benchmark measure its own treatment as
+  its baseline.** `device/spice/pdk_trim/` is generated by
+  `device/pdk_trim.py` and must never be hand-edited: every file there is a
+  pure function of the PDK plus the monolithic libraries, the keep-set is read
+  out of the library's own include list so adding a device widens it
+  automatically, and `test_pdk_trim.py` **re-derives all forty files on every
+  run and fails on a single differing byte**. That is what stops a trim from
+  going stale -- the G32 failure (the file a human reads is not the one that
+  produced the numbers), one layer up.
+
+  **The earned half is the selection, not the editing.**
+  `sky130_runner.lib_for_device` takes the one-section fast path **whenever
+  the file exists**, silently and by design. So `experiments/lib_cost.py`'s
+  "before" arm, which swapped only `CTLE_LIB`, was still being served the
+  SPLIT library -- i.e. the control arm was running the treatment, and the
+  benchmark would have reported the improvement as its own baseline. **It was
+  live for one run before being caught.** The fix is
+  `_no_section_libraries()`, which points `pdk_trim.SECTION_DIR` at an empty
+  directory so the real fallback branch runs. **If a lookup has a silent fast
+  path, any A/B that swaps the slow input has to disable the fast path too.**
+
+  Corollary, same session: a hand-made `sky130_ctle.lib.spice.bak` sat in the
+  tree showing the OLD PDK include paths. It was deleted once
+  `pdk_trim.untrimmed_library_text()` was shown to reproduce it byte for byte
+  -- **a backup of a file you can derive is a second definition with none of
+  the guarantees.**
+
+- **G78 -- (nebula) ngspice expands EVERY `.lib` SECTION in a file, not just
+  the one you ask for.** This is the whole reason the extended library was
+  slow, and it was invisible for four sessions because every measurement
+  compared whole libraries against each other and never a library against
+  ITSELF with sections removed. Same netlist, same machine:
+
+        extended library, ONE section extracted     0.093 s
+        extended library, the real 25-section file  1.386 s   <- 15x
+        nfet-only library, the real 5-section file  0.297 s
+
+  **The cost scales with the SECTION COUNT, not with what the netlist uses.**
+  The extended library grew to 25 sections the day G58 added the 5x5
+  (MOS x passive) corner cross product, and its per-evaluation cost went with
+  it -- so the fix for a corner-coverage decision showed up as a throughput
+  regression nobody could attribute.
+
+  **The standing explanation was wrong in BOTH halves, and both were quoted in
+  `PASSIVES.md` §3.2 and in G70 and believed for four sessions:** that the R/C
+  corner files pull in `parameters/typical.spice` (3023 lines) *and*
+  `invariant.spice` (7340). **`invariant.spice` is not in the include tree at
+  all** -- only `parameters/montecarlo.spice` includes it, and no section this
+  project uses reaches that. And `typical.spice` is real but MINOR: it defines
+  **8909 named parameters of which the library references 86**, and removing
+  the other 8823 is worth about **1.55x** against the section split's 15x.
+  **When a cost explanation has never been tested by removing the thing it
+  blames, it is a hypothesis, not a diagnosis.**
+
+- **G79 -- (nebula) the gm/I_D method's central premise is FALSE on SKY130 at
+  fixed `nf`, and it fails smoothly.** The classical method assumes `gm/I_D`
+  depends on the inversion level and not on `W`, so one sweep at a reference
+  width scales to any width through the current density `I_D/W`. Measured at
+  TT/27, L = 0.30 um, V_ds = 0.75 V, V_sb = 0.40 V, V_gs = 0.90 V:
+
+        W (um)     10       20       40       60      100
+        W/nf     2.50     5.00    10.00    15.00    25.00
+        I_D/W  1.25e-5  1.43e-5  1.72e-5  1.87e-5  1.95e-5
+        gm/I_D   10.74    10.23     9.63     9.31     9.14
+
+  `I_D/W` moves **1.56x across the `w_in` box**; `gm/I_D` moves 15 %. Median
+  relative spread at matched `V_gs` across W = {20, 40, 100}: **2.33 % for
+  gm/I_D, 33.13 % for I_D/W**. The mechanism is **G53's** -- the SKY130 model
+  bins are cut on **W per FINGER**, and holding `nf` at 4 (G38) while sweeping
+  `W` 20 -> 100 um sweeps W/nf 5 -> 25 um straight across the bin set.
+  **The variation is SMOOTH AND MONOTONE, which is what makes it dangerous**:
+  it interpolates beautifully, and scaling `I_D` linearly in `W` -- the
+  textbook step -- is a **56 % width error** on a device that simulates
+  perfectly happily. Any gm/I_D work here needs `W` as a real axis
+  (`device/gmid_lut.py`; `check_width_independence()` is the measurement).
+
+- **G80 -- (nebula) you write MICRONS and you read back METRES.** `W=40` in a
+  netlist means 40 um because the libraries set `.option scale=1e-6` (G31), but
+  `print @m.xm1.m<dev>[w]` returns `4.000000e-05` -- SI metres. **A geometry
+  read-back check written the obvious way (compare the number you wrote against
+  the number you read) fails by 1e6 on a completely correct circuit**, which is
+  G31's failure mode wearing the opposite sign, and the natural reaction is to
+  delete the check. Do the conversion in one place and say why:
+  `gmid_lut._assert_geometry_applied`. Two corollaries measured at the same
+  time: `nf` does NOT divide the read-back (at `W=40 nf=4` the instance reports
+  4e-05, the TOTAL, confirming G38 from the other side); and BSIM4's **`cgs` is
+  NEGATIVE** as reported (`cgg` +2.455e-14, `cgs` -1.663e-14, `cgd` +1.199e-16)
+  because these are charge-derivative matrix entries, not terminal
+  capacitances.
+
+- **G81 -- (nebula) SKY130 REFUSES an out-of-bin WIDTH and SILENTLY
+  EXTRAPOLATES an out-of-bin LENGTH.** `W = 0.1 um` aborts with "could not find
+  a valid modelname" (the message G31 records as being read as a units error
+  nine times out of ten -- here it is correct). `L = 99 um` **simulates
+  happily**, and the current scales as a clean 1/L: I_D at V_gs = 1.2 V is
+  5.92e-3 / 1.37e-3 / 1.56e-4 / 1.59e-5 at L = 0.15 / 1.0 / 10 / 99 um. So the
+  answer looks entirely reasonable all the way out to a length nobody draws.
+  **Consequence: on the L axis the PDK will not protect you.** Any table or map
+  indexed on L must refuse to extrapolate on its own account --
+  `common/design_space._axis_weights` is the only guard there is, and it raises
+  rather than edge-clamping for exactly this reason.
+
+- **G82 -- (nebula) an analytic peak-existence condition and the G44 guard ask
+  DIFFERENT QUESTIONS, and the difference is the search ceiling.** The closed
+  form asks *"does |H| have an interior maximum ANYWHERE?"*;
+  `peak_is_sweep_edge` asks *"is the maximum WITHIN the 20 GHz search range
+  sitting at the range edge?"*. A design peaking at 37 GHz has a genuine
+  interior peak -- the closed form is RIGHT to say so -- and trips the guard
+  anyway, correctly, because inside the search window the response is
+  monotonically rising. Measured on 159 designs: the bare condition scored
+  **TN = 0** against the guard -- it never once correctly excluded a design --
+  and adding `search_top_hz = MAX_SEARCH_TOP_HZ` took it to TN = 8, FP 60 -> 52.
+  **TN is the number to read on any pre-simulation filter**, not accuracy: a
+  filter with TN = 0 has saved zero simulations however accurate it looks. The
+  remaining 52 misses are model error (G66's `res_po` bottom plate on `cl`,
+  G67's quantiser, and the 1z/2p model's own 4.25 %), not the ceiling.
 
 ## 10. Environment
 
@@ -5123,3 +5420,228 @@ time runs short is task 8 first, then the spec-conditioned policy, then the
 depth of PPO tuning; never G2.
 
 Nothing executable changed. **1292 green, unchanged.**
+
+### 2026-08-12 - Session 19a (the library trim: an evaluation costs 13x less, and the standing explanation for the cost was wrong in both halves)
+
+**`NEXT_STEPS.md` step 1, and it was the top open item since session 17.**
+Session 17 measured **99.7 % of a training run is the simulator**, so the
+per-evaluation SPICE cost is the only throughput lever that pays. **An
+evaluation with drawn SKY130 passives now costs 0.222 s against 2.887 s --
+13.02x -- and not one measured number moved** (50 designs x 11 fields, rel = 0,
+abs = 0). Full write-up `nebula/LIB_COST.md`.
+
+**THE HEADLINE IS THAT THE DIAGNOSIS WAS WRONG, NOT THAT THE FIX WORKED.** The
+standing account -- in `PASSIVES.md` §3.2, in G70, and in
+`sky130_runner.lib_for_device`'s own docstring -- was that the R/C corner files
+pull in `parameters/typical.spice` (3023 lines) *and* `invariant.spice` (7340).
+**Both halves fail on inspection.** `invariant.spice` **is not in the include
+tree at all** (only `parameters/montecarlo.spice` includes it, which no section
+this project reaches; the tree is 36 files / 245 606 lines and it is not among
+them). And `typical.spice` is real but MINOR: 8909 named parameters of which
+the library references **86**, and dropping the other 8823 is worth **1.48x**.
+
+**The actual cause (G78): ngspice expands EVERY `.lib` section in a file, not
+just the one asked for.** One section parses in **0.093 s**; the real
+25-section extended library takes **1.386 s**. The cost scales with the
+**section count**, not with what the netlist uses -- so **G58's 5x5 MOS x
+passive corner cross product**, a decision about corner COVERAGE, showed up as
+a throughput regression nobody could attribute to it. **It survived four
+sessions because every previous measurement compared whole libraries against
+each other and never a library against ITSELF with one part removed.**
+
+**WHERE THE TIME WENT, additive, five arms each differing from its neighbour
+in exactly one thing:**
+
+        0.216 s  floor: ideal R/C netlist on the nfet-only library
+      + 0.000 s  the passive model cards       (indistinguishable from zero)
+      + 0.012 s  DRAWING the passives                          (0.5 %)
+      = 0.222 s  a real evaluation TODAY
+      + 1.733 s  the 24 sections the run never uses            ( 65 %)
+      + 0.932 s  the R/C parameter decks                       ( 35 %)
+      = 2.887 s  what an evaluation cost before this session
+
+**TWO RESULTS THAT WERE NOT THE QUESTION AND MATTER MORE THAN THE ANSWER.**
+**Drawing the passives is FREE** -- 0.012 s on a 0.222 s evaluation.
+`PASSIVES.md` §3.2 called the extended library's cost "the price of drawing the
+passives"; **it was never the passives**, and nothing about emitting the
+framework's output as a real schematic is expensive. **The passive model cards
+are free too** (measured -0.007 s, i.e. noise on a ~0.09 s spread; read as
+zero, not as a negative cost). **100 % of the overhead was library parsing**,
+and both terms are now fixed.
+
+**THE GATE, and G36's precedent applied without softening.** Bit-identical
+means rel = 0, abs = 0 on the **raw printed text**, not floats parsed first.
+`test_pdk_trim.py` (22 fast + 2 `slow`) probes every device the netlists use
+through untrimmed and trimmed libraries, re-derives all forty generated files
+byte for byte on every run, and carries **three deliberate falsifications**:
+a dropped kept parameter, an edited process constant in a copied R/C deck
+(`crpf_precision`), and an undefined-parameter run.
+
+**A G26 INSIDE THE G26 GUARD.** Building this found that
+`crosscheck.scan_for_silent_failures` **missed ngspice's own fatal error**:
+`Undefined parameter [cm3d]` was not in the pattern list, and
+`ERROR: fatal error in ngspice, exit(1)` missed `^\s*Error[:,]` **on case** --
+the pattern was anchored case-sensitively and ngspice shouts. **The
+equivalence probe was reading a run that had ABORTED and comparing empty
+result sets, which compare equal.** Fixed, with a test carrying the verbatim
+output. Worth knowing on its own: **a `.model` card whose parameters are
+undefined is accepted in SILENCE until something instantiates it, and is FATAL
+the moment something does.**
+
+**A CONTROL ARM THAT WAS SILENTLY RUNNING THE TREATMENT (G77).**
+`lib_for_device` takes the one-section fast path **whenever the file exists**,
+by design and without saying so. So `lib_cost.py`'s "before" arm, which swapped
+only `CTLE_LIB`, was still served the SPLIT library -- the benchmark would have
+reported the improvement as its own baseline. **Live for one run before being
+caught.** `_no_section_libraries()` points `pdk_trim.SECTION_DIR` at an empty
+directory so the real fallback branch runs. **If a lookup has a silent fast
+path, an A/B that swaps the slow input must disable the fast path too.**
+
+Timing discipline was G71's in full -- discarded warm-up, arm order re-shuffled
+**per design**, control re-run last: **2.740 s against a first pass of
+2.887 s, ratio 1.05x, clean.** Outside [0.8, 1.25] the numbers would be void,
+not adjusted.
+
+**WHAT THIS DOES NOT LICENSE.** It is a **single-process** ratio.
+`baselines.SEC_PER_SIM_AT_8` is a PARALLEL constant (1.698 s) and G75 is the
+standing warning that isolated speed-ups do not transfer -- session 17's 2.98x
+became 1.80x on the benchmark's own task mix. **Re-measure with `--pilot`; do
+not divide.** Left open in `LIB_COST.md` §8, along with correcting
+`PASSIVES.md` §3.2 and G70 in place, since their text is wrong rather than
+merely superseded.
+
+New gotchas **G77** and **G78**. **1292 -> 1314 green** (+22
+`test_pdk_trim.py`; +2 more marked `slow`).
+
+### 2026-08-17 - Session 19b (two orientation documents; no code change)
+
+**`decisions.md` and `flow.md` are new**, at the repository root, written for
+the owner to hand to a supervisor or a teammate. Neither is a contract --
+both say so in their first line, and both defer to `HANDOFF.md` and
+`CLAUDEwa.md` where they disagree.
+
+* **`flow.md`** -- the pipeline, layer by layer, with the state of every arrow
+  marked. The one that matters: `DeviceResult -> LinkResult` is **MOCK end to
+  end**, which is gate G2 and the gap against the competition's own wording
+  ("outputs the final schematic and resulting specs"). It also carries the
+  single-evaluation walkthrough (13 steps, with the G2 insertion point marked),
+  the experiment protocol, the gate table, and a section on **what is in the
+  working tree uncommitted**, because session 19a's library trim is mid-flight.
+* **`decisions.md`** -- 80-odd decisions with the reasoning for each, grouped
+  framing / spec-reading / method / device / toolchain / link / RL / benchmark,
+  plus two sections the rest of the repo does not collect in one place: **§I,
+  the eight retractions** (R1 is G40's falsified central argument; R6 is
+  session 19a's finding that the standing explanation for the extended
+  library's cost was wrong in both halves), and **§J, the eight decisions still
+  waiting on a human** (rule 6).
+
+**Neither file introduces a number.** Every figure in both is quoted from
+`HANDOFF.md`, `CLAUDEwa.md` or a `nebula/*.md` write-up, with the source named
+(rule 1: nothing traceless).
+
+Nothing executable changed. Suite verified before and after: **1314 passed,
+11 deselected, 676 s** (`python -m pytest tests nebula/tests -q -m "not slow"`).
+Note that is **1314, not 18d's 1292** -- the difference is session 19a's
+UNCOMMITTED `test_pdk_trim.py` and trimmed-library tests, which are green. Note
+also that **`CLAUDE.md` is stale on this**: it says 407 tests and 2 deselected.
+
+### 2026-08-17 - Session 20 (a gm/I_D table and a design-space map: the idea's benefit is real, its stated mechanism is not)
+
+**A teammate's proposal, analysed and then built:** search in DESIGN
+coordinates `(gm/I_D, L, I, f_z, k, R_L, VCM)` instead of device coordinates
+`(W, L, I, R_s, C_s, R_L, VCM)`, on two measured grounds -- **G44 was 159 of
+203 invalid evaluations (78.3 %)** and **the seven device axes differ in
+strength by 21x** with `rs` acting 4-10x harder on peaking than `w_in`/`l_in`.
+Both citations verified exact against `RL_SMOKE.md` §§4-5 before any code was
+written.
+
+**IT FITS THE BRIEF** -- the problem statement asks for a framework that "sizes
+devices using fewer search spaces (lowest design time)", which is literally a
+reparameterization, and gm/I_D is the methodology the judging panel uses
+professionally. **So it was built, measured, and the measurement disagrees with
+the argument for it.** Full write-up `nebula/GMID_MAP.md`; read §0 and §8.
+
+**THE HEADLINE IS A MISS ON THE STATED MECHANISM.** The hypothesis was that
+making `f_z` a coordinate would put the sweep-edge region out of reach by
+construction. Two arms, 1500 LHS samples each, same sampler, same evaluator,
+TT/27, `cl_mid`, drawn passives and a real mirror throughout:
+
+        G44 as a share of designs that REACHED the simulator
+            device coordinates  38.07 %
+            design coordinates  37.74 %      <- unchanged
+
+The reparameterization does not make the bad region less reachable. What it
+does do is reject **89.40 %** of proposals before spending a simulation -- but
+**878 of those 1341 rejections (65 %) are `current_unreachable`**, i.e. the
+request is not representable in the device box at all, which is not a physics
+screen. Net effect on what a search actually pays: **1.90 -> 1.64 simulations
+per valid design, 1.16x.** Real, and small.
+
+**THE PRE-SIMULATION G44 FILTER DOES NOT WORK, AND FINDING OUT WHY IS THE MOST
+TRANSFERABLE PART (G82).** Against SPICE the analytic peak condition scored
+**TN = 0** -- it never once correctly excluded a design. The cause is that the
+closed form and the guard ask different questions: a design peaking at 37 GHz
+has a *genuine* interior peak and still trips `peak_is_sweep_edge`, because
+`meas ac MAX` only searches to 20 GHz and inside that window the response is
+monotonically rising. Adding the ceiling took TN 0 -> 8 and FP 60 -> 52; **the
+other 52 are model error** (G66, G67, and the 1z/2p model's own 4.25 %). The
+lesson generalises: **read TN on any pre-simulation filter, not accuracy** -- a
+filter with TN = 0 has saved zero simulations however accurate it looks.
+
+**WHAT THE MAP DOES GET RIGHT.** `f_z` and `k` round-trip through the geometry
+algebraically (rel < 1e-9), and the DC gain lands at a median **-0.20 dB**
+against SPICE -- inside CLAUDEwa.md §6's own 1 dB gate, which says the bias
+solve and the body-effect term both work. `f_peak` is over-predicted by a
+median **0.355 octaves (28 %)**, worse than the pre-screen's 15.85 % at
+benchmark conditions, in the direction G60 predicts. **Re-running the design
+arm at `k_alpha = 0.90` confirms the mechanism and exposes a trade** the
+project had not previously quantified: peaking bias **-0.816 -> -0.157 dB** (5x
+better) while `g_dc` goes **-0.181 -> -0.663 dB** (3.7x worse), because
+`A_dc = gm*R_L/k` and both read the same `k`.
+
+**THREE PDK FINDINGS THAT OUTLIVE THE EXPERIMENT, all new gotchas.**
+**G79: the gm/I_D method's central premise is false on SKY130 at fixed `nf`** --
+`I_D/W` moves **1.56x across the `w_in` box** because W/nf sweeps the model
+bins (G53's axis), so the textbook linear-in-W scaling is a **56 % width
+error**, smoothly and monotonically, on a device that simulates happily. `W`
+had to become a real LUT axis. **G80: you write MICRONS and read back METRES**
+-- a geometry read-back written the obvious way fails by 1e6 on a correct
+circuit, G31 with the sign reversed. **G81: SKY130 refuses an out-of-bin WIDTH
+and silently EXTRAPOLATES an out-of-bin LENGTH** -- `L = 99 um` simulates and
+scales as a clean 1/L, so on the L axis the map's refusal to extrapolate is the
+only guard there is.
+
+**SCOPE HELD.** `common/params.py`, `rl/contract.py` and `rl/env.py` are
+**untouched** (rules 5 and 6), verified by diff. Nothing is wired into the RL
+loop. Adopting this would invalidate the 8.73 % random-search baseline, the
++8.950669 ceiling and every benchmark arm, so it is a human decision -- and
+§8's recommendation is **not to adopt before G2**, with the one argument on the
+other side stated plainly: the baselines sweep has not run, so **now is the
+only moment the change would be free**.
+
+**Also this session:** the gm/I_D table was nearly lost to G49 -- `*.npz` is
+gitignored (the rule exists for `ams_rl_ppo`'s shipped checkpoints), so it
+needed an explicit narrow un-ignore, the same treatment the trimmed library
+gets. And a **numbering note** was added to §9: two entries are both numbered
+G73, left alone deliberately because other files cite it; and **G77/G78 are
+referenced in code but not yet written into §9** -- they belong to session
+19a's uncommitted library trim, so session 20 starts at G79 rather than
+reusing them.
+
+**AND A GATE FIRED ON THIS SESSION'S OWN WORK, which is worth recording
+because it is the system behaving correctly.** The full-suite run came back
+**1 failed, 1388 passed** -- `test_markdown_mentions_are_confined_to_the_
+historical_record`, G62's grep for the retired `CHANNEL_DC_LOSS_DB`. The
+offender was **session 19b's `decisions.md`**, whose §F1 entry documents the
+decision to delete that constant. That is precisely the case the test's own
+comment exempts ("the name may appear in write-ups that RETIRE it"), so the
+ALLOWLIST was extended rather than the text reworded, with the reason written
+into the test. Noted here rather than quietly fixed: extending an allowlist to
+make a test pass is a move that deserves to be visible.
+
+**Artifacts:** `nebula/device/gmid_lut.py`, `nebula/common/design_space.py`,
+`nebula/experiments/exp_gmid_validation.py`, `nebula/GMID_MAP.md`,
+`nebula/device/data/gmid_lut_sky130_nfet01v8.npz` (27.6 MB, tracked),
+`gmid_validation_run.jsonl` + `gmid_validation_kalpha090.jsonl` (tracked).
+Cost: 3000 sweeps / 510 s for the table, 1659 + 151 SPICE invocations for the
+experiment.

@@ -33,6 +33,7 @@ self-contained write-up of one experiment.
 | 10 | [`RL_SMOKE.md`](RL_SMOKE.md) | The RL loop, run end to end **badly on purpose**. The environment contract; the six integration bugs it surfaced; **78 % of what a policy finds is a fictitious peak at the sweep edge**; drawn passives move `f_peak` by more than the load-robustness slack; and where the wall clock actually goes (**99.7 % simulator**) | writing any RL code, or quoting any cost |
 | 11 | [`PREDICTIONS.md`](PREDICTIONS.md) | Pre-registered predictions vs. outcomes, including the misses | — |
 | 12 | [`NRZ_RETARGET_AUDIT.md`](NRZ_RETARGET_AUDIT.md) | All 24 four-level assumptions in the inherited PAM-4 code, risk-marked | retargeting anything |
+| 13 | [`GMID_MAP.md`](GMID_MAP.md) | A gm/I_D table and a design-space inverse map, **measured and not adopted**. The reparameterization's stated mechanism is false (G44 among simulated designs is unchanged, 38.07 → 37.74 %); its real benefit is 1.16× on simulations per valid design. Three PDK findings that outlive it: the gm/I_D W-independence premise fails on SKY130 at fixed `nf`; you write microns and read back metres; an out-of-bin **length** is silently extrapolated where an out-of-bin **width** is refused | doing any gm/I_D work, or building any pre-simulation filter |
 
 Each write-up opens with its **assumptions section**. Read it. Several results
 are explicitly bounds rather than answers, and the assumptions section is where
