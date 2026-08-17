@@ -307,6 +307,20 @@ class Sky130Point:
     #: Per-instance integrated input-referred noise, RMS volts, only when
     #: `run_point(noise_detail=True)`. Adds in QUADRATURE to `vn_in_vrms`.
     noise_by_device: Optional[dict] = None
+    # --- .ac magnitude sweep (raw), only when run_point(ac_sweep=True) ---
+    #: The curve the four `meas` scalars are read off, kept so the pole-zero
+    #: fit (`link/fit.py`) has something to fit. `ac_mag_db` is the
+    #: DIFFERENTIAL magnitude in dB — the same `vd_db` vector `meas` uses, so
+    #: the fit and S3 cannot disagree about what the response is (rule 9).
+    ac_freq_hz: Optional[np.ndarray] = field(default=None, repr=False)
+    ac_mag_db: Optional[np.ndarray] = field(default=None, repr=False)
+    # --- S4: HD3 by transient + FFT, only when run_point(hd3=True) ---
+    #: `20*log10(|V3|/|V1|)` at the S4 tone. Large and NEGATIVE when good.
+    hd3_dbc: Optional[float] = None
+    #: How it was measured — tone, drive level, window, bins. Reported beside
+    #: the number because HD3 goes as ~Vin^2 and an unstated drive level makes
+    #: it meaningless.
+    hd3_detail: Optional[dict] = field(default=None, repr=False)
     # --- .dc swing curve (raw, so Python owns every derived number) ---
     vid: Optional[np.ndarray] = field(default=None, repr=False)
     vod: Optional[np.ndarray] = field(default=None, repr=False)
@@ -605,7 +619,7 @@ Vcm   cm  0 {{VCM}}
 * One swept/AC source, two VCVSs: v(inp,inn) == v(vid) exactly. This makes the
 * .noise input reference DIFFERENTIAL (see the module docstring) and lets .dc
 * sweep the differential input directly.
-Vid   vid 0 dc 0 ac 1
+Vid   vid 0 dc 0 ac 1{tran_src}
 Einp  inp cm vid 0 0.5
 Einn  inn cm vid 0 -0.5
 
@@ -636,6 +650,7 @@ print i(Vdd)
 
 ac dec 50 1meg 100g
 let vd_db = db(v(outp) - v(outn))
+{ac_dump}
 meas ac g_dc  FIND vd_db AT=1meg
 meas ac g_nyq FIND vd_db AT=2.5g
 * MAX is bounded at 20 GHz and g_top read AT the same edge, so `has_interior_
@@ -648,6 +663,7 @@ noise v(outp,outn) Vid dec 20 10meg 5g{noise_summary}
 print inoise_total
 {noise_probe}
 {swing_block}
+{hd3_block}
 quit
 .endc
 
@@ -808,6 +824,95 @@ _NOISE_KEYS_TAIL: tuple[tuple[str, str], ...] = (
     ("mirror_ref", "inoise_total.m.xmr.m{device}"),
 )
 
+#: Dump the AC magnitude sweep, emitted only when `run_point(ac_sweep=True)`.
+#:
+#: **WHY THIS DID NOT EXIST UNTIL G2 NEEDED IT.** The `.ac` analysis has always
+#: run, but only four `meas` scalars were ever extracted from it — `g_dc`,
+#: `g_nyq`, `g_pk`/`f_pk` and `g_top`. That is everything S3 needs, so nothing
+#: asked for more. **A pole-zero fit cannot be made to four numbers**, and
+#: `DeviceResult` has declared `ac_freq_hz` / `ac_mag_db` since the interface
+#: freeze precisely because the bridge would one day need the curve.
+#:
+#: **OFF BY DEFAULT, and that is a correctness decision rather than a
+#: performance one.** With the flag off the netlist is byte-identical to the
+#: one every published number came from, so no existing result can move.
+#: `test_ac_sweep_capture_changes_no_measured_value` runs the same design both
+#: ways and compares every parsed field at rel=0, abs=0 — the G36 discipline,
+#: applied to an addition rather than a removal.
+#:
+#: `db()` is applied by ngspice on the same `vd_db` vector the `meas` lines
+#: read, so the dumped curve and the four scalars cannot disagree about what
+#: "the response" means (rule 9).
+_AC_DUMP_BLOCK = """wrdata ac.txt vd_db"""
+
+
+# ── S4: HD3 by transient + FFT ──────────────────────────────────────────────
+#
+# **`.disto` IS DEAD FOR BSIM4 (G21): it returns exactly 0.0.** Not "small" —
+# zero, on a circuit with real distortion, with no warning. So S4 has to come
+# from a time-domain run, and `spice/g0_hd3_tran_fft.cir` established the
+# method during G0. This is that netlist's recipe, on the real PDK.
+#
+# THE THREE THINGS THAT MAKE THE NUMBER TRUSTWORTHY, all from the G0 prototype:
+#
+#  1. **The window is an exact integer number of cycles.** 20 cycles of a
+#     100 MHz tone is 200 ns, captured from 50 ns to 250 ns. A non-integer
+#     window leaks the fundamental across the whole spectrum and buries the
+#     third harmonic under its own skirt — and the answer still looks like a
+#     number.
+#  2. **Five cycles of settling are DISCARDED** (the 50 ns start). The tone
+#     starts at t=0 into a circuit at its DC operating point; the first cycles
+#     carry the step response, not the steady state.
+#  3. **The FFT is done in PYTHON, not in `.control`.** Rule 10, and the same
+#     reason the §6 cross-check moved out: a `let`/`fft` sequence that errors
+#     prints a warning and exits 0 (G26). Here the raw waveform is written out
+#     and every derived number is computed from it where it can raise.
+#
+# 100 MHz and the drive level are S4's own: "HD3 < -30 dB @ 100 MHz
+# differential input". The amplitude is a parameter because "differential
+# input" does not state one, and HD3 depends on it strongly (square-law gives
+# HD3 ~ Vin^2), so it is REPORTED beside the number rather than buried.
+_HD3_BLOCK = """
+* S4: HD3 from transient + FFT. `.disto` returns exactly 0.0 on BSIM4 (G21).
+* Exactly {n_cycles:d} cycles captured after {n_settle:d} cycles of settling,
+* so the FFT window has no leakage. The FFT itself is done in Python (rule 10).
+tran {t_step:.6g} {t_stop:.6g} {t_start:.6g}
+linearize
+let vd_t = v(outp) - v(outn)
+wrdata hd3.txt vd_t
+"""
+# `linearize` TAKES VECTOR NAMES, NOT A TIMESTEP, and getting that wrong is
+# not a syntax error you find out about cleanly. Measured while building this:
+# `linearize 1e-10` prints
+#
+#     Error: no such vector 1e-10
+#     Warning from checkvalid: vector outp is not available or has zero length.
+#     Error: RHS "v(outp) - v(outn)" invalid
+#
+# -- i.e. it DESTROYS THE PLOT, so every later line in the block fails too --
+# and ngspice still exits normally. G26 again, in a new place. The `tran`
+# already uses a fixed step, so bare `linearize` only resamples onto the
+# uniform grid the FFT needs.
+
+#: S4's stated conditions. "HD3 < -30 dB @ 100 MHz differential input"
+#: (CLAUDEwa.md §3) names the frequency and not the amplitude, so the
+#: amplitude is a parameter and is REPORTED with every HD3 number — HD3 goes
+#: as roughly Vin^2 for a square-law pair, so an unstated drive level makes the
+#: number meaningless.
+HD3_TONE_HZ: float = 100e6
+#: Differential PEAK amplitude at the CTLE input, volts. 100 mV pk = 200 mVpp,
+#: the G0 prototype's level (`VIN_PK = 0.05` single-ended, ±, so 0.1 V
+#: differential peak).
+HD3_VIN_DIFF_PK_V: float = 0.1
+#: Cycles discarded before the window opens, and cycles captured. Both from
+#: the G0 prototype. The capture MUST be an integer number of cycles.
+HD3_SETTLE_CYCLES: int = 5
+HD3_CAPTURE_CYCLES: int = 20
+#: Timesteps per cycle. 100 points/cycle at 100 MHz is a 100 ps step, and the
+#: Nyquist limit of that grid is the 50th harmonic — far above the 3rd.
+HD3_STEPS_PER_CYCLE: int = 100
+
+
 _SWING_BLOCK = """
 save all @m.xm1.m{device}[vds] @m.xm1.m{device}[vdsat] @m.xm1.m{device}[id]
 + @m.xm2.m{device}[vds] @m.xm2.m{device}[vdsat] @m.xm2.m{device}[id]
@@ -816,6 +921,30 @@ wrdata swing.txt v(outp) v(outn)
 + @m.xm1.m{device}[vds] @m.xm1.m{device}[vdsat] @m.xm1.m{device}[id]
 + @m.xm2.m{device}[vds] @m.xm2.m{device}[vdsat] @m.xm2.m{device}[id]
 """
+
+
+
+#: Fields of `_NETLIST` that are OPTIONAL, with the value that means "absent".
+#:
+#: They exist because `ac_sweep` and `hd3` add blocks to the deck, and a
+#: `str.format` template with an unsupplied field raises `KeyError`. Adding
+#: them broke five `test_tail.py` tests and two `test_tunable.py` tests that
+#: format the template directly — a mechanical break, but the lesson is not:
+#: **a shared template with growing placeholders needs ONE place that knows the
+#: defaults**, or every caller has to be found again next time. That place is
+#: `assemble_netlist`.
+_OPTIONAL_NETLIST_FIELDS: dict = {"ac_dump": "", "tran_src": "", "hd3_block": ""}
+
+
+def assemble_netlist(template: str = None, **fields: object) -> str:
+    """Format the single-point netlist, defaulting the optional blocks.
+
+    Every caller that builds this deck goes through here, so adding a block
+    later means editing this dict and nothing else (rule 9).
+    """
+    merged = dict(_OPTIONAL_NETLIST_FIELDS)
+    merged.update(fields)
+    return (template if template is not None else _NETLIST).format(**merged)
 
 
 def lib_for_device(device: str, real_passives: bool = False,
@@ -897,6 +1026,114 @@ def passive_block(passives: Optional[PassiveGeometry]) -> str:
     )
 
 
+def _load_or_none(path: Path) -> Optional[np.ndarray]:
+    """Read a `wrdata` dump, or None if it is absent, empty or unparseable.
+
+    Deliberately returns None rather than raising: WHY it is missing is
+    almost always in the ngspice output, and the caller checks that first.
+    """
+    try:
+        if not (path.exists() and path.stat().st_size > 0):
+            return None
+        return np.loadtxt(path)
+    except (OSError, ValueError):
+        return None
+
+
+def _hd3_source() -> str:
+    """The transient tone, as a `sin()` spec appended to the AC source.
+
+    Appending rather than replacing is what keeps `.op`, `.ac` and `.noise`
+    untouched: ngspice reads `dc` for the operating point and `ac` for the
+    small-signal analyses, and ignores `sin()` in both. So the same source
+    serves all four analyses and there is ONE input definition in the netlist
+    (rule 9) rather than a second one that could drift.
+    """
+    return f" sin(0 {HD3_VIN_DIFF_PK_V:.6g} {HD3_TONE_HZ:.6g})"
+
+
+def _hd3_block() -> str:
+    period = 1.0 / HD3_TONE_HZ
+    return _HD3_BLOCK.format(
+        n_cycles=HD3_CAPTURE_CYCLES, n_settle=HD3_SETTLE_CYCLES,
+        t_step=period / HD3_STEPS_PER_CYCLE,
+        t_start=HD3_SETTLE_CYCLES * period,
+        t_stop=(HD3_SETTLE_CYCLES + HD3_CAPTURE_CYCLES) * period,
+    )
+
+
+def hd3_from_waveform(t: np.ndarray, vd: np.ndarray,
+                      f_tone_hz: float = HD3_TONE_HZ) -> tuple[float, dict]:
+    """Third-harmonic distortion in dBc, from a captured differential waveform.
+
+    In PYTHON, from the raw samples, because rule 10: a `fft`/`let` sequence
+    inside `.control` that errors prints a warning and exits 0 (G26), and an
+    HD3 of "0.0 dBc" from a block that never ran looks exactly like a broken
+    circuit.
+
+    Returns `(hd3_dbc, detail)`. `hd3_dbc` is `20*log10(|V3| / |V1|)`, so a
+    well-behaved stage gives a large NEGATIVE number and S4 asks for
+    < -30 dBc.
+
+    **The window must be an integer number of cycles and this checks it.**
+    Leakage from a partial cycle spreads the fundamental across every bin and
+    the third harmonic disappears under its skirt — while still producing a
+    number. `detail["cycles_in_window"]` is reported so the check is visible.
+    """
+    t = np.asarray(t, dtype=float).ravel()
+    vd = np.asarray(vd, dtype=float).ravel()
+    if t.size < 64 or t.size != vd.size:
+        raise ValueError(f"need at least 64 matched samples, got {t.size}/{vd.size}")
+    if not np.all(np.isfinite(vd)):
+        raise ValueError("waveform contains non-finite samples")
+
+    span = float(t[-1] - t[0])
+    dt = span / (t.size - 1)
+    cycles = span * f_tone_hz
+    if abs(cycles - round(cycles)) > 1e-6:
+        raise ValueError(
+            f"capture window is {cycles:.6f} cycles, not an integer. Spectral "
+            f"leakage would bury the third harmonic under the fundamental's "
+            f"skirt and still return a number.")
+
+    # **DROP THE LAST SAMPLE.** `tran ... {t_stop} {t_start}` yields an
+    # INCLUSIVE grid: 20 cycles at 100 points/cycle arrives as 2001 samples,
+    # t[0] and t[-1] being the SAME PHASE one period apart. Feeding all 2001 to
+    # an FFT describes a 20.01-cycle window, which is not periodic and leaks.
+    # Dropping the duplicate endpoint leaves 2000 samples spanning exactly 20
+    # cycles, so bin `k1 = 20` is the fundamental exactly.
+    #
+    # This is the failure the integer check above exists to catch, and it
+    # caught it on the first real run -- the raise said "20.010000 cycles".
+    vd = vd[:-1]
+    n = vd.size
+    spec = np.fft.rfft(vd - vd.mean())
+    freqs = np.fft.rfftfreq(n, d=dt)
+    k1 = int(round(f_tone_hz * n * dt))
+    k3 = 3 * k1
+    if k3 >= spec.size:
+        raise ValueError(
+            f"the third harmonic ({3 * f_tone_hz / 1e9:.3g} GHz) is above the "
+            f"capture grid's Nyquist ({freqs[-1] / 1e9:.3g} GHz)")
+
+    v1 = float(np.abs(spec[k1]))
+    v3 = float(np.abs(spec[k3]))
+    if v1 <= 0.0:
+        raise ValueError("no energy at the fundamental — the tone never reached "
+                         "the output")
+    hd3 = 20.0 * math.log10(max(v3 / v1, 1e-15))
+    return hd3, {
+        "cycles_in_window": cycles,
+        "n_samples": n,
+        "bin_fundamental": k1,
+        "bin_third": k3,
+        "v1_v": v1,
+        "v3_v": v3,
+        "f_tone_hz": f_tone_hz,
+        "vin_diff_pk_v": HD3_VIN_DIFF_PK_V,
+    }
+
+
 def run_point(
     point: SizingPoint,
     corner: str = "tt",
@@ -907,6 +1144,8 @@ def run_point(
     temp_c: float = 27.0,
     noise_detail: bool = False,
     keep_text: bool = False,
+    ac_sweep: bool = False,
+    hd3: bool = False,
 ) -> Sky130Point:
     """Simulate one sizing point. Never raises — failures come back ok=False.
 
@@ -916,6 +1155,16 @@ def run_point(
     temperature. The third S9 axis, VDD, is carried by `point.vdd` — scale it
     at the call site, because it is a property of the sizing point's supply,
     not of the run.
+
+    `ac_sweep=True` additionally dumps the AC magnitude curve into
+    `ac_freq_hz` / `ac_mag_db`. **Default OFF so the netlist stays byte-
+    identical to the one every published number came from**; the link bridge
+    asks for it because a pole-zero fit cannot be made to four `meas` scalars.
+
+    `hd3=True` adds S4's transient tone and dumps the waveform for a Python
+    FFT. Also default OFF, and for a second reason besides byte-identity: it
+    is the expensive tier. G0 measured a 175x cost spread across the analyses
+    and this is the top of it.
     """
     if corner not in VALID_CORNERS:
         return Sky130Point(ok=False, fail_reason=f"unknown corner {corner!r}",
@@ -965,7 +1214,7 @@ def run_point(
             noise_keys += [(k, v.format(device=point.tail.device))
                            for k, v in _NOISE_KEYS_TAIL]
 
-    text = _NETLIST.format(
+    text = assemble_netlist(
         lib=lib.as_posix(), corner=corner, device=point.device,
         w=point.w, l=point.l, nf=int(point.nf),
         rl=point.rl, rs=point.rs, cs=point.cs, cl=point.cl,
@@ -975,6 +1224,9 @@ def run_point(
         passive_block=passive_block(point.passives),
         noise_summary=noise_summary, noise_probe=noise_probe,
         f_top=f"{MAX_SEARCH_TOP_HZ / 1e9:g}g",
+        ac_dump=(_AC_DUMP_BLOCK if ac_sweep else ""),
+        tran_src=_hd3_source() if hd3 else "",
+        hd3_block=_hd3_block() if hd3 else "",
     )
 
     # THE TWO SILENT WRITES, GATED ON THE ASSEMBLED TEXT (G56, G57). This
@@ -1014,6 +1266,14 @@ def run_point(
             except ValueError as exc:
                 return Sky130Point(ok=False, fail_reason=f"unreadable swing.txt: {exc}",
                                    point=point, corner=corner)
+        # THE DUMPED FILES ARE READ HERE BUT JUDGED LATER, and the order is
+        # G68's: cause before symptom. "ngspice wrote no ac.txt" is a SYMPTOM;
+        # the cause is whatever it printed as a warning first, and the
+        # silent-failure scan below names it. An earlier version of this code
+        # returned "wrote no hd3.txt" while the real message sitting in the
+        # output was `Error: no such vector 1e-10` -- the useful half.
+        ac_raw = _load_or_none(tmp / "ac.txt") if ac_sweep else None
+        hd3_raw = _load_or_none(tmp / "hd3.txt") if hd3 else None
 
     runtime = time.perf_counter() - t0
 
@@ -1022,6 +1282,19 @@ def run_point(
     if offenders:
         return Sky130Point(ok=False, corner=corner, point=point, runtime_s=runtime,
                            fail_reason=f"ngspice silent failure: {offenders[0][:160]}")
+
+    # Only NOW, with the output proven clean, is a missing dump a mystery worth
+    # reporting in its own right (G68: cause before symptom).
+    if ac_sweep and ac_raw is None:
+        return Sky130Point(ok=False, corner=corner, point=point, runtime_s=runtime,
+                           fail_reason="ac_sweep=True but ngspice wrote no "
+                                       "readable ac.txt, and printed nothing "
+                                       "to explain it")
+    if hd3 and hd3_raw is None:
+        return Sky130Point(ok=False, corner=corner, point=point, runtime_s=runtime,
+                           fail_reason="hd3=True but ngspice wrote no readable "
+                                       "hd3.txt, and printed nothing to "
+                                       "explain it")
 
     pt = Sky130Point(ok=True, corner=corner, point=point, runtime_s=runtime,
                      raw_text=(out if keep_text else None))
@@ -1099,6 +1372,44 @@ def run_point(
         pt.vod = outp - outn
         pt.sat_ok = (vds1 > vdsat1) & (vds2 > vdsat2)
         pt.id_min = np.minimum(id1, id2)
+
+    if ac_raw is not None:
+        # `wrdata vd_db` on an AC analysis emits THREE columns, not two:
+        # frequency, then the real and imaginary parts of the vector. `vd_db`
+        # is already real (db() of a magnitude), so the imaginary column is
+        # identically zero -- but it IS there, and reading column 1 as "the
+        # value" only works because of that. Asserted rather than assumed,
+        # because a silently complex column would be read as a magnitude.
+        if ac_raw.ndim != 2 or ac_raw.shape[1] not in (2, 3):
+            return Sky130Point(ok=False, corner=corner, point=point,
+                               runtime_s=runtime,
+                               fail_reason=f"ac.txt has shape {ac_raw.shape}, "
+                                           f"expected (N, 2) or (N, 3)")
+        if ac_raw.shape[1] == 3 and not np.allclose(ac_raw[:, 2], 0.0,
+                                                    rtol=0, atol=0):
+            return Sky130Point(ok=False, corner=corner, point=point,
+                               runtime_s=runtime,
+                               fail_reason="ac.txt imaginary column is not "
+                                           "identically zero -- vd_db is not "
+                                           "the real magnitude it is read as")
+        pt.ac_freq_hz = ac_raw[:, 0]
+        pt.ac_mag_db = ac_raw[:, 1]
+
+    if hd3_raw is not None:
+        if hd3_raw.ndim != 2 or hd3_raw.shape[1] < 2:
+            return Sky130Point(ok=False, corner=corner, point=point,
+                               runtime_s=runtime,
+                               fail_reason=f"hd3.txt has shape {hd3_raw.shape}, "
+                                           f"expected (N, 2)")
+        try:
+            pt.hd3_dbc, pt.hd3_detail = hd3_from_waveform(
+                hd3_raw[:, 0], hd3_raw[:, 1])
+        except ValueError as exc:
+            # A distortion number computed from a bad window is worse than no
+            # number: it is finite, plausible and wrong. Fail instead.
+            return Sky130Point(ok=False, corner=corner, point=point,
+                               runtime_s=runtime,
+                               fail_reason=f"HD3 extraction failed: {exc}")
     return pt
 
 
@@ -1238,7 +1549,7 @@ def run_tunable_sweep(
                            device=point.device, tail_probe=tail_probe,
                            f_top=f"{MAX_SEARCH_TOP_HZ / 1e9:g}g")
         for st in settings)
-    text = (_TOPOLOGY.format(
+    text = (assemble_netlist(_TOPOLOGY,
                 lib=lib.as_posix(), corner=corner, device=point.device,
                 w=point.w, l=point.l, nf=int(point.nf), rl=point.rl,
                 rs=point.rs, cs=point.cs, cl=point.cl,

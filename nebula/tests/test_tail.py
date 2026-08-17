@@ -432,7 +432,7 @@ def _netlist(tail, passives=None) -> str:
             i_ref=f"{tail.i_ref_a(p.i_tail_per_side_a):.9g}",
             c_byp=f"{tail.c_bypass_f:.9g}")
         probe = R._TAIL_PROBE.format(device=tail.device)
-    return R._NETLIST.format(
+    return R.assemble_netlist(
         lib="lib", corner="tt", device=p.device, w=p.w, l=p.l, nf=int(p.nf),
         rl=p.rl, rs=p.rs, cs=p.cs, cl=p.cl, it=p.i_tail_per_side_a,
         vdd=p.vdd, vcm=p.vcm, swing_block="", temp_c=27.0,

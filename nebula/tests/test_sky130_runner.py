@@ -556,3 +556,106 @@ def test_nf_does_not_multiply_width_on_sky130():
     # a width multiplier would give gm(32)/gm(1) of order 32, not order 1
     assert 0.7 < gms[32] / gms[1] < 1.0
     assert abs(gms[4] / gms[1] - 1.0) < 0.2
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# The AC sweep capture (G2's prerequisite).
+# ─────────────────────────────────────────────────────────────────────────────
+
+
+@needs_sim
+def test_ac_sweep_capture_changes_no_measured_value():
+    """`ac_sweep=True` must be PURELY ADDITIVE.
+
+    G36's discipline applied to an addition rather than a removal: a flag that
+    changes an existing number is not a capture, it is a different experiment.
+    Every parsed field is compared at rel=0, abs=0 -- not "within tolerance".
+
+    This matters because the flag edits the `.control` block, and this repo has
+    already found one case where adding a line to `.control` changed what ran
+    (G26: a `let` that errored took the whole block's later lines with it).
+    """
+    from nebula.device.sky130_runner import run_point
+
+    p = SizingPoint(w=40, l=0.15, nf=4, rs=200, cs=1.6e-12, rl=400,
+                    cl=100e-15, i_tail_per_side_a=1.5e-3, vcm=1.25, vdd=1.8)
+    off = run_point(p, swing=False, ac_sweep=False)
+    on = run_point(p, swing=False, ac_sweep=True)
+    assert off.ok and on.ok, (off.fail_reason, on.fail_reason)
+
+    compared = ("gm", "gmbs", "gds", "vth", "vds", "vdsat", "vgs", "id_a",
+                "v_out_dc", "v_src_dc", "i_supply_a", "g_dc_db", "g_nyq_db",
+                "g_pk_db", "f_pk_hz", "g_top_db", "vn_in_vrms")
+    for name in compared:
+        a, b = getattr(off, name), getattr(on, name)
+        assert a == b, f"{name} moved: {a!r} -> {b!r} (rel=0 abs=0 required)"
+
+    # ... and the capture is only present when asked for.
+    assert off.ac_freq_hz is None and off.ac_mag_db is None
+    assert on.ac_freq_hz is not None and on.ac_mag_db is not None
+
+
+@needs_sim
+def test_the_captured_curve_and_the_meas_scalars_describe_one_response():
+    """Rule 9: the fit and S3 must not disagree about what "the response" is.
+
+    Both read the SAME `vd_db` vector, so the curve sampled at 1 MHz must equal
+    `meas ac g_dc FIND vd_db AT=1meg` exactly, and the curve's own maximum
+    below the search ceiling must match `meas ac g_pk MAX` to the grid.
+    """
+    from nebula.device.sky130_runner import MAX_SEARCH_TOP_HZ, run_point
+
+    p = SizingPoint(w=40, l=0.15, nf=4, rs=200, cs=1.6e-12, rl=400,
+                    cl=100e-15, i_tail_per_side_a=1.5e-3, vcm=1.25, vdd=1.8)
+    r = run_point(p, swing=False, ac_sweep=True)
+    assert r.ok, r.fail_reason
+
+    f, mag = r.ac_freq_hz, r.ac_mag_db
+    assert f[0] == pytest.approx(1e6, rel=1e-12)
+
+    # `meas ... AT=1meg` lands on the first grid point, so these are the SAME
+    # number -- but they arrive through two different ngspice formatters and
+    # are compared at the precision the coarser one emits.
+    #
+    # MEASURED, and the reason this is not `abs=0`: `wrdata` writes
+    # 5.0532759 where `print` writes 5.053276. Eight significant figures
+    # against seven. Demanding exactness here would be demanding that two
+    # text formatters agree, which is not a property of the circuit -- and
+    # "loosen the tolerance until it passes" is exactly the move this repo
+    # distrusts, so the reason is written down instead.
+    assert mag[0] == pytest.approx(r.g_dc_db, rel=1e-7)
+
+    inside = f <= MAX_SEARCH_TOP_HZ
+    j = int(np.argmax(mag[inside]))
+    # `meas MAX` interpolates within the grid, so it can exceed the best
+    # SAMPLE by a hair -- but not by more than the sweep's own resolution.
+    assert mag[inside][j] == pytest.approx(r.g_pk_db, abs=0.01)
+    assert f[inside][j] == pytest.approx(r.f_pk_hz, rel=0.02)
+
+
+@needs_sim
+def test_asking_for_the_sweep_and_not_getting_it_is_a_FAILURE():
+    """A missing curve must not surface as `None` three modules downstream.
+
+    The caller that sets this flag is about to fit the curve; an empty field
+    would be read as "the fit failed" and the real cause -- that ngspice wrote
+    nothing -- would be invisible. Proven by pointing the runner at a netlist
+    whose AC analysis cannot run.
+    """
+    from nebula.device import sky130_runner as R
+
+    p = SizingPoint(w=40, l=0.15, nf=4, rs=200, cs=1.6e-12, rl=400,
+                    cl=100e-15, i_tail_per_side_a=1.5e-3, vcm=1.25, vdd=1.8)
+    original = R._AC_DUMP_BLOCK
+    try:
+        R._AC_DUMP_BLOCK = "* the dump, deliberately removed"
+        r = R.run_point(p, swing=False, ac_sweep=True)
+    finally:
+        R._AC_DUMP_BLOCK = original
+    assert not r.ok
+    # Assert on the STABLE half of the message — that the flag was asked for
+    # and the file is what is missing — rather than on its exact wording. This
+    # test went red on a pure rewording once (the G68 ordering fix inserted
+    # "readable"), which is a test that pins prose rather than behaviour.
+    reason = r.fail_reason or ""
+    assert "ac_sweep=True" in reason and "ac.txt" in reason

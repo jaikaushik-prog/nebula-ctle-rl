@@ -561,6 +561,29 @@ class PassiveGeometry:
         return max(abs(self.rs.rel_error), abs(self.cs.rel_error),
                    abs(self.rl.rel_error))
 
+    @property
+    def area_um2(self) -> float:
+        """Drawn passive area: Rs + Cs + **two** RL, um^2.
+
+        **The factor of two on `rl` is the topology, not a fudge.** S2's CTLE
+        is differential and `_PASSIVES_REAL` instantiates `Xrlp` and `Xrln` —
+        one load resistor per side — while `Rs` and `Cs` sit BETWEEN the two
+        sources and there is one of each. A budget that counted `rl` once
+        would understate the load by a whole resistor.
+
+        DEVICE area only. Head enclosure, routing and the guard ring are
+        `PASSIVES.md` §4.5's 4h budget and are not folded in here, so this is a
+        LOWER BOUND on the S7 number. The MOSFETs are excluded too: this is
+        the passive area, which `PASSIVES.md` measured as the term that
+        dominates S7.
+        """
+        return (self.rs.area_um2 + self.cs.area_um2 + 2.0 * self.rl.area_um2)
+
+    @property
+    def area_mm2(self) -> float:
+        """`area_um2` in mm^2 — the unit S7 is written in (< 0.05 mm^2)."""
+        return self.area_um2 * 1e-6
+
     def f_zero_hz(self) -> float:
         """`1 / (2*pi*Rs*Cs)` at the REALISED values."""
         return 1.0 / (2 * math.pi * self.rs.r_actual_ohm * self.cs.c_actual_f)
