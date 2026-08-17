@@ -94,10 +94,23 @@ WHAT IS NOT IN THE REWARD, AND WHY
   the transistors are not in it, so it is a lower bound, and PASSIVES.md §6
   item 5 lists the real budget as open. Scoring a lower bound as if it were
   the area would let the policy buy reward with a number nobody measured.
-* **S8 (eye).** A link-layer metric. The link layer is still a mock end to end
-  (G16), and §6b makes any path from a training run to a mock structurally
-  impossible. So S8 CANNOT be in this reward, and that is the correct
-  outcome — not a limitation to be worked around.
+* **S8 (eye).** WAS absent, and the reason has now been REMOVED rather than
+  worked around. The paragraph that stood here said: *"A link-layer metric. The
+  link layer is still a mock end to end (G16) ... So S8 CANNOT be in this
+  reward, and that is the correct outcome — not a limitation to be worked
+  around."* That was right when it was written and it is no longer true:
+  session 21 built the device->link bridge (`link/bridge.py`, `link/fit.py`,
+  `nebula/G2_RESULTS.md`), so a real eye in volts now exists.
+
+  **S8 is therefore in `V2_SPECS`, and `V1_SPECS` is UNTOUCHED.** Adding two
+  rows changes `len(specs)`, hence the feasibility bonus `B = N + 1`, hence
+  every reward number this project has published — including the **+8.950669**
+  ceiling (G74), which is a property of the spec set rather than of the
+  circuit. `BASELINES.md` §7f forbids moving that without re-running every
+  baseline, so v2 is opt-in until a human decides to.
+
+  Costs no extra simulation: the eye is computed from the AC curve the same
+  invocation already produced (+0.037 s, no simulator).
 
 **NO ANALYTIC QUANTITY IS USED ANYWHERE IN THE REWARD PATH.** §6a requires
 this to be stated. Every number scored here is a MEASURED SPICE primitive or
@@ -156,10 +169,26 @@ TOLERANCES: tuple[Tol, ...] = (
         "vds_tail - vdsat_tail. THE tolerance the reward retraction is about: "
         "session 13's tail misses are tens of mV and must not be invisible "
         "next to a 17 GHz f_peak miss"),
+    # ── S8, added by G2 (session 21). See `V2_SPECS` below. ─────────────────
+    Tol("S8_eye_h", 50.0e-3, "V",
+        "half of S8's own 100 mV floor. A 50 mV miss on a 100 mV spec is a "
+        "miss worth a full unit of shortfall; the eye spans 0 to ~450 mV "
+        "across the box (G2_RESULTS.md), so this is not a knob that makes "
+        "anything pass"),
+    Tol("S8_eye_w", 0.2, "UI",
+        "half of S8's own 0.4 UI floor, by the same argument. Also above the "
+        "1/64 UI = 0.0156 UI phase resolution of the pulse-response grid, so "
+        "the tolerance is coarser than the measurement rather than finer"),
 )
 
 TOL: dict[str, float] = {t.name: t.value for t in TOLERANCES}
 SPEC_NAMES: tuple[str, ...] = tuple(t.name for t in TOLERANCES)
+#: HOW MANY TOLERANCE ROWS EXIST — **not** how many the reward scores. Those
+#: are different numbers since G2 added the two S8 rows: `reward()` sizes its
+#: bands from `len(specs)`, so the default (`V1_SPECS`, 7) is what every
+#: published number was computed with, while this is 9. Left as the count of
+#: rows because that is what the name says; a caller wanting the scored count
+#: reads `len(specs)`.
 N_SPECS: int = len(TOLERANCES)
 
 #: Reward v0's spec set: **S3 alone**, per §6f. Three rows, because CLAUDEwa.md
@@ -167,9 +196,32 @@ N_SPECS: int = len(TOLERANCES)
 #: at Nyquist, and requires all three to be reported.
 V0_SPECS: tuple[str, ...] = ("S3_peaking", "S3_f_peak", "S3_nyq_boost")
 
-#: Reward v1: everything the DEVICE layer can measure. See the module docstring
-#: for why S4, S7 and S8 are absent and why that is a conclusion, not a gap.
-V1_SPECS: tuple[str, ...] = SPEC_NAMES
+#: Reward v1: everything the DEVICE layer can measure. **UNCHANGED by G2**, so
+#: every reward number `RL_SMOKE.md` and `BASELINES.md` publish still
+#: reproduces bit for bit — including the +8.950669 ceiling (G74), which is a
+#: property of this spec set and would move if the set did.
+V1_SPECS: tuple[str, ...] = tuple(
+    n for n in SPEC_NAMES if not n.startswith("S8_"))
+
+#: Reward v2: v1 **plus S8**, now that the device->link bridge exists and the
+#: link layer is no longer a mock (G2, session 21).
+#:
+#: **THIS IS A SEPARATE SPEC SET RATHER THAN AN EDIT TO V1, AND THAT IS THE
+#: WHOLE POINT.** Adding two rows changes `N_SPECS`, which changes the
+#: feasibility bonus `B = N + 1`, which changes every reward number this
+#: project has published. `BASELINES.md` §7f is explicit: *"do not touch the
+#: evaluator, the reward tolerances, the box or the geometry mapping. If any of
+#: those change, every baseline must be re-run."* So v1 keeps its exact
+#: arithmetic and v2 is opt-in until a human decides to re-run the baselines
+#: against it.
+#:
+#: What S8 costs to score: `link eval` measured at ~0.04 s on top of a ~0.28 s
+#: full-fidelity evaluation, with NO extra simulator call — the eye is computed
+#: from the AC curve the same invocation already produced (`G2_RESULTS.md`).
+V2_SPECS: tuple[str, ...] = SPEC_NAMES
+
+#: The S8 rows, named so a caller can ask "is this reward scoring the eye?"
+S8_SPECS: tuple[str, ...] = ("S8_eye_h", "S8_eye_w")
 
 #: The feasibility bonus. **`B` must be large enough that any feasible design
 #: outranks any infeasible one**, and the bound is exact rather than tuned:
@@ -243,7 +295,8 @@ TOLERANCE_SCAN: tuple[float, ...] = (0.5, 1.0, 2.0)
 
 def margins(meas: Mapping[str, float],
             target_f_peak_hz: float,
-            target_peaking_db: Optional[float] = None) -> dict:
+            target_peaking_db: Optional[float] = None,
+            link: Optional[object] = None) -> dict:
     """Signed margins, in natural units. ONE definition (rule 9).
 
     `meas` is `evaluator.EvalResult.meas`: already in the units
@@ -256,6 +309,14 @@ def margins(meas: Mapping[str, float],
     the band instead would be a `match` term, which is what `reward.py` does
     and what §6h replaces. Kept in the signature so the caller cannot silently
     believe it is being honoured.
+
+    `link` is a `LinkResult` (or None). When given AND `ok`, the two S8 rows are
+    added; otherwise they are **ABSENT** from the returned dict rather than
+    filled with a default — so a caller asking for `V2_SPECS` without a link
+    result gets a `KeyError` in `shortfalls` rather than a reward computed from
+    a missing eye. Deliberate: scoring an absent S8 as zero-margin would make
+    every design look like it just failed the eye, and scoring it as satisfied
+    would be worse.
     """
     from nebula.rl.contract import f_peak_octaves
 
@@ -264,7 +325,7 @@ def margins(meas: Mapping[str, float],
     f_oct = float(meas["f_peak_oct"])
     target_oct = f_peak_octaves(float(target_f_peak_hz))
 
-    return {
+    out = {
         # Distance OUTSIDE the band, as a margin: positive inside, negative by
         # exactly how far outside.
         "S3_peaking": min(pk - pk_lo, pk_hi - pk),
@@ -277,6 +338,14 @@ def margins(meas: Mapping[str, float],
         "saturation": float(meas["pair_margin_v"]),
         "tail_saturation": float(meas["tail_margin_v"]),
     }
+
+    # S8, only when a real link result is in hand. Both are MEASURED-minus-
+    # SPEC margins in the spec's own units, like every other row.
+    if link is not None and getattr(link, "ok", False):
+        from nebula.common.types import SPEC_EYE_H_MIN_V, SPEC_EYE_W_MIN_UI
+        out["S8_eye_h"] = float(link.eye_h_v) - SPEC_EYE_H_MIN_V
+        out["S8_eye_w"] = float(link.eye_w_ui) - SPEC_EYE_W_MIN_UI
+    return out
 
 
 def shortfalls(margin: Mapping[str, float],
@@ -328,6 +397,7 @@ def reward(
     meas: Optional[Mapping[str, float]],
     target_f_peak_hz: float,
     specs: Sequence[str] = V1_SPECS,
+    link: Optional[object] = None,
     lambda_cost: float = 0.0,
     sim_cost: float = 0.0,
     target_peaking_db: Optional[float] = None,

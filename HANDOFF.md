@@ -12,7 +12,41 @@
 > discovered to the Gotchas section. A change without a handoff update is an
 > incomplete change.
 
-Last updated: **2026-08-17** (session 20: **a teammate's reparameterization
+Last updated: **2026-08-17** (session 21: **GATE G2 IS PASSED, three days
+early, and the first thing the closed loop revealed is that COMPRESSION binds
+rather than the eye.** One parameter vector -> a drawn SKY130 schematic meeting
+**all of S3-S8 at TT**: peaking **9.667 dB @ 2.188 GHz**, HD3 **-61.10 dBc**,
+noise **0.290 mV_rms**, power **5.289 mW**, passive area **0.001092 mm^2**, eye
+**758.1 mV x 0.875 UI**, fit residual **0.0222 dB**. **"The link layer is a mock
+end to end" OVERSTATED the gap**: the channel, TX, cursors and calibration were
+all real -- what was missing is that **nothing had ever CONSTRUCTED a
+`DeviceResult`** (only `device/mock.py` did, so the two real layers had never
+been joined) and that **the AC sweep was measured and thrown away**, only four
+`meas` scalars kept, and a pole-zero fit cannot be made to four numbers. New:
+`link/fit.py` (fit, rejected above 0.5 dB, exact on synthetic data, basin
+probed from +/-2 decades) and `link/bridge.py`. **THE FUNNEL IS THE RESULT:**
+300 LHS box samples -> 276 fit (92 %), **26 meet S3 (8.67 %)**, and **168 of
+276 -- 61 % -- are REJECTED because the small-signal model no longer applies at
+the link's own drive level**; median overshoot **1.29x**. Ten designs meet S3
+and S8 together. **S8 is CONFIRMED NON-BINDING by measurement** -- 82 of 108
+valid designs meet it (76 %) -- which reproduces `CHANNEL_MODEL.md` §5's
+transistor-free prediction by an independent path, as the compression finding
+reproduces its §6. **Fidelity tiers (G2's other half, min estimator, 21
+interleaved shuffled repeats):** .op+.ac+.noise **0.1768 s**, +AC dump 0.2047,
++.dc swing 0.2257, **+HD3 transient 0.2787**, fit 0.0114 and link eval 0.0372
+with NO simulator. The transient is **cheap** (+1.23x) against `s9_yield.py`'s
+recorded "~4x" -- that figure was measured when PARSING dominated. **G71 fired
+on this session's own gate measurement** (a NEGATIVE increment for strictly
+more work), and three of the four other failures found were mine: `linearize`
+takes VECTOR NAMES not a timestep and destroys the plot on error; my
+missing-file check ran BEFORE the silent-failure scan, reporting the symptom and
+hiding the cause (G68, violated by the person who had just cited it); my FFT
+window was 20.01 cycles because `tran` yields an INCLUSIVE grid; and the
+compression gate initially rejected the MOST LINEAR designs. **S8 is in
+`V2_SPECS` and `V1_SPECS` is UNTOUCHED**, so the +8.950669 ceiling and every
+published reward still reproduce. `params.py`/`contract.py`/`env.py` untouched.
+Full write-up `nebula/G2_RESULTS.md`.
+Earlier session 20: **a teammate's reparameterization
 idea, built and measured -- its benefit is real and small, its stated mechanism
 is false.** A gm/I_D lookup table built by direct `.dc` sweep
 (`device/gmid_lut.py`, 3000 invocations / 510 s, 100 % monotone, `gmbs` on its
@@ -766,6 +800,29 @@ signaling, ADC-based DSP receiver, 28 nm CMOS reference parameters).
 │   │                       Design box DERIVED as the measured image of the
 │   │                       device box, not chosen (rule 6). `--analyse` runs
 │   │                       with no simulator.
+│   ├── link/fit.py         NEW (2026-08-17, session 21). The pole-zero FIT --
+│   │                       measured AC curve -> (g_dc, f_z, f_p1, f_p2) +
+│   │                       residual, REJECTED above 0.5 dB (§5.3b). Exact on
+│   │                       synthetic data; basin probed from +/-2 decades.
+│   │                       Poles come back ORDERED because §6 gives them
+│   │                       different meanings.
+│   ├── link/bridge.py      NEW (2026-08-17, session 21). THE G2 DELIVERABLE.
+│   │                       `device_result_from_point` is the adapter that had
+│   │                       never existed (only device/mock.py built a
+│   │                       DeviceResult); `evaluate_link` is the real one.
+│   │                       Volts end to end, so §5.3a needs no conversion;
+│   │                       compression is a VALIDITY condition (C4), checked
+│   │                       on the pulse response's own peak excursion
+│   │                       (G61 convention C).
+│   ├── experiments/exp_g2_closed_loop.py  NEW (2026-08-17, session 21).
+│   │                       `--tiers` (G2's cost criterion), `--funnel` (300
+│   │                       box samples through the whole chain), `--example`
+│   │                       (one vector to an eye). Carries the G2 worked
+│   │                       example, FOUND BY THE SEARCH not hand-picked.
+│   ├── G2_RESULTS.md       NEW (2026-08-17, session 21). Gate G2, PASSED.
+│   │                       Read §0 then §7 -- §7 is what it does NOT license
+│   │                       (TT-only, a BER BOUND with device noise only, no
+│   │                       1e-15 bathtub, S7 a lower bound).
 │   ├── GMID_MAP.md         NEW (2026-08-17, session 20). The write-up. Read
 │   │                       §0 and §8 first: the motivating mechanism is
 │   │                       measured FALSE and the recommendation is not to
@@ -1097,12 +1154,12 @@ Plus: git init, .gitignore, 28 tests, Wilson-bound BER reporting.
 
 ## 6. Key numbers & validated behavior (current state)
 
-- Tests: **1389 passing** (session 20) —
+- Tests: **1448 passing** (session 21) —
   `python -m pytest tests nebula/tests -q -m "not slow"`.
   (Was 65 + 267 = 332 at the start of session 9; 430 at the end of it; 444
   after 10b; 528 after 11; 618 after 12b; 679 after 13; 1007 after 16; 1246
   after 17; 1292 after 18; **1314** with session 19a's uncommitted trim tests;
-  **1389** after session 20.) **11** further tests are marked `slow` and
+  **1389** after session 20; **1448** after session 21 closed G2.) **11** further tests are marked `slow` and
   deselected by default — they re-derive golden values from the FULL SKY130
   library (~30 s each). Run them after a PDK update. **Note `CLAUDE.md` is
   STALE on this**: it says 407 tests and 2 deselected. **Runtime is machine-load dependent** — the same suite has
@@ -1427,6 +1484,18 @@ Plus: git init, .gitignore, 28 tests, Wilson-bound BER reporting.
   — in a single direction, via the `res_po` bottom-plate parasitic
   (G66, `RL_SMOKE.md` §7). The load screen and the corner screen both need
   re-running before design 432 can be quoted as load-robust.
+- **(nebula) G2 IS PASSED, and everything in it is TT-only.** (Session 21,
+  `nebula/G2_RESULTS.md`.) One design meets **all of S3-S8 at TT/27 C, nominal
+  VDD, one load** — S9 is NOT claimed and is gate G4. The BER on this path is a
+  **worst-case ISI bound with DEVICE NOISE ONLY**, `Q((eye/2)/sigma)`: no
+  reference-clock jitter, no crosstalk, no TX noise, and the residual ISI
+  treated as a deterministic subtraction rather than a distribution. At the
+  worked example's SNR of 298 it UNDERFLOWS double precision and reports 0.0,
+  which means "below ~1e-308", **not** "verified error-free" -- read the SNR.
+  The 1e-15 bathtub is NOT delivered: `statistical_eye.py`'s NRZ path
+  deliberately raises rather than reporting a BER 0.75x the truth from
+  four-level mathematics. The eye WIDTH is a zero-height noiseless width
+  quantised at 1/64 UI, i.e. a strict upper bound at any finite BER.
 - **(nebula) The RL results are TT-only, one seed, one spec target, 500
   steps.** `RL_SMOKE.md` establishes that the plumbing works and what breaks;
   it establishes **nothing about learning**, and its §11 says so explicitly.
@@ -1464,6 +1533,26 @@ Plus: git init, .gitignore, 28 tests, Wilson-bound BER reporting.
    (`nebula/NRZ_RETARGET_AUDIT.md`); bounds re-derived; robust geometry
    confirmed; corner-yield swept (13.49% -> 8.10%). Blocking next actions,
    in priority order:
+   - **>>> G2 IS PASSED. THE NEXT GATE IS G4, AND ONE DESIGN QUESTION NOW
+     OUTRANKS IT. <<<** (Session 21, `nebula/G2_RESULTS.md`.) The loop closes
+     and all of S3-S8 are met at TT on a design the search found. Next, in
+     order:
+     1. **COMPRESSION IS THE TOP OPEN DESIGN QUESTION AND IT IS A HUMAN'S
+        CALL.** 61 % of the approved box cannot be evaluated at the PCIe input
+        level -- the small-signal model that produced every pole stops
+        applying, and the median design overshoots its measured linear limit by
+        1.29x. Three routes, all already on record: reach below S3's 3 dB
+        floor; declare the low-loss end of the channel family out of scope; or
+        accept that the CTLE must ATTENUATE and re-derive the box's `rl` range
+        downward. `CHANNEL_MODEL.md` §6 and this file both already point here.
+     2. **The NRZ retarget of the BER path**, to replace the worst-case bound
+        with a real bathtub. SCOPED: ~6 items, all inside
+        `statistical_eye.py` (A1, B1-B5, E6), each with a hand-computable NRZ
+        value, and the fence exists so it is done group by group. Groups C and
+        D are the time-domain CDR/FFE chain and S2 does not use them.
+     3. **G4, the corner axis.** Nothing structural is missing -- the bridge
+        takes a `DeviceResult` per corner already. At 0.279 s full fidelity,
+        3 corners x 2 loads is 1.7 s per design.
    - **>>> A DECISION IS WAITING, AND IT HAS A DEADLINE THAT IS NOT ITS OWN.
      <<<** (Session 20, `nebula/GMID_MAP.md`.) A gm/I_D table and a
      design-space inverse map are **built, tested and measured**, and
@@ -2848,6 +2937,63 @@ Plus: git init, .gitignore, 28 tests, Wilson-bound BER reporting.
   filter with TN = 0 has saved zero simulations however accurate it looks. The
   remaining 52 misses are model error (G66's `res_po` bottom plate on `cl`,
   G67's quantiser, and the 1z/2p model's own 4.25 %), not the ceiling.
+
+- **G87 -- (nebula) adding a placeholder to a shared `str.format` template
+  breaks every caller that formats it directly, and there is no warning.**
+  `ac_sweep` and `hd3` added three fields to `sky130_runner._NETLIST`; the two
+  production call sites were updated, and **five `test_tail.py` tests and two
+  `test_tunable.py` tests went red with a bare `KeyError: 'tran_src'`** because
+  they assemble the deck themselves. Mechanical to fix, but the lesson is not:
+  **a shared template with growing placeholders needs ONE place that knows the
+  optional fields and their absent-values**, or the next block added has to
+  find every caller again. That place is `assemble_netlist()`, and every caller
+  now goes through it.
+
+- **G83 -- (nebula) `linearize` takes VECTOR NAMES, not a timestep, and getting
+  it wrong DESTROYS THE PLOT while ngspice exits normally.** Measured while
+  building the HD3 tier: `linearize 1e-10` prints
+
+        Error: no such vector 1e-10
+        Warning from checkvalid: vector outp is not available or has zero length.
+        Error: RHS "v(outp) - v(outn)" invalid
+
+  -- so **every later line in the `.control` block fails too**, the `wrdata`
+  writes nothing, and the exit status is clean. G26 in a new place. Bare
+  `linearize` is correct when the `tran` already uses a fixed step; it only
+  resamples onto the uniform grid an FFT needs.
+
+- **G84 -- (nebula) a `tran ... <stop> <start>` window is INCLUSIVE, so an
+  "integer number of cycles" is one sample too long for an FFT.** 20 cycles at
+  100 points/cycle arrives as **2001** samples, and `t[0]` and `t[-1]` are the
+  SAME PHASE one period apart. Feeding all 2001 to an FFT describes a
+  **20.01-cycle** window, which is not periodic: the fundamental leaks across
+  every bin and buries the third harmonic under its own skirt, **while still
+  returning a number**. Drop the duplicate endpoint. Caught on the first real
+  run only because `hd3_from_waveform` checks the cycle count and raises --
+  which is the reason to write that check even when the arithmetic looks
+  obvious.
+
+- **G85 -- (nebula) "the limit was not reached" is INFORMATION, and reading it
+  as "unknown" rejected the BEST designs.** `measured_swing_pp_v` returns the
+  1 dB compression point or `None`, and is right to refuse a fallback to
+  `4*I*RL`. But `SwingLimits` says in its own docstring that `None` means *"the
+  limit was not reached inside the swept input range -- which is information,
+  not a failure"*. The first version of the link bridge read it as unknown and
+  failed the design, which **rejected every `rs >= 400` sizing in the box --
+  i.e. every heavily degenerated, and therefore most linear, stage.** The
+  fallback is `max_swept_pp_v`: still MEASURED, and a LOWER bound, so the
+  compression gate stays conservative rather than looser. **A sentinel that
+  means "better than we could measure" must not be handled like one that means
+  "we do not know".**
+
+- **G86 -- (nebula) G68's ordering rule is easy to violate WHILE CITING IT.**
+  The AC/HD3 dump checks were written as "asked for and not produced -> fail",
+  placed BEFORE `scan_for_silent_failures`. So the first real HD3 failure
+  reported *"hd3=True but ngspice wrote no hd3.txt"* -- the SYMPTOM -- while
+  the cause (`Error: no such vector 1e-10`, G83) sat unread in the output the
+  scan would have surfaced. The files are now read inside the temp directory
+  but JUDGED after the scan. **Reading files and judging them are separate
+  steps, and the judging belongs after the cause check.**
 
 ## 10. Environment
 
@@ -5645,3 +5791,141 @@ make a test pass is a move that deserves to be visible.
 `gmid_validation_run.jsonl` + `gmid_validation_kalpha090.jsonl` (tracked).
 Cost: 3000 sweeps / 510 s for the table, 1659 + 151 SPICE invocations for the
 experiment.
+
+### 2026-08-17 - Session 21 (G2: the loop is closed, and the first thing it revealed is that compression binds)
+
+**GATE G2 IS PASSED, three days before its 20 Aug date.** One parameter vector
+produces a drawn SKY130 schematic that meets **every one of S3-S8 at TT**, with
+no mock anywhere in the path. Full write-up `nebula/G2_RESULTS.md`; read §0
+and §7.
+
+**"THE LINK LAYER IS A MOCK END TO END" OVERSTATED THE GAP, and the two things
+genuinely missing were both structural rather than large.** `link/channel.py`,
+`link/tx.py`, `link/cursors.py` and `link/calibration.py` were all real, tested
+and had already produced published results. What did not exist:
+
+1. **Nothing in the repo had ever CONSTRUCTED a `DeviceResult`.**
+   `device/mock.py` was the only constructor; `sky130_runner` produced a
+   `Sky130Point` and stopped. **So the real device layer and the real link
+   layer had never been connected by anything** -- which is why the mock was
+   the only way to exercise the bridge, and why G16 read as "the link layer is
+   fake" when the truth was "the two halves were never joined".
+2. **The AC sweep was measured and thrown away.** `ac dec 50 1meg 100g` has
+   always run, but only four `meas` scalars were parsed off it, and **a
+   pole-zero fit cannot be made to four numbers.** `DeviceResult` has declared
+   `ac_freq_hz`/`ac_mag_db` since the interface freeze for exactly this.
+
+**THE WORKED EXAMPLE, every number measured** (funnel row i=110, the largest
+eye among the ten designs meeting both S3 and S8 -- **found by the search, not
+hand-picked from outside the box**):
+
+        w_in 38.873 um  l_in 0.18762 um  nf 4  i_bias 3.0787 mA
+        rs 697.71  cs 1.0134 p  rl 653.11  vcm 1.18384
+        -> Rs res_high_po w=10 l=20.69 | Cs cap_mim_m3_1 22.345^2
+           RL res_high_po w=10 l=19.285 | tail W=171 um 1:8 mirror
+
+        S3  9.667 dB @ 2.1878 GHz   (3-12 dB, 1.25-2.5 GHz)   PASS
+        S4  -61.10 dBc @ 100 MHz    (< -30 dBc)               PASS
+        S5  0.2897 mV_rms           (< 1.5 mV)                PASS
+        S6  5.289 mW  measured      (< 15 mW)                 PASS
+        S7  0.001092 mm^2 passives  (< 0.05 mm^2)             PASS (2.2 %)
+        S8  758.11 mV x 0.8750 UI   (> 100 mV, > 0.4 UI)      PASS
+        fit residual 0.0222 dB      (gate 0.5 dB)             PASS
+
+**THE FUNNEL IS THE ACTUAL RESULT: COMPRESSION BINDS, NOT THE EYE.** 300 LHS
+samples of the approved box, TT, drawn passives, real mirror, 12 dB channel,
+161 s: 300 simulated, **276 fit (92 %)**, **26 meet S3 (8.67 %)**, and then
+**168 of the 276 fitted designs -- 61 % -- are REJECTED because the
+small-signal model no longer applies at the link's own drive level.** The
+median design overshoots its measured linear limit by **1.29x** (p90 3.02, max
+7.77). Ten designs meet S3 and S8 together.
+
+**S8 IS CONFIRMED NON-BINDING, now by measurement through real silicon:** 82 of
+the 108 designs whose small-signal model holds meet S8 (**76 %**), and all ten
+S3-compliant valid designs have an open eye. `CHANNEL_MODEL.md` §5 predicted
+this from a pulse response with no transistors in it -- *"S8 vertical is not
+binding and never has been"* -- so **two independent paths now agree**. The
+compression finding likewise reproduces `CHANNEL_MODEL.md` §6's "compression
+binds at 5 of 7 loss points" from transistor-level silicon instead.
+
+**THE FIDELITY-TIER TABLE, which is the other half of G2's criterion** (min
+estimator, 21 interleaved shuffled repeats):
+
+        .op + .ac + .noise          0.1768 s
+        + AC curve dump             0.2047 s   (+0.0279)
+        + .dc swing sweep           0.2257 s   (+0.0210)
+        + HD3 transient + FFT       0.2787 s   (+0.0530)
+        pole-zero fit               0.0114 s   no simulator
+        link eval (pulse->eye)      0.0372 s   no simulator
+
+A full-fidelity evaluation is **0.279 s**; before session 19a's trim an
+AC-ONLY one cost 2.887 s. **The transient is CHEAP** -- +1.23x, against
+`s9_yield.py`'s recorded "~4x the cost of AC+noise" and G0's 175x spread. Those
+were measured when library PARSING dominated; the trim made the analyses
+themselves visible.
+
+**G71 FIRED ON THIS SESSION'S OWN MEASUREMENT OF ITS OWN GATE CRITERION.** Run
+tier-by-tier with a per-tier warm-up, the table came out with `.op+.ac+.noise`
+at 0.3841 s and `+ac_curve` at 0.3138 s -- **a NEGATIVE increment for strictly
+more work**, because whichever tier goes first pays the process-level cache
+warming. Fixed with the full protocol: interleaved, order re-shuffled every
+repeat. And **the MINIMUM is the estimator the increments are read from**, with
+the reason stated: process-launch noise is additive and one-sided, so the min
+estimates the work while the median carries contention. Both are reported and
+they agree on every ordering.
+
+**FOUR MORE FAILURES FOUND AND FIXED, three of them mine.** **`linearize` takes
+VECTOR NAMES, not a timestep** -- `linearize 1e-10` prints
+`Error: no such vector 1e-10`, **destroys the plot** so every later line in the
+block fails too, and ngspice still exits normally. G26 in a new place.
+**My missing-file check ran BEFORE `scan_for_silent_failures`**, so it reported
+"wrote no hd3.txt" (the symptom) while the real message sat unread in the
+output (the cause) -- G68's ordering, violated by the person who had just cited
+it. **My FFT window was 20.01 cycles, not 20**: `tran` yields an INCLUSIVE
+grid, so 20 cycles at 100 points/cycle arrives as 2001 samples whose first and
+last are the same phase; the duplicate endpoint has to be dropped or the window
+is not periodic and leaks. Caught by the integer-cycle check on the first real
+run. And **the compression gate initially rejected the MOST LINEAR designs**:
+`measured_swing_pp_v` returns `None` when the sweep never reaches 1 dB
+compression, which `SwingLimits` documents as *"information, not a failure"*,
+and reading it as unknown failed every `rs >= 400` sizing in the box.
+
+**S8 IS WIRED INTO THE REWARD AS `V2_SPECS`, AND `V1_SPECS` IS UNTOUCHED.**
+Adding two rows changes `len(specs)`, hence `B = N + 1`, hence **every reward
+number this project has published** -- including the **+8.950669** ceiling
+(G74), which is a property of the spec set rather than of the circuit.
+`BASELINES.md` §7f forbids moving that without re-running every baseline, so v2
+is opt-in until a human decides to. 88 reward tests pass unchanged, and
+`feasible_bonus(len(V1_SPECS))` is still exactly 8.0. `margins()` OMITS the S8
+rows without a link result rather than defaulting them, so `V2_SPECS` without
+an eye raises rather than scoring a missing eye as satisfied.
+
+**Scope note:** `ac_sweep` and `hd3` both default **OFF**, so the netlist stays
+byte-identical to the one every published number came from, and
+`test_ac_sweep_capture_changes_no_measured_value` compares 17 parsed fields
+across both settings at **rel = 0, abs = 0**. `common/params.py`,
+`rl/contract.py` and `rl/env.py` are untouched.
+
+**AND ADDING THOSE TWO FLAGS BROKE SEVEN TESTS THAT NOBODY WOULD HAVE
+PREDICTED (G87).** Three new `str.format` placeholders in the shared netlist
+template meant five `test_tail.py` tests and two `test_tunable.py` tests failed
+with a bare `KeyError: 'tran_src'`, because they assemble the deck directly.
+Fixed by routing every caller through `assemble_netlist()`, which is now the
+single place that knows the optional fields -- so the next block added does not
+have to find every caller again.
+
+**And one of MY OWN new tests then went red on a pure rewording**, which is
+worth recording as its own small lesson: `test_asking_for_the_sweep_and_not_
+getting_it_is_a_FAILURE` asserted `"no ac.txt" in fail_reason`, and the G68
+ordering fix inserted the word "readable". **A test that pins prose rather than
+behaviour will go red for the right change.** It now asserts the stable half --
+that the flag was asked for and the file is what is missing.
+
+**Artifacts:** `nebula/link/fit.py`, `nebula/link/bridge.py`,
+`nebula/experiments/exp_g2_closed_loop.py`, `nebula/G2_RESULTS.md`,
+`g2_closed_loop_run.jsonl` (tracked), `nebula/tests/test_link_fit.py` (30),
+`nebula/tests/test_link_bridge.py` (26), plus HD3 + AC-capture + area additions
+to `sky130_runner.py`, `passives.py`, `cursors.py` and `reward_v1.py`.
+
+**1389 -> 1448 green** (+59: `test_link_fit.py` 30, `test_link_bridge.py` 26,
+three AC-capture tests in `test_sky130_runner.py`), 11 deselected, 218 s.

@@ -33,7 +33,8 @@ self-contained write-up of one experiment.
 | 10 | [`RL_SMOKE.md`](RL_SMOKE.md) | The RL loop, run end to end **badly on purpose**. The environment contract; the six integration bugs it surfaced; **78 % of what a policy finds is a fictitious peak at the sweep edge**; drawn passives move `f_peak` by more than the load-robustness slack; and where the wall clock actually goes (**99.7 % simulator**) | writing any RL code, or quoting any cost |
 | 11 | [`PREDICTIONS.md`](PREDICTIONS.md) | Pre-registered predictions vs. outcomes, including the misses | — |
 | 12 | [`NRZ_RETARGET_AUDIT.md`](NRZ_RETARGET_AUDIT.md) | All 24 four-level assumptions in the inherited PAM-4 code, risk-marked | retargeting anything |
-| 13 | [`GMID_MAP.md`](GMID_MAP.md) | A gm/I_D table and a design-space inverse map, **measured and not adopted**. The reparameterization's stated mechanism is false (G44 among simulated designs is unchanged, 38.07 → 37.74 %); its real benefit is 1.16× on simulations per valid design. Three PDK findings that outlive it: the gm/I_D W-independence premise fails on SKY130 at fixed `nf`; you write microns and read back metres; an out-of-bin **length** is silently extrapolated where an out-of-bin **width** is refused | doing any gm/I_D work, or building any pre-simulation filter |
+| 13 | [`G2_RESULTS.md`](G2_RESULTS.md) | **Gate G2, passed.** The device→link bridge: one parameter vector → a drawn SKY130 schematic meeting **all of S3–S8 at TT** (eye 758 mV × 0.875 UI). The funnel's finding: **compression binds, not the eye** — 61 % of the approved box cannot be evaluated at the PCIe input level. S8 confirmed non-binding by measurement, agreeing with `CHANNEL_MODEL.md` §5 by an independent path. Read §7 before quoting anything: TT-only, and the BER is a bound with device noise only | quoting any eye number, or believing "the link layer is a mock" |
+| 14 | [`GMID_MAP.md`](GMID_MAP.md) | A gm/I_D table and a design-space inverse map, **measured and not adopted**. The reparameterization's stated mechanism is false (G44 among simulated designs is unchanged, 38.07 → 37.74 %); its real benefit is 1.16× on simulations per valid design. Three PDK findings that outlive it: the gm/I_D W-independence premise fails on SKY130 at fixed `nf`; you write microns and read back metres; an out-of-bin **length** is silently extrapolated where an out-of-bin **width** is refused | doing any gm/I_D work, or building any pre-simulation filter |
 
 Each write-up opens with its **assumptions section**. Read it. Several results
 are explicitly bounds rather than answers, and the assumptions section is where
@@ -82,9 +83,17 @@ link/                  Device result -> eye.
   config.py            LinkConfig + the PCIe Gen2 anchors (swing, de-emphasis).
   spice/               Netlists, the trimmed SKY130 library, and .spiceinit.
 
-link/                  Device result → eye. calibration.py owns the normalised→volts
-                       conversion, which is the highest-risk silent bug in the project.
-                       Still a mock end to end.
+  fit.py               The POLE-ZERO FIT: measured AC curve -> (g_dc, f_z, f_p1, f_p2)
+                       + residual, REJECTED above 0.5 dB (§5.3b). Exact on synthetic
+                       data; the basin is probed from +/-2 decades, not assumed.
+  bridge.py            THE G2 DELIVERABLE. `device_result_from_point` is the adapter
+                       that had never existed -- only device/mock.py ever built a
+                       DeviceResult, so the two real layers had never been joined.
+                       `evaluate_link` is the real one. Volts end to end, so §5.3a
+                       needs no conversion; compression is a VALIDITY condition, not
+                       a clamp. See G2_RESULTS.md.
+  mock.py              SYNTHETIC. Superseded by bridge.py for every real path; kept
+                       because the interface tests are written against it.
 
 rl/                    THE LOOP. contract.py is the environment contract — the nine-
                        dimensional box (copied from the experiments, never re-derived),

@@ -309,6 +309,29 @@ class CursorSet:
         """Worst-case vertical eye opening, differential volts. 0 when closed."""
         return max(0.0, 2.0 * (self.h0_v - self.residual_abs_v))
 
+    @property
+    def peak_excursion_pp_v(self) -> float:
+        """Largest differential output swing any bit pattern can produce, Vpp.
+
+        `2 * sum_k |h_k|` — every symbol taking the sign that pushes the output
+        furthest. This is **G61's convention C, "peak distortion through the
+        REAL pulse response"**, which `CHANNEL_MODEL.md` §6 names as the one to
+        use after measuring that the three conventions in this repo disagree by
+        **1.8x**.
+
+        It is the quantity a compression check wants, and it needs no decision
+        about which input amplitude to pair with which gain: the pulse response
+        already carries the transmitter's swing, the channel and the CTLE.
+        Pairing a long-run input level with a Nyquist gain — the obvious
+        alternative — is convention B, which measured 7 of 7 loss points
+        compressing and is the most pessimistic of the three.
+
+        A worst-case bound: real PCIe traffic is 8b/10b-coded and
+        run-length-limited, so the true peak excursion is smaller
+        (`HANDOFF.md` §7).
+        """
+        return 2.0 * sum(abs(v) for v in self.taps.values())
+
     def normalised(self, k: int) -> float:
         return self.taps[k] / self.h0_v
 
@@ -365,13 +388,43 @@ def extract_cursors(
     """
     pr = pulse_response(channel, tx, ctle, osr, n_fft, fbaud_hz)
     cursor = int(np.argmax(pr))
-    h0 = float(pr[cursor])
-    if h0 <= 0.0:
-        raise ValueError(
-            f"pulse response has a non-positive maximum ({h0!r}) — the channel or "
-            f"CTLE inverted the pulse, which is a sign convention bug upstream"
-        )
+    return cursors_from_pulse(pr, osr, cursor, label=label, require_positive=True)
 
+
+def cursors_from_pulse(pr: np.ndarray, osr: int, cursor: int, *,
+                       label: str = "",
+                       require_positive: bool = True) -> CursorSet:
+    """UI-spaced taps of an ALREADY-COMPUTED pulse response, at a GIVEN phase.
+
+    Split out of `extract_cursors` so the eye-width phase scan and the
+    published cursor tables share ONE definition of "what a tap is"
+    (CLAUDEwa.md §8 rule 9). `extract_cursors` now calls this with the
+    `argmax` phase, and `tests/test_cursors.py` pins that the numbers behind
+    `CHANNEL_MODEL.md` §5 did not move when it was factored out.
+
+    `cursor` is the sample index the `k = 0` tap is read at; phases other than
+    the `argmax` are exactly how the eye is scanned across a UI.
+
+    `require_positive` is the sign-convention guard, and it is relaxed only by
+    the phase scan: sampling far from the cursor legitimately lands on a
+    negative excursion of the pulse, which is a closed eye at that phase and
+    not a bug upstream.
+    """
+    h0 = float(pr[cursor % pr.size])
+    if h0 <= 0.0:
+        if require_positive:
+            raise ValueError(
+                f"pulse response has a non-positive maximum ({h0!r}) — the channel or "
+                f"CTLE inverted the pulse, which is a sign convention bug upstream"
+            )
+        # A closed eye at this phase. Reported as such rather than raising, so
+        # the width scan can walk right off the edge of the opening.
+        return CursorSet(taps={0: h0}, h0_v=h0, dfe_tap=0.0,
+                         precursor_abs_v=math.inf, postcursor_residual_abs_v=0.0,
+                         residual_abs_v=math.inf, osr=int(osr),
+                         cursor_index=int(cursor), n_ui_scanned=0, label=label)
+
+    n_fft = pr.size
     # The scan window covers the whole buffer exactly once. Its low edge is the
     # true start of the pulse (`-(cursor // osr)`), pulled down further if
     # needed so every REPORTED_TAPS index is inside — otherwise a cursor within
@@ -408,6 +461,82 @@ def extract_cursors(
 # ─────────────────────────────────────────────────────────────────────────────
 # S8
 # ─────────────────────────────────────────────────────────────────────────────
+
+
+@dataclass(frozen=True)
+class EyeOpening:
+    """The eye swept across one UI of sampling phase.
+
+    `phase_ui` is the offset from the `h0`-maximising instant, so 0.0 is the
+    phase `extract_cursors` reports and the array spans [-0.5, +0.5).
+    """
+
+    phase_ui: np.ndarray
+    eye_h_v: np.ndarray            # worst-case vertical opening at each phase
+    best_phase_ui: float
+    eye_h_max_v: float
+    width_ui: float
+    osr: int
+
+    @property
+    def phase_resolution_ui(self) -> float:
+        """The quantisation of `width_ui`. A width quoted finer than this is
+        quoting the FFT grid, not the circuit — the same caution session 11
+        recorded for `f_peak`'s 0.0664-octave lattice."""
+        return 1.0 / self.osr
+
+
+def eye_opening_vs_phase(pr: np.ndarray, osr: int, cursor: int) -> EyeOpening:
+    """Sweep the sampling phase across one UI and measure the eye at each.
+
+    **What "eye width" means here, stated because there are several
+    conventions and they do not agree.** This is the contiguous span of
+    sampling phases, containing the optimum, over which an ideal 1-tap DFE
+    leaves the eye OPEN — i.e. `residual_abs_v < h0_v`. It is a
+    *zero-height, noiseless* width: no BER contour, no jitter, no noise.
+
+    That makes it a strict UPPER BOUND on the width at any finite BER, and it
+    is the right first number for two reasons: it is computed from the same
+    cursor definition as the eye height beside it, and it needs nothing from
+    the PAM-4 BER engine, whose NRZ path is fenced off (`NRZ_RETARGET_AUDIT.md`
+    — it raises rather than reporting a BER 0.75x the truth).
+
+    `CONTIGUITY IS REQUIRED`, not assumed: the span is grown outward from the
+    best phase, so an isolated phase that happens to open elsewhere cannot
+    inflate the width.
+    """
+    pr = np.asarray(pr, dtype=float)
+    osr = int(osr)
+    if osr < 4:
+        raise ValueError(f"osr must be at least 4 to resolve a phase, got {osr}")
+
+    offsets = np.arange(-(osr // 2), osr - (osr // 2))
+    heights = np.empty(offsets.size)
+    for i, d in enumerate(offsets):
+        cs = cursors_from_pulse(pr, osr, int(cursor + d), require_positive=False)
+        heights[i] = cs.eye_h_v
+
+    i_best = int(np.argmax(heights))
+    open_mask = heights > 0.0
+
+    # Grow outward from the optimum; stop at the first closed phase on each
+    # side. A gap elsewhere in the UI is not part of THIS opening.
+    lo = i_best
+    while lo - 1 >= 0 and open_mask[lo - 1]:
+        lo -= 1
+    hi = i_best
+    while hi + 1 < offsets.size and open_mask[hi + 1]:
+        hi += 1
+    width = (hi - lo + 1) / osr if open_mask[i_best] else 0.0
+
+    return EyeOpening(
+        phase_ui=offsets / osr,
+        eye_h_v=heights,
+        best_phase_ui=float(offsets[i_best]) / osr,
+        eye_h_max_v=float(heights[i_best]),
+        width_ui=float(width),
+        osr=osr,
+    )
 
 
 @dataclass(frozen=True)

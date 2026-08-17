@@ -54,12 +54,20 @@ deliverable.
 |---|---|
 | policy → sizing | **real** (`nebula/rl/contract.py`, `nebula/rl/env.py`, `nebula/rl/ppo.py`) |
 | sizing → ngspice → DeviceResult | **real and heavily measured** (`nebula/device/`) |
-| DeviceResult → LinkResult | **MOCK end to end** (`nebula/link/mock.py`) — every number fake (G16) |
-| DeviceResult → reward | **real** (`nebula/rl/reward_v1.py`), but it **refuses to score S8** because the link half is a mock, and it is right to refuse |
+| DeviceResult → LinkResult | **REAL since 2026-08-17** (`nebula/link/fit.py` + `nebula/link/bridge.py`) — gate G2, passed |
+| DeviceResult → reward | **real**, and S8 is now scorable via `reward_v1.V2_SPECS`. `V1_SPECS` is deliberately unchanged so every published reward number still reproduces |
 
-That single mock row is gate **G2**, and it is the gap between this project and
-the competition's own wording *"outputs the final schematic and resulting
-specs."*
+**Gate G2 is passed** (`nebula/G2_RESULTS.md`): one parameter vector produces a
+drawn SKY130 schematic meeting **all of S3–S8 at TT** — eye 758 mV × 0.875 UI.
+The competition's wording *"outputs the final schematic and resulting specs"* is
+now satisfied at TT; S9 (corners) is gate G4 and is not claimed.
+
+**What the closed loop revealed on its first run is the interesting part:**
+**compression binds, not the eye.** 61 % of the approved parameter box cannot be
+evaluated at the PCIe input level, because the small-signal model that produced
+every pole stops applying. S8 turns out to be met by 76 % of the designs that
+are valid — confirming, by an independent path, a prediction `CHANNEL_MODEL.md`
+§5 made from a pulse response with no transistors in it.
 
 ---
 
