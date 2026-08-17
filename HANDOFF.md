@@ -501,6 +501,13 @@ signaling, ADC-based DSP receiver, 28 nm CMOS reference parameters).
 │                             an explicit "Not audited" section. If you add a
 │                             capability, add it here; if you retire one,
 │                             remove it here.
+├── PLAN.md                 ← NEW (2026-08-17, session 21b). The TEAM's
+│                             operating plan for the 29 days to submission:
+│                             three lanes (RL / analog / delivery), the seven
+│                             DECISIONS with owners and deadlines, phase gates,
+│                             and the cut order if time runs short. SUPERSEDES
+│                             `nebula/NEXT_STEPS.md`'s ordering — its steps 1
+│                             and 3 are done — but not its per-step prompts.
 ├── decisions.md            ← NEW (2026-08-17, session 19b). The decision
 │                             register: what was decided, why, what it cost,
 │                             and where it is written down. Grouped framing /
@@ -5929,3 +5936,31 @@ to `sky130_runner.py`, `passives.py`, `cursors.py` and `reward_v1.py`.
 
 **1389 -> 1448 green** (+59: `test_link_fit.py` 30, `test_link_bridge.py` 26,
 three AC-capture tests in `test_sky130_runner.py`), 11 deselected, 218 s.
+
+### 2026-08-17 - Session 21b (PLAN.md: the team's operating plan; no code change)
+
+**`PLAN.md` is new**, at the repository root, written because the project now
+has THREE PEOPLE working in parallel rather than one agent working serially,
+and `nebula/NEXT_STEPS.md` was written for the latter.
+
+What it carries that nothing else does:
+
+* **Three lanes with one-line jobs** -- RL (owns G3), analog (owns G4 and the
+  design decisions), delivery (owns the report, the demo and the schedule) --
+  and the single hard dependency between them, deliberately placed first so it
+  never blocks anything.
+* **Seven decisions with OWNERS and DEADLINES**, each with a recommended
+  answer and its reasoning, so the team is deciding rather than starting from
+  blank. D1 (compression) is the one that blocks the sweep and therefore G3.
+* **A hard stop on G3 tuning at Day 14.** The largest schedule risk is not
+  technical -- it is G3 becoming a tuning rabbit hole. `CLAUDEwa.md` §7 already
+  says a measured negative result is an acceptable answer; this puts a date on
+  taking it.
+* **The cut order**, and what may never be cut (G4 and the report).
+
+**Relationship to `NEXT_STEPS.md`, stated in both directions:** that file's
+steps 1 and 3 are DONE (the library trim, session 19a; the closed loop,
+session 21). Its remaining steps are folded into the phases. Its per-step
+PROMPTS are still useful and are not superseded.
+
+Nothing executable changed. **1448 green, unchanged.**
