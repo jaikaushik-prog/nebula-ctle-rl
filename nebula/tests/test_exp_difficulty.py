@@ -86,8 +86,14 @@ def _stub(monkeypatch, pattern):
     calls = {"n": 0}
 
     def _fake_evaluate(sizing, budget, corner="tt", temp_c=27.0,
-                       vdd_scale=1.0, keep_raw_text=False):
+                       vdd_scale=1.0, keep_raw_text=False,
+                       ac_peak_interp=False):
+        # The stub tracks the REAL signature by name rather than swallowing
+        # `**kw`: a keyword the harness starts passing and the stub silently
+        # absorbs is a threading bug that no test can see. `ac_peak_interp`
+        # is recorded so a test can assert `Objective` passes it through.
         calls["n"] += 1
+        calls["ac_peak_interp"] = bool(ac_peak_interp)
         r = pattern(calls["n"])
         budget.charge(r.n_spice, 0.0)
         return r

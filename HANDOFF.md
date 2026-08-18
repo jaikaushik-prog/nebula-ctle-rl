@@ -12,7 +12,18 @@
 > discovered to the Gotchas section. A change without a handoff update is an
 > incomplete change.
 
-Last updated: **2026-08-17** (session 21: **GATE G2 IS PASSED, three days
+Last updated: **2026-08-19** (session 22e: **task 1's mechanism is in and
+PRE-REGISTERED, with no measurement yet.** The AC peak can now be read off
+the parabola through the three samples bracketing the discrete maximum
+instead of off the `dec 50` lattice -- `run_point(ac_peak_interp=True)`,
+**zero extra simulation**, opt-in, and the default path is provably
+byte-identical, so G74's **+8.950669** ceiling and every published reward
+still reproduce. Whether that ceiling is GONE or merely MOVED is measured
+by `experiments/exp_peak_interp.py`; `PREDICTIONS.md` entry 9 is committed
+ahead of the numbers. Tests **1480 -> 1504**. New gotcha **G92**: two
+arithmetics over the same events are ONE measurement.)
+
+Earlier session 21: **GATE G2 IS PASSED, three days
 early, and the first thing the closed loop revealed is that COMPRESSION binds
 rather than the eye.** One parameter vector -> a drawn SKY130 schematic meeting
 **all of S3-S8 at TT**: peaking **9.667 dB @ 2.188 GHz**, HD3 **-61.10 dBc**,
@@ -3090,6 +3101,30 @@ Plus: git init, .gitignore, 28 tests, Wilson-bound BER reporting.
   `approx` on a farad value.** Same shape as G31 and G80 -- the units in this
   project are small enough that library defaults chosen for volts and ohms are
   meaningless for capacitance.
+
+- **G92 -- (nebula) TWO ARITHMETICS OVER THE SAME EVENTS ARE ONE MEASUREMENT,
+  and computing a number twice is not corroborating it.** Session 22c raised
+  G89 (the pre-screen discards ceiling-capable designs) and called it
+  *"supported two independent ways"*: a direct rate ratio 9/2000 against
+  16/2000, and a lattice argument `ceiling_rate ~ S3_rate/15` that missed the
+  screened arm by 2.1x. **Those are not two supports. Both are functions of the
+  same 9 and 16 counts.** Doubling the events took the ratio 0.535 -> 0.917 and
+  killed the effect; on the pooled data the lattice arithmetic over-predicts by
+  1.36x unscreened and 1.56x screened -- uniformly, with no arm-specific effect
+  at all. **A second statistic computed from the same sample inherits that
+  sample's noise in full, so agreement between the two says something about the
+  algebra and nothing about the world.** The owner's own review then promoted
+  the suspicion further, from "a suspicion with a CI spanning 1.0" to "caught
+  three separate ways", by counting the same pair again.
+  **Same family as G71**, which is the wall-clock version: a number that looked
+  corroborated because it was measured twice in one ordering. The test in both
+  cases is the same one -- *what would have to be independently true for these
+  two figures to disagree?* If the answer is "nothing", there is one
+  measurement. **More events, or a different population; not different
+  algebra.** What survives about the pre-screen is narrower and rests on two
+  genuinely independent measurements: session 18b's accuracy falsification
+  (MdAPE 4.93 -> 15.85 %, false rejection 0.39 -> 3.88 %) and session 20's
+  TN = 0. Its population rates transfer; its per-design accuracy does not.
 
 ## 10. Environment
 
@@ -6345,3 +6380,99 @@ The Task 1 case now rests on the screened arms -- **75 % of them reach the
 ceiling inside the 150-simulation budget and become unrankable** -- and on the
 G3 argument that a 57-design plateau at one value is where a policy gradient
 vanishes near the optimum.
+
+### 2026-08-19 - Session 22e (task 1: the interpolated AC peak - CODE + TESTS + PRE-REGISTRATION, NOT YET RUN)
+
+**No measurement in this commit.** It contains the mechanism, its tests, and
+`PREDICTIONS.md` entry 9 written before any of the three runs. Split out
+deliberately so the predictions are in git history ahead of the numbers, which
+is the same shape as session 22's task-0 commit.
+
+**What G74 says, and what task 0 measured about it.** `meas ac g_pk MAX` can
+only report frequencies on the `ac dec 50 1meg 100g` lattice -- a grid
+**0.0664386 octaves** apart -- and `reward_v1`'s feasible branch is
+`B + min_i(margin_i/tol_i)` with `S3_f_peak`'s margin
+`0.5 - |log2(f_peak/f_target)|`. The nearest lattice point to the mid-window
+target (1.767767 GHz) is **1.737801 GHz, 0.0246654 octaves below**, so the best
+attainable score is **8.950669** and it is a property of the SWEEP GRID.
+Task 0 then measured the consequence at 6.4x the original evidence:
+**57 distinct designs tied at that one value across 8000 simulations, with
+nothing above.** A plateau at the optimum is the objective shape a policy
+gradient cannot climb.
+
+**The mechanism.** `device/sky130_runner.interpolate_peak_log_f` fits the
+parabola through the three samples bracketing the discrete maximum, in
+`(log2 f, dB)`, and returns its vertex. **Zero extra simulation:** the curve is
+already dumped by `run_point(ac_sweep=True)`, which session 21 proved inert at
+rel=0/abs=0. `dec` is NOT raised -- that would be a cost change and it is the
+owner's call.
+
+**Everything is opt-in and the default path is provably untouched.**
+`run_point(ac_peak_interp=True)` (implies `ac_sweep`) fills NEW fields
+`f_pk_interp_hz` / `g_pk_interp_db` / `peak_interp`; `f_pk_hz` and `g_pk_db` are
+never written. `evaluate(ac_peak_interp=True)` adds NEW `meas` keys
+`f_peak_oct_interp` / `peaking_db_interp` and leaves `f_peak_oct` /
+`peaking_db` alone, so `reward_v1(meas)` is bit-identical with the flag on or
+off. `Objective(ac_peak_interp=...)` threads it and defaults False. The single
+definition of the swapped measurement vector is
+`evaluator.meas_with_interpolated_peak` (rule 9) -- both keys move together or
+neither does, because a frequency from the parabola beside a magnitude from the
+lattice is one peak read in two places.
+
+**The G44 guard, and the asymmetry that is deliberate.**
+`Sky130Point.peak_interp_is_sweep_edge` is the interpolated counterpart of
+`peak_is_sweep_edge` and RAISES rather than returning False when the
+interpolation never ran -- "not asked for" is not an answer to "is this peak
+fictitious". A **top**-edge maximum is refused (G44: the response is still
+rising, there is no bracketing triple, and an interpolated peak there would be
+the same fictitious peak with extra decimals). A **bottom**-edge maximum
+carries the lattice pair forward instead, because 10 MHz is both a grid point
+AND the boundary, so `meas ac MAX` reported the true maximum of the searched
+interval and nothing was rounded. That asymmetry mirrors one this repo already
+made on purpose: `validate` rejects the rising case and ACCEPTS the falling one,
+and its comment records why -- rejecting the falling case "would erase the
+reward gradient over the entire low-peaking region of the box, which is where a
+randomly initialised policy starts". Refusing them on the interpolated path
+would rebuild that hole one layer up.
+
+**One structural change made for testability, and it is the interesting one.**
+The vertex arithmetic lives in its own function `parabolic_vertex(y0, y1, y2)`
+because its two refusals -- a non-concave triple, and a vertex outside its own
+cell -- are **UNREACHABLE** through `interpolate_peak_log_f`: `np.argmax`
+returns the FIRST maximal sample, which forces `y1 > y0` and `y1 >= y2`, hence
+`y0 - 2*y1 + y2 < 0` strictly. A guard whose condition cannot be reached is
+indistinguishable from a guard that was deleted, so the arithmetic is tested
+directly where a flat triple can be handed to it, and the composition is
+asserted separately as the invariant it is.
+
+**New constant `MAX_SEARCH_BOT_HZ = 10e6`, and a deliberate rule-9 exception.**
+The netlist's `FROM=10meg` stays the definition; turning it into a placeholder
+would edit a template every published number came from, for no gain.
+`test_the_max_search_window_matches_the_netlist` parses `FROM=`/`TO=` out of the
+assembled deck and asserts both constants against it, so either side moving
+alone goes red. G32 was a model card that differed between netlist and runner
+with no such test.
+
+**Tests: 1480 -> 1504 green** (+23 in `nebula/tests/test_peak_interp.py`, +1 in
+`test_baselines.py`). The two G44 tests break the input, watch the guard fire,
+put the input back and watch it stop. The two stub evaluators in
+`test_baselines.py` / `test_exp_difficulty.py` now name `ac_peak_interp`
+explicitly rather than swallowing `**kw`, because a keyword the harness starts
+passing and a stub silently absorbs is a threading bug no test can see.
+
+**New:** `nebula/experiments/exp_peak_interp.py` (three sub-experiments: the
+300-design G2 funnel replay, a `dec 50` vs `dec 500` validation of whether the
+vertex is RIGHT rather than merely finer, and a replay of all four task-0 pools
+at the same seeds with `ac_peak_interp=True` as the only difference),
+`nebula/tests/test_peak_interp.py`, `PREDICTIONS.md` entry 9.
+
+**Untouched:** `params.py`, `contract.py`, `env.py`, `V1_SPECS`, the
+tolerances, the box, the pre-screen, every seed.
+
+**Next:** run the three experiments and write `nebula/PEAK_INTERP.md`. The
+headline prediction, pre-registered: **all 57 ties separate, and 28 of them
+(half the cell, because the lattice point sits below the target) score ABOVE
+8.950669.** Falsification condition 1 is the one that stops the task: if any of
+the four pools fails to reproduce its published `n_s3`, `n_at_ceiling` and
+`ceiling_design_ids`, the flag is not additive and nothing measured here
+extends what it claims to extend.

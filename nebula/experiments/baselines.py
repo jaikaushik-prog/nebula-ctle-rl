@@ -374,11 +374,20 @@ class Objective:
                  target_peaking_db: Optional[float] = None,
                  specs: Sequence[str] = R.V1_SPECS,
                  on_trial: Optional[Callable[[Trial], None]] = None,
-                 spice: Optional[SpiceBudget] = None):
+                 spice: Optional[SpiceBudget] = None,
+                 ac_peak_interp: bool = False):
         self.problem = problem
         self.budget_sims = int(budget_sims)
         self.prescreen = bool(prescreen)
         self.specs = tuple(specs)
+        # ADDITIVE AND DEFAULT OFF (session 22c, G74). When on, `evaluate` puts
+        # the sub-grid peak into `meas` under NEW keys and leaves the lattice
+        # ones alone, so `_score_one` below scores exactly what it always did
+        # and `Trial.reward` is bit-identical either way. A caller wanting the
+        # interpolated objective re-scores `Trial.meas` through
+        # `evaluator.meas_with_interpolated_peak`; nothing here does it for it,
+        # because `Objective.ceiling` is a LATTICE quantity and would be wrong.
+        self.ac_peak_interp = bool(ac_peak_interp)
         # The same target the RL smoke run used: the geometric centre of S3's
         # octave and the arithmetic centre of its dB band. Mid-window in BOTH
         # axes, so the benchmark does not become a measurement of one edge.
@@ -424,7 +433,8 @@ class Objective:
     def _score_one(self, sizing: Sizing, pt: EvalPoint
                    ) -> tuple[float, R.RewardBreakdown, EvalResult]:
         ev = evaluate(sizing, self.spice, corner=pt.corner,
-                      temp_c=pt.temp_c, vdd_scale=pt.vdd_scale)
+                      temp_c=pt.temp_c, vdd_scale=pt.vdd_scale,
+                      ac_peak_interp=self.ac_peak_interp)
         rb = R.reward(ev.meas, self.target_f_peak_hz, specs=self.specs,
                       target_peaking_db=self.target_peaking_db,
                       headroom=(ev.headroom

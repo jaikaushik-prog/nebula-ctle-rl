@@ -65,8 +65,14 @@ def _stub_factory(pattern):
     calls = {"n": 0}
 
     def _fake_evaluate(sizing, budget, corner="tt", temp_c=27.0,
-                       vdd_scale=1.0, keep_raw_text=False):
+                       vdd_scale=1.0, keep_raw_text=False,
+                       ac_peak_interp=False):
+        # The stub tracks the REAL signature by name rather than swallowing
+        # `**kw`: a keyword the harness starts passing and the stub silently
+        # absorbs is a threading bug that no test can see. `ac_peak_interp`
+        # is recorded so a test can assert `Objective` passes it through.
         calls["n"] += 1
+        calls["ac_peak_interp"] = bool(ac_peak_interp)
         r = pattern(sizing, corner, calls["n"])
         budget.charge(r.n_spice, 0.0)
         return r
@@ -143,6 +149,27 @@ def test_the_budget_stops_every_method(stub_valid):
         with pytest.raises(B.BudgetExhausted):
             B.METHODS[name](obj, np.random.default_rng(1))
         assert obj.n_sims == 12, f"{name} overran its budget"
+
+
+def test_the_interp_flag_is_threaded_to_the_evaluator_and_defaults_OFF(stub_valid):
+    """`Objective(ac_peak_interp=...)` must reach `evaluate`, and default False.
+
+    Both halves matter and only one of them is obvious. If the default flipped
+    to True, every baseline in `BASELINES.md` would start paying for a curve
+    dump — provably inert, but the point of the default is that the deck stays
+    byte-identical to the one those numbers came from. If the flag failed to
+    thread, the interpolated arm would silently score the LATTICE peak and
+    report "the ceiling did not move", which is the wrong answer arrived at
+    quietly.
+    """
+    obj = B.Objective(B.PROBLEMS["P1"], budget_sims=4)
+    assert obj.ac_peak_interp is False
+    obj.evaluate([0.5] * B.N_ACTIONS)
+    assert stub_valid["ac_peak_interp"] is False
+
+    obj = B.Objective(B.PROBLEMS["P1"], budget_sims=4, ac_peak_interp=True)
+    obj.evaluate([0.5] * B.N_ACTIONS)
+    assert stub_valid["ac_peak_interp"] is True
 
 
 def test_worst_case_over_points_is_the_score(monkeypatch):

@@ -308,7 +308,8 @@ def run_restart(arm: str, replicate: int, budget_sims: int = BUDGET_SIMS,
 def run_pool(arm: str, pool_sims: int = POOL_SIMS,
              max_proposals: Optional[int] = None,
              replicate: int = 0,
-             on_trial: Optional[Callable[[Trial], None]] = None) -> dict:
+             on_trial: Optional[Callable[[Trial], None]] = None,
+             ac_peak_interp: bool = False) -> dict:
     """One long unbiased run per arm: the reward distribution and the ties.
 
     No early stop, so the reward sample is not truncated at the first success
@@ -324,7 +325,8 @@ def run_pool(arm: str, pool_sims: int = POOL_SIMS,
     cap_hit = False
 
     obj = Objective(PROBLEMS["P1"], budget_sims=pool_sims,
-                    prescreen=(arm == "screened"), on_trial=on_trial)
+                    prescreen=(arm == "screened"), on_trial=on_trial,
+                    ac_peak_interp=ac_peak_interp)
     ceiling = obj.ceiling
 
     t0 = time.perf_counter()

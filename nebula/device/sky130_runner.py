@@ -132,6 +132,232 @@ MAX_SEARCH_TOP_HZ: float = 20e9
 #: DC. Same number both sides; 0.25 dB is the existing rise threshold.
 PEAK_MARGIN_DB: float = 0.25
 
+#: Bottom of the `meas ac ... MAX` search, in Hz. `FROM=10meg` in the deck.
+#:
+#: **The netlist is the definition and this constant MIRRORS it**, which is a
+#: deliberate exception to rule 9 rather than an oversight: turning `FROM=10meg`
+#: into a `{f_bot}` placeholder edits a template every published number came
+#: from, and the byte-identity argument that protects `ac_sweep` protects it by
+#: NOT touching those bytes. What keeps the two one thing is a test --
+#: `test_the_max_search_window_matches_the_netlist` parses `FROM=` and `TO=` out
+#: of the assembled deck and asserts them against these two constants, so either
+#: side moving alone goes red. G32 was a model card that differed between the
+#: netlist and the runner WITH NO SUCH TEST; that is the failure this avoids.
+MAX_SEARCH_BOT_HZ: float = 10e6
+
+
+# ---------------------------------------------------------------------------
+# The INTERPOLATED peak -- G74's reward ceiling, addressed at its source.
+#
+# `meas ac g_pk MAX vd_db` can only ever report a frequency that is ON the
+# `ac dec 50 1meg 100g` lattice, i.e. a grid 0.066439 octaves apart. G74 traced
+# the +8.950669 reward ceiling to exactly that: `reward_v1`'s feasible branch is
+# `B + min_i(margin_i/tol_i)` with `S3_f_peak` binding, its margin is
+# `0.5 - |log2(f_peak/f_target)|` octaves, and the nearest lattice point to the
+# mid-window target is 0.024665 octaves away. So the best attainable score is a
+# property of the SWEEP GRID -- four independent runs found four DIFFERENT
+# designs all scoring 8.950670 -- and best-score-at-budget cannot separate two
+# search methods on a problem whose optimum is a plateau.
+#
+# The fix is not a denser sweep: that costs simulation time on every evaluation
+# and the grid would still be a grid. It is to stop reading the peak off the
+# lattice. A `db()` magnitude response near its maximum is locally quadratic in
+# LOG frequency, so the three samples bracketing the discrete maximum determine
+# a parabola whose vertex locates the peak far inside one grid step. **Zero
+# extra simulation cost:** the curve is already dumped by
+# `run_point(ac_sweep=True)`, which session 21 proved changes no measured value.
+#
+# THREE THINGS THIS DELIBERATELY DOES NOT DO:
+#
+#  1. **It does not touch `f_pk_hz` / `g_pk_db`.** Those stay exactly what
+#     `meas` said, so every published number still reproduces. The interpolated
+#     pair lands in NEW fields and is opt-in (`run_point(ac_peak_interp=True)`).
+#  2. **It does not widen the search window.** The parabola is fitted inside
+#     `[MAX_SEARCH_BOT_HZ, MAX_SEARCH_TOP_HZ]`, the same window `meas` searches,
+#     because a peak found outside that window is the G44 failure this project
+#     already has a guard for.
+#  3. **It does not rescue a sweep-edge peak.** A discrete maximum sitting ON a
+#     window edge has no bracketing triple, so there is no vertex to report --
+#     and an "interpolated" peak at or beyond the last grid point is the same
+#     fictitious peak G44 rejects, whatever arithmetic produced it. That case
+#     comes back `ok=False` with `edge` set, and the interpolated measurement
+#     path REFUSES it rather than quietly substituting the grid point.
+# ---------------------------------------------------------------------------
+
+
+@dataclass(frozen=True)
+class PeakInterp:
+    """The parabolic-vertex peak, and everything needed to distrust it.
+
+    `ok=False` is a normal outcome rather than an error: the discrete numbers
+    are still good, it is only the sub-grid refinement that is unavailable, and
+    the caller must be able to tell WHY (rule 1 -- unknown stays empty and says
+    so, instead of silently becoming the grid point).
+    """
+
+    ok: bool
+    #: Why not, when `ok` is False. `None` exactly when `ok` is True.
+    reason: Optional[str] = None
+    #: The vertex. `None` unless `ok`.
+    f_hz: Optional[float] = None
+    g_db: Optional[float] = None
+    #: The DISCRETE maximum inside the search window -- what `meas ac MAX`
+    #: should have reported. Present whenever the window held any samples, so
+    #: a failed interpolation can still be cross-checked against `f_pk_hz`.
+    f_grid_hz: Optional[float] = None
+    g_grid_db: Optional[float] = None
+    #: Index of `f_grid_hz` into the FULL curve, not into the window.
+    index: Optional[int] = None
+    n_in_window: int = 0
+    #: "top" / "bottom" when the discrete maximum sits on a window edge, so
+    #: there is no bracketing triple. `"top"` is the G44 condition.
+    edge: Optional[str] = None
+    #: Vertex offset from the grid point, in octaves. Signed. `None` unless ok.
+    delta_octaves: Optional[float] = None
+    #: The lattice step actually observed, in octaves. 0.066439 for `dec 50`.
+    step_octaves: Optional[float] = None
+    #: `y0 - 2*y1 + y2` in dB. Strictly negative at a true interior maximum;
+    #: reported because a near-zero value means a flat top, where the vertex
+    #: position is dominated by whatever numerical noise is left in the curve.
+    curvature_db: Optional[float] = None
+
+    def as_dict(self) -> dict:
+        return {
+            "ok": self.ok, "reason": self.reason,
+            "f_hz": self.f_hz, "g_db": self.g_db,
+            "f_grid_hz": self.f_grid_hz, "g_grid_db": self.g_grid_db,
+            "index": self.index, "n_in_window": self.n_in_window,
+            "edge": self.edge, "delta_octaves": self.delta_octaves,
+            "step_octaves": self.step_octaves,
+            "curvature_db": self.curvature_db,
+        }
+
+
+def parabolic_vertex(y0: float, y1: float, y2: float
+                     ) -> Optional[tuple[float, float]]:
+    """Vertex of the parabola through three EQUALLY SPACED samples.
+
+    Returns `(delta, y_vertex)` where `delta` is the offset from the middle
+    sample in units of the spacing, or `None` when no maximum-vertex exists.
+
+    Split out as its own function for the reason G73 (the ARGMAX one)
+    states in general terms: the
+    two refusals below are UNREACHABLE from `interpolate_peak_log_f`, because
+    `np.argmax` returns the FIRST maximal sample, which forces `y1 > y0` and
+    `y1 >= y2`, hence `y0 - 2*y1 + y2 < 0` strictly and `|delta| <= 0.5`. A
+    guard whose condition cannot be reached is indistinguishable from a guard
+    that was deleted — so the arithmetic lives here, where a test can hand it a
+    flat triple directly and watch it refuse, and the composition is asserted
+    separately as the invariant it is.
+    """
+    curv = y0 - 2.0 * y1 + y2
+    if not curv < 0.0:
+        return None                    # a flat or convex triple has no maximum
+    delta = 0.5 * (y0 - y2) / curv
+    if not abs(delta) <= 0.5 + 1e-9:
+        return None                    # the vertex is outside its own cell
+    return delta, y1 - 0.25 * (y0 - y2) * delta
+
+
+def interpolate_peak_log_f(
+    freq_hz,
+    mag_db,
+    f_lo: float = MAX_SEARCH_BOT_HZ,
+    f_hi: float = MAX_SEARCH_TOP_HZ,
+) -> PeakInterp:
+    """Locate the response maximum by parabolic interpolation in log frequency.
+
+    Three points bracketing the discrete maximum, `x = log2(f)`, `y` in dB.
+    With the samples equally spaced by `h` octaves the vertex sits at
+
+        delta = 0.5 * (y0 - y2) / (y0 - 2*y1 + y2)        [in units of h]
+        f     = f1 * 2**(delta * h)
+        g     = y1 - 0.25 * (y0 - y2) * delta
+
+    and `|delta| <= 0.5` identically when `y1` is the largest of the three.
+
+    **Equal spacing is CHECKED, not assumed.** The deck sweeps `dec 50`, which
+    is uniform in log frequency, but the formula above is the vertex of the
+    fitted parabola only when it is -- a non-uniform grid would produce a
+    plausible, slightly wrong answer rather than an error. So a mismatch is a
+    named failure.
+    """
+    f = np.asarray(freq_hz, dtype=float).ravel()
+    y = np.asarray(mag_db, dtype=float).ravel()
+    if f.shape != y.shape:
+        return PeakInterp(ok=False,
+                          reason=f"freq {f.shape} and mag {y.shape} differ")
+    inside = (f >= f_lo) & (f <= f_hi)
+    n_in = int(inside.sum())
+    if n_in < 3:
+        return PeakInterp(ok=False, n_in_window=n_in,
+                          reason=f"only {n_in} samples in [{f_lo:.4g}, "
+                                 f"{f_hi:.4g}] Hz; a parabola needs 3")
+    if not np.all(np.isfinite(y[inside])):
+        return PeakInterp(ok=False, n_in_window=n_in,
+                          reason="the response has non-finite samples inside "
+                                 "the search window")
+
+    idx = np.flatnonzero(inside)
+    jw = int(np.argmax(y[idx]))            # index WITHIN the window
+    j = int(idx[jw])                       # index into the full curve
+    common = dict(f_grid_hz=float(f[j]), g_grid_db=float(y[j]),
+                  index=j, n_in_window=n_in)
+
+    if jw == n_in - 1:
+        return PeakInterp(ok=False, edge="top",
+                          reason=f"the maximum IS the top of the search window "
+                                 f"({f[j]:.6g} Hz): the response is still "
+                                 f"rising at {f_hi:.4g} Hz, so there is no "
+                                 f"interior peak to interpolate (G44)",
+                          **common)
+    if jw == 0:
+        return PeakInterp(ok=False, edge="bottom",
+                          reason=f"the maximum IS the bottom of the search "
+                                 f"window ({f[j]:.6g} Hz): the response falls "
+                                 f"monotonically (G44's other half)",
+                          **common)
+
+    f0, f1, f2 = float(f[j - 1]), float(f[j]), float(f[j + 1])
+    y0, y1, y2 = float(y[j - 1]), float(y[j]), float(y[j + 1])
+    h_lo = math.log2(f1 / f0)
+    h_hi = math.log2(f2 / f1)
+    if h_lo <= 0.0 or abs(h_hi - h_lo) > 1e-6 * h_lo:
+        return PeakInterp(ok=False, step_octaves=h_lo,
+                          reason=f"the bracketing samples are not equally "
+                                 f"spaced in log frequency ({h_lo:.9g} vs "
+                                 f"{h_hi:.9g} octaves); the vertex formula "
+                                 f"does not apply",
+                          **common)
+
+    curv = y0 - 2.0 * y1 + y2
+    vertex = parabolic_vertex(y0, y1, y2)
+    if vertex is None:
+        # UNREACHABLE from here (see `parabolic_vertex`): an argmax-selected
+        # interior sample forces a strictly concave triple with the vertex
+        # inside its own cell. Kept as a refusal rather than an assert because
+        # the invariant belongs to the argmax, and the argmax is one edit away
+        # from someone's tie-breaking rule.
+        return PeakInterp(ok=False, step_octaves=h_lo, curvature_db=curv,
+                          reason=f"no maximum-vertex exists for the triple "
+                                 f"bracketing the discrete maximum "
+                                 f"(y0-2y1+y2 = {curv:+.6g} dB)",
+                          **common)
+    delta, g_pk = vertex
+    f_pk = f1 * 2.0 ** (delta * h_lo)
+    if f_pk >= float(f[idx[-1]]) or f_pk <= float(f[idx[0]]):
+        # Cannot happen with an interior `j`, and it is checked anyway: an
+        # interpolated peak at or beyond the last grid point is the SAME
+        # fictitious peak G44 rejects, whatever arithmetic produced it.
+        return PeakInterp(ok=False, edge="top", step_octaves=h_lo,
+                          curvature_db=curv, delta_octaves=delta * h_lo,
+                          reason=f"the interpolated peak {f_pk:.6g} Hz lands "
+                                 f"on or outside the edge of the search window",
+                          **common)
+    return PeakInterp(ok=True, f_hz=f_pk, g_db=g_pk, step_octaves=h_lo,
+                      curvature_db=curv, delta_octaves=delta * h_lo, **common)
+
+
 
 # ─────────────────────────────────────────────────────────────────────────────
 # The sizing point.
@@ -314,6 +540,19 @@ class Sky130Point:
     #: the fit and S3 cannot disagree about what the response is (rule 9).
     ac_freq_hz: Optional[np.ndarray] = field(default=None, repr=False)
     ac_mag_db: Optional[np.ndarray] = field(default=None, repr=False)
+    # --- the interpolated peak, only when run_point(ac_peak_interp=True) ---
+    #: The parabolic-vertex peak (see `interpolate_peak_log_f`). **A SECOND
+    #: pair of fields rather than a correction to `f_pk_hz` / `g_pk_db`**, so
+    #: every published number keeps reproducing and a caller has to ASK for the
+    #: refined one. `None` when the flag was off OR when the interpolation
+    #: refused -- `peak_interp["reason"]` says which, and the two must not be
+    #: confused: "not asked for" and "asked for and impossible" are different
+    #: facts about a design.
+    f_pk_interp_hz: Optional[float] = None
+    g_pk_interp_db: Optional[float] = None
+    #: `PeakInterp.as_dict()`. Present whenever the flag was on, including on
+    #: refusal -- it is where the refusal reason lives.
+    peak_interp: Optional[dict] = field(default=None, repr=False)
     # --- S4: HD3 by transient + FFT, only when run_point(hd3=True) ---
     #: `20*log10(|V3|/|V1|)` at the S4 tone. Large and NEGATIVE when good.
     hd3_dbc: Optional[float] = None
@@ -405,6 +644,62 @@ class Sky130Point:
         box, which is where a randomly initialised policy starts.
         """
         return (self.g_pk_db - self.g_top_db) <= PEAK_MARGIN_DB  # type: ignore[operator]
+
+    # ---- derived: the INTERPOLATED peak (G74) ------------------------------
+
+    @property
+    def has_interp_peak(self) -> bool:
+        """True iff a trustworthy sub-grid peak exists on this result."""
+        return self.f_pk_interp_hz is not None
+
+    @property
+    def peaking_interp_db(self) -> float:
+        """max|H| relative to |H(DC)|, read off the parabola rather than the
+        lattice. The interpolated counterpart of `peaking_db`, and strictly
+        >= it, because the vertex of a concave parabola is at or above every
+        sample that defined it."""
+        return self.g_pk_interp_db - self.g_dc_db   # type: ignore[operator]
+
+    @property
+    def d_f_peak_octaves(self) -> float:
+        """`log2(f_interp / f_discrete)`. How far the lattice was off, signed.
+
+        Bounded by half a grid step (0.0332 octaves for `dec 50`) BY
+        CONSTRUCTION, so a value outside that is not a small correction, it is
+        evidence that the Python argmax and `meas ac MAX` disagree about which
+        sample is the maximum.
+        """
+        return math.log2(float(self.f_pk_interp_hz)      # type: ignore[arg-type]
+                         / float(self.f_pk_hz))          # type: ignore[arg-type]
+
+    @property
+    def peak_interp_is_sweep_edge(self) -> bool:
+        """**The G44 condition, on the interpolated path.**
+
+        `peak_is_sweep_edge` asks whether the response had come back down by
+        `MAX_SEARCH_TOP_HZ`, using `g_top`. This asks the question the
+        interpolation itself can answer: was the discrete maximum ON the top
+        edge of the search window, so that no bracketing triple exists? An
+        interpolated peak that lands on or beyond the last grid point is the
+        same fictitious peak, whatever arithmetic produced it.
+
+        **The two guards can disagree, and that is the point of having both.**
+        A sharply peaked response whose maximum sits on the LAST in-window
+        sample can still have fallen more than `PEAK_MARGIN_DB` by 20 GHz --
+        the discrete guard passes it, this one rejects it, and this one is
+        right about the interpolated number because a vertex fitted to two
+        points is not a vertex.
+
+        Raises when the interpolation was never run: "no interpolated peak was
+        asked for" is not an answer to "is the interpolated peak fictitious",
+        and returning False for it would be a fabricated pass.
+        """
+        if self.peak_interp is None:
+            raise ValueError(
+                "peak_interp_is_sweep_edge asked of a result that was not run "
+                "with run_point(ac_peak_interp=True); there is no interpolated "
+                "peak to judge")
+        return self.peak_interp.get("edge") == "top"
 
     @property
     def in_saturation(self) -> bool:
@@ -1145,6 +1440,7 @@ def run_point(
     noise_detail: bool = False,
     keep_text: bool = False,
     ac_sweep: bool = False,
+    ac_peak_interp: bool = False,
     hd3: bool = False,
 ) -> Sky130Point:
     """Simulate one sizing point. Never raises — failures come back ok=False.
@@ -1165,7 +1461,25 @@ def run_point(
     FFT. Also default OFF, and for a second reason besides byte-identity: it
     is the expensive tier. G0 measured a 175x cost spread across the analyses
     and this is the top of it.
+
+    `ac_peak_interp=True` additionally locates the response maximum by
+    parabolic interpolation on the dumped curve and fills `f_pk_interp_hz` /
+    `g_pk_interp_db` (G74's ceiling, see `interpolate_peak_log_f`). **It
+    IMPLIES `ac_sweep=True`** -- there is no curve to interpolate otherwise --
+    and it costs **no extra simulation**: the same invocation, the same deck as
+    `ac_sweep=True`, plus about ten floating-point operations in Python.
+    Default OFF, and `f_pk_hz` / `g_pk_db` are untouched either way, so no
+    published number can move.
+
+    A refused interpolation is NOT a failed run. The discrete measurements are
+    still good; only the sub-grid refinement is unavailable, the two new fields
+    stay `None`, and `peak_interp["reason"]` says why.
     """
+    # There is no curve to interpolate without the dump, and silently returning
+    # `f_pk_interp_hz=None` for a caller who asked for it would be a missing
+    # number that looks like a refusal (rule 1). Raise the flag instead.
+    if ac_peak_interp:
+        ac_sweep = True
     if corner not in VALID_CORNERS:
         return Sky130Point(ok=False, fail_reason=f"unknown corner {corner!r}",
                            point=point, corner=corner)
@@ -1394,6 +1708,34 @@ def run_point(
                                            "the real magnitude it is read as")
         pt.ac_freq_hz = ac_raw[:, 0]
         pt.ac_mag_db = ac_raw[:, 1]
+
+        if ac_peak_interp:
+            pi = interpolate_peak_log_f(pt.ac_freq_hz, pt.ac_mag_db)
+            # THE CROSS-CHECK, and it is the one that matters: this Python
+            # argmax and `meas ac g_pk MAX` are two independent readings of the
+            # same `vd_db` vector, so they must name the SAME sample. If they
+            # do not, the interpolation would be refining the wrong cell and
+            # `d_f_peak_octaves` would come back larger than half a grid step
+            # while still looking like a small correction. Caught here and
+            # named, rather than surfacing as a distribution with a tail.
+            if pi.ok and pt.f_pk_hz is not None and pi.f_grid_hz:
+                off = abs(math.log2(float(pi.f_grid_hz) / float(pt.f_pk_hz)))
+                if off > 0.5 * float(pi.step_octaves or 0.0):
+                    pi = PeakInterp(
+                        ok=False, f_grid_hz=pi.f_grid_hz,
+                        g_grid_db=pi.g_grid_db, index=pi.index,
+                        n_in_window=pi.n_in_window,
+                        step_octaves=pi.step_octaves,
+                        curvature_db=pi.curvature_db,
+                        reason=(f"the Python argmax ({pi.f_grid_hz:.6g} Hz) and "
+                                f"`meas ac MAX` ({float(pt.f_pk_hz):.6g} Hz) "
+                                f"name different samples, {off:.6g} octaves "
+                                f"apart; the bracketing triple is not the one "
+                                f"the reported peak came from"))
+            pt.peak_interp = pi.as_dict()
+            if pi.ok:
+                pt.f_pk_interp_hz = pi.f_hz
+                pt.g_pk_interp_db = pi.g_db
 
     if hd3_raw is not None:
         if hd3_raw.ndim != 2 or hd3_raw.shape[1] < 2:

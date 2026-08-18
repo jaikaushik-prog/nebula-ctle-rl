@@ -1258,3 +1258,174 @@ rather than apportioned.
 
 *Nothing above the Outcome heading was edited.*
 
+
+
+---
+
+## 9. Session 22c, task 1 — does interpolating the peak remove the reward ceiling, or move it?
+
+**Written:** 2026-08-19, session 22c, **before** the three runs below and before
+any of their numbers existed. Task 1 of the session-22c brief, authorised by the
+owner in the session-22b review with the justification restated: the case is no
+longer separability of the unscreened arms (settled, and the owner's own reading
+of it was wrong), it is **75 % of screened restarts saturating inside budget**
+and **57 designs tied at exactly one reward value across 8000 simulations**.
+
+**Experiments:**
+```
+python -m nebula.experiments.exp_peak_interp --funnel    # 300 sims, replays g2_closed_loop_run.jsonl
+python -m nebula.experiments.exp_peak_interp --dense 30  # 60 sims, dec 50 vs dec 500
+python -m nebula.experiments.exp_peak_interp --pools     # 8000 sims, replays the four task-0 pools
+```
+
+### What I have already seen, and am therefore not predicting
+
+Declared because these numbers are **inputs** to the predictions below rather
+than tests of them, and pretending otherwise is exactly the move entry 8's
+outcome section criticises.
+
+1. A **6-design smoke test** of the funnel replay was run to prove it reproduces
+   the published `f_pk_hz`. All 6 reproduced at rel=0. Four had an interior
+   peak, with shifts **+0.0184, +0.0215, −0.0087, −0.0054 octaves**; one was
+   refused at the bottom edge and one at the top.
+2. A **1-design smoke test** of the dense comparison: lattice error
+   **0.01857 octaves**, interpolated error **0.000195 octaves**.
+3. The vertex arithmetic is exact on a synthetic parabola to 1e-12, and the
+   lattice ceiling is arithmetically escapable — `test_THE_LATTICE_CEILING_IS_
+   NOT_A_CEILING_ON_THE_INTERPOLATED_PATH` scores a perfectly centred synthetic
+   design at exactly 9.0. Both are algebra, not measurement.
+
+### The arithmetic the predictions are built from
+
+All published, none re-derived here:
+
+* the AC grid is `dec 50`, step **h = 0.0664386 octaves**, half-step
+  **0.0332193** — the hard bound on any vertex offset;
+* the mid-window target is `sqrt(1.25 × 2.5) GHz` = **1.767767 GHz**;
+* the nearest lattice point is **1.737801 GHz**, i.e. **0.0246654 octaves
+  BELOW** the target;
+* hence G74's ceiling `8 + (0.5 − 0.0246654)/0.5` = **8.950669**;
+* task 0's pools: **14 ties unscreened + 43 screened = 57**, on 57 distinct
+  designs, over 8000 simulations, with nothing above.
+
+### Prediction A: the lattice error is spread across the whole cell
+
+If a design's true peak is locally uniform in frequency, its offset from the
+reported lattice point is uniform on ±h/2, so:
+
+| quantity | point | band |
+|---|---|---|
+| median \|Δf_peak\| on the funnel | **0.0166 oct** (= h/4) | 0.012–0.021 |
+| fraction with \|Δ\| < 0.001 oct | **3.0 %** (= 2×0.001/h) | 0–8 % |
+| designs with \|Δ\| > h/2 | **0** | exactly 0 — a hard bound |
+
+### Prediction B: the vertex is right, not merely finer
+
+Against the `dec 500` reference (step 0.00664 oct):
+
+| quantity | point | band |
+|---|---|---|
+| median \|lattice error\| | **0.0166 oct** | 0.012–0.021 |
+| median \|interpolated error\| | **0.0010 oct** | < 0.004 |
+| error reduction | **16×** | ≥ 5× |
+| designs where interpolation is WORSE than the lattice | **0** | ≤ 2 of 30 |
+
+The point estimate for the interpolated error is not from the smoke test's
+0.000195 — one design is not a distribution, and a real response is only
+approximately quadratic near its peak. 0.0010 oct assumes the quadratic
+approximation leaves about a sixth of a dense grid step.
+
+### Prediction C: the 57 ties separate completely
+
+| quantity | point | band |
+|---|---|---|
+| distinct interpolated rewards among the 57 | **57** | ≥ 55 |
+| of the 57, how many score **above** 8.950669 | **28** | 18–38 |
+| of the 57, how many are refused by the interpolation | **0** | ≤ 2 |
+| designs at the new maximum | **1** | 1 |
+| best interpolated reward over 8000 sims | **8.985** | 8.955–9.000 |
+
+The "28 above" is not a guess: the lattice point sits 0.0247 octaves **below**
+the target, so a tied design's interpolated peak lands closer to the target
+exactly when its vertex offset is positive, and that is **half** the cell —
+0.5 × 57 = 28.5. **This is the prediction I most want tested**, because it is
+the one that fails if peaks cluster on the lattice for some reason nobody has
+thought of, which would mean G74's model of the ceiling is incomplete.
+
+The new supremum is **9.0** and is unattainable: it needs `f_peak` exactly on
+target, and the reward is `min` over specs, so another spec binds first for any
+real design.
+
+### Prediction D: the discrete path does not move, at all
+
+| quantity | point |
+|---|---|
+| pools reproducing published `n_s3`, `n_at_ceiling`, `n_simulated` | **4 of 4** |
+| pools reproducing the published `ceiling_design_ids` set | **4 of 4** |
+| funnel designs reproducing published `f_pk_hz` at rel=0 | **all** |
+| valid designs the interpolated path refuses | **≤ 0.5 %** |
+
+The last row is the one with a real mechanism behind it rather than a hope. The
+two guards *can* disagree: `validate` accepts a monotonically falling response
+(`f_pk` = 10 MHz is inside `F_PEAK_HZ_LIMITS`) and scores it as a large graded
+S3 miss, deliberately, because rejecting it "would erase the reward gradient
+over the entire low-peaking region of the box". The interpolation has no vertex
+to offer there. Refusing on that basis would rebuild that hole one layer up, so
+`evaluate` carries the lattice pair forward for a **bottom**-edge maximum — not
+as a fallback, but because 10 MHz is both a grid point and the boundary, so
+`meas ac MAX` reported the true maximum of the interval and nothing was
+rounded. **Top**-edge maxima stay refused; those are G44 and the discrete path
+already rejects them twice over (`peak_is_sweep_edge`, and
+`F_PEAK_HZ_LIMITS[1]` = 18 GHz sitting below the last in-window sample at
+19.95 GHz).
+
+### What would falsify the reasoning (as opposed to the numbers)
+
+1. **Any pool fails to reproduce.** Then `ac_peak_interp` is not additive, every
+   number in this entry is measured on a different experiment from the one it
+   claims to extend, and task 1 stops until that is understood. This is the one
+   condition that invalidates the task rather than the prediction.
+2. **Any \|Δ\| exceeds h/2.** The Python argmax and `meas ac MAX` would be
+   naming different samples, and the runner's cross-check would have failed to
+   catch it.
+3. **Median \|Δ\| < 0.005 octaves.** The interpolation is returning
+   near-lattice values, i.e. it is not doing anything, and the whole task is a
+   no-op dressed as a fix.
+4. **Fewer than 45 of the 57 separate.** Then the ceiling has **moved** rather
+   than gone — most likely because a different spec now binds at a value shared
+   across designs — and the honest headline is "moved", not "removed".
+5. **"Above the old ceiling" lands outside 18–38.** The vertex offsets are not
+   uniform over the cell. That is more interesting than the fix: it would mean
+   the tied designs are selected by something other than rounding.
+6. **The dense comparison shows no improvement, or the interpolation is worse.**
+   Then the response is not locally quadratic at its peak on this circuit, the
+   vertex is a smoother number rather than a truer one, and the correct move is
+   to say so and stop — not to keep it because it separates the ties.
+
+### Guard against over-claiming, in both directions
+
+**Removing the ceiling does not make the problem hard.** Task 0 measured the S3
+rate at **7.10 %** and **75 % of screened restarts saturating inside budget**; a
+continuous objective over the same population is still that population. The
+claim here is narrowly about the **shape of the objective at its optimum** — a
+plateau becomes a gradient — and it says nothing about whether PPO can climb it.
+Anyone reading "the ceiling is gone" as "G3 is now winnable" has read more than
+this measures. Task 3 (corners in the loop) is where difficulty comes from.
+
+**And a separable metric is not automatically the right metric.** If the ties
+separate by 1e-4 of reward, they separate — but a benchmark that ranks methods
+on differences that small is measuring the fourth decimal of a spice
+measurement. The spread of the separated rewards is reported for exactly this
+reason, and if it is negligible the honest statement is "the ties are broken but
+the ranking they support is not meaningful", which is a different result from
+either "removed" or "moved".
+
+**Nothing here changes a published number.** `V1_SPECS`, the tolerances, the
+box, the pre-screen and the seeds are untouched; the ceiling **8.950669** is
+still the ceiling of the path every baseline lives on, and the interpolated path
+is opt-in. Whether to move the benchmark onto it is a human decision (D-series),
+not a consequence of this entry.
+
+### Outcome
+
+*(to be written after the runs; nothing above this heading may be edited)*

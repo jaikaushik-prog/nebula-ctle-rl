@@ -80,7 +80,7 @@ import re
 import time
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Optional, Sequence
+from typing import Mapping, Optional, Sequence
 
 from nebula.device.crosscheck import (
     derived_ac,
@@ -477,6 +477,7 @@ def evaluate(
     keep_raw_text: bool = False,
     real_tail: bool = True,
     real_passives: bool = True,
+    ac_peak_interp: bool = False,
 ) -> EvalResult:
     """One sizing point -> a validated measurement vector, or a named reason.
 
@@ -488,6 +489,27 @@ def evaluate(
 
     `real_tail` / `real_passives` default to the published configuration and
     exist only for session 22b's attribution experiment — see `build_point`.
+
+    `ac_peak_interp=True` (session 22c, G74) adds the sub-grid peak to `meas`
+    under **new keys** — `f_peak_oct_interp`, `peaking_db_interp` — and leaves
+    `f_peak_oct` and `peaking_db` exactly as they were. That is the whole
+    safety argument: a reward computed from `meas` is bit-identical with the
+    flag on or off, so no published number can move, and a caller who wants the
+    interpolated objective has to swap the keys explicitly through
+    `meas_with_interpolated_peak`. It costs no extra simulation — the curve is
+    dumped by the same invocation (`ac_sweep`, session 21, proven inert).
+
+    Three outcomes, distinguished in `raw["peak_interp_status"]`:
+
+    * `"vertex"` — a genuine interior maximum, refined off the parabola.
+    * `"boundary_bottom_lattice_is_exact"` — the maximum sits at 10 MHz, which
+      is both a grid point and the edge of the searched interval, so the
+      lattice value IS the maximum and is carried forward unchanged. Not a
+      fallback: nothing was rounded.
+    * `"refused"` — no trustworthy peak, the G44 top edge being the case that
+      matters. The two new keys are then ABSENT rather than defaulted, and
+      `meas_with_interpolated_peak` raises, which is how the interpolated arm
+      inherits the rejection instead of scoring a peak the curve never had.
     """
     t0 = time.perf_counter()
     try:
@@ -510,10 +532,12 @@ def evaluate(
     did = design_id(sizing, tag) if tag is not None else design_id(sizing)
 
     n_spice = 0
-    pt = run_point(point, corner=corner, temp_c=temp_c, swing=False)
+    pt = run_point(point, corner=corner, temp_c=temp_c, swing=False,
+                   ac_peak_interp=ac_peak_interp)
     n_spice += 1
     if not pt.ok and _TRANSIENT.search(pt.fail_reason or ""):
-        pt = run_point(point, corner=corner, temp_c=temp_c, swing=False)
+        pt = run_point(point, corner=corner, temp_c=temp_c, swing=False,
+                       ac_peak_interp=ac_peak_interp)
         n_spice += 1
     dt = time.perf_counter() - t0
     budget.charge(n_spice, dt)
@@ -579,6 +603,50 @@ def evaluate(
         "w_tail_um": sizing.w_tail_um, "nf_tail": sizing.nf_tail,
         "runtime_s": pt.runtime_s,
     }
+    if pt.peak_interp is not None:
+        # ADDITIVE, ALWAYS. `f_peak_oct` and `peaking_db` above are untouched;
+        # these are the parallel pair. Present only when the interpolation
+        # succeeded, so "absent" means "refused" and never "equal to the grid
+        # value" — G85's shape of mistake, a sentinel read as a measurement.
+        raw["peak_interp_ok"] = bool(pt.peak_interp.get("ok"))
+        raw["peak_interp_reason"] = pt.peak_interp.get("reason")
+        raw["peak_interp_edge"] = pt.peak_interp.get("edge")
+        raw["peak_interp_curvature_db"] = pt.peak_interp.get("curvature_db")
+        if pt.has_interp_peak:
+            raw["peak_interp_status"] = "vertex"
+            meas["f_peak_oct_interp"] = f_peak_octaves(float(pt.f_pk_interp_hz))
+            meas["peaking_db_interp"] = float(pt.peaking_interp_db)
+            raw["f_pk_interp_hz"] = float(pt.f_pk_interp_hz)
+            raw["g_pk_interp_db"] = float(pt.g_pk_interp_db)
+            raw["d_f_peak_octaves"] = float(pt.d_f_peak_octaves)
+        elif pt.peak_interp.get("edge") == "bottom":
+            # **THE MAXIMUM IS AT THE BOTTOM OF THE WINDOW, AND THE LATTICE
+            # VALUE IS THEN EXACT RATHER THAN APPROXIMATE.** 10 MHz is a grid
+            # point AND the boundary, so `meas ac MAX` reported the true
+            # maximum of the searched interval; there is no sub-grid position
+            # to find and nothing has been rounded. Carrying the lattice pair
+            # forward is the RIGHT answer here, not a fallback.
+            #
+            # WHY THE TWO EDGES ARE TREATED DIFFERENTLY, since geometrically
+            # they are the same situation. It mirrors a decision this repo
+            # already made deliberately and wrote down: `peak_is_sweep_edge`
+            # is the TOP half of `has_interior_peak` only, because a response
+            # still rising at 20 GHz has a FICTITIOUS peak (G44) while a
+            # monotonically falling one has a real, correctly measured, merely
+            # useless one. `validate` rejects the first and accepts the second,
+            # and its comment records why: rejecting the second erased the
+            # reward gradient over the whole low-peaking region of the box,
+            # which is where a randomly initialised policy starts. Refusing
+            # these designs on the interpolated path would rebuild exactly that
+            # hole, one layer up — the interpolated arm would see an invalid
+            # floor where the discrete arm sees a large, graded S3 miss.
+            raw["peak_interp_status"] = "boundary_bottom_lattice_is_exact"
+            meas["f_peak_oct_interp"] = float(meas["f_peak_oct"])
+            meas["peaking_db_interp"] = float(meas["peaking_db"])
+            raw["d_f_peak_octaves"] = 0.0
+        else:
+            raw["peak_interp_status"] = "refused"
+
     if geo is not None:
         # The REALISED passive values, not the requested ones. The reward and
         # the log must be able to tell a quantisation error from a design move.
@@ -600,6 +668,54 @@ def evaluate(
     return EvalResult(verdict=Verdict.VALID, meas=meas, headroom=headroom,
                       raw=raw, design_id=did, geometry_tag=tag,
                       n_spice=n_spice, seconds=dt, text=None)
+
+
+#: The two keys `ac_peak_interp=True` adds, paired with the discrete key each
+#: one replaces. **ONE definition** (rule 9): every caller that wants the
+#: interpolated objective goes through `meas_with_interpolated_peak` rather than
+#: writing its own swap, so "which measurement is the reward scoring?" has a
+#: single answer that can be read in one place.
+INTERP_KEYS: tuple[tuple[str, str], ...] = (
+    ("f_peak_oct", "f_peak_oct_interp"),
+    ("peaking_db", "peaking_db_interp"),
+)
+
+
+def meas_with_interpolated_peak(meas: Optional[Mapping[str, float]]) -> dict:
+    """`meas`, with the lattice peak replaced by the interpolated one.
+
+    THE POINT OF THE SWAP. `reward_v1`'s feasible branch scores
+    `0.5 - |log2(f_peak/f_target)|` octaves against a 0.5-octave tolerance, and
+    `meas ac MAX` can only report frequencies 0.066439 octaves apart, so the
+    best attainable score is a lattice property: +8.950669, G74's ceiling, tied
+    by 57 distinct designs across 8000 simulations. Scoring the SAME reward
+    function on the interpolated peak makes the objective continuous, which is
+    the difference between a plateau at the optimum and a gradient into it.
+
+    BOTH keys move together, from the SAME parabola. Taking the interpolated
+    frequency and the lattice magnitude would be reading one peak in two
+    places, which is precisely the failure rule 9 exists to prevent.
+
+    **Raises rather than falling back.** A missing pair means the interpolation
+    refused, and the commonest refusal is a sweep-edge maximum (G44). Silently
+    substituting the grid value there would hand the interpolated arm exactly
+    the fictitious peak the guard exists to reject; and substituting it for a
+    design where nothing was wrong would misreport a lattice number as a
+    refined one. Callers treat the exception as an invalid design.
+    """
+    if not meas:
+        raise ValueError("no measurement vector to interpolate")
+    missing = [new for _, new in INTERP_KEYS if new not in meas]
+    if missing:
+        raise ValueError(
+            f"{missing} absent: this evaluation either did not run with "
+            f"`ac_peak_interp=True`, or the interpolation refused (a sweep-edge "
+            f"maximum is the commonest reason — see raw['peak_interp_reason']). "
+            f"There is no interpolated peak to score.")
+    out = dict(meas)
+    for old, new in INTERP_KEYS:
+        out[old] = float(out.pop(new))
+    return out
 
 
 # ─────────────────────────────────────────────────────────────────────────────
