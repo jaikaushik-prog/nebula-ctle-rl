@@ -915,3 +915,124 @@ statement than the one the project wants to make in September.
 ### Outcome
 
 *Filled in after the sweep runs. Nothing above is edited.*
+
+---
+
+## 7. Task 0 — how many random samples reach the +8.950669 ceiling?
+
+**Written:** 2026-08-18, session 22, **before** `exp_difficulty.py` was run at
+full size. The 25-simulation cost probe and a 2x8 + 2x10 plumbing smoke test
+had been run (they are quoted below as inputs); nothing at experiment size had.
+**Experiment:** `python -m nebula.experiments.exp_difficulty --run`
+— 24 independent LHS restarts per arm at a 600-simulation budget, plus one
+2000-simulation unbiased pool per arm, on **P1** (TT / 1.00 / 27 C / `cl_mid`),
+drawn passives, real mirror, reward v1 / `V1_SPECS`, the existing box, the
+existing sampler, the existing evaluator. Two arms: **unscreened** and
+**`experiments/prescreen.py` in front**.
+
+### The thesis being tested (the owner's, stated in the brief)
+
+> Random search reaches the reward ceiling in single-digit samples and seconds
+> of wall clock, so the G3 sweep is arithmetically incapable of separating its
+> arms and the likely outcome is "all arms tie at the ceiling".
+
+### The pre-registered decision rule, encoded in `decide()`
+
+| measured median simulations-to-ceiling | verdict |
+|---|---|
+| **< 50** in either arm | thesis holds — proceed to task 1 |
+| **> 500** in every arm | thesis fails — launch the sweep as `PLAN.md` §3 specifies |
+| in between | report and **stop**; the human decides |
+
+### My prediction: **`thesis_holds`, but NOT for the stated reason — and the unscreened arm alone would not deliver it.**
+
+Point estimates and consistent-with-my-reasoning bands, in **simulations**:
+
+| | median sims-to-ceiling | band | median sims-to-first-S3 | band |
+|---|---|---|---|---|
+| unscreened | **90** | 30–400 | **5** | 3–12 |
+| screened | **35** | 12–160 | **2** | 1–6 |
+
+**Pooled rates:** S3 rate **13 %** (band 8–20 %, i.e. consistent with
+`BASELINES.md`'s 13.44 %); ceiling rate **0.8 %** unscreened (band 0.2–3 %);
+**at least 2 DISTINCT designs** tied at the ceiling in the 2000-simulation
+unscreened pool, and I expect **every ceiling-tied design to score the same
+number to six decimals**, because that is what G74 says the number is.
+
+The reasoning, entirely from already-published numbers plus one new arithmetic
+step:
+
+1. **S3 alone is easy and the brief's arithmetic is right about that.**
+   13.44 % gives `ln 2 / 0.1344` = **5** simulations to a first S3 pass, and the
+   smoke test found one at simulation 7 and 8 on its two unscreened restarts.
+   So "single-digit samples" is very likely correct **for S3**.
+2. **The ceiling is not S3.** It requires `S3_f_peak` to bind *at the nearest
+   lattice point*, which is one point of the **15** the octave window holds at
+   `ac dec 50`'s 0.066439-octave spacing (session 11, G74). If `f_peak` among
+   feasible designs were uniform over those 15, the ceiling rate would be
+   `0.1344 / 15` = **0.9 %**, i.e. a median of `ln 2 / 0.009` = **77**.
+3. **And it is not even that**, because the feasible branch is
+   `B + min_i(margin_i/tol_i)`: for `S3_f_peak` to be the binding row at
+   0.950669, **every other margin/tol must exceed 0.9507** — noise below
+   1.025 mV_rms, power below 10.25 mW, peaking inside 3.95–11.05 dB, Nyquist
+   boost above 0.95 dB, and both saturation margins above 95 mV. That is
+   strictly harder than feasibility, so 0.9 % is an **upper** bound on the
+   ceiling rate and 77 a **lower** bound on the median. Hence a point estimate
+   of 90 rather than 77.
+4. **The pre-screen's 2.60x lift carries to the ceiling roughly unchanged.**
+   It filters on predicted `f_peak` and predicted peaking, which is the same
+   axis the ceiling binds on, so `0.009 x 2.60` = 2.3 % gives `ln 2 / 0.023` =
+   **30**. That is what puts an arm under 50 and produces the verdict.
+5. **So the verdict and the reason come apart, and that matters more than the
+   verdict.** I expect `thesis_holds` to fire off the **screened** arm at
+   ~35 simulations, while the unscreened arm sits near 90 — an order of
+   magnitude above "single-digit samples". If that is what happens, the brief's
+   *conclusion* survives and its *arithmetic* does not, and the honest report
+   says so: the sweep's arms would tie at the ceiling not in seconds but in a
+   few tens of simulations, which is still far inside a 150-simulation per-run
+   budget and still forbids a ranking.
+6. **Wall clock is a footnote and is measured serially.** The probe measured
+   **0.2537 s/sim** cold and the smoke test **0.168 s/sim** warm, against
+   `G2_RESULTS.md`'s 0.28 s. G70 forbids reading anything into a wall-clock
+   number gathered while something else simulates, so the run is serial and
+   nothing else may run beside it.
+
+### What would falsify the reasoning (as opposed to the number)
+
+1. **The unscreened median lands in single digits.** Then the ceiling is not
+   the 1-in-15 lattice event I think it is — most likely because `f_peak` among
+   feasible designs is strongly concentrated near the window centre rather than
+   spread across the 15 lattice points. That would be a fact about the box
+   worth more than the verdict, and it would mean `BASELINES.md` §3's
+   "simulations to ceiling" metric is far weaker than it was introduced to be.
+2. **The pre-screen does not lift the ceiling rate**, or lifts it by much less
+   than 2.60x. The screen's lift was measured on S3 membership, not on landing
+   on one particular lattice point, and G76 has already caught this screen
+   transferring its population rates while failing to transfer its accuracy.
+   If the lift does not carry, the verdict rests on the unscreened arm alone.
+3. **Every ceiling-tied design is the SAME design.** G74's evidence is four
+   different `design_id`s at 8.950670. If a 2000-simulation pool finds ties
+   that are all one design, the ceiling is narrower than G74 says and the
+   "cannot separate arms" argument weakens.
+4. **The pooled S3 rate is far from 13.44 %.** That number comes from
+   `robust_geometry_data.csv`, a session-11 population, and this pool is drawn
+   through `sizing_from_u` with drawn passives at `cl_mid`. A large gap means
+   `PLAN.md`'s D4 baseline is quoting a rate the sweep will not reproduce, and
+   D4 has to be re-decided before it can be the bar G3 must beat.
+5. **The feasible rate is materially below the S3 rate.** The smoke test found
+   them equal at n = 10, which is no evidence. If noise, power or a saturation
+   margin binds often, then reward v1's seven-row feasibility is harder than
+   the S3 rate everyone quotes — which is `PREDICTIONS.md` entry 6's own
+   falsification condition 3, still untested at size.
+
+### Guard against over-claiming, in both directions
+
+A `thesis_holds` verdict does **not** say PPO cannot beat random search. It
+says that **on this reward, at nominal, the primary metric saturates too early
+for the comparison to be decidable** — which is a statement about the
+measurement, not about the methods. Equally, a `thesis_fails` verdict would not
+vindicate the sweep design; it would only remove one specific objection to it.
+
+### Outcome
+
+*Filled in after the run. Nothing above is edited.*

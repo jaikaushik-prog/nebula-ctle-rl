@@ -3002,6 +3002,28 @@ Plus: git init, .gitignore, 28 tests, Wilson-bound BER reporting.
   but JUDGED after the scan. **Reading files and judging them are separate
   steps, and the judging belongs after the cause check.**
 
+- **G88 -- (nebula) a SIMULATION budget does not terminate a PRE-SCREENED arm,
+  and the failure is a silent hang rather than an error.** Every method loop in
+  `experiments/baselines.py` terminates on `Objective.n_sims`, which is right
+  and is 7f's first fairness rule (G65: charge every ngspice invocation). But a
+  pre-screened rejection costs **zero simulations by design** -- that is the
+  whole point of the screen -- so a screen that rejects every proposal leaves
+  `n_sims` at 0 forever. `check_budget()` never raises, the LHS stream never
+  ends, and the process spins at full CPU producing nothing. **Found by the
+  test suite hanging for 400 s** on the test that asserts a screened rejection
+  is free; the assertion itself was correct and the loop around it was not.
+  Two consequences, both now in `exp_difficulty.py`:
+  **(a) a screened arm needs a SECOND termination condition** -- a proposal
+  cap, sized against the measured screen (61.7 % free rejection is ~2.6
+  proposals per simulation, so 100x cannot bind by accident); and
+  **(b) hitting it must be RECORDED** (`proposal_cap_hit`), because a run that
+  stopped on the cap and a run that searched its whole budget and found nothing
+  are the same three `None`s otherwise. Generalise: **whenever a cost model
+  makes some action free, check that the free action cannot be taken forever.**
+  Note this bites `baselines.py`'s screened arms too if the screen ever became
+  pathological; there it has not been hit because the real screen accepts
+  ~38 % of proposals.
+
 ## 10. Environment
 
 - Windows 11, PowerShell 5.1 (+ Git Bash available), Python 3.13.14,
@@ -5964,3 +5986,57 @@ session 21). Its remaining steps are folded into the phases. Its per-step
 PROMPTS are still useful and are not superseded.
 
 Nothing executable changed. **1448 green, unchanged.**
+
+### 2026-08-18 - Session 22 (task 0: the difficulty of the problem the G3 sweep will run -- PRE-REGISTERED, NOT YET RUN)
+
+**This commit contains no result.** It contains the experiment, its tests, and
+a prediction committed **before** the experiment ran (PLAN.md §7 rule 6). The
+result lands in the next commit, whatever it says.
+
+**The question.** `PLAN.md` §3's G3 sweep is specified and costed at ~12 h and
+has never been run. Three already-measured numbers -- random LHS meets S3 at
+**13.44 %** (`BASELINES.md` §5 / D4), the reward **saturates at +8.950669**
+(G74), one evaluation costs **0.28 s** (`G2_RESULTS.md` §3) -- together suggest
+the sweep may be arithmetically incapable of separating its arms, because every
+arm would tie at the ceiling and `BASELINES.md`'s own CI-overlap rule then
+forbids reporting a ranking. **Measure it before spending 12 hours on it.**
+
+**New:** `nebula/experiments/exp_difficulty.py`, `nebula/tests/test_exp_difficulty.py` (15).
+**Pre-registration:** `nebula/PREDICTIONS.md` entry 7, with the decision rule
+(`< 50` simulations to ceiling in either arm -> the thesis holds; `> 500` in
+every arm -> it fails; in between -> stop and let a human decide) encoded in
+`decide()` so the verdict is read off the data rather than argued after it.
+
+**Nothing about the problem definition changed** -- same box
+(`rl.contract.ACTION_SPACE`), same sampler (`baselines._lhs`), same evaluator,
+same reward (`V1_SPECS`), same rung (P1: TT / 1.00 / 27 C / `cl_mid`, drawn
+passives). `params.py`, `contract.py`, `env.py`, `V1_SPECS` **untouched**.
+`test_the_restart_loop_matches_method_lhs_exactly` is the gate on that claim:
+it asserts this module's loop emits the identical `u` sequence
+`baselines.method_lhs` does from the same seed.
+
+**One real defect found while building it, and it is now G88:** a simulation
+budget does not terminate a pre-screened arm. A screened rejection costs zero
+simulations *by design*, so an arm whose screen rejects everything never
+advances `n_sims` and loops forever at full CPU. Found by the test suite
+hanging for 400 s on `test_a_screened_out_proposal_costs_zero_simulations`.
+`run_restart`/`run_pool` now carry a proposal cap and **log `proposal_cap_hit`**,
+so hitting it is distinguishable from a run that searched properly and found
+nothing.
+
+**Five gates were deliberately broken and watched go red** before being put
+back (PLAN.md §7 rule 3): the LHS-equivalence gate (block size `n` -> `n+1`),
+the no-substitution gate (budget written over a censored `None`), the
+decision-rule gate (`DECISION_LO` 50 -> 5), the 90 %-band gate (`alpha` dropped,
+falling back to the helper's 95 %), and the ceiling-tolerance gate
+(`CEILING_TOL` 1e-6 -> 1e-3). The sixth -- removing the proposal cap -- **hangs
+rather than failing**, which is exactly why the flag is logged.
+
+**Measured while sizing the run, quoted here because it is the only number in
+this commit:** the evaluator costs **0.2537 s/sim** on a cold cache and
+**0.1665 s/sim** warm, serial, on this machine today, against
+`G2_RESULTS.md`'s 0.2787 s at full fidelity (this tier omits the `.dc` swing
+and the HD3 transient). G71's ordering effect is visible in the gap between
+those two and neither is quoted as *the* cost.
+
+**Tests 1448 -> 1463 green.**
