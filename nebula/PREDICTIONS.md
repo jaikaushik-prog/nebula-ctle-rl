@@ -1426,6 +1426,81 @@ still the ceiling of the path every baseline lives on, and the interpolated path
 is opt-in. Whether to move the benchmark onto it is a human decision (D-series),
 not a consequence of this entry.
 
-### Outcome
+### Outcome — **every band hit, one point estimate badly off, and two findings nobody registered.** Run 2026-08-19, `nebula/PEAK_INTERP.md`.
 
-*(to be written after the runs; nothing above this heading may be edited)*
+| | predicted | band | measured | |
+|---|---|---|---|---|
+| **A** median \|Δf_peak\|, funnel | 0.0166 oct | 0.012–0.021 | **0.015858** | HIT |
+| **A** fraction \|Δ\| < 0.001 oct | 3.0 % | 0–8 % | **2.5 %** | HIT |
+| **A** designs beyond ±h/2 | 0 | exactly 0 | **0** of 160 | HIT |
+| **B** median \|lattice error\| vs `dec 500` | 0.0166 oct | 0.012–0.021 | **0.017265** | HIT |
+| **B** median \|interpolated error\| | 0.0010 oct | < 0.004 | **0.000100** | band hit, **point 10× off** |
+| **B** error reduction | 16× | ≥ 5× | **172×** | band hit, **point 11× off** |
+| **B** designs where interpolation is worse | 0 | ≤ 2 of 30 | **0** of 14 | HIT |
+| **C** distinct rewards among the 57 | 57 | ≥ 55 | **57** | HIT |
+| **C** of the 57, above 8.950669 | 28 | 18–38 | **29** | HIT |
+| **C** of the 57, refused | 0 | ≤ 2 | **0** | HIT |
+| **C** designs at the new maximum | 1 | 1 | **1** | HIT |
+| **C** best interpolated reward / 8000 | 8.985 | 8.955–9.000 | **8.999160** | HIT |
+| **D** pools reproducing counts | 4 of 4 | — | **4 of 4** | HIT |
+| **D** pools reproducing ceiling ids | 4 of 4 | — | **4 of 4** | HIT |
+| **D** funnel designs reproducing `f_pk_hz` at rel=0 | all | — | **276 of 276** | HIT |
+| **D** valid designs the interpolation refuses | ≤ 0.5 % | — | **0.022 %** (1 of 4543) | HIT |
+
+**The headline prediction was the mechanism, and it held to one design.** 28 of
+the 57 were predicted above the old ceiling on the reasoning that the nearest
+lattice point sits 0.0247 octaves *below* the target, so exactly half the grid
+cell moves closer. Measured: **29 above, 28 below**, and — the direct check —
+**29 of the 57 have a positive vertex offset.** The uniform-over-the-cell model
+of the ties is right, which is a second, independent confirmation that G74's
+account of the ceiling was complete rather than approximate.
+
+**Sixteen hits is not a good sign on its own, and one of them was luck.**
+Prediction B's point estimate for the interpolated error, 0.0010 octaves, was
+**ten times too pessimistic** — the measured median is 0.000100 — and the
+reduction factor was predicted at 16× against a measured **172×**. The band
+(≥ 5×) was wide enough to absorb an order of magnitude, so it "hit" while the
+reasoning behind it was wrong: I assumed the quadratic approximation would leave
+about a sixth of a dense grid step of residual, and on this circuit it leaves
+about a sixtieth. **A band that survives a 10× error in its own point estimate
+was not a strong test**, and the honest reading is that B tested "is the vertex
+better than the lattice" (it is, decisively) and did not test how much.
+
+### What was NOT predicted, and should have been
+
+1. **63 designs in 8000 change feasibility** — 39 gain, 24 lose, net +15 on
+   1291. `S3_f_peak`'s margin crosses zero at S3's window edges, and moving
+   `f_peak` by up to a third of a grid step moves designs across them. **This
+   entry predicted a change of RESOLUTION and got a change of PROBLEM as well**,
+   0.79 % of the population, in both directions. It is the same per-design
+   versus population distinction entry 8's prediction B ran into with G66, and
+   it should have been foreseen from that entry, one day earlier. `PEAK_INTERP.md`
+   §5 records it as a change to the problem rather than folding it into the
+   metric, and §7 makes adopting it a human decision.
+2. **The one refusal is not the refusal that was predicted.** The entry named
+   the sweep edge as the case that matters. The single refusal in 4543 valid
+   designs is the **argmax cross-check** firing on a response flat to
+   2 × 10⁻¹⁰ dB: `meas` works on the full-precision vector, `wrdata` writes 8
+   significant figures, and the rounding was enough for the two argmaxes to pick
+   samples one grid step apart. Without that check the interpolation would have
+   refined the wrong cell and reported a shift of a full grid step — twice the
+   hard bound — silently. Now **G93**.
+
+### The over-claiming guard, honoured
+
+The entry warned that "a separable metric is not automatically the right
+metric". Measured: the 57 span **0.1135** reward units with a median adjacent
+gap of **1.28 × 10⁻³**, which is **647×** the vertex uncertainty at a typical
+curvature and **14×** the worst-case one. The ranking is measuring the circuit.
+**But the closest pair is separated by 6.86 × 10⁻⁵, inside the worst-case
+bound**, so those two are not strictly ordered by this measurement — and the
+pool log does not carry per-design curvature, so which pair it is cannot be
+recovered from the run. Stated rather than rounded away.
+
+The entry's other warning also stands unchanged: **removing the ceiling does not
+make the problem hard.** The S3 rate is still 7.10 %, 75 % of screened restarts
+still saturate inside budget, and nothing here says an arm of the G3 sweep would
+separate from another. What changed is the shape of the objective at its
+optimum.
+
+*Nothing above the Outcome heading was edited.*

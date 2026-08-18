@@ -314,6 +314,14 @@ def run_pool(arm: str, pool_sims: int = POOL_SIMS,
 
     No early stop, so the reward sample is not truncated at the first success
     and the ceiling ties can be counted over a FIXED number of simulations.
+
+    `ac_peak_interp` (session 22e) is passed straight to `Objective` and is
+    **default OFF**, so every number `DIFFICULTY.md` publishes came from this
+    function with the flag absent. With it on, `evaluate` adds the sub-grid
+    peak to `meas` under NEW keys and leaves the lattice ones alone -- the
+    rewards this function records are therefore identical either way, and
+    `exp_peak_interp.py` re-scores the captured trials rather than reading a
+    different number out of here.
     """
     seed = run_seed(arm, "pool", replicate)
     rng = np.random.default_rng(seed)

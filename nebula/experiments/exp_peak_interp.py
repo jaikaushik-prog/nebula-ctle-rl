@@ -679,21 +679,32 @@ def plot(funnel: Path = FUNNEL_OUT, pools: Path = POOLS_OUT,
         ax.set_ylabel("reward_v1")
         ax.legend(fontsize=8, loc="lower right")
 
-    # (c) the whole reward distribution, before and after
+    # (c) THE COMB AND THE CONTINUUM. The lattice reward takes a handful of
+    # values because `S3_f_peak`'s margin is a lattice quantity; the
+    # interpolated one is continuous. Drawn on designs feasible on BOTH paths
+    # so the comparison is a change of RESOLUTION and not a change of
+    # population -- the 63 designs whose feasibility flips are counted in
+    # `analyse_pools`, not smuggled into a histogram.
     ax = axes[2]
     if pools.exists():
         rows = [r for r in load(pools)[1:]
                 if r.get("kind") == "trial" and r["n_sims"] > 0]
         a = np.array([r["reward_discrete"] for r in rows])
         b = np.array([r["reward_interp"] for r in rows])
-        m = a > 8.0                       # the feasible band, where it matters
-        ax.hist(a[m], bins=40, alpha=0.55, label="lattice", color="#cc3311")
-        ax.hist(b[m], bins=40, alpha=0.55, label="interpolated", color="#228833")
+        m = (a >= 8.0) & (b >= 8.0)
+        lo = 8.70
+        m &= (a >= lo) & (b >= lo)
+        bins = np.linspace(lo, 9.005, 60)
+        ax.hist(b[m], bins=bins, color="#228833", alpha=0.75,
+                label=f"interpolated ({len(set(np.round(b[m], 9)))} values)")
+        vals, counts = np.unique(np.round(a[m], 9), return_counts=True)
+        ax.vlines(vals, 0, counts, color="#cc3311", lw=1.6,
+                  label=f"lattice ({vals.size} values)")
         ax.axvline(G74_CEILING, color="#333333", ls="--", lw=1.0)
-        ax.set_title(f"(c) feasible rewards, n = {int(m.sum())}")
-        ax.set_xlabel("reward_v1 (feasible band only)")
+        ax.set_title(f"(c) the comb and the continuum, n = {int(m.sum())}")
+        ax.set_xlabel("reward_v1  (top of the feasible band)")
         ax.set_ylabel("designs")
-        ax.legend(fontsize=8)
+        ax.legend(fontsize=8, loc="upper left")
 
     fig.tight_layout()
     path.parent.mkdir(parents=True, exist_ok=True)

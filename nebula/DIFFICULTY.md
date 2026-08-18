@@ -57,6 +57,16 @@ committed at **`e8b9b25`, before the run**.
    and nothing above it in 8000 simulations. The ceiling is a property of the
    AC grid, not of a lucky design.
 
+   > **Session 22e (2026-08-19) removed that ceiling, and this finding is what
+   > it was removed against.** Reading the peak off the parabola through the
+   > three samples bracketing the discrete maximum -- at **zero extra
+   > simulation** -- gives these same 57 designs **57 distinct rewards**, 29 of
+   > them above 8.950669, on a replay that reproduces every count and every
+   > ceiling design-id in this file exactly. Nothing here is edited: these
+   > numbers still describe the path every baseline lives on. But note that
+   > **`simulations-to-ceiling`, this file's headline instrument, is undefined
+   > on the interpolated path.** See `PEAK_INTERP.md`.
+
 7. **A suspicion was raised and then killed by its own confirmation run.** The
    first replicate suggested the pre-screen discards ~46 % of ceiling-capable
    designs; doubling the events moved the rate ratio from 0.535 to **0.917**.

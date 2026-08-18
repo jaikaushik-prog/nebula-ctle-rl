@@ -12,16 +12,27 @@
 > discovered to the Gotchas section. A change without a handoff update is an
 > incomplete change.
 
-Last updated: **2026-08-19** (session 22e: **task 1's mechanism is in and
-PRE-REGISTERED, with no measurement yet.** The AC peak can now be read off
-the parabola through the three samples bracketing the discrete maximum
-instead of off the `dec 50` lattice -- `run_point(ac_peak_interp=True)`,
-**zero extra simulation**, opt-in, and the default path is provably
-byte-identical, so G74's **+8.950669** ceiling and every published reward
-still reproduce. Whether that ceiling is GONE or merely MOVED is measured
-by `experiments/exp_peak_interp.py`; `PREDICTIONS.md` entry 9 is committed
-ahead of the numbers. Tests **1480 -> 1504**. New gotcha **G92**: two
-arithmetics over the same events are ONE measurement.)
+Last updated: **2026-08-19** (session 22e: **TASK 1 IS DONE AND THE REWARD
+CEILING IS GONE.** The AC peak is now read off the parabola through the three
+samples bracketing the discrete maximum instead of off the `dec 50` lattice --
+`run_point(ac_peak_interp=True)`, **zero extra simulation**, `dec` untouched,
+opt-in, default OFF. **The 57 designs that tied at G74's +8.950669 across 8000
+simulations now hold 57 DISTINCT rewards** (8.885654 .. 8.999160, one design at
+the top); **29 above the old ceiling and 28 below**, against a pre-registered
+28 derived from the lattice point sitting 0.0247 octaves BELOW the target.
+**The vertex is RIGHT, not merely finer:** against a `dec 500` reference the
+lattice error is 0.017265 octaves and the interpolated error **0.000100** -- a
+**172x reduction, 0 of 14 worse**. **Nothing published moved:** all four task-0
+pools reproduce their counts AND their ceiling design-id sets exactly, and all
+276 checkable G2-funnel designs reproduce `f_pk_hz` at rel=0. **Not registered
+by anyone and it matters: 63 designs in 8000 CHANGE FEASIBILITY** (39 gain, 24
+lose, net +15 on 1291) because `S3_f_peak`'s margin crosses zero at S3's window
+edges -- so this is a change of PROBLEM as well as of resolution, and moving any
+baseline onto it is a `BASELINES.md` §7f event and the owner's call. Tests
+**1480 -> 1504**. New gotchas **G92** (two arithmetics over the same events are
+ONE measurement) and **G93** (`wrdata`'s 8 significant figures vs `meas`'s full
+precision can disagree about which sample is the maximum, by a whole grid step).
+Write-up `nebula/PEAK_INTERP.md`.)
 
 Earlier session 21: **GATE G2 IS PASSED, three days
 early, and the first thing the closed loop revealed is that COMPRESSION binds
@@ -841,6 +852,26 @@ signaling, ADC-based DSP receiver, 28 nm CMOS reference parameters).
 │   │                       Read §0 then §7 -- §7 is what it does NOT license
 │   │                       (TT-only, a BER BOUND with device noise only, no
 │   │                       1e-15 bathtub, S7 a lower bound).
+│   ├── PREDICTIONS.md      The pre-registration log. Entry N is written and
+│   │                       COMMITTED before its run; the Outcome section is
+│   │                       appended after and nothing above it is edited.
+│   ├── DIFFICULTY.md       NEW (2026-08-18, session 22b). Task 0: how hard is
+│   │                       the problem G3 will run. S3 rate 7.10 %, and G74's
+│   │                       ceiling tied by 57 designs in 8000.
+│   ├── ATTRIBUTION.md      NEW (2026-08-18, session 22d). Where the D4 gap
+│   │                       went: the LOAD, via the G44 population, not design
+│   │                       quality.
+│   ├── PEAK_INTERP.md      NEW (2026-08-19, session 22e). Task 1: the reward
+│   │                       ceiling REMOVED at its source by parabolic
+│   │                       interpolation of the AC peak, at zero simulation
+│   │                       cost. Read §0, then §5 (it changes 63 S3 verdicts,
+│   │                       so it is a change of PROBLEM too) and §7 (the three
+│   │                       decisions it leaves to a human).
+│   ├── experiments/exp_peak_interp.py  NEW (2026-08-19, session 22e). Three
+│   │                       sub-experiments: `--funnel` (replay the 300 G2
+│   │                       designs), `--dense N` (dec 50 vs dec 500 -- is the
+│   │                       vertex RIGHT or merely finer), `--pools` (replay
+│   │                       all four task-0 pools at their own seeds).
 │   ├── GMID_MAP.md         NEW (2026-08-17, session 20). The write-up. Read
 │   │                       §0 and §8 first: the motivating mechanism is
 │   │                       measured FALSE and the recommendation is not to
@@ -2808,6 +2839,13 @@ Plus: git init, .gitignore, 28 tests, Wilson-bound BER reporting.
   is the reward faithfully reporting the resolution of the measurement
   underneath it. **Before using any "best score" as a discriminator, work out
   whether the measurement can resolve it.**
+  **ADDRESSED 2026-08-19 (session 22e), and the gotcha stands as written.** The
+  resolution was raised without raising `dec`: `run_point(ac_peak_interp=True)`
+  reads the peak off the parabola through the three bracketing samples, at zero
+  extra simulation, and the 57 ties become 57 distinct rewards. **This entry is
+  still live**, because the flag is default OFF and every published number --
+  including the +8.950669 itself -- is still measured on the lattice. See
+  `nebula/PEAK_INTERP.md`, and G93 for the failure the change exposed.
 - **G75 -- (nebula) a parallel speed-up measured on isolated evaluations does
   not transfer to a workload whose workers also compute.** Session 17 measured
   **2.98x at 8 workers** on 24 bare ngspice evaluations. The same 8 workers on
@@ -3125,6 +3163,26 @@ Plus: git init, .gitignore, 28 tests, Wilson-bound BER reporting.
   genuinely independent measurements: session 18b's accuracy falsification
   (MdAPE 4.93 -> 15.85 %, false rejection 0.39 -> 3.88 %) and session 20's
   TN = 0. Its population rates transfer; its per-design accuracy does not.
+
+- **G93 -- (nebula) `wrdata` writes EIGHT significant figures while `meas`
+  works on the full-precision vector, so on a flat response the two disagree
+  about which sample is the maximum -- by a whole grid step.** Measured once in
+  4543 valid designs (session 22e, `unscreened r1` trial 386,
+  `design_id 89780188e55329c0`): three adjacent AC samples equal to within
+  **2 x 10^-10 dB**, `meas ac MAX` reporting 57.544 MHz and a numpy argmax over
+  the dumped curve reporting 54.954 MHz -- **0.0664385 octaves apart, exactly
+  one `dec 50` step.** Both are "the maximum" of their own copy of the data.
+  The consequence, had it gone unnoticed: the parabolic interpolation would have
+  refined the WRONG cell and reported a peak shift of a full grid step, twice
+  its own hard bound, as a small smooth correction. **Caught only because
+  `run_point(ac_peak_interp=True)` cross-checks its argmax against `f_pk_hz` and
+  REFUSES on disagreement.** The general form: **a dumped file and a `meas`
+  scalar are two copies of one measurement at two precisions, and any argmax,
+  threshold or comparison computed on the dump can disagree with the one
+  computed inside ngspice.** Cross-check them where it matters, and make the
+  disagreement a refusal rather than a number. Rule 9's usual advice -- one
+  definition -- does not reach this, because the two "definitions" here are the
+  same expression evaluated on data of different width.
 
 ## 10. Environment
 
@@ -6476,3 +6534,104 @@ headline prediction, pre-registered: **all 57 ties separate, and 28 of them
 the four pools fails to reproduce its published `n_s3`, `n_at_ceiling` and
 `ceiling_design_ids`, the flag is not additive and nothing measured here
 extends what it claims to extend.
+
+### 2026-08-19 - Session 22e-run (task 1 RESULT: the ceiling is GONE, and the vertex is 172x closer to the truth)
+
+**The three runs of `PREDICTIONS.md` entry 9, at the pre-registration commit
+`9f9eca8`. 8360 simulations, 2065 s, serial, nothing else simulating. Full
+write-up `nebula/PEAK_INTERP.md`.**
+
+**THE HEADLINE: the 57 designs that tied at +8.950669 across 8000 simulations
+now hold 57 DISTINCT rewards**, spanning 8.885654 to 8.999160, with **one**
+design at the top. **29 of them score above the old ceiling and 28 below** --
+the pre-registered number was 28, on the reasoning that the nearest lattice
+point sits 0.0247 octaves BELOW the target so exactly half the grid cell moves
+closer, and **29 of the 57 do have a positive vertex offset**. The ceiling is
+gone rather than moved: the new supremum is 9.0 and is unattainable, because it
+needs `f_peak` exactly on target and the reward is a `min` over specs.
+**45 designs in 8000 now score above 8.950669** -- the 29, plus 16 that sat at
+the ADJACENT lattice value 8.916453 and whose true peaks reach inside it. The
+old ceiling was hiding a real ordering in both directions.
+
+**THE CHECK THAT MATTERS MOST, and it was not in the brief: is the vertex RIGHT
+or merely finer?** 30 funnel designs run twice, `dec 50` against **`dec 500`**,
+with the dense run's interpolated peak as the reference. Median lattice error
+**0.017265 octaves**; median interpolated error **0.000100 octaves**; **172x
+reduction; 0 of 14 designs where interpolation is worse.** Nothing in any
+deliverable sweeps `dec 500` -- this is a validation, and raising `dec` remains
+the owner's decision.
+
+**NOTHING PUBLISHED MOVED.** All four task-0 pools reproduce `n_s3`,
+`n_at_ceiling`, `invalid_rate`, `best_reward` **and their `ceiling_design_ids`
+sets** exactly; the screened arms even drew the same 6645 and 6746 proposals.
+All 276 checkable funnel designs reproduce `f_pk_hz` at rel=0. Falsification
+condition 1 -- the one that would have stopped the task -- did not fire.
+
+**AND IT IS A SLIGHTLY DIFFERENT PROBLEM, NOT ONLY A FINER METRIC. Nobody
+pre-registered this.** `S3_f_peak`'s margin crosses zero at S3's window edges,
+so moving `f_peak` by up to a third of a grid step moves designs across them:
+**63 designs in 8000 change feasibility -- 39 gain, 24 lose, net +15 on 1291**,
+0.79 % of the population, in **both directions** while the rate stays nearly
+flat. That is the same per-design-versus-population distinction session 22b's
+prediction B ran into with G66, one day earlier, and it should have been
+foreseen. On the strength of the `dec 500` check these 63 are **corrections**
+rather than new errors -- but they are 63 changed S3 answers, and moving any
+baseline onto the interpolated path is a `BASELINES.md` §7f event.
+
+**The funnel numbers (300 designs, `cl_mid`, drawn passives, real mirror):**
+160 interior peaks, 122 refused as still-rising at 20 GHz (G44) and 18 as
+monotonically falling. Median shift **0.015858 octaves**, flat across the whole
+cell, **0 outside the ±0.033219 hard bound**. The MAGNITUDE barely moves --
+median +7.4e-5 dB against a 1.0 dB tolerance -- so **the lattice cost frequency
+resolution, not gain resolution**, and `S3_peaking` is untouched in practice.
+Guard cross-tab: the interpolated G44 guard rejects **0** designs the discrete
+guard accepts; the discrete guard is stricter (13 the other way) and remains
+operative.
+
+**Is the separation real or fourth-decimal noise?** The reward converts at
+2 units per octave. Vertex uncertainty from `wrdata`'s 8-figure write is
+**2.0e-6** reward units at the median curvature and **9.4e-5** at the flattest
+seen. Median adjacent gap among the 57 is **1.28e-3** -- 647x the first, 14x the
+second -- and they span 0.1135, a third of the distance between two lattice
+values. **But the closest pair is 6.86e-5 apart, INSIDE the worst-case bound**,
+so those two are not strictly ordered by this measurement, and the pool log does
+not carry per-design curvature so which pair it is cannot be recovered. Stated
+rather than rounded away.
+
+**WHAT BROKE: one design in 4543, and not the way it was predicted.** The single
+refusal is the **argmax cross-check**, not a sweep edge: three AC samples equal
+to 2e-10 dB, `meas` and numpy naming samples one full grid step apart because
+`wrdata` writes 8 significant figures and `meas` does not. **New gotcha G93.**
+Recovering its reason needed the LHS stream re-derived and the design
+re-simulated, because the per-trial log carries `Trial.meas` and not
+`EvalResult.raw` -- an instrument gap worth closing before task 3.
+
+**Cost, under G71's discipline.** Pool replay 1954.4 s against the published
+1830.6 s, **1.068x** aggregate, against G2's tier table predicting **1.158x**
+for the AC dump. But the two published replicates of the same arm differ from
+each other by **1.178x** and **1.117x** with no code difference at all. **A
+6.8 % increment inside a 17.8 % spread is not a measurement of the increment.**
+The honest statement: the interpolation costs **no simulations**, and its
+wall-clock cost is below this machine's own run-to-run noise.
+
+**Retired:** task 0's `simulations-to-ceiling` metric is undefined on the
+interpolated path. Best-score-at-budget is a usable discriminator again on P1 at
+nominal.
+
+**Still true and unchanged:** the problem did not get harder. S3 rate 7.10 %,
+75 % of screened restarts still saturating inside budget. What changed is the
+SHAPE of the objective at its optimum -- a 57-design plateau became a gradient.
+Difficulty is task 3's axis.
+
+**New:** `nebula/PEAK_INTERP.md`, `figures/peak_interp.png`,
+`experiments/peak_interp_{funnel,dense,pools}.jsonl`. **Tests 1504 green,
+unchanged.** `params.py`, `contract.py`, `env.py`, `V1_SPECS`, the tolerances,
+the box, the pre-screen and every seed untouched; the flag is default-off
+everywhere.
+
+**Three decisions this surfaces, all the owner's** (`PEAK_INTERP.md` §7):
+does the benchmark move onto the interpolated path (63 changed S3 verdicts, and
+every baseline re-run); what should a refused interpolation score (today the
+invalid floor, which is a hole in the landscape, fired once in 4543); and do the
+corner and load screens need re-running, which should be costed together with
+G66's own re-run before task 3 spends compute.
