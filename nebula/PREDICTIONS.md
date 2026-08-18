@@ -1088,3 +1088,125 @@ ceiling (33 %), against 18 of 24 screened (75 %). So best-reward-at-budget does
 separable" objection to the sweep is not what the arithmetic supports.
 
 *Nothing above the Outcome heading was edited.*
+
+---
+
+## 8. Session 22b — where did the S3 rate go, and does the pre-screen throw away winners?
+
+**Written:** 2026-08-18, session 22b, **before** either run. Two questions the
+task-0 result forced, both decided by the owner in the session-22 review.
+
+**Experiments:**
+`python -m nebula.experiments.exp_attribution --run` (3 arms x 1500 simulations)
+and `python -m nebula.experiments.exp_difficulty --more-pools 1` (2 arms x 2000).
+
+### What is already known before the run, and is NOT a prediction
+
+Two facts were established with **no simulation at all**, by re-scoring the
+stored calibration population, and they are recorded here as inputs rather than
+as predictions because they were measured before this entry was written:
+
+1. **The definition accounts for none of the gap.** On
+   `robust_geometry_data.csv`, `prescreen.s3_true` (2 rows) gives **13.44 %**
+   and `reward_v1.V0_SPECS` (3 rows, adding `S3_nyq_boost`) gives **13.44 %**.
+   Zero designs are killed by the Nyquist row. The 7-row `V1_SPECS` rate is
+   **13.39 %** — which independently reproduces task 0's "the other specs never
+   bind" on a different population, with ideal passives and an ideal tail.
+2. **Every row of that population has `cl` = 150 fF**, the legacy pin — *not*
+   `cl_mid` = 32.63 fF. `PLAN.md` D4 describes 13.44 % as "the measured rate at
+   `cl_mid`", and `BASELINES.md` §2's ladder table puts it on the `cl_mid` row.
+   **Both are wrong**, and the ratio is 4.598x.
+
+### Prediction A: the load explains most of the gap
+
+**Point estimate: the `cl` = 150 fF arm comes back at 12.5 %**, band
+**10.5–15.5 %**, against **7.10 %** [6.05, 8.31] at `cl_mid`.
+
+Reasoning, from published numbers only:
+
+* `f_peak` moves as roughly `cl^-0.5` (`PREDICTIONS.md` entry 1 §2, measured
+  slope −0.48 over `cl` = 50–500 fF). A 4.598x load change moves `f_peak` by
+  **1.10 octaves** — more than S3's entire one-octave window.
+* So the window selects a *different slice of the box* at each load, and there
+  is no reason for the two slices to have equal S3 density. G42 already
+  measured the direction: pinning `cl` at 150 fF gave **13.54 %** where
+  searching `cl` over 10–500 fF gave 8.73 %.
+* I expect the legacy arm to land near 13 % and therefore to account for
+  roughly **5 of the 6.34 points**, leaving ~1 point for drawn passives.
+
+### Prediction B: drawn passives cost about a point
+
+**Point estimate: the ideal-passive arm at `cl_mid` comes back at 8.2 %**,
+band **7.0–11.0 %**, i.e. drawn passives cost **~1.1 points** (band 0–4).
+
+G66's mechanism is a `res_po` bottom plate adding **1.4–24.3 fF to a `cl` of
+32.6 fF, up to +75 %**, always lowering `f_peak`. At `cl^-0.5` a +75 % load is
+**0.40 octaves** — large against a 0.5-octave half-window — but the *median*
+shift G66 measured is 0.1329 octaves, so the typical design moves ~13 % of the
+window and only designs near the edge change verdict.
+
+**If B comes back at or below 7.10 %**, drawn passives make the problem
+*easier*, which would contradict G66's stated direction and would be the more
+interesting result.
+
+### Prediction C (G89): the screen does discard ceiling-capable designs
+
+**Point estimate: the pooled rate ratio stays near 0.535 and its 95 % CI
+excludes 1.0**, i.e. **CONFIRMED**, with implied false rejection on the
+ceiling-capable population of **45 %**, band **25–65 %**.
+
+Reasoning: the effect already has two independent supports. The direct one is
+9/2000 against 16/6645 proposals. The indirect one is that "ceiling rate = S3
+rate / 15" predicts the unscreened ceiling rate to **5 %** (0.473 % against
+0.450 % measured) and misses the screened one by **2.1x** (1.703 % predicted,
+0.800 % measured) — two different routes to the same ~2x. Doubling the events
+should move the interval below 1.0 without moving the point estimate much.
+
+**The mechanism I expect, and it is checkable:** the screen filters on
+predicted `f_peak` with a 0.40-octave widening, and the ceiling is a
+**0.0664-octave** target. A predictor with 4.93 % MdAPE at calibration and
+**15.85 %** at benchmark conditions (G76) cannot resolve a lattice step, so it
+rejects near-centre designs essentially at random with respect to the ceiling.
+**A filter with a tolerance 6x coarser than the target it is being judged on is
+a coin flip on that target.**
+
+### What would falsify the reasoning (as opposed to the numbers)
+
+1. **The legacy-load arm comes back near 7 %.** Then the load is not the cause,
+   and the gap must be the sampler, the box, or the mirror — the last of which
+   is currently unmeasurable (`TAIL_AXIS_BLOCKED`) and would have to be
+   unblocked, which is a human decision about `validate`.
+2. **The ideal-passive arm comes back far ABOVE 11 %.** Then drawn passives
+   alone explain most of the gap, G66 is larger than its own measurement said,
+   and every ideal-passive number in the repo is optimistic by more than the
+   caveat admits.
+3. **The two arms together over-explain the gap** (their effects sum to well
+   over 6.34 points). The causes are not independent — both act on `f_peak`
+   through the load — so a simple sum is not guaranteed to close, and if it
+   over-closes the decomposition must be reported as non-additive rather than
+   presented as a budget.
+4. **C's ratio moves toward 1.0 with more events.** Then the first pools were
+   an unlucky draw, G89 is killed, and the screened arms of the sweep are fine.
+   That is the outcome that saves a 12-hour run from a caveat.
+5. **C's ratio goes below ~0.2.** That would be a screen rejecting four fifths
+   of ceiling-capable designs, which is too large to be predictor noise and
+   would point at a systematic edge in the accept window rather than a
+   resolution limit.
+
+### Guard against over-claiming
+
+Prediction A confirming does **not** make 13.44 % a valid baseline — it makes
+it a baseline **at a load the next stage cannot present**, which is the exact
+ground `PLAN.md` D4 uses to reject 13.54 %. The consequence of A is that D4's
+recommended number and its rejected alternative were measured at the *same*
+load, so the stated reason for preferring one over the other does not exist.
+
+Prediction C confirming does **not** condemn the pre-screen: 61.7 % free
+rejection at a 2.60x yield lift is a large, real saving on the S3 problem. It
+would mean the screen is a **population filter and not a design filter**, and
+that screened arms cannot be used to rank methods on a metric as narrow as the
+ceiling. Those are different claims and the report must not blur them.
+
+### Outcome
+
+*Filled in after the runs. Nothing above is edited.*

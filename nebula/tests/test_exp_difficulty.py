@@ -399,3 +399,82 @@ def test_the_log_header_pins_the_evaluator_and_the_seed_rule(tmp_path,
     assert head["base_seed"] == D.BASE_SEED
     assert "seed_rule" in head and "box" in head and "library" in head
     assert head["specs"] == list(R.V1_SPECS)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# G89 — does the pre-screen discard CEILING-capable designs?
+# ─────────────────────────────────────────────────────────────────────────────
+
+
+def test_the_ceiling_ratio_is_measured_per_PROPOSAL_not_per_simulation():
+    """The statistic must be on the axis a screen can actually bias.
+
+    A screen only REMOVES proposals, so absent bias both arms must show the
+    same ceiling rate PER PROPOSAL. The per-SIMULATION rate cannot answer the
+    question, because raising that one is what the screen is for — reading it
+    instead would "confirm" the screen is helping in exactly the case where it
+    is throwing good designs away.
+
+    **Proven able to fail:** switching `ceiling_rate_ratio` to `n_sims` makes
+    the ratio 1.78 (the screen looks purely beneficial) instead of 0.535, and
+    the ordering assertion below goes red.
+    """
+    pools = [
+        {"arm": "unscreened", "n_at_ceiling": 9, "n_proposals": 2000,
+         "n_sims": 2000},
+        {"arm": "screened", "n_at_ceiling": 16, "n_proposals": 6645,
+         "n_sims": 2000},
+    ]
+    rr = D.ceiling_rate_ratio(pools)
+    assert rr["rate_unscreened"] == pytest.approx(0.0045)
+    assert rr["rate_screened"] == pytest.approx(16 / 6645)
+    assert rr["ratio"] == pytest.approx(0.535, abs=1e-3)
+    assert rr["ratio"] < 1.0, "per-simulation would give 1.78 and hide the bias"
+    assert rr["implied_false_rejection"] == pytest.approx(0.465, abs=1e-3)
+
+
+def test_the_ratio_reports_whether_its_interval_excludes_one():
+    """A CI spanning 1.0 is NOT a finding, and the code has to say so.
+
+    This is the whole reason G89 is recorded as a suspicion. The flag is what
+    stops the point estimate being quoted on its own.
+    """
+    wide = D.ceiling_rate_ratio([
+        {"arm": "unscreened", "n_at_ceiling": 9, "n_proposals": 2000},
+        {"arm": "screened", "n_at_ceiling": 16, "n_proposals": 6645}])
+    assert wide["excludes_one"] is False
+    lo, hi = wide["ci95"]
+    assert lo < 1.0 < hi
+
+    # Same rates, ~6x the events: the interval must tighten and exclude 1.
+    tight = D.ceiling_rate_ratio([
+        {"arm": "unscreened", "n_at_ceiling": 54, "n_proposals": 12000},
+        {"arm": "screened", "n_at_ceiling": 96, "n_proposals": 39870}])
+    assert tight["ratio"] == pytest.approx(wide["ratio"], abs=1e-6)
+    assert tight["excludes_one"] is True
+    assert tight["ci95"][1] < 1.0
+
+
+def test_a_zero_event_count_is_undefined_rather_than_zero():
+    """`log(0)` is not a rate ratio, and 0.0 would read as total rejection."""
+    rr = D.ceiling_rate_ratio([
+        {"arm": "unscreened", "n_at_ceiling": 5, "n_proposals": 1000},
+        {"arm": "screened", "n_at_ceiling": 0, "n_proposals": 3000}])
+    assert rr["ratio"] is None and "undefined" in rr["note"]
+
+
+def test_more_pools_uses_a_fresh_seed_so_counts_may_be_added(stub_at_ceiling,
+                                                             monkeypatch):
+    """Replicate 1 must not redraw replicate 0's sample.
+
+    Pooling counts by addition is only valid across INDEPENDENT samples; if the
+    seed did not move, the second pool would be the first one again and the
+    interval would tighten around a number that never gained evidence.
+    """
+    monkeypatch.setattr(PS, "screen",
+                        lambda p, **kw: PS.ScreenVerdict(True, None, None))
+    a = D.run_pool("unscreened", pool_sims=3, replicate=0)
+    b = D.run_pool("unscreened", pool_sims=3, replicate=1)
+    assert a["seed"] != b["seed"]
+    assert a["replicate"] == 0 and b["replicate"] == 1
+    assert D.run_seed("unscreened", "pool", 1) == b["seed"]

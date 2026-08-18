@@ -506,3 +506,82 @@ def test_run_point_keeps_raw_text_only_when_asked():
     point, _ = E.build_point(sizing_from_u(design_432_u()))
     assert run_point(point, swing=False).raw_text is None
     assert run_point(point, swing=False, keep_text=True).raw_text
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Session 22b — the ideal-tail / ideal-passive flags on `build_point`.
+#
+# They exist ONLY for the D4 attribution experiment (why the S3 rate is 7.10 %
+# under this pipeline against 13.44 % on the session-11 population). The whole
+# safety argument is that the DEFAULTS are the published configuration, so
+# these two tests are the gate on that and nothing else.
+# ─────────────────────────────────────────────────────────────────────────────
+
+
+def _have_sim() -> bool:
+    import shutil
+    from nebula.device.ngspice_runner import _DEFAULT_NGSPICE
+    from nebula.device.sky130_runner import TRIMMED_LIB
+    ng = _DEFAULT_NGSPICE.exists() or shutil.which("ngspice_con") is not None
+    return ng and TRIMMED_LIB.exists()
+
+
+_needs_sim = pytest.mark.skipif(not _have_sim(), reason="ngspice or SKY130 absent")
+
+
+def test_build_point_defaults_are_the_published_configuration():
+    """A real tail and drawn passives, unless explicitly asked otherwise.
+
+    **Proven able to fail:** flipping either default to False turns this red
+    immediately, which is the point — BASELINES.md §7f says changing the
+    evaluator means re-running every baseline, and a flag whose default drifts
+    changes the evaluator silently.
+    """
+    from nebula.rl.evaluator import build_point
+
+    sizing = sizing_from_u([0.5] * N_ACTIONS, cl_f=32.63e-15)
+    point, geo = build_point(sizing)
+    assert point.tail is not None, "the default lost the real current mirror"
+    assert point.passives is not None, "the default lost the drawn passives"
+    assert geo is not None
+
+    # ...and each flag removes exactly the one thing it names.
+    p_it, g_it = build_point(sizing, real_tail=False)
+    assert p_it.tail is None and p_it.passives is not None and g_it is not None
+    p_ip, g_ip = build_point(sizing, real_passives=False)
+    assert p_ip.tail is not None and p_ip.passives is None and g_ip is None
+    p_both, g_both = build_point(sizing, real_tail=False, real_passives=False)
+    assert p_both.tail is None and p_both.passives is None and g_both is None
+
+    # The REQUESTED electrical values never move — only what realises them.
+    for p in (point, p_it, p_ip, p_both):
+        assert p.rs == point.rs and p.cs == point.cs and p.rl == point.rl
+        assert p.cl == point.cl, "cl is context and is ideal either way"
+
+
+@_needs_sim
+def test_build_point_defaults_are_byte_identical_to_the_published_path():
+    """`real_tail=True, real_passives=True` must be the SAME RUN as no flags.
+
+    The session-21 pattern for `ac_sweep`/`hd3`, applied to an argument rather
+    than a netlist block: every parsed field compared at **rel=0, abs=0**, not
+    "within tolerance". A flag that moves a published number by a ULP is not a
+    default-preserving flag.
+
+    **Proven able to fail:** passing `real_passives=False` here reports
+    `g_dc_db` and `f_pk_hz` moving, which is exactly the difference the
+    attribution experiment is built to measure.
+    """
+    from nebula.rl.evaluator import SpiceBudget, evaluate
+
+    sizing = sizing_from_u([0.5] * N_ACTIONS, cl_f=32.63e-15)
+    a = evaluate(sizing, SpiceBudget())
+    b = evaluate(sizing, SpiceBudget(), real_tail=True, real_passives=True)
+    assert a.verdict is b.verdict and a.reason == b.reason
+    assert a.design_id == b.design_id and a.geometry_tag == b.geometry_tag
+    if a.meas is None:
+        pytest.skip(f"mid-box point is not scorable here: {a.reason}")
+    assert set(a.meas) == set(b.meas)
+    for k in a.meas:
+        assert a.meas[k] == b.meas[k], (
+            f"{k} moved: {a.meas[k]!r} -> {b.meas[k]!r} (rel=0 abs=0 required)")

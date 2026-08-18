@@ -86,9 +86,21 @@ buy at most ~1.2 % of the `f_peak` spread (measured). Not worth delaying the
 sweep. Just state that the screened arms carry a known 3.88 % false-rejection
 rate.
 
-**D4 — recommend: 13.44 %**, the measured rate at `cl_mid`. Not 8.73 % (that
-was `cl` searched) and not 13.54 % (that was `cl` pinned at a load the next
-stage cannot present).
+**D4 — ~~recommend: 13.44 %, the measured rate at `cl_mid`~~. DECIDED
+2026-08-18: the baseline is 7.10 %.**
+
+**The recommendation above was wrong on its own facts and is kept struck
+through rather than deleted.** 13.44 % was *not* measured at `cl_mid`: it is
+the rate on `robust_geometry_data.csv`, **every row of which has `cl` = 150 fF**
+— the legacy pin, 4.598× `cl_mid`. So the reason given here for rejecting
+13.54 % ("`cl` pinned at a load the next stage cannot present") applies to
+13.44 % **equally**, and the stated discriminator between them never existed.
+
+**The decision: 7.10 %** [6.05, 8.31], n = 2000 — the only one of the four
+candidates measured under the sampler, evaluator, box **and load** the sweep
+will actually use (`nebula/DIFFICULTY.md` §3). A baseline the current pipeline
+cannot reproduce does not survive a report. The gap is decomposed in
+`nebula/ATTRIBUTION.md`; the S3 *definition* explains none of it.
 
 **D5 — recommend: no.** Measured benefit is 1.16× on simulations per usable
 design, against invalidating every baseline. But **decide before the sweep** —

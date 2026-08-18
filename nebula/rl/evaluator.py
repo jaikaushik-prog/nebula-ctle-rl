@@ -226,17 +226,37 @@ def geometry_tag(geo: PassiveGeometry) -> str:
 
 
 def build_point(sizing: Sizing, corner: str = "tt",
-                vdd_scale: float = 1.0) -> tuple[SizingPoint, PassiveGeometry]:
+                vdd_scale: float = 1.0,
+                real_tail: bool = True,
+                real_passives: bool = True
+                ) -> tuple[SizingPoint, Optional[PassiveGeometry]]:
     """Sizing -> a `SizingPoint` carrying a real tail and drawn passives.
 
     Raises rather than returning a bad point: an ungrowable geometry is an
     invalidity the CALLER must name, and swallowing it here would let it become
     a silent default.
+
+    **`real_tail` and `real_passives` DEFAULT TO THE PUBLISHED CONFIGURATION
+    AND MUST STAY THAT WAY.** They exist for one purpose — session 22b's
+    attribution of the 13.44 % -> 7.10 % S3-rate gap, which needs the SAME
+    validation and the SAME scoring applied to the ideal-tail / ideal-passive
+    configuration `experiments/s3_yield.py` measured on. Setting either False
+    reproduces a LEGACY configuration; it is not a modelling option and nothing
+    in the RL path or the benchmark may pass them.
+    `test_build_point_defaults_are_byte_identical_to_the_published_path` is the
+    gate (BASELINES.md §7f: touching the evaluator means re-running every
+    baseline, and a default-off flag is how that is avoided).
+
+    With `real_passives=False` there is no drawn geometry, so the second
+    element is `None` and the caller gets no `geometry_tag` — which is correct
+    rather than a gap: G67's `design_id` grouping is a property of drawn
+    silicon and does not exist for ideal elements.
     """
-    geo = to_geometry(sizing.params["rs"], sizing.params["cs"],
-                      sizing.params["rl"])
-    tail = TailDevice(w_tail=sizing.w_tail_um, l_tail=sizing.l_tail_um,
-                      nf_tail=sizing.nf_tail, mirror_ratio=TAIL_MIRROR_RATIO)
+    geo = (to_geometry(sizing.params["rs"], sizing.params["cs"],
+                       sizing.params["rl"]) if real_passives else None)
+    tail = (TailDevice(w_tail=sizing.w_tail_um, l_tail=sizing.l_tail_um,
+                       nf_tail=sizing.nf_tail, mirror_ratio=TAIL_MIRROR_RATIO)
+            if real_tail else None)
     point = SizingPoint.from_params(sizing.params,
                                     vdd=VDD_NOMINAL_V * vdd_scale,
                                     tail=tail, passives=geo)
@@ -455,6 +475,8 @@ def evaluate(
     temp_c: float = 27.0,
     vdd_scale: float = 1.0,
     keep_raw_text: bool = False,
+    real_tail: bool = True,
+    real_passives: bool = True,
 ) -> EvalResult:
     """One sizing point -> a validated measurement vector, or a named reason.
 
@@ -463,10 +485,15 @@ def evaluate(
     bin ceiling — all of them are invalidities with names, because §8 rule 2
     says the RL loop cannot tolerate exceptions and every one of these is
     reachable from inside the box.
+
+    `real_tail` / `real_passives` default to the published configuration and
+    exist only for session 22b's attribution experiment — see `build_point`.
     """
     t0 = time.perf_counter()
     try:
-        point, geo = build_point(sizing, corner=corner, vdd_scale=vdd_scale)
+        point, geo = build_point(sizing, corner=corner, vdd_scale=vdd_scale,
+                                 real_tail=real_tail,
+                                 real_passives=real_passives)
     except (ValueError, TailGeometryError) as exc:
         # `to_geometry` REJECTS rather than clamps (PASSIVES.md §4.3), and a
         # clamped geometry is how an undrawable device ends up in a netlist
@@ -476,8 +503,11 @@ def evaluate(
             seconds=time.perf_counter() - t0,
             design_id_=design_id(sizing))
 
-    tag = geometry_tag(geo)
-    did = design_id(sizing, tag)
+    # No drawn passives -> no geometry, and therefore no geometry tag. G67's
+    # `design_id` grouping is a property of drawn silicon; inventing a tag for
+    # ideal elements would make two different configurations look like one.
+    tag = geometry_tag(geo) if geo is not None else None
+    did = design_id(sizing, tag) if tag is not None else design_id(sizing)
 
     n_spice = 0
     pt = run_point(point, corner=corner, temp_c=temp_c, swing=False)
@@ -546,18 +576,27 @@ def evaluate(
         "vds_tail": float(pt.vds_tail), "vdsat_tail": float(pt.vdsat_tail),
         "gm_tail": float(pt.gm_tail),
         "mirror_gain_error": pt.mirror_gain_error,
-        # The REALISED passive values, not the requested ones. The reward and
-        # the log must be able to tell a quantisation error from a design move.
-        "rs_actual_ohm": geo.rs.r_actual_ohm,
-        "cs_actual_f": geo.cs.c_actual_f,
-        "rl_actual_ohm": geo.rl.r_actual_ohm,
-        "rs_rel_error": geo.rs.rel_error,
-        "cs_rel_error": geo.cs.rel_error,
-        "rl_rel_error": geo.rl.rel_error,
-        "f_zero_error_octaves": geo.f_zero_error_octaves(),
         "w_tail_um": sizing.w_tail_um, "nf_tail": sizing.nf_tail,
         "runtime_s": pt.runtime_s,
     }
+    if geo is not None:
+        # The REALISED passive values, not the requested ones. The reward and
+        # the log must be able to tell a quantisation error from a design move.
+        #
+        # **ABSENT rather than defaulted when the passives are ideal** (session
+        # 22b). A `0.0` quantisation error for an element that was never drawn
+        # is a fabricated number, and it would read as a perfectly-drawn device
+        # rather than as no device at all -- which is the exact shape of G85's
+        # mistake (a sentinel meaning one thing handled as if it meant another).
+        raw.update({
+            "rs_actual_ohm": geo.rs.r_actual_ohm,
+            "cs_actual_f": geo.cs.c_actual_f,
+            "rl_actual_ohm": geo.rl.r_actual_ohm,
+            "rs_rel_error": geo.rs.rel_error,
+            "cs_rel_error": geo.cs.rel_error,
+            "rl_rel_error": geo.rl.rel_error,
+            "f_zero_error_octaves": geo.f_zero_error_octaves(),
+        })
     return EvalResult(verdict=Verdict.VALID, meas=meas, headroom=headroom,
                       raw=raw, design_id=did, geometry_tag=tag,
                       n_spice=n_spice, seconds=dt, text=None)

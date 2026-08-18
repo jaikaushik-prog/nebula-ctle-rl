@@ -151,10 +151,33 @@ reported.
 
 | rung | evaluation points | sims/design | expected base rate |
 |---|---|---|---|
-| **P1** | TT / 1.00 / 27 °C, `cl_mid` = 32.63 fF | 1 | **13.44 %** (measured, §5) |
+| **P1** | TT / 1.00 / 27 °C, `cl_mid` = 32.63 fF | 1 | **7.10 %** (measured at *these* conditions, session 22 — see the correction below) |
 | **P2** | 3 screen corners, `cl_mid` | 3 | ~8 % (session 10d, at the legacy pin) |
 | **P3** | 3 screen corners × {`cl_lo` 13.64 fF, `cl_hi` 78.04 fF} | 6 | **possibly empty** |
 | **P4** | tunable: fixed geometry, inner `(rs, cs)` search per (corner, load) | — | **seam only** |
+
+### CORRECTION, 2026-08-18 (session 22b): this table used to read 13.44 % on the P1 row, and that was a load mismatch
+
+**13.44 % was never measured at `cl_mid`.** It is the rate on
+`robust_geometry_data.csv`, and **every row of that file has `cl` = 150 fF** —
+the legacy pin, **4.598× `cl_mid`**. `exp_attribution.legacy_cl_f()` reads it
+off the file and raises if the column is not constant, so this cannot drift
+back.
+
+Two consequences, and the second is the one that matters:
+
+* The P1 row above now carries **7.10 %** [6.05, 8.31] (n = 2000), measured by
+  `exp_difficulty.py` through this benchmark's own sampler, evaluator, box and
+  load. `nebula/DIFFICULTY.md` §3.
+* **`PLAN.md` D4 rejected 13.54 % on the ground that it was "`cl` pinned at a
+  load the next stage cannot present" — and 13.44 % was measured at that same
+  load.** So the stated discriminator between the recommended baseline and its
+  rejected alternative did not exist. D4 is now decided as **7.10 %**.
+
+`nebula/ATTRIBUTION.md` decomposes the gap. Note what is *not* claimed here:
+13.44 % is a correct number for its own population, and the two S3 definitions
+(`prescreen.s3_true`'s two rows and `reward_v1.V0_SPECS`'s three) agree on it
+**exactly** — the definition explains none of the difference.
 
 The score is the **worst** over a rung's points — CLAUDEwa.md §12's first named
 trap read the right way round. The evaluation short-circuits when a point

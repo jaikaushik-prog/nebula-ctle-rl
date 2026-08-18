@@ -75,7 +75,7 @@ import sys
 import time
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Callable, Iterator, Optional, Sequence
+from typing import Callable, Iterator, Mapping, Optional, Sequence
 
 import numpy as np
 
@@ -175,6 +175,22 @@ def run_seed(arm: str, kind: str, replicate: int) -> int:
 # ─────────────────────────────────────────────────────────────────────────────
 
 
+def margins_meet_s3(m: Optional[Mapping[str, float]]) -> bool:
+    """All three S3 margins >= 0. **THE definition, used by every caller.**
+
+    Rule 9: `exp_attribution.py` asks the same question of a different
+    population and must not answer it with a second copy of this test. A
+    missing or empty margin dict is NOT a pass -- the design was never
+    measured, which is different from measuring it and failing.
+    """
+    if not m:
+        return False
+    try:
+        return all(float(m[k]) >= 0.0 for k in S3_SPECS)
+    except KeyError:                                       # pragma: no cover
+        return False
+
+
 def meets_s3(tr: Trial) -> bool:
     """All three S3 margins >= 0 on the worst evaluated point.
 
@@ -183,13 +199,7 @@ def meets_s3(tr: Trial) -> bool:
     or invalid trial has `margins=None` and is not an S3 pass -- which is the
     right reading: it was never measured.
     """
-    m = tr.margins
-    if not m:
-        return False
-    try:
-        return all(float(m[k]) >= 0.0 for k in S3_SPECS)
-    except KeyError:                                       # pragma: no cover
-        return False
+    return margins_meet_s3(tr.margins)
 
 
 def at_ceiling(tr: Trial, ceiling: float, tol: float = CEILING_TOL) -> bool:
@@ -297,13 +307,14 @@ def run_restart(arm: str, replicate: int, budget_sims: int = BUDGET_SIMS,
 
 def run_pool(arm: str, pool_sims: int = POOL_SIMS,
              max_proposals: Optional[int] = None,
+             replicate: int = 0,
              on_trial: Optional[Callable[[Trial], None]] = None) -> dict:
     """One long unbiased run per arm: the reward distribution and the ties.
 
     No early stop, so the reward sample is not truncated at the first success
     and the ceiling ties can be counted over a FIXED number of simulations.
     """
-    seed = run_seed(arm, "pool", 0)
+    seed = run_seed(arm, "pool", replicate)
     rng = np.random.default_rng(seed)
     cap = int(max_proposals if max_proposals is not None
               else PROPOSAL_CAP_FACTOR * pool_sims)
@@ -340,6 +351,7 @@ def run_pool(arm: str, pool_sims: int = POOL_SIMS,
         "arm": arm,
         "kind": "pool",
         "seed": seed,
+        "replicate": int(replicate),
         "pool_sims": int(pool_sims),
         "max_proposals": cap,
         "proposal_cap_hit": cap_hit,
@@ -537,6 +549,75 @@ def run(restarts: int = RESTARTS, budget_sims: int = BUDGET_SIMS,
     return out
 
 
+def run_more_pools(pool_sims: int = POOL_SIMS, replicate: int = 1,
+                   arms: Sequence[str] = ARMS,
+                   log_path: Optional[Path] = None) -> dict:
+    """MORE pooled samples, fresh seeds -- G89's confirmation run.
+
+    The suspicion is that the pre-screen discards ceiling-capable designs: the
+    first pools put the per-proposal ceiling rate at 0.4500 % unscreened
+    against 0.2408 % screened, a rate ratio of 0.535 whose **95 % CI
+    [0.236, 1.211] spans 1.0** on 9 and 16 events. That interval is the whole
+    problem, and the only fix is more events.
+
+    These pools are drawn the same way at a DIFFERENT replicate, so their
+    counts pool with the originals by simple addition -- independent samples of
+    the same quantity, not a re-analysis of the same one.
+    """
+    rows: list[dict] = []
+    path = Path(log_path) if log_path is not None else (
+        HERE / f"difficulty_pool_r{replicate}.jsonl")
+    header = {"experiment": f"difficulty pools, replicate {replicate} (G89)",
+              "pool_sims": pool_sims, "replicate": replicate,
+              "arms": list(arms), "base_seed": BASE_SEED,
+              "pools_with": "difficulty_run.jsonl (replicate 0)",
+              **provenance()}
+    with RunLog(path, header=header) as log:
+        for arm in arms:
+            p = run_pool(arm, pool_sims=pool_sims, replicate=replicate)
+            rows.append(p)
+            log.event(p["kind"], **p)
+            print(f"  [{arm:10s}] pool r{replicate} sims={p['n_sims']} "
+                  f"prop={p['n_proposals']} s3={p['s3_rate']:.4f} "
+                  f"ceiling_ties={p['n_at_ceiling']} "
+                  f"distinct={p['n_distinct_at_ceiling']} {p['wall_s']:.1f} s",
+                  flush=True)
+    return {"rows": rows, "log": str(path)}
+
+
+def ceiling_rate_ratio(pools: Sequence[dict]) -> dict:
+    """G89's statistic: per-PROPOSAL ceiling rate, screened over unscreened.
+
+    Per proposal rather than per simulation, because a screen can only REMOVE
+    proposals -- so absent any bias the two arms must show the same rate on
+    this axis, and a ratio below 1 means ceiling-capable designs were thrown
+    away. The per-SIMULATION rate cannot answer this: the screen is supposed to
+    raise that one.
+    """
+    def _sum(arm: str, key: str) -> int:
+        return sum(int(p[key]) for p in pools if p["arm"] == arm)
+
+    a, na = _sum("unscreened", "n_at_ceiling"), _sum("unscreened", "n_proposals")
+    b, nb = _sum("screened", "n_at_ceiling"), _sum("screened", "n_proposals")
+    if not (a and b and na and nb):
+        return {"n_unscreened_events": a, "n_screened_events": b,
+                "ratio": None,
+                "note": "a zero event count makes the log-ratio undefined"}
+    ru, rs = a / na, b / nb
+    lr = math.log(rs / ru)
+    se = math.sqrt(1.0 / a + 1.0 / b)
+    lo, hi = math.exp(lr - 1.96 * se), math.exp(lr + 1.96 * se)
+    return {
+        "n_unscreened_events": a, "n_unscreened_proposals": na,
+        "n_screened_events": b, "n_screened_proposals": nb,
+        "rate_unscreened": ru, "rate_screened": rs,
+        "ratio": math.exp(lr), "ci95": (lo, hi),
+        "excludes_one": bool(hi < 1.0 or lo > 1.0),
+        "implied_false_rejection": 1.0 - math.exp(lr),
+        "implied_false_rejection_ci95": (1.0 - hi, 1.0 - lo),
+    }
+
+
 def load(path: Path) -> list[dict]:
     """Rebuild the rows from a log. `--analyse` works on a killed run."""
     return [r for r in runlog_read(Path(path))
@@ -690,6 +771,10 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     ap.add_argument("--log", type=Path, default=LOG_PATH)
     ap.add_argument("--analyse", type=Path, default=None)
     ap.add_argument("--plot", type=Path, nargs="?", const=LOG_PATH, default=None)
+    ap.add_argument("--more-pools", type=int, default=None, metavar="REPLICATE",
+                    help="G89: another pooled sample per arm, at a fresh seed")
+    ap.add_argument("--ratio", type=Path, nargs="*", default=None,
+                    help="G89: pool the ceiling counts across logs")
     a = ap.parse_args(argv)
 
     if a.probe is not None:
@@ -708,6 +793,37 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     if a.plot is not None:
         p = plot(load(a.plot))
         print(f"wrote {p}")
+        return 0
+
+    if a.more_pools is not None:
+        out = run_more_pools(pool_sims=a.pool, replicate=a.more_pools,
+                             arms=tuple(a.arms))
+        print(f"\nwrote {out['log']}")
+        return 0
+
+    if a.ratio is not None:
+        pools = [r for f in (a.ratio or [LOG_PATH]) for r in load(Path(f))
+                 if r.get("kind") == "pool"]
+        rr = ceiling_rate_ratio(pools)
+        print("\nG89 -- does the pre-screen discard CEILING-capable designs?")
+        print(f"  pooled over {len(pools)} pool rows")
+        if rr.get("ratio") is None:
+            print(f"  UNDEFINED: {rr['note']}")
+            return 0
+        print(f"  unscreened {rr['n_unscreened_events']}/"
+              f"{rr['n_unscreened_proposals']} proposals = "
+              f"{rr['rate_unscreened']*100:.4f} %")
+        print(f"  screened   {rr['n_screened_events']}/"
+              f"{rr['n_screened_proposals']} proposals = "
+              f"{rr['rate_screened']*100:.4f} %")
+        lo, hi = rr["ci95"]
+        flo, fhi = rr["implied_false_rejection_ci95"]
+        print(f"  rate ratio {rr['ratio']:.3f}  95% CI [{lo:.3f}, {hi:.3f}]")
+        print(f"  implied false rejection on the ceiling population "
+              f"{rr['implied_false_rejection']*100:.1f} % "
+              f"[{flo*100:.1f}, {fhi*100:.1f}] %")
+        print(f"  CI excludes 1.0: {rr['excludes_one']}  -> "
+              f"{'CONFIRMED' if rr['excludes_one'] and rr['ratio'] < 1 else 'NOT ESTABLISHED'}")
         return 0
 
     if a.run:

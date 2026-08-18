@@ -3044,6 +3044,37 @@ Plus: git init, .gitignore, 28 tests, Wilson-bound BER reporting.
   one narrow axis those are different populations.** G76 is the same lesson one
   level up.
 
+- **G90 -- (nebula) the evaluator REQUIRES a real tail, so "ideal tail" is not
+  a configuration you can measure -- it is an invalidity.**
+  `rl.evaluator.validate` checks `vds_tail` and `vdsat_tail` for presence and
+  finiteness, and ideal current sinks do not produce those primitives at all.
+  So `evaluate(..., real_tail=False)` returns
+  `invalid: vds_tail is missing from the ngspice output` for **every** design,
+  not a measurement -- which silently converts "measure the ideal-tail
+  population" into "measure nothing" while looking like a 100 % invalid rate.
+  Consequence, session 22c: the 4th candidate cause of the 13.44 -> 7.10 % S3
+  gap (session 13's 4-8 % mirror deficit) **cannot be attributed** without
+  changing what `validate` treats as a failure, which is `BASELINES.md` sec 7f
+  territory and a human decision. **Generalise: before designing an experiment
+  whose arms turn a subsystem off, check that the VALIDATOR regards the
+  turned-off state as legal.** A validator written for one configuration will
+  report a different configuration as broken, correctly and uselessly.
+  `exp_attribution.TAIL_AXIS_BLOCKED` records it and
+  `test_the_tail_axis_is_blocked_and_the_block_is_measured` runs one and reads
+  the reason, so the constant cannot drift from the behaviour.
+
+- **G91 -- (nebula) `pytest.approx` has a default `abs=1e-12`, and every
+  capacitance in this repo is smaller than that.**
+  `150e-15 != approx(32.63e-15)` evaluates **False**: the two loads are 4.598x
+  apart and compare EQUAL, because both sit far inside the absolute tolerance.
+  A test written to assert that the calibration population is NOT at `cl_mid`
+  therefore passed while asserting nothing. Found in session 22c on the test
+  that carries the D4 finding. **Compare femtofarad and picofarad quantities by
+  RATIO** (`abs(a/b - 1) > x`) **or pass an explicit `abs=`; never use a bare
+  `approx` on a farad value.** Same shape as G31 and G80 -- the units in this
+  project are small enough that library defaults chosen for volts and ohms are
+  meaningless for capacitance.
+
 ## 10. Environment
 
 - Windows 11, PowerShell 5.1 (+ Git Bash available), Python 3.13.14,
@@ -6128,3 +6159,95 @@ a SPICE experiment.
 
 **`params.py`, `contract.py`, `env.py`, `V1_SPECS`, the box, the tolerances and
 the pre-screen are all UNTOUCHED.** Tests **1463 green**, unchanged.
+
+### 2026-08-18 - Session 22c (D4 decided; the attribution and the G89 confirmation, PRE-REGISTERED and NOT YET RUN)
+
+**Decisions the owner made in the session-22 review, recorded so they are not
+re-litigated:**
+
+* **D4 is DECIDED: the baseline is 7.10 %**, the rate measured under the
+  sampler, evaluator and box the sweep will actually use (n = 2000, 95 % Wilson
+  [6.05, 8.31]). Reason: a baseline the current pipeline cannot reproduce is
+  indefensible in a report. **`PLAN.md` sec 2's recommended 13.44 % is
+  superseded.**
+* **Task order: Task 1 (remove the reward ceiling) BEFORE Task 3 (corners)** --
+  not for separability, which task 0 showed mostly does not need it, but
+  because (a) **75 % of SCREENED runs reach the ceiling inside the
+  150-simulation budget**, so those arms saturate and become unrankable, and
+  (b) a plateau of 9-16 designs at exactly the top is the objective shape where
+  PPO gets no gradient near the optimum, which `PLAN.md` sec 4 tells lane A to
+  check for before touching hyperparameters. In Task 3, **scope the G66 screen
+  re-run FIRST, not last.**
+* **G88's accounting is a DECISION, not just a bug.** If screened rejections
+  cost nothing in the cost metric, the screened arm gets unlimited proposals
+  per simulation and its efficiency is inflated by an unbounded factor.
+  **Whether the screen's analytic evaluations are charged, and at what rate, is
+  a Task 2 fairness item and must be written into `FAIRNESS.md` BEFORE the
+  sweep.** It applies to `baselines.py` as well as to `exp_difficulty.py`.
+
+**The finding session 22's report under-weighted, now promoted:**
+**median-to-first-feasible is IDENTICAL to median-to-first-S3** -- not close,
+identical, in both arms (7.5 and 3.0), with the pooled rates equal to the digit
+(7.10 %, 25.55 %). **Reward v1 has ONE active dimension where it advertises
+seven.** So the sweep is not measuring a seven-constraint search; it is
+measuring margin-maximisation on one row against a lattice-quantised `f_peak`.
+Consistent with G74, but measured as a WAITING TIME rather than inferred. It is
+also the strongest argument yet for the corner axis, which adds binding
+constraints nominal does not have.
+
+**Two things established with NO SIMULATION, by re-scoring
+`robust_geometry_data.csv` (in `exp_attribution.definition_report`):**
+
+1. **The definition explains NONE of the 13.44 -> 7.10 % gap.**
+   `prescreen.s3_true` (2 rows) = **13.44 %**; `reward_v1.V0_SPECS` (3 rows,
+   adding `S3_nyq_boost`) = **13.44 %**; zero designs die to the Nyquist row.
+   The 7-row `V1_SPECS` rate on that population is **13.39 %**, which
+   reproduces the one-active-dimension finding on a DIFFERENT population with
+   ideal passives and an ideal tail.
+2. **THE 13.44 % POPULATION IS AT `cl` = 150 fF, THE LEGACY PIN -- NOT
+   `cl_mid`.** Read off the file, every row, ratio **4.598x**. `PLAN.md` D4
+   calls 13.44 % "the measured rate at `cl_mid`" and `BASELINES.md` sec 2's
+   ladder table puts it on the `cl_mid` row. **Both are wrong.** The
+   consequence is sharper than a mislabel: D4 rejects 13.54 % because it was
+   "`cl` pinned at a load the next stage cannot present", and 13.44 % was
+   measured at **that same load** -- so the stated discriminator between the
+   recommended number and its rejected alternative does not exist. Corrected in
+   `BASELINES.md` and `PLAN.md` in the same commit as the run.
+
+**New:** `nebula/experiments/exp_attribution.py`,
+`nebula/tests/test_exp_attribution.py` (11), plus `--more-pools` / `--ratio` on
+`exp_difficulty.py` and 4 more tests there. Pre-registration:
+`PREDICTIONS.md` entry 8, committed BEFORE either run.
+
+**A default-preserving change to the evaluator, and why it is safe.**
+`build_point`/`evaluate` now take `real_tail` / `real_passives`, **defaulting
+to the published configuration**. They exist solely for the attribution arms.
+`test_build_point_defaults_are_byte_identical_to_the_published_path` compares
+every parsed field at **rel=0, abs=0** between no-flags and explicit-True, the
+same gate session 21 used for `ac_sweep` -- so `BASELINES.md` sec 7f's
+"touching the evaluator means re-running every baseline" is not triggered.
+
+**G90 (new): the mirror axis CANNOT be measured through the current evaluator,
+and finding that out cost a run.** `validate` requires `vds_tail`/`vdsat_tail`,
+which ideal current sinks never produce, so every ideal-tail design returns
+`invalid: vds_tail is missing from the ngspice output` rather than a
+measurement. So the 4th candidate cause of the D4 gap (session 13's 4-8 %
+mirror deficit) is **blocked pending a human decision about what `validate`
+treats as a failure**. Recorded in `exp_attribution.TAIL_AXIS_BLOCKED` and
+pinned by a test that RUNS one and reads the reason, so a docstring cannot
+drift from the code.
+
+**Two of my own bugs, both caught by the gates:**
+(a) `evaluate` dereferenced `geo.rs` unconditionally, so `real_passives=False`
+raised `AttributeError` instead of returning a result -- found because the
+byte-identical gate failed **for the wrong reason** (G68/G86's rule, again).
+The realised-passive rows are now ABSENT rather than defaulted when no device
+was drawn, because a `0.0` quantisation error for an element that was never
+drawn reads as a perfectly drawn device (G85's shape).
+(b) `pytest.approx` carries a default **abs=1e-12**, so
+`150 fF != approx(32.63 fF)` is FALSE and a test asserting the two loads differ
+passed vacuously. Every capacitance in this project is femtofarads. **Compare
+femtofarad quantities by RATIO, never by bare `approx`.** (G91.)
+
+**Tests 1463 -> 1480 green.** `params.py`, `contract.py`, `env.py`,
+`V1_SPECS`, the box, the tolerances and the pre-screen all untouched.
