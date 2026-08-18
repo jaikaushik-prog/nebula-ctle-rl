@@ -78,9 +78,10 @@ and once at **`dec 500`** (step 0.0066439 octaves) — and the dense run's
 
 **Error reduction 172×. Designs where interpolation is worse than the lattice:
 0 of 14.** 16 of the 30 were skipped because they have no interior peak at one
-or both densities — the funnel is 47 % sweep-edge at `cl_mid` (G44, and
-`ATTRIBUTION.md`'s 40.13 %), so that attrition is the population's, not the
-method's.
+or both densities. That attrition is the population's, not the method's: §3
+measures **46.7 %** of the funnel with no interior peak at `cl_mid` — **40.7 %**
+still rising at 20 GHz, which is G44 and reproduces `ATTRIBUTION.md`'s
+**40.13 %** sweep-edge rate at that load, plus **6.0 %** falling monotonically.
 
 This is a **validation, not a cost change.** Nothing in any deliverable sweeps
 `dec 500`; raising `dec` is the owner's decision and is not being proposed.
