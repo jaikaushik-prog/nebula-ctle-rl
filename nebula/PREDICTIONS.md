@@ -1504,3 +1504,137 @@ separate from another. What changed is the shape of the objective at its
 optimum.
 
 *Nothing above the Outcome heading was edited.*
+
+
+---
+
+## 10. Session 22f — the G3 sweep, on the interpolated objective. **An ADDENDUM to entry 6, not a replacement.**
+
+**Written:** 2026-08-19, session 22e/f, **before** the sweep was launched and
+before any sweep row existed. Authorised by the owner ("okay lets do it") after
+the task-1 result, which is the thing that makes this run worth its two hours.
+
+**Experiment:** `python -m nebula.experiments.baselines --sweep --interp`
+— 170 runs, **25 500 simulations**, 150 simulations per run, at
+`ac_peak_interp=True` for every job including the warm-up and the timing
+control.
+
+### Entry 6 stands. This entry changes exactly one thing about it
+
+Entry 6 pre-registered this sweep on the **lattice** objective, and its
+predicted ordering was never testable on the metric it was stated in: the pilot
+put **six of ten P1 groups at exactly +8.950669** (`BASELINES.md` §11), which is
+G74's grid ceiling, not a result. Task 1 removed that ceiling
+(`PEAK_INTERP.md`). **Entry 6's ordering prediction is therefore carried
+forward unchanged and is being tested for the first time**; nothing in it is
+edited, and this entry adds only what the change of objective makes newly
+predictable.
+
+**One thing the reader should hold onto:** this is not a re-run. The sweep has
+**never been run** — `baselines_run.jsonl` contains a header and nothing else.
+
+### What is already known before the run, and is NOT a prediction
+
+Measured on 2026-08-19 while costing the run — nine single-replicate
+calibration jobs at a 40-simulation budget, which is a quarter of the sweep's
+budget and one seed rather than ten or twenty. Recorded as inputs:
+
+* the aggregate rate is **0.2672 s/sim**, so the sweep is **1.89 h serial**;
+* **GP-BO (0.3700) and PPO (0.5603) are the two configs above the pack**, both
+  of which compute between simulations;
+* `P1/uniform` at a 40-simulation budget reached **8.990174**, i.e. **above the
+  old ceiling**, on one seed. That is the interpolated objective doing what
+  task 1 said it would, and it is not evidence about any ordering.
+
+### Prediction A: best-reward-at-150 becomes a discriminating metric
+
+This is the whole reason the sweep is now worth running.
+
+| quantity | point | band |
+|---|---|---|
+| P1 groups whose median best-reward is **exactly** 8.950669 | **0** of 10 | 0 |
+| distinct median best-reward values across the 10 P1 groups | **10** | ≥ 8 |
+| at least one P1 pair separable by the CI-overlap rule | **yes** | — |
+| P1 groups with median best-reward in the feasible band (≥ +8) | **10** of 10 | 9–10 |
+
+### Prediction B: entry 6's ordering, now testable
+
+> **CMA-ES ≈ GP-BO > pre-screened uniform ≈ pre-screened LHS > LHS ≈ uniform
+> > PPO**, CMA-ES and GP-BO not separable from each other at 10 seeds.
+
+Carried forward verbatim. **My own confidence in it is lower than entry 6's**,
+and the reason is measured: on a saturating metric the ordering was untestable,
+so nothing has ever been evidence for it. The one calibration data point points
+the other way — `uniform` at 8.990174 beat `cmaes` at 8.79122 and `gp_bo` at
+8.733982 at a 40-simulation budget — but that is one seed at a quarter budget
+and I am explicitly **not** revising a pre-registered prediction on it.
+
+Additional, and this one is mine rather than entry 6's:
+
+| quantity | point | band |
+|---|---|---|
+| pre-screened arms beat their unscreened twin on median best-reward | **5 of 5** | ≥ 3 of 5 |
+| PPO ranks last of the five on P1 unscreened | **yes** | — |
+| P3: methods finding a feasible design in 150 sims | **0** of 30 runs | 0–2 |
+
+### Prediction C: the interpolation costs nothing the sweep can see
+
+| quantity | point | band |
+|---|---|---|
+| `n_interp_refused`, summed over all 170 runs | **≤ 30** of 25 500 | ≤ 130 (0.5 %) |
+| runs where the interpolation refused more than 2 % of evaluations | **0** | 0 |
+| `timing_void` (7g's warm-up-vs-control ratio outside [0.8, 1.25]) | **false** | — |
+
+The refusal bound is the task-1 rate, 1 in 4543, scaled: 25 500 / 4543 ≈ **5.6
+expected**. I am predicting ≤ 30 rather than ≤ 6 because task 1's rate was
+measured at one load on P1-like draws and the sweep includes P3's corners.
+
+### Prediction D: wall clock does not rank like simulations
+
+Entry 6 predicted **GP-BO ≥ 1.15× its simulation-implied time, everything else
+within 1.05×**. The calibration says GP-BO is 1.54× the `uniform` rate and PPO
+is **2.33×**, so I predict entry 6's cross-cutting prediction is **HALF right**:
+GP-BO exceeds 1.15× as stated, and **PPO also does**, which entry 6 did not
+anticipate. Recorded as a miss against entry 6 in advance rather than discovered
+afterwards.
+
+### What would falsify the reasoning (as opposed to the numbers)
+
+1. **Any P1 group's median lands exactly on 8.950669.** The ceiling would not
+   have been removed for the population the sweep actually samples, and
+   `PEAK_INTERP.md`'s headline would be over-stated.
+2. **`timing_void` fires.** Then the wall-clock half of this entry is void and
+   the sweep is repeated, not adjusted (7g). Simulation counts stand.
+3. **The sweep does not finish, or the log is truncated.** The pilot already
+   died before writing its summary and `analyse_log()` exists because of it;
+   if recovery from a partial log fails, that is a harness failure and a
+   result.
+4. **`uniform` wins P1 outright.** Entry 6's ordering would be falsified, and
+   the honest reading would be that a 7.10 %-base-rate problem at 150
+   simulations does not reward search at all — which is an argument for task 3
+   (corners) and against reporting P1 as a method comparison.
+5. **Screened arms lose to unscreened ones.** The pre-screen's yield lift is
+   measured; if it does not convert into better best-reward, the lift is buying
+   proposals rather than designs and `GMID_MAP.md` §6's fairness point becomes
+   the headline instead.
+
+### Guard against over-claiming, in both directions
+
+**A separable ordering on P1 is not evidence that RL works.** P1 is the sanity
+rung; entry 6 says so and this entry does not upgrade it. If PPO loses here, it
+is what entry 6 predicted and it is **not** evidence about the amortised,
+spec-conditioned claim, which no run in this sweep tests.
+
+**And separability is not significance.** `BASELINES.md` §8's CI-overlap rule
+governs every ranking claim; "10 distinct medians" is a statement about the
+metric's resolution, not about the methods. Prediction A deliberately separates
+the two — the first row is about the ceiling, the "at least one separable pair"
+row is about the methods.
+
+**Nothing published moves either.** The lattice objective is still the default
+everywhere; this sweep is the first run of a benchmark that had never been run,
+on a flag that has to be asked for.
+
+### Outcome
+
+*(to be written after the run; nothing above this heading may be edited)*

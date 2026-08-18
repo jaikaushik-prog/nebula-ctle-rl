@@ -351,6 +351,113 @@ def test_THE_LATTICE_CEILING_IS_NOT_A_CEILING_ON_THE_INTERPOLATED_PATH():
 
 
 # ─────────────────────────────────────────────────────────────────────────────
+# `scoring_meas` — the one rule both scoring paths use.
+# ─────────────────────────────────────────────────────────────────────────────
+
+
+class _Ev:
+    """The two fields `scoring_meas` / `interp_was_refused` actually read."""
+
+    def __init__(self, meas, raw=None):
+        self.meas = meas
+        self.raw = raw or {}
+
+
+def _meas(**kw) -> dict:
+    base = {"g_dc_db": 5.0, "peaking_db": 4.0, "f_peak_oct": -0.30,
+            "nyq_boost_db": 1.0, "inoise_vrms": 2e-4, "power_w": 3e-3,
+            "pair_margin_v": 0.2, "tail_margin_v": 0.2}
+    base.update(kw)
+    return base
+
+
+def test_scoring_meas_is_the_identity_when_the_flag_is_off():
+    """**The safety property the whole change rests on.**
+
+    Every published number was computed from `ev.meas`. With the flag off this
+    must hand back exactly that object's contents — not a copy with a key
+    renamed, not a copy with a float rounded.
+    """
+    from nebula.rl.evaluator import scoring_meas
+
+    m = _meas(f_peak_oct_interp=-0.28, peaking_db_interp=4.01)
+    out = scoring_meas(_Ev(m), ac_peak_interp=False)
+    assert out is m, "the flag-off path must not even copy"
+    assert scoring_meas(_Ev(None), ac_peak_interp=False) is None
+    assert scoring_meas(_Ev(None), ac_peak_interp=True) is None
+
+
+def test_scoring_meas_swaps_the_peak_when_the_flag_is_on():
+    from nebula.rl.evaluator import scoring_meas
+
+    m = _meas(f_peak_oct_interp=-0.28, peaking_db_interp=4.01)
+    out = scoring_meas(_Ev(m), ac_peak_interp=True)
+    assert out["f_peak_oct"] == -0.28 and out["peaking_db"] == 4.01
+    assert "f_peak_oct_interp" not in out
+    assert m["f_peak_oct"] == -0.30, "the input must not be mutated"
+
+
+def test_a_refusal_falls_back_to_the_LATTICE_and_not_to_the_floor():
+    """**The decision recorded in `scoring_meas`, pinned so it cannot drift.**
+
+    A design whose sub-grid peak cannot be located still has a perfectly good
+    lattice measurement. Scoring it at the invalid floor would punch a hole in
+    the reward landscape for a reason that is a property of the sweep's
+    numerical resolution, not of the circuit — the same mistake `validate`'s
+    G44 comment records having made once already. Measured rate: 1 valid design
+    in 4543.
+    """
+    from nebula.rl import reward_v1 as R
+    from nebula.rl.evaluator import scoring_meas
+
+    refused = _Ev(_meas(), raw={"peak_interp_status": "refused"})
+    out = scoring_meas(refused, ac_peak_interp=True)
+    assert out == _meas(), "a refusal must score the lattice measurement"
+
+    target = math.sqrt(1.25e9 * 2.5e9)
+    r = R.reward_v1(out, target).reward
+    assert r > R.invalid_reward(len(R.V1_SPECS)), (
+        "a refused interpolation must not be scored as an invalid design")
+    assert r == R.reward_v1(_meas(), target).reward
+
+
+def test_interp_was_refused_distinguishes_OFF_from_REFUSED():
+    """"Never asked" and "asked and failed" are different facts.
+
+    If these collapsed, a run with the flag off would report 100 % refusals and
+    a run with a broken interpolation would look identical to a healthy one.
+    """
+    from nebula.rl.evaluator import interp_was_refused
+
+    assert not interp_was_refused(_Ev(_meas()))                       # flag off
+    assert not interp_was_refused(_Ev(_meas(), {"peak_interp_status": "vertex"}))
+    assert not interp_was_refused(
+        _Ev(_meas(), {"peak_interp_status": "boundary_bottom_lattice_is_exact"}))
+    assert interp_was_refused(_Ev(_meas(), {"peak_interp_status": "refused"}))
+
+
+def test_the_env_and_the_objective_read_the_SAME_definition():
+    """PPO and the other four methods must score one objective (`BASELINES.md` 7f).
+
+    They reach the reward through different files — `rl/env.py` for PPO,
+    `experiments/baselines.py` for the rest — so this asserts that both call
+    `evaluator.scoring_meas` rather than each formatting its own measurement
+    vector. A benchmark whose methods optimise different objectives is
+    measuring formulation, not search.
+    """
+    import inspect
+
+    from nebula.experiments import baselines as B
+    from nebula.rl import env as E
+
+    for mod, fn in ((B, B.Objective._score_one), (E, E.CtleSizingEnv._evaluate_current)):
+        src = inspect.getsource(fn)
+        assert "scoring_meas(" in src, f"{fn.__qualname__} does not use scoring_meas"
+    assert E.EnvConfig(seed=0).ac_peak_interp is False
+    assert B.Objective(B.PROBLEMS["P1"], budget_sims=1).ac_peak_interp is False
+
+
+# ─────────────────────────────────────────────────────────────────────────────
 # Simulator-backed.
 # ─────────────────────────────────────────────────────────────────────────────
 

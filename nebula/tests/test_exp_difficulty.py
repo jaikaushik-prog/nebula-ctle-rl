@@ -23,7 +23,7 @@ input and watching it go red (PLAN.md §7 rule 3):
 from __future__ import annotations
 
 import math
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Optional
 
 import numpy as np
@@ -55,6 +55,12 @@ class _StubResult:
     geometry_tag: str = "stub"
     n_spice: int = 1
     seconds: float = 0.0
+    #: `EvalResult` has always had this; the stub went without it until
+    #: `Objective` started reading `raw['peak_interp_status']` (session 22e).
+    #: Named here rather than defended against with `getattr` in the production
+    #: path -- a double that silently lacks a field the real object has fails
+    #: wherever the caller happens to touch it, not at the seam it stands in for.
+    raw: dict = field(default_factory=dict)
 
     @property
     def valid(self) -> bool:

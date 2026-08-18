@@ -718,6 +718,56 @@ def meas_with_interpolated_peak(meas: Optional[Mapping[str, float]]) -> dict:
     return out
 
 
+def scoring_meas(ev: "EvalResult", ac_peak_interp: bool) -> Optional[dict]:
+    """**THE measurement vector the reward scores.** One definition (rule 9).
+
+    Every search method in this project must optimise the same objective or the
+    benchmark measures formulation instead of search (`BASELINES.md` §7f). Four
+    of them reach the reward through `baselines.Objective._score_one` and the
+    fifth (PPO) through `rl.env.CtleSizingEnv._evaluate_current`, so the choice
+    of WHICH peak the reward reads has to live in one place that both call.
+    This is that place.
+
+    `ac_peak_interp=False` returns `ev.meas` unchanged, which is what every
+    published number was computed from.
+
+    **On a refusal the LATTICE value is used, and the design is NOT dropped to
+    the invalid floor.** That is a change from the rule
+    `PEAK_INTERP.md` §7 item 2 recorded as "today's behaviour", and the reason
+    is measured: the interpolation refused on **1 valid design in 4543**
+    (0.022 %), and the alternative punches a hole in the reward landscape —
+    a design the discrete path grades at −2.018 would score −10 for a reason
+    that is a property of the SWEEP's numerical resolution rather than of the
+    circuit. This repo has already paid for that mistake once: `validate`'s G44
+    comment records that rejecting merely-small peaks "erased the reward
+    gradient over the entire low-peaking region of the box, which is where a
+    randomly initialised policy starts". A 1-in-4543 event is not worth
+    rebuilding it. The count is returned so it cannot hide — callers increment
+    a counter on `refused`, and a run that reports zero refusals has either
+    seen none or is not counting.
+
+    Reversible in one argument if a human decides otherwise; nothing in the
+    ranking can turn on 0.022 % of the population either way.
+    """
+    if not ac_peak_interp or ev.meas is None:
+        return ev.meas
+    try:
+        return meas_with_interpolated_peak(ev.meas)
+    except ValueError:
+        return dict(ev.meas)
+
+
+def interp_was_refused(ev: "EvalResult") -> bool:
+    """Did this evaluation ask for a sub-grid peak and not get one?
+
+    Distinct from "was the flag off": `raw['peak_interp_status']` is absent in
+    that case and present on every evaluation that asked. G93 is the reason
+    this is counted rather than assumed rare.
+    """
+    st = (ev.raw or {}).get("peak_interp_status")
+    return st is not None and st == "refused"
+
+
 # ─────────────────────────────────────────────────────────────────────────────
 # §6d's independent cross-check.
 # ─────────────────────────────────────────────────────────────────────────────

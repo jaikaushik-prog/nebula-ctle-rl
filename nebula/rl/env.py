@@ -59,7 +59,14 @@ from nebula.rl.contract import (
     build_observation,
     sizing_from_u,
 )
-from nebula.rl.evaluator import EvalResult, SpiceBudget, Verdict, evaluate
+from nebula.rl.evaluator import (
+    EvalResult,
+    SpiceBudget,
+    Verdict,
+    evaluate,
+    interp_was_refused,
+    scoring_meas,
+)
 
 # ─────────────────────────────────────────────────────────────────────────────
 # The construction-time proof that the two §6a gates are live.
@@ -177,6 +184,18 @@ class EnvConfig:
                                         * SPEC_F_PEAK_HZ_RANGE[1])
     target_peaking_db: float = sum(SPEC_PEAKING_DB_RANGE) / 2.0
     lambda_cost: float = 0.0
+    #: Score the SUB-GRID peak instead of the `dec 50` lattice one (G74,
+    #: session 22e). **Default OFF, so every published RL_SMOKE number and the
+    #: +8.950669 ceiling still reproduce.**
+    #:
+    #: It lives here and not only on `Objective` because PPO reaches the reward
+    #: through THIS file. `BASELINES.md` 7f requires every method to be scored
+    #: by one evaluator and one reward; if the flag stopped at `Objective` the
+    #: policy would be TRAINED on the lattice objective and RANKED on the
+    #: interpolated one, and the benchmark would be measuring that mismatch
+    #: rather than search. `evaluator.scoring_meas` is the single definition of
+    #: what the reward reads, shared with `Objective`.
+    ac_peak_interp: bool = False
 
 
 class CtleSizingEnv:
@@ -205,6 +224,10 @@ class CtleSizingEnv:
         #: §6d: the invalid rate, over the whole run. If it RISES the agent is
         #: finding the holes, which is exactly what this smoke run is for.
         self.n_eval = 0
+        #: Times the sub-grid peak was asked for and refused (G93). The reward
+        #: falls back to the lattice value there; this is what stops that
+        #: fallback from being invisible.
+        self.n_interp_refused = 0
         self.n_invalid = 0
         #: §Call 1: `.op` good, device in triode. Tracked apart from
         #: `n_invalid` because the two mean different things about the box.
@@ -244,8 +267,15 @@ class CtleSizingEnv:
     def _evaluate_current(self) -> tuple[EvalResult, R.RewardBreakdown, Sizing]:
         sizing = sizing_from_u(self._u, cl_f=self.cfg.cl_f)
         ev = evaluate(sizing, self.budget, corner=self.cfg.corner,
-                      temp_c=self.cfg.temp_c, vdd_scale=self.cfg.vdd_scale)
+                      temp_c=self.cfg.temp_c, vdd_scale=self.cfg.vdd_scale,
+                      ac_peak_interp=self.cfg.ac_peak_interp)
         self.n_eval += 1
+        if interp_was_refused(ev):
+            # The sub-grid peak was asked for and not found (G93). The reward
+            # below falls back to the lattice value rather than to the invalid
+            # floor -- see `scoring_meas` for why -- and this counter is what
+            # keeps that fallback from being invisible.
+            self.n_interp_refused += 1
         if ev.verdict is Verdict.HEADROOM_ONLY:
             # Counted SEPARATELY from invalid. It is not a broken measurement —
             # `.op` converged — so folding it into the invalid rate would
@@ -256,7 +286,8 @@ class CtleSizingEnv:
             self.n_invalid += 1
             bucket = self._classify(ev.reason or "")
             self.invalid_reasons[bucket] = self.invalid_reasons.get(bucket, 0) + 1
-        rb = R.reward(ev.meas, self.cfg.target_f_peak_hz, specs=self.cfg.specs,
+        rb = R.reward(scoring_meas(ev, self.cfg.ac_peak_interp),
+                      self.cfg.target_f_peak_hz, specs=self.cfg.specs,
                       lambda_cost=self.cfg.lambda_cost, sim_cost=ev.n_spice,
                       target_peaking_db=self.cfg.target_peaking_db,
                       headroom=(ev.headroom

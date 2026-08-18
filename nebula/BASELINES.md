@@ -112,13 +112,57 @@ budget and never on the seed counts.
 |---|---|---|---|---|---|
 | A | P1 | no | all five | 70 | 10 500 |
 | B | P1 | yes | all five | 70 | 10 500 |
-| C | P3 | no | four (no PPO) | 60 | 9 000 |
-| | | | **total** | **200** | **30 000** |
+| C | P3 | no | **two** (`uniform`, `cmaes`) | 30 | 4 500 |
+| | | | **total** | **170** | **25 500** |
+
+### CORRECTION, 2026-08-19 (session 22e): this table read 60 runs / 9 000 sims on the C row, and 200 / 30 000 in the total
+
+`baselines.py::P3_METHODS` was **re-cut on 2026-08-08** from four methods to
+two — its docstring carries the reasoning, that the pilot found 0 of 2 seeds
+feasible on P3 for both methods it ran, so `lhs` and `gp_bo` would spend 4 500
+simulations to produce two more rows reading "never found one". **The code was
+re-cut and this table was not**, so the written plan and the runnable plan
+disagreed by 4 500 simulations for eleven days. Found by running
+`--budget` and reading its output against this page.
+
+This is `CLAUDEwa.md` §8 rule 9's failure in documentation rather than in code —
+two definitions of one allocation — and the fix is the same as G32's: **the
+table below is now generated from the same `default_allocation()` the sweep
+runs**, i.e. reproduce it with `python -m nebula.experiments.baselines --budget`
+and treat any disagreement as a bug in this page. No measurement changes; the
+sweep had never been run at either number.
 
 ```
-30,000 x 1.341 s = 11.2 h   <- what this is sized to
-30,000 x (2.071/2.98) s = 5.8 h   <- the optimistic bracket
+25,500 x 1.341 s = 9.5 h    <- the session-17 rate this was sized to
+25,500 x 0.2672 s = 1.9 h   <- MEASURED 2026-08-19, serial, on the real
+                               per-method workload with the interpolated
+                               objective (see below)
 ```
+
+### The rate that actually applies, measured rather than carried forward
+
+The 1.341 s/sim above is session 17's, and it predates the library trims. **Nine
+configurations timed on 2026-08-19** — one discarded warm-up, randomised order,
+serial, through `run_one` on the real methods:
+
+| config | s/sim | | config | s/sim |
+|---|---|---|---|---|
+| P1/uniform | 0.2405 | | P1/uniform+screen | 0.2349 |
+| P1/lhs | 0.2460 | | P1/ppo+screen | 0.2273 |
+| P1/cmaes | 0.2370 | | P3/uniform | 0.2235 |
+| P1/gp_bo | **0.3700** | | P3/cmaes | 0.1848 |
+| P1/ppo | **0.5603** | | | |
+
+**Aggregate over the real allocation: 0.2672 s/sim → 1.89 h serial**, or
+**1.05 h** at G75's *measured* 1.80× for 8 workers on this workload (not the
+2.98× measured on the simulator alone — that is the distinction G75 exists to
+make). The two methods above the pack are the two that compute between
+simulations: GP-BO's O(n³) fit and PPO's torch rollout, which is entry 6's
+wall-clock prediction visible before the sweep runs.
+
+**The sweep is now a ~2-hour job, not an overnight one.** That is the single
+biggest change to §7a's arithmetic since it was written, and it comes from the
+trimmed libraries (G36, G58), not from any choice in this file.
 
 * **P2 cut entirely.** It is the interpolation between P1 and P3, and the
   quantity it resolves — how much of the loss is corners and how much is load —

@@ -6635,3 +6635,87 @@ every baseline re-run); what should a refused interpolation score (today the
 invalid floor, which is a hole in the landscape, fired once in 4543); and do the
 corner and load screens need re-running, which should be costed together with
 G66's own re-run before task 3 spends compute.
+
+### 2026-08-19 - Session 22f (the benchmark SWITCHES to the interpolated peak; sweep pre-registered, NOT YET RUN)
+
+**The owner's decision, taken after the task-1 result: move the benchmark onto
+the sub-grid peak.** This commit wires it end to end and pre-registers the
+sweep. No sweep row exists yet.
+
+**THE CORRECTION THAT CHANGES THE PLAN: the sweep has NEVER BEEN RUN.**
+`experiments/baselines_run.jsonl` contains **a header and nothing else**. What
+exists is the PILOT (1992 simulations, 33 runs, `baselines_pilot.jsonl`), which
+`BASELINES.md` §11 is explicit is "not to rank methods". So switching the
+objective is **not a re-run of published baselines** -- there are none. It is
+running the benchmark for the first time, on a metric that can now separate its
+arms. Session 22e's report said "every baseline re-runs"; that was wrong and is
+retracted here.
+
+**AND THE SWEEP IS A TWO-HOUR JOB, NOT AN OVERNIGHT ONE.** §7a was sized to
+session 17's **1.341 s/sim** at 8 workers, which predates the library trims.
+Measured 2026-08-19 -- nine configurations, one discarded warm-up, randomised
+order, serial, through the real `run_one` path with the interpolated objective:
+
+    P1/uniform 0.2405   P1/lhs 0.2460   P1/cmaes 0.2370
+    P1/gp_bo   0.3700   P1/ppo 0.5603   P1/uniform+screen 0.2349
+    P1/ppo+screen 0.2273   P3/uniform 0.2235   P3/cmaes 0.1848
+
+**Aggregate 0.2672 s/sim -> 1.89 h serial**, or 1.05 h at G75's *measured*
+1.80x for 8 workers on this workload. The two configs above the pack are the
+two that compute between simulations (GP-BO's O(n^3) fit, PPO's torch rollout),
+which is entry 6's wall-clock prediction showing up before the sweep runs.
+
+**A DOC/CODE MISMATCH FOUND BY RUNNING `--budget` AND READING IT.**
+`BASELINES.md` §1's allocation table said **60 runs / 9 000 simulations** on
+block C and **200 / 30 000** in the total. `baselines.py::P3_METHODS` was re-cut
+from four methods to two on 2026-08-08 -- with the reasoning in its docstring --
+and the table was never updated, so **the written plan and the runnable plan
+disagreed by 4 500 simulations for eleven days**. The real allocation is
+**170 runs / 25 500 simulations**. Rule 9's failure in documentation rather than
+in code; corrected in place with the correction stated, and the table now says
+to regenerate it with `--budget` and treat disagreement as a bug in the page.
+
+**The wiring, and the one file it needed that is on the ask-first list.**
+`evaluator.scoring_meas(ev, ac_peak_interp)` is now **THE** definition of which
+measurement the reward reads. Four methods reach it through
+`Objective._score_one`; **PPO reaches it through `rl/env.py`**, so `EnvConfig`
+gained `ac_peak_interp` (default OFF) and `method_ppo` reads it **off the
+Objective, never from a default** -- otherwise the policy would TRAIN on the
+lattice objective and be RANKED on the interpolated one, which is §7f's
+"identical validity handling" broken in the least visible place available.
+`env.py` was touched for that reason and additively only.
+`test_the_env_and_the_objective_read_the_SAME_definition` asserts both call
+sites by source inspection.
+
+**A DECISION I TOOK AND AM FLAGGING: a refused interpolation scores the LATTICE
+value, not the invalid floor.** `PEAK_INTERP.md` §7 item 2 recorded the floor as
+"today's behaviour" and put the choice to the owner. The harness now falls back,
+because the floor punches a hole in the reward landscape for a reason that is a
+property of the sweep's numerical resolution rather than of the circuit -- the
+identical mistake `validate`'s G44 comment records having made once, where
+rejecting merely-small peaks "erased the reward gradient over the entire
+low-peaking region of the box". Measured rate 1 valid design in 4543 (0.022 %),
+so nothing can turn on it either way, and it is one argument to reverse.
+**Counted, never assumed:** `Objective.n_interp_refused` and
+`CtleSizingEnv.n_interp_refused`, both reported in the run summary.
+
+**Both `_StubResult` doubles gained `raw`.** They lacked a field `EvalResult`
+has always had, so they failed at whatever line the caller happened to touch
+rather than at the seam they stand in for. Fixed in the doubles, not defended
+against with `getattr` in the production path.
+
+**Pre-registered:** `PREDICTIONS.md` entry **10**, an ADDENDUM to entry 6 and
+not a replacement -- entry 6's ordering prediction is carried forward verbatim
+and is **being tested for the first time**, because on the lattice metric the
+pilot put six of ten P1 groups at exactly +8.950669. Headline prediction: **0 of
+10 P1 groups tie at 8.950669 and all 10 medians are distinct.** A calibration
+seed already reached **8.990174** on `P1/uniform` at a quarter budget, i.e.
+above the old ceiling; that is declared as an input, not a prediction, and I did
+**not** revise entry 6's ordering on it even though it points the other way.
+
+**Tests 1504 -> 1509 green.** `params.py`, `contract.py`, `V1_SPECS`, the
+tolerances, the box, the pre-screen and every seed untouched. Every new flag
+defaults OFF, so the lattice objective is still what runs unless asked.
+
+**Next:** `python -m nebula.experiments.baselines --sweep --interp`, 25 500
+simulations, ~1 h at 8 workers.

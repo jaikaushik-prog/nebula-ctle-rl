@@ -103,7 +103,14 @@ from nebula.rl.contract import (
     Sizing,
     sizing_from_u,
 )
-from nebula.rl.evaluator import EvalResult, SpiceBudget, Verdict, evaluate
+from nebula.rl.evaluator import (
+    EvalResult,
+    SpiceBudget,
+    Verdict,
+    evaluate,
+    interp_was_refused,
+    scoring_meas,
+)
 from nebula.rl.runlog import RunLog
 from nebula.rl.runlog import read as runlog_read
 
@@ -388,6 +395,11 @@ class Objective:
         # `evaluator.meas_with_interpolated_peak`; nothing here does it for it,
         # because `Objective.ceiling` is a LATTICE quantity and would be wrong.
         self.ac_peak_interp = bool(ac_peak_interp)
+        #: How often the sub-grid peak was asked for and refused (G93). Counted
+        #: rather than assumed rare: `scoring_meas` falls back to the lattice
+        #: value there, and a fallback nobody counts is indistinguishable from
+        #: a fallback that never fires.
+        self.n_interp_refused = 0
         # The same target the RL smoke run used: the geometric centre of S3's
         # octave and the arithmetic centre of its dB band. Mid-window in BOTH
         # axes, so the benchmark does not become a measurement of one edge.
@@ -435,7 +447,10 @@ class Objective:
         ev = evaluate(sizing, self.spice, corner=pt.corner,
                       temp_c=pt.temp_c, vdd_scale=pt.vdd_scale,
                       ac_peak_interp=self.ac_peak_interp)
-        rb = R.reward(ev.meas, self.target_f_peak_hz, specs=self.specs,
+        if interp_was_refused(ev):
+            self.n_interp_refused += 1
+        rb = R.reward(scoring_meas(ev, self.ac_peak_interp),
+                      self.target_f_peak_hz, specs=self.specs,
                       target_peaking_db=self.target_peaking_db,
                       headroom=(ev.headroom
                                 if ev.verdict is Verdict.HEADROOM_ONLY else None))
@@ -567,6 +582,8 @@ class Objective:
             "censored": first is None,
             "reward_ceiling": self.ceiling,
             "sims_to_ceiling": sims_to_ceiling(self.trials, self.ceiling),
+            "ac_peak_interp": self.ac_peak_interp,
+            "n_interp_refused": self.n_interp_refused,
             "invalid_rate": self.invalid_rate,
             "invalid_reasons": dict(self.invalid_reasons),
         }
@@ -824,11 +841,17 @@ def method_ppo(obj: Objective, rng: np.random.Generator,
         )
     pt = obj.problem.points[0]
     seed = int(rng.integers(1 << 31))
+    # `ac_peak_interp` comes off the OBJECTIVE, never from a default here.
+    # PPO is the one method that reaches the reward through `rl/env.py`, so a
+    # default on this line would let the policy train on the lattice objective
+    # while the other four are ranked on the interpolated one -- 7f's
+    # "identical validity handling" broken in the least visible possible place.
     cfg = EnvConfig(seed=seed, cl_f=pt.cl_f, corner=pt.corner,
                     temp_c=pt.temp_c, vdd_scale=pt.vdd_scale,
                     specs=obj.specs,
                     target_f_peak_hz=obj.target_f_peak_hz,
-                    target_peaking_db=obj.target_peaking_db)
+                    target_peaking_db=obj.target_peaking_db,
+                    ac_peak_interp=obj.ac_peak_interp)
     env = _ObjectiveEnv(obj, cfg)
     train(env, PPOConfig(seed=seed, total_steps=steps))
 
@@ -1287,6 +1310,13 @@ class Job:
     #: "measured" rows enter the analysis; "warmup" and "control" carry only
     #: timing, and 7g's control compares the two.
     role: str = "measured"
+    #: Score the sub-grid peak rather than the `dec 50` lattice one (G74).
+    #: **On the JOB rather than on the Allocation** because it is a property of
+    #: the whole sweep, not of one block: a run log holding some jobs scored one
+    #: way and some the other would be a benchmark comparing two objectives,
+    #: which is 7f's whole prohibition. `sweep()` sets it once for every job and
+    #: records it in the header.
+    ac_peak_interp: bool = False
 
     @property
     def config(self) -> str:
@@ -1314,7 +1344,8 @@ def run_one(job: Job) -> dict:
     seed = run_seed(job.problem, job.method, job.replicate)
     rng = np.random.default_rng(seed)
 
-    obj = Objective(prob, job.budget_sims, prescreen=job.prescreen)
+    obj = Objective(prob, job.budget_sims, prescreen=job.prescreen,
+                    ac_peak_interp=job.ac_peak_interp)
     t0 = time.perf_counter()
     try:
         METHODS[job.method](obj, rng)
@@ -1325,6 +1356,7 @@ def run_one(job: Job) -> dict:
     s = obj.summary()
     s.update(problem=job.problem, method=job.method, replicate=job.replicate,
              seed=seed, prescreen=job.prescreen, role=job.role, wall_s=wall,
+             ac_peak_interp=job.ac_peak_interp,
              model_seconds=float(getattr(obj, "model_seconds", 0.0)),
              sec_per_sim=(wall / obj.n_sims if obj.n_sims else float("nan")),
              curve=[float(v) for v in anytime_curve(obj.trials,
@@ -1333,7 +1365,8 @@ def run_one(job: Job) -> dict:
     return s
 
 
-def jobs_for(alloc: Sequence[Allocation], seed: int) -> list[Job]:
+def jobs_for(alloc: Sequence[Allocation], seed: int,
+             ac_peak_interp: bool = False) -> list[Job]:
     """Every measured run, INTERLEAVED (7g).
 
     The shuffle is over individual jobs, not over blocks, so no method is
@@ -1341,7 +1374,8 @@ def jobs_for(alloc: Sequence[Allocation], seed: int) -> list[Job]:
     shuffle would still put all twenty `uniform` replicates next to each other
     and let a thermal drift land on one method.
     """
-    out = [Job(a.problem, a.method, rep, a.budget_sims, a.prescreen)
+    out = [Job(a.problem, a.method, rep, a.budget_sims, a.prescreen,
+               ac_peak_interp=ac_peak_interp)
            for a in alloc for rep in range(a.replicates)]
     np.random.default_rng(seed).shuffle(out)
     return out
@@ -1352,7 +1386,8 @@ def sweep(alloc: Optional[Sequence[Allocation]] = None,
           seed: int = BASE_SEED,
           control: bool = True,
           workers: int = WORKERS,
-          out_path: Optional[Path] = None) -> dict:
+          out_path: Optional[Path] = None,
+          ac_peak_interp: bool = False) -> dict:
     """The whole benchmark. ONE command, fixed seeds (7j).
 
     **The parallelism is across RUNS, not inside them, and that is a fairness
@@ -1387,9 +1422,14 @@ def sweep(alloc: Optional[Sequence[Allocation]] = None,
     from concurrent.futures import ProcessPoolExecutor, as_completed
 
     alloc = list(alloc if alloc is not None else default_allocation())
-    jobs = jobs_for(alloc, seed)
+    jobs = jobs_for(alloc, seed, ac_peak_interp=ac_peak_interp)
     log_path = log_path or (HERE / "baselines_run.jsonl")
     header = {"task": "7 - baselines sweep", "base_seed": seed,
+              # WHICH OBJECTIVE THIS SWEEP OPTIMISED. On the header rather than
+              # only on the rows, because it is the one property that must be
+              # the same for every row: a log mixing the two is a benchmark
+              # comparing formulations instead of methods (7f).
+              "ac_peak_interp": bool(ac_peak_interp),
               "allocation": [asdict(a) for a in alloc],
               "budget": budget_report(alloc),
               "problems": {k: {"note": v.note,
@@ -1417,8 +1457,12 @@ def sweep(alloc: Optional[Sequence[Allocation]] = None,
         warm = None
         if control and jobs:
             j0 = jobs[0]
+            # The warm-up and the control must run the SAME objective as the
+            # pool, or 7g's ratio compares two different workloads and calls
+            # the difference machine drift.
             warm = run_one(Job(j0.problem, j0.method, 0, j0.budget_sims,
-                               j0.prescreen, role="warmup"))
+                               j0.prescreen, role="warmup",
+                               ac_peak_interp=ac_peak_interp))
             _emit(warm)
             print(f"  warm-up {j0.config}: {warm['sec_per_sim']:.3f} s/sim, "
                   f"{warm['n_sims']} sims, DISCARDED from the analysis",
@@ -1445,7 +1489,8 @@ def sweep(alloc: Optional[Sequence[Allocation]] = None,
         if control and warm is not None:
             j0 = jobs[0]
             last = run_one(Job(j0.problem, j0.method, 0, j0.budget_sims,
-                               j0.prescreen, role="control"))
+                               j0.prescreen, role="control",
+                               ac_peak_interp=ac_peak_interp))
             _emit(dict(last))
             ratio = (warm["sec_per_sim"] / last["sec_per_sim"]
                      if last["sec_per_sim"] else float("nan"))
@@ -1877,6 +1922,11 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     ap.add_argument("--pilot-methods", type=str,
                     default="uniform,lhs,cmaes,gp_bo,ppo")
     ap.add_argument("--workers", type=int, default=WORKERS)
+    ap.add_argument("--interp", action="store_true",
+                    help="score the SUB-GRID peak instead of the dec-50 "
+                         "lattice one (G74). Applies to every job in the run, "
+                         "including the warm-up and the timing control, and is "
+                         "recorded in the log header.")
     ap.add_argument("--out", type=Path, default=None)
     args = ap.parse_args(argv)
 
@@ -1916,7 +1966,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
                                  args.pilot_budget)
                       for s in (False, True) for m in ms)
         out = sweep(alloc, log_path=HERE / "baselines_pilot.jsonl",
-                    workers=args.workers,
+                    workers=args.workers, ac_peak_interp=args.interp,
                     out_path=HERE / "baselines_pilot_results.json")
         print_sweep(out, "PILOT")
         results["pilot"] = {"control": out["control"],
@@ -1925,7 +1975,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
                             "total_sims_including_discarded":
                                 out["total_sims_including_discarded"]}
     if args.sweep:
-        out = sweep(workers=args.workers)
+        out = sweep(workers=args.workers, ac_peak_interp=args.interp)
         print_sweep(out, "SWEEP")
         results["sweep"] = {"control": out["control"],
                             "analysis": out["analysis"],

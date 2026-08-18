@@ -19,7 +19,7 @@ fail if a rule is quietly relaxed:
 from __future__ import annotations
 
 import math
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Optional
 
 import numpy as np
@@ -48,6 +48,13 @@ class _StubResult:
     geometry_tag: str = "stub"
     n_spice: int = 1
     seconds: float = 0.0
+    #: `EvalResult` has carried this since the interface froze, and the stub
+    #: went without it until `Objective` started reading
+    #: `raw['peak_interp_status']` (session 22e). A test double missing a field
+    #: the real object has does not fail at the seam it is standing in for --
+    #: it fails wherever the caller happens to touch it, which is why the stub
+    #: now names the field rather than being defended against with `getattr`.
+    raw: dict = field(default_factory=dict)
 
     @property
     def valid(self) -> bool:
