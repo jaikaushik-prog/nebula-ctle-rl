@@ -3024,6 +3024,26 @@ Plus: git init, .gitignore, 28 tests, Wilson-bound BER reporting.
   pathological; there it has not been hit because the real screen accepts
   ~38 % of proposals.
 
+- **G89 -- (nebula) a screen's population rates and its rates ON THE TARGET
+  YOUR METRIC SCORES are different numbers, and only the first one has ever
+  been measured here.** Session 22 measured the analytic pre-screen lifting the
+  **S3 rate 3.60x** (7.10 -> 25.55 %) while lifting the **ceiling rate only
+  1.78x** (0.45 -> 0.80 %). Since a screen can only REMOVE proposals, the
+  per-proposal rates compare directly: 9/2000 = 0.4500 % unscreened against
+  16/6645 = 0.2408 % screened, a rate ratio of **0.535** -- a point estimate of
+  **46.5 % false rejection on the ceiling-capable population**, against the
+  0.39 % and 3.88 % measured on the S3 population (G76).
+  **This is a SUSPICION, not a finding: the 95 % CI is [0.236, 1.211] and
+  spans 1.0**, on 9 and 16 events. It is recorded because it is cheap to check,
+  because an independent route agrees (the "S3 rate / 15" lattice arithmetic
+  predicts the unscreened ceiling rate to 5 % and misses the screened one by
+  2.1x), and because it would bias every screened arm of the G3 sweep against
+  the very metric the sweep reports. **Generalise: a filter validated on
+  "does it keep the feasible designs" has NOT been validated on "does it keep
+  the designs that score well", and when the reward is nearly all-or-nothing on
+  one narrow axis those are different populations.** G76 is the same lesson one
+  level up.
+
 ## 10. Environment
 
 - Windows 11, PowerShell 5.1 (+ Git Bash available), Python 3.13.14,
@@ -6040,3 +6060,71 @@ and the HD3 transient). G71's ordering effect is visible in the gap between
 those two and neither is quoted as *the* cost.
 
 **Tests 1448 -> 1463 green.**
+
+### 2026-08-18 - Session 22b (task 0 RESULT: the sweep's metric does NOT saturate at its own budget, and D4's baseline does not reproduce)
+
+**Verdict `IN_BETWEEN`, so the pre-registered rule says STOP and the decision is
+a human's.** Full write-up `nebula/DIFFICULTY.md`; outcome scored into
+`PREDICTIONS.md` entry 7 (six hits, two misses); figure
+`nebula/figures/difficulty.png`; data `experiments/difficulty_run.jsonl`.
+
+**The thesis splits in half and the halves point opposite ways.** *"S3 is
+trivial"* is CONFIRMED -- median **7.5** simulations to a first S3-meeting
+design unscreened, **3.0** screened. *"Random search reaches the ceiling in
+single-digit samples"* is FALSIFIED by ~30x -- median **221** unscreened
+(90 % CI [142, 315], 22/24 reached, 2 censored at 600) and **68.5** screened
+(CI [42, 117], 24/24).
+
+**THE HEADLINE RUNS AGAINST THE BRIEF'S CONCLUSION.** The sweep's per-run budget
+is 150 simulations (`baselines.BUDGET_SIMS`), and only **8 of 24 unscreened
+restarts (33 %)** reach the ceiling inside it, against 18 of 24 (75 %) screened.
+So best-reward-at-budget is **still a live discriminator** in the unscreened
+arms and "every arm ties at the ceiling, nothing separable" is not what the
+arithmetic says. `BASELINES.md` §3 introduced simulations-to-ceiling *because*
+saturation was expected; both metrics are now worth reporting and neither is
+redundant.
+
+**`PLAN.md` D4's RECOMMENDED BASELINE DOES NOT REPRODUCE** (a pre-registered
+falsification condition, fired). Measured S3 rate over 2000 simulations of the
+sweep's own sampler, evaluator and box: **7.10 %**, 95 % Wilson
+**[6.05, 8.31] %** -- and **13.44 % is outside that interval**. The 13.44 %
+figure is `robust_geometry_data.csv`, a session-11 population. Four measured
+candidates now exist (7.10 / 13.44 / 13.54 / 8.73 %) and they are not the same
+measurement. **D4 is a human decision and nothing here adopts one.**
+
+**THE OTHER FOUR V1 SPECS NEVER BIND.** Simulations-to-first-feasible equals
+simulations-to-first-S3 **exactly** (7.5 and 3.0) and the pooled feasible rate
+equals the pooled S3 rate **to the digit** in both arms (7.10 %, 25.55 %). So
+reward v1's seven-row feasibility is no harder than the S3 rate everyone
+quotes, which settles `PREDICTIONS.md` entry 6's falsification condition 3 in
+the opposite direction to the worry it was written about.
+
+**G74 reconfirmed at 2.8x the evidence:** 9 ceiling ties on **9 distinct**
+designs unscreened and 16 on **16 distinct** screened -- 25 designs, 25 ids,
+one reward to six decimals, and nothing in 4000 simulations above it.
+
+**A NEW SUSPICION, RECORDED AS SUSPICION (G89).** The screen lifts the S3 rate
+**3.60x** but the ceiling rate only **1.78x**. Per proposal the ceiling rate is
+0.4500 % unscreened against 0.2408 % screened -- rate ratio 0.535, **95 % CI
+[0.236, 1.211]**, i.e. a point estimate of **46.5 % false rejection on the
+CEILING population** whose interval spans 1.0. It agrees with an independent
+route (the "S3 rate / 15" lattice arithmetic predicts the unscreened ceiling
+rate to 5 % and misses the screened one by 2.1x) and it is the failure mode G76
+already caught this screen in once. **Not established** -- 9 and 16 events.
+Confirming it costs one pooled re-run and no new code.
+
+**Cost, all serial with nothing else simulating (G70):** 8394 simulations,
+3222 s. 0.2629 s/sim unscreened restarts, 0.2800 s/sim screened, against a
+0.2537 s/sim cold probe and a 0.1665 s/sim warm smoke test (the spread is G71).
+
+**A G70 VIOLATION HAPPENED AND IS IN THE RECORD.** The first launch was wrapped
+in a `timeout` that would have killed the run mid-flight; stopping it killed the
+shell but **not its Python child**, and a second run started alongside the first
+-- two concurrent ngspice drivers writing one log. Both killed by PID, the
+contaminated log deleted, the machine verified idle, the run restarted from
+scratch. **No published number comes from those runs.** Generalise: killing a
+task runner is not killing the process it started; check `ps` before restarting
+a SPICE experiment.
+
+**`params.py`, `contract.py`, `env.py`, `V1_SPECS`, the box, the tolerances and
+the pre-screen are all UNTOUCHED.** Tests **1463 green**, unchanged.

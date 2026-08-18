@@ -1033,6 +1033,58 @@ for the comparison to be decidable** — which is a statement about the
 measurement, not about the methods. Equally, a `thesis_fails` verdict would not
 vindicate the sweep design; it would only remove one specific objection to it.
 
-### Outcome
+### Outcome — **six hits, two misses.** Run 2026-08-18, `nebula/DIFFICULTY.md`.
 
-*Filled in after the run. Nothing above is edited.*
+Verdict: **`IN_BETWEEN`** — the rule says report and stop.
+
+| # | predicted | band | measured | |
+|---|---|---|---|---|
+| 1 | unscreened median sims-to-ceiling **90** | 30-400 | **221** | **HIT** |
+| 2 | screened median sims-to-ceiling **35** | 12-160 | **68.5** | **HIT** |
+| 3 | unscreened median sims-to-first-S3 **5** | 3-12 | **7.5** | **HIT** |
+| 4 | screened median sims-to-first-S3 **2** | 1-6 | **3.0** | **HIT** |
+| 5 | unscreened ceiling rate **0.8 %** | 0.2-3 % | **0.45 %** | **HIT** |
+| 6 | >= 2 DISTINCT designs tied at the ceiling | -- | **9 of 9** | **HIT** |
+| 7 | S3 rate **13 %** | 8-20 % | **7.10 %** | **MISS** |
+| 8 | verdict **`thesis_holds`** | -- | **`IN_BETWEEN`** | **MISS** |
+
+**Falsification condition 4 FIRED.** The pooled S3 rate is **7.10 %**, 95 %
+Wilson **[6.05, 8.31] %**, and 13.44 % is outside that interval. `PLAN.md` D4's
+recommended baseline does not reproduce under the sweep's own sampler,
+evaluator and box. D4 goes back to a human.
+
+**Falsification condition 5 fired in the OPPOSITE direction to the worry.**
+Simulations-to-first-feasible equals simulations-to-first-S3 exactly (7.5 and
+3.0) and the pooled feasible rate equals the pooled S3 rate to the digit in
+both arms. The other four V1 rows never bind, so reward v1's seven-row
+feasibility is **not** harder than the S3 rate everyone quotes. This also
+settles entry 6's falsification condition 3.
+
+**Conditions 1, 2 and 3 did NOT fire.** The unscreened median is 221, not
+single digits; the screen lifts the ceiling rate (1.78x on simulations, 3.2x on
+time-to-ceiling); and the ceiling ties are **25 designs with 25 distinct
+`design_id`s** across the two pools, which reconfirms G74 at 2.8x its original
+evidence.
+
+**The miss I want on the record properly.** The prediction's mechanism --
+"ceiling rate = S3 rate / 15, because the octave holds 15 lattice points" -- is
+**right**: feeding the MEASURED 7.10 % through it gives 0.473 % against 0.450 %
+measured, a 5 % agreement. Prediction 5 landed in its band with the WRONG input
+(13 % rather than 7.10 %) and a compensating error. A hit obtained that way is
+worth recording as a near-miss, because the next person to use the arithmetic
+should use the measured base rate, not the published one.
+
+**What the reasoning got right and is worth keeping:** it predicted that the
+verdict and its reason would come apart, that the unscreened arm would sit an
+order of magnitude above "single-digit samples", and that any `thesis_holds`
+would have to fire off the screened arm. All three hold. The screened arm
+simply landed at 68.5 rather than under 50, which is why the verdict is
+`IN_BETWEEN` rather than `thesis_holds`.
+
+**The consequence the brief did not anticipate.** At the sweep's own
+150-simulation per-run budget, only **8 of 24** unscreened restarts reach the
+ceiling (33 %), against 18 of 24 screened (75 %). So best-reward-at-budget does
+**not** saturate for most unscreened runs, and the "all arms tie, nothing
+separable" objection to the sweep is not what the arithmetic supports.
+
+*Nothing above the Outcome heading was edited.*
