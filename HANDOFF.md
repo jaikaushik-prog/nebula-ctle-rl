@@ -3024,25 +3024,41 @@ Plus: git init, .gitignore, 28 tests, Wilson-bound BER reporting.
   pathological; there it has not been hit because the real screen accepts
   ~38 % of proposals.
 
-- **G89 -- (nebula) a screen's population rates and its rates ON THE TARGET
-  YOUR METRIC SCORES are different numbers, and only the first one has ever
-  been measured here.** Session 22 measured the analytic pre-screen lifting the
-  **S3 rate 3.60x** (7.10 -> 25.55 %) while lifting the **ceiling rate only
-  1.78x** (0.45 -> 0.80 %). Since a screen can only REMOVE proposals, the
-  per-proposal rates compare directly: 9/2000 = 0.4500 % unscreened against
-  16/6645 = 0.2408 % screened, a rate ratio of **0.535** -- a point estimate of
-  **46.5 % false rejection on the ceiling-capable population**, against the
-  0.39 % and 3.88 % measured on the S3 population (G76).
-  **This is a SUSPICION, not a finding: the 95 % CI is [0.236, 1.211] and
-  spans 1.0**, on 9 and 16 events. It is recorded because it is cheap to check,
-  because an independent route agrees (the "S3 rate / 15" lattice arithmetic
-  predicts the unscreened ceiling rate to 5 % and misses the screened one by
-  2.1x), and because it would bias every screened arm of the G3 sweep against
-  the very metric the sweep reports. **Generalise: a filter validated on
-  "does it keep the feasible designs" has NOT been validated on "does it keep
-  the designs that score well", and when the reward is nearly all-or-nothing on
-  one narrow axis those are different populations.** G76 is the same lesson one
-  level up.
+- **G89 -- (nebula) RAISED AND KILLED IN ONE DAY: the pre-screen does NOT
+  discard ceiling-capable designs, and the way the suspicion survived a day is
+  the lesson.** Session 22's first pools measured the per-proposal ceiling rate
+  at 9/2000 = 0.4500 % unscreened against 16/6645 = 0.2408 % screened -- a rate
+  ratio of **0.535**, implying the screen threw away **46.5 %** of
+  ceiling-capable designs, which would have biased every screened arm of the G3
+  sweep against the metric the sweep reports. It was recorded as a **suspicion**
+  because the 95 % CI **[0.236, 1.211] spanned 1.0**, and a confirmation run was
+  ordered. Doubling the events killed it:
+
+        arm            replicate 0        pooled r0 + r1
+        unscreened      9 / 2000           14 / 4000   = 0.3500 %
+        screened       16 / 6645           43 / 13391  = 0.3211 %
+        rate ratio        0.535               0.917
+        95 % CI      [0.236, 1.211]      [0.502, 1.677]
+
+  **Implied false rejection on the ceiling population: 8.3 %, CI [-67.7, 49.8].
+  No effect.** Both arms regressed to the mean from opposite directions (9 -> 5
+  and 16 -> 27).
+  **THE REUSABLE PART IS THE METHODOLOGICAL ERROR, NOT THE NUMBER.** The
+  suspicion was written up as having *"an independent route agreeing with it"*:
+  the closed form `ceiling rate = S3 rate / 15` predicted the unscreened rate to
+  5 % and missed the screened one by 2.1x, which looked like corroboration by a
+  different mechanism. **It was not independent -- it is computed from the same
+  9 and 16 counts.** Two statistics derived from one small sample agreeing with
+  each other is the same noise twice. On the pooled data the "2.1x
+  arm-specific discrepancy" is 1.36x against 1.56x, i.e. a uniform
+  over-prediction in BOTH arms and no arm-specific effect at all.
+  **Generalise: before calling a second statistic independent corroboration,
+  check whether it shares its DATA with the first. Different arithmetic on the
+  same counts is not a second measurement.** And: a point estimate whose CI
+  spans 1.0 is not a small finding, it is not a finding -- G89 exists as a
+  record of one that was correctly labelled and correctly killed. Full data
+  `nebula/DIFFICULTY.md` sec 4.3; both pools tracked as
+  `experiments/difficulty_run.jsonl` and `experiments/difficulty_pool_r1.jsonl`.
 
 - **G90 -- (nebula) the evaluator REQUIRES a real tail, so "ideal tail" is not
   a configuration you can measure -- it is an invalidity.**
@@ -6251,3 +6267,81 @@ femtofarad quantities by RATIO, never by bare `approx`.** (G91.)
 
 **Tests 1463 -> 1480 green.** `params.py`, `contract.py`, `env.py`,
 `V1_SPECS`, the box, the tolerances and the pre-screen all untouched.
+
+### 2026-08-18 - Session 22d (the attribution lands, and G89 is KILLED by its own confirmation run)
+
+Both runs from session 22c, executed serially on an idle machine (G70).
+Pre-registration `PREDICTIONS.md` entry 8, committed at `b6fe85e` before either.
+**Scored: A hit, B miss, C miss.**
+
+**THE D4 GAP IS ATTRIBUTED, AND THE MECHANISM IS NOT WHAT THE HEADLINE NUMBER
+SUGGESTS.** Full write-up `nebula/ATTRIBUTION.md`.
+
+        cause                        worth      how
+        S3 definition (2 vs 3 rows)  +0.00 pts  re-scoring, NO simulation
+        load, cl 32.63 -> 150 fF     +4.47 pts  one arm, 1500 sims
+        drawn passives (G66)         +0.33 pts  one arm, not significant
+        real mirror                  BLOCKED    G90
+        residual                     ~2.04 pts  named, not apportioned
+
+**The load is the cause, but NOT because the box is better at 150 fF.** The S3
+rate among designs that are **scorable at all** is **13.94 / 13.91 / 14.16 %**
+across all three arms -- flat. What the load changes is the **G44 population**:
+**40.13 % sweep-edge invalid at `cl_mid` against 8.67 % at 150 fF**. At the
+lighter load `f_p2` moves up and two fifths of the box has no interior maximum
+below the 20 GHz search ceiling. **The published baseline was measuring a box
+less of which is wasted, not a box that designs better.** Two consequences:
+this explains the pre-screen's 3.60x lift here against the published 2.60x
+(more G44 population available to remove at `cl_mid`), and **G65's "78 % of
+what a policy finds is G44" is a property of the LOAD as much as of the policy**.
+
+**Drawn passives cost nothing measurable (6.93 % vs 6.60 %, CIs overlapping),
+and that does NOT contradict G66.** G66 is a **per-design** 0.1329-octave shift
+that moves designs both into and out of the window; a population rate is the
+wrong instrument for it. G66's claim about design 432's 0.12 octaves of slack
+is untouched. **My prediction B was wrong because I used a rate to test a
+per-design effect** -- the pre-registration named this exact case in advance.
+
+**G89 IS KILLED, AND THE WAY IT SURVIVED A DAY IS THE LESSON.** The
+confirmation run doubled the events and the rate ratio moved **0.535 -> 0.917**
+(unscreened 14/4000 = 0.3500 %, screened 43/13391 = 0.3211 %, CI
+[0.502, 1.677], implied false rejection **8.3 %**). Both arms regressed to the
+mean from opposite directions (9 -> 5 and 16 -> 27). **The screened arms of the
+G3 sweep carry no known ceiling bias**, which is `PREDICTIONS.md` entry 8's
+falsification condition 4 firing verbatim, and it is the outcome that saves the
+12-hour run from a caveat.
+**The methodological error was mine and it is now the body of G89:** I wrote
+the suspicion up as having *"two independent supports"* -- the direct rate
+ratio, and the lattice arithmetic `ceiling = S3/15` missing the screened arm by
+2.1x. **They are not independent; both are computed from the same 9 and 16
+counts.** On the pooled data the arithmetic over-predicts by 1.36x unscreened
+and 1.56x screened -- uniform, no arm-specific effect. **Different arithmetic
+on the same small sample is not a second measurement.** `DIFFICULTY.md` sec 4.2
+and sec 4.3 are corrected; the earlier "agrees to 5 %" claim is retracted in
+place rather than deleted.
+
+**G74 reconfirmed at 6.4x its original evidence:** pooled over both replicates,
+**57 ceiling ties on 57 DISTINCT designs** (14 unscreened, 43 screened), one
+reward to six decimals, nothing above it in 8000 simulations.
+
+**Also measured, and it strengthens session 22's promoted finding:** on the
+session-11 population the 7-row `V1_SPECS` rate is **13.39 %** against the
+3-row **13.44 %** -- so noise, power and the pair-saturation margin cost
+**0.05 points between them**, reproducing *"reward v1 has one active dimension
+where it advertises seven"* on a **different population**, with ideal passives
+and an ideal tail. That finding is now measured twice on disjoint data.
+
+**Cost:** attribution 4500 simulations / 877 s (0.183-0.208 s/sim); pools 4000
+simulations / 853 s. All serial, nothing else simulating.
+
+**New:** `nebula/ATTRIBUTION.md`, `experiments/attribution_run.jsonl`,
+`experiments/difficulty_pool_r1.jsonl`. **Tests 1480 green, unchanged.**
+`params.py`, `contract.py`, `env.py`, `V1_SPECS`, the box, the tolerances and
+the pre-screen all untouched.
+
+**Next, per the owner's decision:** Task 1 (interpolate the AC peak to remove
+the ceiling), then Task 3 (corners) with the G66 screen re-run scoped first.
+The Task 1 case now rests on the screened arms -- **75 % of them reach the
+ceiling inside the 150-simulation budget and become unrankable** -- and on the
+G3 argument that a 57-design plateau at one value is where a policy gradient
+vanishes near the optimum.

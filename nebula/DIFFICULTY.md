@@ -51,10 +51,18 @@ committed at **`e8b9b25`, before the run**.
    S3. This settles `PREDICTIONS.md` entry 6's falsification condition 3 in the
    *opposite* direction to the worry it was written about.
 
-6. **G74 is reconfirmed at 2.8x the evidence.** 9 ceiling ties on **9 distinct
-   designs** unscreened, 16 on **16 distinct** screened — 25 designs, 25 ids,
-   one reward to six decimals. The ceiling is a property of the AC grid, not of
-   a lucky design, and no design in 4000 simulations exceeded it.
+6. **G74 is reconfirmed at 6.4x the evidence.** Pooled over both replicates:
+   **14 ceiling ties on 14 distinct designs** unscreened and **43 on 43
+   distinct** screened — **57 designs, 57 ids, one reward to six decimals**,
+   and nothing above it in 8000 simulations. The ceiling is a property of the
+   AC grid, not of a lucky design.
+
+7. **A suspicion was raised and then killed by its own confirmation run.** The
+   first replicate suggested the pre-screen discards ~46 % of ceiling-capable
+   designs; doubling the events moved the rate ratio from 0.535 to **0.917**.
+   **The screened arms carry no known ceiling bias.** §4.3 records how it
+   failed, because the failure mode — treating two statistics computed from one
+   small sample as independent corroboration — is the reusable part.
 
 ---
 
@@ -175,44 +183,62 @@ budget was expected to saturate. On this measurement, at 150 simulations,
 and is close to saturated in the screened ones. Both metrics are worth
 reporting and neither is redundant.
 
-### 4.2 The ceiling rate is the S3 rate divided by the lattice, and that is now measured
+### 4.2 The ceiling rate is roughly the S3 rate divided by the lattice
 
 The octave window holds **15** `ac dec 50` lattice points (session 11, G74), and
 the ceiling requires `f_peak` on the single nearest one. If `f_peak` were
 uniform over those 15 among S3-meeting designs:
 
-| | S3 rate / 15 | measured ceiling rate | |
-|---|---|---|---|
-| unscreened | 0.473 % | **0.450 %** | agrees to 5 % |
-| screened | 1.703 % | **0.800 %** | **2.1x off** |
+| | S3 rate | S3 rate / 15 | measured ceiling rate | over-prediction |
+|---|---|---|---|---|
+| unscreened | 7.15 % | 0.477 % | **0.350 %** | 1.36x |
+| screened | 25.12 % | 1.675 % | **1.075 %** | 1.56x |
 
-**The unscreened agreement is close enough to call the mechanism confirmed.**
-The screened row missing by 2.1x is the interesting one and §4.3 is about it.
+*(Pooled over both replicates, 4000 simulations per arm — see §4.3 for why the
+first replicate alone was misleading.)*
 
-### 4.3 The pre-screen may be discarding ceiling-capable designs — SUSPECTED, NOT ESTABLISHED
+The model over-predicts by a similar factor in **both** arms, which is what a
+uniformity assumption that is slightly wrong looks like: `f_peak` is not evenly
+spread over the 15 lattice points, and the extra constraint that every *other*
+margin/tol clear 0.9507 removes more designs at the centre than at the edges.
+**The mechanism is right to within ~1.5x and it is the same in both arms.**
 
-The screen lifts the S3 rate by **3.60x** (7.10 → 25.55 %) but the ceiling rate
-by only **1.78x** (0.45 → 0.80 %). Since the screen can only *remove*
-proposals, the per-proposal ceiling rate compares directly:
+### 4.3 The pre-screen does NOT discard ceiling-capable designs — SUSPICION RAISED AND KILLED
+
+**On the first replicate this looked like a real effect, and it was not.**
+Recorded in full because the way it failed is worth more than the number.
+
+The first pools gave a per-proposal ceiling rate of 9/2000 = 0.4500 %
+unscreened against 16/6645 = 0.2408 % screened — a rate ratio of **0.535**,
+implying the screen threw away **46.5 %** of ceiling-capable designs. The 95 %
+CI was **[0.236, 1.211]** and spanned 1.0, so it was recorded as a suspicion
+rather than a finding, and a confirmation run was ordered.
+
+**Doubling the events killed it:**
 
 ```
-unscreened   9 / 2000  = 0.4500 % of proposals
-screened    16 / 6645  = 0.2408 % of proposals
-rate ratio 0.535, 95 % CI [0.236, 1.211]
+                 replicate 0        pooled r0 + r1
+unscreened        9 / 2000          14 / 4000   = 0.3500 %
+screened         16 / 6645          43 / 13391  = 0.3211 %
+rate ratio          0.535               0.917
+95 % CI       [0.236, 1.211]      [0.502, 1.677]
+implied false rejection            8.3 %  [-67.7, 49.8]
 ```
 
-Point estimate: the screen removes **46.5 %** of ceiling-capable designs.
-**The CI spans 1.0, so this is a suspicion and not a finding** — it rests on 9
-and 16 events. It is recorded because it is checkable, because it agrees with
-§4.2's independent 2.1x, and because it is exactly the failure mode G76 already
-caught this screen in once (*population rates transfer, accuracy does not*).
-The measured S3-population false-rejection rates are 0.39 % at calibration and
-3.88 % at benchmark conditions; a rate near 46 % on the *ceiling* population
-would be a different order of thing, because the ceiling is a narrow target on
-the same `f_peak` axis the screen filters.
+**Verdict: NOT ESTABLISHED, and the point estimate is now within 8 % of no
+effect at all.** Both arms regressed to the mean from opposite directions —
+the unscreened count went 9 → 5 on the second replicate and the screened count
+16 → 27. The screened arms of the G3 sweep carry **no known ceiling bias**.
 
-**Confirming or killing this costs one pooled re-run at larger n and no new
-code.** It is not done here.
+**The methodological error was mine and it is the part to remember.** §4.2
+originally read as *"an independent route agrees: the lattice arithmetic
+predicts the unscreened ceiling rate to 5 % and misses the screened one by
+2.1x."* **That route was not independent — it is computed from the same 9 and
+16 counts.** Two statistics derived from one small sample agreeing with each
+other is not corroboration; it is the same noise, twice. On the pooled data the
+"2.1x discrepancy" is 1.36x against 1.56x, i.e. **no arm-specific effect at
+all**. *A second statistic that shares its data with the first cannot confirm
+it, however different the arithmetic looks.*
 
 ### 4.4 The screen's population rates moved, in the direction that flatters it
 
@@ -250,10 +276,15 @@ and the sweep's own sampler and evaluator produce 7.10 % [6.05, 8.31].
 **Miss 8 followed from miss 7 and from a compensating error I should own.** The
 prediction reasoned "ceiling rate = S3 rate / 15" and got the ceiling rate
 right (0.45 % measured against 0.8 % predicted, in band) **while getting the S3
-rate that feeds it wrong by 1.9x**. Feeding the *measured* S3 rate through the
-same arithmetic gives 0.473 % against 0.450 % measured — so the mechanism was
-right and one of its two inputs was wrong, and the band held for the wrong
-reason. That is worth more than the hit it produced.
+rate that feeds it wrong by 1.9x**. On the pooled 4000-simulation data the
+arithmetic over-predicts by **1.36x** (0.477 % against 0.350 %) rather than
+matching, so the mechanism is right to about 1.5x and **the band held partly by
+compensating errors**. That is worth more than the hit it produced.
+
+*(An earlier draft of §4.2 claimed this arithmetic agreed with the measurement
+"to 5 %" on the first replicate. It did — on 9 events. Doubling the sample took
+the agreement to 1.36x. **Neither number was a check on the other; both came
+from the same small sample.** See §4.3.)*
 
 **What the prediction got right that matters:** it said the verdict and the
 reason would come apart, that the unscreened arm would sit "an order of
@@ -271,8 +302,8 @@ screened arm simply landed at 68.5 rather than under 50.
   (`BASELINES.md` §5, session-11 population); **13.54 %** (G42, `cl` pinned);
   **8.73 %** (G42, `cl` searched). They are not the same measurement and the
   gap is not noise. **Ask before quoting any of them as the bar G3 must beat.**
-* **It does not re-fit or re-tune the pre-screen.** D3. §4.3's suspicion is a
-  reason to *measure*, not to change a calibration.
+* **It does not re-fit or re-tune the pre-screen.** D3. §4.3's suspicion was
+  measured and **killed**; it is not grounds to change a calibration.
 * **It does not touch `V1_SPECS`, the box, the tolerances or the evaluator.**
   `params.py`, `contract.py`, `env.py` untouched.
 * **It is P1 only** — TT / 1.00 / 27 °C, one load, drawn passives. Nothing here
@@ -312,15 +343,21 @@ run restarted from scratch. **No number in this file comes from those runs.**
 
 ## 8. Open, in the order a next session should take it
 
-1. **D4 — which baseline G3 must beat.** Blocked on a human. §6 lists the four
-   measured candidates.
-2. **§4.3 — does the pre-screen discard ceiling-capable designs?** One pooled
-   re-run at larger n, no new code. If the 46 % point estimate survives, every
-   screened arm of the sweep is biased against the metric the sweep reports.
+1. ~~**D4 — which baseline G3 must beat.**~~ **DECIDED 2026-08-18: 7.10 %.**
+   `nebula/ATTRIBUTION.md` decomposes the gap to the published 13.44 %, which
+   was measured at `cl` = 150 fF and not at `cl_mid`.
+2. ~~**§4.3 — does the pre-screen discard ceiling-capable designs?**~~
+   **ANSWERED: no.** The confirmation run took the rate ratio from 0.535 to
+   **0.917** on doubled events. The screened arms carry no known ceiling bias.
 3. **Task 1 — remove the ceiling at its source** (parabolic interpolation of
-   the AC peak). Note that §4.1 weakens the *urgency*: the ceiling is not
-   reached by two thirds of unscreened runs at budget. It does not weaken the
-   *case*, because 25 designs still tie at exactly one number.
-4. **Task 3 — the corner axis.** Nominal-only is now measured as reachable but
-   not trivial; the corner-robust problem is where the search difficulty
-   actually lives (~1 in 1890, session 10d/11).
+   the AC peak). **This is the agreed next task.** §4.1 weakens the *urgency*
+   for the unscreened arms — two thirds of them never reach the ceiling at
+   budget — but not for the screened ones, where **75 % do** and therefore
+   saturate and become unrankable. The stronger argument is G3's: a plateau of
+   57 designs at exactly one value is the objective shape where a policy
+   gradient vanishes near the optimum, which `PLAN.md` §4 requires lane A to
+   rule out before any hyperparameter work.
+4. **Task 3 — the corner axis**, with the G66 screen re-run scoped FIRST.
+   Nominal-only is measured as reachable but not trivial, and §0 item 5 is the
+   strongest argument for corners: they add binding constraints that nominal
+   does not have.

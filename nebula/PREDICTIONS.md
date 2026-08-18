@@ -1207,6 +1207,54 @@ would mean the screen is a **population filter and not a design filter**, and
 that screened arms cannot be used to rank methods on a metric as narrow as the
 ceiling. Those are different claims and the report must not blur them.
 
-### Outcome
+### Outcome — **A hit, B miss, C miss.** Run 2026-08-18, `nebula/ATTRIBUTION.md` and `nebula/DIFFICULTY.md` sec 4.3.
 
-*Filled in after the runs. Nothing above is edited.*
+| | predicted | band | measured | |
+|---|---|---|---|---|
+| **A** legacy-load arm | 12.5 % | 10.5–15.5 % | **11.40 %** [9.89, 13.11] | **HIT** |
+| **B** ideal-passive arm | 8.2 % | 7.0–11.0 % | **6.60 %** [5.45, 7.97] | **MISS**, below the band |
+| **C** G89 rate ratio | 0.535, CI excludes 1 | 0.35–0.75 | **0.917**, CI [0.502, 1.677] | **MISS** |
+| definition cost | 0 pts | — | **0.00 pts** | established pre-run |
+
+**A: the load is the cause, and the mechanism is not the one the number
+suggests.** Moving only `cl` from 32.63 to 150 fF takes the S3 rate 6.93 ->
+11.40 %. But the S3 rate **among scorable designs** is **13.94 % against
+13.91 %** — flat. What the load changes is the G44 population: **40.13 %
+sweep-edge invalid at `cl_mid` against 8.67 % at 150 fF**. The published
+baseline is not measuring a better box, it is measuring a box less of which is
+wasted.
+
+**B: drawn passives cost nothing measurable, and the pre-registration named
+this case.** 6.93 % drawn against 6.60 % ideal, CIs overlapping across almost
+their whole width. The entry said in advance: *"If B comes back at or below
+7.10 %, drawn passives make the problem easier, which would contradict G66's
+stated direction and would be the more interesting result."* It came back at
+6.60 %. **The reasoning error was using a population rate to test a per-design
+effect**: G66's 0.1329-octave shift moves designs both into and out of the
+window, so the rate can be flat while individual verdicts flip. G66 is
+untouched; my instrument was wrong.
+
+**C: FALSIFICATION CONDITION 4 FIRED, exactly as written** — *"C's ratio moves
+toward 1.0 with more events. Then the first pools were an unlucky draw, G89 is
+killed, and the screened arms of the sweep are fine. That is the outcome that
+saves a 12-hour run from a caveat."* Doubling the events took the ratio from
+0.535 to **0.917**, implied false rejection **8.3 %** with CI [-67.7, 49.8].
+Both arms regressed from opposite directions (9 -> 5 and 16 -> 27).
+
+**And the reasoning behind C was worse than the number.** I wrote that the
+effect *"has two independent supports"* — the direct rate ratio, and the
+lattice arithmetic `ceiling = S3/15` missing the screened arm by 2.1x. **Those
+are not independent: both are computed from the same 9 and 16 counts.** On the
+pooled data the arithmetic over-predicts by 1.36x unscreened and 1.56x
+screened, i.e. uniformly, with no arm-specific effect. *Different arithmetic on
+the same small sample is not a second measurement*, and calling it one is how a
+noise artifact acquired a mechanism and a paragraph.
+
+**Falsification condition 3 also fired.** The causes do not sum:
+0.00 + 4.47 + 0.33 = 4.80 points against a 6.51-point gap. The decomposition is
+reported as **non-additive**, with the 2.04-point residual named (mirror axis —
+blocked by G90; the G64 validity-definition difference; the sampler and box)
+rather than apportioned.
+
+*Nothing above the Outcome heading was edited.*
+
