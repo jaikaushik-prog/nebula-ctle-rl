@@ -775,3 +775,79 @@ def test_grid_raises_rather_than_enumerating_forever(monkeypatch):
     with pytest.raises(RuntimeError, match="without spending"):
         B.method_grid(obj, np.random.default_rng(0))
     assert obj.n_sims == 0
+
+
+def test_a_groups_bootstrap_stream_is_a_function_of_its_NAME(monkeypatch):
+    """**G96: a group's interval must not depend on which other arms ran.**
+
+    `analyse` used to build ONE generator and consume it across
+    `groups.items()`, whose order is the order the process pool finished.
+    Adding a `grid` arm reproduced all twelve medians at **0.00e+00** and still
+    moved the separable-pair count from **20 to 22 of 45**.
+
+    **This asserts on the STREAM, not on the interval, and that is
+    deliberate.** A percentile bootstrap endpoint is an order statistic of the
+    sample, so across 10 000 resamples it is *stable*: two different streams
+    land on the same endpoint most of the time and only a group sitting near a
+    boundary flips. That stability is why the defect survived three sessions --
+    and it is also why an interval-equality version of this test passed with
+    the bug restored, which the first draft did. The property that actually has
+    to hold is that **the draws a group sees are a function of its name and of
+    nothing else.**
+
+    `analyse` iterates `sorted(groups.items())`, so adding `P1/grid` prepends
+    its calls and leaves `P1/lhs` and `P1/uniform` seeing exactly the draws
+    they saw before. With a shared generator they would all shift.
+    """
+    drawn: list[int] = []
+
+    def _spy(x, n_boot=10_000, alpha=0.05, rng=None):
+        if rng is not None:
+            drawn.append(int(rng.integers(0, 10 ** 9)))
+        return (float(np.median(x)), float(np.min(x)), float(np.max(x)))
+
+    monkeypatch.setattr(B, "bootstrap_median", _spy)
+
+    def _row(method, rep):
+        return {"problem": "P1", "method": method, "prescreen": False,
+                "replicate": rep, "seed": rep, "curve": [8.0, 8.4, 8.9],
+                "sims_to_first_feasible": 2, "sims_to_ceiling": None,
+                "censored": False, "reward_ceiling": 8.95, "invalid_rate": 0.0,
+                "wall_s": 1.0, "model_seconds": 0.0, "sec_per_sim": 0.1,
+                "n_screened_out": 0, "n_sims": 3}
+
+    base = ([_row("uniform", i) for i in range(5)]
+            + [_row("lhs", i) for i in range(5)])
+    extra = [_row("grid", i) for i in range(5)]
+
+    drawn.clear()
+    B.analyse(base)
+    without = list(drawn)
+
+    drawn.clear()
+    B.analyse(extra + base)
+    with_grid = list(drawn)
+
+    assert without, "the spy recorded nothing -- has bootstrap_median moved?"
+    assert len(with_grid) > len(without)
+    assert with_grid[-len(without):] == without, (
+        "adding an unrelated arm changed the bootstrap stream the SHARED "
+        "groups see; the generator is not seeded per group (G96)"
+    )
+    # ... and the seed is a pure function of the name, stable across processes
+    assert B.group_seed("P1/uniform") == B.group_seed("P1/uniform")
+    assert B.group_seed("P1/uniform") != B.group_seed("P1/grid")
+
+
+def test_analyse_survives_a_log_with_a_single_group():
+    """The recovery path's whole purpose is a PARTIAL log, and the first
+    finished arm is one group -- which used to divide by zero pairs."""
+    runs = [{"problem": "P1", "method": "uniform", "prescreen": False,
+             "replicate": i, "seed": i, "curve": [8.0, 8.5, 8.9],
+             "sims_to_first_feasible": 2, "sims_to_ceiling": None,
+             "censored": False, "reward_ceiling": 8.95, "invalid_rate": 0.0,
+             "wall_s": 1.0, "model_seconds": 0.0, "sec_per_sim": 0.1,
+             "n_screened_out": 0, "n_sims": 3} for i in range(3)]
+    a = B.analyse(runs)
+    assert "no pairs to correct" in a["multiple_comparisons"]
+    assert set(a["groups"]) == {"P1/uniform"}

@@ -1,11 +1,13 @@
 # CONTINUE_HERE.md — the brief for the next agent
 
-**Written 2026-08-19, at the end of sessions 22e–22g.** Supersedes
+**Written 2026-08-19, at the end of sessions 22e–22g; updated the same day
+at the end of session 22h, which built grid search and ran the benchmark
+again.** Supersedes
 `nebula/NEXT_STEPS.md`, which was written 2026-08-08 and is now wrong in its
 first table (it says G2 is not started and the sweep has not run; both are done).
 
 **This file is not a substitute for `HANDOFF.md`.** It is the *entry point*:
-where the project stands today, what the last three sessions changed, what is
+where the project stands today, what the last four sessions changed, what is
 decided, what is open, and what to do next. Every number below traces to a run
 in this repository and to a commit.
 
@@ -17,16 +19,17 @@ in this repository and to a commit.
 |---|---|---|---|
 | 1 | **this file**, §§1–8 | the situation and the decision | 10 min |
 | 2 | `CLAUDEwa.md` §§1–3, §7 | the contract, the spec table, the gates | 15 min |
-| 3 | `HANDOFF.md` §0 header, §9 gotchas **G92–G95** | state, and the four traps found this week | 20 min |
-| 4 | `nebula/BASELINES.md` §12 (+§12.6) | the sweep, and the control that gives it meaning | 15 min |
+| 3 | `HANDOFF.md` §0 header, §9 gotchas **G92–G96** | state, and the five traps found this week | 20 min |
+| 4 | `nebula/BASELINES.md` §12 (+§12.6), then **§13** | the sweep, the control that gives it meaning, and the grid arm | 25 min |
 | 5 | `nebula/PEAK_INTERP.md` §0, §5, §7 | why the reward changed and what it cost | 10 min |
-| 6 | `nebula/PREDICTIONS.md` entries 10–13 | how this project makes claims | 20 min |
+| 6 | `nebula/PREDICTIONS.md` entries 10–14 | how this project makes claims | 25 min |
 | 7 | `PLAN.md` §2 (D1–D7), §7, §8 | the team's decisions and cut order | 10 min |
 
 **Do not skim 3 and 6.** The gotchas are the highest-value-per-line thing in the
 repo, and `PREDICTIONS.md` is the discipline that makes the results worth
-anything: **pre-register, commit, then run.** Three predictions were missed this
-week and all three are written up as misses.
+anything: **pre-register, commit, then run.** Five predictions were missed this
+week and all five are written up as misses — including entry 14's, where the
+band held and the *claim* was wrong, which is scored as a miss on purpose.
 
 ---
 
@@ -34,11 +37,20 @@ week and all three are written up as misses.
 
 The reward function had a defect that made the benchmark unable to rank
 anything. It is fixed, and the fix is proved by a matched control. The benchmark
-then ran for the first time and produced a real ranking. **In that ranking, PPO
-— our RL method — comes last, behind uniform random search.** Three separate
+then ran for the first time and produced a real ranking. **In that ranking PPO
+— our RL method — is second-last, behind uniform random search.** Three separate
 diagnoses of why have been made and two of them were wrong; the current one is
 that at a 150-simulation budget the policy gradient is *uninformative*, not
 absent, and no hyperparameter fixes that.
+
+**Session 22h then built the baseline G3 names and this project did not have —
+grid search — and re-ran everything.** Grid comes **last**, below PPO, and the
+reason is resolution rather than adaptivity: at d = 7 a 150-simulation budget
+buys `150 ** (1/7)` = **2.06 levels per axis**, so even a policy that does not
+learn out-resolves a factorial. **G3 now fails on both of its clauses and can
+be *scored* on both, which it could not be before.** The same run reproduced
+all twelve pre-existing group medians at **0.00e+00** — the benchmark is
+bit-for-bit deterministic — and that determinism is what caught **G96**.
 
 **27 days to the 15 Sept deadline.**
 
@@ -53,15 +65,16 @@ From `CLAUDEwa.md` §7.
 | G0 | 2 Aug | toolchain runs four analyses | **passed** |
 | G1 | 3 Aug | hand reference meets S3–S7 at TT | **substantially passed** |
 | G2 | 20 Aug | one full evaluation, params → ngspice → fit → eye → reward | **PASSED** (session 21, `G2_RESULTS.md`) |
-| **G3** | **3 Sep** | **RL beats random search AND grid search at TT, with a plot** | **FAILING — see §4** |
+| **G3** | **3 Sep** | **RL beats random search AND grid search at TT, with a plot** | **FAILING on BOTH clauses, and now scoreable on both — see §4** |
 | G4 | 12 Sep | corner-robust design generated and verified | not started; see §4 for the ordering conflict |
 | G5 | 15 Sep | submitted | — |
 
 ---
 
-## 3. What sessions 22e–22g did
+## 3. What sessions 22e–22h did
 
-Eleven commits, `9f9eca8` … `6d6d149`. ~60 000 simulations, ~3 hours of compute.
+Thirteen commits, `9f9eca8` … the grid arm. ~92 000 simulations, ~4 hours of
+compute.
 
 ### 3.1 The reward ceiling was removed at its source (`PEAK_INTERP.md`)
 
@@ -133,6 +146,45 @@ The benchmark did not rank coarsely. **It resolved nothing at all.**
   zero with a minority making one late jump, which is a search finding things
   by luck rather than by policy.
 
+### 3.5 Session 22h — grid search, built and run (`BASELINES.md` §13)
+
+`METHODS` had no grid, so **G3 was not failing its grid clause; it could not be
+evaluated on it.** `method_grid` is a centred full factorial sized to the budget
+and then refined. 210 runs, 31 879 simulations.
+
+```
+cmaes+screen 8.9974 > gp_bo 8.9955 > gp_bo+screen 8.9921 > uniform+screen 8.9860
+> cmaes 8.9736 > lhs+screen 8.9661 > uniform 8.9532 > lhs 8.9419
+> ppo+screen 8.9288 > ppo 8.9106 > grid+screen 8.8886 > grid 8.8886
+```
+
+**34 of 66 P1 pairs separate.** Four things to carry forward:
+
+* **The arithmetic is the finding.** `L**d` at d = 7 means 150 simulations buys
+  `150 ** (1/7)` = **2.06 levels per axis**: L = 2 is 128 points and fits,
+  L = 3 is 2 187 and is 14.6× the budget. **The grid loses on RESOLUTION, not
+  adaptivity** — `uniform` and `lhs` are not adaptive either and both beat it —
+  because the binding reward row is a *distance to a target* and a continuous
+  sampler resolves each axis 150 ways.
+* **`P1/grid`'s CI is exactly zero wide, and that is the METHOD.** 19 of 20
+  seeds return the identical 8.888648. **A different zero from §3.3's**, where
+  the *objective* could not resolve. So its 20 replicates are one lattice plus
+  20 short random tails, and a "separable at n = 20" verdict involving it is
+  arithmetically true and inferentially weak.
+* **The pre-screen bought the grid RESOLUTION — 5.19× more simulated points on
+  the 3-level lattice — and moved the median by +0.0000**, the smallest delta
+  of the six methods. Eleven of twenty screened seeds finished on the *same*
+  design as the unscreened arm. **The coarse lattice's best point is a wall.**
+* **Grid is the FASTEST method in the study to a feasible design (median 1.0
+  simulation, screened) and the only one that never reaches the reward
+  ceiling** — 0 of 20, twice, across 6 000 simulations. *Feasible is not good.*
+
+And the run reproduced **all twelve** pre-existing group medians at
+**0.00e+00**, which is how **G96** was caught: the separable-pair count still
+moved 20 → 22 of 45 because `analyse` shared one bootstrap RNG across groups in
+pool-completion order. Fixed; the ten arms then give 20 of 45 exactly and §3.3's
+control still gives 0 of 45.
+
 ---
 
 ## 4. **The thing you most need to know: G3 is failing, and the plan says stop**
@@ -155,14 +207,21 @@ search at TT. Two consequences, and neither is an agent's call:
    spec S9.** Someone has to decide whether that rule still binds now that the
    reward defect it was aimed at has been found and removed.
 
-**And a gap nobody has flagged: grid search does not exist.** `METHODS` holds
-`uniform, lhs, cmaes, gp_bo, ppo`. G3's criterion names grid search explicitly
-and CLAUDEwa §7 lists it among the baselines "we must report against".
-`optimize_ctle()` exists only in `python_models/statistical_eye.py`, which grids
-CTLE *settings* in the link model — not device sizes in the nebula box. **G3
-cannot be evaluated as written until `method_grid` is built.** That is a
-half-day of work plus a ~15-minute run, and it is the cheapest open item in the
-project.
+**The gap that made G3 unscoreable is CLOSED (session 22h).** `METHODS` held
+`uniform, lhs, cmaes, gp_bo, ppo` and no grid, so G3 was not failing its grid
+clause — it could not be evaluated on it. `method_grid` is now built, tested
+and run, and `BASELINES.md` §13 is the write-up. **The verdict on the full
+criterion:**
+
+* **RL vs random search: LOSES.** `ppo` 8.9106 against `uniform` 8.9532.
+* **RL vs grid search: does not separably win.** `ppo` sits above `grid`
+  8.8886 on the point estimate, but `ppo`'s interval [8.8100, 8.9302] contains
+  the grid's entire (zero-width) interval, so §7h's own rule reports **not
+  separable at this sample size**.
+
+So **G3 fails on both clauses.** Building the arm made the gate answerable, not
+passable — which is what its pre-registration (`PREDICTIONS.md` entry 14) said
+it would do.
 
 ---
 
@@ -201,6 +260,23 @@ project.
    just use CMA-ES?"*
 5. Whether to re-run the corner and load screens on the interpolated peak
    (interacts with G66's own re-run scope — cost them together).
+6. **NEW (22h): restore P2?** `SEC_PER_SIM_AT_8` was **17.4× wrong** — 1.698
+   from a pre-library-trim pilot against the sweeps' own end-to-end 0.09773 and
+   0.11095 s/sim. Fixing it means the **fully crossed** design (3 rungs × 6
+   methods × 2 screen arms, 81 000 sims) costs **~2.2 h**, so **P2's cut, which
+   was purely budgetary, no longer has a reason.** The other two cuts stand on
+   reasons that were never about cost: P3's screened arm is EPISTEMIC (the
+   screen's calibration off nominal is unmeasured, so the arm would confound
+   "the screen helps" with "the screen is miscalibrated"), and P3's PPO arm is
+   STRUCTURAL. Restoring P2 changes what the benchmark measures, so it is not
+   an agent's call.
+7. **NEW (22h): pin the warm-up/control configuration?** 7g takes it from
+   `jobs[0]`, i.e. the head of the shuffle, so **adding a method silently
+   changed which configuration the timing control measures** — it became
+   `P3/uniform`, whose 6-simulations-per-design short-circuiting is far noisier
+   per simulation, and the 22h sweep came back `timing_void` (ratio 1.408).
+   Pinning it to a P1 arm is a two-line change with a fairness argument on both
+   sides.
 
 ---
 
@@ -211,14 +287,16 @@ contributions**, which is the strongest argument for them.
 
 | # | Task | Time | Why | Maps to |
 |---|---|---|---|---|
-| **1** | **Build `method_grid` and re-run** | ½ d + 15 min | **G3 cannot be scored without it.** Cheapest open item in the project | G3's literal criterion |
+| ~~1~~ | ~~**Build `method_grid` and re-run**~~ | **DONE, session 22h** | G3 is now scoreable on both clauses and fails both. `BASELINES.md` §13 | G3's literal criterion |
 | **2** | **Task 3 — corners in the loop (G4)** | 2–3 d | Mandatory: spec S9, and `PLAN.md` "never cut". P3 is now known **hard, not empty** — `uniform` found 2 of 20 | contribution **#1**, "reward on worst-case corner, not nominal" |
 | **3** | **Task 4 — spec-conditioned policy** | 5–7 d | The only answer to *"why not CMA-ES?"*, **and** the only regime where the policy gets enough experience to learn | contribution **#2**, "this is the live demo" |
 | **4** | **Report + slides** | ~7 d | Mandatory. Run it *alongside* 2–3, not after | — |
 | 5 | `FAIRNESS.md` (task 2 leftover) | ½ d | One table: every asymmetry, which way it cut, what was done. Cheap credibility | — |
 | — | ~~PPO contract changes~~ | 1–2 d | Measured ceiling on that path is small. Only if 3 stalls | — |
 
-~13 days of work in 27. The slack is deliberate; `CLAUDEwa.md` §7 says protect it.
+~13 days of work in 27, of which **task 1 is done**. **Task 2 (corners, G4)
+is now the top item.** The slack is deliberate; `CLAUDEwa.md` §7 says protect
+it.
 
 ### Three results already banked for the report
 
@@ -228,6 +306,15 @@ contributions**, which is the strongest argument for them.
    for model-based methods (GP-BO model time 127.1 s → 207.9 s), because a
    screened proposal costs no simulation but still costs a full acquisition
    optimisation. First measurement of this anywhere in the project.
+4. **(22h) The answer to "why not just sweep the parameter space?"** — which is
+   the competition's own sentence. At a matched 150-simulation budget the sweep
+   is the **worst of six methods**, it is the **only one that never reaches the
+   reward ceiling** (0 of 20 seeds, twice, across 6 000 simulations), and it is
+   the **fastest of all twelve arms to a first feasible design** (median **1.0
+   simulation** with the pre-screen). *Feasible is not good*, and this is the
+   cleanest demonstration of that in the project.
+5. **(22h) The benchmark is bit-for-bit deterministic** — twelve group medians
+   reproduced at **0.00e+00** across two independently ordered sweeps.
 
 ---
 
@@ -286,7 +373,14 @@ simulator alone). A 25 500-simulation sweep is **42 minutes**, not 12 hours.
   destroyed 1890 samples of pre-screen calibration. Both writers reported
   success. Recovered with `git checkout HEAD~1 --`.
 
-**Two mistakes made this week that are not gotchas but are instructive:**
+* **G96** — *one shared bootstrap RNG made a headline number depend on the
+  completion order of an unrelated arm.* Adding the `grid` arm reproduced all
+  twelve medians at **0.00e+00** and still moved the separable-pair count
+  **20 → 22 of 45**. Seed per unit of analysis, from a stable function of that
+  unit's identity. Same family as G71, one level up: there the order
+  contaminated the measurement, here it contaminated the *analysis of* it.
+
+**Three mistakes made this week that are not gotchas but are instructive:**
 
 * **A diagnostic that consumed the resource it measured.** The policy-movement
   probe called `env.reset()`, which *simulates* — so it spent budget from the
@@ -296,6 +390,10 @@ simulator alone). A 25 500-simulation sweep is **42 minutes**, not 12 hours.
 * **A single probe point is not a function comparison.** The same seed reads
   0.633 on one observation and 0.209 averaged over 32. A tanh can be saturated
   at one point and steep at another.
+* **A prediction band that spans zero cannot test a directional claim.** Entry
+  14 predicted "grid beats PPO, by 0.02" with a band of −0.06…+0.10. Grid lost
+  by 0.0220 — inside the band, and the claim was wrong. Scored as a miss on the
+  claim rather than a hit on the band.
 
 **Standing traps that still bite:** G20 (`ngspice_con`, not `ngspice`), G26/G30
 (ngspice reports failures as warnings and exits 0 — parse and assert), G29
@@ -347,22 +445,31 @@ configuration pays the cold cache, whichever one it is).
 | `device/sky130_runner.py` | `interpolate_peak_log_f`, `parabolic_vertex`, `MAX_SEARCH_BOT_HZ`, 3 new `Sky130Point` fields |
 | `rl/evaluator.py` | `scoring_meas`, `INTERP_KEYS`, `meas_with_interpolated_peak`, `interp_was_refused` |
 | `nebula/tests/test_peak_interp.py` | 28 tests |
-| `PREDICTIONS.md` entries 9–13 | five pre-registrations, four scored |
+| `PREDICTIONS.md` entries 9–14 | six pre-registrations, five scored |
+| `experiments/baselines.py` | **(22h)** `method_grid`, `grid_levels`, `grid_level_of`, `group_seed` (G96), the measured throughput constants |
+| `experiments/baselines_run_interp_grid.jsonl.gz` | **(22h)** the 210-run sweep with the grid arm |
+| `nebula/BASELINES.md` §13 | **(22h)** the grid arm, seven subsections |
 
 ---
 
 ## 11. The one-paragraph version, if you read nothing else
 
 The reward could not rank anything and now it can — proved by a matched control
-that separates **0 of 45** pairs against **20 of 45**. The benchmark ran and
-produced an honest ranking in which **our RL comes last, behind uniform random
-search**, which means **G3 is failing on its literal criterion** and the
-criterion cannot even be fully scored because **grid search was never built**.
-PPO's failure has been diagnosed three times, twice wrongly, and the current
-reading is that a 150-simulation budget is smaller than a policy-gradient
-method's minimum viable sample size — so no hyperparameter fixes it. The two
-things worth the remaining 27 days are the two contributions `CLAUDEwa.md` §7
-already claims: **corner-aware evaluation** (mandatory anyway) and the
-**spec-conditioned policy**, which is the only regime where the policy gets
-enough experience to learn and the only answer to *"why not just use CMA-ES?"*.
-Build `method_grid` first; it is half a day and G3 cannot be scored without it.
+that separates **0 of 45** pairs against **20 of 45**, a contrast that survived
+being re-derived under G96's fix. The benchmark has now run twice and produced
+an honest ranking of **twelve** arms in which **grid search comes last and our
+RL comes second-last, both behind uniform random search** — so **G3 fails on
+both of its clauses**, and after session 22h it can at last be *scored* on both,
+because the grid baseline its criterion names did not exist until then. PPO's
+failure has been diagnosed three times, twice wrongly, and the current reading
+is that a 150-simulation budget is smaller than a policy-gradient method's
+minimum viable sample size — so no hyperparameter fixes it. **The grid's failure
+is different and sharper: at seven dimensions 150 simulations buys `150**(1/7)`
+= 2.06 levels per parameter, and the reward pays for resolution, so even a
+policy that provably does not learn out-resolves a factorial.** The same run
+proved the benchmark **bit-for-bit deterministic** (twelve medians at 0.00e+00)
+and, through that, caught **G96**. The two things worth the remaining 27 days
+are the two contributions `CLAUDEwa.md` §7 already claims: **corner-aware
+evaluation** (mandatory anyway, and now the top item) and the **spec-conditioned
+policy**, which is the only regime where the policy gets enough experience to
+learn and the only answer to *"why not just use CMA-ES?"*.

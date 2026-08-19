@@ -1845,6 +1845,29 @@ def analyse_log(path: Path) -> dict:
                              if r.get("event") == "timing_control"), None)}
 
 
+def group_seed(key: str) -> int:
+    """The bootstrap seed for one group, **a function of its NAME alone**.
+
+    **G96, and it cost a headline number.** `analyse` used to build ONE
+    generator and consume it across `groups.items()`, so every group's interval
+    depended on how many groups came before it -- and that order is the order
+    the process pool happened to finish, which is not stable across runs. Adding
+    the `grid` arm re-ran the ten pre-existing arms on their own seeds, the
+    medians came back **bit-identical (0.00e+00 on all twelve)**, and the count
+    of separable P1 pairs still moved **20 -> 22 of 45** on data that had not
+    changed by a bit.
+
+    A statistic that moves when an unrelated arm is added is not a property of
+    the measurement. Seeding per group from a stable digest of the key makes
+    the interval a function of the data, which is what it was always reported
+    as. `hash()` is deliberately NOT used: it is salted per process.
+    """
+    import hashlib
+
+    h = hashlib.blake2b(key.encode("utf-8"), digest_size=8).digest()
+    return (BASE_SEED + int.from_bytes(h, "big")) % (2 ** 63)
+
+
 def analyse(runs: Sequence[dict]) -> dict:
     """7c + 7h, from run summaries. Pure — safe to re-run on a saved sweep."""
     groups: dict[str, list[dict]] = {}
@@ -1852,9 +1875,12 @@ def analyse(runs: Sequence[dict]) -> dict:
         key = f"{r['problem']}/{r['method']}{'+screen' if r['prescreen'] else ''}"
         groups.setdefault(key, []).append(r)
 
-    rng = np.random.default_rng(BASE_SEED)
     per_group: dict[str, dict] = {}
-    for key, rs in groups.items():
+    # Sorted so the OUTPUT order is stable too; the numbers no longer depend on
+    # it either way, and a diff between two analyses should show the numbers
+    # that moved rather than the order they were written in.
+    for key, rs in sorted(groups.items()):
+        rng = np.random.default_rng(group_seed(key))
         curves = np.asarray([r["curve"] for r in rs], dtype=float)
         finite = np.where(np.isfinite(curves), curves, np.nan)
         med = np.nanmedian(finite, axis=0)
@@ -1898,6 +1924,12 @@ def analyse(runs: Sequence[dict]) -> dict:
             pairs[f"{ka} vs {kb}"] = mann_whitney(a, b)
 
     n_tests = len(pairs)
+    # A log with ONE group has no pairs, and the recovery path (`--analyse` on
+    # a PARTIAL log, which is why that path exists) hits exactly that on the
+    # first finished arm. Dividing by it crashed the analysis of a log that was
+    # otherwise fine.
+    bonf = (f"{0.05 / n_tests:.4g}" if n_tests else
+            "undefined -- there are no pairs to correct")
     return {
         "groups": per_group,
         "pairwise_sims_to_feasible": pairs,
@@ -1905,7 +1937,7 @@ def analyse(runs: Sequence[dict]) -> dict:
             f"{n_tests} pairwise tests were run. No correction is APPLIED "
             f"because the tests are reported as a family and not used to "
             f"select a winner; at alpha = 0.05 a Bonferroni threshold would be "
-            f"{0.05 / n_tests:.4g} and any p above it should be read as "
+            f"{bonf} and any p above it should be read as "
             f"uncorrected. 7h's ranking rule governs instead: an ordering "
             f"whose confidence intervals overlap is reported as 'not separable "
             f"at this sample size'."),

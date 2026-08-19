@@ -1058,7 +1058,195 @@ the seeds, the box, the specs and the simulator are identical in the two runs.
 
 ---
 
-## 13. What is not done
+## 13. Results — **THE GRID ARM**, the baseline G3 names and this file did not have
+
+**Run 2026-08-19 at commit `347734a`.** `python -m nebula.experiments.baselines
+--sweep --interp --tag interp_grid`. 210 measured runs + a discarded warm-up +
+the timing control = **31 879 simulations**. Artifacts
+`baselines_run_interp_grid.jsonl.gz` and `baselines_results_interp_grid.json`;
+pre-registration and scoring in `PREDICTIONS.md` entry 14.
+
+**Why this run exists.** `CLAUDEwa.md` §7 states G3 as *"RL beats random search
+**and** grid search at TT, with a plot"*, and §4 of this file listed five
+methods, none of them a grid. **G3 has not been failing its grid clause — it
+has been unscoreable on it.** `optimize_ctle()` in
+`python_models/statistical_eye.py` grids CTLE *settings* inside the link model;
+it does not size devices and never sees this box.
+
+**Timing control: VOID.** Warm-up 0.312 s/sim → control 0.222 s/sim, ratio
+**1.408**, outside [0.8, 1.25]. Under §7 the wall-clock numbers for this sweep
+are **void and are not quoted**; the simulation counts stand, which is exactly
+why 7g asks for simulations as the headline. The likely cause is that adding a
+method re-shuffled `jobs_for`, so `jobs[0]` — the configuration the warm-up and
+control both run — became **P3/uniform** instead of P1/uniform+screen, and a
+P3 run is 6 simulations per design with short-circuiting and is far noisier per
+simulation than any P1 arm. **The control is only as stable as whichever
+configuration the shuffle puts first, and adding an arm changes that
+silently.** Noted as an open item in §14.
+
+### 13.1 The arithmetic, which is the finding
+
+A full factorial with `L` levels in `d` dimensions costs `L**d`. At `d = 7`:
+
+    150 simulations   ->   150 ** (1/7)  =  2.06 levels per axis
+    L = 2   ->    128 points   fits inside 150
+    L = 3   ->  2 187 points   14.6x the budget
+
+P1 costs exactly **1.000 simulations per design** (measured over 3 000
+`uniform` designs), so the unscreened arm always completes the same 128-point
+coarse factorial and spends its last **22** simulations inside a shuffled
+`L = 3`. `grid_levels()` is that arithmetic and `test_grid_levels_is_the_
+budget_arithmetic_and_it_is_the_finding` pins it.
+
+**This is not a handicap we imposed.** It is what the competition's own
+sentence — *"significantly lower time than sweeping all MOS, R, C, L parameter
+space"* — costs at seven dimensions, and it is the number a panel will ask for.
+
+**No P3 arm.** P3 is 6 simulations per design, so 150 buys 25 designs and
+`grid_levels(25, 7)` returns **1**: a single point. A P3 grid row would be the
+box centre labelled as a search.
+
+### 13.2 The ranking, twelve arms
+
+| group | median final | 95 % CI | width |
+|---|---|---|---|
+| P1/cmaes+screen | 8.9974 | [8.9890, 8.9985] | 0.0095 |
+| P1/gp_bo | 8.9955 | [8.9886, 8.9988] | 0.0103 |
+| P1/gp_bo+screen | 8.9921 | [8.9846, 8.9978] | 0.0132 |
+| P1/uniform+screen | 8.9860 | [8.9591, 8.9895] | 0.0305 |
+| P1/cmaes | 8.9736 | [8.9599, 8.9924] | 0.0325 |
+| P1/lhs+screen | 8.9661 | [8.9460, 8.9845] | 0.0386 |
+| P1/uniform | 8.9532 | [8.8745, 8.9732] | 0.0986 |
+| P1/lhs | 8.9419 | [8.8920, 8.9588] | 0.0669 |
+| P1/ppo+screen | 8.9288 | [8.8998, 8.9627] | 0.0629 |
+| P1/ppo | 8.9106 | [8.8100, 8.9302] | 0.1202 |
+| **P1/grid+screen** | **8.8886** | [8.8886, 8.9185] | 0.0298 |
+| **P1/grid** | **8.8886** | **[8.8886, 8.8886]** | **0.0000** |
+
+**34 of 66 P1 pairs separate.** The grid is separably below eight of the other
+ten arms and **not** separably below `uniform` or `ppo`.
+
+**The zero-width interval is the METHOD, not the objective.** Grid search is
+deterministic: 19 of 20 unscreened seeds returned the identical 8.888648,
+because every seed evaluates the same 128 points and differs only in which 22
+of `L = 3` the leftover budget reaches. **This is a different zero from
+§12.6's**, where eight of ten arms reported the same value because the
+*objective* could not resolve. Here the objective resolves fine and the method
+has no randomness. Consequence for reading the table: **`P1/grid`'s 20
+replicates are one lattice plus 20 short random tails, not 20 independent
+runs**, so a "separable at n = 20" verdict involving it is arithmetically true
+and inferentially weak.
+
+### 13.3 The pre-screen buys the GRID something it buys nothing else — and it does not help
+
+For every other method the pre-screen buys **throughput**: a rejected proposal
+costs no simulation, so more proposals fit. For the grid it buys **step size**,
+because clearing the coarse factorial cheaply lets the budget land inside a
+finer one. Measured, and the mechanism fired exactly as pre-registered:
+
+| | L = 2 simulated | L ≥ 3 simulated | L ≥ 3 *enumerated* |
+|---|---|---|---|
+| `P1/grid` | 2 560 (128/seed) | 439 (22/seed) | 439 |
+| `P1/grid+screen` | 720 (36/seed) | **2 280 (114/seed)** | **7 131** |
+
+**5.19× more simulated points on the fine lattice — and the median did not
+move at all.** `grid+screen` − `grid` = **+0.0000**, the smallest screen delta
+of the six methods:
+
+| method | no screen | +screen | delta |
+|---|---|---|---|
+| uniform | 8.9532 | 8.9860 | **+0.0328** |
+| lhs | 8.9419 | 8.9661 | +0.0242 |
+| cmaes | 8.9736 | 8.9974 | +0.0239 |
+| ppo | 8.9106 | 8.9288 | +0.0182 |
+| **grid** | **8.8886** | **8.8886** | **+0.0000** |
+| gp_bo | 8.9955 | 8.9921 | −0.0034 |
+
+Eleven of twenty screened seeds finished on the *same* 8.888648 design the
+unscreened arm found. What the screen bought is a **tail**, not a median: 6
+distinct outcomes against 2, best seed 8.9488 against 8.9185.
+
+**The reading: the coarse lattice's best point is a wall, and resolution is not
+what unblocks it.** 114 extra points on a *three*-level lattice are still
+nowhere near fine enough to beat the best of the coarse 128 — which is a
+stronger statement than "the grid is coarse", because it says the grid's
+failure is not fixable by spending its budget better.
+
+### 13.4 The two results nobody registered
+
+**Grid search is the fastest method in the study to a feasible design, and the
+only one that never improves it.**
+
+| | sims to first feasible (median) | reached the +8.950669 ceiling |
+|---|---|---|
+| `P1/grid+screen` | **1.0** — fastest of all twelve arms | **0 of 20** |
+| `P1/grid` | 4.5 | **0 of 20** |
+| `P1/uniform+screen` | 2.0 | 15 of 20 |
+| `P1/uniform` | 6.0 | 10 of 20 |
+| `P1/ppo` | 5.0 | 1 of 10 |
+
+Every other P1 arm reaches the ceiling on at least one seed. **The grid reaches
+it on none, across 40 runs and 6 000 simulations.** A coarse factorial plus the
+analytic pre-screen lands on a working circuit with the *first* simulation and
+then cannot move — which is the cleanest illustration in this project of the
+difference between *feasible* and *good*, and it is the sentence to put in
+front of a panel that asks why we did not just sweep.
+
+**And the benchmark is bit-for-bit deterministic.** Re-running the ten
+pre-existing arms on their own seeds inside a differently ordered sweep
+reproduced **all twelve group medians at 0.00e+00**. That was free and it is
+the strongest statement about this harness anyone has made.
+
+### 13.5 Why the grid loses, mechanically
+
+Not adaptivity — `uniform` and `lhs` are not adaptive either and both beat it.
+**Resolution.** The binding reward row on P1 is `S3_f_peak`, whose margin is
+`0.5 − |log2(f_peak/f_target)|`: a *distance to a target*, so it pays for fine
+positioning. A continuous sampler's effective resolution per axis is its sample
+count — 150 distinct values. A factorial's is `budget ** (1/d)` — **two**. Even
+a policy that provably does not learn (`PREDICTIONS.md` entries 12–13) proposes
+from a continuum and therefore out-resolves the grid.
+
+**This is Bergstra and Bengio's 2012 result, measured on transistor sizing
+rather than on hyperparameters**, with a matched budget, a matched evaluator
+and a stated point pattern.
+
+### 13.6 What this does to G3
+
+G3 requires RL to beat random search **and** grid search at TT.
+
+* **RL vs random search: LOSES.** `ppo` 8.9106 against `uniform` 8.9532.
+* **RL vs grid search: does not separably win.** `ppo`'s interval
+  [8.8100, 8.9302] contains the grid's entire degenerate interval, so 7h's rule
+  reports **not separable at this sample size** — even though `ppo` is above
+  the grid on the point estimate.
+
+**G3 fails on both clauses and can now be scored on both, which it could not be
+before this run.** Building the arm made the gate answerable; it did not make
+it passable, which is what the pre-registration said it would do.
+
+### 13.7 Two conventions, stated because they were choices
+
+**Centred, not endpoint-inclusive.** Levels sit at `(i + 0.5)/L`, the same
+convention `_lhs` uses. An endpoint grid at `L = 2` in 7 dimensions is exactly
+the **128 box corners** — every parameter at an extreme simultaneously — which
+is a straw man rather than a baseline. Centring also makes the two model-free
+methods differ in their point pattern and in nothing else.
+
+**Shuffled enumeration.** The budget truncates, and a lexicographic prefix of a
+factorial varies only the last coordinates while holding the first at one
+value, so an ordered truncation would measure the enumeration order rather than
+the method. The shuffle comes from the run's own seeded rng.
+
+**De-duplication across levels is present and CANNOT FIRE at this budget**, and
+that is declared rather than assumed (G73). Centred lattices nest only when
+`M / L` is an odd integer, so `L = 2`'s points are absent from `L = 3`, `L = 4`
+and `L = 5` and first reappear at `L = 6` — 96 824 designs away. The guard is
+kept because `BUDGET_SIMS` is a constant rather than a law.
+
+---
+
+## 14. What is not done
 
 In the order a next session should take it.
 
@@ -1068,17 +1256,25 @@ In the order a next session should take it.
    gm/I_D model should be re-fitted on the pilot's own 457 valid rows —
    `prescreen.accuracy_from_log` is the measurement and `fit_gm_model` is the
    fit. The mirror's measured 4–8 % current deficit is the first thing to try.
-2. **Run the sweep.** `python -m nebula.experiments.baselines --sweep`,
-   25 500 simulations, ~12 h, machine otherwise idle. It writes
-   `baselines_run.jsonl` as it goes, so an interrupted run is recoverable with
-   `--analyse`.
-3. **Fill in `PREDICTIONS.md` entry 6's outcome** from the sweep, not from the
-   pilot.
-4. **P2**, if the throughput item below lands and makes it affordable.
+2. ~~**Run the sweep.**~~ **DONE** 2026-08-19 (§12), and again with the grid
+   arm (§13). 42.1 min, not 12 h.
+3. ~~**Fill in `PREDICTIONS.md` entry 6's outcome.**~~ **DONE** (entry 10 is
+   its addendum; entries 11-14 followed).
+4. **P2 — and the reason it was cut has EXPIRED.** It was cut for cost alone.
+   At the sweep's own measured 0.09773 s/sim the fully crossed design is
+   **~2.2 h**, so restoring it is now a decision about what the benchmark
+   should measure rather than about the budget. **Owner's call**
+   (`CONTINUE_HERE.md` §5).
+4b. **7g's timing control is only as stable as whichever configuration the
+   shuffle puts FIRST.** §13's run came back `timing_void` because adding a
+   method moved `jobs[0]` from a P1 arm to **P3/uniform**, whose 6-simulations-
+   per-design short-circuiting makes its per-simulation rate far noisier. The
+   warm-up/control configuration should be **pinned** rather than taken from
+   the shuffled head.
 5. **P4, the tunable rung** — the seam is in `TUNABLE_SEAM` and the blocker is
    G63, not effort.
-6. **The library trim** (`PASSIVES.md` §6 item 6). It is already first in
-   HANDOFF §8's decided order, and this file gives it another number: at
-   ~0.33 s/eval the whole sweep is **1.3 h instead of 12.0 h**, which is the
-   difference between running the ladder once and running it whenever a
-   constant changes.
+6. ~~**The library trim**~~ **DONE**, and the end-to-end effect is now
+   measured rather than projected: the sweep ran at **0.09773 s/sim**
+   (2528.055 s / 25 869 sims) against the 1.698 this file was sized to, i.e.
+   **17.4x**. `SEC_PER_SIM_AT_8` carries the measured value and
+   `SEC_PER_SIM_AT_8_PILOT` keeps the old one so the revision is visible.

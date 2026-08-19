@@ -17,7 +17,45 @@
 > decisions that are OPEN and human-only, and what to do next. It supersedes
 > `nebula/NEXT_STEPS.md`. This file remains the full state of record.
 
-Last updated: **2026-08-19** (session 22h: **GRID SEARCH EXISTS. G3 names it,
+Last updated: **2026-08-19** (session 22h-run: **GRID SEARCH IS LAST, ITS
+CONFIDENCE INTERVAL IS EXACTLY ZERO WIDE, AND IT IS THE FASTEST METHOD IN THE
+STUDY TO A FEASIBLE DESIGN.** 31 879 simulations, 210 runs.
+`grid 8.8886 < ppo 8.9106 < lhs 8.9419 < uniform 8.9532 < ... < cmaes+screen
+8.9974`, **34 of 66 P1 pairs separate**. I predicted grid would BEAT PPO and
+gave the prediction a band spanning zero, which cannot test a directional claim
+-- scored as "the band held and the claim was wrong". **The mechanism is
+RESOLUTION, not adaptivity**: `uniform` and `lhs` are not adaptive either and
+both beat the grid, because the binding reward row is a DISTANCE TO A TARGET
+and a continuous sampler resolves each axis 150 ways where a factorial resolves
+it `150**(1/7)` = **2.06** ways. **Even a policy that provably does not learn
+out-resolves a grid** -- Bergstra and Bengio 2012, measured on transistor
+sizing. **The zero-width CI is the METHOD, not the objective**: 19 of 20
+unscreened seeds return the identical 8.888648 because every seed evaluates the
+same 128 points, which is a DIFFERENT zero from 22f's lattice control. **The
+pre-screen bought the grid RESOLUTION exactly as pre-registered -- 5.19x more
+simulated points on the 3-level lattice -- and moved the median by +0.0000**,
+the smallest delta of six methods; 11 of 20 screened seeds finished on the SAME
+design as the unscreened arm, so the coarse lattice's best point is a WALL and
+the grid's failure is not fixable by spending its budget better. **TWO
+UNREGISTERED FINDINGS: `grid+screen` reaches feasibility in a median of 1.0
+SIMULATION -- the fastest of all twelve arms -- and reaches the +8.950669
+ceiling on 0 of 20 seeds, in 40 runs and 6 000 simulations, alone among P1
+arms.** Feasible is not good, and that is the answer to "why not just sweep".
+**And the benchmark is BIT-FOR-BIT DETERMINISTIC: all twelve pre-existing
+medians reproduced at 0.00e+00** across two independently ordered sweeps --
+which is what caught **G96**, because the separable-pair count still moved
+**20 -> 22 of 45** on identical data (`analyse` shared ONE bootstrap RNG across
+groups, consumed in POOL-COMPLETION order). Fixed with a per-group `blake2b`
+seed; the ten arms then give 20 of 45 exactly and the lattice control still 0
+of 45, so §12.6's contrast is unaffected and now reproducible. **TIMING VOID
+and not quoted** (ratio 1.408): adding a method re-shuffled `jobs_for` so the
+warm-up/control config became **P3/uniform** -- 7g's control is only as stable
+as whichever configuration the shuffle puts first. **G3 FAILS ON BOTH CLAUSES
+AND CAN NOW BE SCORED ON BOTH**: RL loses to random search, and RL is above
+grid on the point estimate but NOT separable from it. Tests **1510 -> 1522**.
+Write-ups `BASELINES.md` §13, `PREDICTIONS.md` entry 14.)
+
+Earlier session 22h: (**GRID SEARCH EXISTS. G3 names it,
 `METHODS` did not have it, so G3 has not been failing its grid clause -- it has
 been UNSCOREABLE on it.** `method_grid` is a centred full factorial sized to the
 budget and then refined, and **the arithmetic is the finding**: a full factorial
@@ -3301,6 +3339,47 @@ Plus: git init, .gitignore, 28 tests, Wilson-bound BER reporting.
   pins it and was verified to go red when the old default is put back.
   **Related to G77** (a GENERATED artifact a caller silently prefers) -- both
   are cases where the filesystem carried state that no assertion guarded.
+
+- **G96 -- (nebula) ONE bootstrap RNG shared across groups made a HEADLINE
+  number depend on the completion order of an unrelated arm.** `analyse()`
+  built a single `default_rng(BASE_SEED)` and consumed it across
+  `groups.items()`, so a group's confidence interval depended on how many
+  groups had been bootstrapped before it -- and that order is insertion order,
+  which is **the order a `ProcessPoolExecutor` happened to finish**, not
+  anything about the data. Caught by accident: session 22h re-ran the ten
+  pre-existing benchmark arms on their own seeds inside a sweep that also
+  carried a new `grid` arm, and **all twelve group medians came back at
+  0.00e+00 -- bit-identical** -- while the count of separable P1 pairs moved
+  **20 -> 22 of 45**. A statistic that moves when an unrelated arm is added is
+  not a property of the measurement it is reported as.
+  **Two things make this worse than a cosmetic irreproducibility.** The moved
+  number is `BASELINES.md` §12's headline and `CONTINUE_HERE.md` §3.3's
+  most persuasive table (0 of 45 against 20 of 45); and the medians being
+  EXACT is precisely what made the drift look like a real change rather than
+  noise -- if the data had wobbled too, the interval wobble would have been
+  attributed to the data. **Fixed** by `baselines.group_seed(key)`, a
+  `blake2b` digest of the group name (**not** `hash()`, which is salted per
+  process), so the interval is a function of the data alone; `analyse` also
+  iterates `sorted(groups.items())` so the output order is stable too. After
+  the fix the ten arms give **20 of 45** exactly, the lattice control still
+  gives **0 of 45**, and re-analysing the two published logs moves **one** CI
+  endpoint by 1.02e-03 and nothing else.
+  **Why it survived three sessions, and why the test for it is not the obvious
+  one.** A percentile bootstrap endpoint is an ORDER STATISTIC of the sample,
+  so across 10 000 resamples it is stable: two different streams land on the
+  same endpoint most of the time, and only a group sitting near a boundary
+  flips. That is why the damage was 2 pairs of 45 rather than all of them --
+  and it is why the first version of the regression test, which compared the
+  INTERVALS, **passed with the bug deliberately restored**. A gate that can
+  only sometimes fail is not a gate. The test therefore asserts on the STREAM:
+  the draws a group sees must be a function of its name and of nothing else.
+  **The general form: a shared random stream turns "which statistic is
+  computed first" into an input.** Seed per unit of analysis, from a stable
+  function of that unit's identity.
+  `test_a_groups_bootstrap_stream_is_a_function_of_its_NAME` pins it and was
+  verified to go red with the shared stream restored. **Same family as G71** (a benchmark run in a fixed order measures
+  the order) one level up: there the order contaminated the measurement, here
+  it contaminated the *analysis of* the measurement.
 
 ## 10. Environment
 
@@ -7240,3 +7319,125 @@ is make G3 fail on one clause instead of two.
 `METHOD_OFFSET`, the throughput constants, `budget_report`, `print_budget`,
 `main`'s tag handling), `nebula/tests/test_baselines.py` (+10),
 `PREDICTIONS.md` entry 14.
+
+### 2026-08-19 - Session 22h-run (GRID SEARCH IS LAST, its CI is exactly zero wide, and it is the FASTEST method to a feasible design)
+
+**31 879 simulations, 210 runs.** `baselines --sweep --interp --tag
+interp_grid`. `PREDICTIONS.md` entry 14 scored: **6 HIT, 2 MISS, 1 in-band at
+its floor, 1 VOID.**
+
+    P1/cmaes+screen   8.9974  [8.9890, 8.9985]
+    P1/gp_bo          8.9955  [8.9886, 8.9988]
+    P1/gp_bo+screen   8.9921  [8.9846, 8.9978]
+    P1/uniform+screen 8.9860  [8.9591, 8.9895]
+    P1/cmaes          8.9736  [8.9599, 8.9924]
+    P1/lhs+screen     8.9661  [8.9460, 8.9845]
+    P1/uniform        8.9532  [8.8745, 8.9732]
+    P1/lhs            8.9419  [8.8920, 8.9588]
+    P1/ppo+screen     8.9288  [8.8998, 8.9627]
+    P1/ppo            8.9106  [8.8100, 8.9302]
+    P1/grid+screen    8.8886  [8.8886, 8.9185]
+    P1/grid           8.8886  [8.8886, 8.8886]   <- width 0.0000
+    34 of 66 P1 pairs separate
+
+**GRID SEARCH COMES LAST, BELOW PPO.** I predicted the opposite and gave the
+prediction a band that spanned zero, which **cannot test a directional claim**
+-- so it is scored as "the band held and the claim was wrong" rather than as a
+hit. Grid loses to `uniform` by **0.0646** and to `ppo` by **0.0220**.
+
+**The mechanism is RESOLUTION, not adaptivity** -- `uniform` and `lhs` are not
+adaptive either and both beat the grid. The binding reward row on P1 is
+`S3_f_peak`, a *distance to a target*, so it pays for fine positioning. A
+continuous sampler's effective resolution per axis is its sample count, 150; a
+factorial's is `budget ** (1/d)` = **2.06 at d = 7**. **Even a policy that
+provably does not learn out-resolves a grid.** That is Bergstra and Bengio 2012
+measured on transistor sizing instead of hyperparameters.
+
+**THE ZERO-WIDTH INTERVAL IS THE METHOD, NOT THE OBJECTIVE.** 19 of 20
+unscreened seeds returned the identical **8.888648**: every seed evaluates the
+same 128 points and differs only in which 22 of `L = 3` the leftover budget
+reaches. **A different zero from session 22f's lattice control**, where eight
+of ten arms tied because the OBJECTIVE could not resolve. Consequence, recorded
+so the table cannot be misread: `P1/grid`'s 20 replicates are **one lattice
+plus 20 short random tails**, so any "separable at n = 20" verdict involving it
+is arithmetically true and inferentially weak.
+
+**THE PRE-SCREEN BOUGHT THE GRID RESOLUTION, EXACTLY AS PRE-REGISTERED, AND IT
+DID NOT HELP.** For every other method the screen buys throughput; for the grid
+it buys step size. Measured: **2 280 simulated points on the 3-level lattice
+against 439, a 5.19x lift**, from 7 131 enumerated candidates against 439. And
+the median moved by **+0.0000** -- the smallest screen delta of the six methods
+(uniform +0.0328, lhs +0.0242, cmaes +0.0239, ppo +0.0182, grid +0.0000,
+gp_bo -0.0034). Eleven of twenty screened seeds finished on the *same* design
+the unscreened arm found. What the screen bought is a **tail**: 6 distinct
+outcomes against 2, best seed 8.9488 against 8.9185. **The coarse lattice's
+best point is a wall, and the grid's failure is not fixable by spending its
+budget better** -- a stronger result than the prediction would have been.
+
+**TWO FINDINGS NOBODY REGISTERED.**
+
+**(1) Grid search is the FASTEST method in the study to a feasible design and
+the only one that never improves it.** `grid+screen` reaches feasibility in a
+**median of 1.0 simulation** -- the fastest of all twelve arms, against
+uniform+screen's 2.0 -- and reaches the +8.950669 ceiling on **0 of 20** seeds,
+as does unscreened grid. Every other P1 arm reaches the ceiling on at least one
+seed. **40 runs and 6 000 simulations, and the grid never once gets there.** A
+coarse factorial plus the analytic pre-screen lands on a working circuit with
+the FIRST simulation and then cannot move. That is the cleanest illustration in
+this project of the difference between *feasible* and *good*, and it is the
+answer to "why not just sweep the parameter space".
+
+**(2) The benchmark is bit-for-bit deterministic.** All twelve pre-existing
+group medians reproduced at **0.00e+00** across two independently ordered
+sweeps. Free, and the strongest statement about this harness anyone has made.
+
+**AND THAT DETERMINISM CAUGHT G96.** No median moved -- and the count of
+separable P1 pairs among the same ten arms still came back **22 of 45** against
+the published **20 of 45**. `analyse()` shared ONE bootstrap generator across
+`groups.items()`, whose order is the order the process pool finished, so adding
+an arm re-ordered the stream and moved two intervals. **A statistic that moves
+when an unrelated arm is added is not a property of the measurement.** Fixed
+with `group_seed(key)` -- a `blake2b` digest of the group name, not `hash()`,
+which is salted per process. After the fix the ten arms give **20 of 45**
+exactly and the lattice control still gives **0 of 45**: `BASELINES.md` §12.6's
+contrast is unaffected and is now reproducible rather than accidentally
+correct. All three results artifacts were re-analysed; **one** CI endpoint in
+the published interp sweep moves, by 1.02e-03.
+
+**And the regression test for G96 had to be rewritten, which is the more
+useful half of the lesson.** A percentile bootstrap endpoint is an ORDER
+STATISTIC, so it is stable across streams -- which is why the damage was 2
+pairs of 45 rather than all of them, and why the first version of the test,
+comparing the INTERVALS, **passed with the bug deliberately restored**. A gate
+that can only sometimes fail is not a gate. The test now asserts on the STREAM:
+the draws a group sees must be a function of its name and of nothing else.
+
+**THE TIMING IS VOID AND IS NOT QUOTED.** Warm-up 0.312 s/sim -> control
+0.222 s/sim, ratio **1.408**, outside [0.8, 1.25]. Under 7g the wall-clock
+numbers for this sweep are void and the sweep is repeated, not adjusted; the
+simulation counts are unaffected, which is exactly why 7g asks for simulations
+as the headline. **The cause is instructive and is a new open item:** adding a
+method re-shuffled `jobs_for`, so `jobs[0]` -- the configuration the warm-up
+and the control both run -- became **P3/uniform** instead of a P1 arm, and a
+P3 run is 6 simulations per design with short-circuiting and far noisier per
+simulation. **7g's control is only as stable as whichever configuration the
+shuffle happens to put first, and adding an arm changes that silently.** The
+warm-up/control configuration should be pinned rather than taken from the
+shuffled head. Prediction 10 is recorded as VOID rather than scored.
+
+**A latent crash fixed on the way:** `analyse` divided by the pairwise-test
+count, which is **zero for a log with one group** -- exactly what the recovery
+path (`--analyse` on a PARTIAL log, which is the reason that path exists) hits
+on the first finished arm.
+
+**G3, STATED PLAINLY.** It requires RL to beat random search **and** grid
+search at TT. **RL vs random search: LOSES** (8.9106 against 8.9532). **RL vs
+grid search: does not separably win** -- `ppo` is above the grid on the point
+estimate, but its interval [8.8100, 8.9302] contains the grid's entire
+degenerate interval, so 7h reports not separable. **G3 fails on both clauses
+and can now be SCORED on both, which it could not be before this run.**
+
+**Tests 1520 -> 1522.** Write-ups: `BASELINES.md` §13 (seven subsections),
+`PREDICTIONS.md` entry 14's Outcome. New gotcha **G96**. Artifacts:
+`baselines_run_interp_grid.jsonl.gz` (31 879 rows),
+`baselines_results_interp_grid.json`, `baselines_summary_interp_grid.json`.

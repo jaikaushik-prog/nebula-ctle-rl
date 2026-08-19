@@ -2358,6 +2358,135 @@ one baseline a panel is guaranteed to ask about, and after this run the answer
 is a measured number with a matched budget and a stated point pattern rather
 than an appeal to the curse of dimensionality.
 
-### Outcome
+### Outcome — **grid search is LAST, its confidence interval is exactly zero wide, and it is the FASTEST method in the study to a feasible design.** Run 2026-08-19, 31 879 simulations, 210 runs.
 
-*(to be filled in after the run; nothing above this heading may be edited)*
+`baselines --sweep --interp --tag interp_grid`. Artifacts:
+`baselines_run_interp_grid.jsonl.gz`, `baselines_results_interp_grid.json`.
+
+#### The ranking, all twelve arms
+
+| group | median final | 95 % CI | width |
+|---|---|---|---|
+| P1/cmaes+screen | 8.9974 | [8.9890, 8.9985] | 0.0095 |
+| P1/gp_bo | 8.9955 | [8.9886, 8.9988] | 0.0103 |
+| P1/gp_bo+screen | 8.9921 | [8.9846, 8.9978] | 0.0132 |
+| P1/uniform+screen | 8.9860 | [8.9591, 8.9895] | 0.0305 |
+| P1/cmaes | 8.9736 | [8.9599, 8.9924] | 0.0325 |
+| P1/lhs+screen | 8.9661 | [8.9460, 8.9845] | 0.0386 |
+| P1/uniform | 8.9532 | [8.8745, 8.9732] | 0.0986 |
+| P1/lhs | 8.9419 | [8.8920, 8.9588] | 0.0669 |
+| P1/ppo+screen | 8.9288 | [8.8998, 8.9627] | 0.0629 |
+| P1/ppo | 8.9106 | [8.8100, 8.9302] | 0.1202 |
+| **P1/grid+screen** | **8.8886** | **[8.8886, 8.9185]** | 0.0298 |
+| **P1/grid** | **8.8886** | **[8.8886, 8.8886]** | **0.0000** |
+
+**34 of 66 P1 pairs separate.** `grid` is separably below eight of the other
+ten arms, and **not** separably below `uniform` or `ppo`.
+
+#### Scoring
+
+| # | prediction | point | band | measured | |
+|---|---|---|---|---|---|
+| 1 | identical unscreened seeds | 18/20 | ≥ 14/20 | **19 of 20** at 8.888648 | HIT |
+| 2 | width of `P1/grid`'s CI | 0.000 | ≤ 0.005 | **0.0000**, exactly | HIT |
+| 3 | `P1/grid` median | 8.93 | 8.60–8.99 | **8.8886** | HIT |
+| 4 | grid − uniform | −0.02 | −0.15…+0.02 | **−0.0646** | HIT |
+| 5 | grid+screen − grid | +0.04 | 0.00…+0.15 | **+0.0000** | in band **at its floor**, point too high |
+| 6 | is #5 the largest screen delta? | yes | — | **no — it is the smallest** | **MISS** |
+| 7 | grid − ppo | +0.02, grid **wins** | −0.06…+0.10 | **−0.0220**, grid **loses** | band held, **claim wrong** — see below |
+| 8 | simulated L ≥ 3 points, screened vs unscreened | ~104 vs 22 | ≥ 3× | **114 vs 22 per seed, 5.19×** | HIT |
+| 9 | the pre-existing group medians reproduce | all identical | ≤ 1e-6 | **0.00e+00 on all TWELVE** | HIT |
+| 10 | wall clock | 51 min | 40–90 min | 53.8 min, but **`timing_void = True`** | **VOID, not scoreable** |
+
+#### #7 is the one that matters, and the band was too wide to test it
+
+I predicted grid would beat PPO and gave the prediction a band spanning zero.
+**A band that spans zero cannot test a directional claim**, so recording this as
+a hit on the band would be scoring the wrong thing. The claim was wrong: **grid
+loses to PPO by 0.0220**, and PPO is the method this project has spent three
+sessions establishing does not learn.
+
+The mechanism is not adaptivity — `uniform` and `lhs` are not adaptive either
+and both beat the grid. It is **resolution**. The binding reward row on P1 is
+`S3_f_peak`, whose margin is a *distance to a target*; a continuous sampler's
+effective resolution is its sample count, while a factorial's is
+`budget ** (1/d)` = **2.06 levels per axis** at d = 7. Even a policy that never
+learns proposes from a continuum and therefore has 150 distinct values per axis
+where the grid has two. **That is Bergstra and Bengio's 2012 result, measured
+on transistor sizing rather than on hyperparameters.**
+
+#### #5 and #6 missed for one reason: the coarse lattice's best point is a WALL
+
+The predicted mechanism **fired exactly as described** — the screen bought the
+grid resolution, 2 280 simulated points on the 3-level lattice against 439
+(5.19×), from 7 131 enumerated candidates against 439:
+
+| | L = 2 simulated | L ≥ 3 simulated | L ≥ 3 *visited* |
+|---|---|---|---|
+| `P1/grid` | 2 560 (128/seed) | 439 (22/seed) | 439 |
+| `P1/grid+screen` | 720 (36/seed) | **2 280 (114/seed)** | **7 131** |
+
+— and it bought **nothing at the median**. Eleven of twenty screened seeds
+still finished on the *same* 8.888648 design the unscreened arm found, because
+114 extra points on a **three**-level lattice are still nowhere near fine
+enough to improve on the best of the coarse 128. What the screen did buy is a
+**tail**: the screened arm has 6 distinct outcomes against 2, and its best seed
+reaches 8.9488 against 8.9185.
+
+So the honest sentence is **"the screen bought the grid resolution and the
+resolution was not the binding problem"**, which is a stronger result than the
+prediction would have been: it says the grid's failure is not fixable by
+spending its budget better.
+
+#### Two findings nobody registered
+
+**Grid search is the FASTEST method in the study to a feasible design, and the
+only one that never improves it.**
+
+| | sims to first feasible (median) | reached the ceiling |
+|---|---|---|
+| `P1/grid+screen` | **1.0** — the fastest of all twelve arms | **0 of 20** |
+| `P1/grid` | 4.5 | **0 of 20** |
+| `P1/uniform+screen` | 2.0 | 15 of 20 |
+| `P1/uniform` | 6.0 | 10 of 20 |
+| `P1/ppo` | 5.0 | 1 of 10 |
+
+Every other P1 arm reaches the +8.950669 ceiling on at least one seed. **The
+grid reaches it on none, in 40 runs and 6 000 simulations.** A coarse factorial
+plus an analytic pre-screen lands on a working circuit with the **first**
+simulation and then cannot move.
+
+**And the benchmark is bit-for-bit deterministic.** All twelve pre-existing
+group medians reproduced at **0.00e+00** across two independently ordered
+sweeps — which is the strongest statement about this harness anyone has made,
+and it was free.
+
+#### One falsification condition fired, and it was G96 rather than physics
+
+Falsifier 4 was *"any of the 10 pre-existing medians moves"*. **No median
+moved.** But the count of separable P1 pairs among those same ten arms came
+back **22 of 45** against the published **20 of 45**, on data that had not
+changed by a bit — because `analyse` shared ONE bootstrap generator across
+`groups.items()`, whose order is the order the process pool finished. Adding an
+arm re-ordered the stream. Fixed with a per-group seed
+(`baselines.group_seed`), after which the ten arms give **20 of 45** exactly,
+and the lattice control still gives **0 of 45**. Recorded as **G96**. The
+published contrast in `BASELINES.md` §12.6 is unaffected, and it is now
+reproducible rather than accidentally correct.
+
+#### The G3 verdict, stated plainly
+
+G3 requires RL to beat random search **and** grid search at TT.
+
+* **RL vs random search: LOSES.** `ppo` 8.9106 against `uniform` 8.9532.
+* **RL vs grid search: does not separably win.** `ppo` 8.9106 sits above
+  `grid` 8.8886 on the point estimate, but `ppo`'s interval [8.8100, 8.9302]
+  contains the grid's entire (degenerate) interval, so by 7h's own rule this is
+  **not separable at this sample size**.
+
+**G3 fails on both clauses, and it can now be SCORED on both, which it could
+not be before this run.** Building the arm made the gate answerable; it did not
+make it passable, exactly as the pre-registration said.
+
+*Nothing above the Outcome heading was edited.*
+
