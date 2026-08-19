@@ -2735,3 +2735,99 @@ than argued.
 
 *Nothing above the Outcome heading was edited.*
 
+---
+
+## 16. Session 22j — **how many random simulations buy a library that answers any S3 spec?**
+
+**Written 2026-08-20, before the sub-sampling run.** The owner asked to build
+the spec-conditioned policy (`CLAUDEwa.md` §7's second contribution). Two things
+turned up while building its scaffolding, **both before any training**, and the
+second one is why this entry exists.
+
+### Declared inputs — already measured, NOT predictions
+
+Stated here so nothing below is scored as a forecast of something already seen.
+
+**(a) `target_peaking_db` IS INERT, deliberately and by documentation.**
+`reward_v1.margins`'s docstring says it outright: *"`target_peaking_db` is
+accepted for the spec-conditioned form but is NOT used: S3's peaking constraint
+is a BAND (3-12 dB), and CLAUDEwa.md §3 reads the band as the requirement."*
+Verified by measurement — one fixed design scores **8.999984 against targets of
+3, 5, 7.5, 10 and 12 dB**, identically — while the same design's score moves
+`8.000 → 8.996 → −0.000` across a sweep of `target_f_peak_hz`.
+
+**The consequence has not been written down anywhere and it matters to the
+claimed contribution: the spec-conditioned problem is ONE-DIMENSIONAL.** The
+observation carries a two-channel target block and one channel can never change
+any reward. A "type in a spec" demo can honour the *frequency* request; the
+peaking request is a band membership, not a target. That is a faithful reading
+of S3 rather than a defect — and it halves what "spec-conditioned" can mean
+here.
+
+**(b) A zero-simulation lookup over the designs already on disk serves every
+held-out target.** `spec_pool.load_pool` rebuilds **74 526 distinct valid P1
+designs** from 146 597 logged trials (the grid sweep and the budget ladder).
+Because a measurement does not know what it was aiming at, each can be
+re-scored against any target for free. Result: **32 of 32 held-out targets —
+16 interpolation, 16 extrapolation — are served by a feasible design at a
+median best reward of 9.0000**, against a practical ceiling of 9.0.
+
+**So the amortised comparison's real opponent is not CMA-ES-from-scratch. It is
+a table lookup that costs nothing per query and already wins.**
+
+### What this entry actually predicts
+
+The lookup's one-off cost is the pool. **How big does the pool have to be?**
+The sub-pool proposed by `uniform` alone — **24 480 designs**, the only
+unbiased sample, since CMA-ES and PPO rows were steered toward the legacy
+target — is sub-sampled at 30 / 100 / 300 / 1 000 / 3 000 / 10 000 / 24 480 and
+the 32 held-out targets are re-scored against each. Zero simulations, seconds
+of compute. Ten seeds per size, because a small sub-pool is a lottery.
+
+| # | quantity | point | acceptance band |
+|---|---|---|---|
+| 1 | pool size at which **all 16** interpolation targets are feasible | **300** | 100 – 3 000 |
+| 2 | median best reward at 100 designs | **8.80** | 8.0 – 8.97 |
+| 3 | median best reward at 1 000 designs | **8.96** | 8.90 – 8.995 |
+| 4 | median best reward at 10 000 designs | **8.995** | 8.98 – 9.000 |
+| 5 | designs needed to reach a median best reward of **8.99** | **3 000** | 1 000 – 20 000 |
+| 6 | extrapolation set behaves the same as interpolation | **yes**, within 0.005 at every size | — |
+| 7 | the curve is roughly **log-linear** in pool size | yes | — |
+
+**The prediction that decides the project's next two weeks is #5.** If a few
+thousand random simulations buy a library that answers any S3 spec at
+essentially the ceiling, then the amortised claim `CLAUDEwa.md` §7 makes is
+**already satisfied by a database**, and a policy has to beat *zero
+simulations at 8.99*. If instead it takes tens of thousands, a policy trained
+on less is still a contribution.
+
+### What would falsify the reasoning
+
+1. **Coverage does not saturate** — the curve is still climbing steeply at
+   24 480. Then the library is not cheap after all and the amortised claim is
+   live.
+2. **The extrapolation set behaves differently.** It should not: the lookup has
+   no notion of train and test, so a difference would mean the two target sets
+   are not drawn from comparable regions and `spec_dist` needs re-reading.
+3. **Feasibility saturates but reward does not.** Then "served" is the wrong
+   headline and the honest metric is distance-to-ceiling, not a pass rate.
+4. **Small sub-pools beat large ones on some seed.** Impossible if the metric
+   is a max over a growing set — it would mean `score_pool` is not a pure
+   function of (design, target) and the whole pool method is unsound.
+
+### Guard against over-claiming
+
+**A lookup that wins here has NOT solved the competition problem.** The pool is
+**P1 only** — one corner, one load. `Trial.meas` on a P3 row is a corner
+measurement, so corner rows are excluded by construction, and nothing in this
+entry says anything about S9. **The place a library provably cannot answer is
+exactly the place gate G4 lives**, and that asymmetry is the argument for
+spending the remaining time on corners rather than on amortisation.
+
+**And it is not an argument that RL is worthless** — it is an argument that
+*this* target space is too small for amortisation to be interesting. Two
+dimensions, one of them inert, densely covered by designs we already have.
+
+### Outcome
+
+*(to be filled in after the run; nothing above this heading may be edited)*
