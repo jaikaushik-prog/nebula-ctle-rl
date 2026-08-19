@@ -1,0 +1,370 @@
+"""
+nebula/design.py — **the deliverable: target specs in, a sized schematic and
+its measured specs out.**
+
+    python -m nebula.design --peaking 9 --f-peak 1.9e9
+    python -m nebula.design --peaking 9 --f-peak 1.9e9 --method cmaes --budget 150
+    python -m nebula.design --peaking 9 --f-peak 1.9e9 --robust --verify --out out/
+
+WHY THIS FILE EXISTS
+---------------------
+`CLAUDEwa.md` §2 states deliverable 1 in the competition's own words:
+
+    "A Reinforcement Learning based Python framework that **takes target specs
+     as input**, seamlessly integrates with a SPICE simulator, and **outputs
+     the final schematic and resulting specs**."
+
+Every piece of that has existed for weeks -- the box, the evaluator, the
+reward, six search methods, the corner verification -- and **there was no front
+door.** A reviewer opening this repository found fifteen experiment scripts and
+no single command. This is the command.
+
+THREE THINGS IT REFUSES TO PRETEND
+-----------------------------------
+**1. The peaking request is a BAND, not a target, and the reward cannot see
+it.** `reward_v1.margins` accepts `target_peaking_db` and deliberately ignores
+it, because S3 reads *"3-12 dB, tunable"* as a band and `CLAUDEwa.md` §3 takes
+the band as the requirement. Measured: one design scores identically against
+targets of 3, 5, 7.5, 10 and 12 dB (`SPEC_CONDITIONED.md` §0). So `--peaking`
+is honoured as a **tie-break applied OUTSIDE the reward**, among designs that
+already meet every spec, and the report says so on every run. Silently
+optimising a number the objective cannot see would be the worst kind of demo.
+
+**2. The default method is not RL.** `--method library` costs **zero
+simulations** and wins; `cmaes` is the measured best searcher
+(`BASELINES.md` §14). PPO is available and is measured as *statistically
+indistinguishable from uniform random search at every budget from 150 to 2400*.
+The tool prints the ranking it is choosing from, because a framework that hid
+that would be advertising rather than reporting.
+
+**3. A nominal design is not a corner-robust design.** Without `--robust` the
+search scores at TT only, and the report says the result is unverified at
+corners. `G4_RESULTS.md` measured what that is worth: the best design at
+nominal **failed 75 of 135** corner points.
+
+THE NETLIST IS THE ONE THAT RAN
+--------------------------------
+`--out` writes the assembled SPICE deck captured from `run_point(keep_netlist=
+True)` -- the exact string handed to ngspice, not a re-rendering. G32 is that
+defect: a netlist a human reads that differs from the runner which produced the
+numbers. It costs one extra simulation and is worth it.
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+import math
+import sys
+import time
+from pathlib import Path
+from typing import Optional, Sequence
+
+import numpy as np
+
+from nebula.common.types import SPEC_F_PEAK_HZ_RANGE, SPEC_PEAKING_DB_RANGE
+from nebula.device.sky130_runner import run_point
+from nebula.rl import reward_v1 as R
+from nebula.rl.contract import ACTION_NAMES, N_ACTIONS, sizing_from_u
+from nebula.rl.evaluator import SpiceBudget, Verdict, build_point, evaluate, scoring_meas
+from nebula.rl.spec_dist import SpecTarget
+
+#: What a design is reported against, in the units a datasheet would use.
+SPEC_ROWS: tuple[tuple[str, str, str, str], ...] = (
+    ("S3  peaking", "peaking_db", "dB", "3 - 12"),
+    ("S3  peak frequency", "_f_peak_ghz", "GHz", "1.25 - 2.50"),
+    ("S3  boost at Nyquist", "nyq_boost_db", "dB", "> 0"),
+    ("S5  input noise", "_noise_mv", "mV_rms", "< 1.5"),
+    ("S6  power", "_power_mw", "mW", "< 15"),
+    ("    DC gain", "g_dc_db", "dB", "-"),
+    ("    pair saturation", "pair_margin_v", "V", "> 0"),
+    ("    tail saturation", "tail_margin_v", "V", "> 0"),
+)
+
+
+def _derived(meas: dict) -> dict:
+    m = dict(meas)
+    m["_f_peak_ghz"] = 2.5 * 2.0 ** float(meas["f_peak_oct"])
+    m["_noise_mv"] = float(meas["inoise_vrms"]) * 1e3
+    m["_power_mw"] = float(meas["power_w"]) * 1e3
+    return m
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# The methods a spec can be answered with
+# ─────────────────────────────────────────────────────────────────────────────
+
+
+def solve_library(target: SpecTarget, peaking_tiebreak: bool = True) -> dict:
+    """**Zero simulations.** Look the answer up among designs already measured.
+
+    A measurement does not know what it was aiming at, so every design this
+    project has ever simulated can be re-scored against a new target for free
+    (`SPEC_CONDITIONED.md`). Measured: ~600 random designs answer any S3 spec at
+    8.99 of a 9.0 ceiling, and the crossover against CMA-ES-at-150 is **two
+    spec requests**.
+
+    `peaking_tiebreak` is the honest half of `--peaking`: among designs whose
+    reward is within `1e-3` of the best, prefer the one closest to the
+    requested peaking. That is a preference expressed OUTSIDE the objective and
+    it is labelled as one everywhere it appears.
+    """
+    from nebula.experiments import spec_pool as SP
+
+    pool = SP.load_pool()
+    scores = SP.score_pool(pool, target)
+    best = float(np.max(scores))
+    near = np.flatnonzero(scores >= best - 1e-3)
+    if peaking_tiebreak and near.size > 1:
+        pk = np.array([pool.meas[i]["peaking_db"] for i in near])
+        idx = int(near[int(np.argmin(np.abs(pk - target.peaking_db)))])
+    else:
+        idx = int(np.argmax(scores))
+    return {"u": [float(x) for x in pool.u[idx]], "reward": float(scores[idx]),
+            "sims": 0, "n_candidates": len(pool),
+            "n_tied_at_best": int(near.size),
+            "design_id": pool.design_id[idx]}
+
+
+def solve_search(target: SpecTarget, method: str, budget: int, seed: int,
+                 robust: bool, peaking_tiebreak: bool = True) -> dict:
+    """Run one of the benchmarked search methods against this target."""
+    from nebula.experiments import baselines as B
+
+    problem = B.PROBLEMS["P3" if robust else "P1"]
+    obj = B.Objective(problem, budget, ac_peak_interp=True,
+                      target_f_peak_hz=target.f_peak_hz,
+                      target_peaking_db=target.peaking_db)
+    rng = np.random.default_rng(seed)
+    try:
+        B.METHODS[method](obj, rng)
+    except B.BudgetExhausted:
+        pass
+    scored = [t for t in obj.trials if t.n_sims > 0]
+    if not scored:
+        raise RuntimeError(f"{method} produced no evaluated design in {budget} "
+                           f"simulations")
+    best = max(t.reward for t in scored)
+    near = [t for t in scored if t.reward >= best - 1e-3]
+    if peaking_tiebreak and len(near) > 1:
+        near.sort(key=lambda t: abs((t.meas or {}).get("peaking_db", 1e9)
+                                    - target.peaking_db))
+    win = near[0]
+    return {"u": list(win.u), "reward": float(win.reward), "sims": obj.n_sims,
+            "n_candidates": len(scored), "n_tied_at_best": len(near),
+            "design_id": win.design_id}
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+
+
+def measure(u: Sequence[float], cl_f: float, budget: SpiceBudget,
+            target: SpecTarget, corner: str = "tt", temp_c: float = 27.0,
+            vdd_scale: float = 1.0) -> dict:
+    sizing = sizing_from_u(np.asarray(u, dtype=float), cl_f=cl_f)
+    ev = evaluate(sizing, budget, corner=corner, temp_c=temp_c,
+                  vdd_scale=vdd_scale, ac_peak_interp=True)
+    if ev.meas is None:
+        return {"ok": False, "verdict": ev.verdict.value, "reason": ev.reason}
+    rb = R.reward(scoring_meas(ev, True), target.f_peak_hz,
+                  target_peaking_db=target.peaking_db,
+                  headroom=(ev.headroom if ev.verdict is Verdict.HEADROOM_ONLY
+                            else None))
+    return {"ok": True, "verdict": ev.verdict.value,
+            "meas": _derived(scoring_meas(ev, True)), "params": dict(sizing.params),
+            "reward": float(rb.reward), "feasible": bool(rb.feasible),
+            "worst_spec": rb.worst_spec, "design_id": ev.design_id}
+
+
+def netlist_for(u: Sequence[float], cl_f: float) -> Optional[str]:
+    """The deck that RAN, captured rather than re-rendered (rule 9, G32)."""
+    sizing = sizing_from_u(np.asarray(u, dtype=float), cl_f=cl_f)
+    point, _ = build_point(sizing, corner="tt", vdd_scale=1.0)
+    pt = run_point(point, corner="tt", temp_c=27.0, swing=False,
+                   ac_peak_interp=True, keep_netlist=True)
+    return pt.netlist
+
+
+def design(peaking_db: float, f_peak_hz: float, method: str = "library",
+           budget: int = 150, seed: int = 0, robust: bool = False,
+           verify: bool = False, peaking_tiebreak: bool = True) -> dict:
+    """Target specs in; a sized schematic and its measured specs out."""
+    target = SpecTarget(peaking_db=float(peaking_db), f_peak_hz=float(f_peak_hz))
+    t0 = time.perf_counter()
+    if method == "library":
+        sol = solve_library(target, peaking_tiebreak)
+    else:
+        sol = solve_search(target, method, budget, seed, robust,
+                           peaking_tiebreak)
+
+    from nebula.experiments.cl_range import committed_cl_range
+
+    cl_mid = committed_cl_range().cl_mid_f
+    budget_obj = SpiceBudget()
+    nominal = measure(sol["u"], cl_mid, budget_obj, target)
+
+    out = {
+        "request": {"peaking_db": target.peaking_db,
+                    "f_peak_hz": target.f_peak_hz,
+                    "f_peak_ghz": target.f_peak_hz / 1e9},
+        "method": method, "robust_search": bool(robust),
+        "search": sol, "nominal": nominal,
+        "simulations": {"search": sol["sims"],
+                        "measure": budget_obj.calls},
+        "peaking_is_a_band_not_a_target": (
+            "reward_v1 deliberately ignores target_peaking_db: S3 reads "
+            "'3-12 dB, tunable' as a BAND and CLAUDEwa sec 3 takes the band as "
+            "the requirement. --peaking is honoured as a TIE-BREAK outside the "
+            "objective, among designs that already meet every spec."),
+        "wall_s": time.perf_counter() - t0,
+    }
+
+    if verify:
+        from nebula.experiments.exp_g4_verify import Candidate, verify as g4_verify
+
+        cand = Candidate(design_id=str(nominal.get("design_id", "?")),
+                         u=tuple(sol["u"]), role="requested",
+                         source=f"{method}", claimed_reward=sol["reward"],
+                         claimed_worst_point=None)
+        vb = SpiceBudget()
+        v = g4_verify(cand, vb)
+        v.pop("points", None)
+        out["verification"] = v
+        out["simulations"]["verify"] = vb.calls
+    out["simulations"]["total"] = sum(
+        v for k, v in out["simulations"].items() if k != "total")
+    return out
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+
+
+def report(d: dict) -> str:
+    L: list[str] = []
+    req = d["request"]
+    L.append("=" * 74)
+    L.append("NEBULA -- CTLE sizing.  Target specs in, schematic and specs out.")
+    L.append("=" * 74)
+    L.append(f"  REQUESTED   peaking {req['peaking_db']:.2f} dB   "
+             f"peak at {req['f_peak_ghz']:.4f} GHz")
+    L.append(f"  METHOD      {d['method']}"
+             + ("   (corner-robust search)" if d["robust_search"] else
+                "   (nominal search -- NOT verified at corners)"))
+    n = d["nominal"]
+    if not n["ok"]:
+        L.append(f"\n  FAILED: {n['verdict']} -- {n.get('reason')}")
+        return "\n".join(L)
+
+    L.append("")
+    L.append("  SCHEMATIC  (drawn SKY130 devices)")
+    p = n["params"]
+    L.append(f"    w_in    {p['w_in'] * 1e6:10.3f} um      "
+             f"l_in    {p['l_in'] * 1e9:10.2f} nm      nf_in {int(p['nf_in']):3d}")
+    L.append(f"    i_bias  {p['i_bias'] * 1e3:10.4f} mA      "
+             f"vcm_in  {p['vcm_in']:10.4f} V")
+    L.append(f"    rs      {p['rs']:10.2f} ohm     "
+             f"cs      {p['cs'] * 1e12:10.4f} pF")
+    L.append(f"    rl      {p['rl']:10.2f} ohm     "
+             f"cl      {p['cl'] * 1e15:10.2f} fF  (context)")
+    L.append("")
+    L.append("  RESULTING SPECS  at TT / 1.00 / 27 C")
+    L.append(f"    {'spec':<24}{'measured':>14}  {'requirement':<14}")
+    L.append("    " + "-" * 56)
+    m = n["meas"]
+    for label, key, unit, req_s in SPEC_ROWS:
+        L.append(f"    {label:<24}{m[key]:>10.4f} {unit:<4} {req_s:<14}")
+    L.append("")
+    L.append(f"    reward {n['reward']:.4f}   feasible={n['feasible']}"
+             + (f"   binding: {n['worst_spec']}" if n["worst_spec"] else ""))
+
+    v = d.get("verification")
+    if v:
+        L.append("")
+        L.append(f"  CORNER VERIFICATION  {v['n_corners']} corners x "
+                 f"{v['n_loads']} loads = {v['n_points']} points")
+        L.append(f"    {'ALL POINTS PASS' if v['all_points_pass'] else 'FAILS'}"
+                 f"   {v['n_failed']} failed"
+                 f"   ({v['n_failed_outside_the_screen']} of them at corners "
+                 f"the 3-corner screen never evaluates)")
+        L.append(f"    worst {v['worst_reward']:.4f} at {v['worst_point']}"
+                 f"  ({v['worst_spec']})"
+                 f"   screened corner: {v['worst_is_a_screen_corner']}")
+    elif not d["robust_search"]:
+        L.append("")
+        L.append("  NOT VERIFIED AT CORNERS. Re-run with --robust --verify.")
+        L.append("  G4_RESULTS.md measured what that is worth: the best design")
+        L.append("  at nominal failed 75 of 135 corner points.")
+
+    s = d["simulations"]
+    L.append("")
+    L.append(f"  COST  {s['total']} SPICE simulations "
+             f"(search {s['search']}, measure {s['measure']}"
+             + (f", verify {s['verify']}" if "verify" in s else "")
+             + f")   {d['wall_s']:.1f} s")
+    L.append("")
+    L.append("  NOTE ON --peaking: " + d["peaking_is_a_band_not_a_target"])
+    L.append("=" * 74)
+    return "\n".join(L)
+
+
+def main(argv: Optional[Sequence[str]] = None) -> int:
+    lo_db, hi_db = SPEC_PEAKING_DB_RANGE
+    lo_hz, hi_hz = SPEC_F_PEAK_HZ_RANGE
+    ap = argparse.ArgumentParser(
+        prog="python -m nebula.design", description=__doc__,
+        formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap.add_argument("--peaking", type=float, required=True,
+                    help=f"HF peaking, dB. S3's band is {lo_db}-{hi_db}. "
+                         f"Honoured as a TIE-BREAK; see the module docstring.")
+    ap.add_argument("--f-peak", type=float, required=True,
+                    help=f"peak frequency in Hz (or GHz if < 100). S3's window "
+                         f"is {lo_hz/1e9:.2f}-{hi_hz/1e9:.2f} GHz. This IS the "
+                         f"reward's target.")
+    ap.add_argument("--method", default="library",
+                    choices=("library", "uniform", "lhs", "grid", "cmaes",
+                             "gp_bo", "ppo"),
+                    help="library = 0 simulations, the measured-best answer; "
+                         "cmaes = the best SEARCHER; ppo = the RL policy, "
+                         "measured indistinguishable from uniform random")
+    ap.add_argument("--budget", type=int, default=150,
+                    help="simulation budget for search methods")
+    ap.add_argument("--seed", type=int, default=0)
+    ap.add_argument("--robust", action="store_true",
+                    help="search on the worst of 3 corners x 2 loads instead "
+                         "of at TT only")
+    ap.add_argument("--verify", action="store_true",
+                    help="verify at 45 corners x 3 loads (135 simulations)")
+    ap.add_argument("--no-peaking-tiebreak", action="store_true")
+    ap.add_argument("--out", type=Path, default=None,
+                    help="write design.json and design.cir here")
+    ap.add_argument("--json", action="store_true", help="print JSON only")
+    args = ap.parse_args(argv)
+
+    f_peak = args.f_peak * 1e9 if args.f_peak < 100 else args.f_peak
+    try:
+        d = design(args.peaking, f_peak, method=args.method,
+                   budget=args.budget, seed=args.seed, robust=args.robust,
+                   verify=args.verify,
+                   peaking_tiebreak=not args.no_peaking_tiebreak)
+    except ValueError as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 2
+
+    print(json.dumps(d, indent=1, default=str) if args.json else report(d))
+
+    if args.out:
+        args.out.mkdir(parents=True, exist_ok=True)
+        (args.out / "design.json").write_text(
+            json.dumps(d, indent=1, default=str), encoding="utf-8")
+        from nebula.experiments.cl_range import committed_cl_range
+
+        deck = netlist_for(d["search"]["u"], committed_cl_range().cl_mid_f)
+        if deck:
+            (args.out / "design.cir").write_text(deck, encoding="utf-8")
+        print(f"\nwrote {args.out / 'design.json'}"
+              + (f" and {args.out / 'design.cir'}" if deck else ""))
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

@@ -298,7 +298,19 @@ it would do.
    fixed forward, but the blob is in history) plus 32 MB of ladder log.
    Removing the blob needs a history rewrite. **Owner's call**, and it is not
    urgent — the repo is private and nothing is broken.
-9. **NEW (22h): pin the warm-up/control configuration?** 7g takes it from
+9. **NEW (22k/22l): should the corner screen gain a MIXED corner?** Now the
+   best-supported decision on this list, evidenced three times.
+   `G4_RESULTS.md`: of the 2 designs the 3-corner screen certified, one fails
+   8 of 135 full-grid points and **all 8 are at unscreened corners**, every one
+   at `sf` or `fs` -- of which the screen has **no member**. Then
+   `nebula/design.py` reproduced it on fresh designs: a nominal library answer
+   fails **23 of 135** (21 unscreened), and CMA-ES **searching on the screen
+   itself** at a 400-simulation budget fails **45 of 135** (42 unscreened).
+   **The search inherits the screen's blind spot.** Adding one mixed corner
+   takes the search from 3 corners to 4 (+33 %) and changes the benchmark, so
+   it is an owner's call -- but nothing else on this list has three independent
+   measurements behind it.
+10. **NEW (22h): pin the warm-up/control configuration?** 7g takes it from
    `jobs[0]`, i.e. the head of the shuffle, so **adding a method silently
    changed which configuration the timing control measures** — it became
    `P3/uniform`, whose 6-simulations-per-design short-circuiting is far noisier

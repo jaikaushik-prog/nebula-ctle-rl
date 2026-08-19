@@ -576,6 +576,18 @@ class Sky130Point:
     #: default because a training run holding 500 copies of ngspice's output is
     #: a memory leak with no reader.
     raw_text: Optional[str] = field(default=None, repr=False)
+    #: The assembled SPICE deck, kept ONLY when `run_point(keep_netlist=True)`.
+    #:
+    #: **It is the deck that RAN, not a second copy of it**, and that is the
+    #: whole reason it lives here instead of in whatever wants to print one.
+    #: G32 is exactly this defect one level down: `g1_handdesign.cir` and the
+    #: runner described "the same" reference point with `.model` cards that
+    #: differed by one parameter, so anyone sanity-checking by opening the
+    #: netlist was quietly reading a circuit that had never been simulated.
+    #: Rule 9: a human reading this netlist must see the values that produced
+    #: the published numbers, which is only guaranteed if it is the same
+    #: string.
+    netlist: Optional[str] = field(default=None, repr=False)
 
     # ---- derived: S3 ----
     @property
@@ -1439,6 +1451,7 @@ def run_point(
     temp_c: float = 27.0,
     noise_detail: bool = False,
     keep_text: bool = False,
+    keep_netlist: bool = False,
     ac_sweep: bool = False,
     ac_peak_interp: bool = False,
     hd3: bool = False,
@@ -1611,7 +1624,8 @@ def run_point(
                                        "explain it")
 
     pt = Sky130Point(ok=True, corner=corner, point=point, runtime_s=runtime,
-                     raw_text=(out if keep_text else None))
+                     raw_text=(out if keep_text else None),
+                     netlist=(text if keep_netlist else None))
     pt.gm = find_device_scalar(out, "gm")
     pt.gmbs = find_device_scalar(out, "gmbs")
     pt.gds = find_device_scalar(out, "gds")

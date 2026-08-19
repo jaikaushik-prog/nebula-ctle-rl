@@ -17,7 +17,28 @@
 > decisions that are OPEN and human-only, and what to do next. It supersedes
 > `nebula/NEXT_STEPS.md`. This file remains the full state of record.
 
-Last updated: **2026-08-20** (session 22k-run: **G4 IS MET, 23 DAYS EARLY --
+Last updated: **2026-08-20** (session 22l: **THE FRONT DOOR EXISTS.**
+`CLAUDEwa.md` §2's deliverable 1 -- *"takes target specs as input ... outputs
+the final schematic and resulting specs"* -- had every piece built for weeks
+and **no single command**. `python -m nebula.design --peaking 9 --f-peak 1.9e9`
+now answers in **ONE simulation, 4.8 s**: peaking 8.776 dB @ 1.8996 GHz, noise
+0.163 mV_rms, power 5.38 mW, all specs met. **Three things it refuses to
+pretend, each with a gate:** `--peaking` is a **BAND** and is honoured as a
+tie-break OUTSIDE the objective (printed on every run, because `reward_v1`
+deliberately ignores it); **the default method is NOT RL** and `--help` states
+that PPO measured indistinguishable from uniform random; and **a nominal design
+is never called corner-verified** -- the report quotes the measured cost, 75 of
+135 corner points. **The netlist is the one that RAN**: `--out` captures
+`run_point(keep_netlist=True)`, the exact string handed to ngspice, because
+G32 is that defect one level down. **AND THE TOOL REPRODUCED G99 TWICE ON FRESH
+DESIGNS** -- a library answer exact at nominal fails **23 of 135** (21
+unscreened), and `--method cmaes --robust --budget 400`, searching on the
+screen itself, fails **45 of 135** (42 unscreened). **Searching on the 3-corner
+screen does not produce a full-grid-robust design**, now evidenced three times,
+which makes open decision 8 the best-supported on the list. Tests
+**1574 -> 1582**. Still missing: `nebula/llm/` (deliverable 2) and the report.)
+
+Earlier session 22k-run: ( **G4 IS MET, 23 DAYS EARLY --
 AND THE 3-CORNER SCREEN MISSED EVERY FAILURE.** 675 simulations, 3.7 min.
 Design **`57cba07581cd2603` passes 135 of 135 points at 45 corners x 3 loads**,
 so *"corner-robust design generated and verified"* is done. The other screen
@@ -8063,3 +8084,67 @@ not in this verification: `V1_SPECS` excludes it.
 **Tests 1568 -> 1574.** New: `experiments/exp_g4_verify.py`,
 `nebula/tests/test_g4_verify.py` (6), `nebula/G4_RESULTS.md`,
 `experiments/g4_verify_results.json`, gotcha **G99**.
+
+### 2026-08-20 - Session 22l (THE FRONT DOOR: target specs in, a sized schematic and its specs out)
+
+**`CLAUDEwa.md` §2's deliverable 1, in the competition's own words:** *"A
+Reinforcement Learning based Python framework that **takes target specs as
+input**, seamlessly integrates with a SPICE simulator, and **outputs the final
+schematic and resulting specs**."* Every piece of that had existed for weeks --
+the box, the evaluator, the reward, six search methods, the corner
+verification -- and **there was no front door.** A reviewer opening this repo
+found fifteen experiment scripts and no single command. `nebula/design.py` is
+the command.
+
+    python -m nebula.design --peaking 9 --f-peak 1.9e9
+    python -m nebula.design --peaking 9 --f-peak 1.9 --method cmaes --robust --verify --out out/
+
+**MEASURED, first run: 9 dB @ 1.9 GHz answered in ONE simulation, 4.8 s** --
+peaking 8.776 dB @ 1.8996 GHz, noise 0.163 mV_rms, power 5.38 mW, all specs
+met, reward 8.9995. The `library` method costs **zero search simulations**
+because a measurement does not know what it was aiming at (`SPEC_CONDITIONED.md`).
+
+**THREE THINGS IT REFUSES TO PRETEND, each with a test that goes red if it
+starts pretending:**
+
+1. **`--peaking` is a BAND, not a target.** `reward_v1` deliberately ignores
+   `target_peaking_db`, so the request is honoured as a **tie-break applied
+   OUTSIDE the objective**, among designs that already meet every spec -- and
+   the note saying so prints on **every** run, in the report as well as the
+   JSON. A test pins that the tie-break only breaks TIES and never overrides a
+   strictly better design.
+2. **The default method is NOT RL.** `library` costs 0 simulations and wins;
+   `cmaes` is the measured-best searcher; `ppo` is available and `--help` says
+   what it was measured to be -- *indistinguishable from uniform random search
+   at every budget from 150 to 2400*. A framework that hid that would be
+   advertising.
+3. **A nominal design is never called corner-verified.** Without `--robust` the
+   report says so and quotes the measured cost: the best design at nominal
+   failed **75 of 135** corner points. The gate asserts that every occurrence
+   of "verified" in a nominal report is negated.
+
+**THE NETLIST IS THE ONE THAT RAN.** `--out` writes `design.cir` captured from
+`run_point(keep_netlist=True)` -- a new opt-in field carrying **the exact
+string handed to ngspice**, not a re-rendering. G32 is precisely that defect
+one level down, where `g1_handdesign.cir` and the runner described "the same"
+point with `.model` cards differing by one parameter. Costs one extra
+simulation. `Sky130Point.netlist`, default `None`, so no training run holds 500
+copies.
+
+**AND THE TOOL REPRODUCED G99 TWICE, ON FRESH DESIGNS.** A library answer for
+6 dB @ 2.2 GHz is exact at nominal (6.032 dB @ 2.2002 GHz) and **fails 23 of
+135 corner points, 21 of them at corners the 3-corner screen never
+evaluates**. Worse: `--method cmaes --robust --budget 400`, i.e. searching on
+the screen itself, produced a design feasible at all 6 screen points that
+**fails 45 of 135, 42 of them unscreened**. **Searching on the 3-corner screen
+does not produce a full-grid-robust design** -- the search inherits the
+screen's blind spot -- which is now evidenced three times and makes open
+decision 8 (should the screen gain a mixed corner?) the best-supported one on
+the list.
+
+**Tests 1574 -> 1582.** New: `nebula/design.py`,
+`nebula/tests/test_design_cli.py` (8), `Sky130Point.netlist` +
+`run_point(keep_netlist=)`.
+
+**Still missing from the deliverable list: `nebula/llm/` (deliverable 2, the
+bonus) and the report.**
