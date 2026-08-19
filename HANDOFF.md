@@ -17,7 +17,33 @@
 > decisions that are OPEN and human-only, and what to do next. It supersedes
 > `nebula/NEXT_STEPS.md`. This file remains the full state of record.
 
-Last updated: **2026-08-20** (session 22j: **THE SPEC-CONDITIONED
+Last updated: **2026-08-20** (session 22k: **CORNERS IN THE LOOP -- reward on
+the worst corner, not on nominal.** `CLAUDEwa.md` §7's FIRST claimed
+contribution is four words and until now no RL run could do it: `CtleSizingEnv`
+takes ONE corner and ONE load, which is why PPO refuses a multi-point problem
+and P3 has no PPO arm. **`rl/corner_env.py` WRAPS rather than replaces** --
+`env.py` is do-not-modify and a second episode implementation would be rule 9
+-- so the base env still owns the whole episode and `CornerCtleEnv` adds
+exactly one thing: the same sizing is scored at every (corner, load) point and
+the reward is the **minimum**. **Termination follows the WORST point**, or the
+episode would end with TT happy and SS failing, which is §12's named trap
+verbatim. **The short-circuit is exact** (the invalid floor is the global
+minimum, the same argument `Objective` makes) and **every extra simulation is
+charged to the same budget** (7f rule 1). **The observation stays NOMINAL** --
+§7 says *reward* on the worst corner, not *observe* it -- and that is recorded
+as a live question rather than decided, with `which_corner_binds()` as the
+first evidence. **The corner set INCLUDES TT** (S9 lists it, and it keeps the
+observation comparable with every published run). Footgun closed: `EnvConfig`
+defaults to tt/27 C while `PROBLEMS["P3"].points[0]` is **ss/0.95/125 C**, so
+the constructor checks the two agree and `from_points()` derives the config.
+**Real ngspice smoke: 21 simulations in 3.9 s, and the binding point already
+MOVES** -- 3 of 5 designs bound at TT, 2 at ff/1.05/0C. Tests
+**1558 -> 1568**, five gates broken and watched go red. **Next: G4's literal
+criterion** -- the sweep's P3 arm already found corner-robust designs (uniform,
+2 of 20 seeds, 8.0342 and 8.0021) and nothing has re-verified them at a wider
+corner set or drafted the table.)
+
+Earlier session 22j: ( **THE SPEC-CONDITIONED
 CONTRIBUTION, MEASURED BEFORE BUILDING IT -- AND A 600-DESIGN LOOKUP ALREADY
 WINS.** No policy was trained; two measurements made while building the
 scaffolding changed what training would be worth. **(1) The problem is
@@ -7845,3 +7871,74 @@ from S3 rather than chosen, plus both splits), `experiments/spec_pool.py`,
 `nebula/tests/test_spec_conditioned.py` (16, four of them rule-10 gates),
 `nebula/SPEC_CONDITIONED.md`, `PREDICTIONS.md` entry 16 (**4 HIT, 3 MISS**, and
 every miss in the same direction -- the library is cheaper than predicted).
+
+### 2026-08-20 - Session 22k (CORNERS IN THE LOOP: reward on the worst corner, not on nominal)
+
+**`CLAUDEwa.md` §7's FIRST claimed contribution is four words -- "Reward on
+worst-case corner, not nominal" -- and until now no RL run could do it.**
+`CtleSizingEnv` takes ONE corner and ONE load, which is why
+`baselines.method_ppo` refuses a multi-point problem outright and why P3 has no
+PPO arm. `rl/corner_env.py` is the missing piece.
+
+**IT WRAPS RATHER THAN REPLACES, AND THAT IS THE DESIGN.** `rl/env.py` is on
+the do-not-modify list and re-implementing an episode would put TWO definitions
+of one thing in the repo (rule 9, the defect that produced G32). So the base
+`CtleSizingEnv` still owns the entire episode -- action scaling and clipping,
+the box, termination on an invalid evaluation, the observation, the step
+records, the invalid-rate accounting -- and `CornerCtleEnv` adds exactly ONE
+thing: after the base has moved the design, the SAME sizing is evaluated at the
+other (corner, load) points and the reward becomes the **minimum**. The only
+private thing it reads is the base's current normalised sizing.
+
+**TERMINATION FOLLOWS THE WORST POINT, NOT THE NOMINAL ONE.** The base
+terminates the moment ITS point is feasible; letting that through would be
+CLAUDEwa §12's named trap verbatim -- *"optimising at nominal and checking
+corners afterwards"* -- and would end an episode with TT happy and SS failing.
+`test_termination_follows_the_WORST_point_not_the_nominal_one` is the gate.
+
+**THE SHORT-CIRCUIT IS EXACT, and it is the same argument `Objective.evaluate`
+makes:** `invalid_reward` is the global minimum of the reward's four bands, so
+once a point returns the floor nothing can lower the minimum and the remaining
+simulations buy nothing. A corner-aware method that paid for simulations a
+nominal one skips would be measuring the short-circuit rather than the corners.
+
+**EVERY EXTRA SIMULATION IS CHARGED TO THE SAME BUDGET** (7f rule 1), so a
+corner-aware run pays honestly for what it costs.
+
+**THE OBSERVATION STAYS NOMINAL, and that is the contract rather than an
+oversight -- but it is a live question and is recorded as one.** §7 says
+*reward* on the worst corner; it does not say the policy SEES it, and
+`contract.build_observation` has one measurement block, so showing the worst
+point instead would change the frozen observation contract rather than set a
+flag. A policy rewarded on a corner it cannot observe has to infer which one
+binds from the nominal response alone, and whether that is learnable is
+unmeasured. `which_corner_binds()` is the first evidence either way.
+
+**THE CORNER SET INCLUDES TT, and that is deliberate:** S9 lists TT among the
+corners, and keeping the observation at TT keeps every published number
+comparable. So the sets are `PROBLEMS["P1"].points + PROBLEMS["P2"].points`
+(4 points, cl_mid) and `+ PROBLEMS["P3"].points` (7 points). The rungs keep
+ONE definition -- the points are passed IN rather than imported, so
+`rl/corner_env.py` has no dependency on `experiments/`.
+
+**A FOOTGUN CLOSED:** `EnvConfig` defaults to tt/27 C/1.00 while
+`PROBLEMS["P3"].points[0]` is **ss/0.95/125 C**, so a caller building both by
+hand can silently observe the wrong corner. The constructor CHECKS that
+`points[0]` matches `cfg`, and `from_points()` derives the config so nobody has
+to remember.
+
+**REAL NGSPICE SMOKE TEST, 21 simulations in 3.9 s** on the 4-point set: the
+loop runs, the short-circuit is wired, and **the binding point already MOVES**
+-- 3 of 5 designs bound at TT and 2 at ff/1.05/0C. If that holds at scale it is
+the report's answer to "why not just screen at one corner".
+
+**Tests 1558 -> 1568.** Five gates deliberately broken and watched go red:
+termination on nominal feasibility; the reward taken from nominal instead of
+the worst; corner simulations charged to a private budget; the exact
+short-circuit removed; and `points[0]` no longer required to match `cfg`.
+
+**NOT YET DONE, and it is the next step:** G4's literal criterion is *"corner-
+robust design generated and verified; results table drafted"*. The sweep's P3
+arm already FOUND corner-robust designs -- `uniform` on 2 of 20 seeds, both on
+the boundary at 8.0342 and 8.0021 -- and nothing has re-verified them at a
+wider corner set or drafted the table.
