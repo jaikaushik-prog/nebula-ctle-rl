@@ -3234,6 +3234,26 @@ Plus: git init, .gitignore, 28 tests, Wilson-bound BER reporting.
   WALL CLOCK for model-based methods, and only the first half of that had ever
   been measured.
 
+- **G95 -- (nebula) two writers shared one DEFAULT artifact filename, and the
+  sweep silently destroyed the pre-screen's calibration.** `sweep()` defaulted
+  its output to `experiments/baselines_results.json`. So did the `--prescreen`
+  stage, whose 4 KB of numbers -- **1890 samples, 61.69 % free rejection,
+  2.600x yield lift, 0.394 % false rejection, the 13.44 % S3 base rate** --
+  are quoted across `BASELINES.md` §5 and half this project. The first real
+  sweep replaced them with 63 MB of run summaries. **Nothing failed:** both
+  writers succeeded, both printed `wrote ...`, and the loss showed up only as a
+  ` D` in `git status` an hour later. Recovered with
+  `git checkout HEAD~1 -- <path>`; had the sweep run twice before anyone
+  looked, it would have been gone from the working tree and only in history.
+  **The general form: rule 9 applies to FILESYSTEM PATHS, not only to
+  functions and constants.** A default output path is a definition, and two
+  functions holding the same one is the same defect as two functions computing
+  the same number. Fixed by moving the sweep to
+  `baselines_sweep_results.json`; `test_no_two_default_artifact_paths_collide`
+  pins it and was verified to go red when the old default is put back.
+  **Related to G77** (a GENERATED artifact a caller silently prefers) -- both
+  are cases where the filesystem carried state that no assertion guarded.
+
 ## 10. Environment
 
 - Windows 11, PowerShell 5.1 (+ Git Bash available), Python 3.13.14,
@@ -6865,6 +6885,15 @@ was already continuous -- **and the benchmark still resolved zero pairs.**
 **identical in all ten P1 groups** across the two runs, and both find the same
 2 of 20 P3 designs. The objective change sharpens the TOP of the feasible band
 and leaves the BOUNDARY where it was.
+
+**AND ONE NEAR-MISS THAT COST AN ARTIFACT.** `sweep()` defaulted its output to
+`experiments/baselines_results.json` -- **the same path the `--prescreen` stage
+writes**, holding the 1890-sample calibration (61.69 % free rejection, 2.600x
+yield lift, 13.44 % S3 base rate) that `BASELINES.md` §5 quotes. The first
+sweep overwrote it, silently, with both writers reporting success. Recovered
+from git; the sweep now writes `baselines_sweep_results.json`, and
+`test_no_two_default_artifact_paths_collide` pins it and was verified red
+against the old default. **New gotcha G95: rule 9 applies to filesystem paths.**
 
 **New:** `BASELINES.md` §12 (+§12.6), `experiments/baselines_run_{interp,
 lattice}.jsonl.gz` (56 MB raw each, committed gzipped),

@@ -1522,7 +1522,12 @@ def sweep(alloc: Optional[Sequence[Allocation]] = None,
         log.event("sweep_summary", control=ctrl, n_runs=len(runs),
                   total_sims_including_discarded=total,
                   wall_s=out["wall_s"])
-    _save(out, out_path or (HERE / "baselines_results.json"))
+    # **NOT `baselines_results.json`, and that is a bug fix.** That name was
+    # already taken by the `--prescreen` stage's artifact -- 1890 samples of
+    # pre-screen calibration that `BASELINES.md` §5 quotes -- and this default
+    # silently overwrote it the first time the sweep ran (G95). Two writers
+    # sharing one default path is rule 9 in the filesystem.
+    _save(out, out_path or (HERE / "baselines_sweep_results.json"))
     return out
 
 

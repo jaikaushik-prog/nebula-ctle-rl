@@ -19,6 +19,7 @@ fail if a rule is quietly relaxed:
 from __future__ import annotations
 
 import math
+import re
 from dataclasses import dataclass, field
 from typing import Optional
 
@@ -177,6 +178,43 @@ def test_the_interp_flag_is_threaded_to_the_evaluator_and_defaults_OFF(stub_vali
     obj = B.Objective(B.PROBLEMS["P1"], budget_sims=4, ac_peak_interp=True)
     obj.evaluate([0.5] * B.N_ACTIONS)
     assert stub_valid["ac_peak_interp"] is True
+
+
+def test_no_two_default_artifact_paths_collide():
+    """**G95: the sweep silently overwrote the pre-screen's results file.**
+
+    `--prescreen` writes 1890 samples of calibration -- the 61.69 % free
+    rejection, the 2.600x yield lift, the 0.394 % false rejection that
+    `BASELINES.md` §5 and half this project quote -- and `sweep()` defaulted its
+    own output to the same name. The first real sweep replaced 4 KB of
+    calibration with 63 MB of run summaries, and nothing said so: both writers
+    succeeded, both printed "wrote ...", and the loss was only visible as a
+    deletion in `git status`.
+
+    Recovering it needed `git checkout HEAD~1 --`. Had the sweep run twice
+    before anyone looked, it would have been gone.
+
+    This asserts the defaults are distinct by NAME rather than checking the
+    files on disk, so it fails in CI on a fresh clone.
+    """
+    import inspect
+
+    src = inspect.getsource(B.sweep) + inspect.getsource(B.main)
+    defaults = re.findall(r'HERE / f?"([A-Za-z0-9_{}.]+\.json)"', src)
+    assert defaults, "no default artifact paths found -- has the pattern moved?"
+    # `{suffix}`-templated names are distinct from the literal ones by
+    # construction; strip them to their stem and compare the rest.
+    literal = [d for d in defaults if "{" not in d]
+    assert len(literal) == len(set(literal)), (
+        f"two writers share a default artifact path: {literal}")
+    # ... and specifically: the CALL, not the comment above it. Grepping the
+    # whole source matches the paragraph explaining the bug, which would make
+    # this test permanently red for documenting itself.
+    save_line = [L for L in inspect.getsource(B.sweep).splitlines()
+                 if "_save(" in L]
+    assert len(save_line) == 1, save_line
+    assert "baselines_results.json" not in save_line[0], (
+        "sweep() must not default to the pre-screen's artifact name (G95)")
 
 
 def test_worst_case_over_points_is_the_score(monkeypatch):
