@@ -1922,6 +1922,13 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     ap.add_argument("--pilot-methods", type=str,
                     default="uniform,lhs,cmaes,gp_bo,ppo")
     ap.add_argument("--workers", type=int, default=WORKERS)
+    ap.add_argument("--tag", type=str, default="",
+                    help="suffix for the artifact names, so two sweeps can "
+                         "coexist (e.g. --tag lattice writes "
+                         "baselines_run_lattice.jsonl). The A/B that measures "
+                         "what the interpolated objective bought needs both "
+                         "logs side by side, and a run that overwrites its own "
+                         "control is not a control.")
     ap.add_argument("--interp", action="store_true",
                     help="score the SUB-GRID peak instead of the dec-50 "
                          "lattice one (G74). Applies to every job in the run, "
@@ -1975,7 +1982,10 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
                             "total_sims_including_discarded":
                                 out["total_sims_including_discarded"]}
     if args.sweep:
-        out = sweep(workers=args.workers, ac_peak_interp=args.interp)
+        suffix = f"_{args.tag}" if args.tag else ""
+        out = sweep(workers=args.workers, ac_peak_interp=args.interp,
+                    log_path=HERE / f"baselines_run{suffix}.jsonl",
+                    out_path=HERE / f"baselines_results{suffix}.json")
         print_sweep(out, "SWEEP")
         results["sweep"] = {"control": out["control"],
                             "analysis": out["analysis"],

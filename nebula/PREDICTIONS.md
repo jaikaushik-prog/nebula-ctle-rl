@@ -1635,6 +1635,194 @@ row is about the methods.
 everywhere; this sweep is the first run of a benchmark that had never been run,
 on a flag that has to be asked for.
 
+### Outcome — **the benchmark ranks. 20 of 45 P1 pairs separate, 0 groups tie at the ceiling, and the run took 42 minutes.** Run 2026-08-19 at `ad17cf4`, `nebula/BASELINES.md` §12.
+
+`python -m nebula.experiments.baselines --sweep --interp`, 170 measured runs +
+warm-up + control = **25 869 simulations, 42.1 min wall** at 8 workers. Timing
+control **clean** (0.186 → 0.221 s/sim, ratio 0.844, inside [0.8, 1.25]), so the
+wall-clock numbers are valid under 7g.
+
+#### Prediction A — the metric discriminates. **Four for four.**
+
+| quantity | point | band | measured | |
+|---|---|---|---|---|
+| P1 groups with median exactly 8.950669 | 0 of 10 | 0 | **0** | HIT |
+| distinct median values, 10 P1 groups | 10 | ≥ 8 | **10** | HIT |
+| at least one separable P1 pair | yes | — | **20 of 45 pairs** | HIT |
+| P1 groups with median in the feasible band | 10 of 10 | 9–10 | **10** | HIT |
+
+The pilot had **six of ten groups at exactly +8.950669**. The same benchmark on
+the interpolated objective has **none**, and the top of the table
+(`cmaes+screen` 8.99742) is separable from the bottom (`ppo` 8.91063) with room
+to spare. **The third row is the one that mattered** — distinct medians are
+nearly free with continuous values, whereas 20 disjoint confidence intervals out
+of 45 pairs is a benchmark that can support a ranking.
+
+#### Prediction B — entry 6's ordering, confirmed wherever the sample resolves it
+
+Measured, unscreened only: **GP-BO 8.9955 > CMA-ES 8.9736 > uniform 8.9532 >
+LHS 8.9419 > PPO 8.9106.**
+
+Entry 6 said *"CMA-ES ≈ GP-BO > pre-screened uniform ≈ pre-screened LHS > LHS ≈
+uniform > PPO, with CMA-ES and GP-BO not separable from each other"*. Every
+clause it makes that this sample can test is right: CMA-ES and GP-BO are **not
+separable** (CIs [8.9599, 8.9924] and [8.9886, 8.9988] overlap), LHS and uniform
+are **not separable**, and **PPO is last and is separable from six of the other
+nine groups**. The single deviation — pre-screened uniform (8.9860) landing
+*above* unscreened CMA-ES (8.9736) rather than below it — is **not separable**
+either, so it is not a falsification.
+
+| my own additions | point | band | measured | |
+|---|---|---|---|---|
+| screened arms beat their unscreened twin | 5 of 5 | ≥ 3 | **4 of 5** | band hit, point MISS |
+| PPO last of five, P1 unscreened | yes | — | **yes** | HIT |
+| P3 runs finding a feasible design | 0 of 30 | 0–2 | **2 of 30** | band hit at its edge, point MISS |
+
+**The screen helps four ways and hurts GP-BO** (+0.0328 uniform, +0.0242 LHS,
++0.0239 CMA-ES, +0.0182 PPO, **−0.0034 GP-BO**) — and the GP-BO figure is far
+inside the CI overlap, so the honest statement is "no measurable effect on
+GP-BO", which is entry 6's *"it helps uniform random most and CMA-ES least"*
+reasoning extended to the other model-based method.
+
+**Entry 6's "P3 is EMPTY" is FALSIFIED.** `P3/uniform` found a corner-and-load
+robust design on **2 of 20 seeds** (median 77.5 simulations, conditional), one
+of them scoring **8.034**. `P3/cmaes` found none in 10. Two designs is not a
+yield estimate, but "no method finds one" is now known to be false, and that
+matters for task 3: the robust problem is hard, not empty.
+
+#### Prediction C — the interpolation costs nothing the sweep can see. **Three for three.**
+
+| quantity | point | band | measured | |
+|---|---|---|---|---|
+| `n_interp_refused` over the whole sweep | ≤ 30 | ≤ 130 | **2** of 25 869 | HIT |
+| runs refusing > 2 % of evaluations | 0 | 0 | **0** | HIT |
+| `timing_void` | false | — | **false** | HIT |
+
+0.0077 %, against the 5.6 expected from scaling task 1's rate — the refusal is
+rarer on this population than on the funnel, not more common.
+
+#### Prediction D — **my own revision was wrong and entry 6 was exactly right**
+
+I predicted entry 6's cross-cutting wall-clock claim was "HALF right": GP-BO
+above 1.15× as it said, **and PPO also above it**, which entry 6 did not
+anticipate. Measured, against `P1/uniform` at 0.6131 s/sim:
+
+    gp_bo 2.43x   gp_bo+screen 3.26x   ppo 1.01x   ppo+screen 1.03x
+    cmaes 0.99x   lhs 1.00x            everything else within 1.03x
+
+**Entry 6 was right on both halves and I was wrong on the half I added.**
+
+**The mistake is reusable and is now G94.** My calibration measured PPO at
+0.5603 s/sim — at a **40-simulation budget**, a quarter of the sweep's 150. PPO
+carries a large *fixed* startup (torch import, network construction, the first
+rollout) and dividing it by 40 attributes it to the marginal rate; dividing the
+same constant by 150 makes it disappear. **A per-unit rate measured at a
+fraction of the real budget over-attributes fixed startup to the margin, and the
+error grows as the budget shrinks.** GP-BO went the other way for the mirror-image
+reason — its cost is `O(n³)` in observations, so 40 observations badly
+*under*-states what 150 cost, and the sweep measured 2.43× where the calibration
+saw 1.54×. Neither method's rate is a constant; only the flat ones extrapolate.
+
+`gp_bo+screen` at **3.26×** has a mechanism worth stating: a screened proposal
+costs zero simulations but still costs a full acquisition optimisation, so
+screening *raises* GP-BO's model time per simulation — **207.9 s of model time
+against 127.1 s unscreened**. The pre-screen is not free for model-based
+methods, and this is the first measurement of that.
+
+#### What this does and does not license
+
+**It licenses the ranking**, which the pilot could not: six of its ten groups
+were pinned to the grid. It does **not** license any claim about RL. PPO losing
+here is what entry 6 predicted and said in advance must be reported as such —
+untuned PPO at 150 simulations on a fixed spec target loses to tuned classical
+optimisers, and no run in this sweep tests the amortised, spec-conditioned claim
+that would favour it. P1 remains the sanity rung.
+
+*Nothing above the Outcome heading was edited.*
+
+---
+
+## 11. Session 22f — the LATTICE control. **What did removing the ceiling actually buy?**
+
+**Written:** 2026-08-19, **before** the control run, and after entry 10's
+outcome was written. The interpolated sweep is done; this is its A/B.
+
+**Experiment:** `python -m nebula.experiments.baselines --sweep --tag lattice`
+— the **identical** 170 runs at the **identical** seeds, with
+`ac_peak_interp` OFF. 25 500 simulations, ~42 min. Every other input is
+byte-identical, so the difference between the two logs is the objective and
+nothing else.
+
+**Why it is worth 42 minutes.** Everything claimed so far about the ceiling
+rests on the *pilot* (60 simulations, 3 seeds, "not to rank methods") and on
+task 1's re-scoring of the difficulty pools. Neither is the sweep. This run
+makes "the ceiling stopped the benchmark from ranking" a **measured A/B on one
+experiment** rather than an argument assembled from two others — which is the
+single most persuasive table this project can put in front of a judge.
+
+### Predictions
+
+**The comb, computed exactly.** A feasible design's lattice reward is
+`8 + (0.5 − |off + k·h|)/0.5` with `h` = 0.0664386 octaves and `off` = −0.0246654
+(the nearest grid point sits *below* target), so the teeth are **not evenly
+spaced in reward** — `|off + k·h|` alternates:
+
+    k =  0   ->  8.950669      k = +1  ->  8.916454
+    k = -1   ->  8.817792      k = +2  ->  8.783576
+
+**Only two teeth lie inside the interpolated run's entire P1 range**
+(8.910626 … 8.997423, a spread of **0.0868**): 8.950669 and 8.916454, which are
+**0.0342 apart**. So the whole measured ordering — every method, screened and
+unscreened — fits between two adjacent lattice values.
+
+| quantity | point | band |
+|---|---|---|
+| P1 groups whose median is **exactly** 8.950669 | **7** of 10 | 4–10 |
+| **distinct** median values, 10 P1 groups (interpolated: 10) | **2** | 2–4 |
+| separable P1 pairs (interpolated: 20 of 45) | **8** of 45 | 0–24 |
+| of those, pairs involving a **zero-width** CI | **≥ half** | — |
+| median best-reward of `P1/cmaes+screen` | **8.950669** | — |
+| groups unchanged to 3 decimals between the two runs | **0** | 0–2 |
+
+**Why the separable-pair band is wide in BOTH directions, and why it is not the
+headline.** If a group's seeds all land on the same tooth its bootstrap CI has
+**zero width**, and a zero-width interval is trivially disjoint from any other —
+so the lattice run can report *more* separable pairs than the interpolated one
+while resolving *fewer* levels. The pilot already showed this ("one degenerate
+zero-width interval"). **The comparison that means something is the number of
+distinct resolvable levels: 2 on the lattice against 10 interpolated**, and the
+separable-pair counts must be reported with the degenerate ones broken out or
+they will say the opposite of the truth.
+
+The "7 of 10" is read off the interpolated run's own ceiling-crossing table —
+`cmaes`, `cmaes+screen`, `gp_bo`, `gp_bo+screen` reached 8.95067 on 10/10 seeds
+and `uniform+screen` on 15/20, so those five have a majority of seeds at the top
+tooth; `uniform` (10/20) and `lhs+screen` (12/20) are borderline; `lhs` (6/20),
+`ppo` (1/10) and `ppo+screen` (3/10) are not.
+
+### What would falsify the reasoning
+
+1. **The lattice run separates as many pairs as the interpolated one.** Then the
+   ceiling was never what limited the benchmark, `PEAK_INTERP.md`'s headline is
+   over-stated, and the 42 minutes bought the most important correction of the
+   week.
+2. **A lattice median lands off the comb.** The comb is exact arithmetic; a
+   median between teeth would mean either the seeds disagree enough that the
+   median interpolates between two of them (legitimate for even seed counts —
+   check before concluding) or G74's model is incomplete.
+3. **The two runs give different `sims_to_first_feasible`.** Feasibility is
+   `all margins ≥ 0` and the peak moves by up to a third of a grid step, so a
+   few designs flip (task 1 measured 0.79 %) — but a *large* difference would
+   mean the objective change is doing more than sharpening the top of the band.
+
+### Guard against over-claiming
+
+A larger separable-pair count on the interpolated objective is a statement about
+**measurement resolution**, not about any method being better than it was. The
+methods are identical; only the ruler changed. And if the lattice run happens to
+separate a pair the interpolated one does not, that is noise at 10 seeds and
+must not be reported as the lattice metric being better at anything.
+
 ### Outcome
 
 *(to be written after the run; nothing above this heading may be edited)*
