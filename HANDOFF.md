@@ -6910,3 +6910,73 @@ PPO loses. Candidates, cheapest first: **tune PPO's exploration** (targets the
 measured stall, ~half a day), **task 3 corners** (P3 is hard-not-empty, so the
 rung is now worth running properly), **task 4 spec-conditioned** (the only
 comparison that favours RL on its merits).
+
+### 2026-08-19 - Session 22g (PPO gets ONE gradient update; giving it eleven buys 25 % of the gap to RANDOM SEARCH)
+
+**A retraction first, because it was told to the owner twice.** PPO's stall was
+reported as **exploration collapse**. It is **measured false**: instrumented at
+the sweep's own configuration, entropy **RISES** across updates (9.942 -> 9.952
+-> 9.956) and the final `log_std` is **~0.005 in all seven dimensions**,
+unchanged from its 0.0 initialisation. `ent_coef` is 0.0 and there is nothing
+for it to fix. The claim came from reading a flat anytime curve instead of
+reading the policy.
+
+**What the same run measured, and this IS the cause.** 235 simulations for 150
+environment steps -- **1.57 sims/step** -- because `CtleSizingEnv.reset`
+simulates a fresh start point and an invalid evaluation ends the episode at
+once: **38 episodes in 150 steps, many of length 1**. So a 150-simulation budget
+buys ~96 environment steps, and at `rollout_steps = 64` that is **ONE policy
+update**. *"PPO came last"* means *"PPO performed one gradient update."*
+
+**The experiment** (`experiments/exp_ppo_updates.py`, `PREDICTIONS.md` entry 12,
+pre-registered at `bf1f1ea`): `rollout_steps` in {64 control, 32, 16, 8} x 10
+replicates x 150 simulations = **6000 simulations, 24.4 min**. One knob;
+`Objective`, `_ObjectiveEnv`, `method_ppo`, the seed rule, the box, `V1_SPECS`,
+the tolerances and `ac_peak_interp` all the sweep's.
+
+**THE GATE PASSED AT THE STRONGEST LEVEL AVAILABLE:** the control does not
+merely reproduce the sweep's median, **all ten seeds are bit-exact**.
+
+    rollout   updates   median      95 % CI                vs control
+    8         11        8.92120     [8.82077, 8.95497]     +0.01058  not separable
+    16        5         8.92048     [8.81284, 8.95542]     +0.00986  not separable
+    32        2         8.91958     [8.88862, 8.93454]     +0.00895  not separable
+    64        1         8.91063     [8.80998, 8.93022]     control
+
+**Monotone, real, and far too small to matter.** The gains saturate hard --
+2 updates buy +0.0089 and eleven buy +0.0106, so 5.5x the updates buys 19 % more
+improvement -- and **no arm separates from its own control**. In context: the
+whole effect recovers **24.8 % of the gap to unscreened UNIFORM RANDOM** and
+16.8 % of the gap to CMA-ES. **PPO is still last.**
+
+Entry 12 pre-registered exactly this: *"I expect the ordering to move and the
+statistics not to."* It did; they did not. One prediction missed -- I expected
+`rollout_steps = 8` to turn over on gradient variance and it is instead the best
+arm, by **0.0007** over 16, which is far inside both intervals, so "smaller
+still" is suggested and NOT established and the extra arm is not worth 1500
+simulations.
+
+**THE TWO LEVERS THIS RUN DELIBERATELY EXCLUDED ARE NOW THE STORY**, and both
+change the environment contract, so both are the owner's:
+
+1. **A third of PPO's budget is episode resets** -- and those reset points are
+   logged as trials and count toward best-so-far, so they are *uniform random
+   samples*. **PPO spends a third of its budget being the method it loses to**
+   (uniform random 8.953 against PPO 8.911).
+2. **`terminated = bool(rb.feasible)`** ends the episode the moment a design is
+   feasible. The policy is trained to REACH the band while the benchmark scores
+   how far PAST it the policy gets. A train/test mismatch, and unlike
+   `rollout_steps` not a hyperparameter.
+
+**New:** `experiments/exp_ppo_updates.py`, `experiments/ppo_updates_run.jsonl`,
+`PREDICTIONS.md` entry 12. `method_ppo` gained an optional `rollout_steps`
+argument, **default `None` = `PPOConfig`'s default**, so `METHODS` and every
+published sweep are unchanged. **Tests 1510 green.**
+
+**Standing recommendation, now with a number behind it:** one knob bought a
+quarter of the gap to random search. Two contract changes might buy more.
+Neither is likely to make untuned PPO beat a tuned classical optimiser at 150
+simulations from scratch, because that budget is structurally hostile to
+policy-gradient methods -- which is the argument for spending the remaining time
+on the **amortised, spec-conditioned** comparison, where the training cost is
+paid once and reused across every new spec.

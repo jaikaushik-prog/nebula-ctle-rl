@@ -2003,6 +2003,88 @@ simulation per episode, (ii) `terminated = bool(rb.feasible)` ending the episode
 at first feasibility, which trains the policy to *reach* the feasible band while
 the benchmark scores how far *past* it the policy gets.
 
-### Outcome
+### Outcome — **the diagnosis was right, the fix works in the predicted direction, and it is far too small to matter.** Run 2026-08-19, 6000 simulations, 24.4 min.
 
-*(to be written after the run; nothing above this heading may be edited)*
+#### Prediction A — the gate, passed at the strongest level available
+
+The control does not merely reproduce the sweep's *median*: **all ten seeds are
+bit-exact**, seed for seed (8.777005, 8.897793, 8.963242, 8.930217, 8.799842,
+8.913282, 8.941015, 8.809983, 8.918471, 8.907969). The control arm **is** the
+sweep's PPO block. Everything below transfers.
+
+#### Prediction B — monotone, and I was wrong about where it turns over
+
+| arm | updates | predicted | band | measured | |
+|---|---|---|---|---|---|
+| 64 (control) | 1 | 8.9106 | — | **8.91063** | gate |
+| 32 | 2 | 8.920 | 8.87–8.96 | **8.91958** | **HIT** (point accurate to 4 dp) |
+| 16 | 5 | 8.935 | 8.88–8.98 | **8.92048** | band hit, point high by 0.015 |
+| 8 | 11 | 8.925 | 8.85–8.98 | **8.92120** | band hit, point high by 0.004 |
+
+**"Monotone up to 16 and then turning over at 8" is MISS.** It is monotone all
+the way: 8 is the *best* arm, not the turnover. My gradient-variance argument
+did not bite at these rollout lengths.
+
+**But the gains are saturating hard**, which is the more useful shape:
+
+    updates   2 -> +0.0089    5 -> +0.0099    11 -> +0.0106
+
+Five and a half times the updates buys 19 % more improvement. Falsification
+condition 4 (*"`rollout_steps = 8` is the best arm by a clear margin"*) fired
+only in its first half: 8 **is** the best arm, by **0.0007** over 16 — far
+inside both intervals. So "smaller still" is suggested and **not established**,
+and the extra arm that condition would have licensed is **not worth 1500
+simulations** to chase a difference this size.
+
+#### Prediction C — three for three, including the one that matters
+
+| quantity | point | measured | |
+|---|---|---|---|
+| best arm separable from its control | **no** | **no** — all three overlap | HIT |
+| arms beating unscreened uniform (8.95319) | 0 of 3 | **0** | HIT |
+| arms beating CMA-ES (8.97356) | 0 of 3 | **0** | HIT |
+
+**The whole effect is +0.0106 reward units and it does not separate.** In
+context:
+
+    gap PPO -> uniform random   0.0426     recovered  24.8 %
+    gap PPO -> CMA-ES           0.0629     recovered  16.8 %
+
+So fixing the update count recovers about a quarter of the gap to *random
+search* — and the ranking is unchanged. **PPO is still last.**
+
+This is exactly what the entry pre-registered, in the words it used: *"I expect
+the ordering to move and the statistics not to, and I am saying so in advance so
+that 'PPO improved' is not reported off a point estimate whose interval overlaps
+its own control."* It did, they did not, and it is not.
+
+#### What the null half of this tells us
+
+Falsification condition 2 — *"no trend at all"* — **did not fire**: the trend is
+real, monotone, and in the predicted direction. So the diagnosis (PPO gets one
+gradient update) is confirmed as *a* cause. What the size of the effect
+establishes is that it is **not the dominant one**.
+
+**The two levers this run deliberately excluded are now the story**, and both
+change the environment contract and are the owner's:
+
+1. **~1/3 of the budget is episode resets** (1.57 simulations per environment
+   step). Those resets are not wasted — they are logged as trials and count
+   toward best-so-far — but they are *uniform random samples*, so a third of
+   PPO's budget is spent being uniform random. Since uniform random scores
+   **8.953** and PPO scores **8.911**, PPO is currently paying a third of its
+   budget for the method it loses to.
+2. **`terminated = bool(rb.feasible)`** ends the episode the moment a design is
+   feasible. The policy is trained to *reach* the band; the benchmark scores how
+   far *past* it the policy gets. That is a train/test mismatch, and unlike
+   `rollout_steps` it is not a hyperparameter.
+
+**Recommendation, unchanged by this run and now with a number behind it:** one
+knob bought 25 % of the gap to random search. Two contract changes might buy
+more. Neither is likely to make untuned PPO beat a tuned classical optimiser at
+150 simulations from scratch, because that budget is structurally hostile to
+policy-gradient methods — which is the argument for spending the remaining time
+on the **amortised, spec-conditioned** comparison instead, where the training
+cost is paid once and reused.
+
+*Nothing above the Outcome heading was edited.*
