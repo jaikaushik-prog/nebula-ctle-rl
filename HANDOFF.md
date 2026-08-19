@@ -17,7 +17,35 @@
 > decisions that are OPEN and human-only, and what to do next. It supersedes
 > `nebula/NEXT_STEPS.md`. This file remains the full state of record.
 
-Last updated: **2026-08-19** (session 22h-run: **GRID SEARCH IS LAST, ITS
+Last updated: **2026-08-19** (session 22i: **THE BUDGET LADDER IS BUILT AND
+PRE-REGISTERED, NOT YET RUN.** The owner asked to raise the budget and proposed
+200/250/300/350 with PPO compared against itself; the ladder idea is right and
+had three problems. **(1) Separate runs are waste** -- nothing in PPO's config
+depends on the budget (`steps = 100_000`, constant `lr`, no horizon schedule,
+`run_seed` budget-blind), so a long run CONTAINS the short ones and
+`anytime_curve` already records every simulation. **Verified: a budget-30 smoke
+run reproduced the published sweep's first 30 simulations on 40 of 40 curves at
+0.0.** **(2) The rungs could not resolve anything** -- a 2.3x span against a
+0.12-wide seed spread and an effect entry 12 measured at 0.0106; the rungs now
+MULTIPLY, **150/300/600/1200/2400 = 1/2/5/11/23 policy updates**. **(3) No
+control** -- PPO against itself trends upward whether or not it learns, so
+`uniform` (20 seeds) and `cmaes` (10) are in the run. **THE HEADLINE METRIC IS
+NOT THE RAW GAP**: the reward saturates near +9.0, so every arm converges at
+large budgets and that would look like RL catching up. The read-out is in the
+control's units -- **random-equivalent budget**, how many uniform simulations
+buy what an arm reached in n -- and on the ALREADY PUBLISHED sweep it reads
+**cmaes >1.00x, lhs 0.960x, ppo 0.720x, grid 0.540x**. **"150 simulations of
+our RL are worth 108 simulations of random guessing"** is saturation-proof and
+free. New gotcha **G97**: `anytime_curve` CLAMPS rather than truncates, so a
+short prefix of a long run folds every later trial into the last cell -- it
+reported 34 of 40 curves mismatched with a worst difference of 9.18, all of it
+manufactured by the instrument. Also fixed: `sweep()` saved every trial a
+SECOND time inside its results JSON (**79 MB against 0.2 MB**; the blob is in
+history at `3ee4ea1` and removing it needs a rewrite, the owner's call). Tests
+**1522 -> 1534**. `PREDICTIONS.md` entry 15, eleven bands, five falsifiers; the
+one that matters is whether the ratio **crosses 1.0**.)
+
+Earlier session 22h-run: ( **GRID SEARCH IS LAST, ITS
 CONFIDENCE INTERVAL IS EXACTLY ZERO WIDE, AND IT IS THE FASTEST METHOD IN THE
 STUDY TO A FEASIBLE DESIGN.** 31 879 simulations, 210 runs.
 `grid 8.8886 < ppo 8.9106 < lhs 8.9419 < uniform 8.9532 < ... < cmaes+screen
@@ -3380,6 +3408,27 @@ Plus: git init, .gitignore, 28 tests, Wilson-bound BER reporting.
   verified to go red with the shared stream restored. **Same family as G71** (a benchmark run in a fixed order measures
   the order) one level up: there the order contaminated the measurement, here
   it contaminated the *analysis of* the measurement.
+
+- **G97 -- (nebula) `anytime_curve(trials, budget)` CLAMPS, so asking it for a
+  SHORT prefix of a LONG run folds every later trial into the last cell.** The
+  line is `lo = min(int(t.cum_sims), int(budget))`, which is correct for its
+  own job -- building a curve for a run of that budget -- and silently wrong
+  the moment a caller uses `budget` as a truncation. Session 22i's prefix
+  check did exactly that: it rebuilt the published 150-simulation reference at
+  `n = 30` and compared it with a real 30-simulation run, and reported **34 of
+  40 curves mismatched with a worst difference of 9.18**. Every one of those
+  disagreements was manufactured by the instrument -- the best of all 150
+  simulations had been stamped onto index 29. Built at the run's own length and
+  then sliced, the same comparison is **40 of 40 identical at 0.0**.
+  **The general form: a function that CLAMPS is not a function that
+  TRUNCATES, and the difference only shows on data whose best arrives after
+  the cut.** A prefix check on a monotone curve is exactly that data, which is
+  why this fired on its first use. Same family as the session 22g probe that
+  spent the budget it was measuring: **the instrument was the finding, and it
+  looked like a result.** `test_verify_prefix_builds_the_reference_at_its_OWN_
+  budget` pins it -- its fixture puts the jump AFTER the prefix, which is the
+  only shape that can tell the two behaviours apart -- and was verified to go
+  red with the clamping restored.
 
 ## 10. Environment
 
@@ -7441,3 +7490,94 @@ and can now be SCORED on both, which it could not be before this run.**
 `PREDICTIONS.md` entry 14's Outcome. New gotcha **G96**. Artifacts:
 `baselines_run_interp_grid.jsonl.gz` (31 879 rows),
 `baselines_results_interp_grid.json`, `baselines_summary_interp_grid.json`.
+
+### 2026-08-19 - Session 22i (the BUDGET LADDER: is PPO starved or misdirected? CODE + TESTS + PRE-REGISTRATION, NOT YET RUN)
+
+**The owner asked to raise the simulation budget and proposed a ladder of
+200 / 250 / 300 / 350, comparing PPO against itself.** The ladder idea is right
+and the design had three problems, all fixed here rather than argued about:
+
+**1. Separate runs are pure waste.** Nothing in PPO's configuration depends on
+the budget -- `method_ppo` fixes `steps = 100_000` precisely so the SIMULATION
+budget is what stops the run, `PPOConfig.lr` is constant, and no schedule is
+annealed against a horizon; `run_seed` does not see the budget either. **So for
+a given seed the trajectory is identical up to wherever it stops, and a long
+run CONTAINS the short ones.** `anytime_curve` already records the best-so-far
+after every simulation, so the whole ladder is read off one curve. **Verified,
+not assumed:** a 1200-simulation smoke run at budget 30 reproduced the
+published sweep's first 30 simulations on **40 of 40 curves at worst |diff| =
+0.0**.
+
+**2. The rungs were too close to resolve anything.** 150 -> 350 is 2.3x. PPO's
+seed spread at 150 is ~0.12 wide and entry 12 measured an **11x increase in
+policy updates moving the score by 0.0106** -- six times smaller than the
+noise. The rungs now MULTIPLY: **150 / 300 / 600 / 1200 / 2400**, which is
+**1 / 2 / 5 / 11 / 23 policy updates**, so the ladder is an update ladder for
+free and it leaves the one-update regime entry 12 diagnosed.
+
+**3. There was no control, so the trend could not have been interpreted.**
+**PPO against itself trends upward whether or not it learns**, because more
+simulations is more lottery tickets -- uniform random improves too. `uniform`
+(20 seeds) is now in the run as the control and `cmaes` (10 seeds) as the
+reference for "is ANYTHING still improving at 2400".
+
+**THE HEADLINE METRIC IS NOT THE RAW GAP, AND THAT IS THE METHODOLOGICAL
+POINT.** The reward saturates near +9.0, so at large budgets every method
+compresses toward it and any two arms converge -- which would look exactly like
+PPO catching up and would be an artifact of the ceiling. The primary read-out
+is therefore stated in the CONTROL's own units:
+
+> **random-equivalent budget** -- how many UNIFORM RANDOM simulations buy the
+> score this arm reached in n. Below 1 means it is worth less than guessing.
+
+Computed on the ALREADY PUBLISHED 150-simulation sweep, so it costs nothing:
+
+    cmaes    8.9736   uniform never catches it in 150    > 1.00x
+    lhs      8.9419   144 simulations                      0.960x
+    ppo      8.9106   108 simulations                      0.720x
+    grid     8.8886    81 simulations                      0.540x
+
+**"150 simulations of our RL are worth 108 simulations of random guessing"** is
+saturation-proof, is derived from data already on disk, and is the sentence the
+report should use.
+
+**NEW GOTCHA G97, found by the prefix check on its first use.**
+`anytime_curve(trials, budget)` **clamps** (`lo = min(cum_sims, budget)`), so
+asking it for a short prefix of a long run folds every later trial into the
+last cell. Rebuilding the 150-simulation reference at n = 30 reported **34 of
+40 curves mismatched, worst difference 9.18** -- all of it manufactured by the
+instrument. Built at the run's own length and then sliced, the same comparison
+is **40 of 40 at 0.0**. *A function that clamps is not a function that
+truncates, and the difference only shows on data whose best arrives after the
+cut.*
+
+**AND A 79 MB ARTIFACT, FIXED.** `sweep()` hands `_emit` a shallow COPY of each
+run summary, so `runs` still held every trial and the results JSON saved the
+entire sweep a second time -- `baselines_results_interp_grid.json` came out at
+**79 MB against the 0.2 MB** of the two artifacts before it, and the two shapes
+disagreeing is how it was noticed. The log is now the single record; the
+`curve` is kept because it is NOT in the log and is what every ladder read-out
+is made of. **The 79 MB blob is already in git history** (commit `3ee4ea1`) --
+removing it needs a history rewrite, which is the owner's call.
+
+**PRE-REGISTERED, NOT YET RUN.** `PREDICTIONS.md` entry 15: eleven quantities
+with bands, five falsifiers. The prediction that matters is whether the
+random-equivalent ratio **crosses 1.0** -- if PPO is merely starved, 23 updates
+instead of 1 must show it; if entry 13's "uninformative gradient" reading is
+right, it will not. Registered against it: **the raw gap will shrink while the
+ratio does not improve**, so the saturation artifact cannot be reported as
+progress.
+
+**Guard: a ratio below 1 bounds THIS formulation** -- one fixed spec target,
+from scratch, this box, this reward -- and says nothing about the amortised
+spec-conditioned claim, which entry 6 already ring-fences and which no
+from-scratch comparison can test.
+
+**Run:** `python -m nebula.experiments.exp_budget_ladder --run` -- 40 runs,
+**96 000 simulations, ~2.6-3.0 h**, no warm-up and no timing control (the
+metric is score against SIMULATIONS and no wall-clock number is quoted, so 7g's
+control would cost ~29 % of the run to protect nothing this file reports).
+
+**Tests 1522 -> 1534.** New: `experiments/exp_budget_ladder.py`,
+`nebula/tests/test_budget_ladder.py` (11), `PREDICTIONS.md` entry 15, gotcha
+**G97**, and a gate that the results artifact may not duplicate the run log.

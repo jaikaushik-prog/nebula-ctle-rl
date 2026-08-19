@@ -1755,10 +1755,23 @@ def sweep(alloc: Optional[Sequence[Allocation]] = None,
 
         analysis = analyse([r for r in runs if r.get("role", "measured")
                             == "measured"])
+        # `warm`/`last` had their trials popped in place by `_emit`; `runs`
+        # did not, because the pool branch passes a copy. Strip them once here
+        # so the saved artifact carries the summaries and the curves only.
         total = sum(r["n_sims"] for r in runs) + \
             (warm["n_sims"] if warm else 0) + \
             (last["n_sims"] if ctrl else 0)
-        out = {"header": header, "runs": runs, "control": ctrl,
+        # **The trial rows go in the LOG, not in here as well.** `_emit` writes
+        # every trial to the JSONL; `runs` still holds them because `_emit` was
+        # handed a shallow copy, so saving `runs` verbatim writes the whole
+        # sweep TWICE -- and the two copies are then two definitions of one
+        # thing (rule 9). Measured: the grid sweep's artifact came out at
+        # **79 MB against the 0.2 MB** of the two before it, which is how this
+        # was noticed. The `curve` is KEPT: it is 150-2400 floats per run, it
+        # is what every budget-ladder read-out is made of, and it is not in the
+        # log at all (`_emit` drops it from `run_summary`).
+        slim = [{k: v for k, v in r.items() if k != "trials"} for r in runs]
+        out = {"header": header, "runs": slim, "control": ctrl,
                "warmup": {k: v for k, v in (warm or {}).items()
                           if k != "curve"},
                "wall_s": time.perf_counter() - t_sweep,

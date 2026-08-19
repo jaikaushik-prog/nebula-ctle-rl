@@ -2490,3 +2490,120 @@ make it passable, exactly as the pre-registration said.
 
 *Nothing above the Outcome heading was edited.*
 
+---
+
+## 15. Session 22i — **is PPO starved, or is the gradient pointing the wrong way?**
+
+**Written 2026-08-19, before the run, and committed before it starts.**
+
+Entries 12 and 13 left two live explanations for PPO's failure and no way to
+choose between them:
+
+* **(a) starved.** 150 simulations buys ~96 environment steps and, at
+  `rollout_steps = 64`, **one** policy update. A method given one gradient step
+  has not been tested.
+* **(b) misdirected.** Entry 13 measured that the policy *does* move — the mean
+  action travels 0.167 → 0.389 as updates go 2 → 12 — while the design does not
+  improve. An *uninformative* gradient, where more updates buy more travel in a
+  direction that is not up.
+
+**Only the budget separates them**, so the budget is what this varies:
+`exp_budget_ladder --run`, three arms at **2400 simulations**, 40 runs,
+**96 000 simulations, ~2.6–3.0 h**.
+
+### Declared inputs — established before this entry, not predicted
+
+| | |
+|---|---|
+| the ladder | 150 → 300 → 600 → 1200 → 2400, **doublings** |
+| why not 200/250/300/350 | PPO's seed spread at 150 is ~0.12 wide and entry 12 measured an **11× increase in updates moving the score by 0.0106**, six times smaller. A ladder spanning 2.3× cannot resolve that |
+| policy updates bought | **1 → 2 → 5 → 11 → 23** (`rollout_steps` = 64, 1.57 sims/step) |
+| one run, not five | nothing in PPO's config depends on the budget: `steps = 100_000`, `lr` constant, no schedule. Same seed ⇒ identical trajectory, so a 2400 run *contains* the shorter ones |
+| **that claim is verified, not assumed** | a 1200-simulation smoke run at budget 30 reproduced the published sweep's first 30 simulations on **40 of 40 curves at worst \|diff\| = 0.0**. The real run re-checks at n = 150 |
+| the control | `uniform` (20 seeds) — PPO against itself trends upward whether or not it learns, because more simulations is more lottery tickets |
+| the reference | `cmaes` (10 seeds) — is *anything* still improving at 2400? |
+
+### The primary metric, and why it is not the raw gap
+
+**The reward saturates near +9.0.** As the budget grows every method compresses
+toward that asymptote and the difference between any two shrinks — which looks
+exactly like "PPO is catching up" and would be an artifact of the ceiling. So
+the headline is stated in the control's own units:
+
+> **Random-equivalent budget** — how many *uniform random* simulations buy the
+> score this arm reached in `n`. Below 1 means the method is worth less than
+> guessing.
+
+Computed on the already-published 150-simulation sweep:
+
+| arm | score at 150 | uniform needs | ratio |
+|---|---|---|---|
+| cmaes | 8.9736 | more than 150 | **> 1.00×** |
+| lhs | 8.9419 | 144 | 0.960× |
+| **ppo** | **8.9106** | **108** | **0.720×** |
+| grid | 8.8886 | 81 | 0.540× |
+
+**150 simulations of our RL are worth 108 simulations of random guessing.**
+That sentence is saturation-proof, and it is the sentence the report should
+use.
+
+### Predictions
+
+| # | quantity | point | acceptance band |
+|---|---|---|---|
+| 1 | **`ppo` random-equivalent ratio at 2400** | **0.75×** | 0.40 – 1.10 |
+| 2 | **does that ratio cross 1.0 at any rung?** | **no** | — |
+| 3 | the ratio's trend across 150 → 2400 | **flat**, \|slope\| < 0.15 over the whole 16× | −0.4 … +0.4 |
+| 4 | `ppo` median reward at 2400 | 8.985 | 8.94 – 8.999 |
+| 5 | `uniform` median reward at 2400 | 8.996 | 8.985 – 8.9995 |
+| 6 | `cmaes` median reward at 2400 | 8.999 | 8.990 – 9.000 |
+| 7 | **raw gap `ppo − uniform` at 2400** | **−0.011** | −0.06 … +0.005 |
+| 8 | **the raw gap shrinks while the ratio does not improve** | **yes** — the saturation artifact, registered so it cannot be reported as progress | — |
+| 9 | `cmaes` ratio at 2400 | **censored** (uniform never catches it) | — |
+| 10 | `ppo` gain over the final third at 2400 | +0.005 | 0.00 – 0.05 |
+| 11 | prefix check against the published sweep | **0 of 40 mismatched**, worst \|diff\| **0.0** | exact |
+
+**The prediction that matters is #1 and #2.** If PPO is merely starved, 23
+policy updates instead of 1 has to show up as the ratio climbing through 1.0.
+If entry 13's reading is right — the gradient is uninformative — it will sit
+below 1 no matter how long the run is.
+
+### What would falsify the reasoning
+
+1. **The ratio exceeds 1.2 at 2400.** Then PPO *was* starved, entry 13's
+   "misdirected" reading is wrong, and the right response is more training
+   budget rather than a different algorithm. **This is the outcome that would
+   most change the project's plan**, which is why it is listed first.
+2. **Uniform saturates so hard that every arm's ratio is censored.** Then the
+   problem is simply *solved* by random search at 2400 and the finding is not
+   "RL lost" but **"there was nothing left to win at this budget"** — and the
+   response is to make the problem harder (corners, tighter specs), not the
+   policy better.
+3. **The prefix check finds any mismatch.** Then a long run does not contain
+   the short ones, the whole one-run ladder is invalid, and every rung has to
+   be run separately.
+4. **The ratio FALLS sharply with budget.** Then more updates actively hurt —
+   the policy walks away from good regions — which is the strongest form of
+   "misdirected" and would make the learning rate the first thing to look at.
+5. **`cmaes` drops below 1.0.** Nothing about the harness should change at long
+   budgets; if the strongest classical method stops beating random search, the
+   run is measuring something other than search quality.
+
+### Guard against over-claiming, in both directions
+
+**A ratio below 1 at 2400 does not show that RL cannot size this circuit.** It
+bounds *this* formulation: one fixed spec target, from scratch, this 7-D box,
+this reward, this policy. `PREDICTIONS.md` entry 6 already says the amortised
+spec-conditioned claim is untouched by any from-scratch comparison, and that
+remains true here — **it is the one regime where the policy gets enough
+experience to learn, and nothing in this entry tests it.**
+
+**And a ratio above 1 would not rescue G3 by itself.** G3 is scored at 150
+simulations, which is the budget every published arm ran at. A win at 2400
+would be a finding about the budget, reported as such, and would argue for
+re-running the whole benchmark at the larger budget rather than for quietly
+re-scoring the gate.
+
+### Outcome
+
+*(to be filled in after the run; nothing above this heading may be edited)*

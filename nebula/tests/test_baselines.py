@@ -851,3 +851,40 @@ def test_analyse_survives_a_log_with_a_single_group():
     a = B.analyse(runs)
     assert "no pairs to correct" in a["multiple_comparisons"]
     assert set(a["groups"]) == {"P1/uniform"}
+
+
+def test_the_results_artifact_does_not_duplicate_the_run_log(tmp_path,
+                                                             stub_valid):
+    """**Rule 9 in the filesystem again, and it cost 79 MB.**
+
+    `_emit` writes every trial into the JSONL log, and it is handed a shallow
+    COPY of the run summary -- so `runs` still held the trials and `sweep()`
+    saved the entire sweep a second time inside its results JSON. The grid
+    sweep's artifact came out at **79 MB against the 0.2 MB** of the two before
+    it, and the two shapes disagreeing is how it was noticed: a reader
+    comparing artifacts would have found one carrying per-simulation rows and
+    the other not.
+
+    The `curve` is deliberately KEPT. It is not in the log at all -- `_emit`
+    drops it from `run_summary` because it would triple the file -- and it is
+    what every budget-ladder read-out is made of.
+    """
+    import json
+
+    alloc = (B.Allocation("P1", "uniform", False, 1, 4),)
+    out_path = tmp_path / "results.json"
+    B.sweep(alloc, log_path=tmp_path / "run.jsonl", out_path=out_path,
+            workers=1, control=False)
+
+    saved = json.loads(out_path.read_text(encoding="utf-8"))
+    assert saved["runs"], "no runs were saved"
+    for r in saved["runs"]:
+        assert "trials" not in r, (
+            "the results artifact duplicates the run log -- see rule 9"
+        )
+        assert "curve" in r, (
+            "the curve is NOT in the log, so dropping it here loses it"
+        )
+    # and the log is where the trials actually are
+    log = (tmp_path / "run.jsonl").read_text(encoding="utf-8")
+    assert '"event": "trial"' in log or '"event":"trial"' in log
