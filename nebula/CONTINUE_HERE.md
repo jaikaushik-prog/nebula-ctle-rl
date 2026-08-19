@@ -1,8 +1,8 @@
 # CONTINUE_HERE.md — the brief for the next agent
 
 **Written 2026-08-19, at the end of sessions 22e–22g; updated the same day
-at the end of session 22h, which built grid search and ran the benchmark
-again.** Supersedes
+at the end of sessions 22h and 22i, which built grid search, ran the
+benchmark again, and then laddered the simulation budget 16x.** Supersedes
 `nebula/NEXT_STEPS.md`, which was written 2026-08-08 and is now wrong in its
 first table (it says G2 is not started and the sweep has not run; both are done).
 
@@ -19,10 +19,10 @@ in this repository and to a commit.
 |---|---|---|---|
 | 1 | **this file**, §§1–8 | the situation and the decision | 10 min |
 | 2 | `CLAUDEwa.md` §§1–3, §7 | the contract, the spec table, the gates | 15 min |
-| 3 | `HANDOFF.md` §0 header, §9 gotchas **G92–G96** | state, and the five traps found this week | 20 min |
-| 4 | `nebula/BASELINES.md` §12 (+§12.6), then **§13** | the sweep, the control that gives it meaning, and the grid arm | 25 min |
+| 3 | `HANDOFF.md` §0 header, §9 gotchas **G92–G98** | state, and the seven traps found this week | 25 min |
+| 4 | `nebula/BASELINES.md` §12 (+§12.6), then **§13** and **§14** | the sweep, its control, the grid arm, and the budget ladder | 35 min |
 | 5 | `nebula/PEAK_INTERP.md` §0, §5, §7 | why the reward changed and what it cost | 10 min |
-| 6 | `nebula/PREDICTIONS.md` entries 10–14 | how this project makes claims | 25 min |
+| 6 | `nebula/PREDICTIONS.md` entries 10–15 | how this project makes claims | 30 min |
 | 7 | `PLAN.md` §2 (D1–D7), §7, §8 | the team's decisions and cut order | 10 min |
 
 **Do not skim 3 and 6.** The gotchas are the highest-value-per-line thing in the
@@ -43,7 +43,17 @@ diagnoses of why have been made and two of them were wrong; the current one is
 that at a 150-simulation budget the policy gradient is *uninformative*, not
 absent, and no hyperparameter fixes that.
 
-**Session 22h then built the baseline G3 names and this project did not have —
+**Session 22i then laddered the budget 16×, and it produced the clearest
+sentence this project has about its own method.** At 150 simulations PPO is
+0.0426 behind uniform random. Give it 2400 and 23 policy updates instead of 1
+and that deficit closes — **and PPO is *not separable* from uniform random at
+any rung of the ladder.** Meanwhile CMA-ES reaches **8.9999** against a ceiling
+of 9.0000 while PPO and random both stall at ~8.994, and that 0.006 **does not
+close**: CMA-ES is separably better than PPO at **every single budget tested**.
+
+> **PPO is not broken. It is a random search with extra steps.**
+
+**Session 22h built the baseline G3 names and this project did not have —
 grid search — and re-ran everything.** Grid comes **last**, below PPO, and the
 reason is resolution rather than adaptivity: at d = 7 a 150-simulation budget
 buys `150 ** (1/7)` = **2.06 levels per axis**, so even a policy that does not
@@ -270,7 +280,13 @@ it would do.
    "the screen helps" with "the screen is miscalibrated"), and P3's PPO arm is
    STRUCTURAL. Restoring P2 changes what the benchmark measures, so it is not
    an agent's call.
-7. **NEW (22h): pin the warm-up/control configuration?** 7g takes it from
+7. **NEW (22i): the repository is getting large, and part of it was my
+   mistake.** `.git` was 98 MB before 22h and now carries an accidental 79 MB
+   blob (commit `3ee4ea1`, a results JSON that duplicated its own run log —
+   fixed forward, but the blob is in history) plus 32 MB of ladder log.
+   Removing the blob needs a history rewrite. **Owner's call**, and it is not
+   urgent — the repo is private and nothing is broken.
+8. **NEW (22h): pin the warm-up/control configuration?** 7g takes it from
    `jobs[0]`, i.e. the head of the shuffle, so **adding a method silently
    changed which configuration the timing control measures** — it became
    `P3/uniform`, whose 6-simulations-per-design short-circuiting is far noisier
@@ -315,6 +331,12 @@ it.
    cleanest demonstration of that in the project.
 5. **(22h) The benchmark is bit-for-bit deterministic** — twelve group medians
    reproduced at **0.00e+00** across two independently ordered sweeps.
+6. **(22i) The budget ladder** (`BASELINES.md` §14). *At a matched budget, from
+   150 to 2400 simulations, our PPO agent is statistically indistinguishable
+   from uniform random search at every budget tested, while CMA-ES is
+   separably better at every budget tested.* One table, one control, 96 000
+   simulations — and it settles the "it just needs more data" objection that a
+   panel will certainly raise.
 
 ---
 
@@ -390,6 +412,16 @@ simulator alone). A 25 500-simulation sweep is **42 minutes**, not 12 hours.
 * **A single probe point is not a function comparison.** The same seed reads
   0.633 on one observation and 0.209 averaged over 32. A tanh can be saturated
   at one point and steep at another.
+* **G97** — *`anytime_curve` CLAMPS rather than truncates*, so asking it for a
+  short prefix of a long run folds every later trial into the last cell. It
+  manufactured "34 of 40 curves mismatched, worst difference 9.18" out of data
+  that actually agreed at 0.0.
+* **G98** — *a ratio metric must be run against its own reference.* Entry 15's
+  headline read 0.960 / 0.893 / 0.632 / 0.988 / **0.623×** when the control was
+  measured against itself, where it must read 1.000×, because a median of
+  monotone step functions has plateaus. Three of eleven predictions were
+  written against the wrong line. **The only reason it was catchable is that
+  the control was in the run.**
 * **A prediction band that spans zero cannot test a directional claim.** Entry
   14 predicted "grid beats PPO, by 0.02" with a band of −0.06…+0.10. Grid lost
   by 0.0220 — inside the band, and the claim was wrong. Scored as a miss on the
@@ -468,7 +500,11 @@ is different and sharper: at seven dimensions 150 simulations buys `150**(1/7)`
 = 2.06 levels per parameter, and the reward pays for resolution, so even a
 policy that provably does not learn out-resolves a factorial.** The same run
 proved the benchmark **bit-for-bit deterministic** (twelve medians at 0.00e+00)
-and, through that, caught **G96**. The two things worth the remaining 27 days
+and, through that, caught **G96**. Session 22i then laddered the budget 16×
+and answered the objection a panel will certainly raise: **more simulations
+close PPO's deficit to random search and never take it past random search**,
+while CMA-ES is separably better at every budget tested — *PPO is not broken,
+it is a random search with extra steps*. The two things worth the remaining 27 days
 are the two contributions `CLAUDEwa.md` §7 already claims: **corner-aware
 evaluation** (mandatory anyway, and now the top item) and the **spec-conditioned
 policy**, which is the only regime where the policy gets enough experience to

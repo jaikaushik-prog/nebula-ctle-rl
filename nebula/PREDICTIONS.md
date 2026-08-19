@@ -2604,6 +2604,134 @@ would be a finding about the budget, reported as such, and would argue for
 re-running the whole benchmark at the larger budget rather than for quietly
 re-scoring the gate.
 
-### Outcome
+### Outcome — **neither. PPO's deficit to random search closes with budget; PPO never gets past random search; and CMA-ES beats both at every rung by a margin that does not close.** Run 2026-08-19, 40 runs, 96 000 simulations, five resumed chunks.
 
-*(to be filled in after the run; nothing above this heading may be edited)*
+`exp_budget_ladder --run`. Artifacts `budget_ladder_run.jsonl`,
+`budget_ladder_results.json`, `budget_ladder_summary.json`.
+
+#### The ladder — median best-so-far
+
+| arm | 150 | 300 | 600 | 1200 | 2400 |
+|---|---|---|---|---|---|
+| **cmaes** | 8.9736 | 8.9965 | 8.9993 | **8.9999** | **8.9999** |
+| uniform | 8.9532 | 8.9635 | 8.9860 | 8.9901 | 8.9939 |
+| **ppo** | 8.9106 | 8.9521 | 8.9844 | 8.9903 | 8.9941 |
+
+| separability | 150 | 300 | 600 | 1200 | 2400 |
+|---|---|---|---|---|---|
+| ppo vs uniform | not | not | not | not | **not, at any rung** |
+| cmaes vs uniform | not | **SEP** | **SEP** | **SEP** | **SEP** |
+| cmaes vs ppo | **SEP** | **SEP** | **SEP** | **SEP** | **SEP** |
+
+#### The answer, in one paragraph
+
+**PPO was partly starved and that is not the interesting half.** Its
+150-simulation deficit to random search — `−0.0426`, and 0.750× of random's
+budget after calibration — closes monotonically and is gone by 600–1200. So
+one gradient update *was* costing it something.
+
+**But it converges TO random search, not past it.** At 1200 and 2400 the gap
+is `+0.0001` and `+0.0002`, and PPO is **not separable from uniform random at
+any rung of the ladder**. Sixteen times the budget and twenty-three policy
+updates instead of one buys PPO exactly parity with guessing.
+
+**And the thing that is left to win, PPO does not win.** CMA-ES reaches
+**8.9999** by 1200 against a ceiling of 9.0000, while uniform and PPO both
+plateau at **~8.994**. That 0.006 does not close: CMA-ES is separable from
+uniform from 300 up and from PPO at **every single rung**. Falsifier 2 —
+"uniform saturates, so there was nothing left to win" — **did not fire**:
+random search stops 0.006 short of what a classical optimiser takes.
+
+> **This is the fourth diagnosis of PPO's failure and the first that is not
+> about PPO being broken. PPO is not broken. It is a random search with extra
+> steps.**
+
+#### Scoring
+
+| # | prediction | point | band | measured | |
+|---|---|---|---|---|---|
+| 1 | `ppo` random-equivalent ratio at 2400 | 0.75× | 0.40–1.10 | **censored, > 1.00×** | **MISS** |
+| 2 | does the ratio cross 1.0 at any rung? | **no** | — | **yes** — 1.024× at 1200 | **MISS** |
+| 3 | the ratio's trend is flat | flat | −0.4…+0.4 | 0.720 → 0.480 → 0.578 → 1.024 → >1.00; **rises** | **MISS** on the claim, inside the band |
+| 4 | `ppo` median at 2400 | 8.985 | 8.94–8.999 | **8.9941** | HIT |
+| 5 | `uniform` median at 2400 | 8.996 | 8.985–8.9995 | **8.9939** | HIT |
+| 6 | `cmaes` median at 2400 | 8.999 | 8.990–9.000 | **8.9999** | HIT |
+| 7 | raw gap at 2400 | −0.011 | −0.06…+0.005 | **+0.0002** | band held, **point had the wrong sign** |
+| 8 | the raw gap shrinks while the ratio does not improve | yes | — | **no — the ratio improved too** | **MISS** |
+| 9 | `cmaes` ratio at 2400 censored | censored | — | **censored** | HIT |
+| 10 | `ppo` gain over the final third at 2400 | +0.005 | 0.00–0.05 | **+0.0000** | in band **at its floor** |
+| 11 | prefix check | 0 of 40, exact | exact | **0 of 40, worst \|diff\| 0.000e+00** | HIT |
+
+**6 hits, 4 misses, 1 at a band floor.** The four misses are all the same
+miss: I predicted PPO would not close the gap, and it closed it. What I got
+right is that closing it would not make PPO *good* — #7's band held and the
+medians converge at a value 0.006 below CMA-ES.
+
+#### **The control invalidated my own metric, and that is the most useful thing here**
+
+`random_equivalent_budget` was defined as *"the first simulation at which
+uniform's median curve reaches this score"*. Run against **uniform itself** it
+must read 1.000× — and it does not:
+
+| | 150 | 300 | 600 | 1200 | 2400 |
+|---|---|---|---|---|---|
+| **uniform vs uniform** | 0.960× | 0.893× | 0.632× | 0.988× | **0.623×** |
+
+The cause is real, not a coding error. **A median over twenty monotone step
+functions is itself a step function with long plateaus**, so "first reached" is
+the *start* of the plateau the target sits on. `uniform 2400 → 1494` is a true
+sentence — the median uniform run had already reached its 2400-simulation score
+after 1494 — but it is **not an equivalent budget**, and **1.0 is the wrong
+line to compare anything against.**
+
+The pre-registered quantity is reported unchanged and scored as registered
+(#1, #2, #3 above). Beside it now sits the same quantity divided by the
+control's own value, where the control reads exactly 1.000× by construction:
+
+| calibrated | 150 | 300 | 600 | 1200 | 2400 |
+|---|---|---|---|---|---|
+| cmaes | **2.167×** | > 8.96× | > 6.33× | > 2.02× | > 1.61× |
+| uniform | 1.000× | 1.000× | 1.000× | 1.000× | 1.000× |
+| **ppo** | **0.750×** | 0.537× | 0.916× | **1.036×** | > 1.61× |
+
+**And this metric saturates too, which must be said rather than exploited.** At
+2400 both PPO and CMA-ES read `> 1.61×` — the same censoring bound — because
+uniform never reaches either. That is not evidence they are equal: their
+medians are 8.9941 and 8.9999 and they are **separable**. Above ~1200
+simulations the ratio stops discriminating and the medians are the honest
+read-out.
+
+Recorded as **G98**: *a ratio metric must be run against its own reference, and
+if reference-against-reference is not 1.0 the threshold is wrong.* **The only
+reason this was catchable is that the control was in the run** — the
+originally-proposed design, PPO against itself, would have produced the same
+numbers with nothing to check them against.
+
+#### The design claim, verified
+
+**40 of 40 curves matched the published 150-simulation sweep at worst
+\|diff\| = 0.000e+00.** A 2400-simulation run does contain the 150-simulation
+run, exactly, for all three methods — so the ladder was read off one run per
+seed rather than five, and prediction 11 is a clean hit.
+
+#### What this does and does not license
+
+**It does not rescue G3.** G3 is scored at 150 simulations, the budget every
+published arm ran at, and at 150 PPO is behind uniform by 0.0426. A budget at
+which PPO reaches parity with random search is a finding about the budget, not
+a re-score of the gate.
+
+**It does not test the amortised claim.** Every run here optimises one fixed
+spec target from scratch, which is the regime `PREDICTIONS.md` entry 6 already
+ring-fences. The spec-conditioned policy remains the only place RL has an
+argument, and nothing in this entry touches it.
+
+**What it does license** is a sharper sentence than the project had before:
+*at a matched budget, from 150 to 2400 simulations, our PPO agent is
+statistically indistinguishable from uniform random search at every budget
+tested, while CMA-ES is separably better at every budget tested.* That is worth
+more to a panel than a hedge about sample sizes, and it is now measured rather
+than argued.
+
+*Nothing above the Outcome heading was edited.*
+

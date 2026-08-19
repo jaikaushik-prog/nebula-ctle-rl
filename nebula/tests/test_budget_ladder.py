@@ -276,3 +276,171 @@ def test_the_random_equivalent_budget_is_the_headline_and_handles_censoring():
     assert e["lhs"]["100"]["ratio"] is None
     assert e["lhs"]["100"]["uniform_sims"] is None
     assert e["lhs"]["100"]["censored_at"] == 100
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Resume — earned. The first attempt was killed after 8 of 40 runs.
+# ─────────────────────────────────────────────────────────────────────────────
+
+
+def _log_rows(method, replicate, rewards, with_summary=True, budget=None):
+    rows = [{"kind": "event", "event": "trial", "role": "measured",
+             "problem": "P1", "method": method, "replicate": replicate,
+             "prescreen": False, "index": i, "reward": rw, "n_sims": 1,
+             "cum_sims": i + 1}
+            for i, rw in enumerate(rewards)]
+    if with_summary:
+        rows.append({"kind": "event", "event": "run_summary", "role": "measured",
+                     "problem": "P1", "method": method, "replicate": replicate,
+                     "prescreen": False, "n_sims": len(rewards),
+                     "budget_sims": budget or len(rewards),
+                     "best_reward": max(rewards), "seed": 1})
+    return rows
+
+
+def _write_log(tmp_path, rows):
+    p = tmp_path / "run.jsonl"
+    p.write_text("".join(json.dumps(r) + "\n" for r in rows), encoding="utf-8")
+    return p
+
+
+def test_completed_requires_a_SUMMARY_not_merely_trials(tmp_path, monkeypatch):
+    """**The correctness property of resume, and the one that can silently
+    corrupt a result.**
+
+    A job killed mid-flight leaves its trials in the log with no summary. Those
+    trials are a PARTIAL run: treating them as complete would put a short curve
+    into the ladder and every read-out above its length would silently be the
+    last value it happened to reach. The summary is written last, so its
+    presence is the only honest completion marker.
+    """
+    rows = (_log_rows("ppo", 0, [8.1, 8.4, 8.9])
+            + _log_rows("ppo", 1, [8.0, 8.2], with_summary=False))
+    p = _write_log(tmp_path, rows)
+    monkeypatch.setattr(L, "LOG_PATH", p)
+    assert L.completed(p) == {("ppo", 0)}, (
+        "a run with trials but no summary was counted as complete"
+    )
+
+
+def test_completed_is_empty_when_there_is_no_log(tmp_path):
+    assert L.completed(tmp_path / "nope.jsonl") == set()
+
+
+def test_results_from_log_rebuilds_the_curve_from_the_TRIAL_rows(tmp_path,
+                                                                 monkeypatch):
+    """Rule 9: the log is the one record. The curve is not in it -- the summary
+    drops it because it is `budget_sims` floats per run -- so it is rebuilt
+    rather than stored twice, and the rebuild has to be a step function of the
+    best so far."""
+    p = _write_log(tmp_path, _log_rows("ppo", 0, [8.1, 8.0, 8.9, 8.5]))
+    monkeypatch.setattr(L, "LOG_PATH", p)
+    res = L.results_from_log(p)
+    assert len(res["runs"]) == 1
+    r = res["runs"][0]
+    assert r["method"] == "ppo" and r["replicate"] == 0
+    # best-so-far, never decreasing
+    assert r["curve"] == pytest.approx([8.1, 8.1, 8.9, 8.9])
+    # the bookkeeping keys the log carries survive; the wrapper keys do not
+    assert "best_reward" in r
+    assert "kind" not in r and "event" not in r
+
+
+def test_results_from_log_skips_a_run_with_no_summary(tmp_path):
+    """The recovery path must yield every COMPLETE run and no partial one."""
+    rows = (_log_rows("ppo", 0, [8.1, 8.9])
+            + _log_rows("ppo", 1, [8.0, 8.2, 8.3], with_summary=False))
+    res = L.results_from_log(_write_log(tmp_path, rows))
+    assert [r["replicate"] for r in res["runs"]] == [0]
+
+
+def test_the_job_list_covers_the_whole_allocation():
+    js = L.jobs()
+    assert len(js) == sum(B.REPLICATES[m] for m in L.ARMS)
+    assert {j.method for j in js} == set(L.ARMS)
+    assert all(j.problem == "P1" and not j.prescreen for j in js)
+    assert all(j.ac_peak_interp for j in js), (
+        "the ladder must score the same objective as the published sweep"
+    )
+    assert all(j.budget_sims == L.LADDER_BUDGET for j in js)
+    # and the seed does not see the budget, which is WHY one long run contains
+    # the short ones
+    assert (B.run_seed("P1", "ppo", 3)
+            == B.run_seed("P1", "ppo", 3)), "run_seed is not a pure function"
+
+
+def test_runlog_append_continues_instead_of_truncating(tmp_path):
+    """`RunLog` opened with `"w"` is why the first ladder attempt could not be
+    resumed: 19 200 trial rows were on disk and reopening the log would have
+    erased them. Append is opt-in, so nothing else changes."""
+    from nebula.rl.runlog import RunLog, read as runlog_read
+
+    p = tmp_path / "log.jsonl"
+    with RunLog(p, {"chunk": 1}) as lg:
+        lg.event("trial", i=0)
+    with RunLog(p, {"chunk": 2}, append=True) as lg:
+        lg.event("trial", i=1)
+    rows = list(runlog_read(p))
+    assert [r.get("i") for r in rows if r.get("event") == "trial"] == [0, 1]
+    # each chunk records its own provenance rather than inheriting the first
+    assert [r.get("chunk") for r in rows if r.get("kind") == "header"] == [1, 2]
+
+    # ... and the default still truncates, so no existing caller changes
+    with RunLog(p, {"chunk": 3}) as lg:
+        lg.event("trial", i=2)
+    rows = list(runlog_read(p))
+    assert [r.get("i") for r in rows if r.get("event") == "trial"] == [2]
+
+
+def test_the_control_measured_against_ITSELF_exposes_the_metrics_calibration():
+    """**G98: a ratio metric must be run against its own reference.**
+
+    `random_equivalent_budget` is "the first simulation at which uniform's
+    median curve reaches this score". Against UNIFORM ITSELF that must be
+    1.000x if the metric means what its name says -- and on the real run it
+    reads 0.960 / 0.893 / 0.632 / 0.988 / 0.623 across the five rungs.
+
+    The cause is real rather than a coding error: a median over twenty monotone
+    step functions is a step function with long PLATEAUS, so "first reached" is
+    the start of the plateau the target sits on. `uniform 2400 -> 1494` is a
+    true sentence -- the median uniform run had already reached its
+    2400-simulation score after 1494 -- but it is **not an equivalent budget**,
+    and 1.0 is therefore the wrong line to compare against.
+
+    This pins both halves: the raw metric is allowed to be non-unity on a
+    plateaued curve (nobody may "fix" it into a fake 1.0 by smoothing), and the
+    CALIBRATED table must read exactly 1.0 for the control at every rung,
+    because that is what makes the other rows readable.
+    """
+    # a control whose median plateaus: flat from index 5 to 9
+    ctrl = [8.0, 8.2, 8.4, 8.6, 8.8, 9.0, 9.0, 9.0, 9.0, 9.0]
+    other = [8.0, 8.1, 8.2, 8.3, 8.4, 8.5, 8.6, 8.6, 8.6, 8.6]
+    a = L.ladder(_results({"uniform": [ctrl], "ppo": [other]}),
+                 readouts=(10,))
+
+    raw = a["random_equivalent_budget"]
+    # the plateau makes the control's own ratio LESS than one, and that is the
+    # honest reading rather than a bug to be smoothed away
+    assert raw["uniform"]["10"]["uniform_sims"] == 6
+    assert raw["uniform"]["10"]["ratio"] == pytest.approx(0.6)
+
+    cal = a["calibrated_against_the_control"]
+    assert cal["uniform"]["10"]["calibrated"] == pytest.approx(1.0), (
+        "the control must read exactly 1.0 after calibration, or the other "
+        "rows have no line to be compared against"
+    )
+    # ppo reached 8.6, which the control first hits at simulation 4
+    assert raw["ppo"]["10"]["uniform_sims"] == 4
+    assert cal["ppo"]["10"]["calibrated"] == pytest.approx(4 / 6)
+
+
+def test_calibration_keeps_censoring_censored():
+    """A method the control never catches must stay censored after
+    calibration, with a LOWER BOUND rather than a number (7c)."""
+    ctrl = [8.0 + 0.1 * i for i in range(10)]
+    high = [20.0] * 10
+    a = L.ladder(_results({"uniform": [ctrl], "ppo": [high]}), readouts=(10,))
+    d = a["calibrated_against_the_control"]["ppo"]["10"]
+    assert d["censored"] is True
+    assert d["calibrated"] is None
+    assert d["at_least"] > 0

@@ -17,7 +17,35 @@
 > decisions that are OPEN and human-only, and what to do next. It supersedes
 > `nebula/NEXT_STEPS.md`. This file remains the full state of record.
 
-Last updated: **2026-08-19** (session 22i: **THE BUDGET LADDER IS BUILT AND
+Last updated: **2026-08-19** (session 22i-run: **PPO IS NOT BROKEN. IT IS A
+RANDOM SEARCH WITH EXTRA STEPS.** 40 runs, 96 000 simulations. The budget
+ladder ran: **PPO was PARTLY STARVED and that is not the interesting half.**
+Its 150-simulation deficit to random search (**-0.0426**, 0.750x of random's
+budget) closes monotonically and is gone by 600-1200 -- one gradient update
+*was* costing it something. **But it converges TO random search, not past
+it**: the gap at 1200 and 2400 is **+0.0001** and **+0.0002** and PPO is **NOT
+SEPARABLE from uniform random at ANY rung**. 16x the budget and **23 policy
+updates instead of 1** buys exactly parity with guessing. **And what is left
+to win, PPO does not win:** CMA-ES reaches **8.9999** by 1200 against a
+ceiling of 9.0000 while uniform and PPO both plateau at **~8.994**, and that
+**0.006 does not close** -- CMA-ES is separable from PPO at **every single
+rung**. So falsifier 2, "uniform saturates so there was nothing left to win",
+**did NOT fire**. **THE CONTROL INVALIDATED MY OWN PRE-REGISTERED METRIC**:
+`random_equivalent_budget` run against uniform ITSELF must read 1.000x and
+reads **0.960/0.893/0.632/0.988/0.623**, because a median of monotone step
+functions has PLATEAUS and "first reached" is the plateau's START -- so 1.0
+was the wrong line and three of eleven predictions were written against it
+(**G98**). The metric also SATURATES: above ~1200 PPO and CMA-ES read the same
+censoring bound while their medians are separable. **The only reason this was
+catchable is that the CONTROL was in the run** -- PPO against itself would
+have produced the same numbers with nothing to check them against. **Design
+claim verified: 40 of 40 curves match the published 150-simulation sweep at
+0.000e+00**, so the ladder really was read off one run per seed. The run was
+killed at 8 of 40 and **nothing was lost** -- `RunLog` now takes `append` and
+the ladder resumes on the **run_summary** marker, not on trials. Tests
+**1534 -> 1542**. Entry 15 scored **6 HIT, 4 MISS, 1 at a band floor**.)
+
+Earlier session 22i: (**THE BUDGET LADDER IS BUILT AND
 PRE-REGISTERED, NOT YET RUN.** The owner asked to raise the budget and proposed
 200/250/300/350 with PPO compared against itself; the ladder idea is right and
 had three problems. **(1) Separate runs are waste** -- nothing in PPO's config
@@ -3429,6 +3457,36 @@ Plus: git init, .gitignore, 28 tests, Wilson-bound BER reporting.
   budget` pins it -- its fixture puts the jump AFTER the prefix, which is the
   only shape that can tell the two behaviours apart -- and was verified to go
   red with the clamping restored.
+
+- **G98 -- (nebula) a RATIO metric must be run against its own reference, and
+  if reference-against-reference is not 1.0 the threshold is wrong.** Session
+  22i pre-registered `random_equivalent_budget` -- *"how many uniform random
+  simulations buy the score this arm reached in n"* -- as the
+  saturation-proof headline, with 1.0 as the line between "worth more than
+  guessing" and "worth less". Run against **uniform itself** it must read
+  1.000x. It reads **0.960 / 0.893 / 0.632 / 0.988 / 0.623** across the five
+  rungs. The cause is real rather than a bug: **a median over twenty monotone
+  step functions is itself a step function with long PLATEAUS**, so "first
+  reached" is the START of the plateau the target sits on. `uniform 2400 ->
+  1494` is a true sentence -- the median uniform run had already reached its
+  2400-simulation score after 1494 -- but it is **not an equivalent budget**,
+  and every comparison against 1.0 was therefore mis-calibrated. Three of
+  entry 15's eleven predictions were written against that wrong line.
+  **Fixed** by reporting the same quantity divided by the control's own value,
+  where the control reads exactly 1.000x by construction; the pre-registered
+  quantity is kept unchanged beside it and scored as registered.
+  **Two second-order lessons, both worth more than the fix.** (a) **The metric
+  saturates as well**: above ~1200 simulations PPO and CMA-ES both read the
+  same censoring bound `> 1.61x` while their medians, 8.9941 and 8.9999, are
+  SEPARABLE -- so past that point the ratio stops discriminating and the
+  medians are the honest read-out. (b) **The only reason any of this was
+  catchable is that the CONTROL was in the run.** The originally proposed
+  design -- PPO compared against itself across budgets -- would have produced
+  the same numbers with nothing to check them against, and the mis-calibration
+  would have been invisible. *Put the reference in the experiment, then measure
+  the reference with the instrument.*
+  `test_the_control_measured_against_ITSELF_exposes_the_metrics_calibration`
+  pins both halves and was verified to go red.
 
 ## 10. Environment
 
@@ -7581,3 +7639,94 @@ control would cost ~29 % of the run to protect nothing this file reports).
 **Tests 1522 -> 1534.** New: `experiments/exp_budget_ladder.py`,
 `nebula/tests/test_budget_ladder.py` (11), `PREDICTIONS.md` entry 15, gotcha
 **G97**, and a gate that the results artifact may not duplicate the run log.
+
+### 2026-08-19 - Session 22i-run (PPO IS NOT BROKEN. IT IS A RANDOM SEARCH WITH EXTRA STEPS.)
+
+**40 runs, 96 000 simulations, five resumed chunks.** `exp_budget_ladder --run`.
+`PREDICTIONS.md` entry 15 scored: **6 HIT, 4 MISS, 1 at a band floor.**
+
+    median best-so-far        150      300      600     1200     2400
+    cmaes                  8.9736   8.9965   8.9993   8.9999   8.9999
+    uniform                8.9532   8.9635   8.9860   8.9901   8.9939
+    ppo                    8.9106   8.9521   8.9844   8.9903   8.9941
+
+    ppo vs uniform            not      not      not      not      not
+    cmaes vs uniform          not      SEP      SEP      SEP      SEP
+    cmaes vs ppo              SEP      SEP      SEP      SEP      SEP
+
+**PPO WAS PARTLY STARVED, AND THAT IS NOT THE INTERESTING HALF.** Its
+150-simulation deficit to random search -- **-0.0426**, and **0.750x** of
+random's budget after calibration -- closes monotonically and is gone by
+600-1200. One gradient update *was* costing it something.
+
+**BUT IT CONVERGES TO RANDOM SEARCH, NOT PAST IT.** At 1200 and 2400 the gap
+is **+0.0001** and **+0.0002**, and PPO is **NOT SEPARABLE from uniform random
+at any rung of the ladder**. Sixteen times the budget and **23 policy updates
+instead of 1** buys exactly parity with guessing.
+
+**AND WHAT IS LEFT TO WIN, PPO DOES NOT WIN.** CMA-ES reaches **8.9999** by
+1200 against a ceiling of 9.0000, while uniform and PPO both plateau at
+**~8.994**. That **0.006 does not close**: CMA-ES is separable from uniform
+from 300 up and from PPO at **every single rung**. **Falsifier 2 -- "uniform
+saturates, so there was nothing left to win" -- DID NOT FIRE.** Random search
+stops 0.006 short of what a classical optimiser takes.
+
+> **The fourth diagnosis of PPO's failure, and the first that is not about PPO
+> being broken: PPO is not broken. It is a random search with extra steps.**
+
+**THE CONTROL INVALIDATED MY OWN PRE-REGISTERED METRIC, AND THAT IS THE MOST
+USEFUL THING IN THE SESSION.** `random_equivalent_budget` run against UNIFORM
+ITSELF must read 1.000x. It reads **0.960 / 0.893 / 0.632 / 0.988 / 0.623**.
+A median over twenty monotone step functions is a step function with long
+PLATEAUS, so "first reached" is the START of the plateau -- a true statement
+about the data, but **not an equivalent budget**, so **1.0 was the wrong line**
+and three of eleven predictions were written against it. New gotcha **G98**.
+The pre-registered quantity is reported unchanged and scored as registered; a
+CALIBRATED table sits beside it, where the control reads exactly 1.000x by
+construction:
+
+    calibrated                150      300      600     1200     2400
+    cmaes                  2.167x   >8.96x   >6.33x   >2.02x   >1.61x
+    uniform                1.000x   1.000x   1.000x   1.000x   1.000x
+    ppo                    0.750x   0.537x   0.916x   1.036x   >1.61x
+
+**And the metric saturates too, which is said rather than exploited:** at 2400
+PPO and CMA-ES read the SAME censoring bound while their medians are
+SEPARABLE, so above ~1200 the ratio stops discriminating and the medians are
+the honest read-out. **The only reason any of this was catchable is that the
+CONTROL was in the run** -- the originally proposed design, PPO against
+itself, would have produced the same numbers with nothing to check them
+against.
+
+**THE DESIGN CLAIM IS VERIFIED: 40 of 40 curves match the published
+150-simulation sweep at worst |diff| = 0.000e+00.** A 2400-simulation run
+contains the 150-simulation run exactly, for all three methods, so the whole
+ladder was read off one run per seed instead of five.
+
+**THE RUN WAS KILLED AT 8 OF 40 AND NOTHING WAS LOST.** The log streams, so
+19 200 evaluations were already on disk; `RunLog` opened with `"w"` and
+`sweep()` rebuilt every job, so resuming would have re-simulated all of them.
+`RunLog` now takes `append` (default False, nothing else changes) and the
+ladder drives `baselines.run_one` over an explicit job list, skipping whatever
+the log already carries a **run_summary** for. **The completion marker is the
+summary, not the trials** -- a job killed mid-flight leaves trials with no
+summary, and counting those as complete would put a SHORT curve into the
+ladder where every read-out above its length is silently the last value it
+reached. Five chunks of 8, ~23 minutes each.
+
+**WHAT THIS DOES NOT LICENSE.** It does not rescue G3, which is scored at 150
+where PPO is 0.0426 behind uniform -- a budget at which PPO reaches parity
+with guessing is a finding about the budget, not a re-score of the gate. And
+it does not test the amortised claim: every run optimises ONE fixed spec
+target from scratch, which entry 6 already ring-fences. **The
+spec-conditioned policy remains the only place RL has an argument.**
+
+**What it DOES license, and it is sharper than anything the project had:**
+*at a matched budget, from 150 to 2400 simulations, our PPO agent is
+statistically indistinguishable from uniform random search at every budget
+tested, while CMA-ES is separably better at every budget tested.*
+
+**Tests 1534 -> 1542.** Artifacts `budget_ladder_run.jsonl.gz` (32 MB, 96 000
+trial rows), `budget_ladder_results.json` (2.2 MB, every summary and curve),
+`budget_ladder_summary.json`. **Repo size is now an owner item:** `.git` was
+98 MB before this session and carries an accidental 79 MB blob at `3ee4ea1`.

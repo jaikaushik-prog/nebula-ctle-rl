@@ -167,10 +167,148 @@ def budget_report(budget: int = LADDER_BUDGET) -> dict:
     }
 
 
-def run(budget: int = LADDER_BUDGET, workers: int = B.WORKERS) -> dict:
-    """The run. Reuses `baselines.sweep` so every 7f fairness rule holds."""
-    return B.sweep(allocation(budget), log_path=LOG_PATH, out_path=OUT_PATH,
-                   workers=workers, control=False, ac_peak_interp=True)
+def jobs(budget: int = LADDER_BUDGET) -> list[B.Job]:
+    """Every run this experiment needs, as explicit `baselines.Job`s."""
+    return [B.Job("P1", a.method, rep, a.budget_sims, a.prescreen,
+                  ac_peak_interp=True)
+            for a in allocation(budget) for rep in range(a.replicates)]
+
+
+def completed(log_path: Path = LOG_PATH) -> set[tuple[str, int]]:
+    """`(method, replicate)` pairs that already have a `run_summary` row.
+
+    **A trial row is not enough.** A job killed mid-flight leaves its trials in
+    the log with no summary, and those trials are a PARTIAL run whose curve
+    would be silently short. The summary is written last, so its presence is
+    the only honest completion marker.
+    """
+    done: set[tuple[str, int]] = set()
+    if not Path(log_path).exists():
+        return done
+    for row in B.runlog_read(Path(log_path)):
+        if row.get("event") == "run_summary" and row.get("n_sims"):
+            done.add((row["method"], int(row["replicate"])))
+    return done
+
+
+def run(budget: int = LADDER_BUDGET, workers: int = B.WORKERS,
+        max_jobs: Optional[int] = None, fresh: bool = False) -> dict:
+    """The run, **resumable**, because 96 000 simulations is ~2.6 h.
+
+    The first attempt at this experiment was killed after 8 of 40 runs. Its
+    trials were all on disk -- the log streams -- but `baselines.sweep()` opens
+    its log with `"w"` and rebuilds every job, so resuming meant re-simulating
+    19 200 evaluations that were already paid for. G49's rule applies at the
+    level of the RUN as well as the row: *a 40-minute run that has to be
+    repeated has cost 40 minutes twice.*
+
+    So this drives `baselines.run_one` directly over an explicit job list,
+    skips whatever the log already carries a summary for, and appends. Every
+    7f fairness property is preserved because they are properties of `run_one`
+    and `run_seed`, not of `sweep`: same evaluator, same box, same geometry
+    mapping, and a seed that is a stated function of (problem, method,
+    replicate) and does not see the budget.
+
+    **What is NOT preserved, and it does not matter here:** `sweep()`'s
+    interleaving, warm-up and timing control. This experiment reports score
+    against SIMULATIONS and quotes no wall-clock number, so there is nothing
+    for a timing control to protect (see `budget_report`'s note).
+
+    `max_jobs` bounds one sitting. Set it so a chunk finishes inside whatever
+    time the caller actually has; the next call picks up where it stopped.
+    """
+    from concurrent.futures import ProcessPoolExecutor, as_completed
+
+    if fresh and LOG_PATH.exists():
+        LOG_PATH.unlink()
+
+    all_jobs = jobs(budget)
+    done = completed()
+    todo = [j for j in all_jobs if (j.method, j.replicate) not in done]
+    if max_jobs is not None:
+        todo = todo[:int(max_jobs)]
+
+    print(f"  {len(done)} of {len(all_jobs)} runs already complete; "
+          f"running {len(todo)} now", flush=True)
+
+    header = {"task": "budget ladder -- is PPO starved or misdirected?",
+              "ladder_budget": int(budget),
+              "readouts": list(READOUTS),
+              "arms": list(ARMS),
+              "ac_peak_interp": True,
+              "chunk_jobs": [f"{j.method}/{j.replicate}" for j in todo],
+              "resumed_after": sorted(f"{m}/{r}" for m, r in done),
+              **B.provenance()}
+
+    if todo:
+        with B.RunLog(LOG_PATH, header, append=True) as log:
+            def _emit(r: dict) -> None:
+                trials = r.pop("trials", [])
+                for t in trials:
+                    log.event("trial", problem=r["problem"], method=r["method"],
+                              replicate=r["replicate"], seed=r["seed"],
+                              prescreen=r["prescreen"], role=r["role"], **t)
+                log.event("run_summary",
+                          **{k: v for k, v in r.items() if k != "curve"})
+
+            if workers <= 1:
+                for j in todo:
+                    _emit(B.run_one(j))
+            else:
+                with ProcessPoolExecutor(max_workers=workers) as ex:
+                    futs = {ex.submit(B.run_one, j): j for j in todo}
+                    for i, fut in enumerate(as_completed(futs), start=1):
+                        r = fut.result()
+                        _emit(dict(r))
+                        print(f"  [{i:>3}/{len(todo)}] {r['method']:<8} "
+                              f"rep {r['replicate']:>2}  best "
+                              f"{r['best_reward']:.4f}  sims {r['n_sims']:>5}  "
+                              f"{r['wall_s']:.1f} s", flush=True)
+
+    res = results_from_log()
+    n_done = len(completed())
+    res["progress"] = {"complete": n_done, "total": len(all_jobs),
+                       "remaining": len(all_jobs) - n_done}
+    OUT_PATH.write_text(json.dumps(res, indent=1, default=str),
+                        encoding="utf-8")
+    print(f"wrote {OUT_PATH}  ({n_done}/{len(all_jobs)} runs complete)")
+    return res
+
+
+def results_from_log(log_path: Path = LOG_PATH) -> dict:
+    """Rebuild the results **from the log alone**, curves included.
+
+    Rule 9: the log is the one record. The curve is not in it -- `run_summary`
+    drops it because it is `budget_sims` floats per run -- so it is rebuilt
+    here from the trial rows rather than stored twice. That also makes this the
+    recovery path: an interrupted chunk still yields every completed run.
+    """
+    runs: list[dict] = []
+    summaries: dict[tuple[str, int], dict] = {}
+    points: dict[tuple[str, int], list[tuple[int, float]]] = {}
+    for row in B.runlog_read(Path(log_path)):
+        ev = row.get("event")
+        if ev == "run_summary" and row.get("n_sims"):
+            summaries[(row["method"], int(row["replicate"]))] = row
+        elif ev == "trial" and row.get("n_sims", 0) > 0:
+            key = (row["method"], int(row["replicate"]))
+            points.setdefault(key, []).append(
+                (int(row["cum_sims"]), float(row["reward"])))
+    for key, summ in summaries.items():
+        budget = int(summ.get("budget_sims") or 0)
+        pts = sorted(points.get(key, []))
+        if not budget:
+            budget = max((c for c, _ in pts), default=0)
+        curve = np.full(budget, -np.inf)
+        best = -np.inf
+        for cum, rew in pts:
+            best = max(best, rew)
+            lo = min(cum, budget)
+            curve[lo - 1:] = np.maximum(curve[lo - 1:], best)
+        runs.append({**{k: v for k, v in summ.items()
+                        if k not in ("kind", "event", "schema_version")},
+                     "curve": [float(v) for v in curve]})
+    return {"runs": runs}
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -266,6 +404,45 @@ def ladder(results: dict, readouts: Sequence[int] = READOUTS) -> dict:
                                    "ratio": k / float(n), "censored": False}
             equiv[method] = per
 
+    # ── the calibration the metric turned out to need ───────────────────────
+    #
+    # **The control caught a flaw in the metric, and the metric was
+    # pre-registered.** `random_equivalent_budget` was defined as "the first
+    # simulation at which uniform's median curve reaches this score". Run
+    # against UNIFORM ITSELF it must therefore read exactly 1.000x -- and it
+    # does not: 0.960 / 0.893 / 0.632 / 0.988 / 0.623 across the five rungs.
+    #
+    # The cause is real and is not a coding error. A median over twenty
+    # monotone step functions is itself a step function with long PLATEAUS, so
+    # "first reached" is the START of the plateau the target sits on, not the
+    # budget that produced it. `uniform 2400 -> 1494` is a true sentence -- the
+    # median uniform run had already reached its 2400-simulation score after
+    # 1494 -- but it is not an equivalent budget, and **1.0 is therefore the
+    # wrong line to compare anything against.**
+    #
+    # The right line is the control's own value at the same rung. This reports
+    # it rather than silently redefining the pre-registered quantity: both are
+    # in the output, and `PREDICTIONS.md` entry 15 is scored on the one that
+    # was registered.
+    calibrated: dict[str, dict[str, dict]] = {}
+    if "uniform" in equiv:
+        base = equiv["uniform"]
+        for method, per in equiv.items():
+            out = {}
+            for n_key, d in per.items():
+                b = base.get(n_key)
+                if b is None or b["uniform_sims"] is None:
+                    continue
+                if d["censored"]:
+                    out[n_key] = {"calibrated": None, "censored": True,
+                                  "at_least": d["censored_at"]
+                                  / float(b["uniform_sims"])}
+                else:
+                    out[n_key] = {"calibrated": d["uniform_sims"]
+                                  / float(b["uniform_sims"]),
+                                  "censored": False}
+            calibrated[method] = out
+
     gaps = {}
     if "ppo" in cur and "uniform" in cur:
         p = np.asarray(cur["ppo"], float)
@@ -282,7 +459,9 @@ def ladder(results: dict, readouts: Sequence[int] = READOUTS) -> dict:
                 "separable": B.separable(tuple(ci_p), tuple(ci_u)),
             }
     return {"per_arm": rows, "ppo_vs_uniform": gaps,
-            "random_equivalent_budget": equiv, "readouts": list(readouts)}
+            "random_equivalent_budget": equiv,
+            "calibrated_against_the_control": calibrated,
+            "readouts": list(readouts)}
 
 
 def verify_prefix(results: dict, reference: Path = REFERENCE_LOG,
@@ -419,6 +598,27 @@ def print_ladder(a: dict) -> None:
                 cells.append(f"{d['ratio']:.3f}x".rjust(18))
         print("  " + m.ljust(10) + "".join(cells))
     print()
+    print("  ... and the SELF-CHECK that says how to read the row above:")
+    print("  uniform against ITSELF should be 1.000x. It is not, because a")
+    print("  median of step functions has plateaus, so \"first reached\" is the")
+    print("  START of the plateau. Compare against THIS line, not against 1.0.")
+    print()
+    print("  CALIBRATED -- each arm divided by the control's own value")
+    hdr3 = "  " + "arm".ljust(10) + "".join(f"{n:>18}" for n in a["readouts"])
+    print(hdr3)
+    print("  " + "-" * (len(hdr3) - 2))
+    for m, per in a.get("calibrated_against_the_control", {}).items():
+        cells = []
+        for n in a["readouts"]:
+            d = per.get(str(n))
+            if d is None:
+                cells.append("--".rjust(18))
+            elif d["censored"]:
+                cells.append(f">{d['at_least']:.2f}x".rjust(18))
+            else:
+                cells.append(f"{d['calibrated']:.3f}x".rjust(18))
+        print("  " + m.ljust(10) + "".join(cells))
+    print()
     print("  THE RAW GAP: PPO minus UNIFORM RANDOM at each budget")
     print("    read with care -- the reward saturates near +9.0, so this")
     print("    shrinks with budget whether or not anything is learned")
@@ -444,10 +644,31 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
                     help="check the long run contains the published short ones")
     ap.add_argument("--ladder-budget", type=int, default=LADDER_BUDGET)
     ap.add_argument("--workers", type=int, default=B.WORKERS)
+    ap.add_argument("--max-jobs", type=int, default=None,
+                    help="run at most this many OUTSTANDING runs, then stop "
+                         "cleanly. The run is resumable, so a long experiment "
+                         "is taken in sittings that fit the time available.")
+    ap.add_argument("--fresh", action="store_true",
+                    help="delete the log and start over. Not the default: the "
+                         "first attempt at this experiment was killed after 8 "
+                         "of 40 runs and every one of its trials was on disk.")
+    ap.add_argument("--progress", action="store_true",
+                    help="how many runs are complete. No SPICE, no analysis.")
     args = ap.parse_args(argv)
 
-    if not any((args.budget, args.run, args.analyse, args.verify_prefix)):
+    if not any((args.budget, args.run, args.analyse, args.verify_prefix,
+                args.progress)):
         ap.error("choose a stage; see the module docstring")
+
+    if args.progress:
+        done = completed()
+        allj = jobs(args.ladder_budget)
+        print(f"\n  {len(done)} of {len(allj)} runs complete")
+        for m in ARMS:
+            have = sum(1 for k in done if k[0] == m)
+            want = sum(1 for j in allj if j.method == m)
+            print(f"    {m:<10} {have:>3}/{want}")
+        print()
 
     out: dict = {}
     if args.budget:
@@ -455,7 +676,8 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         print_budget(b)
         out["budget"] = b
     if args.run:
-        res = run(args.ladder_budget, workers=args.workers)
+        res = run(args.ladder_budget, workers=args.workers,
+                  max_jobs=args.max_jobs, fresh=args.fresh)
         a = ladder(res)
         print_ladder(a)
         out["ladder"] = a

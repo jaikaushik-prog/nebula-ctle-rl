@@ -81,15 +81,27 @@ def _clean(obj: Any) -> Any:
 class RunLog:
     """Append-only JSONL writer. Use as a context manager."""
 
-    def __init__(self, path: Path, header: Optional[dict] = None):
+    def __init__(self, path: Path, header: Optional[dict] = None,
+                 append: bool = False):
         self.path = Path(path)
         self.path.parent.mkdir(parents=True, exist_ok=True)
         self._fh = None
         self._header = header or {}
+        #: Continue an existing log instead of truncating it. **Default
+        #: False, so nothing that already uses this class changes.** It
+        #: exists because a long run can be interrupted -- a 96 000-
+        #: simulation sweep does not fit in one sitting -- and this format's
+        #: whole first property is that *a truncated run is still readable*.
+        #: A resumed chunk writes its OWN header row before continuing:
+        #: not a duplicate but the provenance of that chunk, since readers
+        #: already filter by `kind`/`event` and a chunk whose conditions
+        #: differ from the first must be able to say so.
+        self.append = bool(append)
         self.n_rows = 0
 
     def __enter__(self) -> "RunLog":
-        self._fh = self.path.open("w", encoding="utf-8", newline="\n")
+        mode = "a" if self.append and self.path.exists() else "w"
+        self._fh = self.path.open(mode, encoding="utf-8", newline="\n")
         # Row 0 is the header: the seed, the box, the tolerances, the library.
         # It is a ROW, not a separate file, so a log can never be read without
         # the conditions that produced it (CLAUDEwa.md §8 rule 8).
