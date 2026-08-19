@@ -17,7 +17,35 @@
 > decisions that are OPEN and human-only, and what to do next. It supersedes
 > `nebula/NEXT_STEPS.md`. This file remains the full state of record.
 
-Last updated: **2026-08-20** (session 22l: **THE FRONT DOOR EXISTS.**
+Last updated: **2026-08-20** (session 22m: **DELIVERABLE 2 EXISTS -- the LLM
+wrapper, with a guard that makes it safe.** `python -m nebula.llm "I need about
+9 dB of peaking with the peak near 1.9 GHz"` parses, sizes, verifies and
+explains. **THE HARD PART IS THE GUARD, NOT THE PROMPT:** rule 1 is *never
+fabricate a number*, and an LLM's copied and invented numbers are
+indistinguishable to a reader -- so `llm/grounding.py` extracts every numeric
+literal and requires each to match a fact **at the precision written**
+("8.78 dB" matches a measured 8.7763; "8.9 dB" does not), and a miss
+**DISCARDS the text rather than repairing it**. **No allowlist for bare
+integers**: "45 corners" is a hole wide enough for a fabricated COUNT, and
+counts are what a reader trusts without checking. **Three properties, each with
+a gate broken and watched go red:** the model **cannot widen the spec** (both
+parse paths end at the same `SpecTarget` constructor -- **the validator is in
+the TYPE, not the prompt** -- and the system prompt tells the model to return
+out-of-range numbers UNCHANGED); it **cannot invent a number**; and it is
+**never in the sizing loop** (a test greps `nebula/llm/` for `reward_v1`,
+`evaluator`, `baselines`, `sizing_from_u`, `METHODS`, `Objective`). **`anthropic`
+is NOT a dependency** -- regex parsing and a `str.format` template mean CI needs
+no key and **the 25 Sept demo does not depend on venue wifi**; the template is
+*ungrounded by construction* and a test proves it survives its own checker. A
+naming trap earned twice from two call sites: `explain.py` holding a function
+called `explain` meant the re-export **shadowed the module**; it is now
+`explanation.py` and the rule is pinned generally. API verified against the
+current reference rather than memory: `output_config={"effort": "low",
+"format": {"type": "json_schema", ...}}`, model **`claude-opus-5`**. Tests
+**1582 -> 1607**. **Both competition deliverables now exist; what remains is
+the report.**)
+
+Earlier session 22l: ( **THE FRONT DOOR EXISTS.**
 `CLAUDEwa.md` §2's deliverable 1 -- *"takes target specs as input ... outputs
 the final schematic and resulting specs"* -- had every piece built for weeks
 and **no single command**. `python -m nebula.design --peaking 9 --f-peak 1.9e9`
@@ -8148,3 +8176,85 @@ the list.
 
 **Still missing from the deliverable list: `nebula/llm/` (deliverable 2, the
 bonus) and the report.**
+
+### 2026-08-20 - Session 22m (DELIVERABLE 2: the LLM wrapper, with a guard that makes it safe)
+
+**`CLAUDEwa.md` §2's bonus deliverable -- *"LLM-based human interaction with a
+wrapper to fine-tune"* -- and `nebula/llm/` did not exist.** It does now.
+
+    python -m nebula.llm "I need about 9 dB of peaking with the peak near 1.9 GHz"
+
+    REQUEST   "I need about 9 dB of peaking with the peak near 1.9 GHz"
+    READ AS   peaking 9 dB, peak at 1.9 GHz   [parsed by regex]
+    ... the full schematic + specs table ...
+    EXPLANATION [template]
+      You asked for 9 dB of high-frequency peaking with the peak near 1.9 GHz.
+      The sized stage peaks at 8.776 dB at 1.9 GHz, and lifts the response by
+      8.744 dB at Nyquist -- so it equalises rather than merely peaking
+      somewhere below the data band. ...
+
+**THE HARD PART IS THE GUARD, NOT THE PROMPT.** §8 rule 1 is *"never fabricate
+a number"*, and an LLM writing prose about a circuit produces numbers of which
+some are copied and some are invented -- **indistinguishable to a reader**. So
+the wrapper does not ask the model to be careful, it CHECKS:
+`llm/grounding.py` extracts every numeric literal from the generated text and
+requires each to match a fact **at the precision it was written to**. "8.78 dB"
+matches a measured 8.7763; "8.9 dB" does not. A miss raises and **the text is
+DISCARDED, not repaired** -- patching would leave prose whose remaining claims
+were written around the deleted number.
+
+**No allowlist for bare integers**, deliberately: "the 3 specs" or "45 corners"
+is a hole wide enough to drive a fabricated COUNT through, and counts are what
+a reader trusts without checking. The prompt tells the model to spell small
+numbers as words; the checker admits no exceptions. A guard with an allowlist
+is a guard someone will widen.
+
+**THREE PROPERTIES, EACH WITH A GATE THAT WAS BROKEN AND WATCHED GO RED:**
+
+1. **The model cannot widen the spec.** Both parse paths -- regex and LLM --
+   end at the same `SpecTarget` constructor, which refuses anything outside
+   S3's band. **The validator is in the TYPE, not in the prompt**, so the worst
+   an LLM misreading can do is produce a *different legal request*. The system
+   prompt explicitly tells the model to return an out-of-range number
+   UNCHANGED, because a model that helpfully clamps hides the one thing the
+   caller must be allowed to refuse.
+2. **The model cannot invent a number** (above).
+3. **The model is never in the sizing loop.** §2's objective is *"zero human
+   intervention"* in the DESIGN, which only coexists with an LLM wrapper if the
+   model stays outside the optimiser. A test greps `nebula/llm/` for
+   `reward_v1`, `evaluator`, `baselines`, `sizing_from_u`, `METHODS` and
+   `Objective` and fails if any appears.
+
+**`anthropic` IS NOT A DEPENDENCY.** Every path has a deterministic offline
+fallback -- regex for parsing, a `str.format` template for the explanation --
+so CI needs no key and **a live demo on 25 September does not depend on the
+venue's wifi**. `--llm` opts IN. The template is *ungrounded by construction*
+(every number substituted from `facts()`), and a test asserts it survives its
+own checker, so the fallback is provably safe rather than assumed to be.
+
+**An out-of-range request is NOT retried offline.** If the model read "20 dB"
+correctly, re-parsing and raising the same error is noise; if it read it
+wrongly, quietly trying another parser until one succeeds is how a demo answers
+a question nobody asked. Only infrastructure failures -- no package, no key, no
+network -- fall back, and the fallback SAYS so in the output.
+
+**A NAMING TRAP, EARNED TWICE IN ONE SESSION FROM TWO CALL SITES.**
+`explain.py` held a function called `explain`, and the package re-exported it --
+so `from nebula.llm import explain` silently bound the **function**, shadowing
+the module, and `explain.template(...)` raised `AttributeError`. The module is
+now `explanation.py`, and `test_no_submodule_is_shadowed_by_a_reexport` pins
+the rule generally rather than the one instance.
+
+**API surface used** (verified against the current reference, not from
+memory): `client.messages.create` with `output_config={"effort": "low",
+"format": {"type": "json_schema", "schema": ...}}` for the parse and
+`output_config={"effort": "low"}` for the prose; model **`claude-opus-5`**.
+`effort` is low because this is a short extraction, not reasoning -- the
+wrapper never asks the model to think about circuits.
+
+**Tests 1582 -> 1607** (+25). Four gates deliberately broken and watched go
+red: the fabrication guard accepting anything; small integers exempted; the
+LLM parse path clamping instead of refusing; an ungrounded answer kept instead
+of discarded.
+
+**Both competition deliverables now exist.** What remains is the report.
