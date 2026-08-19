@@ -2228,3 +2228,136 @@ simulations per step; a seed with many short episodes pays more resets and
 overruns. Reported rather than back-filled.
 
 *Nothing above the Outcome heading was edited.*
+
+---
+
+## 14. Session 22h — **grid search, the baseline G3 names and this project never had**
+
+**Written:** 2026-08-19, **before** the run, and committed before it starts.
+
+`CLAUDEwa.md` §7 states G3 as *"RL beats random search **and** grid search at
+TT, with a plot"*. `METHODS` held `uniform, lhs, cmaes, gp_bo, ppo` and no
+grid, so **G3 has not been failing its grid clause — it has been unscoreable on
+it.** `optimize_ctle()` in `python_models/statistical_eye.py` grids CTLE
+*settings* inside the link model; it does not size devices and never sees this
+box, so it is not the missing arm. `method_grid` is, and it is now built.
+
+This entry pre-registers what the re-run will say. The run is
+`baselines --sweep --interp --tag interp_grid`: **31 500 simulations, 210 runs,
+~51 minutes** at the sweep's own measured 0.09773 s/sim.
+
+### Declared inputs — arithmetic, not predictions
+
+These are computed and would be dishonest to score as forecasts.
+
+| | |
+|---|---|
+| box dimension | `N_ACTIONS` = **7** |
+| budget | 150 simulations, and P1 costs exactly **1.000 simulations per design** (measured over 3 000 `uniform` designs in the existing log) |
+| levels the budget buys | `150 ** (1/7)` = **2.06** |
+| the grid that fits | **L = 2**, 128 points; L = 3 is 2 187, i.e. **14.6× the budget** |
+| so an unscreened P1 grid run is | the **same 128 points every seed**, then **22** points from a shuffled L = 3 |
+| P3 | 6 sims/design → 25 designs → `grid_levels` = **1**, one point. Not a search; no P3 grid arm |
+
+### The prediction that matters most, and it is about the STATISTICS
+
+**Grid search is deterministic and this benchmark's machinery is not built for
+that.** Every unscreened seed evaluates the identical 128-point factorial; the
+only thing a seed changes is which 22 of L = 3's points the leftover budget
+reaches. So:
+
+> **`P1/grid`'s 20 replicates are not 20 independent runs. They are one lattice
+> plus 20 short random tails.** Its bootstrap CI will be near zero width, and
+> that zero means something completely different from `BASELINES.md` §12.6's:
+> there, the OBJECTIVE could not resolve; here, the METHOD has no randomness.
+> Any "separable at n = 20" verdict involving `P1/grid` is arithmetically true
+> and inferentially weak, and the write-up must say so rather than bank it.
+
+| # | quantity | point | acceptance band |
+|---|---|---|---|
+| 1 | unscreened grid seeds returning the **identical** `best_reward` | **18 of 20** | ≥ 14 of 20 |
+| 2 | width of `P1/grid`'s 95 % bootstrap CI | **0.000** | ≤ 0.005 |
+| 3 | `P1/grid` median final reward | **8.93** | 8.60 – 8.99 |
+| 4 | `P1/grid` **vs `P1/uniform`** (8.9532) | grid **loses**, by 0.02 | −0.15 … +0.02 |
+| 5 | `P1/grid+screen` − `P1/grid` | **+0.04** | 0.00 … +0.15 |
+| 6 | is #5 the **largest** screen delta of the six methods? | **yes** | (current largest: `uniform` +0.0328) |
+| 7 | `P1/grid` **vs `P1/ppo`** (8.9106) | grid **wins**, by 0.02 | −0.06 … +0.10 |
+| 8 | simulated points on the L ≥ 3 lattice, screened vs unscreened | **~104 vs 22** | screened ≥ 3× unscreened |
+| 9 | the 10 pre-existing group medians, re-run at the same seeds | **all 10 identical** | all within 1e-6 |
+| 10 | wall clock | **51 min** | 40 – 90 min |
+
+### The reasoning behind #3, #4 and #5, so a miss is informative
+
+**#4, grid loses to uniform.** The binding reward row on P1 is `S3_f_peak`,
+whose margin is `0.5 − |log2(f_peak/f_target)|`: it is a *distance to a target*,
+so it pays for **resolution**. A 2-level lattice gives each axis exactly two
+values and therefore gives `f_peak` at most 128 attainable values, all fixed in
+advance; uniform's 150 draws take 150 distinct values from a continuum. Grid
+should lose, and the mechanism is the same one Bergstra and Bengio's 2012
+result names — a factorial spends its budget on coordinates that do not matter
+as heavily as on the ones that do. **The margin should be small**, because
+best-of-128 and best-of-150 from comparable populations are close; the loss is
+resolution at the top, not coverage.
+
+**#5 and #6, the screen buys the grid something it buys nothing else.** For
+every other method the pre-screen buys *throughput*: a rejected proposal costs
+no simulation, so more proposals fit. For the grid it buys **step size**. At
+~36 % acceptance the screened arm clears the 128-point coarse factorial for
+~46 simulations and spends the remaining ~104 inside **L = 3**, whose lattice
+the unscreened arm barely enters. This is the only mechanism in the benchmark
+that can change a grid's resolution, and it is why #5's band is one-sided at
+the bottom rather than centred.
+
+**The risk in #5, named before the fact:** the screen's measured
+false-rejection rate at benchmark conditions is **3.88 %** (`BASELINES.md` §5,
+ten times its 1 % design budget). On a random method a false rejection costs a
+draw. On a *fixed* lattice it can delete the single best point the grid was
+ever going to see, permanently, for every seed. So #5 has a real failure mode
+that is invisible for every other arm, and if it comes back negative that is
+the first place to look.
+
+### What would falsify the reasoning
+
+1. **`P1/grid`'s CI is NOT near zero and the seeds disagree widely.** Then
+   something is re-randomising the lattice and `method_grid` is not doing what
+   its docstring claims — check `_factorial`'s centring and the `seen` set.
+2. **Grid beats `uniform` by more than 0.02.** Then the resolution argument in
+   #4 is wrong, and the more likely explanation is that the box's *structure*
+   (not its fineness) is what the reward rewards — which would be a real result
+   about the problem and would make the P2/P3 grid arms worth building.
+3. **Grid beats every classical optimiser.** Then the benchmark's 150-simulation
+   budget is too small for any method to be doing better than dense sampling,
+   and the ranking in `BASELINES.md` §12 is measuring luck. This is the outcome
+   that would most damage the existing write-up, and it is why it is listed.
+4. **Any of the 10 pre-existing medians moves.** Then the benchmark is not
+   deterministic under its own seed protocol, and every A/B in this project
+   that assumed it is — including §12.6's matched lattice control — needs a
+   re-reading.
+5. **`grid+screen` scores BELOW `grid`.** Then #5's mechanism is dominated by
+   the 3.88 % false-rejection rate deleting lattice points, which would be the
+   sharpest measurement of the screen's bias this project has.
+
+### Guard against over-claiming, in both directions
+
+**A grid arm does not rescue G3.** G3 requires RL to beat random search *and*
+grid search. PPO already loses to `uniform` by 0.0426 (`BASELINES.md` §12), and
+nothing in this entry changes that; the most a favourable grid result can do is
+make G3 fail on one clause instead of two. **Building this arm makes G3
+scoreable, not passable**, and the entry is written that way on purpose.
+
+**And a grid loss is not evidence for RL.** If `ppo` beats `grid` (#7), the
+correct sentence is "PPO beats the weakest baseline in the study", not "RL
+beats grid search" as a headline — because the same table has PPO last of the
+methods that search adaptively. `CLAUDEwa.md` §7's own instruction applies:
+*"If BO matches RL, say so. That is a finding, not a loss."*
+
+**What this row IS worth, and it is worth something.** The competition's
+problem statement is a sentence about grid search — *"should take significantly
+lower time than sweeping all MOS, R, C, L parameter space"* — so this is the
+one baseline a panel is guaranteed to ask about, and after this run the answer
+is a measured number with a matched budget and a stated point pattern rather
+than an appeal to the curse of dimensionality.
+
+### Outcome
+
+*(to be filled in after the run; nothing above this heading may be edited)*

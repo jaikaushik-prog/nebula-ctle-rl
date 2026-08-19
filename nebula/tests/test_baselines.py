@@ -152,7 +152,12 @@ def test_every_simulation_is_counted_including_invalid_ones(stub_invalid):
 
 
 def test_the_budget_stops_every_method(stub_valid):
-    for name in ("uniform", "lhs", "cmaes", "gp_bo"):
+    """Derived from `METHODS`, not from a list, so a method added without a
+    budget test cannot slip through. `ppo` is excluded here because it needs
+    the torch env; `test_ppo_refuses_a_multi_point_problem` covers its seam."""
+    names = [m for m in B.METHODS if m != "ppo"]
+    assert "grid" in names, "the grid arm must be covered by this gate"
+    for name in names:
         obj = B.Objective(B.PROBLEMS["P1"], budget_sims=12)
         with pytest.raises(B.BudgetExhausted):
             B.METHODS[name](obj, np.random.default_rng(1))
@@ -290,10 +295,39 @@ def test_workers_is_eight_because_eleven_is_slower():
     # BASELINES.md quotes both because the difference is the finding.
     assert B.SPEEDUP_AT_8 == pytest.approx(1.80, abs=0.02)
     assert B.SPEEDUP_AT_8_SESSION_17 == pytest.approx(2.98, abs=0.01)
-    assert B.SEC_PER_SIM_AT_8 > B.SEC_PER_SIM_AT_8_SESSION_17, (
-        "the benchmark's own rate must be the SLOWER one; sizing to the "
-        "faster one plans a 12-hour run that takes 15"
+
+
+def test_the_rate_the_budget_is_sized_to_is_the_sweeps_own_end_to_end_timing():
+    """**Replaces an assertion that had gone false, and says why.**
+
+    Until 2026-08-19 this file asserted `SEC_PER_SIM_AT_8 >
+    SEC_PER_SIM_AT_8_SESSION_17` -- "the benchmark's own rate must be the
+    SLOWER one" -- which was the right rule while both numbers were PREDICTIONS
+    of a run that had not happened. The run has now happened, twice, and timed
+    itself end to end: 2528.06 s / 25 869 sims and 2869.64 s / 25 866 sims. A
+    measured rate does not have to be pessimistic; it has to be measured.
+
+    What the rule becomes: the constant the allocation is sized to must be one
+    of the two SWEEP timings, the pessimistic bracket must be the slower of
+    them, and the superseded constants must still be present so a reader can
+    see a 17x revision rather than only its result.
+    """
+    assert B.SEC_PER_SIM_AT_8 == pytest.approx(2528.055 / 25869, rel=1e-3), (
+        "sized to the interpolated sweep's own elapsed time"
     )
+    assert B.SEC_PER_SIM_AT_8_LATTICE == pytest.approx(2869.637 / 25866,
+                                                       rel=1e-3)
+    assert B.SEC_PER_SIM_AT_8_LATTICE > B.SEC_PER_SIM_AT_8, (
+        "the pessimistic bracket must be the slower measurement"
+    )
+    # the history is kept, not overwritten
+    assert B.SEC_PER_SIM_AT_8_PILOT == pytest.approx(1.698)
+    assert B.SEC_PER_SIM_AT_8_PILOT / B.SEC_PER_SIM_AT_8 > 15.0
+    b = B.budget_report()
+    assert b["hours_optimistic"] == pytest.approx(
+        b["total_sims"] * B.SEC_PER_SIM_AT_8 / 3600.0)
+    assert b["hours_pessimistic"] == pytest.approx(
+        b["total_sims"] * B.SEC_PER_SIM_AT_8_LATTICE / 3600.0)
 
 
 def test_p3_lost_two_methods_and_says_which():
@@ -330,22 +364,36 @@ def test_budget_report_adds_up():
     assert b["total_sims"] == sum(
         blk["replicates"] * blk["budget_sims"] for blk in b["blocks"])
     assert b["hours_pessimistic"] == pytest.approx(
-        b["total_sims"] * B.SEC_PER_SIM_AT_8 / 3600.0)
+        b["total_sims"] * B.SEC_PER_SIM_AT_8_LATTICE / 3600.0)
     assert b["hours_optimistic"] < b["hours_pessimistic"]
 
 
-def test_the_allocation_fits_an_overnight_run_and_the_full_design_does_not():
+def test_the_allocation_fits_and_the_cut_is_no_longer_a_cost_argument():
+    """**This test asserted the opposite until 2026-08-19, and the change is
+    the finding rather than a relaxation.**
+
+    It used to require `fully_crossed_hours_at_8 > 12.0`, on the reasoning
+    that "if the fully crossed design fits, nothing needed cutting". At the
+    measured 0.098 s/sim the fully crossed design DOES fit -- 81 000 sims is
+    ~2.2 h -- so that reasoning now points at a decision rather than at a
+    constraint, and the decision is the owner's (CONTINUE_HERE.md sec 5).
+
+    What survives is the part that was never about hours: 7a's rule that the
+    cut falls on problems and screen arms, never on the per-run budget and
+    never on the seed counts. `test_the_cut_fell_on_problems_and_screen_arms_
+    not_on_seeds` is that rule and it is untouched.
+    """
     b = B.budget_report()
-    # 7a asks for "roughly 12 hours"; 12.5 is where "roughly" stops. The
-    # allocation lands at 12.0 h and the warm-up plus control add ~0.15 h on
-    # top, which is why the bound is not exactly 12.
     assert b["hours_pessimistic"] <= 12.5, (
-        "7a: the allocation must fit a single overnight run of roughly 12 h"
+        "7a: the allocation must fit a single overnight run"
     )
-    assert b["fully_crossed_hours_at_8"] > 12.0, (
-        "if the fully crossed design fits, nothing needed cutting and the "
-        "allocation should be the full one"
+    assert b["fully_crossed_hours_at_8"] < 4.0, (
+        "the fully crossed design now fits; if this goes red the rate moved "
+        "and default_allocation()'s docstring has to be re-argued"
     )
+    # ... and the allocation is still NOT the fully crossed design, so the
+    # docstring's claim that cuts remain is checkable rather than asserted.
+    assert b["total_sims"] < b["fully_crossed_sims"]
 
 
 def test_the_cut_fell_on_problems_and_screen_arms_not_on_seeds():
@@ -535,3 +583,195 @@ def test_the_job_order_is_interleaved_not_blocked():
 
 def test_control_limits_are_session_17s_own():
     assert B.CONTROL_RATIO_LIMIT == (0.8, 1.25)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# The GRID arm — G3's criterion names grid search and this file had none until
+# 2026-08-19. These pin the arithmetic, the point pattern, and the two ways the
+# method can silently stop being grid search.
+# ─────────────────────────────────────────────────────────────────────────────
+
+
+def test_grid_levels_is_the_budget_arithmetic_and_it_is_the_finding():
+    """150 simulations in 7 dimensions buys 2.06 levels per axis.
+
+    This is the number the whole grid row exists to report, so it is pinned
+    exactly rather than approximately: L = 2 costs 128 points and fits inside
+    150; L = 3 costs 2 187 and is 14.6x the budget. No arrangement of a
+    150-simulation budget makes grid search finer than two levels per axis at
+    d = 7, and that is what the competition's "sweeping all MOS, R, C, L
+    parameter space" costs.
+    """
+    assert B.grid_levels(B.BUDGET_SIMS, N_ACTIONS) == 2
+    assert 2 ** N_ACTIONS == 128 <= B.BUDGET_SIMS
+    assert 3 ** N_ACTIONS == 2187 > B.BUDGET_SIMS
+    # the boundaries, exactly
+    assert B.grid_levels(128, N_ACTIONS) == 2
+    assert B.grid_levels(127, N_ACTIONS) == 1
+    assert B.grid_levels(2186, N_ACTIONS) == 2
+    assert B.grid_levels(2187, N_ACTIONS) == 3
+    # monotone in the budget, and never zero
+    prev = 0
+    for n in (1, 2, 50, 128, 500, 2187, 20000):
+        L = B.grid_levels(n, N_ACTIONS)
+        assert L >= max(1, prev)
+        prev = L
+    for bad in (0, -1):
+        with pytest.raises(ValueError):
+            B.grid_levels(bad, N_ACTIONS)
+    with pytest.raises(ValueError):
+        B.grid_levels(150, 0)
+
+
+def test_grid_is_not_on_P3_and_the_reason_is_arithmetic_not_taste():
+    """P3 buys 25 designs; the smallest factorial in 7 dimensions is 128."""
+    assert "grid" not in B.P3_METHODS
+    designs = B.BUDGET_SIMS // B.PROBLEMS["P3"].sims_per_design
+    assert designs == 25
+    assert B.grid_levels(designs, N_ACTIONS) == 1, (
+        "if this ever returns >= 2, a grid arm on P3 becomes a search rather "
+        "than a single point and P3_METHODS should be re-argued"
+    )
+
+
+def test_every_method_has_a_seed_offset(stub_valid):
+    """`run_seed` raises `KeyError` on an unknown method, so a method added to
+    `METHODS` without an offset fails at RUN time, inside a worker process,
+    after the sweep has already started. Catch it here instead."""
+    assert set(B.METHOD_OFFSET) >= set(B.METHODS)
+    assert len(set(B.METHOD_OFFSET.values())) == len(B.METHOD_OFFSET)
+
+
+def _grid_us(budget, seed=0, obj=None):
+    obj = obj or B.Objective(B.PROBLEMS["P1"], budget_sims=budget)
+    with pytest.raises(B.BudgetExhausted):
+        B.method_grid(obj, np.random.default_rng(seed))
+    return obj, [t.u for t in obj.trials]
+
+
+def test_grid_is_a_CENTRED_factorial_not_the_128_box_corners(stub_valid):
+    """An endpoint-inclusive 2-level grid in 7 dimensions is exactly the box
+    corners -- every parameter at its extreme, simultaneously. That is a straw
+    man, and it would also be a different measurement: `sizing_from_u` maps
+    u = 0 and u = 1 to the ends of every range. The centred convention is
+    `_lhs`'s, so the two model-free methods differ in point pattern alone."""
+    obj, us = _grid_us(128)
+    assert len(us) == 128
+    assert {round(x, 12) for u in us for x in u} == {0.25, 0.75}
+    assert len({tuple(u) for u in us}) == 128, "the factorial is complete"
+
+
+def test_grid_refines_past_its_first_factorial_when_budget_remains(stub_valid):
+    obj, us = _grid_us(150)
+    levels = [B.grid_level_of(u) for u in us]
+    assert levels.count(2) == 128
+    assert levels.count(3) == 22, "the leftover 22 go into the finer grid"
+    assert None not in levels
+
+
+def test_grid_visits_distinct_points_and_its_dedupe_CANNOT_FIRE_here(stub_valid):
+    """**G73, stated instead of assumed: this guard is unreachable at 150.**
+
+    `method_grid` carries a `seen` set across levels so a refinement never
+    re-simulates a point the coarse pass already has. The first draft of this
+    test asserted "no duplicates" after 400 simulations, went green, and was
+    VACUOUS -- centred lattices nest only when `M / L` is an ODD integer, so
+    L = 2's points are absent from L = 3, L = 4 and L = 5 and first reappear at
+    L = 6, which this loop reaches only after 96 824 designs.
+
+    So this test asserts two different things and keeps them apart: that the
+    points really are distinct at a reachable budget, and that the DEDUPE is
+    not what makes them distinct. The second half is the part G73 is about --
+    "a gate whose condition is unreachable is indistinguishable from a deleted
+    gate" -- and it is why `method_grid`'s docstring says the same thing.
+    """
+    obj, us = _grid_us(400)
+    keys = [tuple(round(x, 12) for x in u) for u in us]
+    assert len(keys) == len(set(keys)), "grid re-evaluated a point"
+
+    # the nesting rule, checked on the lattices themselves
+    rng = np.random.default_rng(0)
+
+    def _pts(L):
+        return {round(x, 12) for x in B._factorial(L, 1, rng).ravel()}
+
+    assert _pts(2) <= _pts(6), "L=2 must nest inside L=6 (6/2 = 3, odd)"
+    for L in (3, 4, 5):
+        assert not (_pts(2) <= _pts(L)), f"L=2 must NOT nest inside L={L}"
+
+    # ... therefore the first level at which `seen` could fire is 6, and
+    # reaching it costs this many designs:
+    cost = sum(L ** N_ACTIONS for L in (2, 3, 4, 5))
+    assert cost == 96_824
+    assert cost > 100 * B.BUDGET_SIMS, (
+        "if the budget ever grows past the coarse levels, the dedupe becomes "
+        "reachable and this test should start asserting that it fires"
+    )
+
+
+def test_grid_level_of_recovers_the_lattice_from_u_alone():
+    """The run log stores `u` and nothing about the grid, so a write-up that
+    claims "the screened arm reached the three-level grid" has to be able to
+    check it against the artifact."""
+    assert B.grid_level_of([0.5] * N_ACTIONS) == 1
+    assert B.grid_level_of([0.25] * N_ACTIONS) == 2
+    assert B.grid_level_of([1 / 6] * N_ACTIONS) == 3
+    # nesting: 0.25 is on BOTH the 2-level and the 6-level lattice, and the
+    # smallest is the one the enumeration reached.
+    assert B.grid_level_of([0.25, 0.75, 0.25, 0.75, 0.25, 0.75, 0.25]) == 2
+    # a point on no lattice -- i.e. every row any other method logs
+    assert B.grid_level_of([0.31] * N_ACTIONS) is None
+    assert B.grid_level_of(np.random.default_rng(0).uniform(size=N_ACTIONS)) is None
+
+
+def test_the_screen_buys_the_grid_RESOLUTION_not_only_throughput(monkeypatch,
+                                                                 stub_valid):
+    """**The claim in `method_grid`'s docstring, measured rather than asserted.**
+
+    For every other method the pre-screen buys throughput: a rejected proposal
+    costs no simulation, so more proposals fit in the budget. For the grid it
+    buys step size -- the screened arm can finish the coarse factorial cheaply
+    and spend its simulations inside the FINER one, which the unscreened arm
+    cannot reach at all. This is the only mechanism in the benchmark that can
+    change a grid's resolution, and if it stops being true the docstring is
+    wrong.
+    """
+    n = {"i": 0}
+
+    def _screen(params, target_f_peak_hz=None):
+        n["i"] += 1
+        return PS.ScreenVerdict(n["i"] % 3 == 0, "stub", None)
+
+    monkeypatch.setattr(B.PS, "screen", _screen)
+
+    plain, _ = _grid_us(150)
+    scr = B.Objective(B.PROBLEMS["P1"], budget_sims=150, prescreen=True)
+    scr, _ = _grid_us(150, obj=scr)
+
+    def _fine(o):
+        return sum(1 for t in o.trials
+                   if t.n_sims > 0 and (B.grid_level_of(t.u) or 0) >= 3)
+
+    assert scr.n_screened_out > 0, "the stub screen never fired"
+    assert _fine(plain) == 22
+    assert _fine(scr) > _fine(plain), (
+        f"the screen bought no resolution: {_fine(scr)} simulated points on "
+        f"the 3-level grid against {_fine(plain)} unscreened"
+    )
+
+
+def test_grid_raises_rather_than_enumerating_forever(monkeypatch):
+    """CLAUDEwa sec 8 rule 10: a condition that cannot be handled must fail
+    loudly. If nothing costs a simulation the budget never exhausts, and every
+    method in this file spins -- `method_uniform` silently and forever. The
+    grid is finite per level, so it is the one that can name the condition,
+    and it must."""
+    fake, calls = _stub_factory(
+        lambda s, c, i: _StubResult(Verdict.VALID, None, _good_meas(), {},
+                                    n_spice=0))
+    monkeypatch.setattr(B, "evaluate", fake)
+    monkeypatch.setattr(B, "GRID_MAX_LEVELS", 2)
+    obj = B.Objective(B.PROBLEMS["P1"], budget_sims=150)
+    with pytest.raises(RuntimeError, match="without spending"):
+        B.method_grid(obj, np.random.default_rng(0))
+    assert obj.n_sims == 0

@@ -6,9 +6,10 @@ experiments/baselines.py — task 7. **The benchmark the final claim rests on.**
 
 WHAT THIS FILE IS, IN ONE PARAGRAPH
 ------------------------------------
-Six search methods, run against ONE evaluator, ONE scalar objective and ONE
-geometry mapping, on a LADDER of problems, with every simulation counted and
-every seed recorded. It answers "how many SPICE calls does each method need"
+Six search methods -- uniform random, Latin hypercube, GRID, CMA-ES, GP-BO and
+PPO -- run against ONE evaluator, ONE scalar objective and ONE geometry
+mapping, on a LADDER of problems, with every simulation counted and every seed
+recorded. It answers "how many SPICE calls does each method need"
 rather than "which method wins", because at this sample size the second
 question is usually not answerable and saying so is part of the deliverable.
 
@@ -73,6 +74,17 @@ USAGE
     python -m nebula.experiments.baselines --pilot             # small, real
     python -m nebula.experiments.baselines --sweep             # the 12 h run
     python -m nebula.experiments.baselines --analyse FILE.jsonl
+
+WHY THERE IS A GRID ARM AT ALL (added 2026-08-19)
+--------------------------------------------------
+`CLAUDEwa.md` sec 7 states G3's criterion as *"RL beats random search AND grid
+search at TT, with a plot"*, and until this was written the file held no grid
+search -- so G3 could not be SCORED, let alone passed. The competition's own
+problem statement is a sentence about grid search (*"significantly lower time
+than sweeping all MOS, R, C, L parameter space"*), which makes this the one
+baseline a judge is guaranteed to ask about. See `method_grid` and
+`grid_levels`; the short version is that 150 simulations in 7 dimensions buys
+150 ** (1/7) = 2.06 levels per axis, and that arithmetic is the result.
 """
 
 from __future__ import annotations
@@ -140,25 +152,52 @@ SEC_PER_SIM_TRAJECTORY: float = 2.071
 SEC_PER_SIM_UNIFORM: float = 3.999
 #: Wall seconds per simulation at `WORKERS`, measured directly (not divided).
 #:
-#: **REVISED 2026-08-08 from session 17's 1.341 to this benchmark's OWN
-#: measurement, and the revision is a finding rather than a correction.**
-#: The session-17 number came from 24 isolated evaluations dispatched to a
-#: pool. This one comes from 33 real benchmark runs, 1992 simulations, 27 064
-#: summed worker-seconds:
+#: **REVISED 2026-08-19, and this is the third value this constant has held.**
+#: The first two were both PREDICTIONS of a run that had not happened; this one
+#: is the run. `sweep()` timed itself end to end (`wall_s` is
+#: `perf_counter()` around the whole pool, warm-up and control included) and
+#: the answer is on disk in `baselines_results_interp.json`:
 #:
-#:     single process (the discarded warm-up)   3.060 s/sim
-#:     8 workers, aggregate                     1.698 s/sim
-#:     speed-up                                 1.80x   <- not 2.98x
+#:     2528.055 s elapsed / 25 869 simulations  =  0.09773 s/sim
 #:
-#: **8 workers buy 1.80x on the benchmark's own task mix**, because each worker
-#: now runs Python between simulations — CMA-ES's eigendecomposition, GP-BO's
-#: O(n^3) fit, PPO's torch forward — where session 17's probe ran nothing but
-#: ngspice. Sizing to 1.341 would plan a 12-hour run that takes 15.
-SEC_PER_SIM_AT_8: float = 1.698
+#: **That is 17.4x cheaper than the 1.698 this constant held**, and the reason
+#: is not a mistake in the old measurement: the 33-run pilot it came from
+#: predates the library trims (G36 and the extended-library trim), and a
+#: constant measured before the thing that made it stale is simply old. The
+#: consequence is stated plainly in `CONTINUE_HERE.md` §3.2 -- the sweep 7a
+#: sized at 12 hours took **42.1 minutes** -- and the same arithmetic now says
+#: the FULLY CROSSED design costs ~2 h, so the cuts in `default_allocation()`
+#: are no longer forced by cost. See that function's docstring.
+#:
+#: **What did NOT change: the simulation counts.** 7g asks for simulations as
+#: the headline precisely so that a stale wall-clock constant can only mis-size
+#: a run, never mis-rank a method.
+SEC_PER_SIM_AT_8: float = 0.09773
 
-#: Measured on the same 33 runs: single-process 3.060 s/sim over 8-worker
+#: The same measurement on the LATTICE control sweep -- same 170 runs, same
+#: seeds, one flag off: 2869.637 s / 25 866 sims. It did strictly LESS work
+#: and took **13.5 % longer**, which is why these two bracket the estimate
+#: instead of one of them being "the" rate: the spread between two runs of the
+#: same allocation on the same machine is larger than anything the objective
+#: costs. `budget_report` quotes the slower one as pessimistic.
+SEC_PER_SIM_AT_8_LATTICE: float = 0.11095
+
+#: The pilot's value, kept because `BASELINES.md` §1 quotes it and because a
+#: constant that changed by 17x should show its history rather than its last
+#: state. 33 benchmark runs, 1992 simulations, single process 3.060 s/sim over
+#: 8-worker aggregate 1.698 s/sim.
+SEC_PER_SIM_AT_8_PILOT: float = 1.698
+
+#: Measured on those same 33 runs: single-process 3.060 s/sim over 8-worker
 #: aggregate 1.698 s/sim. Session 17's 2.98x stands for ITS task set and does
 #: not transfer to this one; both are quoted in `BASELINES.md` §1.
+#:
+#: **Not re-derived from the sweep, deliberately.** The sweep's only
+#: single-process rows are its warm-up and its control, which are ONE
+#: configuration (`P1/uniform+screen`) rather than the task mix, and G94 is
+#: exactly the trap of reading a per-simulation rate off a fraction of the
+#: workload. The sweep's own warm-up/pool ratio is 1.90x and is reported as
+#: what it is -- one configuration -- not promoted to a mix measurement.
 SPEEDUP_AT_8: float = 1.802
 
 #: Session 17 §6i, on 24 isolated evaluations. Kept because `BASELINES.md`
@@ -174,7 +213,7 @@ BASE_SEED: int = 20260807
 PROBLEM_OFFSET: dict[str, int] = {"P1": 0, "P2": 100_000, "P3": 200_000,
                                   "P4": 300_000}
 METHOD_OFFSET: dict[str, int] = {"uniform": 0, "lhs": 1_000, "cmaes": 2_000,
-                                 "gp_bo": 3_000, "ppo": 4_000}
+                                 "gp_bo": 3_000, "ppo": 4_000, "grid": 5_000}
 
 
 def run_seed(problem: str, method: str, replicate: int) -> int:
@@ -651,6 +690,168 @@ def method_lhs(obj: Objective, rng: np.random.Generator) -> dict:
             obj.evaluate(row)
 
 
+#: The most levels per axis `method_grid` will refine to before it gives up.
+#: **A guard, not a tuning knob.** Six levels in seven dimensions is 279 936
+#: points, four orders of magnitude past anything a 150-simulation budget can
+#: reach, so arriving here means the budget is not being SPENT -- every design
+#: screened out for free, or an evaluator returning `n_spice = 0` -- and that
+#: is a condition to raise on, not to absorb. (`method_uniform` would spin
+#: forever on the same condition and say nothing; the grid is finite per level,
+#: so it is the one method that can name it.)
+GRID_MAX_LEVELS: int = 6
+
+
+def grid_levels(n_designs: int, d: int = N_ACTIONS) -> int:
+    """Largest `L` with `L**d <= n_designs`. **This function is the finding.**
+
+    Grid search does not have a step size you choose; it has one the budget
+    chooses for you, and in seven dimensions that arithmetic is brutal:
+
+        150 simulations, d = 7   ->   150 ** (1/7) = 2.06 levels per axis
+        L = 2   ->    128 points   fits
+        L = 3   ->  2 187 points   14.6x the budget
+
+    So on P1 the benchmark's grid arm is a **two-level** factorial and there is
+    no version of this method at this budget that is finer. That is not a
+    handicap we imposed; it is what "sweep the parameter space" costs at d = 7,
+    and it is the sentence the competition's own problem statement is about:
+    *"should take significantly lower time than sweeping all MOS, R, C, L
+    parameter space"*. The row exists to put a number on the thing we are
+    asked to beat.
+
+    Returns 1 -- the single box centre -- when not even a two-level factorial
+    fits, which is what happens on P3 (150 / 6 = 25 designs).
+    """
+    if d < 1:
+        raise ValueError(f"d must be >= 1, got {d}")
+    if n_designs < 1:
+        raise ValueError(f"n_designs must be >= 1, got {n_designs}")
+    L = 1
+    while (L + 1) ** d <= n_designs:
+        L += 1
+    return L
+
+
+def _factorial(levels: int, d: int, rng: np.random.Generator) -> np.ndarray:
+    """The centred full factorial at `levels` per axis, in a SHUFFLED order.
+
+    **Centred**, at `(i + 0.5) / L`, for the same reason `_lhs` centres its
+    cuts: an endpoint-inclusive grid at L = 2 is exactly the 128 corners of the
+    box, which is a straw man rather than a baseline. Centring also makes the
+    two low-tech methods differ in their POINT PATTERN and in nothing else.
+
+    **Shuffled**, because the budget truncates. A lexicographic prefix of a
+    factorial varies only the last coordinates and holds the first ones at a
+    single value, so a truncated grid enumerated in order would be a
+    measurement of the enumeration order rather than of the method. The
+    shuffle is drawn from the run's own `rng`, so it is seeded and recorded
+    like everything else here.
+    """
+    cut = (np.arange(levels) + 0.5) / levels
+    g = np.stack(np.meshgrid(*([cut] * d), indexing="ij"), axis=-1)
+    g = g.reshape(-1, d)
+    return g[rng.permutation(len(g))]
+
+
+def grid_level_of(u: Sequence[float], max_levels: int = GRID_MAX_LEVELS
+                  ) -> Optional[int]:
+    """Which factorial a logged point came from, recovered from `u` alone.
+
+    The run log stores `u` and nothing about the grid, so this is how a
+    write-up checks a claim like "the screened arm reached the three-level
+    grid" against the artifact instead of against the code that wrote it.
+
+    Returns the SMALLEST `L` whose centred lattice contains every coordinate,
+    because the lattices nest -- L = 2's points are a subset of L = 6's -- and
+    the smallest is the one the enumeration actually reached. `None` for a
+    point on no lattice up to `max_levels`, which is what every non-grid
+    method's rows return.
+    """
+    u = np.asarray(u, dtype=float).ravel()
+    for L in range(1, int(max_levels) + 1):
+        cut = (np.arange(L) + 0.5) / L
+        if all(bool(np.any(np.isclose(x, cut, rtol=0.0, atol=1e-9)))
+               for x in u):
+            return L
+    return None
+
+
+def method_grid(obj: Objective, rng: np.random.Generator) -> dict:
+    """Full-factorial grid search, sized to the budget, then refined.
+
+    **The method the competition's problem statement names as the thing to
+    beat**, and until now the one baseline `CLAUDEwa.md` sec 7's G3 criterion
+    asks for that this file did not have. `python_models/statistical_eye.py`
+    has an `optimize_ctle()` that grids CTLE *settings* inside the link model;
+    it does not size devices and it does not see this box, so it is not this.
+
+    The loop:
+
+      1. take the largest complete factorial the budget affords
+         (`grid_levels`) and run it, shuffled;
+      2. if budget remains -- which happens when designs are short-circuited or
+         screened out for free -- refine to `L + 1` and keep going;
+      3. never re-evaluate a point already visited. A grid search that
+         re-simulates a point it already has is being handicapped by an
+         implementation detail rather than by its method -- no human sweeping
+         parameters throws away the coarse pass -- so `seen` carries across
+         levels.
+
+    **G73 applies to that third item and it is declared rather than assumed.**
+    Centred lattices nest only when `M / L` is an odd integer:
+    `(i + 0.5)/L = (j + 0.5)/M` needs `(M/L - 1)/2` integral. So L = 2's points
+    are NOT inside L = 3, L = 4 or L = 5, and first reappear at **L = 6** --
+    which this loop reaches only after enumerating
+    128 + 2187 + 16 384 + 78 125 = 96 824 designs. **At a 150-simulation budget
+    the de-duplication cannot fire**, and a guard whose condition is
+    unreachable is indistinguishable from a deleted one unless somebody says
+    so. It is kept because `BUDGET_SIMS` is a constant, not a law, and it is
+    named here so nobody reports it as a working defence.
+
+    **What this buys the pre-screened arm, and it is worth watching.** For
+    every other method the screen buys *throughput*: rejected proposals cost no
+    simulation, so more proposals fit. For the grid it buys *resolution*: the
+    two-level factorial is 128 points but only the accepted ones cost anything,
+    so the budget can carry the arm into the three-level factorial that the
+    unscreened arm cannot reach at all. The screen is the only thing in this
+    benchmark that can change a grid's step size.
+
+    Determinism is a property of the method and is reported, not engineered
+    away: with the whole factorial affordable, every seed sees the same 128
+    points and differs only in the order it sees them, so the spread across
+    seeds is a measurement of TRUNCATION, not of search. If the arm's bootstrap
+    interval comes back at zero width, that is the answer rather than a bug --
+    and it is a different zero from `BASELINES.md` sec 12.6's, which was the
+    objective failing to resolve rather than the method having no randomness.
+    """
+    d = N_ACTIONS
+    seen: set[tuple[float, ...]] = set()
+    n_designs = max(1, obj.budget_sims // obj.problem.sims_per_design)
+    level = grid_levels(n_designs, d)
+
+    while True:
+        obj.check_budget()
+        if level > GRID_MAX_LEVELS:
+            # Rule 10: fail loudly. Reaching here means `budget_sims`
+            # simulations were never charged, so the run would otherwise
+            # enumerate ever-larger factorials in silence.
+            raise RuntimeError(
+                f"method_grid exhausted {GRID_MAX_LEVELS} levels "
+                f"({GRID_MAX_LEVELS ** d:,} points) without spending its "
+                f"{obj.budget_sims}-simulation budget "
+                f"({obj.n_sims} spent, {obj.n_screened_out} screened out). "
+                "Every design is costing zero simulations -- check the "
+                "pre-screen and the evaluator, not this method.")
+        for row in _factorial(level, d, rng):
+            key = tuple(np.round(row, 12))
+            if key in seen:
+                continue
+            seen.add(key)
+            obj.check_budget()
+            obj.evaluate(row)
+        level += 1
+
+
 @dataclass
 class CmaConfig:
     """Textbook (mu/mu_w, lambda)-CMA-ES defaults. **Nothing here is tuned.**
@@ -957,6 +1158,7 @@ class _ObjectiveEnv:
 METHODS: dict[str, Callable] = {
     "uniform": method_uniform,
     "lhs": method_lhs,
+    "grid": method_grid,
     "cmaes": method_cmaes,
     "gp_bo": method_gp_bo,
     "ppo": method_ppo,
@@ -1030,8 +1232,12 @@ class Allocation:
 BUDGET_SIMS: int = 150
 
 #: 7h's floors. Cutting these is forbidden before cutting a problem rung.
-REPLICATES: dict[str, int] = {"uniform": 20, "lhs": 20, "cmaes": 10,
-                              "gp_bo": 10, "ppo": 10}
+#: `grid` gets 20 like the other two model-free methods, and specifically the
+#: same 20 as `uniform`, because "grid search against random search at equal
+#: budget" is the comparison the problem statement is about and an unequal seed
+#: count would make it a comparison of sample sizes.
+REPLICATES: dict[str, int] = {"uniform": 20, "lhs": 20, "grid": 20,
+                              "cmaes": 10, "gp_bo": 10, "ppo": 10}
 
 #: Which methods run on P3, and this list is where the SECOND cut fell.
 #:
@@ -1047,17 +1253,33 @@ REPLICATES: dict[str, int] = {"uniform": 20, "lhs": 20, "cmaes": 10,
 #: classical optimiser on P1, so between them the rung is answered. Adding
 #: `lhs` and `gp_bo` would spend 4 500 simulations to produce two more rows
 #: reading "never found one". `ppo` cannot run P3 at all — see `method_ppo`.
+#:
+#: **`grid` is absent for a THIRD kind of reason, and it is arithmetic rather
+#: than judgement.** P3 costs 6 simulations per design, so a 150-simulation
+#: budget buys 25 designs, and the smallest complete factorial in 7 dimensions
+#: is 128. `grid_levels(25, 7)` returns **1** -- the single box centre. A grid
+#: arm on P3 would be one point, which is not a search, so the row would
+#: measure the box centre and be labelled as a grid. Stated here rather than
+#: left to be inferred from a missing row.
 P3_METHODS: tuple[str, ...] = ("uniform", "cmaes")
 
 
 def default_allocation() -> tuple[Allocation, ...]:
     """The overnight sweep, as three blocks. **What was cut is in the name.**
 
-    The arithmetic is in `budget_report()`; the shape of the answer is that a
-    fully crossed design (3 rungs x 5 methods x {screen, no screen} x these
-    replicates x 150) is **63 000 simulations = 23.5 hours**, so it does not
-    fit and something has to go. Per 7a the cut falls on PROBLEMS and on
+    The arithmetic is in `budget_report()`. It was that a fully crossed design
+    (3 rungs x 6 methods x {screen, no screen} x these replicates x 150) is
+    **81 000 simulations**, which at the pre-trim 1.698 s/sim was 38 hours and
+    did not fit, so something had to go. Per 7a the cut fell on PROBLEMS and on
     pre-screen ARMS, never on the per-run budget and never on the seed counts:
+
+    **2026-08-19: THE COST ARGUMENT IS GONE AND THE CUTS ARE NOT.** The sweep
+    measured itself at 0.09773 s/sim end to end, so the fully crossed design is
+    now **~2.2 hours**. That retires the budgetary reason for exactly one of
+    the three cuts below -- P2 -- and leaves the other two standing on their
+    own reasons, which were never about cost. Restoring P2 is a change to what
+    the benchmark measures and therefore an OWNER'S CALL, recorded in
+    `CONTINUE_HERE.md` sec 5; it is not taken here.
 
       Block A   P1, no pre-screen, all five methods
       Block B   P1, pre-screened, all five methods
@@ -1065,18 +1287,21 @@ def default_allocation() -> tuple[Allocation, ...]:
                 `method_ppo`)
 
     **Cut, and why:**
-      * **P2 entirely.** It is the interpolation between P1 and P3, and the
+      * **P2 entirely** -- and this is the cut whose reason has now expired.
+        It is the interpolation between P1 and P3, and the
         quantity it would resolve — how much of the loss is corners and how
         much is load — is already measured, twice: session 10d put the corner
         tax at 39 % of the nominal winners and session 12b put the load cost at
         99.4 %. P2 adds a third estimate of a known split at the price of a
         third of the night.
-      * **P3's pre-screened arm.** The screen is calibrated on TT and its
+      * **P3's pre-screened arm.** EPISTEMIC, not budgetary, so it stands.
+        The screen is calibrated on TT and its
         false-rejection rate at corners is unmeasured, so a screened P3 arm
         would confound "the screen helps" with "the screen is miscalibrated off
         nominal". Measuring that calibration first is cheaper than running the
         arm.
       * **P3's PPO arm**, for the structural reason in `method_ppo`.
+      * **P3's grid arm**, for the arithmetic reason in `P3_METHODS`.
     """
     out: list[Allocation] = []
     for m, n in REPLICATES.items():
@@ -1105,28 +1330,37 @@ def budget_report(alloc: Optional[Sequence[Allocation]] = None) -> dict:
         "total_sims": total,
         "fully_crossed_sims": full,
         "fully_crossed_hours_at_8": _hours(full, SEC_PER_SIM_AT_8),
-        # The two brackets. 7a's honest answer is a RANGE, because the two
-        # measured per-simulation costs disagree by 1.9x and the disagreement
-        # is between two task distributions, not two measurements of one thing.
-        "hours_pessimistic": _hours(total, SEC_PER_SIM_AT_8),
-        "hours_optimistic": _hours(total,
-                                   SEC_PER_SIM_TRAJECTORY / SPEEDUP_AT_8),
+        # The two brackets. **Both are now END-TO-END measurements of THIS
+        # allocation** (2026-08-19) rather than two serial probes of two task
+        # distributions: the interpolated sweep and its lattice control, same
+        # 170 runs and same seeds, ran at 0.09773 and 0.11095 s/sim. The spread
+        # between two runs of one allocation is the honest width of the
+        # estimate, and it is 13.5 % rather than the 1.9x the serial probes
+        # disagreed by.
+        "hours_pessimistic": _hours(total, SEC_PER_SIM_AT_8_LATTICE),
+        "hours_optimistic": _hours(total, SEC_PER_SIM_AT_8),
         "sec_per_sim_at_8_workers": SEC_PER_SIM_AT_8,
+        "sec_per_sim_at_8_workers_lattice": SEC_PER_SIM_AT_8_LATTICE,
+        "sec_per_sim_at_8_workers_pilot": SEC_PER_SIM_AT_8_PILOT,
         "sec_per_sim_at_8_workers_session_17": SEC_PER_SIM_AT_8_SESSION_17,
         "speedup_at_8_session_17": SPEEDUP_AT_8_SESSION_17,
         "sec_per_sim_serial_uniform": SEC_PER_SIM_UNIFORM,
         "sec_per_sim_serial_trajectory": SEC_PER_SIM_TRAJECTORY,
         "workers": WORKERS,
         "speedup_at_8": SPEEDUP_AT_8,
-        # What the highest-value open item would do to all of this.
+        # The item that was "highest value in the repo" for five sessions, now
+        # DONE and priced. Kept as a row because the ratio is the argument for
+        # every experiment this project can still afford.
         "library_trim_note": (
-            "HANDOFF sec 8's decided re-run order puts the extended-library "
-            "trim FIRST, measured at 2.07 s/eval against ~0.33 s on the "
-            "nfet-only library. At 0.33 s serial the whole sweep is "
-            f"{_hours(total, 0.33 / SPEEDUP_AT_8):.1f} h instead of "
-            f"{_hours(total, SEC_PER_SIM_AT_8):.1f} h. That item, not any "
-            "choice in this file, is what decides how much benchmark the "
-            "project can afford."),
+            "The extended-library trim is DONE. It was measured at 2.07 s/eval "
+            "before and ~0.33 s serial after, and the end-to-end effect is "
+            f"visible here: this allocation is {_hours(total, SEC_PER_SIM_AT_8):.1f} h "
+            f"at the measured 0.098 s/sim against "
+            f"{_hours(total, SEC_PER_SIM_AT_8_PILOT):.1f} h at the pre-trim "
+            "1.698. **The cuts in default_allocation() were made against the "
+            "pre-trim number and are no longer forced by cost** -- see that "
+            "function's docstring for which of them are now epistemic or "
+            "structural rather than budgetary."),
     }
 
 
@@ -1709,13 +1943,19 @@ def print_budget(b: dict) -> None:
     print("\n" + "=" * 78)
     print("7a BUDGET ARITHMETIC -- computed, not asserted")
     print("=" * 78)
-    print(f"  measured cost. Session 17 sec 6i for the serial rows; THIS")
-    print(f"  benchmark's own 33 runs / 1992 sims for the 8-worker row:")
+    print(f"  measured cost. The 8-worker rows are END-TO-END timings of THIS")
+    print(f"  allocation (2026-08-19); the rest are kept for the history:")
+    print(f"    {b['workers']} workers, interp sweep      "
+          f"{b['sec_per_sim_at_8_workers']:.5f} s/sim  "
+          f"(2528.06 s / 25 869 sims -- what this is sized to)")
+    print(f"    {b['workers']} workers, lattice control  "
+          f"{b['sec_per_sim_at_8_workers_lattice']:.5f} s/sim  "
+          f"(less work, 13.5 % LONGER -- the pessimistic bracket)")
+    print(f"    {b['workers']} workers, 33-run pilot     "
+          f"{b['sec_per_sim_at_8_workers_pilot']:.3f} s/sim  "
+          f"(PRE-library-trim; 17.4x too slow)")
     print(f"    serial, uniform box draws     {b['sec_per_sim_serial_uniform']:.3f} s/sim  (session 17)")
     print(f"    serial, policy trajectory     {b['sec_per_sim_serial_trajectory']:.3f} s/sim  (session 17)")
-    print(f"    {b['workers']} workers, THIS task mix        "
-          f"{b['sec_per_sim_at_8_workers']:.3f} s/sim  "
-          f"({b['speedup_at_8']:.2f}x over its own 3.060 s single process)")
     print(f"    {b['workers']} workers, isolated evals    "
           f"{b['sec_per_sim_at_8_workers_session_17']:.3f} s/sim  "
           f"({b['speedup_at_8_session_17']:.2f}x, session 17 -- does NOT transfer)")
@@ -1724,9 +1964,11 @@ def print_budget(b: dict) -> None:
           f"(the x-axis; held across every method and rung)")
     print(f"  replicates      " + ", ".join(f"{k} {v}" for k, v in b["replicates"].items()))
     print()
-    print(f"  FULLY CROSSED (3 rungs x 5 methods x 2 screen arms):")
+    print(f"  FULLY CROSSED (3 rungs x {len(b['replicates'])} methods x 2 screen arms):")
     print(f"    {b['fully_crossed_sims']:,} sims = "
-          f"{b['fully_crossed_hours_at_8']:.1f} h  -> DOES NOT FIT")
+          f"{b['fully_crossed_hours_at_8']:.1f} h  "
+          f"-> at the MEASURED rate this now FITS; the remaining cuts are "
+          f"epistemic and structural, not budgetary")
     print()
     print(f"  ALLOCATED:")
     for blk in b["blocks"]:
@@ -1738,10 +1980,10 @@ def print_budget(b: dict) -> None:
     print(f"    {'TOTAL':<20} {b['n_runs']:>3} runs         "
           f"{b['total_sims']:>6,} sims")
     print()
-    print(f"    {b['hours_pessimistic']:.1f} h  at the uniform-draw rate "
+    print(f"    {b['hours_pessimistic']:.2f} h  at the lattice sweep's rate "
+          f"(the pessimistic bracket)")
+    print(f"    {b['hours_optimistic']:.2f} h  at the interp sweep's rate "
           f"(what this is sized to)")
-    print(f"    {b['hours_optimistic']:.1f} h  at the policy-trajectory rate "
-          f"(the optimistic bracket)")
     print()
     print("  " + b["library_trim_note"].replace(". ", ".\n  "))
     print()
@@ -1936,7 +2178,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     ap.add_argument("--pilot-budget", type=int, default=40)
     ap.add_argument("--pilot-reps", type=int, default=3)
     ap.add_argument("--pilot-methods", type=str,
-                    default="uniform,lhs,cmaes,gp_bo,ppo")
+                    default="uniform,lhs,grid,cmaes,gp_bo,ppo")
     ap.add_argument("--workers", type=int, default=WORKERS)
     ap.add_argument("--tag", type=str, default="",
                     help="suffix for the artifact names, so two sweeps can "
@@ -1956,6 +2198,12 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     if not any((args.budget, args.prescreen, args.designer, args.pilot,
                 args.sweep, args.analyse)):
         ap.error("choose at least one stage; see the module docstring")
+
+    # G95 in one line: `--tag` exists so two sweeps can coexist, and a
+    # summary file that ignores it is a third writer sharing one path. The
+    # suffix is computed HERE, before any stage runs, so every artifact this
+    # invocation writes carries it.
+    suffix = f"_{args.tag}" if args.tag else ""
 
     results: dict = {}
     if args.budget:
@@ -1988,9 +2236,12 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         alloc = tuple(Allocation("P1", m, s, args.pilot_reps,
                                  args.pilot_budget)
                       for s in (False, True) for m in ms)
-        out = sweep(alloc, log_path=HERE / "baselines_pilot.jsonl",
+        # G95 again: `baselines_pilot.jsonl` is TRACKED and its 457 valid rows
+        # are the re-fit population BASELINES.md sec 5 points at. `--tag` has
+        # to reach this writer too, or a smoke test overwrites a dataset.
+        out = sweep(alloc, log_path=HERE / f"baselines_pilot{suffix}.jsonl",
                     workers=args.workers, ac_peak_interp=args.interp,
-                    out_path=HERE / "baselines_pilot_results.json")
+                    out_path=HERE / f"baselines_pilot_results{suffix}.json")
         print_sweep(out, "PILOT")
         results["pilot"] = {"control": out["control"],
                             "analysis": out["analysis"],
@@ -1998,7 +2249,6 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
                             "total_sims_including_discarded":
                                 out["total_sims_including_discarded"]}
     if args.sweep:
-        suffix = f"_{args.tag}" if args.tag else ""
         out = sweep(workers=args.workers, ac_peak_interp=args.interp,
                     log_path=HERE / f"baselines_run{suffix}.jsonl",
                     out_path=HERE / f"baselines_results{suffix}.json")
@@ -2010,7 +2260,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
                                 out["total_sims_including_discarded"]}
 
     if results:
-        _save(results, args.out or (HERE / "baselines_summary.json"))
+        _save(results, args.out or (HERE / f"baselines_summary{suffix}.json"))
     return 0
 
 

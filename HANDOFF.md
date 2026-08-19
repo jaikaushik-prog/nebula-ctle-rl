@@ -17,7 +17,38 @@
 > decisions that are OPEN and human-only, and what to do next. It supersedes
 > `nebula/NEXT_STEPS.md`. This file remains the full state of record.
 
-Last updated: **2026-08-19** (session 22f: **THE G3 SWEEP HAS RUN FOR THE FIRST
+Last updated: **2026-08-19** (session 22h: **GRID SEARCH EXISTS. G3 names it,
+`METHODS` did not have it, so G3 has not been failing its grid clause -- it has
+been UNSCOREABLE on it.** `method_grid` is a centred full factorial sized to the
+budget and then refined, and **the arithmetic is the finding**: a full factorial
+costs `L**d`, so at d = 7 a 150-simulation budget buys `150**(1/7)` = **2.06
+levels per axis** -- L = 2 is 128 points and fits, L = 3 is 2187 and is 14.6x the
+budget. P1 costs exactly **1.000 sims/design**, so the unscreened arm always
+completes the same 128 points and spends its last **22** inside a shuffled
+L = 3. **Grid search is DETERMINISTIC and the benchmark is not built for that**:
+20 replicates are one lattice plus 20 short random tails, so a near-zero-width
+CI is expected and means something completely different from BASELINES.md
+section 12.6's zero -- there the OBJECTIVE could not resolve, here the METHOD
+has no randomness. **The pre-screen buys the grid RESOLUTION rather than
+throughput** -- clearing the coarse factorial for ~46 sims lets it spend ~104
+inside L = 3 -- and its 3.88 % false-rejection rate is the named risk, because
+on a fixed lattice a false rejection deletes the best point for EVERY seed. No
+P3 arm: 6 sims/design buys 25 designs and `grid_levels(25, 7)` is **1**.
+**`SEC_PER_SIM_AT_8` was 17.4x wrong** -- 1.698 from a pre-library-trim pilot,
+against the two sweeps' own end-to-end **0.09773** and **0.11095** s/sim -- and
+fixing it retires the ONLY budgetary cut in `default_allocation()`: the fully
+crossed design now costs **~2.2 h**, so **restoring P2 is an open OWNER
+decision** (P3's screened arm stays cut for an epistemic reason, P3's PPO arm
+for a structural one). Two more G95-family path hazards closed (`--tag` now
+reaches `baselines_summary.json` and the **tracked** `baselines_pilot.jsonl`).
+G73 declared on the dedupe: centred lattices nest only at odd `M/L`, so it
+**cannot fire below L = 6** = 96 824 designs, and its first test was vacuous.
+Tests **1510 -> 1520**, seven gates broken and watched go red. **PRE-REGISTERED,
+NOT YET RUN** -- `PREDICTIONS.md` entry 14, ten bands, five falsifiers; the run
+re-uses `BASE_SEED` so the ten existing arms are a free **reproduction check**
+on 170 runs. **Guard: this makes G3 scoreable, not passable.**)
+
+Earlier session 22f: (**THE G3 SWEEP HAS RUN FOR THE FIRST
 TIME AND THE BENCHMARK RANKS -- and a matched control proves it could not
 before.** Same 170 runs, same seeds, one flag: on the `dec 50` lattice
 objective **0 of 45 P1 pairs separate**, eight of ten methods report the
@@ -1605,6 +1636,18 @@ Plus: git init, .gitignore, 28 tests, Wilson-bound BER reporting.
    (`nebula/NRZ_RETARGET_AUDIT.md`); bounds re-derived; robust geometry
    confirmed; corner-yield swept (13.49% -> 8.10%). Blocking next actions,
    in priority order:
+   - **>>> GRID SEARCH IS BUILT (session 22h) AND TWO DECISIONS FOLLOW FROM
+     IT. <<<** `method_grid` closes the gap that made G3 unscoreable; the
+     sweep that scores it is pre-registered as `PREDICTIONS.md` entry 14 and
+     runs as `baselines --sweep --interp --tag interp_grid` (31 500 sims,
+     ~51 min). Two things for the owner, neither an agent's call:
+     1. **`SEC_PER_SIM_AT_8` was 17.4x wrong** and the fix retires the only
+        budgetary cut in `default_allocation()`. The fully crossed design is
+        now **~2.2 h**, so **P2 can be restored** -- it was cut for cost alone.
+        P3's screened arm and P3's PPO arm stay cut on reasons that were never
+        about cost.
+     2. **G3 becomes scoreable, not passable.** It needs RL to beat random
+        search AND grid search; PPO loses to `uniform` by 0.0426 either way.
    - **>>> G2 IS PASSED. THE NEXT GATE IS G4, AND ONE DESIGN QUESTION NOW
      OUTRANKS IT. <<<** (Session 21, `nebula/G2_RESULTS.md`.) The loop closes
      and all of S3-S8 are met at TT on a design the search found. Next, in
@@ -7060,3 +7103,140 @@ do not proceed to corners" has already been executed once -- the ceiling WAS a
 real reward defect -- without fixing it); and **grid search DOES NOT EXIST**, so
 G3, which names it explicitly, cannot be scored as written. `method_grid` is
 half a day and is now the cheapest open item in the project.
+
+### 2026-08-19 - Session 22h (GRID SEARCH is built - G3's missing baseline - CODE + TESTS + PRE-REGISTRATION, NOT YET RUN)
+
+**`CLAUDEwa.md` section 7 states G3 as "RL beats random search AND grid search
+at TT". `METHODS` held `uniform, lhs, cmaes, gp_bo, ppo` and no grid, so G3 has
+not been failing its grid clause - it has been UNSCOREABLE on it.** Session
+22g-b surfaced that and called it the cheapest open item in the project;
+this is it, built. `optimize_ctle()` in `python_models/statistical_eye.py`
+grids CTLE *settings* inside the link model, never sizes devices and never sees
+this box, so it was not the missing arm.
+
+**`method_grid`, and the arithmetic IS the finding.** A full factorial with `L`
+levels in `d` dimensions costs `L**d`, so at `d = 7` a 150-simulation budget
+buys `150 ** (1/7)` = **2.06 levels per axis**:
+
+    L = 2   ->    128 points   fits inside 150
+    L = 3   ->  2 187 points   14.6x the budget
+
+P1 costs exactly **1.000 simulations per design** (measured over 3 000
+`uniform` designs in `baselines_run_interp.jsonl.gz`), so the unscreened arm
+always completes the 128-point coarse factorial and spends its last **22**
+simulations inside a shuffled `L = 3`. That is not a handicap we imposed; it is
+what "sweeping all MOS, R, C, L parameter space" - the competition's own
+sentence - costs at seven dimensions, and the row exists to put a number on it.
+
+**Three design choices, each stated rather than defaulted.** The lattice is
+**centred** at `(i + 0.5)/L`, matching `_lhs`'s cuts, because an
+endpoint-inclusive 2-level grid in 7-D is exactly the 128 **box corners** and
+that is a straw man rather than a baseline. The enumeration is **shuffled from
+the run's own seeded rng**, because the budget truncates and a lexicographic
+prefix varies only the last coordinates - it would measure the enumeration
+order. And the loop **refines** to `L + 1` if budget remains, which is what lets
+the screened arm reach a finer grid than the unscreened one.
+
+**The mechanism worth watching, and it is unique to this arm.** For every other
+method the pre-screen buys *throughput* - a rejected proposal costs no
+simulation, so more proposals fit. **For the grid it buys STEP SIZE.** At ~36 %
+acceptance the screened arm clears the coarse factorial for ~46 simulations and
+spends the remaining ~104 inside `L = 3`, which the unscreened arm barely
+enters. The pre-screen is the only thing in this benchmark that can change a
+grid's resolution. Its 3.88 % false-rejection rate is the named risk: on a
+random method a false rejection costs a draw, on a **fixed lattice** it can
+delete the single best point the grid was ever going to see, for every seed.
+
+**No P3 grid arm, and the reason is arithmetic rather than taste.** P3 costs 6
+simulations per design, so 150 buys 25 designs, and `grid_levels(25, 7)` returns
+**1** - the box centre. A P3 grid row would be one point labelled as a search.
+
+**THE STATISTICAL POINT, PRE-REGISTERED BECAUSE IT WILL LOOK LIKE A BUG.**
+Grid search is deterministic. Every unscreened seed evaluates the *identical*
+128 points and differs only in which 22 of `L = 3` the leftover budget reaches,
+so **`P1/grid`'s 20 replicates are one lattice plus 20 short random tails, not
+20 independent runs.** Its bootstrap CI should come back at or near **zero
+width** - and that zero means something completely different from
+`BASELINES.md` section 12.6's, where the OBJECTIVE could not resolve. Here the
+METHOD has no randomness. Any "separable at n = 20" verdict involving this arm
+is arithmetically true and inferentially weak, and the write-up has to say so
+rather than bank it.
+
+**THE THROUGHPUT CONSTANT WAS 17.4x WRONG AND IS NOW MEASURED.**
+`SEC_PER_SIM_AT_8` held **1.698** s/sim from the 33-run pilot, which predates
+the library trims - and `CONTINUE_HERE.md` section 3.2 had already recorded the
+consequence, that the sweep 7a sized at 12 hours took **42.1 minutes**. Both
+sweeps timed themselves end to end and the numbers are on disk:
+
+    interpolated sweep    2528.055 s / 25 869 sims   =  0.09773 s/sim
+    lattice control       2869.637 s / 25 866 sims   =  0.11095 s/sim   (13.5 % slower on LESS work)
+
+`SEC_PER_SIM_AT_8` is now the first, `SEC_PER_SIM_AT_8_LATTICE` the second, and
+`SEC_PER_SIM_AT_8_PILOT` keeps 1.698 so the revision is visible rather than
+only its result. `budget_report`'s two brackets are now **two end-to-end
+timings of THIS allocation** instead of two serial probes of two task mixes.
+The old assertion "the benchmark's own rate must be the SLOWER one" was the
+right rule while both numbers were predictions of a run that had not happened;
+it is replaced by a test that pins the rate to the sweep's own elapsed time.
+
+**AND THAT RETIRES ONE OF THE THREE CUTS. THE OWNER HAS TO DECIDE.** At the
+measured rate the FULLY CROSSED design - 3 rungs x 6 methods x 2 screen arms,
+81 000 simulations - costs **~2.2 hours**, not the 38 it cost at 1.698. So
+**P2's cut, which was purely budgetary, no longer has a reason.** The other two
+stand on reasons that were never about cost: P3's screened arm is EPISTEMIC
+(the screen's calibration off nominal is unmeasured, so the arm would confound
+"the screen helps" with "the screen is miscalibrated"), and P3's PPO arm is
+STRUCTURAL. Restoring P2 changes what the benchmark measures, so it is not
+taken here - it goes to `CONTINUE_HERE.md` section 5 as an open decision.
+
+**Two more filesystem-path hazards closed, same family as G95.** `--tag` did
+not reach `baselines_summary.json` (written by every stage) or
+`baselines_pilot.jsonl` (**tracked**, and the 457 valid rows `BASELINES.md`
+section 5 points at for the pre-screen re-fit). A tagged smoke test would have
+overwritten the pilot dataset and reported success. The suffix is now computed
+once at the top of `main` and reaches every writer.
+
+**G73 applies to `method_grid`'s de-duplication and is DECLARED, not assumed.**
+Centred lattices nest only when `M / L` is an odd integer, so `L = 2`'s points
+are absent from `L = 3`, `L = 4` and `L = 5` and first reappear at `L = 6` -
+which the loop reaches only after 128 + 2187 + 16 384 + 78 125 = **96 824**
+designs. **At a 150-simulation budget the dedupe cannot fire.** The first draft
+of its test asserted "no duplicates after 400 simulations", went green, and was
+VACUOUS; it now asserts the nesting rule and the reachability arithmetic
+separately and says which half is live. The guard is kept because `BUDGET_SIMS`
+is a constant rather than a law, and it is named so nobody reports it as a
+working defence.
+
+**Tests 1510 -> 1520.** Seven of them are gates in rule 10's sense and **all
+seven were deliberately broken and watched go red**: endpoint grid instead of
+centred; the lattice offset a quarter cell so the levels stop nesting; a silent
+`return` where the loud `RuntimeError` is; `grid` removed from `METHODS`; the
+budget re-sized to the stale 1.698; `grid_levels` off by one; and the refinement
+frozen so the screen stops buying resolution. `test_the_budget_stops_every_method`
+now derives its list from `METHODS` rather than hard-coding it, so a method
+added without a budget test cannot slip through again.
+
+**A real 80-simulation smoke test ran first** (`--pilot --tag gridsmoke`, both
+arms, ngspice, discarded): grid **8.749** unscreened against **8.889** screened,
+31 free rejections, timing control clean at 1.077. The arm works end to end
+before 51 minutes are spent on it.
+
+**PRE-REGISTERED, NOT YET RUN.** `PREDICTIONS.md` entry 14: ten quantities with
+acceptance bands and five falsification conditions, including the one that would
+most damage the existing write-up (if grid beats every classical optimiser, the
+150-simulation budget is too small for any method to beat dense sampling and
+`BASELINES.md` section 12's ranking is measuring luck). The run is
+`baselines --sweep --interp --tag interp_grid`: **31 500 simulations, 210 runs,
+~51 minutes**, re-using `BASE_SEED` so the ten pre-existing arms are a free
+**reproduction check** on 170 runs.
+
+**Guard, written before the run: this makes G3 SCOREABLE, not passable.** G3
+needs RL to beat random search AND grid search. PPO loses to `uniform` by
+0.0426 and nothing here changes that; the most a favourable grid result can do
+is make G3 fail on one clause instead of two.
+
+**New/changed:** `experiments/baselines.py` (`method_grid`, `grid_levels`,
+`_factorial`, `grid_level_of`, `GRID_MAX_LEVELS`, `METHODS`, `REPLICATES`,
+`METHOD_OFFSET`, the throughput constants, `budget_report`, `print_budget`,
+`main`'s tag handling), `nebula/tests/test_baselines.py` (+10),
+`PREDICTIONS.md` entry 14.
