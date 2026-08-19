@@ -2151,6 +2151,80 @@ A moving mean is **not** evidence that PPO is learning something useful — entr
 Neither result changes the recommendation to spend the remaining time on the
 amortised comparison.
 
-### Outcome
+### Outcome — **the spread never moves, the mean does, and the design stops improving either way.** Run 2026-08-19, 2670 simulations, 10.8 min.
 
-*(to be written after the run; nothing above this heading may be edited)*
+| quantity | rollout=64 | rollout=8 | untrained |
+|---|---|---|---|
+| updates (median) | **2** | **12** | — |
+| entropy at last update | 9.9129 | 9.9300 | **9.9326** |
+| entropy − untrained | **−0.0197** | **−0.0026** | 0 |
+| mean \|log_std\| | 0.0054 | 0.0080 | 0 |
+| **mean action L2 move** | **0.167** | **0.389** | — |
+| **curve gain over the last third (median)** | **0.0** | **0.0** | — |
+| n | 10 | 9 (see below) | — |
+
+#### Scoring
+
+| prediction | point | band | measured | |
+|---|---|---|---|---|
+| updates, 64 / 8 | 1–2 / 11–12 | — | **2 / 12** | HIT |
+| entropy − 9.9326, 64 | −0.01 | ±0.15 | **−0.0197** | HIT |
+| entropy − 9.9326, 8 | −0.03 | ±0.15 | **−0.0026** | HIT |
+| L2 move, 64 | 0.15 | 0.0–0.5 | **0.167** | HIT |
+| L2 move, 8 | 0.60 | 0.3–1.2 | **0.389** | in band, **not cleanly scoreable** — see below |
+| curve gain, 64 / 8 | +0.005 / +0.010 | 0–0.05 | **0.0 / 0.0** | in band at its floor, points too high |
+
+**The L2 row is not a clean score and saying so matters more than claiming the
+hit.** The prediction was anchored on the declared input 0.633, which came from
+a **single** probe observation. The probe was then rebuilt — it had called
+`env.reset()`, which *simulates*, and killed the first attempt at job 11 of 20 —
+and the replacement averages over **32** fixed vectors, which reads 0.209 for
+that same seed. **The number was predicted against one instrument and measured
+with another.** The band survives; the point estimate was never comparable, and
+it is recorded as not-scoreable rather than as a hit.
+
+#### The prediction that mattered, and it held
+
+> *"the mean moves roughly in proportion to the update count, while the spread
+> stays at its initialisation"*
+
+**Both halves hold.** Entropy sits within 0.02 of an untrained 7-dimensional
+Gaussian in both arms and `log_std` within 0.008 of its initialisation — the
+policy never narrows. And the mean moves **0.167 → 0.389**, i.e. **2.33× the
+movement for 6× the updates**: monotone, clearly non-zero, sub-linear. None of
+the three falsification conditions fired.
+
+**So "the policy never started" is RETRACTED.** It moves. The accurate
+statement, and the third diagnosis this project has given PPO's failure:
+
+> **The policy moves and the design does not improve. The gradient is
+> uninformative, not absent.**
+
+This is the worse of the two readings. An absent gradient is fixed with more
+updates or a larger step; an uninformative one means more updates move the
+policy further along a direction that is not up — which is exactly entry 12's
+measurement, where eleven updates instead of one bought **+0.0106, not
+separable**.
+
+#### The honest reading of the flat curve
+
+**The median gain over the final third is 0.0 in both arms, and that is a median
+rather than a universal.** Per seed:
+
+    rollout=64   7 of 10 seeds gain exactly 0.0; the other three gain 0.196, 0.028, 0.736
+    rollout=8    6 of 9  seeds gain exactly 0.0; the other three gain 0.167, 0.203, 0.370
+
+So it is not "the curve is flat". It is **"most runs make no progress at all in
+their final third, and a minority make a single late jump"** — the signature of
+a search that is still finding things by luck rather than by policy. **Twelve
+updates does not change that distribution.**
+
+#### One run lost, and why
+
+`rollout_steps=8`, replicate 8, spent its full 150-simulation budget before
+`train()` returned, so `BudgetExhausted` carried its stats away and the arm has
+**n = 9**. The `total_steps = 90` cap is calibrated on a *median* 1.49
+simulations per step; a seed with many short episodes pays more resets and
+overruns. Reported rather than back-filled.
+
+*Nothing above the Outcome heading was edited.*

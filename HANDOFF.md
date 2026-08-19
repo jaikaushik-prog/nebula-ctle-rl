@@ -6985,3 +6985,78 @@ simulations from scratch, because that budget is structurally hostile to
 policy-gradient methods -- which is the argument for spending the remaining time
 on the **amortised, spec-conditioned** comparison, where the training cost is
 paid once and reused across every new spec.
+
+### 2026-08-19 - Session 22g-b (the policy MOVES and the design does not improve; "never started" retracted)
+
+**2670 simulations, 10.8 min.** `exp_ppo_updates --instrument`, `rollout_steps`
+in {64, 8} x 10 seeds, logging what `--run` did not: entropy per update, final
+`log_std`, the anytime curve, and the L2 distance between the trained policy's
+mean action and the UNTRAINED one's over 32 fixed probe vectors.
+`PREDICTIONS.md` entry 13.
+
+                        rollout=64      rollout=8     untrained
+    updates                    2             12
+    entropy (last)        9.9129         9.9300        9.9326
+    entropy - untrained  -0.0197        -0.0026             0
+    mean |log_std|        0.0054         0.0080             0
+    mean action L2 move    0.167          0.389
+    curve gain, last third   0.0            0.0
+
+**THE SPREAD NEVER MOVES AND THE MEAN DOES.** Entropy is within **0.02** of an
+untrained 7-dimensional Gaussian and `log_std` within **0.008** of its
+initialisation, in both arms -- so the retracted "exploration collapse" story is
+retracted twice over. But the mean action moves **0.167 -> 0.389** going from 2
+updates to 12: **2.33x the movement for 6x the updates**, monotone, clearly
+non-zero, sub-linear.
+
+**So "the policy never started" -- told to the owner earlier the same day -- is
+RETRACTED. This is the THIRD diagnosis of PPO's failure and the first that
+survives its own measurement:**
+
+> **The policy moves and the design does not improve. The gradient is
+> UNINFORMATIVE, not absent.**
+
+That is the worse of the two readings. An absent gradient is fixed with more
+updates or a larger step; an uninformative one means more updates move the
+policy further along a direction that is not up -- which is exactly entry 12's
++0.0106-and-not-separable.
+
+**The flat curve, read honestly.** The median gain over the final third is 0.0
+in both arms, but that is a MEDIAN: per seed it is **7 of 10** (rollout=64) and
+**6 of 9** (rollout=8) at exactly zero, with a minority making one late jump
+(0.196/0.028/0.736 and 0.167/0.203/0.370). **A search still finding things by
+luck rather than by policy**, and twelve updates does not change the
+distribution.
+
+**A BUG IN THE INSTRUMENT, caught and worth naming.** The first version of the
+probe called `env.reset()` -- which **SIMULATES** -- so the diagnostic was
+spending the budget it was measuring, and because the call sat outside the
+`try` its `BudgetExhausted` killed the run at **job 11 of 20**. Rebuilt as 32
+fixed synthetic vectors from a seeded RNG: same vectors for both networks,
+exact, free. **An instrument must not consume the resource under measurement.**
+
+**And a second measurement lesson: one probe point is not a function
+comparison.** The same seed reads **0.633** on a single observation and
+**0.209** averaged over 32 -- a tanh can be saturated at one point and steep at
+another. The consequence for the pre-registration is recorded rather than
+smoothed over: entry 13's L2 point estimate was anchored on the single-probe
+number and measured with the 32-probe one, so **that row is scored as NOT
+CLEANLY SCOREABLE** even though it landed inside its band.
+
+**One run lost:** `rollout_steps=8` replicate 8 spent its full 150 simulations
+before `train()` returned, so its stats went with the exception and that arm is
+**n = 9**. The `total_steps = 90` cap is set from a MEDIAN 1.49 sims/step; a
+seed with many short episodes pays more resets and overruns. Reported, not
+back-filled.
+
+**New:** `experiments/ppo_instrumented_run.jsonl`, `--instrument` mode,
+`PREDICTIONS.md` entry 13, `nebula/CONTINUE_HERE.md` (the entry point for the
+next agent; supersedes `NEXT_STEPS.md`, which now carries a banner).
+
+**Two findings surfaced while writing CONTINUE_HERE, and both are section 4 of
+it:** **G3 is FAILING on its literal criterion** (PPO 8.9106 against uniform
+random 8.9532, and its prescribed fallback "stop and debug the reward function,
+do not proceed to corners" has already been executed once -- the ceiling WAS a
+real reward defect -- without fixing it); and **grid search DOES NOT EXIST**, so
+G3, which names it explicitly, cannot be scored as written. `method_grid` is
+half a day and is now the cheapest open item in the project.

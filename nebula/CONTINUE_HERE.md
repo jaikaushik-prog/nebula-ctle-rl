@@ -121,10 +121,17 @@ The benchmark did not rank coarsely. **It resolved nothing at all.**
 * Fixing it (`rollout_steps` 64 → 8, eleven updates) bought **+0.0106,
   not separable** — **24.8 % of the gap to *uniform random***. Monotone, real,
   and far too small to matter.
-* **"the policy never started"** — being retracted. The *spread* never changes
-  but the *mean* moves, roughly in proportion to the update count. The accurate
-  statement is **the policy moves and does not improve**: the gradient is
-  uninformative rather than absent. `PREDICTIONS.md` entry 13 measures this.
+* **"the policy never started"** — **RETRACTED, measured** (entry 13, 10 seeds
+  per arm). Entropy sits within **0.02** of an untrained 7-D Gaussian and
+  `log_std` within **0.008** of its initialisation in both arms: the spread
+  never narrows. But the mean action moves **0.167 → 0.389** going from 2 to 12
+  updates — 2.33× the movement for 6× the updates. **The policy moves; the
+  design does not improve.** The gradient is *uninformative*, not absent, which
+  is the worse of the two readings: more updates move the policy further along
+  a direction that is not up. Median anytime gain over the final third is
+  **0.0 in both arms** — though per seed it is 7 of 10 and 6 of 9 at exactly
+  zero with a minority making one late jump, which is a search finding things
+  by luck rather than by policy.
 
 ---
 
