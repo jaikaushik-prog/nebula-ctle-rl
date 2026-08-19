@@ -2088,3 +2088,69 @@ on the **amortised, spec-conditioned** comparison instead, where the training
 cost is paid once and reused.
 
 *Nothing above the Outcome heading was edited.*
+
+---
+
+## 13. Session 22g-b — did the PPO policy move at all?
+
+**Written:** 2026-08-19, **before** the paired run. The owner asked whether the
+learning stagnation was ever solved. It was not, and entry 12 says so — but
+entry 12 logged only `best_reward`, so it cannot say whether the *policy*
+changed. This closes that gap.
+
+**Experiment:** `exp_ppo_updates --instrument` — `rollout_steps` ∈ {64, 8} × 10
+seeds, `total_steps` capped at 90 (~135 simulations) so `train()` returns with
+its stats instead of `BudgetExhausted` carrying them away. **Its `best_reward`
+is therefore NOT comparable to entry 12's** and is labelled so in the log.
+
+### Declared inputs — one seed already seen
+
+`rollout_steps=8`, replicate 0: **12 updates**, entropy **9.9354 → 9.8996**
+against an untrained 9.9326, final `log_std` ≈ ±0.03, and
+**`mean_action_l2_move = 0.633`**. `init_reproduced` is True, so the
+reconstruction of the initialisation is verified rather than assumed.
+
+**That last number already complicates what I told the owner.** I said the
+policy "never started". Its *spread* is unchanged, but its *mean* moved 0.633
+in a tanh-bounded 7-dimensional action space whose maximum possible move is
+2·√7 = 5.29. That is 12 % of the range, and it is not nothing.
+
+### Predictions
+
+| quantity | rollout=64 | rollout=8 | band |
+|---|---|---|---|
+| updates | 1–2 | 11–12 | — |
+| entropy at last update − 9.9326 | **−0.01** | **−0.03** | ±0.15 both |
+| `mean_action_l2_move` | **0.15** | **0.60** | 0.0–0.5 / 0.3–1.2 |
+| curve gain over the last third | **+0.005** | **+0.010** | 0–0.05 both |
+
+**The prediction that matters: the mean moves roughly in proportion to the
+update count, while the spread stays at its initialisation.** If that holds,
+"the policy never started" is the wrong description and must be withdrawn — the
+right one is **the policy moves and does not improve**, i.e. the gradient signal
+is uninformative rather than absent. Those are different diagnoses with
+different fixes, and I would rather find out than keep the tidier sentence.
+
+### What would falsify the reasoning
+
+1. **`mean_action_l2_move` ≈ 0 at BOTH arms.** Then the smoke-test seed was
+   anomalous, "never started" stands, and the fix is more updates or a larger
+   learning rate.
+2. **The two arms move the same amount.** Then the movement is not driven by
+   the updates at all — it would be initialisation noise in my probe, and the
+   measurement is worthless as written.
+3. **Entropy falls below ~9.2 (σ < 0.9) at rollout=8.** Exploration *is*
+   contracting after all, and the collapse story I retracted was early rather
+   than wrong.
+
+### Guard against over-claiming
+
+A moving mean is **not** evidence that PPO is learning something useful — entry
+12 measured the payoff at +0.0106, not separable. It would only establish
+*where* the failure is: in the usefulness of the gradient, not in its absence.
+Neither result changes the recommendation to spend the remaining time on the
+amortised comparison.
+
+### Outcome
+
+*(to be written after the run; nothing above this heading may be edited)*
