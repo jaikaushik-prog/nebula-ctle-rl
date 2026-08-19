@@ -17,7 +17,36 @@
 > decisions that are OPEN and human-only, and what to do next. It supersedes
 > `nebula/NEXT_STEPS.md`. This file remains the full state of record.
 
-Last updated: **2026-08-19** (session 22i-run: **PPO IS NOT BROKEN. IT IS A
+Last updated: **2026-08-20** (session 22j: **THE SPEC-CONDITIONED
+CONTRIBUTION, MEASURED BEFORE BUILDING IT -- AND A 600-DESIGN LOOKUP ALREADY
+WINS.** No policy was trained; two measurements made while building the
+scaffolding changed what training would be worth. **(1) The problem is
+ONE-DIMENSIONAL and nobody had written that down:** `reward_v1` accepts
+`target_peaking_db` and DELIBERATELY ignores it (S3's peaking is a BAND and
+CLAUDEwa §3 reads the band as the requirement), so one design scores
+**8.999984 against targets of 3, 5, 7.5, 10 and 12 dB, identically**, while
+moving 8.000 -> 8.996 -> -0.000 across a frequency sweep. The observation's
+target block has two channels and one is inert. **(2) A measurement does not
+know what it was aiming at**, so every logged trial re-scores against any
+target for ZERO simulations: **74 526 distinct valid P1 designs** from 146 597
+rows serve **32 of 32 held-out targets at a median best reward of 9.0000**.
+**And the library need not be large** -- on the unbiased `uniform` sub-pool,
+**50 designs serve 100 % of targets and 600 reach 8.9899** of a 9.0 ceiling.
+**An unpredicted scaling law: `N x (9 - best)` = 7.6 +/- 20 % over three orders
+of magnitude, so gap ~= 7.6/N** -- halve the distance, double the library.
+**THE CROSSOVER:** CMA-ES gets 8.9736 for 150 sims *per spec, forever*; ~290
+designs match it once, so **after TWO spec requests a 300-simulation library
+has already paid for itself and answers better**. So the amortised claim's real
+opponent is not CMA-ES-from-scratch (which has no memory and loses trivially)
+but a **table lookup**, and a policy would have to beat **zero simulations at
+8.99**. **Where a lookup provably cannot answer is CORNERS** -- the pool is P1
+only and P3 rows are excluded by construction -- **which is exactly where G4
+lives, and that asymmetry is the argument for spending the remaining time
+there.** NOT an agent's call: §7 claims this as contribution #2. Tests
+**1542 -> 1558**. Entry 16 scored **4 HIT, 3 MISS**, every miss in the same
+direction. Write-up `nebula/SPEC_CONDITIONED.md`.)
+
+Earlier session 22i-run: ( **PPO IS NOT BROKEN. IT IS A
 RANDOM SEARCH WITH EXTRA STEPS.** 40 runs, 96 000 simulations. The budget
 ladder ran: **PPO was PARTLY STARVED and that is not the interesting half.**
 Its 150-simulation deficit to random search (**-0.0426**, 0.750x of random's
@@ -7730,3 +7759,89 @@ tested, while CMA-ES is separably better at every budget tested.*
 trial rows), `budget_ladder_results.json` (2.2 MB, every summary and curve),
 `budget_ladder_summary.json`. **Repo size is now an owner item:** `.git` was
 98 MB before this session and carries an accidental 79 MB blob at `3ee4ea1`.
+
+### 2026-08-20 - Session 22j (the spec-conditioned contribution, measured BEFORE building it -- and a 600-design lookup already wins)
+
+**The owner asked to build `CLAUDEwa.md` §7's second contribution. No policy
+was trained.** Two measurements made while building its scaffolding changed
+what training would be worth. `PREDICTIONS.md` entry 16, write-up
+`nebula/SPEC_CONDITIONED.md`.
+
+**1. THE SPEC-CONDITIONED PROBLEM IS ONE-DIMENSIONAL, AND NOBODY HAD WRITTEN
+THAT DOWN.** `reward_v1.margins` accepts `target_peaking_db` and deliberately
+ignores it -- its own docstring says so, because S3's peaking constraint is a
+BAND (3-12 dB) and CLAUDEwa §3 reads the band as the requirement. Measured:
+one fixed design scores **8.999984 against targets of 3, 5, 7.5, 10 and 12 dB,
+identically**, while the same design moves **8.000 -> 8.996 -> -0.000** across a
+sweep of `target_f_peak_hz`. **The observation's target block has two channels
+and one can never change any reward.** That is a faithful reading of S3 rather
+than a defect -- and it halves what "spec-conditioned" can mean here.
+
+**2. A MEASUREMENT DOES NOT KNOW WHAT IT WAS AIMING AT**, so every trial row
+ever logged can be re-scored against any target for **zero** simulations.
+`experiments/spec_pool.py` rebuilds **74 526 distinct valid P1 designs** from
+146 597 logged trials (cmaes 25 044, uniform 24 480, ppo 19 010, lhs 2 799,
+gp_bo 2 568, grid 625). Against it, **32 of 32 held-out targets -- 16
+interpolation, 16 extrapolation -- are served by a feasible design at a median
+best reward of 9.0000**, against a ceiling of 9.0.
+
+**AND THE LIBRARY DOES NOT NEED TO BE LARGE.** On the `uniform` sub-pool alone
+-- the only unbiased sample, since CMA-ES and PPO rows were steered toward the
+legacy target:
+
+    designs      served   median best
+         10       77 %        8.5193
+         20       96 %        8.7385
+         50      100 %        8.8576
+        100      100 %        8.9305
+        300      100 %        8.9757
+        600      100 %        8.9899
+      3 000      100 %        8.9970
+     24 480      100 %        8.9997
+
+**Fifty random simulations answer every spec in S3. Six hundred answer them at
+8.99 of 9.0.** Zero simulations per query thereafter.
+
+**A SCALING LAW FELL OUT AND IT WAS NOT PREDICTED:** `N x (9.0 - best)` is
+**7.6 +/- 20 %** across three orders of magnitude (30 -> 24 480). **gap ~= 7.6/N.
+To halve the distance from the optimum, double the library.**
+
+**THE CROSSOVER, WHICH IS THE NUMBER FOR THE REPORT.** `BASELINES.md` §14
+measured CMA-ES at 8.9736 for 150 simulations and 8.9999 for 2400 -- *per spec,
+every time*, because it has no memory. Inverting the law:
+
+    to match CMA-ES at  150 sims/spec  ->  ~290 designs   ->  crossover ~2 specs
+    to match CMA-ES at 2400 sims/spec  ->  ~76 000        ->  crossover ~32 specs
+
+**After TWO different spec requests, 300 random simulations have already paid
+for themselves and give better answers than CMA-ES does for 150 simulations
+every single time.**
+
+**SO THE AMORTISED CLAIM'S REAL OPPONENT IS NOT CMA-ES-FROM-SCRATCH.** That is
+the opponent everyone reaches for and a policy beats it trivially, because
+CMA-ES has no memory and the policy does. The honest opponent is the cheapest
+thing that ALSO has memory: keep every design you ever simulated and look one
+up. No model, no training, no simulation -- and a panel of practising designers
+will think of it immediately, because several of them keep exactly such a
+database. **A spec-conditioned policy would have to beat zero simulations at
+8.99 on a 2-D target space with one dimension inert.**
+
+**WHERE A LIBRARY PROVABLY CANNOT ANSWER, AND IT IS THE RECOMMENDATION.** The
+pool is **P1 only** -- one corner, one supply, one temperature, one load -- and
+P3 rows are excluded by construction because `Trial.meas` on a corner row means
+something else (rule 9 in the data). A corner-robust answer needs the worst case
+over 3 corners x 2 loads and the library holds nominal measurements and nothing
+else. **The place a lookup has nothing to say is exactly where gate G4 lives.**
+
+**NOT AN AGENT'S CALL.** `CLAUDEwa.md` §7 claims the spec-conditioned policy as
+contribution #2 and `PLAN.md` §8 already lists it first-to-cut; this
+measurement supports that cut order but does not execute it. Equally, making
+`target_peaking_db` LIVE would make the problem 2-D and might make amortisation
+interesting again -- and would move **every published reward number**, a
+`BASELINES.md` §7f re-run event. Both go to `CONTINUE_HERE.md` §5.
+
+**Tests 1542 -> 1558.** New: `rl/spec_dist.py` (the target distribution, derived
+from S3 rather than chosen, plus both splits), `experiments/spec_pool.py`,
+`nebula/tests/test_spec_conditioned.py` (16, four of them rule-10 gates),
+`nebula/SPEC_CONDITIONED.md`, `PREDICTIONS.md` entry 16 (**4 HIT, 3 MISS**, and
+every miss in the same direction -- the library is cheaper than predicted).

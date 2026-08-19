@@ -2828,6 +2828,87 @@ spending the remaining time on corners rather than on amortisation.
 *this* target space is too small for amortisation to be interesting. Two
 dimensions, one of them inert, densely covered by designs we already have.
 
-### Outcome
+### Outcome — **fifty random simulations answer every spec in S3; six hundred answer them at 8.99 of 9.0. The library is far cheaper than I predicted, and all three misses are in that direction.** Run 2026-08-20, zero simulations, seconds of compute.
 
-*(to be filled in after the run; nothing above this heading may be edited)*
+Uniform sub-pool only (24 480 designs), 32 held-out targets, 10-30 seeds per
+size. Write-up: `nebula/SPEC_CONDITIONED.md`.
+
+| library size | targets served | median best reward |
+|---|---|---|
+| 1 | 10 % | -1.0000 |
+| 5 | 47 % | 6.0466 |
+| 10 | 77 % | 8.5193 |
+| 20 | 96 % | 8.7385 |
+| **50** | **100 %** | 8.8576 |
+| 100 | 100 % | 8.9305 |
+| 300 | 100 % | 8.9757 |
+| **600** | 100 % | **8.9899** |
+| 1 000 | 100 % | 8.9936 |
+| 3 000 | 100 % | 8.9970 |
+| 10 000 | 100 % | 8.9991 |
+| 24 480 | 100 % | 8.9997 |
+
+#### Scoring
+
+| # | prediction | point | band | measured | |
+|---|---|---|---|---|---|
+| 1 | size at which all 16 interpolation targets are feasible | 300 | 100-3 000 | **50** | **MISS**, below the band |
+| 2 | median best at 100 designs | 8.80 | 8.0-8.97 | **8.9305** | HIT |
+| 3 | median best at 1 000 designs | 8.96 | 8.90-8.995 | **8.9936** | HIT |
+| 4 | median best at 10 000 designs | 8.995 | 8.98-9.000 | **8.9991** | HIT |
+| 5 | designs needed to reach a median of 8.99 | 3 000 | 1 000-20 000 | **~600** | **MISS**, below the band |
+| 6 | extrapolation within 0.005 of interpolation at every size | yes | - | **0.034 at 30, 0.008 at 100**, then <= 0.002 | **MISS** at the two smallest sizes |
+| 7 | the curve is roughly log-linear | yes | - | **an exact 1/N law** | HIT, and stronger than predicted |
+
+**4 hits, 3 misses, and every miss is in the same direction: the library is
+cheaper than I thought.** #1 was wrong by 6x and #5 by 5x, both toward "less
+data needed", which strengthens the finding rather than weakening it. #6's
+miss is a small-sample artifact -- a lookup has no notion of train and test, so
+at 30 designs the two target sets differ by luck, and by 300 they agree to
+0.002.
+
+#### The scaling law, which was not predicted at all
+
+| N | gap to 9.0 | N x gap |
+|---|---|---|
+| 30 | 0.24893 | 7.47 |
+| 100 | 0.06332 | 6.33 |
+| 300 | 0.02544 | 7.63 |
+| 1 000 | 0.00641 | 6.41 |
+| 3 000 | 0.00272 | 8.17 |
+| 10 000 | 0.00092 | 9.24 |
+| 24 480 | 0.00032 | 7.85 |
+
+**gap ~= 7.6 / N**, constant to +/-20 % across three orders of magnitude. To
+halve the distance from the optimum, double the library. Prediction 7 asked for
+"roughly log-linear" and got something far tighter.
+
+#### The crossover, derived from the law
+
+`BASELINES.md` §14 measured CMA-ES at **8.9736 for 150 simulations** and
+**8.9999 for 2400**, *per spec, every time*. Inverting `gap = 7.6/N`:
+
+| to match | library needs | crossover |
+|---|---|---|
+| CMA-ES at 150 sims/spec | **~290 designs** | **~2 specs** |
+| CMA-ES at 2400 sims/spec | ~76 000 designs | ~32 specs |
+
+**After two different spec requests, 300 random simulations have already paid
+for themselves and give better answers than CMA-ES does for 150 simulations
+every single time.**
+
+#### What it means for the claimed contribution
+
+A spec-conditioned policy would have to beat **zero simulations at 8.99**, on a
+target space that is 2-D with one dimension inert and that ~600 random
+simulations already cover. Falsifier 1 did not fire -- coverage saturates hard
+and early.
+
+**The guard written before the run stands and is now the recommendation:** the
+pool is P1 only, a lookup holds nominal measurements and nothing else, and the
+place it provably cannot answer is exactly where **G4** lives. That asymmetry
+is the argument for spending the remaining time on corners rather than on
+amortisation -- **and it is the owner's call, not an agent's**, because
+`CLAUDEwa.md` §7 claims the spec-conditioned policy as contribution #2.
+
+*Nothing above the Outcome heading was edited.*

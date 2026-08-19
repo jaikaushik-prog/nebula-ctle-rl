@@ -280,13 +280,25 @@ it would do.
    "the screen helps" with "the screen is miscalibrated"), and P3's PPO arm is
    STRUCTURAL. Restoring P2 changes what the benchmark measures, so it is not
    an agent's call.
-7. **NEW (22i): the repository is getting large, and part of it was my
+7. **NEW (22j): DOES THE SPEC-CONDITIONED CONTRIBUTION SURVIVE?** Measured
+   before building it (`SPEC_CONDITIONED.md`): a lookup over designs already
+   simulated serves **32 of 32 held-out targets**, and on the unbiased sub-pool
+   **50 random designs serve 100 % of them, 600 reach 8.9899 of a 9.0
+   ceiling**, with `gap ~= 7.6/N`. Crossover against CMA-ES-at-150 is **~2
+   spec requests**. So a policy would have to beat **zero simulations at
+   8.99**, on a target space that is 2-D with **one dimension inert** — and
+   `CLAUDEwa.md` §7 claims this as contribution #2 while `PLAN.md` §8 already
+   lists it first-to-cut. **The measurement supports the cut; making the cut is
+   yours.** Sub-decision: making `target_peaking_db` LIVE would make the
+   problem genuinely 2-D and might make amortisation interesting again — and
+   would move every published reward number (a §7f re-run event).
+8. **NEW (22i): the repository is getting large, and part of it was my
    mistake.** `.git` was 98 MB before 22h and now carries an accidental 79 MB
    blob (commit `3ee4ea1`, a results JSON that duplicated its own run log —
    fixed forward, but the blob is in history) plus 32 MB of ladder log.
    Removing the blob needs a history rewrite. **Owner's call**, and it is not
    urgent — the repo is private and nothing is broken.
-8. **NEW (22h): pin the warm-up/control configuration?** 7g takes it from
+9. **NEW (22h): pin the warm-up/control configuration?** 7g takes it from
    `jobs[0]`, i.e. the head of the shuffle, so **adding a method silently
    changed which configuration the timing control measures** — it became
    `P3/uniform`, whose 6-simulations-per-design short-circuiting is far noisier
@@ -305,7 +317,7 @@ contributions**, which is the strongest argument for them.
 |---|---|---|---|---|
 | ~~1~~ | ~~**Build `method_grid` and re-run**~~ | **DONE, session 22h** | G3 is now scoreable on both clauses and fails both. `BASELINES.md` §13 | G3's literal criterion |
 | **2** | **Task 3 — corners in the loop (G4)** | 2–3 d | Mandatory: spec S9, and `PLAN.md` "never cut". P3 is now known **hard, not empty** — `uniform` found 2 of 20 | contribution **#1**, "reward on worst-case corner, not nominal" |
-| **3** | **Task 4 — spec-conditioned policy** | 5–7 d | The only answer to *"why not CMA-ES?"*, **and** the only regime where the policy gets enough experience to learn | contribution **#2**, "this is the live demo" |
+| ~~3~~ | ~~**Task 4 — spec-conditioned policy**~~ | **RE-PRICED, 22j** | Its opponent is not CMA-ES-from-scratch but a **table lookup** costing ~600 simulations once and then nothing. `SPEC_CONDITIONED.md`. **Owner's call (§5 item 7).** | contribution **#2** |
 | **4** | **Report + slides** | ~7 d | Mandatory. Run it *alongside* 2–3, not after | — |
 | 5 | `FAIRNESS.md` (task 2 leftover) | ½ d | One table: every asymmetry, which way it cut, what was done. Cheap credibility | — |
 | — | ~~PPO contract changes~~ | 1–2 d | Measured ceiling on that path is small. Only if 3 stalls | — |
