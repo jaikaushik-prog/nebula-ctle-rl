@@ -2912,3 +2912,117 @@ amortisation -- **and it is the owner's call, not an agent's**, because
 `CLAUDEwa.md` §7 claims the spec-conditioned policy as contribution #2.
 
 *Nothing above the Outcome heading was edited.*
+
+---
+
+## 17. Session 22n — **PPO is trained on a different objective from the one it is scored on. Does removing the mismatch fix it?**
+
+**Written 2026-08-20, before the run, and committed before it starts.**
+
+### The defect, in two lines
+
+`rl/env.py`:
+
+    terminated = bool(rb.feasible)     # early success
+
+`rl/reward_v1.py`, feasible branch:
+
+    reward = B + min_i(margin_i / tol_i)      # how far PAST the band you get
+
+**The episode ends the instant every spec is met, and the metric rewards
+exactly what happens after that.** The policy is never once in a state from
+which it could learn to improve a design that already works — that region is
+terminal.
+
+### Declared inputs — measured, not predicted
+
+| | |
+|---|---|
+| PPO runs at 150 sims (published sweep) | 10, unscreened |
+| **feasible designs found, median** | **11.5** |
+| ⇒ episodes ending in success | **~12 in 150 simulations** |
+| what follows each | a fresh **uniform-random** `reset()` |
+| horizon | 8 steps |
+| PPO at 150 / 600 (`BASELINES.md` §14) | **8.9106 / 8.9844** |
+| uniform at 150 / 600 | 8.9532 / 8.9860 |
+| cmaes at 150 / 600 | 8.9736 / 8.9993 |
+
+So a run is *random start → short walk → hits feasibility → STOP → random
+restart*, about twelve times. **Random restarts plus a short walk that stops at
+"good enough" is structurally a random search** — which is exactly what §14
+measured PPO to be at every budget from 150 to 2400.
+
+`CONTINUE_HERE.md` §5 item 3 flagged this as an open decision months ago and
+nobody tested it.
+
+### The experiment
+
+`exp_ppo_terminate --run`. Two arms × two budgets × 10 seeds = **40 runs,
+15 000 simulations, ~25 min**. `terminate_on_feasible` defaults to True, so
+nothing published moves. The treatment suppresses termination **only on a
+valid, feasible** evaluation; an invalid one still ends the episode (§6d) and
+the horizon still truncates. Same `PPOConfig`, same box, same evaluator, same
+reward, and **the same seed protocol** — `run_seed("P1", "ppo", rep)` — so the
+control at 150 is a bit-for-bit re-run of the sweep's PPO arm.
+
+### The mechanism check, which is reported before the outcome
+
+`steps_from_feasible` counts environment steps taken **from** a state that
+already met every spec. It is **near zero in the control, not exactly zero** —
+a `reset()` can land on a feasible design and the first step out of it precedes
+any termination. A 60-simulation smoke run measured **one** such step in the
+control against **three** in the treatment.
+
+**If the treatment does not raise it well above the control, the flag did not
+do what it claims and the outcome is void.** That number is read first.
+
+### Predictions
+
+| # | quantity | point | acceptance band |
+|---|---|---|---|
+| 1 | control median at 150 **reproduces the published 8.9106** | exact | \|Δ\| ≤ 1e-9 |
+| 2 | `steps_from_feasible`, treatment ÷ control, at 150 | **≥ 8×** | ≥ 3× |
+| 3 | **Δ median best at 150** (treatment − control) | **+0.015** | −0.020 … +0.060 |
+| 4 | **Δ median best at 600** | **+0.010** | −0.015 … +0.050 |
+| 5 | does the treatment beat **uniform random** at 150 (8.9532)? | **no** | — |
+| 6 | treatment's gain over the final third, at 600 | **+0.004** | 0.000 … 0.040 |
+| 7 | median episodes per run at 150, treatment vs control | **fewer, but < 2× fewer** | — |
+| 8 | is Δ separable at either budget? | **no** at 10 seeds | — |
+
+**The prediction that matters is #3 and #5 together: I expect a real,
+directionally positive effect that is still not enough to beat random search.**
+If that holds, the mismatch was a genuine defect *and* not the binding one, and
+the negative result about RL gets stronger rather than weaker — because it will
+have survived the removal of its most obvious excuse.
+
+### What would falsify the reasoning
+
+1. **The mechanism counter barely moves.** Then the flag is not doing what the
+   code says and nothing else in this entry can be read.
+2. **Δ ≥ +0.05 at both budgets, and the treatment beats uniform.** Then the
+   mismatch *was* the binding defect, `BASELINES.md` §14's ranking was measuring
+   an implementation bug rather than PPO, and **the G3 comparison must be
+   re-run with the fix** before anything about RL is published.
+3. **Δ is strongly negative.** Then episode restarts were doing the work — the
+   run really was random search and removing the restarts removed the search.
+   That is the cleanest possible confirmation of the diagnosis and the worst
+   possible outcome for RL.
+4. **The control does not reproduce 8.9106.** Then this harness is not running
+   what the sweep ran and no comparison here is valid.
+
+### Guard against over-claiming
+
+**A positive Δ is not "RL works".** It would mean PPO trained on its own
+objective does better than PPO trained on a different one — which is a
+statement about the experimental setup, not about reinforcement learning. The
+claim that matters is #5: whether it beats uniform random at the budget G3 is
+scored at.
+
+**And a null result is not a wasted run.** Today a reviewer can correctly say
+*"you trained on a different objective from the one you reported."* After this
+run they cannot, whichever way it lands — which is why it is worth doing
+independently of the outcome.
+
+### Outcome
+
+*(to be filled in after the run; nothing above this heading may be edited)*

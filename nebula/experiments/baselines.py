@@ -458,6 +458,16 @@ class Objective:
         self.n_screened_out = 0
         self.n_zero_sim = 0
         self.invalid_reasons: dict[str, int] = {}
+        #: Whatever the METHOD wants to report about itself, stashed here so it
+        #: SURVIVES `BudgetExhausted`.
+        #:
+        #: **Earned in session 22g and again in 22n.** A method's own
+        #: instrumentation lives inside the method, the budget raises from deep
+        #: inside its loop, and the exception unwinds past every `return` --
+        #: so the run's diagnostics vanish exactly when the run completes
+        #: normally. `exp_ppo_updates` lost an arm to this once; a `finally`
+        #: that writes here costs nothing and cannot lose them again.
+        self.method_diagnostics: dict = {}
 
     # -- budget ---------------------------------------------------------------
 
@@ -1018,7 +1028,8 @@ def obj_model_seconds(obj: Objective, seconds: float) -> None:
 
 def method_ppo(obj: Objective, rng: np.random.Generator,
                steps: int = 100_000,
-               rollout_steps: Optional[int] = None) -> dict:
+               rollout_steps: Optional[int] = None,
+               terminate_on_feasible: bool = True) -> dict:
     """The EXISTING, UNTUNED policy from task 6. At P1 only, and labelled.
 
     7i, in the brief's own words: *"If PPO loses, that is the expected result
@@ -1030,6 +1041,23 @@ def method_ppo(obj: Objective, rng: np.random.Generator,
     Nothing about `PPOConfig` is changed from session 17. `steps` is set far
     above what the budget can buy so that the SIMULATION budget is what stops
     it, exactly as it stops every other method.
+
+    **`terminate_on_feasible` is the session-22n experiment, and it defaults to
+    the published behaviour so no existing number moves.** `CtleSizingEnv.step`
+    sets `terminated = bool(rb.feasible)` -- the episode ENDS the instant every
+    spec is met. But the benchmark scores `B + min(margin/tol)`, which is *how
+    far PAST the band you get*, so **the region the metric rewards is exactly
+    the region the policy is never trained in.** Measured on the published
+    sweep: 150 simulations, a median of **11.5 feasible designs**, i.e. ~12
+    episodes ended in success and were followed by a fresh uniform-random
+    restart. Random restarts plus a short walk that stops at "good enough" is
+    structurally a random search -- which is what `BASELINES.md` §14 measured
+    PPO to be.
+
+    Setting it False terminates only on an INVALID evaluation or the horizon,
+    so a feasible episode keeps going and the policy finally experiences the
+    part of the reward landscape it is scored on. `CONTINUE_HERE.md` §5 item 3
+    flagged this as an open decision and nobody had tested it.
     """
     from nebula.rl.env import CtleSizingEnv, EnvConfig
     from nebula.rl.ppo import PPOConfig, train
@@ -1061,11 +1089,18 @@ def method_ppo(obj: Objective, rng: np.random.Generator,
                     target_f_peak_hz=obj.target_f_peak_hz,
                     target_peaking_db=obj.target_peaking_db,
                     ac_peak_interp=obj.ac_peak_interp)
-    env = _ObjectiveEnv(obj, cfg)
+    env = _ObjectiveEnv(obj, cfg,
+                        terminate_on_feasible=terminate_on_feasible)
     pcfg = PPOConfig(seed=seed, total_steps=steps)
     if rollout_steps is not None:
         pcfg = dataclasses.replace(pcfg, rollout_steps=int(rollout_steps))
-    train(env, pcfg)
+    try:
+        train(env, pcfg)
+    finally:
+        # `BudgetExhausted` fires from inside PPO's rollout and unwinds past
+        # every `return`, so the diagnostics are written where they survive it.
+        obj.method_diagnostics = env.diagnostics()
+    return env.diagnostics()
 
 
 class _ObjectiveEnv:
@@ -1090,11 +1125,20 @@ class _ObjectiveEnv:
     which makes it a WEAKER wrapper than the one the other four methods get.
     """
 
-    def __init__(self, obj: Objective, cfg):
+    def __init__(self, obj: Objective, cfg,
+                 terminate_on_feasible: bool = True):
         from nebula.rl.env import CtleSizingEnv
 
         self.obj = obj
         self.env = CtleSizingEnv(cfg, budget=obj.spice, on_step=self._on_step)
+        self.terminate_on_feasible = bool(terminate_on_feasible)
+        #: Mechanism counters. `steps_from_feasible` is ZERO BY CONSTRUCTION
+        #: when `terminate_on_feasible` is True, which is the whole point.
+        self.n_episodes = 0
+        self.n_steps = 0
+        self.steps_from_feasible = 0
+        self.n_suppressed = 0
+        self._last_feasible = False
         self.observation_dim = self.env.observation_dim
         self.action_dim = self.env.action_dim
 
@@ -1124,7 +1168,45 @@ class _ObjectiveEnv:
 
     def reset(self, *a, **kw):
         self.obj.check_budget()
-        return self.env.reset(*a, **kw)
+        self.n_episodes += 1
+        obs, info = self.env.reset(*a, **kw)
+        # **Set from THIS episode's start, not left over from the last one.**
+        # `_last_feasible` gates the `steps_from_feasible` counter, so a value
+        # carried across an episode boundary would credit the new episode's
+        # first step with the old episode's final state -- and that state is,
+        # by construction, the feasible one the old episode terminated on.
+        # `reset`'s info carries a reward but no verdict, so feasibility is
+        # re-derived from the band boundary rather than assumed.
+        self._last_feasible = bool(
+            float(info.get("reward", float("-inf")))
+            >= R.feasible_bonus(len(self.env.cfg.specs)))
+        return obs, info
+
+    def diagnostics(self) -> dict:
+        """**The mechanism check, not the outcome.**
+
+        `steps_from_feasible` is the number of environment steps taken FROM a
+        state that already met every spec.
+
+        **It is NEAR zero in the control, not exactly zero, and the difference
+        is real rather than pedantic:** `reset()` can land on a design that is
+        already feasible, and the first step out of it is taken before any
+        termination applies. Measured on a 60-simulation smoke run: one such
+        step in the control against three in the treatment. So the claim is
+        "the control cannot accumulate feasible-state experience", not "the
+        counter is zero" -- and a treatment that fails to raise it well above
+        the control did not do what it claims.
+        """
+        return {
+            "terminate_on_feasible": bool(self.terminate_on_feasible),
+            "n_episodes": int(self.n_episodes),
+            "n_steps": int(self.n_steps),
+            "steps_from_feasible": int(self.steps_from_feasible),
+            "fraction_of_steps_from_feasible": (
+                self.steps_from_feasible / self.n_steps
+                if self.n_steps else 0.0),
+            "n_terminations_suppressed": int(self.n_suppressed),
+        }
 
     def step(self, action):
         self.obj.check_budget()
@@ -1152,7 +1234,23 @@ class _ObjectiveEnv:
                     predicted=None))
                 obs = self.env._observation(self.env._last)
                 return obs, self.obj.floor, True, False, {"screened": True}
-        return self.env.step(action)
+        was_feasible = bool(self._last_feasible)
+        obs, reward, terminated, truncated, info = self.env.step(action)
+        self.n_steps += 1
+        if was_feasible:
+            self.steps_from_feasible += 1
+        self._last_feasible = bool(info.get("feasible", False))
+
+        if (not self.terminate_on_feasible and terminated
+                and info.get("valid", False)):
+            # `terminated` on a VALID evaluation can only have come from
+            # feasibility -- an unusable measurement is `valid=False` and must
+            # still end the episode (§6d), because there is no observation to
+            # continue from. So this suppresses success-termination only.
+            self.n_suppressed += 1
+            terminated = False
+            truncated = bool(self.env._step >= self.env.cfg.horizon)
+        return obs, reward, terminated, truncated, info
 
 
 METHODS: dict[str, Callable] = {
