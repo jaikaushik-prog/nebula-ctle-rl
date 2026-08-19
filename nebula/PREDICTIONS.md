@@ -1894,3 +1894,115 @@ It says nothing about any method being better than it was. The methods are
 identical in the two runs; **only the ruler changed**.
 
 *Nothing above the Outcome heading was edited.*
+
+
+---
+
+## 12. Session 22g — PPO gets ONE gradient update. Does giving it more help?
+
+**Written:** 2026-08-19, **before** the run. Owner-authorised ("yes run it")
+after the diagnostic below.
+
+**Experiment:** `python -m nebula.experiments.exp_ppo_updates --run` —
+`rollout_steps` ∈ {**64** (control), 32, 16, 8} × 10 replicates × 150
+simulations = **6000 simulations**, ~15 min. One knob; `Objective`,
+`_ObjectiveEnv`, `method_ppo`, the seed rule, the box, `V1_SPECS`, the
+tolerances and `ac_peak_interp=True` are the sweep's.
+
+### What is already known, and is NOT a prediction
+
+**A retraction first.** This session twice told the owner PPO's stall was
+**exploration collapse**. It was inferred from the flat anytime curve and it is
+**measured false**:
+
+    entropy per update   9.942 -> 9.952 -> 9.956    RISES
+    final log_std        ~0.005 in all 7 dims       UNCHANGED from init (0.0)
+
+Nothing collapses; `ent_coef` is 0.0 and there is nothing for it to fix. What
+the same instrumented run measured instead, and these are inputs:
+
+* **1.57 simulations per environment step** — `CtleSizingEnv.reset` simulates a
+  fresh start point, and an invalid evaluation ends the episode at once: 38
+  episodes in 150 steps, many of length 1. **~1/3 of the budget is resets.**
+* so a 150-simulation budget buys **~96 environment steps**, and at
+  `rollout_steps = 64` that is **ONE policy update**.
+
+"PPO came last" means "PPO performed one gradient update".
+
+### Prediction A: the control reproduces the sweep, or the run is void
+
+| quantity | point |
+|---|---|
+| control (`rollout_steps=64`) median best-reward | **8.910626**, exactly the sweep's |
+| control's 10 per-seed bests | identical to the sweep's PPO runs |
+
+**This is the gate.** `run_one` uses `baselines.run_seed("P1","ppo",rep)`, the
+sweep's own rule, so the control is the same run. If it does not reproduce,
+nothing below transfers.
+
+### Prediction B: more updates help, monotonically, and not by much
+
+| arm | updates | point | band |
+|---|---|---|---|
+| 64 (control) | 1 | 8.9106 | — |
+| 32 | 2 | **8.920** | 8.87–8.96 |
+| 16 | 5 | **8.935** | 8.88–8.98 |
+| 8 | 11 | **8.925** | 8.85–8.98 |
+
+Monotone up to 16 and then **turning over at 8**, because 8-step rollouts give
+gradients estimated from a single 8-step episode's worth of advantage — the
+variance starts to cost more than the extra updates buy.
+
+### Prediction C: it does not fix the ranking, and that is the point
+
+| quantity | point | band |
+|---|---|---|
+| best arm separable from the control by 7h's CI rule | **no** | — |
+| any arm beating unscreened uniform (8.95319) | **0 of 3** | 0–1 |
+| any arm beating CMA-ES (8.97356) | **0 of 3** | 0 |
+
+**At 10 seeds and a 0.05-level bootstrap CI, a ~0.02 shift is very unlikely to
+separate.** I expect the *ordering* to move and the *statistics* not to, and I
+am saying so in advance so that "PPO improved" is not reported off a point
+estimate whose interval overlaps its own control.
+
+The reason PPO is not expected to catch uniform random is structural: **150
+simulations is a tiny sample budget for a policy-gradient method**, and no
+value of `rollout_steps` changes that. It is also why the amortised,
+spec-conditioned comparison — where the training cost is paid once and reused
+across every new spec — is the one that could favour RL, and this run is not it.
+
+### What would falsify the reasoning (as opposed to the numbers)
+
+1. **The control does not reproduce.** The experiment is not the sweep's PPO.
+   Stop; nothing transfers.
+2. **No trend at all across the arms.** Then update COUNT is not the binding
+   constraint, my diagnosis is wrong, and the two candidates I ranked below it
+   — the ~1/3 of budget spent on resets, and the episode terminating at first
+   feasibility — become the story instead. **That is the outcome I would learn
+   most from.**
+3. **An arm beats CMA-ES (8.97356).** Then "PPO is structurally sample-starved
+   at 150 simulations" is wrong, PPO tuning is worth far more than I told the
+   owner, and the recommendation to spend the next week on task 4 rather than
+   on tuning should be revisited.
+4. **`rollout_steps = 8` is the best arm by a clear margin.** My variance
+   argument is wrong and the useful direction is *smaller still*, which is
+   cheap to test and would be worth one more arm.
+
+### Guard against over-claiming
+
+**This tunes one hyperparameter, on one problem rung, at one budget, with one
+seed protocol.** It is not "PPO tuning" in the sense `PLAN.md` §4 defers — it is
+the single knob a measurement pointed at. A gain here does not license a claim
+that PPO is competitive, and a null result does not license a claim that PPO
+cannot be tuned.
+
+**And the two bigger levers are deliberately NOT in this run**, because both
+change the environment contract and are the owner's: (i) `reset` spending a
+simulation per episode, (ii) `terminated = bool(rb.feasible)` ending the episode
+at first feasibility, which trains the policy to *reach* the feasible band while
+the benchmark scores how far *past* it the policy gets.
+
+### Outcome
+
+*(to be written after the run; nothing above this heading may be edited)*

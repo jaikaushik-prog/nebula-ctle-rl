@@ -84,6 +84,7 @@ import platform
 import subprocess
 import sys
 import time
+import dataclasses
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Callable, Iterable, Mapping, Optional, Sequence
@@ -815,7 +816,8 @@ def obj_model_seconds(obj: Objective, seconds: float) -> None:
 
 
 def method_ppo(obj: Objective, rng: np.random.Generator,
-               steps: int = 100_000) -> dict:
+               steps: int = 100_000,
+               rollout_steps: Optional[int] = None) -> dict:
     """The EXISTING, UNTUNED policy from task 6. At P1 only, and labelled.
 
     7i, in the brief's own words: *"If PPO loses, that is the expected result
@@ -846,6 +848,12 @@ def method_ppo(obj: Objective, rng: np.random.Generator,
     # default on this line would let the policy train on the lattice objective
     # while the other four are ranked on the interpolated one -- 7f's
     # "identical validity handling" broken in the least visible possible place.
+    # `rollout_steps` is the ONLY hyperparameter this function exposes, and it
+    # is exposed because session 22g measured it to be the binding one: at the
+    # default 64, a 150-simulation budget buys PPO exactly ONE policy update
+    # (the run spends ~1.57 simulations per environment step on episode
+    # resets). `None` keeps `PPOConfig`'s default, so METHODS -- and therefore
+    # every published sweep -- is unchanged.
     cfg = EnvConfig(seed=seed, cl_f=pt.cl_f, corner=pt.corner,
                     temp_c=pt.temp_c, vdd_scale=pt.vdd_scale,
                     specs=obj.specs,
@@ -853,7 +861,10 @@ def method_ppo(obj: Objective, rng: np.random.Generator,
                     target_peaking_db=obj.target_peaking_db,
                     ac_peak_interp=obj.ac_peak_interp)
     env = _ObjectiveEnv(obj, cfg)
-    train(env, PPOConfig(seed=seed, total_steps=steps))
+    pcfg = PPOConfig(seed=seed, total_steps=steps)
+    if rollout_steps is not None:
+        pcfg = dataclasses.replace(pcfg, rollout_steps=int(rollout_steps))
+    train(env, pcfg)
 
 
 class _ObjectiveEnv:
