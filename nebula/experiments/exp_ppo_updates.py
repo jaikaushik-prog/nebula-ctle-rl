@@ -291,13 +291,29 @@ def run_instrumented(rollout_steps: int, replicate: int,
         torch.manual_seed(pcfg.seed)
         init = ActorCritic(env.observation_dim, env.action_dim, pcfg.hidden,
                            pcfg.log_std_init)
-        probe = torch.as_tensor(env.reset()[0], dtype=torch.float32).unsqueeze(0)
+        # **THE PROBE IS SYNTHETIC AND FIXED, and the first version of it was a
+        # BUG worth naming: it called `env.reset()`, which SIMULATES.** A
+        # diagnostic that spends the budget it is measuring corrupts the run it
+        # is reporting on -- and because the call sat outside the try, the
+        # `BudgetExhausted` it triggered killed the whole experiment at job 11
+        # of 20. An instrument must not consume the resource under measurement.
+        #
+        # 32 fixed vectors rather than one: the question is how much the
+        # POLICY FUNCTION moved, and a single observation can sit anywhere from
+        # a saturated tanh (where nothing moves) to the steep part (where
+        # everything does). Same vectors for both networks, drawn from a fixed
+        # seed, so the comparison is exact and costs nothing.
+        probe = torch.as_tensor(
+            np.random.default_rng(4242).normal(
+                0.0, 1.0, size=(32, env.observation_dim)),
+            dtype=torch.float32)
         with torch.no_grad():
-            m_trained = policy.distribution(probe).mean.squeeze(0)
-            m_init = init.distribution(probe).mean.squeeze(0)
-        row["mean_action_trained"] = [round(float(x), 6) for x in m_trained]
-        row["mean_action_untrained"] = [round(float(x), 6) for x in m_init]
-        row["mean_action_l2_move"] = float(torch.linalg.norm(m_trained - m_init))
+            m_trained = policy.distribution(probe).mean
+            m_init = init.distribution(probe).mean
+        d = torch.linalg.norm(m_trained - m_init, dim=1)
+        row["mean_action_l2_move"] = float(d.mean())
+        row["mean_action_l2_move_max"] = float(d.max())
+        row["n_probes"] = int(probe.shape[0])
         row["init_reproduced"] = bool(
             torch.allclose(init.log_std, torch.zeros_like(init.log_std)))
     return row

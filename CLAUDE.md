@@ -20,7 +20,9 @@ it has its own spec table (S1–S9), its own gates (G0–G5), and its own standi
 rules, several of which were written after a specific failure and are not
 guessable. Start with these, in order:
 
-1. `HANDOFF.md` — state, session log, gotchas **G1–G36**
+0. `nebula/CONTINUE_HERE.md` — **the entry point (2026-08-19).** Where the
+   project stands, what is decided, what is OPEN, what to do next.
+1. `HANDOFF.md` — state, session log, gotchas **G1–G95**
 2. `CLAUDEwa.md` — the Nebula contract
 3. `nebula/G0_RESULTS.md` — toolchain findings + the cost model
 4. `nebula/NRZ_RETARGET_AUDIT.md` — the 24 PAM-4 assumptions, 3 fixed

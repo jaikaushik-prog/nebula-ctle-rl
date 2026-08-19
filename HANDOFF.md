@@ -12,6 +12,11 @@
 > discovered to the Gotchas section. A change without a handoff update is an
 > incomplete change.
 
+> **NEW AGENT? START WITH `nebula/CONTINUE_HERE.md`.** It is the 2026-08-19
+> entry point: where the project stands, what sessions 22e-22g changed, the
+> decisions that are OPEN and human-only, and what to do next. It supersedes
+> `nebula/NEXT_STEPS.md`. This file remains the full state of record.
+
 Last updated: **2026-08-19** (session 22f: **THE G3 SWEEP HAS RUN FOR THE FIRST
 TIME AND THE BENCHMARK RANKS -- and a matched control proves it could not
 before.** Same 170 runs, same seeds, one flag: on the `dec 50` lattice

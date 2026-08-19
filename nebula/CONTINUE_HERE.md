@@ -1,0 +1,361 @@
+# CONTINUE_HERE.md — the brief for the next agent
+
+**Written 2026-08-19, at the end of sessions 22e–22g.** Supersedes
+`nebula/NEXT_STEPS.md`, which was written 2026-08-08 and is now wrong in its
+first table (it says G2 is not started and the sweep has not run; both are done).
+
+**This file is not a substitute for `HANDOFF.md`.** It is the *entry point*:
+where the project stands today, what the last three sessions changed, what is
+decided, what is open, and what to do next. Every number below traces to a run
+in this repository and to a commit.
+
+---
+
+## 0. Read in this order
+
+| # | File | Why | Time |
+|---|---|---|---|
+| 1 | **this file**, §§1–8 | the situation and the decision | 10 min |
+| 2 | `CLAUDEwa.md` §§1–3, §7 | the contract, the spec table, the gates | 15 min |
+| 3 | `HANDOFF.md` §0 header, §9 gotchas **G92–G95** | state, and the four traps found this week | 20 min |
+| 4 | `nebula/BASELINES.md` §12 (+§12.6) | the sweep, and the control that gives it meaning | 15 min |
+| 5 | `nebula/PEAK_INTERP.md` §0, §5, §7 | why the reward changed and what it cost | 10 min |
+| 6 | `nebula/PREDICTIONS.md` entries 10–13 | how this project makes claims | 20 min |
+| 7 | `PLAN.md` §2 (D1–D7), §7, §8 | the team's decisions and cut order | 10 min |
+
+**Do not skim 3 and 6.** The gotchas are the highest-value-per-line thing in the
+repo, and `PREDICTIONS.md` is the discipline that makes the results worth
+anything: **pre-register, commit, then run.** Three predictions were missed this
+week and all three are written up as misses.
+
+---
+
+## 1. The situation in 60 seconds
+
+The reward function had a defect that made the benchmark unable to rank
+anything. It is fixed, and the fix is proved by a matched control. The benchmark
+then ran for the first time and produced a real ranking. **In that ranking, PPO
+— our RL method — comes last, behind uniform random search.** Three separate
+diagnoses of why have been made and two of them were wrong; the current one is
+that at a 150-simulation budget the policy gradient is *uninformative*, not
+absent, and no hyperparameter fixes that.
+
+**27 days to the 15 Sept deadline.**
+
+---
+
+## 2. Gate status — honest
+
+From `CLAUDEwa.md` §7.
+
+| Gate | Due | Criterion | Status |
+|---|---|---|---|
+| G0 | 2 Aug | toolchain runs four analyses | **passed** |
+| G1 | 3 Aug | hand reference meets S3–S7 at TT | **substantially passed** |
+| G2 | 20 Aug | one full evaluation, params → ngspice → fit → eye → reward | **PASSED** (session 21, `G2_RESULTS.md`) |
+| **G3** | **3 Sep** | **RL beats random search AND grid search at TT, with a plot** | **FAILING — see §4** |
+| G4 | 12 Sep | corner-robust design generated and verified | not started; see §4 for the ordering conflict |
+| G5 | 15 Sep | submitted | — |
+
+---
+
+## 3. What sessions 22e–22g did
+
+Eleven commits, `9f9eca8` … `6d6d149`. ~60 000 simulations, ~3 hours of compute.
+
+### 3.1 The reward ceiling was removed at its source (`PEAK_INTERP.md`)
+
+`meas ac g_pk MAX` can only report frequencies on the `ac dec 50` lattice —
+0.0664386 octaves apart. `reward_v1`'s `S3_f_peak` margin is
+`0.5 − |log2(f_peak/f_target)|`, so the reward inherited the lattice: the best
+attainable score was **+8.950669** and **57 distinct designs tied there across
+8000 simulations** (G74, `DIFFICULTY.md`).
+
+Fixed by fitting a parabola through the three samples bracketing the discrete
+maximum, in `(log2 f, dB)`, and taking its vertex. **Zero extra simulations** —
+the curve is already dumped. `dec` was **not** raised.
+
+* the 57 ties became **57 distinct rewards**, 29 above the old ceiling
+* validated against a `dec 500` sweep: the vertex is **172× closer** to the
+  truth, worse on **0 of 14** designs
+* **63 designs in 8000 change feasibility** (39 gain, 24 lose) — this is a
+  change of *problem*, not only of resolution
+* opt-in everywhere; `V1_SPECS`, the tolerances, the box and every seed untouched
+
+### 3.2 The G3 sweep ran for the first time (`BASELINES.md` §12)
+
+`baselines_run.jsonl` had contained **a header and nothing else**. 170 runs,
+25 869 simulations, **42.1 minutes** — not the 12 hours §7a predicted, because
+that estimate predated the library trims.
+
+```
+cmaes+screen 8.9974 > gp_bo 8.9955 > gp_bo+screen 8.9921 > uniform+screen 8.9860
+> cmaes 8.9736 > lhs+screen 8.9661 > uniform 8.9532 > lhs 8.9419
+> ppo+screen 8.9288 > ppo 8.9106
+```
+
+**20 of 45 P1 pairs separate.** `PREDICTIONS.md` entry 6's ordering, written
+months earlier, is confirmed wherever the sample resolves it.
+
+### 3.3 The lattice control, which is the most persuasive table in the repo
+
+Same 170 runs, same seeds, one flag off:
+
+| | lattice | interpolated |
+|---|---|---|
+| **separable P1 pairs (of 45)** | **0** | **20** |
+| groups whose median is 8.950670 | **8 of 10** | 0 of 10 |
+| distinct median values | 3 | 10 |
+| groups with a **zero-width** CI | 6 | 0 |
+
+The benchmark did not rank coarsely. **It resolved nothing at all.**
+
+### 3.4 PPO was diagnosed three times; twice wrongly
+
+* **"exploration collapsed"** — **measured false.** Entropy *rises*
+  (9.942 → 9.956) against 9.9326 for an untrained 7-D Gaussian; `log_std` is
+  unchanged; `ent_coef` is already 0.0.
+* **"PPO gets one gradient update"** — **true.** 1.57 simulations per env step
+  (a third of the budget is episode resets), so 150 sims buys ~96 steps, and at
+  `rollout_steps=64` that is one update.
+* Fixing it (`rollout_steps` 64 → 8, eleven updates) bought **+0.0106,
+  not separable** — **24.8 % of the gap to *uniform random***. Monotone, real,
+  and far too small to matter.
+* **"the policy never started"** — being retracted. The *spread* never changes
+  but the *mean* moves, roughly in proportion to the update count. The accurate
+  statement is **the policy moves and does not improve**: the gradient is
+  uninformative rather than absent. `PREDICTIONS.md` entry 13 measures this.
+
+---
+
+## 4. **The thing you most need to know: G3 is failing, and the plan says stop**
+
+`CLAUDEwa.md` §7 states G3's criterion and its fallback verbatim:
+
+> **G3** | Sep 3 | RL beats random search **and** grid search at TT, with a plot
+> | *Fallback if failed:* **Stop and debug the reward function. Do not proceed
+> to corners.**
+
+Measured: **PPO 8.9106 against uniform random 8.9532.** RL does not beat random
+search at TT. Two consequences, and neither is an agent's call:
+
+1. **The prescribed fallback has already been executed once, and it worked
+   without fixing G3.** The reward function *did* have a defect — the lattice
+   ceiling — it was found, fixed, and proved fixed by a control. RL still loses.
+   The current diagnosis (§3.4) says a second reward-debugging pass will not
+   change it either, because the problem is the sample budget, not the reward.
+2. **"Do not proceed to corners" conflicts with G4 being mandatory and with
+   spec S9.** Someone has to decide whether that rule still binds now that the
+   reward defect it was aimed at has been found and removed.
+
+**And a gap nobody has flagged: grid search does not exist.** `METHODS` holds
+`uniform, lhs, cmaes, gp_bo, ppo`. G3's criterion names grid search explicitly
+and CLAUDEwa §7 lists it among the baselines "we must report against".
+`optimize_ctle()` exists only in `python_models/statistical_eye.py`, which grids
+CTLE *settings* in the link model — not device sizes in the nebula box. **G3
+cannot be evaluated as written until `method_grid` is built.** That is a
+half-day of work plus a ~15-minute run, and it is the cheapest open item in the
+project.
+
+---
+
+## 5. Decisions — made, and open
+
+### Made (by the owner, this session)
+
+| # | Decision | Consequence |
+|---|---|---|
+| 1 | Switch the benchmark to the interpolated peak | Done. Every flag still defaults OFF; the lattice path is what runs unless asked |
+| 2 | Run the sweep | Done, plus the lattice control |
+| 3 | Tune PPO's `rollout_steps` | Done. Null result, reported as one |
+
+### Made by the agent, flagged, and reversible
+
+| Decision | Where | Why | Reverse by |
+|---|---|---|---|
+| A refused interpolation scores the **lattice** value, not the invalid floor | `evaluator.scoring_meas` | The floor punches a hole in the reward landscape for a numerical reason; the same mistake `validate`'s G44 comment records. **Fired 2 times in 25 869 simulations** | one argument |
+| A **bottom**-edge peak carries the lattice pair forward; a **top**-edge one is refused | `evaluator.evaluate` | 10 MHz is both a grid point and the boundary, so nothing was rounded. Mirrors the asymmetry `peak_is_sweep_edge` already makes | one branch |
+
+### **OPEN — human only. Do not decide these.**
+
+1. **Does G3's "do not proceed to corners" rule still bind?** (§4)
+2. **Should the benchmark's published baselines move onto the interpolated
+   path permanently?** It changes 63 of 8000 S3 verdicts; `BASELINES.md` §7f
+   makes it a re-run event.
+3. **The two PPO environment-contract changes** (`PEAK_INTERP.md` §7,
+   `PREDICTIONS.md` entry 12's closing section):
+   * `reset()` spends a simulation per episode — a third of PPO's budget
+   * `terminated = bool(rb.feasible)` ends the episode at first feasibility, so
+     the policy is trained to *reach* the band while the benchmark scores how
+     far *past* it you get
+4. **`PLAN.md` §8 lists the spec-conditioned policy as the FIRST thing to cut.**
+   That ordering was written before PPO was known to lose head-to-head. If it
+   stands and time gets tight, the submission ships with no answer to *"why not
+   just use CMA-ES?"*
+5. Whether to re-run the corner and load screens on the interpolated peak
+   (interacts with G66's own re-run scope — cost them together).
+
+---
+
+## 6. What to do next — recommended order
+
+**Both of the top two map directly onto `CLAUDEwa.md` §7's own two claimed
+contributions**, which is the strongest argument for them.
+
+| # | Task | Time | Why | Maps to |
+|---|---|---|---|---|
+| **1** | **Build `method_grid` and re-run** | ½ d + 15 min | **G3 cannot be scored without it.** Cheapest open item in the project | G3's literal criterion |
+| **2** | **Task 3 — corners in the loop (G4)** | 2–3 d | Mandatory: spec S9, and `PLAN.md` "never cut". P3 is now known **hard, not empty** — `uniform` found 2 of 20 | contribution **#1**, "reward on worst-case corner, not nominal" |
+| **3** | **Task 4 — spec-conditioned policy** | 5–7 d | The only answer to *"why not CMA-ES?"*, **and** the only regime where the policy gets enough experience to learn | contribution **#2**, "this is the live demo" |
+| **4** | **Report + slides** | ~7 d | Mandatory. Run it *alongside* 2–3, not after | — |
+| 5 | `FAIRNESS.md` (task 2 leftover) | ½ d | One table: every asymmetry, which way it cut, what was done. Cheap credibility | — |
+| — | ~~PPO contract changes~~ | 1–2 d | Measured ceiling on that path is small. Only if 3 stalls | — |
+
+~13 days of work in 27. The slack is deliberate; `CLAUDEwa.md` §7 says protect it.
+
+### Three results already banked for the report
+
+1. **0 → 20 separable pairs** (§3.3). One flag, matched control.
+2. **The ranking table** (§3.2), with pre-registered predictions scored.
+3. **The pre-screen's true cost**: free in simulations, **1.34× in wall clock**
+   for model-based methods (GP-BO model time 127.1 s → 207.9 s), because a
+   screened proposal costs no simulation but still costs a full acquisition
+   optimisation. First measurement of this anywhere in the project.
+
+---
+
+## 7. Commands
+
+```bash
+# environment
+conda activate nebula          # ngspice 41; use ngspice_con.exe, NOT ngspice.exe (G20)
+                               # NOTE: the TEST SUITE runs on the SYSTEM python
+                               # (the conda env has no torch). ngspice is found
+                               # by absolute path either way.
+
+# tests — before and after ANY change. 1510 tests, ~4 min, from the repo root
+python -m pytest tests nebula/tests -q -m "not slow"
+
+# the benchmark
+python -m nebula.experiments.baselines --budget            # allocation, no SPICE
+python -m nebula.experiments.baselines --sweep --interp    # 25 500 sims, ~42 min
+python -m nebula.experiments.baselines --sweep --tag lattice   # the control
+python -m nebula.experiments.baselines --analyse <log.jsonl>   # works on a PARTIAL log
+
+# task 1's three sub-experiments
+python -m nebula.experiments.exp_peak_interp --funnel      # 300 sims, ~2 min
+python -m nebula.experiments.exp_peak_interp --dense 30    # 60 sims, dec 50 vs dec 500
+python -m nebula.experiments.exp_peak_interp --pools       # 8000 sims, ~33 min
+python -m nebula.experiments.exp_peak_interp --analyse --plot
+
+# PPO
+python -m nebula.experiments.exp_ppo_updates --run         # 6000 sims, ~24 min
+python -m nebula.experiments.exp_ppo_updates --instrument  # entropy/log_std/curve
+```
+
+**Measured rate: 0.24–0.27 s/simulation** serial on this machine, ~1.80× at 8
+workers (G75's figure *on this workload*, not the 2.98× measured on the
+simulator alone). A 25 500-simulation sweep is **42 minutes**, not 12 hours.
+
+---
+
+## 8. Traps — the four found this week, and the ones that bit
+
+**New gotchas, all in `HANDOFF.md` §9:**
+
+* **G92** — *two arithmetics over the same events are ONE measurement.* G89 was
+  called "supported two independent ways"; both statistics came from the same 9
+  and 16 counts. Doubling the events killed it. Same family as G71.
+* **G93** — `wrdata` writes **8 significant figures** while `meas` works on the
+  full-precision vector, so on a flat response the two disagree about which
+  sample is the maximum — **by a whole grid step**. Fired once in 4543. Caught
+  only because `run_point(ac_peak_interp=True)` cross-checks its argmax.
+* **G94** — *a per-simulation rate measured at a fraction of the real budget is
+  wrong in both directions.* Calibrating at 40 simulations and extrapolating to
+  150 put PPO at 2.33× (real: 1.01×) and GP-BO at 1.54× (real: 2.43×). Fixed
+  startup over-charges the margin; `O(n³)` under-charges it.
+* **G95** — *rule 9 applies to FILESYSTEM PATHS.* `sweep()` defaulted its output
+  to `baselines_results.json`, the same name `--prescreen` writes, and silently
+  destroyed 1890 samples of pre-screen calibration. Both writers reported
+  success. Recovered with `git checkout HEAD~1 --`.
+
+**Two mistakes made this week that are not gotchas but are instructive:**
+
+* **A diagnostic that consumed the resource it measured.** The policy-movement
+  probe called `env.reset()`, which *simulates* — so it spent budget from the
+  run it was reporting on, and (being outside the `try`) its `BudgetExhausted`
+  killed the experiment at job 11 of 20. **An instrument must not consume the
+  resource under measurement.**
+* **A single probe point is not a function comparison.** The same seed reads
+  0.633 on one observation and 0.209 averaged over 32. A tanh can be saturated
+  at one point and steep at another.
+
+**Standing traps that still bite:** G20 (`ngspice_con`, not `ngspice`), G26/G30
+(ngspice reports failures as warnings and exits 0 — parse and assert), G29
+(`.spiceinit` is read at parse time from the cwd), G31 (instance W/L are plain
+numbers in **microns**), G36 (use the trimmed library), G44 (a peak at the sweep
+edge is fictitious), G70 (one concurrent ngspice = 4.8× slower), G71 (the first
+configuration pays the cold cache, whichever one it is).
+
+---
+
+## 9. Rules you must follow
+
+1. **Update `HANDOFF.md` in the same commit as any change.** A change without a
+   handoff update is incomplete.
+2. **Run the suite before and after.** `python -m pytest tests nebula/tests -q
+   -m "not slow"` — **1510 tests, ~4 min**. Report the count both times. Never
+   commit with failures.
+3. **Pre-register anything costing more than ~10 minutes.** Write the prediction
+   *and its acceptance band* into `PREDICTIONS.md`, **commit it**, then run.
+   Record misses as misses; nothing above an Outcome heading may be edited.
+4. **Every gate gets a test that proves it can fail.** Break the input, watch it
+   go red, restore it, and say in your report that you did.
+5. **Never fabricate a number.** Unknown stays empty and fails loudly.
+6. **ngspice's exit code is not a success signal.** Parse the output and assert.
+7. **Do not modify without asking:** `common/params.py`, `rl/contract.py`,
+   `rl/env.py`, `V1_SPECS`, the box, the tolerances, the pre-screen. (`env.py`
+   *was* touched this session, additively and default-off, with the reason
+   recorded — see §5.)
+8. **You may not decide anything in §5's OPEN list.** State the options with the
+   measured numbers behind each and ask.
+9. Windows: no non-ASCII in `print()`; run pytest from the repo root.
+10. Commit as `Jai Kaushik <jaikaushik-prog@users.noreply.github.com>` (G12).
+    **The repo is PRIVATE and must stay private** (G1).
+
+---
+
+## 10. What is new on disk
+
+| Path | What |
+|---|---|
+| `nebula/PEAK_INTERP.md` | task 1: the ceiling, removed and validated |
+| `nebula/BASELINES.md` §12, §12.6 | the sweep and the lattice control |
+| `nebula/experiments/exp_peak_interp.py` | funnel replay, `dec 500` validation, pool replay |
+| `nebula/experiments/exp_ppo_updates.py` | `rollout_steps` arms + `--instrument` |
+| `nebula/experiments/baselines_run_{interp,lattice}.jsonl.gz` | 25 869 trial rows each (56 MB raw; committed gzipped) |
+| `nebula/experiments/baselines_results_{interp,lattice}.json` | per-run summaries + analysis |
+| `nebula/experiments/ppo_updates_run.jsonl` | 40 PPO runs across four `rollout_steps` |
+| `nebula/figures/peak_interp.png` | the three-panel task-1 figure |
+| `device/sky130_runner.py` | `interpolate_peak_log_f`, `parabolic_vertex`, `MAX_SEARCH_BOT_HZ`, 3 new `Sky130Point` fields |
+| `rl/evaluator.py` | `scoring_meas`, `INTERP_KEYS`, `meas_with_interpolated_peak`, `interp_was_refused` |
+| `nebula/tests/test_peak_interp.py` | 28 tests |
+| `PREDICTIONS.md` entries 9–13 | five pre-registrations, four scored |
+
+---
+
+## 11. The one-paragraph version, if you read nothing else
+
+The reward could not rank anything and now it can — proved by a matched control
+that separates **0 of 45** pairs against **20 of 45**. The benchmark ran and
+produced an honest ranking in which **our RL comes last, behind uniform random
+search**, which means **G3 is failing on its literal criterion** and the
+criterion cannot even be fully scored because **grid search was never built**.
+PPO's failure has been diagnosed three times, twice wrongly, and the current
+reading is that a 150-simulation budget is smaller than a policy-gradient
+method's minimum viable sample size — so no hyperparameter fixes it. The two
+things worth the remaining 27 days are the two contributions `CLAUDEwa.md` §7
+already claims: **corner-aware evaluation** (mandatory anyway) and the
+**spec-conditioned policy**, which is the only regime where the policy gets
+enough experience to learn and the only answer to *"why not just use CMA-ES?"*.
+Build `method_grid` first; it is half a day and G3 cannot be scored without it.

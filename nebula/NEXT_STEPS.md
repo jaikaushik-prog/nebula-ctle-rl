@@ -1,5 +1,17 @@
 # NEXT_STEPS.md — the ordered plan, and prompts to execute it
 
+> **SUPERSEDED 2026-08-19 by `nebula/CONTINUE_HERE.md`. Read that first.**
+>
+> This file was written on 2026-08-08 (session 18) and its §0 status table is
+> now wrong in both of its load-bearing rows: **G2 is PASSED** (session 21) and
+> **the G3 sweep HAS RUN** (session 22f, 25 869 simulations, 42 minutes). Its
+> "38 days to the deadline" is now 27.
+>
+> **Kept, not deleted**, because its per-step reasoning and its prompts are
+> still the best record of *why* the order was chosen, and because deleting a
+> superseded plan hides the fact that the plan changed. Treat every status
+> claim in it as of 2026-08-08 and every ordering claim as advisory.
+
 **Written 2026-08-08, at the end of session 18, for whoever picks this up
 next** — a Claude Code session, a chat agent working by copy-paste, or a human.
 
