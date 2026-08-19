@@ -17,7 +17,36 @@
 > decisions that are OPEN and human-only, and what to do next. It supersedes
 > `nebula/NEXT_STEPS.md`. This file remains the full state of record.
 
-Last updated: **2026-08-20** (session 22m: **DELIVERABLE 2 EXISTS -- the LLM
+Last updated: **2026-08-20** (session 22n: **PPO WAS TRAINED ON A DIFFERENT
+OBJECTIVE FROM THE ONE IT WAS SCORED ON -- worth 0.0413, and G3's grid clause
+FLIPS.** Two lines: `env.py` set `terminated = bool(rb.feasible)` while the
+metric scored `B + min(margin/tol)`, *how far PAST the band you get* -- **so the
+region the metric rewards was exactly the region the policy was never in**.
+Three sessions of diagnosis all examined the POLICY; none examined the episode.
+Measured shape on the published sweep: 150 sims, **11.5 feasible designs
+median**, each ending its episode and each followed by a fresh UNIFORM-RANDOM
+reset -- *random start -> short walk -> stop at good enough -> random restart*,
+twelve times, which is structurally a random search. **Mechanism check first:**
+steps-from-feasible **4 -> 18** at 150 and **15 -> 74** at 600 (4.5x, 4.9x), so
+the flag does what it claims. **Outcome: 8.910626 -> 8.951936 at 150
+(+0.0413)**, 8.984407 -> 8.987479 at 600. **The control reproduces the
+published sweep to 4.67e-07.** **THE HEADLINE: the gap to uniform random at 150
+goes -0.0426 -> -0.0013, 97.0 % closed**, about **4x** the largest effect any
+hyperparameter change here has produced. **AND IT MOVES G3:** RL vs grid goes
+not-separable -> **SEPARABLE WIN** (the grid clause is MET), RL vs CMA-ES goes
+separably-below -> not-separable, and *"RL loses to random search"* becomes
+**"RL is statistically indistinguishable from random search"**. **G3 still
+fails, on ONE clause instead of two.** The pre-registered prediction held --
+*a real effect that is still not enough to win* -- so **the negative result is
+now STRONGER for having survived the removal of its most obvious excuse**. New
+gotcha **G100**: *an episode that terminates on the condition your metric
+rewards exceeding is two objectives, not one -- write the metric and the
+termination condition down side by side.* Two correctness fixes found on the
+way (diagnostics destroyed by `BudgetExhausted`; `_last_feasible` leaking
+across the episode boundary), and one claim corrected before publishing (the
+control is NEAR zero, not zero). Tests **1607 -> 1614**.)
+
+Earlier session 22m: ( **DELIVERABLE 2 EXISTS -- the LLM
 wrapper, with a guard that makes it safe.** `python -m nebula.llm "I need about
 9 dB of peaking with the peak near 1.9 GHz"` parses, sizes, verifies and
 explains. **THE HARD PART IS THE GUARD, NOT THE PROMPT:** rule 1 is *never
@@ -3644,6 +3673,34 @@ Plus: git init, .gitignore, 28 tests, Wilson-bound BER reporting.
   corner-robust on the screen alone** -- verification is the full grid, and it
   is 135 simulations, under 15 seconds. Same family as G76 (an aggregate rate
   hiding a systematic bias) and G92 (two arithmetics over the same events).
+
+- **G100 -- (nebula) an episode that TERMINATES on the condition your metric
+  rewards EXCEEDING is two objectives, not one.** `CtleSizingEnv.step` set
+  `terminated = bool(rb.feasible)` -- the episode ended the instant every spec
+  was met -- while the benchmark scored `B + min(margin/tol)`, which is *how
+  far PAST the band you get*. **So the region the metric rewards was exactly
+  the region the policy was never in.** It could not generate the data it was
+  being graded on.
+  **The shape it produces looks like a search method, not like a bug.**
+  Measured on the published sweep: 150 simulations, a median of **11.5
+  feasible designs**, each ending its episode and each followed by a fresh
+  UNIFORM-RANDOM `reset()`. So the run was *random start -> short walk -> hits
+  feasibility -> STOP -> random restart*, about twelve times -- which is
+  structurally a random search, and `BASELINES.md` §14 duly measured PPO to be
+  statistically indistinguishable from one at every budget from 150 to 2400.
+  Three sessions of diagnosis (exploration collapse, one gradient update, "the
+  policy never started") all looked at the POLICY; none looked at the episode.
+  **Measured cost: 0.0413 of reward at 150 simulations -- 97 % of the entire
+  gap to random search, and ~4x the largest effect any hyperparameter change in
+  this project has produced.** Removing it also flipped `ppo` vs `grid` from
+  not-separable to a **separable win**, and `ppo` vs `cmaes` from separably
+  below to not-separable.
+  **The general form: write the metric and the termination condition down side
+  by side.** If the metric keeps improving in states the episode treats as
+  terminal, the agent is trained on one objective and graded on another -- and
+  no amount of tuning finds it, because it is not in the hyperparameters, it is
+  in the MDP. `nebula/tests/test_ppo_terminate.py` pins the seam and
+  `PREDICTIONS.md` entry 17 is the measurement.
 
 ## 10. Environment
 
@@ -8258,3 +8315,91 @@ LLM parse path clamping instead of refusing; an ungrounded answer kept instead
 of discarded.
 
 **Both competition deliverables now exist.** What remains is the report.
+
+### 2026-08-20 - Session 22n (PPO was trained on a DIFFERENT OBJECTIVE from the one it was scored on -- worth 0.0413, and G3's grid clause flips)
+
+**40 runs, 15 000 simulations, 25 minutes.** `exp_ppo_terminate --run`,
+pre-registered at `09c1593`. `PREDICTIONS.md` entry 17: **5 clean hits, 2
+in-band with the point off, 1 band I wrote wrong.** New gotcha **G100**.
+
+**THE DEFECT IS TWO LINES AND NOBODY HAD LOOKED AT IT.**
+
+    env.py:        terminated = bool(rb.feasible)      # early success
+    reward_v1.py:  reward = B + min(margin/tol)        # how far PAST you get
+
+The episode ended the instant every spec was met, and the metric rewarded
+exactly what happened after that. **The policy was never in a state from which
+it could learn to improve a design that already worked.** Three sessions of
+diagnosis -- exploration collapse, one gradient update, "the policy never
+started" -- all examined the POLICY. None examined the episode.
+
+**THE MECHANISM CHECK, READ BEFORE THE OUTCOME:**
+
+    budget  arm       steps from feasible   fraction   episodes
+       150  control            4              0.043        24
+       150  FIXED             18              0.166        20
+       600  control           15              0.036        98
+       600  FIXED             74              0.164        78
+
+**4.5x and 4.9x** -- the flag does what it claims, so the outcome can be read.
+
+**THE OUTCOME:**
+
+    budget   control      fixed      delta     separable
+       150  8.910626   8.951936    +0.0413   not separable
+       600  8.984407   8.987479    +0.0031   not separable
+
+**The control reproduces the published sweep to 4.67e-07**, so this is a
+matched control against the real published PPO rather than a re-implementation.
+
+**THE HEADLINE: the gap to uniform random at 150 goes from -0.0426 to -0.0013.
+97.0 % of it closed by removing a two-line mismatch** -- about **4x** the
+largest effect any hyperparameter change in this project has produced
+(session 22g's `rollout_steps` bought +0.0106).
+
+**AND IT MOVES G3.** At 150 simulations, against the published arms:
+
+    RL vs GRID     not separable  ->  SEPARABLE WIN    <- G3's grid clause is MET
+    RL vs RANDOM   not separable  ->  not separable    (-0.0426 -> -0.0013)
+    RL vs CMA-ES   separably BELOW ->  not separable
+    RL vs LHS      not separable  ->  not separable
+
+Three of four moved, all in RL's favour. **G3 still fails -- but on ONE clause
+instead of two, and the failing clause is now "cannot demonstrate superiority"
+rather than "loses".** The sentence for the report changes from *"RL loses to
+random search"* to **"RL is statistically indistinguishable from random
+search"**, which is more accurate, more favourable, and honestly earned.
+
+**THE PREDICTION THAT MATTERED HELD:** *a real, directionally positive effect
+that is still not enough to beat uniform random.* Both halves. **So the
+negative result about RL is now STRONGER, not weaker -- it has survived the
+removal of its most obvious excuse.** Before today a reviewer could correctly
+say *"you trained on a different objective from the one you reported."* They no
+longer can, and that was the point of running it regardless of outcome.
+
+**TWO CORRECTNESS FIXES FOUND WHILE BUILDING THE SEAM**, both of which would
+have corrupted this measurement:
+* **diagnostics were destroyed by `BudgetExhausted`** -- it raises from deep
+  inside PPO's rollout and unwinds past every `return`, so a run that completes
+  NORMALLY is exactly the one whose instrumentation vanishes. The trap that
+  cost session 22g an arm. Now written in a `finally`, onto the `Objective`.
+* **`_last_feasible` leaked across the episode boundary**, so a new episode's
+  first step inherited the old episode's terminal state -- which in the control
+  is ALWAYS the feasible one. It would have inflated the control's counter and
+  hidden the effect.
+
+**A CLAIM I CORRECTED BEFORE PUBLISHING IT.** I had written that the control's
+`steps_from_feasible` is *"zero by construction"*. It is not: a `reset()` can
+land on a feasible design and the first step out of it precedes any
+termination. Measured 4 at 150, not 0. The honest claim is *"the control cannot
+ACCUMULATE feasible-state experience"*.
+
+**NOT A RE-RUN OF THE BENCHMARK.** §14's PPO rows were measured with the
+mismatch and stand; these are the matched control for them and must be quoted
+BESIDE rather than substituted. Re-running the published sweep with
+`terminate_on_feasible=False` is a §7f event and an owner's decision -- now the
+best-evidenced item on that list.
+
+**Tests 1607 -> 1614.** Four gates broken and watched go red. New:
+`experiments/exp_ppo_terminate.py`, `nebula/tests/test_ppo_terminate.py`,
+`experiments/ppo_terminate_results.json`, gotcha **G100**.

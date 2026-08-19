@@ -3023,6 +3023,115 @@ scored at.
 run they cannot, whichever way it lands — which is why it is worth doing
 independently of the outcome.
 
-### Outcome
+### Outcome — **the mismatch was real and cost 0.0413. It closes 97 % of PPO's gap to random search, moves one of G3's two clauses, and is still not enough to win.** Run 2026-08-20, 40 runs, 15 000 simulations, 25 min.
 
-*(to be filled in after the run; nothing above this heading may be edited)*
+#### The mechanism check, read first
+
+| budget | arm | steps from feasible | fraction | episodes |
+|---|---|---|---|---|
+| 150 | control | 4 | 0.043 | 24 |
+| 150 | **fixed** | **18** | **0.166** | 20 |
+| 600 | control | 15 | 0.036 | 98 |
+| 600 | **fixed** | **74** | **0.164** | 78 |
+
+**4.5× and 4.9×.** The flag does what it claims: the policy now spends a sixth
+of its steps inside the region the metric rewards, against a twenty-fifth
+before. Falsifier 1 did not fire, so the outcome can be read.
+
+#### The outcome
+
+| budget | control | fixed | Δ | separable? |
+|---|---|---|---|---|
+| 150 | 8.910626 | **8.951936** | **+0.0413** | not separable |
+| 600 | 8.984407 | 8.987479 | +0.0031 | not separable |
+
+**The control reproduces the published sweep to 4.67e-07** — same seeds, same
+objective, same harness. So the comparison is against the real published PPO
+and not against a re-implementation.
+
+#### The headline
+
+> **Gap to uniform random at 150 simulations: −0.0426 before, −0.0013 after.
+> 97.0 % of it closed by removing a two-line objective mismatch.**
+
+That is **~4× larger than any other PPO intervention this project has tried** —
+session 22g's `rollout_steps` change bought +0.0106.
+
+**And it is still not a win.** At 150 the fixed policy sits 0.0013 *below*
+uniform random. At 600 it edges 0.0015 *above*. Neither is separable; both are
+rounding-level.
+
+#### What it does to G3, and this is the part that matters
+
+At 150 simulations, the budget G3 is scored at, against the published arms:
+
+| comparison | control | **fixed** |
+|---|---|---|
+| RL vs **grid search** | not separable | **SEPARABLE WIN** |
+| RL vs **random search** | not separable (−0.0426 on the point) | not separable (−0.0013) |
+| RL vs LHS | not separable | not separable |
+| RL vs CMA-ES | **separably BELOW** | not separable |
+
+**Three of those four moved, all in RL's favour:**
+
+* **G3's grid clause is now MET.** `ppo` [8.9175, 8.9787] against `grid`
+  [8.8886, 8.8886] — the intervals do not overlap.
+* **RL is no longer separably below CMA-ES.**
+* The sentence *"RL loses to random search"* becomes **"RL is statistically
+  indistinguishable from random search"**, which is both more accurate and
+  more favourable, and is honestly earned.
+
+**G3 still fails**, on one clause instead of two — and the failing clause is
+now *"cannot demonstrate superiority"* rather than *"loses"*.
+
+#### Scoring
+
+| # | prediction | point | band | measured | |
+|---|---|---|---|---|---|
+| 1 | control reproduces 8.9106 | exact | ≤ 1e-9 | **4.67e-07** | reproduces; **my band was mis-specified** — see below |
+| 2 | steps ratio, treatment ÷ control | ≥ 8× | ≥ 3× | **4.5× / 4.9×** | in band, point too high |
+| 3 | Δ at 150 | +0.015 | −0.020…+0.060 | **+0.0413** | HIT |
+| 4 | Δ at 600 | +0.010 | −0.015…+0.050 | **+0.0031** | HIT |
+| 5 | does the fix beat uniform at 150? | **no** | — | **no**, −0.0013 | HIT |
+| 6 | gain over the final third at 600 | +0.004 | 0.000–0.040 | **+0.0000** | in band at its floor |
+| 7 | episodes fewer, but < 2× fewer | yes | — | 24→20, 98→78 | HIT |
+| 8 | separable at either budget? | **no** | — | **no** | HIT |
+
+**Five clean hits, two in-band with the point off, one band I wrote wrong.**
+
+**#1 is scored as "reproduces, band mis-specified" rather than as a miss**, and
+the distinction is mine to own: I set a 1e-9 band against a reference value I
+only had to six decimal places, so the band was never checkable as written. The
+substance — that this harness runs what the sweep ran — holds at 4.67e-07,
+which is display precision.
+
+**No falsifier fired.** In particular #2 did not: Δ at 600 is +0.0031, far
+below the +0.05 that would have meant the published ranking was measuring an
+implementation bug and forced a full G3 re-run.
+
+#### The prediction that mattered, and it held
+
+> *"a real, directionally positive effect that is still not enough to beat
+> uniform random"*
+
+Both halves. The effect is real and the largest yet; it is still not a win.
+**So the negative result about RL is now stronger, not weaker — it has survived
+the removal of its most obvious excuse.** Before today a reviewer could
+correctly say *"you trained on a different objective from the one you
+reported."* They no longer can.
+
+#### What this does NOT license
+
+**It is not a re-run of the benchmark.** `BASELINES.md` §14's PPO rows were
+measured with the mismatch and stay as they are; this entry is the matched
+control for them, at the same seeds and the same objective, and the fixed
+numbers must be quoted **beside** them rather than substituted for them.
+Whether the published sweep is re-run with `terminate_on_feasible=False` is a
+§7f event and an owner's decision.
+
+**And +0.0413 is not "RL works".** It is the cost of one implementation defect,
+measured. The claim that matters is #5, and it is unchanged: at the budget G3
+is scored at, reinforcement learning does not beat random search.
+
+*Nothing above the Outcome heading was edited.*
+

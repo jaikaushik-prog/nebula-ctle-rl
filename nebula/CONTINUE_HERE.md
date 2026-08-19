@@ -75,7 +75,7 @@ From `CLAUDEwa.md` §7.
 | G0 | 2 Aug | toolchain runs four analyses | **passed** |
 | G1 | 3 Aug | hand reference meets S3–S7 at TT | **substantially passed** |
 | G2 | 20 Aug | one full evaluation, params → ngspice → fit → eye → reward | **PASSED** (session 21, `G2_RESULTS.md`) |
-| **G3** | **3 Sep** | **RL beats random search AND grid search at TT, with a plot** | **FAILING on BOTH clauses, and now scoreable on both — see §4** |
+| **G3** | **3 Sep** | **RL beats random search AND grid search at TT, with a plot** | **grid clause MET (22n, separable win); random clause NOT met — indistinguishable, not a loss. Fails on one clause of two** |
 | G4 | 12 Sep | corner-robust design generated and verified | **MET 2026-08-20, 23 days early** (`G4_RESULTS.md`): 135 of 135 points at 45 corners x 3 loads. Found by uniform random search, not by RL |
 | G5 | 15 Sep | submitted | — |
 
