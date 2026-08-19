@@ -12,8 +12,26 @@
 > discovered to the Gotchas section. A change without a handoff update is an
 > incomplete change.
 
-Last updated: **2026-08-19** (session 22e: **TASK 1 IS DONE AND THE REWARD
-CEILING IS GONE.** The AC peak is now read off the parabola through the three
+Last updated: **2026-08-19** (session 22f: **THE G3 SWEEP HAS RUN FOR THE FIRST
+TIME AND THE BENCHMARK RANKS -- and a matched control proves it could not
+before.** Same 170 runs, same seeds, one flag: on the `dec 50` lattice
+objective **0 of 45 P1 pairs separate**, eight of ten methods report the
+identical **8.950670** and six have a bootstrap CI of literally zero width; on
+the interpolated peak **20 of 45 separate** with ten distinct medians.
+`cmaes+screen 8.9974 > gp_bo 8.9955 > gp_bo+screen 8.9921 > uniform+screen
+8.9860 > cmaes 8.9736 > lhs+screen 8.9661 > uniform 8.9532 > lhs 8.9419 >
+ppo+screen 8.9288 > ppo 8.9106`. **PPO is last, as `PREDICTIONS.md` entry 6
+pre-registered**, and the diagnosis is specific: it reaches a feasible design in
+**5 simulations** (2nd fastest unscreened) and then gains **+0.0003 over its
+last 50** where uniform gains +0.054 -- it does not search slowly, it STALLS.
+**Entry 6's "P3 is EMPTY" is FALSIFIED**: `uniform` found a corner-and-load
+robust design on **2 of 20** seeds, both on the boundary (8.0342, 8.0021 against
+a bonus of exactly 8.0). **The sweep is 42 minutes, not 12 hours** -- section 7a
+was sized to a rate that predates the library trims -- and the lattice control
+took **13.5 % LONGER** while doing strictly less work, so the interpolation's
+wall-clock cost is below this machine's noise floor and has the opposite sign.
+New gotcha **G94**. Earlier the same day, session 22e: **the reward ceiling was
+removed at its source** -- The AC peak is now read off the parabola through the three
 samples bracketing the discrete maximum instead of off the `dec 50` lattice --
 `run_point(ac_peak_interp=True)`, **zero extra simulation**, `dec` untouched,
 opt-in, default OFF. **The 57 designs that tied at G74's +8.950669 across 8000
@@ -3183,6 +3201,38 @@ Plus: git init, .gitignore, 28 tests, Wilson-bound BER reporting.
   disagreement a refusal rather than a number. Rule 9's usual advice -- one
   definition -- does not reach this, because the two "definitions" here are the
   same expression evaluated on data of different width.
+
+- **G94 -- (nebula) a per-simulation RATE measured at a FRACTION of the real
+  budget is wrong in both directions, and which way depends on the method.**
+  Session 22f costed the G3 sweep from nine calibration jobs at a
+  **40-simulation** budget and extrapolated to the real **150**. Two of the
+  twelve configurations did not extrapolate at all:
+
+      config      calibration (40)   sweep (150)   error
+      P1/ppo          0.5603 s/sim    0.6165        2.33x  -> 1.01x  OVER
+      P1/gp_bo        0.3700 s/sim    1.4925        1.54x  -> 2.43x  UNDER
+
+  **PPO carries a large FIXED startup** -- torch import, network construction,
+  the first rollout -- and dividing it by 40 charges it to the marginal rate,
+  where dividing it by 150 makes it vanish. **GP-BO is `O(n^3)` in
+  OBSERVATIONS**, so 40 observations badly understate what fitting a GP to 150
+  costs. A flat-cost method (`uniform`, `lhs`, `cmaes`) extrapolates fine, which
+  is exactly why the error is easy to miss: most of the table is right.
+  On the strength of the bad extrapolation this session **predicted PPO would
+  join GP-BO above 1.15x its simulation-implied wall clock, and `PREDICTIONS.md`
+  entry 6 -- written months earlier without any calibration -- had it right.**
+  **Before extrapolating a rate, ask whether the method has a fixed cost or a
+  superlinear one; if either, calibrate at the budget you will run.** Same
+  family as G75 (a speed-up measured on isolated evaluations does not transfer
+  to a workload whose workers also compute) -- the general form is that a rate
+  is only a rate for a method whose cost is linear in the thing you divided by.
+
+  **A second thing the same run measured, and it is a real cost:** the
+  pre-screen **raises** GP-BO's model time per simulation, 127.1 s -> 207.9 s,
+  because a screened proposal costs zero simulations but still costs a full
+  acquisition optimisation. The screen is free in SIMULATIONS and not free in
+  WALL CLOCK for model-based methods, and only the first half of that had ever
+  been measured.
 
 ## 10. Environment
 
@@ -6719,3 +6769,115 @@ defaults OFF, so the lattice objective is still what runs unless asked.
 
 **Next:** `python -m nebula.experiments.baselines --sweep --interp`, 25 500
 simulations, ~1 h at 8 workers.
+
+### 2026-08-19 - Session 22f-run (THE SWEEP RUNS, THE BENCHMARK RANKS, and the lattice control proves it could not before)
+
+**Two matched sweeps, 51 735 simulations, 90 minutes.** Same allocation, same
+seeds, one flag. Full write-up `nebula/BASELINES.md` §12; pre-registrations and
+outcomes `PREDICTIONS.md` entries **10** and **11**.
+
+**THE A/B, AND IT IS THE CLEANEST NUMBER THIS PROJECT HAS:**
+
+    separable P1 pairs (of 45)      lattice  0        interpolated  20
+    groups whose median is 8.950670          8 of 10                0 of 10
+    distinct median values                   3                      10
+    groups with a ZERO-WIDTH CI              6                      0
+
+On the lattice objective **eight of ten methods report the same six digits** and
+six of them return the identical float on every seed. The benchmark did not
+merely rank coarsely -- **it resolved nothing at all**. §11's pilot suggested
+this at 3 seeds and 60 simulations; this measures it at full budget on the
+identical experiment.
+
+**The ranking, interpolated:** `cmaes+screen 8.99742 > gp_bo 8.99546 >
+gp_bo+screen 8.99207 > uniform+screen 8.98596 > cmaes 8.97356 > lhs+screen
+8.96611 > uniform 8.95319 > lhs 8.94188 > ppo+screen 8.92884 > ppo 8.91063`.
+**Entry 6's ordering is confirmed wherever the sample resolves it** -- CMA-ES
+and GP-BO not separable from each other, LHS and uniform not separable, PPO last
+and separable from six of nine.
+
+**PPO: the diagnosis is more useful than the rank.** It reaches a feasible
+design in a median of **5 simulations** -- second fastest of the unscreened
+methods, ahead of uniform's 6.0 -- and then **stops**: +0.0003 over its last 50
+simulations against uniform's +0.054 and CMA-ES's +0.012. **It does not search
+slowly, it stalls**, which is the signature of exploration collapse and is a
+tuning question PLAN.md §4 deliberately deferred until the reward was worth
+tuning against. It now is, as of the day before. **Entry 6's prediction that PPO
+would find a feasible design on <= 0.5 of seeds is FALSIFIED: 10 of 10.**
+
+**ENTRY 6's "P3 IS EMPTY" IS FALSIFIED, and this is what task 3 needed.**
+`P3/uniform` found a corner-and-load robust design on **2 of 20 seeds** (at 25
+and 130 simulations). **Both sit on the boundary** -- rewards 8.0342 and 8.0021
+against a feasibility bonus of exactly 8.0, i.e. their worst spec has 0.034 and
+0.002 tolerances of margin. Two designs is not a yield; what it settles is that
+the robust problem is **HARD, not EMPTY**.
+
+**THE PRE-SCREEN IS NOT FREE FOR MODEL-BASED METHODS.** A screened proposal
+costs zero simulations and still costs a full acquisition optimisation, so
+GP-BO's model time goes **127.1 s -> 207.9 s** and its cost per simulation 1.49
+-> 2.00. Free in simulations, 1.34x in wall clock. First measurement of that.
+The screen helps uniform (+0.0328), LHS (+0.0242), CMA-ES (+0.0239) and PPO
+(+0.0182), and has **no measurable effect** on GP-BO (-0.0034, far inside the CI
+overlap).
+
+**THE SWEEP IS 42 MINUTES, NOT 12 HOURS.** §7a was sized to session 17's
+1.341 s/sim, which predates the library trims (G36, G58). Nothing about the
+allocation changed.
+
+**AND THE COST OF THE INTERPOLATION IS NOW SETTLED THE OTHER WAY: the LATTICE
+run took 47.8 min against the interpolated run's 42.1 while doing strictly less
+work.** 1.135x longer for three fewer simulations. On this machine the
+run-to-run noise is larger than the interpolation's cost **and has the opposite
+sign**; quote it as "below the noise floor" and never as a number. G71 on a
+matched pair rather than an argument.
+
+**Two corrections earned:**
+
+* **A DOC/CODE MISMATCH.** `BASELINES.md` §1's allocation table said 60 runs /
+  9 000 simulations on block C and 200 / 30 000 total; `P3_METHODS` was re-cut
+  from four methods to two on 2026-08-08 and the table was never updated, so the
+  written and runnable plans disagreed by **4 500 simulations for eleven days**.
+  Real allocation **170 runs / 25 500**. Found by running `--budget` and reading
+  its output against the page. Rule 9 in documentation rather than in code.
+* **G94, and it cost me a pre-registration.** I costed the sweep from a
+  40-simulation calibration and predicted PPO would join GP-BO above 1.15x its
+  simulation-implied wall clock. Measured `gp_bo` **2.43x**, `ppo` **1.01x**,
+  everything else within 1.03x -- **entry 6, written months earlier with no
+  calibration at all, was right and my calibrated revision was wrong.** PPO
+  carries a fixed torch startup that a 40-simulation budget charges to the
+  margin; GP-BO is `O(n^3)` in observations so 40 badly understates 150. **A
+  rate is only a rate for a method whose cost is linear in what you divided by.**
+
+**A pre-registered failure mode I called backwards.** Entry 11 warned that
+zero-width CIs would *inflate* the lattice run's separable-pair count and
+predicted 8. It was 0: the degenerate intervals did not land on different teeth,
+they collapsed onto **the same one**, so they are identical rather than
+disjoint. The 0-24 band did the work the point estimate could not.
+
+**A subtlety the control exposed and the interpolated run could not.** The
+lattice reward is a comb **only where `S3_f_peak` binds**, which task 1 measured
+at **1075 of 1291 feasible designs (83 %)**; the other 17 % are set by a spec
+with a continuous margin, which is why `P1/ppo`'s median 8.923336 is off-comb
+(the mean of 8.950670 and 8.896002 at n = 10). So a sixth of the feasible band
+was already continuous -- **and the benchmark still resolved zero pairs.**
+
+**Falsification condition 3 did NOT fire:** `sims_to_first_feasible` is
+**identical in all ten P1 groups** across the two runs, and both find the same
+2 of 20 P3 designs. The objective change sharpens the TOP of the feasible band
+and leaves the BOUNDARY where it was.
+
+**New:** `BASELINES.md` §12 (+§12.6), `experiments/baselines_run_{interp,
+lattice}.jsonl.gz` (56 MB raw each, committed gzipped),
+`experiments/baselines_results_{interp,lattice}.json`, `--tag` and `--interp`
+on the CLI. **Tests 1509 green.** `params.py`, `contract.py`, `V1_SPECS`, the
+tolerances, the box, the pre-screen and every seed untouched; every flag still
+defaults OFF.
+
+**Next, and the decision is the owner's** -- PPO loses head to head, and the
+only argument that answers *"why not just use CMA-ES?"* is the amortised,
+spec-conditioned claim (`PLAN.md` §5's optional item, which §8 currently
+schedules as the FIRST thing to cut). That ordering was written before we knew
+PPO loses. Candidates, cheapest first: **tune PPO's exploration** (targets the
+measured stall, ~half a day), **task 3 corners** (P3 is hard-not-empty, so the
+rung is now worth running properly), **task 4 spec-conditioned** (the only
+comparison that favours RL on its merits).

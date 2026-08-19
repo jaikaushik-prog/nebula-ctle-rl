@@ -827,7 +827,238 @@ Seeds and the per-run budget were again untouched.
 
 ---
 
-## 12. What is not done
+## 12. Results — **THE SWEEP**, on the interpolated objective
+
+**Run 2026-08-19 at commit `ad17cf4`.** `python -m nebula.experiments.baselines
+--sweep --interp`. 170 measured runs + a discarded warm-up + the timing
+control = **25 869 simulations, 42.1 minutes** at 8 workers.
+
+**This is the first time the sweep has ever run.** §11's pilot is a different
+and smaller thing, and `baselines_run.jsonl` held a header and nothing else
+until this. Read §11 for what a pilot is for; read this for the ranking.
+
+**Timing control: CLEAN.** Warm-up 0.186 s/sim → control 0.221 s/sim, ratio
+**0.844**, inside [0.8, 1.25]. So under 7g the wall-clock numbers below are
+valid rather than void.
+
+**Why it is 42 minutes and not 12 hours:** §1's arithmetic was sized to session
+17's 1.341 s/sim, which predates the library trims (G36, G58). Nothing about
+the allocation changed.
+
+### Anytime curve — best reward at 150 simulations, median over seeds
+
+| group | n | median | 95 % CI | invalid | screened out | s/sim | model s |
+|---|---|---|---|---|---|---|---|
+| **P1/cmaes+screen** | 10 | **8.99742** | [8.98899, 8.99851] | 4.0 % | 47 | 0.60 | 0.0 |
+| **P1/gp_bo** | 10 | **8.99546** | [8.98856, 8.99882] | 10.3 % | 0 | 1.49 | 127.1 |
+| **P1/gp_bo+screen** | 10 | **8.99207** | [8.98563, 8.99793] | 5.3 % | 34 | 2.00 | 207.9 |
+| P1/uniform+screen | 20 | 8.98596 | [8.95906, 8.98951] | 27.3 % | 360 | 0.61 | 0.0 |
+| P1/cmaes | 10 | 8.97356 | [8.95990, 8.99240] | 11.0 % | 0 | 0.61 | 0.0 |
+| P1/lhs+screen | 20 | 8.96611 | [8.94597, 8.98454] | 27.3 % | 350 | 0.62 | 0.0 |
+| P1/uniform | 20 | 8.95319 | [8.87453, 8.97316] | 37.7 % | 0 | 0.61 | 0.0 |
+| P1/lhs | 20 | 8.94188 | [8.89198, 8.95883] | 39.3 % | 0 | 0.61 | 0.0 |
+| P1/ppo+screen | 10 | 8.92884 | [8.89978, 8.96271] | 32.0 % | 40 | 0.63 | 0.0 |
+| **P1/ppo** | 10 | **8.91063** | [8.80998, 8.93022] | 13.7 % | 0 | 0.62 | 0.0 |
+| P3/uniform | 20 | −0.228 | [−0.359, −0.094] | 56.8 % | 0 | 0.61 | 0.0 |
+| P3/cmaes | 10 | −0.408 | [−1.000, −0.191] | 42.7 % | 0 | 0.62 | 0.0 |
+
+**Ten groups, ten distinct medians, none of them 8.950669.** §11's pilot had
+**six of ten pinned to exactly that value**, which is G74's grid ceiling and not
+a result. **20 of the 45 P1 pairs are separable** under 7h's CI-overlap rule.
+
+### What is separable, and what is not
+
+**Not separable, and predicted not to be:** CMA-ES against GP-BO ([8.95990,
+8.99240] vs [8.98856, 8.99882]); LHS against uniform; every adjacent pair in the
+table. `PREDICTIONS.md` entry 6 called both non-separabilities in advance.
+
+**Separable, 20 pairs.** The shape of the result rather than the list: each of
+`cmaes+screen`, `gp_bo` and `gp_bo+screen` separates from each of `lhs+screen`,
+`uniform`, `lhs`, `ppo+screen` and `ppo` — a clean split between the
+**model-based-or-screened top** and the **unstructured bottom** — plus
+`uniform+screen` over `lhs` and `ppo`, `cmaes` over `lhs` and `ppo`, and
+`lhs+screen` over `ppo`.
+
+**PPO is last of the five unscreened methods and separable from six of the other
+nine groups.** That is what entry 6 predicted and said in advance must be
+reported as such: *untuned PPO at 150 simulations on one fixed spec target loses
+to tuned classical optimisers*. It is **not** evidence about the amortised,
+spec-conditioned claim — no run in this sweep tests that.
+
+### The pre-screen: helps four, does nothing measurable to the fifth
+
+| method | unscreened | screened | Δ |
+|---|---|---|---|
+| uniform | 8.95319 | 8.98596 | **+0.0328** |
+| LHS | 8.94188 | 8.96611 | **+0.0242** |
+| CMA-ES | 8.97356 | 8.99742 | **+0.0239** |
+| PPO | 8.91063 | 8.92884 | **+0.0182** |
+| GP-BO | 8.99546 | 8.99207 | −0.0034 |
+
+The GP-BO figure is far inside the CI overlap, so the honest reading is **no
+measurable effect**, not "the screen hurts". Entry 6 predicted the screen would
+help *uniform random most and CMA-ES least* because CMA-ES's covariance
+adaptation already learns the region the screen encodes; the measurement extends
+that to the other model-based method, and uniform does get the largest lift.
+
+**And the screen is NOT free for model-based methods.** A screened proposal
+costs zero simulations by design — but it still costs a full acquisition
+optimisation, so GP-BO's model time rises from **127.1 s to 207.9 s** and its
+seconds-per-simulation from 1.49 to 2.00. Free in simulations, 1.34× in wall
+clock. This is the first measurement of that and it is **G94**'s second half.
+
+### Simulations to first feasible — censored, read all three columns
+
+| group | found/seeds | median \| found | 95 % CI |
+|---|---|---|---|
+| P1/uniform+screen | 20/20 | **2.0** | [1.0, 3.0] |
+| P1/gp_bo+screen | 10/10 | **2.0** | [1.0, 3.0] |
+| P1/ppo+screen | 10/10 | 3.5 | [2.0, 9.0] |
+| P1/lhs+screen | 20/20 | 4.0 | [3.0, 4.5] |
+| P1/cmaes+screen | 10/10 | 4.5 | [2.0, 9.0] |
+| P1/gp_bo | 10/10 | 4.5 | [2.0, 10.5] |
+| P1/ppo | 10/10 | 5.0 | [2.0, 13.0] |
+| P1/uniform | 20/20 | 6.0 | [4.0, 10.0] |
+| P1/cmaes | 10/10 | 9.5 | [6.5, 26.0] |
+| P1/lhs | 20/20 | 12.5 | [8.0, 15.0] |
+| **P3/uniform** | **2/20** | 77.5 | [25.0, 130.0] |
+| P3/cmaes | 0/10 | — | — |
+
+**Every P1 seed of every method found a feasible design.** Entry 6 predicted
+uniform's median at ≈ 5 (band 2–12); measured **6.0**. It predicted screened
+uniform at ≈ 2 (band 1–5); measured **2.0**. Both hit.
+
+**Entry 6's prediction that PPO would find a feasible design on ≤ 0.5 of seeds
+is FALSIFIED: PPO found one on 10 of 10, with a median of 5.0 simulations** —
+better than unscreened uniform. PPO is not bad at *finding* the feasible band;
+it is worse than the others at *improving inside it*, which is a different and
+more interesting statement than the one predicted.
+
+### P3 — **not empty**, and that is the headline for task 3
+
+Entry 6 predicted *"no method finds a feasible design in 150 simulations on any
+seed"*. **`P3/uniform` found one on 2 of 20 seeds**, at a conditional median of
+77.5 simulations, one of them scoring **8.034**. `P3/cmaes` found none in 10.
+
+Two designs is not a yield estimate and must not be quoted as one. What it does
+settle is that the **corner-and-load robust problem is HARD, not EMPTY** — which
+is exactly the property task 3 needs, and which the ~1-in-1890 figure from
+session 10d/11 implied but had never been demonstrated inside a search.
+
+**And both designs sit on the boundary.** Their rewards are **8.0342** (rep 4,
+found at 25 simulations) and **8.0021** (rep 16, at 130) against a feasibility
+bonus of exactly 8.0, so their worst spec has a margin of **0.034 and 0.002
+tolerances** — they *just* clear every spec at every corner and load, with
+essentially no room. Reporting them as "corner-robust designs found" without
+that number would overstate them badly. **One feasible design each, out of
+25 designs evaluated per run** (P3 spends 6 simulations per design).
+
+### Cost, per configuration
+
+`P1/uniform` at 0.6131 s/sim is the reference. Everything is within 1.03× of it
+**except the two methods that compute between simulations**: `gp_bo` **2.43×**
+and `gp_bo+screen` **3.26×**. `ppo` is **1.01×**.
+
+Entry 6 predicted exactly this — GP-BO ≥ 1.15×, everything else within 1.05×.
+Session 22f's own calibration predicted PPO would also exceed 1.15× and was
+**wrong**, because it measured PPO's rate at a 40-simulation budget where its
+fixed torch startup is divided by 40 instead of 150. **G94.**
+
+
+### 12.6 The LATTICE control — what removing the ceiling actually bought
+
+**The same 170 runs, at the same seeds, with `ac_peak_interp` OFF.**
+`--sweep --tag lattice`, 25 866 simulations, 47.8 min, timing control clean
+(0.165 → 0.200 s/sim, ratio 0.822). One flag is the only difference between the
+two logs, so the difference between the two tables is the objective and nothing
+else.
+
+| | **lattice** | **interpolated** |
+|---|---|---|
+| **separable P1 pairs (of 45)** | **0** | **20** |
+| P1 groups whose median is 8.950670 | **8 of 10** | **0 of 10** |
+| distinct median values | **3** | **10** |
+| groups with a zero-width CI | **6** | 0 |
+| simulations | 25 866 | 25 869 |
+| wall clock | **47.8 min** | **42.1 min** |
+
+#### The lattice table
+
+| group | n | median | 95 % CI | |
+|---|---|---|---|---|
+| P1/lhs | 20 | 8.950670 | [8.916453, 8.950670] | |
+| P1/uniform+screen | 20 | 8.950670 | [8.950670, 8.950670] | **zero width** |
+| P1/lhs+screen | 20 | 8.950670 | [8.950670, 8.950670] | **zero width** |
+| P1/cmaes+screen | 10 | 8.950670 | [8.950670, 8.950670] | **zero width** |
+| P1/gp_bo | 10 | 8.950670 | [8.950670, 8.950670] | **zero width** |
+| P1/cmaes | 10 | 8.950670 | [8.950670, 8.950670] | **zero width** |
+| P1/ppo+screen | 10 | 8.950670 | [8.933561, 8.950670] | |
+| P1/gp_bo+screen | 10 | 8.950670 | [8.950670, 8.950670] | **zero width** |
+| P1/ppo | 10 | 8.923336 | [8.817792, 8.950670] | |
+| P1/uniform | 20 | 8.916453 | [8.916453, 8.950670] | |
+
+**Eight of ten methods report the same six digits.** Six of them return the
+*identical float* on every one of their ten or twenty seeds, so their bootstrap
+interval has zero width. Nothing separates from anything: **0 of 45 pairs**.
+
+This is the number to hold next to §12's ranking. The pilot (§11) suggested it
+at 3 seeds and 60 simulations; this measures it at the full budget, on the
+identical experiment, and the answer is not "the metric was coarse" but **"the
+metric resolved nothing at all"**.
+
+#### Two things the control clarified that the interpolated run alone could not
+
+**1. The comb is not the whole story, and that makes the result stronger.**
+`P1/ppo`'s 8.923336 is not a lattice value. It is the mean of its 5th and 6th
+seeds (n = 10), **8.950670 and 8.896002** — and the second of those is off-comb
+too, because the reward is `B + min_i(margin_i/tol_i)` and **the comb only
+exists where `S3_f_peak` is the binding row**. Task 1 measured that at **1075 of
+1291 feasible designs, 83 %**; the remaining 17 % are set by a spec whose margin
+is continuous. So roughly a sixth of the feasible band was *already* continuous
+on the lattice objective — **and the benchmark still resolved zero pairs.**
+
+**2. The change sharpens the top of the band and leaves the boundary alone.**
+`sims_to_first_feasible` is **identical in all ten P1 groups** (9.5, 4.5, 4.5,
+2.0, 12.5, 4.0, 5.0, 3.5, 6.0, 2.0) and both runs find a P3 design on the same
+**2 of 20** seeds. Feasibility — "does this design meet every spec" — is
+essentially untouched; only the ordering *within* the feasible set changed. That
+is the separation of concerns the change was supposed to have, and it had not
+been measured until now.
+
+#### The cost question, settled by a matched pair
+
+**The lattice run did strictly less work and took 13.5 % longer** — 47.8 min
+against 42.1 for three fewer simulations. So on this machine the run-to-run
+noise is not merely larger than the interpolation's cost, it has the **opposite
+sign**. G71, demonstrated rather than argued. Quote the interpolation's
+wall-clock cost as *"below the noise floor"* and never as a number.
+
+#### What it does and does not license
+
+**It licenses the claim that the grid ceiling, not the methods, is what stopped
+the benchmark ranking** — as a measured A/B on one experiment rather than an
+argument assembled from the pilot and the difficulty pools.
+
+It licenses **nothing** about any method being better than it was. The methods,
+the seeds, the box, the specs and the simulator are identical in the two runs.
+**Only the ruler changed.**
+
+**Artifacts:** `experiments/baselines_run_lattice.jsonl.gz`,
+`experiments/baselines_results_lattice.json`, `PREDICTIONS.md` entry 11.
+
+### Artifacts
+
+* `experiments/baselines_run_interp.jsonl.gz` — 25 869 trial rows, one per
+  evaluation, with `design_id`. Committed **gzipped**: 56 MB raw, 11.7 MB
+  compressed. (§10's argument that the log "should not be regenerated later"
+  has weakened now that the sweep is a 42-minute job.)
+* `experiments/baselines_results_interp.json` — per-run summaries and the full
+  analysis, with the per-trial payload stripped because the log carries it.
+* `PREDICTIONS.md` entry 10 — pre-registration and outcome.
+
+---
+
+## 13. What is not done
 
 In the order a next session should take it.
 

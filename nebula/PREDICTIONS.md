@@ -1823,6 +1823,74 @@ methods are identical; only the ruler changed. And if the lattice run happens to
 separate a pair the interpolated one does not, that is noise at 10 seeds and
 must not be reported as the lattice metric being better at anything.
 
-### Outcome
+### Outcome — **0 separable pairs on the lattice against 20 on the interpolated objective.** Run 2026-08-19, `nebula/BASELINES.md` §12.6.
 
-*(to be written after the run; nothing above this heading may be edited)*
+`python -m nebula.experiments.baselines --sweep --tag lattice`, identical
+allocation, identical seeds, flag off. **25 866 simulations, 47.8 min.** Timing
+control clean (0.165 → 0.200 s/sim, ratio 0.822).
+
+| quantity | point | band | measured | |
+|---|---|---|---|---|
+| P1 groups whose median is the ceiling | 7 of 10 | 4–10 | **8 of 10** | HIT |
+| distinct median values (interpolated: 10) | 2 | 2–4 | **3** | HIT |
+| separable P1 pairs (interpolated: 20 of 45) | 8 of 45 | 0–24 | **0 of 45** | band hit, **point wrong** |
+| of those, pairs involving a zero-width CI | ≥ half | — | **vacuous — there are none** | — |
+| median of `P1/cmaes+screen` | 8.950669 | — | **8.950670** | HIT |
+| groups unchanged to 3 dp between runs | 0 | 0–2 | **0 of 10** | HIT |
+
+**THE HEADLINE, AND IT IS THE CLEANEST NUMBER IN THIS PROJECT: the benchmark
+resolved NOTHING on the lattice objective.** Zero of forty-five P1 pairs
+separate. Eight of ten groups report a median of **8.950670** — the same six
+digits — and **six of them have a bootstrap CI of literally zero width**,
+because every one of their ten or twenty seeds returned the identical float.
+The same 170 runs, at the same seeds, scored on the interpolated peak separate
+**20 of 45**.
+
+**I predicted the failure mode backwards, and the band caught it.** The entry
+warned that zero-width CIs would *inflate* the separable count — "a zero-width
+interval is trivially disjoint from any other" — and predicted 8 separable
+pairs on that basis. It did not happen, for a reason that is obvious in
+hindsight: the degenerate intervals did not land on *different* teeth, they all
+collapsed onto **the same one**, so they are identical rather than disjoint.
+The band (0–24) was wide because I knew the sign of the effect was uncertain,
+and the honest reading is that the band did the work the point estimate could
+not.
+
+**Falsification condition 2 fired, and the pre-registered check disposes of
+it.** `P1/ppo`'s median is **8.923336**, which is not a comb value. The entry
+said in advance: *"legitimate for even seed counts — check before concluding"*.
+It is: n = 10, so the median averages the 5th and 6th seeds, **8.950670 and
+8.896002**. And 8.896002 is itself off-comb — because **the comb only exists
+where `S3_f_peak` binds**, which the task-1 pools measured at **1075 of 1291
+feasible designs (83 %)**; the other 17 % are set by a spec whose margin is
+continuous. So the lattice reward is a comb over five sixths of the feasible
+band, not all of it — **and it still resolved zero pairs**, which makes the
+result stronger rather than weaker.
+
+**Falsification condition 3 did not fire.** `sims_to_first_feasible` is
+**identical in all ten P1 groups** — 9.5, 4.5, 4.5, 2.0, 12.5, 4.0, 5.0, 3.5,
+6.0, 2.0, unchanged to the decimal — and both runs find a P3 design on the same
+2 of 20 seeds. The objective change sharpens the **top** of the feasible band
+and leaves the **boundary** where it was, which is exactly the separation of
+concerns the change was supposed to have.
+
+#### And the cost question is now settled the other way
+
+**The lattice run — doing strictly less work — took 47.8 minutes against the
+interpolated run's 42.1**, i.e. **1.135× longer** for 3 fewer simulations. The
+interpolation is not merely cheap; on this machine the run-to-run noise is
+larger than its cost **and has the opposite sign**. Every wall-clock claim about
+the interpolation should now be quoted as "below the noise floor" and never as a
+number. G71, demonstrated on a matched pair rather than argued.
+
+#### What this licenses
+
+**It converts "the ceiling stopped the benchmark ranking" from an argument
+assembled out of the pilot and the difficulty pools into a measured A/B on one
+experiment.** Same 170 runs, same seeds, same 25 500 simulations, one flag: 0
+separable pairs against 20. That is the table to put in front of a judge.
+
+It says nothing about any method being better than it was. The methods are
+identical in the two runs; **only the ruler changed**.
+
+*Nothing above the Outcome heading was edited.*
