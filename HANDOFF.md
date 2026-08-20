@@ -9465,3 +9465,23 @@ an argument for printing them side by side.
 `verify_full` (a `KeyError` and three source assertions), plus
 `test_no_hand_built_f_peak_oct_anywhere_in_the_package`, which **immediately
 caught a second occurrence I had missed** in `exp_g4_verify.py:361`.
+
+#### A last hand-typed number, and what counting it properly found
+
+I wrote **108** into the report's gotcha counter, by taking 22t's 107 and
+adding one. Then I counted. `HANDOFF.md` §9 carries **113 list headings with
+108 distinct IDs**, because **five numbers -- G41, G52, G53, G54, G73 -- are
+each used by two different entries.** An old numbering slip, invisible for
+months precisely because the count was always typed rather than derived.
+
+108 turned out to be right, by luck, and that is the point: **a hand-typed
+number that happens to be correct is indistinguishable from one that is not.**
+The cover counter and both prose mentions are now computed from `HANDOFF.md`
+and `PREDICTIONS.md` at build time (`_gotchas()`, `_n_predictions()`), and the
+helper reports `entries`, `distinct`, `highest` and `duplicated` separately so
+the discrepancy stays visible instead of being silently resolved.
+
+**Left for whoever does `CONTINUE_HERE.md` §6.1 item 3:** the five duplicated
+IDs are a real defect in the catalogue and should be renumbered, but doing it
+here would have touched five unrelated entries in a commit about frequency
+quantisation.

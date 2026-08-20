@@ -35,6 +35,36 @@ GOOD = (46, 125, 79)
 BAND = (243, 246, 250)
 
 
+def _gotchas() -> dict:
+    """Count the failure catalogue **from `HANDOFF.md`**, not from memory.
+
+    Session 22u typed "108" here because 22t had reported 107 and one was
+    added. Counting properly found **113 list headings carrying 108 distinct
+    IDs** — five numbers (G41, G52, G53, G54, G73) are used by two entries
+    each, an old numbering slip nobody had noticed because this count had
+    always been hand-typed. **`distinct` is what the cover reports**; the other
+    fields exist so the discrepancy is visible rather than silently resolved.
+    """
+    import re
+
+    txt = (HERE.parent.parent / "HANDOFF.md").read_text(encoding="utf-8")
+    ids = re.findall(r"^- \*\*G(\d+)", txt, flags=re.M)
+    return {"entries": len(ids), "distinct": len(set(ids)),
+            "highest": max(int(i) for i in ids),
+            "duplicated": sorted({int(i) for i in ids if ids.count(i) > 1})}
+
+
+def _n_predictions() -> int:
+    """Scored pre-registrations, counted from `PREDICTIONS.md`'s own headings."""
+    import re
+
+    txt = (HERE.parent / "PREDICTIONS.md").read_text(encoding="utf-8")
+    return len(re.findall(r"^## (\d+)\.", txt, flags=re.M))
+
+
+_G = _gotchas()
+
+
 def _load(name: str) -> dict:
     p = EXP / name
     if not p.exists():
@@ -298,8 +328,8 @@ def build() -> Path:
         ("Search methods benchmarked on one evaluator", "6"),
         ("SPICE simulations behind this report", "> 250 000"),
         ("Automated tests", "1665"),
-        ("Documented failure modes (gotchas)", "108"),
-        ("Pre-registered predictions, scored", "22"),
+        ("Documented failure modes (gotchas)", str(_G["distinct"])),
+        ("Pre-registered predictions, scored", str(_n_predictions())),
     ]
     pdf.set_font("Body", "", 9.6)
     for k, v in stats:
@@ -801,11 +831,13 @@ def build() -> Path:
         "**Pre-registration.** Any experiment whose result could be argued for "
         "afterwards gets its prediction, with acceptance bands and "
         "falsification conditions, committed to version control *before* it "
-        "runs. Twenty-two entries; the misses are recorded as misses and "
+        f"runs. {_n_predictions()} entries; the misses are recorded as misses "
+        "and "
         "nothing above an outcome heading is ever edited.",
         "**Every gate is proved able to fail.** A check that cannot go red is "
         "not a check. Each is deliberately broken, watched fail, and restored.",
-        "**A failure catalogue of 108 entries.** Most describe something that "
+        f"**A failure catalogue of {_G['distinct']} entries.** Most describe "
+        "something that "
         "reported success and exited zero -- the simulator reporting failures "
         "as warnings, a benchmark run in a fixed order measuring the order, an "
         "aggregate rate hiding a systematic bias.",
