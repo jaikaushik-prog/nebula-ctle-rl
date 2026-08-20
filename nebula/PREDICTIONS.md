@@ -3135,3 +3135,178 @@ is scored at, reinforcement learning does not beat random search.
 
 *Nothing above the Outcome heading was edited.*
 
+
+---
+
+## 18. Session 22q — **an EXTERNAL prediction about the reward, falsified by data that was already on disk**
+
+**Written:** 2026-08-20, session 22q. **This entry is retrospective and says so
+in its first line**, which the rest of this file's entries are not allowed to
+be. The reason it is admissible: the prediction came from OUTSIDE this project
+(a task brief), the data that falsifies it was **already committed** before the
+prediction was made, and no simulation was run to produce the falsification.
+There was nothing to pre-register — the measurement predated the claim. It is
+recorded because a hypothesis that shaped a work plan and turned out to be
+wrong is exactly what this file is for.
+
+### The prediction, verbatim from the brief
+
+> *"The reward treats power and noise as **scored** (more margin = better), so
+> the optimiser spent its degrees of freedom buying margin on constraints that
+> were already satisfied, and starved the one spec that binds."*
+
+with the supporting observation that the delivered design has **6.9x power
+margin, 7.1x noise margin and 23x area margin** while S8 is blocked, and the
+proposed remedy that *"power, noise and area become hard constraints (pass/fail,
+no credit for exceeding), not scored terms."*
+
+### Outcome — **FALSIFIED on the mechanism, and the proposed remedy measures as a NO-OP. The conclusion it was reaching for is right; the reason is the opposite one.**
+
+`reward_v1.reward`'s feasible branch is `B + min_i(margin_i / tol_i)` — a
+**maximin**, not a sum. Exceeding a spec is worth exactly nothing unless that
+spec is the binding minimum. That is `CLAUDEwa.md` section 9's own rule (*"do
+not add bonus terms for exceeding a spec"*) already correctly implemented, and
+it means the stated mechanism cannot occur in this objective.
+
+Re-scoring the **74 526 distinct valid designs already on disk** against
+9 dB / 1.9 GHz (`spec_pool`; **zero simulations** — a measurement does not know
+what it was aiming at):
+
+| binding row among the 33 214 FEASIBLE designs | share |
+|---|---|
+| `S3_f_peak` | **94.5 %** |
+| `S3_peaking` | 3.5 % |
+| `tail_saturation` | 1.2 % |
+| **`S6_power`** | **0.6 %** |
+| `saturation` | 0.2 % |
+| **`S5_noise`** | **0.0 % — never** |
+
+`corr(reward, power) = -0.17`, `corr(reward, noise) = -0.12`.
+
+**The remedy, applied and measured.** Moving power and noise from scored to
+hard-constraint:
+
+* feasible set **identical** — 33 214 designs either way;
+* reward changes on **210 of 33 214** designs (**0.63 %**);
+* the best design is **unchanged**.
+
+Area needed no change at all: `S7_area` was never in `V1_SPECS`.
+
+**WHAT IS ACTUALLY WRONG IS THE OPPOSITE PROPERTY — the reward is not greedy,
+it is INDIFFERENT.** A maximin goes flat once every non-binding row clears the
+minimum. Within **0.001** of the best attainable reward the pool holds **38
+designs spanning 0.500-4.217 mA of tail current (8.4x)** and 0.92-7.56 mW;
+within 0.01, **355 designs spanning 11.3x**. **The delivered 1.1376 mA was
+never bought. It was drawn from a plateau that is flat in current across an
+order of magnitude.**
+
+So the lever is an **added** term, not a removed one — and two further premises
+of the brief are also false: `VDD_NOMINAL_V` is **1.8 V**, not 3.3 V, and the
+`i_bias` box already spans **0.5-8 mA** with its ceiling set by S6 itself
+(8 mA x 1.8 V = 14.4 mW against a 15 mW limit), so the tail-current bound
+cannot be raised without admitting S6 violations.
+
+**Owner's decision, 2026-08-20:** do not build the hard-constraint flag (it
+measures as a no-op); ship the measurement; hold the linear-range scored term
+until item 3 lands.
+
+**The general lesson, now `HANDOFF.md` G102:** *before removing a term from an
+objective, measure how often it BINDS.* A term that binds 0 % of the time is
+already inert, and deleting it changes nothing while looking like a fix.
+
+---
+
+## 19. Session 22q — **what does S3 charge for linearity? The attainable linear-input-range front, and where it crosses PCIe Gen2 drive**
+
+**Written:** 2026-08-20, session 22q, **before `exp_linear_pareto.py --run` was
+executed at full size.**
+**Experiment:** `python -m nebula.experiments.exp_linear_pareto --run` — two
+arms, ~1 600 simulations, ~10 min. `pool`: 28 peaking bins x 30 designs
+replayed from `spec_pool` with `swing=True`. `targeted`: CMA-ES at 5 peaking
+bands x 150 simulations with **linear input range at Nyquist as the
+objective**, which is what makes a negative result mean something.
+
+### Declared inputs — measured before this entry, NOT predicted
+
+1. `linear range at f = linear range at DC / |H(f)/H(0)|`, because `Cs` shorts
+   out the same `Rs` the linear range is made of. Session 22q, `HANDOFF.md`
+   G103.
+2. The delivered design: **520 mVpp at DC, 172 mVpp at Nyquist**, drive
+   **534.7 mVpp**, overdrive **3.11x**, at 135 of 135 points.
+3. The drive is **post-channel**: 800 mVpp raw TX, -3.5 dB mandated
+   de-emphasis, 0 dB channel loss at DC by construction.
+4. The `gm/I_D` table says the box reaches **gm/I_D from 21.35 down to ~5**
+   inside the current window, i.e. `V_ov` from ~94 mV up to ~400 mV. The
+   delivered design sits near the **top** of that range (gm/I_D ~ 20).
+
+### DISCLOSURE: a 28-simulation debug run was executed before this entry, and I have seen it
+
+One design per bin, `--pool-only --per-bin 1`. It is stated here in full
+because pre-registering against something already seen and not saying so is
+the failure this file exists to prevent. It showed: the **DC** front rising
+with peaking (~600 mVpp at 0 dB to ~1400 mVpp at 13 dB); the **Nyquist** front
+roughly **flat** at 150-450 mVpp across 3-14 dB; and single samples at 8-11 dB
+already reaching **0.65-0.82x** the drive. **It does not determine the front** —
+n = 1 per bin, no targeted arm — and everything predicted below concerns what
+30x the sample plus a search that optimises the quantity directly will find.
+
+### Predictions
+
+1. **The DC front RISES with peaking and the Nyquist front does NOT.** Formally:
+   regress the DC front on `k = 10^(peaking/20)` in log-log; the slope lands in
+   **[0.7, 1.3]**. The Nyquist front's spread across the 3-12 dB bins is
+   **under 6 dB peak-to-peak** — i.e. flat to within a factor of 2.
+   *Reasoning:* degeneration multiplies the DC linear range by `k` and the
+   peaking divides it by the same `k`, so at the signal band the pair is
+   un-degenerated and its range is set by `V_ov` alone. If this holds, **S3
+   does not charge for linearity at all** — the price is paid in `gm/I_D`, and
+   the framing of "maximum peaking at which the topology accepts PCIe Gen2
+   drive" has no crossing point in peaking to find.
+2. **The best linear range at Nyquist found anywhere lands in
+   [450, 900] mVpp.** Point estimate **650 mVpp**. *Reasoning:* `V_ov` up to
+   ~400 mV is reachable per input 4, and the delivered 172 mVpp sits at
+   ~0.85 `V_ov`; the ceiling is supply headroom on 1.8 V, not the box.
+3. **The drive IS reached at 3 dB.** Confidence high (85 %).
+4. **The drive IS ALSO reached at 9.78 dB** — i.e. the owner's suggested
+   prediction that 9.78 dB is unreachable at any sizing is one I expect to
+   MISS. Confidence **65 %**. *Reasoning:* prediction 1. If the Nyquist front
+   is flat in peaking then whatever is reachable at 3 dB is reachable at
+   9.78 dB, and the debug run's 0.65-0.82x at 8-11 dB is already most of the
+   way there on one sample per bin. **Band: the 9.5-10.0 dB bin's front lands
+   in [400, 800] mVpp.**
+5. **The targeted arm beats the pool arm at every band**, by at least **1.3x**
+   in the 9-10 dB bins. *Reasoning:* the pool was produced by searches scoring
+   `reward_v1`, which is blind to linear range, so its coverage of the
+   high-`V_ov` corner is incidental.
+6. **A design that clears the drive at Nyquist will NOT meet S3+S5+S6+saturation
+   at the same time.** Confidence moderate (60 %). *Reasoning:* `V_ov` ~ 400 mV
+   costs `vds > vdsat = V_ov` of output headroom on a 1.8 V rail with `vcm_in`
+   at 1.1-1.6 V, and it costs current. **This is the prediction that decides
+   whether S8 can actually be unblocked**, and arms 1-5 do not test it — the
+   objective here scores linear range and peaking only. If 6 holds, the finding
+   is a genuine three-way conflict; if it fails, the delivered design is simply
+   in the wrong part of the box and should be re-searched.
+
+### What would falsify the reasoning
+
+* If the **Nyquist** front rises or falls monotonically with peaking by more
+  than 6 dB, the `k`-cancellation is wrong and the DC/Nyquist relation needs
+  re-deriving before any of this is quotable.
+* If the targeted arm does **not** beat the pool arm, either CMA-ES is failing
+  on this objective or the pool already covers the corner — and prediction 2's
+  ceiling would then be a property of the box rather than of the sample.
+* If many bins come back `n_with_a_hard_limit = 0` (the `.dc` sweep never
+  compressing inside +/-0.8 V), the front is measuring the sweep range and not
+  the circuit, and the sweep must be widened before anything is read off it.
+
+### Guard against over-claiming, in both directions
+
+**This is an ATTAINED front from ~1 600 simulations, not a proven envelope.**
+No result here can show that no sizing anywhere does better. A "not reached"
+verdict is evidence in proportion to the targeted arm's effort and nothing
+more, and it must be written that way. Equally, a front that DOES cross the
+drive says only that peaking and linear range can coexist — prediction 6 is
+where the rest of the spec table gets its say, and it is not tested by this
+run.
+
+### Outcome — *not yet run.*

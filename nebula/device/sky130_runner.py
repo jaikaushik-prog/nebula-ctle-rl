@@ -1395,7 +1395,7 @@ def _load_or_none(path: Path) -> Optional[np.ndarray]:
         return None
 
 
-def _hd3_source(vin_pk_v: float = None) -> str:
+def _hd3_source(vin_pk_v: float = None, tone_hz: float = None) -> str:
     """The transient tone, as a `sin()` spec appended to the AC source.
 
     Appending rather than replacing is what keeps `.op`, `.ac` and `.noise`
@@ -1405,11 +1405,21 @@ def _hd3_source(vin_pk_v: float = None) -> str:
     (rule 9) rather than a second one that could drift.
     """
     v = HD3_VIN_DIFF_PK_V if vin_pk_v is None else float(vin_pk_v)
-    return f" sin(0 {v:.6g} {HD3_TONE_HZ:.6g})"
+    f = HD3_TONE_HZ if tone_hz is None else float(tone_hz)
+    return f" sin(0 {v:.6g} {f:.6g})"
 
 
-def _hd3_block() -> str:
-    period = 1.0 / HD3_TONE_HZ
+def _hd3_block(tone_hz: float = None) -> str:
+    """The transient window, sized from the tone.
+
+    **Every timing number here is derived from `tone_hz`, not from
+    `HD3_TONE_HZ`**, so raising the tone to Nyquist shortens the window and the
+    step together and the FFT still sees an integer number of cycles. Writing
+    the step against the module constant while the source ran at another
+    frequency would put a non-integer window into `hd3_from_waveform`, which
+    rejects it — loudly, which is the point.
+    """
+    period = 1.0 / (HD3_TONE_HZ if tone_hz is None else float(tone_hz))
     return _HD3_BLOCK.format(
         n_cycles=HD3_CAPTURE_CYCLES, n_settle=HD3_SETTLE_CYCLES,
         t_step=period / HD3_STEPS_PER_CYCLE,
@@ -1505,6 +1515,7 @@ def run_point(
     ac_peak_interp: bool = False,
     hd3: bool = False,
     hd3_vin_pk_v: Optional[float] = None,
+    hd3_tone_hz: Optional[float] = None,
 ) -> Sky130Point:
     """Simulate one sizing point. Never raises — failures come back ok=False.
 
@@ -1602,8 +1613,8 @@ def run_point(
         noise_summary=noise_summary, noise_probe=noise_probe,
         f_top=f"{MAX_SEARCH_TOP_HZ / 1e9:g}g",
         ac_dump=(_AC_DUMP_BLOCK if ac_sweep else ""),
-        tran_src=_hd3_source(hd3_vin_pk_v) if hd3 else "",
-        hd3_block=_hd3_block() if hd3 else "",
+        tran_src=_hd3_source(hd3_vin_pk_v, hd3_tone_hz) if hd3 else "",
+        hd3_block=_hd3_block(hd3_tone_hz) if hd3 else "",
     )
 
     # THE TWO SILENT WRITES, GATED ON THE ASSEMBLED TEXT (G56, G57). This
@@ -1808,8 +1819,14 @@ def run_point(
                                fail_reason=f"hd3.txt has shape {hd3_raw.shape}, "
                                            f"expected (N, 2)")
         try:
+            # **The same tone the source used.** `hd3_from_waveform` picks the
+            # fundamental and third-harmonic BINS from this; defaulting it to
+            # the module constant while the deck ran at another frequency would
+            # report the wrong bins as HD3 — a finite, plausible, wrong number.
             pt.hd3_dbc, pt.hd3_detail = hd3_from_waveform(
-                hd3_raw[:, 0], hd3_raw[:, 1])
+                hd3_raw[:, 0], hd3_raw[:, 1],
+                f_tone_hz=(HD3_TONE_HZ if hd3_tone_hz is None
+                           else float(hd3_tone_hz)))
         except ValueError as exc:
             # A distortion number computed from a bad window is worse than no
             # number: it is finite, plausible and wrong. Fail instead.
