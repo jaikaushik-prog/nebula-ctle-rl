@@ -80,6 +80,7 @@ from nebula.rl.spec_dist import SpecTarget, interpolation_split
 HERE = Path(__file__).resolve().parent
 RESULTS = HERE / "corner_rl_results.json"
 RUN_LOG = HERE / "corner_rl_run.jsonl"
+POLICY_CKPT = HERE / "corner_rl_policy.pt"
 
 #: Environment steps of PPO. Each is one SPICE-evaluated edit at every screen
 #: point, so the SPICE cost is `TRAIN_STEPS * len(points)`.
@@ -174,6 +175,26 @@ class ArmResult:
     reason: Optional[str] = None
 
 
+def _budget_calls(env) -> int:
+    """SPICE calls charged to an env's budget. **THE reader (rule 9).**
+
+    `SpiceBudget` exposes `calls`; this file asked for `n_calls` in three
+    places. Two of them were guarded by `hasattr(..., "budget")` -- which is
+    True -- so they raised, and the third was an f-string that printed
+    `None SPICE calls` for the whole training run without failing. **A wrong
+    attribute name that FORMATS cleanly is worse than one that crashes**, and
+    both shapes were in this file at once. One reader now, and it raises rather
+    than defaulting: a missing budget means the cost accounting is broken, and
+    a run whose cost cannot be stated is not reportable.
+    """
+    b = getattr(env, "budget", None)
+    if b is None:
+        raise AttributeError(
+            "env has no budget: the SPICE cost of this arm cannot be stated, "
+            "and an arm with no cost cannot appear in a benchmark table")
+    return int(b.calls)
+
+
 def _screen():
     """The search screen. One definition, shared by every arm (rule 9)."""
     from nebula.experiments.adaptive_screen import EDGE4_MANDATED
@@ -222,7 +243,7 @@ def arm_policy(net, t: SpecTarget, points, seed: int) -> ArmResult:
     obs, _ = env.reset()
     best_u, best_r = None, -math.inf
     done = False
-    n_sims = env.env.budget.n_calls if hasattr(env.env, "budget") else 0
+    n_sims = _budget_calls(env.env)
     while not done:
         with torch.no_grad():
             o = torch.as_tensor(obs, dtype=torch.float32).unsqueeze(0)
@@ -231,7 +252,7 @@ def arm_policy(net, t: SpecTarget, points, seed: int) -> ArmResult:
         if r > best_r:
             best_r, best_u = r, np.array(env.env._u, dtype=float)
         done = bool(term or trunc)
-    used = (env.env.budget.n_calls - n_sims) if hasattr(env.env, "budget") else 0
+    used = _budget_calls(env.env) - n_sims
     ev = _score(best_u, t)
     return ArmResult("policy", t.peaking_db, t.f_peak_hz, float(ev.reward),
                      bool(ev.feasible), int(used + ev.n_sims),
@@ -341,7 +362,20 @@ def run(train_steps: int = TRAIN_STEPS, n_test: int = N_TEST_TARGETS,
     t_train = time.time()
     net, stats = train(env, PPOConfig(seed=seed, total_steps=train_steps))
     train_s = time.time() - t_train
-    train_sims = getattr(env.env.budget, "n_calls", None)
+    # **Checkpoint immediately.** The first run of this file trained for
+    # 19.3 minutes and then died in the evaluation loop on a typo, losing the
+    # policy. Training is the expensive, non-reproducible-in-a-hurry part; the
+    # arms after it are cheap to re-run.
+    import torch
+
+    torch.save({"state_dict": net.state_dict(), "train_steps": train_steps,
+                "seed": seed, "obs_dim": env.observation_dim,
+                "act_dim": env.action_dim,
+                "train_targets": [(t.peaking_db, t.f_peak_hz)
+                                  for t in split.train]},
+               POLICY_CKPT)
+    print(f"  checkpointed policy -> {POLICY_CKPT.name}", flush=True)
+    train_sims = _budget_calls(env.env)
     print(f"  trained: {train_steps} env steps, {train_sims} SPICE calls, "
           f"{train_s / 60:.1f} min", flush=True)
 

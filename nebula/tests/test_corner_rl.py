@@ -199,3 +199,55 @@ def test_the_summary_counts_FEASIBILITY_not_just_reward():
     rows = [{"arm": "x", "reward": 5.0, "feasible": False, "n_sims": 1,
              "wall_s": 1.0}]
     assert _summarise(rows)["x"]["n_feasible"] == 0
+
+
+# ── 6. the cost accounting is real (the 19-minute bug) ───────────────────────
+
+
+def test_the_budget_reader_uses_the_attribute_SpiceBudget_ACTUALLY_HAS():
+    """**19.3 minutes of training died on this.**
+
+    `SpiceBudget` exposes `calls`. This file asked for `n_calls` in three
+    places. Two were guarded by `hasattr(env, "budget")` — which is True — so
+    they raised at run time; the third was an f-string that printed
+    `None SPICE calls` for an entire training run **without failing at all**.
+
+    A wrong attribute that formats cleanly is worse than one that crashes, and
+    both shapes were live in one file. Pinned against the real class rather
+    than a mock, so a rename in `evaluator.py` reddens this instead of
+    silently reintroducing `None` into a benchmark table.
+    """
+    from nebula.experiments.exp_corner_rl import _budget_calls
+    from nebula.rl.evaluator import SpiceBudget
+
+    assert hasattr(SpiceBudget(), "calls")
+    assert not hasattr(SpiceBudget(), "n_calls")
+
+    class _Env:
+        budget = SpiceBudget()
+
+    e = _Env()
+    e.budget.charge(7, 1.0)
+    assert _budget_calls(e) == 7
+
+
+def test_a_missing_budget_RAISES_rather_than_reporting_zero():
+    """Rule 5. An arm whose SPICE cost cannot be stated must not appear in a
+    benchmark table with a plausible-looking 0 beside it."""
+    from nebula.experiments.exp_corner_rl import _budget_calls
+
+    with pytest.raises(AttributeError):
+        _budget_calls(object())
+
+
+def test_the_policy_is_CHECKPOINTED_before_the_arms_run():
+    """Training is the expensive, slow part; the arms after it are cheap. A
+    downstream crash must not cost the policy again."""
+    import inspect
+
+    from nebula.experiments import exp_corner_rl as M
+
+    src = inspect.getsource(M.run)
+    i_save = src.index("torch.save")
+    i_arms = src.index("arm_policy(")
+    assert i_save < i_arms, "the policy must be saved BEFORE the arms run"
