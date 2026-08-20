@@ -361,6 +361,33 @@ V5_SPECS: tuple[str, ...] = (
     "S8_eye_h", "S8_eye_w", "S7_area", "S4_hd3_nyq",
 )
 
+#: **Reward v5-device: the rows `rl/env.py` can actually score, plus the
+#: request.** `V1_SPECS` + `S3_peaking_match`.
+#:
+#: `CtleSizingEnv._evaluate_current` calls `reward()` with `target_peaking_db`
+#: but with **no `link`, no `area_mm2` and no `hd3_nyq_dbc`** -- it measures the
+#: device, and the eye needs the link bridge. So an RL run cannot score
+#: `V5_SPECS` without either editing `rl/env.py` (rule 7 forbids it without a
+#: human decision) or defaulting three rows nobody measured (rule 5 forbids
+#: that outright, and `margins()` deliberately omits them so the attempt
+#: raises rather than silently succeeds).
+#:
+#: **This is the honest subset, and the important property survives it:** the
+#: spec manifold is still genuinely **2-D**, because `S3_peaking_match` is in
+#: it. That was the whole reason RL could not win before -- with the request
+#: discarded the manifold was 1-D and a lookup table was provably optimal
+#: (`SPEC_CONDITIONED.md` §0).
+#:
+#: **Training reward and reporting reward are therefore different, and that is
+#: stated rather than hidden**: policies train on this, and EVERY arm --
+#: policy, library, CMA-ES, random -- is SCORED on the full `V5_SPECS` through
+#: one shared evaluator, so the comparison is never between two rewards.
+#: Listed by ENUMERATION (G101/G106).
+V5D_SPECS: tuple[str, ...] = (
+    "S3_f_peak", "S3_peaking", "S3_peaking_match", "S3_nyq_boost",
+    "S5_noise", "S6_power", "saturation", "tail_saturation",
+)
+
 #: The S8 rows, named so a caller can ask "is this reward scoring the eye?"
 S8_SPECS: tuple[str, ...] = ("S8_eye_h", "S8_eye_w")
 
@@ -682,6 +709,7 @@ def reward_v1(meas: Optional[Mapping[str, float]],
 __all__: Sequence[str] = (
     "Tol", "TOLERANCES", "TOL", "SPEC_NAMES", "N_SPECS",
     "V0_SPECS", "V1_SPECS", "V2_SPECS", "V3_SPECS", "V4_SPECS", "V5_SPECS",
+    "V5D_SPECS",
     "S8_SPECS",
     "TOLERANCE_SCAN",
     "feasible_bonus", "invalid_reward", "headroom_band_top",

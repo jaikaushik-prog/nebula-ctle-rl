@@ -205,6 +205,40 @@ Budget each setting as a full SPICE run.
 
 ---
 
+## 5b. OPEN DEBT — **`S3_f_peak`'s tolerance is a CONSTRAINT tolerance being used as a REQUEST tolerance**
+
+**Found 2026-08-21 mid-coverage-run. Owner has approved the fix; it is
+sequenced AFTER the RL experiment and MUST NOT be dropped.**
+
+`S3_f_peak`'s margin is `0.5 - |f_oct - target_oct|`, and **0.5 octaves is half
+of S3's entire window**. That is the right number for the question *"is the
+peak inside 1.25-2.5 GHz?"* and close to meaningless for *"did you deliver what
+was asked?"* — almost any design peaking anywhere in the window satisfies any
+frequency request.
+
+Measured, from the live coverage run:
+
+    asked 4.0 dB @ 1.921 GHz  ->  delivered 4.98 dB @ 2.734 GHz  ->  scored PASS
+
+**A 42 % miss on the number the user typed, reported as compliant.** Identical
+in shape to the `target_peaking_db` defect fixed earlier the same session
+(D6/`S3_peaking_match`): a row written for a constraint, later reused for a
+request, without the tolerance being re-derived.
+
+**The fix**, same shape as D6: a separate `S3_f_peak_match` row, tolerance
+derived from measurement rather than convenience. The peak's own PVT excursion
+across the 45 mandated corners is **0.23-0.30 octaves**, so a tolerance below
+~0.15 octaves is unmeetable by construction; **~0.30-0.35 octaves** is the
+honest promise. `S3_f_peak` stays as the band constraint, exactly as
+`S3_peaking` stayed alongside `S3_peaking_match`.
+
+**Deliberately NOT changed mid-run** — it would corrupt the sweep in progress.
+Plan: report the sweep under the loose rule, re-run under the honest rule,
+**and publish both.** The difference between the two coverage numbers is itself
+the measurement of how much the loose tolerance was flattering us.
+
+---
+
 ## 6. Next steps, in order
 
 | # | Task | Cost | Status |
@@ -213,11 +247,39 @@ Budget each setting as a full SPICE run.
 | 2 | `experiments/adaptive_screen.py` — EDGE-4, spread probe, D2 self-check | — | **DONE**, 15 tests, 2 gates watched red |
 | 3 | `rl/reward_v1.py` — `S3_peaking_match` + `V5_SPECS` (D6) | — | **DONE**, 12 tests, 3 gates watched red |
 | 4 | `experiments/exp_coverage.py` — the 16-request coverage sweep | ~10 000 sims, ~1.5 h | **RUNNING** |
-| 5 | 2-D tuning bank (`Cs` axis) + the reading-(B) criterion | ~1 100 sims, ~8 min | |
-| 6 | Option B: deliberate output loading, to desensitise the load axis (~20 sims). Measure device output capacitance with `device/cap_probe.py` first rather than inferring it (§4b infers ~90 fF) | ~30 sims | |
-| 7 | Fair benchmark: random / CMA-ES / PPO / hybrid, one evaluator, equal budgets | ~6 400 sims, ~42 min | |
-| 8 | **Corner-aware RL** — `rl/corner_env.py` is built, tested, and has never been run. The one defensible RL niche (a design lookup is nominal-only by construction and cannot answer corners) | ~2 h | |
-| 9 | Report: compliance matrix on page 1; renumber figures; point the grounding checker at report prose | — | |
+| **5** | **Corner-aware RL vs random / CMA-ES / library lookup.** `rl/corner_env.py` is built, tested, and **has never been run** — deferred four times. **Owner moved this ahead of item 6 on 2026-08-21**, because a surprising result here changes what the report is about | ~2 h | **NEXT** |
+| **6** | **Tighten the frequency request (§5b) and re-run the sweep.** Owner: *"polishing numbers is much needed for honesty."* Report both the loose and the honest coverage number | ~1.5 h | **committed, do not drop** |
+| 7 | 2-D tuning bank (`Cs` axis) + the reading-(B) criterion | ~1 100 sims, ~8 min | built, not run |
+| 8 | Fair benchmark — **all six methods**: uniform, LHS, **grid**, CMA-ES, GP-BO, PPO, plus the hybrid. **Grid is not optional**: *"significantly lower time than sweeping all MOS, R, C, L parameter space"* is the slide's own success criterion, so the sweep is the baseline we claim to beat. Dropping GP-BO would be dropping the strongest fair rival | ~1 h | |
+| 9 | Option B: deliberate output loading, to desensitise the load axis. Measure device output capacitance with `device/cap_probe.py` first rather than inferring it (§4b infers ~90 fF) | ~30 sims | |
+| 10 | Report: compliance matrix on page 1; renumber figures; point the grounding checker at report prose | ~2 h | |
+| 11 | Demo capture: plain-English request → schematic → specs → verification | ~1 h | |
+
+### Why the RL work is NOT hopeless, and the framing that follows
+
+`BASELINES.md` measures PPO as indistinguishable from uniform random at every
+budget. **That null was measured on a problem that was accidentally degenerate
+in two ways, and one of them was fixed in this session:**
+
+1. **The spec manifold was 1-D** because `target_peaking_db` was discarded, so
+   "give me 4 dB" and "give me 11 dB" were the same question. On a 1-D manifold
+   a lookup table is provably the optimal policy — RL had nothing to learn.
+   **D6 fixed this.** The problem is now genuinely 2-D.
+2. **The policy was never shown corners.** Every published RL run is P1,
+   nominal only. `rl/corner_env.py` was built for exactly this and never run.
+
+**The claim to test is NOT "RL beats CMA-ES on one request."** On a 7-D
+continuous box a classical optimiser should win a single query, and claiming
+otherwise would be a retraction waiting to happen. The claim is **amortised**:
+the optimiser wins request #1; a trained policy wins request #50, answering in
+milliseconds having already learned the space. That is what the slide's
+*"lowest design time"* and *"fewer search spaces"* actually ask about.
+**The library lookup is the honest competitor** — and it cannot answer corner
+questions, because the pool is nominal-only by construction. That asymmetry is
+the whole niche.
+
+**Report the result either way.** A completed, well-explained negative beats a
+fourth deferral.
 
 ### What is built and working (session 23)
 
