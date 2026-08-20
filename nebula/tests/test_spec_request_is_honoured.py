@@ -158,3 +158,87 @@ def test_v5_is_listed_by_ENUMERATION_not_derived_from_another_set():
 
 def test_every_v5_row_has_a_tolerance_behind_it():
     assert set(R.V5_SPECS) <= set(R.SPEC_NAMES)
+
+
+# ── 3. the frequency BAND, which was never written (G111) ────────────────────
+
+
+def _at(f_hz, peaking=7.0):
+    import math
+    return dict(MEAS, peaking_db=peaking, f_peak_oct=math.log2(f_hz / 2.5e9))
+
+
+def test_a_peak_OUTSIDE_S3s_window_now_FAILS_however_the_target_was_set():
+    """**The defect that shipped 4 of 16 coverage designs outside the window.**
+
+    `S3_peaking` is a BAND. `S3_f_peak` is a DISTANCE FROM TARGET. So until
+    `S3_f_peak_band` existed, nothing in any spec set required the peak to lie
+    inside 1.25-2.5 GHz -- and with an off-centre target the distance row
+    happily accepted peaks well past the ceiling.
+
+    The measured case, verbatim from the coverage sweep: asked 2.253 GHz,
+    delivered **3.174 GHz**, scored **45 of 45 corners PASS**.
+    """
+    m = R.margins(_at(3.174e9), 2.253e9)
+    assert m["S3_f_peak"] > 0.0, (
+        "premise check: the OLD row accepted this design, which is why the "
+        "band row had to be added")
+    assert m["S3_f_peak_band"] < 0.0, (
+        "3.174 GHz is outside S3's 1.25-2.5 GHz window and must fail the band")
+
+
+def test_the_band_is_positive_INSIDE_and_zero_AT_the_window_edges():
+    for f in (1.25e9, 1.7677669529663687e9, 2.5e9):
+        assert R.margins(_at(f), 1.7677669529663687e9)["S3_f_peak_band"] >= 0.0
+    lo = R.margins(_at(1.25e9), 1.77e9)["S3_f_peak_band"]
+    hi = R.margins(_at(2.5e9), 1.77e9)["S3_f_peak_band"]
+    mid = R.margins(_at(1.7677669529663687e9), 1.77e9)["S3_f_peak_band"]
+    assert lo == pytest.approx(0.0, abs=1e-9)
+    assert hi == pytest.approx(0.0, abs=1e-9)
+    assert mid == pytest.approx(0.5, abs=1e-3), "centre is half a window in"
+
+
+def test_the_band_fails_BELOW_the_window_too_not_just_above():
+    """Both edges, like `S3_peaking`. A one-sided band is not a band."""
+    assert R.margins(_at(1.0e9), 1.77e9)["S3_f_peak_band"] < 0.0
+
+
+def test_the_frequency_REQUEST_tolerance_is_tighter_than_the_WINDOW_half_width():
+    """`S3_f_peak`'s 0.5 octaves is +/-41 % -- half the whole window -- so any
+    design peaking anywhere in band satisfied any request. Measured: asked
+    2.253 GHz, delivered 1.776 GHz, scored a pass."""
+    assert R.TOL["S3_f_peak_match"] < R.TOL["S3_f_peak"]
+    # the case that used to pass
+    assert R.margins(_at(1.776e9), 2.253e9)["S3_f_peak"] > 0.0
+    assert R.margins(_at(1.776e9), 2.253e9)["S3_f_peak_match"] < 0.0
+
+
+def test_the_frequency_match_tolerance_is_NOT_tighter_than_f_peaks_PVT_EXCURSION():
+    """Derived, not chosen: the peak's own excursion across the 45 mandated
+    corners is 0.23-0.30 octaves, so a tolerance below ~0.15 is unmeetable at
+    any target however well the design is centred."""
+    assert R.TOL["S3_f_peak_match"] >= 0.30 / 2.0
+
+
+def test_V6_replaces_the_old_row_rather_than_ADDING_to_it():
+    """Scoring band + match + the old distance row would count one frequency
+    miss three times in the shortfall sum."""
+    assert "S3_f_peak" not in R.V6_SPECS
+    assert {"S3_f_peak_band", "S3_f_peak_match"} <= set(R.V6_SPECS)
+    assert "S3_f_peak" in R.V1_SPECS, "V1 must be untouched"
+
+
+def test_V6_mirrors_the_peaking_axis_exactly():
+    """Both axes end up with one band row and one request row. If they ever
+    stop mirroring, one of them has drifted."""
+    for band, match in (("S3_peaking", "S3_peaking_match"),
+                        ("S3_f_peak_band", "S3_f_peak_match")):
+        assert band in R.V6_SPECS and match in R.V6_SPECS
+
+
+@pytest.mark.parametrize("specs", [R.V1_SPECS, R.V2_SPECS, R.V3_SPECS,
+                                   R.V4_SPECS, R.V5_SPECS])
+def test_the_new_frequency_rows_did_not_move_any_PUBLISHED_spec_set(specs):
+    """Both rows are emitted unconditionally by `margins()`, so the only thing
+    keeping V1-V5 fixed is that they do not NAME them. Pinned."""
+    assert "S3_f_peak_band" not in specs and "S3_f_peak_match" not in specs

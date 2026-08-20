@@ -4006,6 +4006,44 @@ Plus: git init, .gitignore, 28 tests, Wilson-bound BER reporting.
   design-load grid; `nebula/tests/test_adaptive_screen.py` pins the audit's
   direction (pessimistic is safe, optimistic is not).
 
+- **G111 -- (nebula) a row written as "distance from target" is NOT a band
+  constraint, and the two are indistinguishable for as long as the target sits
+  at the band's centre.**
+  `S3_peaking` is a BAND: `min(pk - 3, 12 - pk)`, both edges enforced.
+  `S3_f_peak` is a DISTANCE: `0.5 - |f_oct - target_oct|`. So **no spec set in
+  this project ever required the peak to lie inside S3's stated 1.25-2.5 GHz
+  window** -- V0 through V5, every published run, the whole benchmark.
+  **It hid because every published run targeted the window CENTRE**, where the
+  two statements coincide exactly:
+
+      target 1.768 GHz (the centre)  -> accepts [1.250, 2.500] GHz == the window
+      target 2.253 GHz               -> accepts [1.593, 3.186] GHz, +0.686 over
+      target 1.387 GHz               -> accepts [0.981, 1.962] GHz, -0.269 under
+
+  `exp_coverage` was the first experiment ever to ask for an **off-centre**
+  target, and it walked straight into the gap on its first run: **4 of 16
+  delivered designs peaked outside the window and were not penalised**, the
+  worst asked for 2.253 GHz, delivered **3.174 GHz**, and scored **45 of 45
+  corners PASS**. That retracted part of the run's headline (10 of 16 ->
+  at most 9 of 16 pending the corrected re-run).
+  **The general form, and it is the same shape as the `target_peaking_db`
+  defect found hours earlier the same session:** a row written for one job
+  (a CONSTRAINT) gets reused for another (a REQUEST) and nobody re-derives what
+  it means when the new job's parameter moves. Peaking had both rows and was
+  fine; frequency had only the request row and had been silently standing in
+  for a constraint that was never written.
+  **The tell is cheap and general: for every spec that is a RANGE, ask which
+  row enforces the range and which row enforces the request, and confirm they
+  are two different rows.** If one row is doing both, it is doing neither
+  except at one point.
+  Fixed by `S3_f_peak_band` (the band, tolerance 0.5 oct = the window's own
+  half-width) plus `S3_f_peak_match` (the request, tolerance 0.30 oct, derived
+  from f_peak's measured 0.23-0.30 octave PVT excursion). `V6_SPECS` carries
+  both and **drops `S3_f_peak`** -- keeping all three would count one frequency
+  miss three times in the shortfall sum. V1-V5 untouched.
+  `nebula/tests/test_spec_request_is_honoured.py` (24 tests, 2 gates watched
+  go red), `PREDICTIONS.md` entry 24's outcome is the measurement.
+
 ## 10. Environment
 
 - Windows 11, PowerShell 5.1 (+ Git Bash available), Python 3.13.14,

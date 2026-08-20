@@ -119,7 +119,7 @@ class SpecConditionedCornerEnv:
     """
 
     def __init__(self, points, targets: Sequence[SpecTarget], seed: int,
-                 specs: Sequence[str] = R.V5D_SPECS, budget=None):
+                 specs: Sequence[str] = R.V6D_SPECS, budget=None):
         from nebula.rl.corner_env import CornerCtleEnv
 
         if not targets:
@@ -203,7 +203,7 @@ def _score(u, t: SpecTarget) -> tuple:
     from nebula.experiments.adaptive_screen import evaluate_at_points
 
     ev = evaluate_at_points(u, _screen(), target_f_peak_hz=t.f_peak_hz,
-                            target_peaking_db=t.peaking_db, specs=R.V5_SPECS)
+                            target_peaking_db=t.peaking_db, specs=R.V6_SPECS)
     return ev
 
 
@@ -353,7 +353,7 @@ def run(train_steps: int = TRAIN_STEPS, n_test: int = N_TEST_TARGETS,
                              "n_test": len(split.test),
                              "train_sims": train_sims,
                              "train_seconds": train_s,
-                             "spec_set": list(R.V5_SPECS),
+                             "spec_set": list(R.V6_SPECS),
                              "screen": [p.label for p in points]}) + "\n")
         for i, t in enumerate(split.test):
             print(f"[{i + 1}/{len(split.test)}] held-out request "
@@ -377,7 +377,7 @@ def run(train_steps: int = TRAIN_STEPS, n_test: int = N_TEST_TARGETS,
 
     out = {
         "task": "corner-aware, spec-conditioned RL vs library, CMA-ES, random",
-        "spec_set": list(R.V5_SPECS),
+        "spec_set": list(R.V6_SPECS),
         "screen": [p.label for p in points],
         "train_steps": train_steps, "train_sims": train_sims,
         "train_seconds": train_s,

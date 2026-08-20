@@ -94,7 +94,8 @@ def test_no_tolerance_row_is_an_ORPHAN():
     """
     reachable = (set(R.V0_SPECS) | set(R.V1_SPECS) | set(R.V2_SPECS)
                  | set(R.V3_SPECS) | set(R.V4_SPECS) | set(R.V5_SPECS)
-                 | set(R.V5D_SPECS))
+                 | set(R.V5D_SPECS) | set(R.V6_SPECS)
+                 | set(R.V6D_SPECS))
     orphans = set(R.SPEC_NAMES) - reachable
     assert not orphans, f"tolerance rows no spec set can score: {sorted(orphans)}"
     # and nothing is named in a set without a tolerance behind it

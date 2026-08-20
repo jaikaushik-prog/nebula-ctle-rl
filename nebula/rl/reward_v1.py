@@ -138,6 +138,12 @@ from nebula.common.types import (
     SPEC_AREA_MAX_MM2,
 )
 
+#: S3's frequency window in OCTAVES relative to 2.5 GHz, which is the unit
+#: `contract.f_peak_octaves` puts every frequency in. One definition (rule 9):
+#: `S3_f_peak_band` is the only consumer and must not rebuild it.
+_F_LO_OCT: float = math.log2(SPEC_F_PEAK_HZ_RANGE[0] / 2.5e9)
+_F_HI_OCT: float = math.log2(SPEC_F_PEAK_HZ_RANGE[1] / 2.5e9)
+
 # ─────────────────────────────────────────────────────────────────────────────
 # The tolerances. Human-set (see the module docstring). One definition.
 # ─────────────────────────────────────────────────────────────────────────────
@@ -234,6 +240,54 @@ TOLERANCES: tuple[Tol, ...] = (
     # round value that admits a correctly-centred design with ~0.67 dB of
     # centring slack left over. Anything tighter is a spec against physics
     # rather than against the circuit.
+    # ── THE FREQUENCY BAND, added by session 23. See `V6_SPECS`. ──────────
+    #
+    # **THE ROW THAT WAS NEVER WRITTEN.** `S3_peaking` is a BAND -- both edges
+    # of 3-12 dB enforced. `S3_f_peak` is a DISTANCE FROM TARGET. So until this
+    # row existed, **nothing in any spec set required the peak to lie inside
+    # S3's stated 1.25-2.5 GHz window.**
+    #
+    # It survived the whole life of the project because every published run
+    # used the window CENTRE as its target, and at the centre the two are the
+    # same statement:
+    #
+    #   target 1.768 GHz (centre) -> S3_f_peak accepts [1.250, 2.500] == window
+    #   target 2.253 GHz          -> accepts [1.593, 3.186], +0.686 GHz over
+    #   target 1.387 GHz          -> accepts [0.981, 1.962], -0.269 GHz under
+    #
+    # The coverage sweep was the first experiment ever to ask for an off-centre
+    # target and it walked straight into the gap: **4 of 16 delivered designs
+    # peaked outside the window and were not penalised**, one of them scoring
+    # 45 of 45 corners at 3.174 GHz. G111.
+    #
+    # Tolerance 0.5 octaves = the window's own half-width, exactly the basis
+    # `S3_f_peak` uses. Nothing new is chosen here; the number was always the
+    # right one for a band and was being spent on a target instead.
+    Tol("S3_f_peak_band", 0.5, "octaves",
+        "distance INSIDE S3's 1.25-2.5 GHz window, in octaves -- the frequency "
+        "twin of S3_peaking's 3-12 dB band. Half-width of a one-octave window, "
+        "the same basis S3_f_peak uses. Positive inside, negative by exactly "
+        "how far outside"),
+    # **The frequency REQUEST, with a tolerance a user would recognise.**
+    # `S3_f_peak`'s 0.5 octaves is +/-41 % in frequency -- half the entire
+    # window -- so almost any design peaking anywhere in band "satisfied" any
+    # request. Measured on the coverage sweep: asked 2.253 GHz, delivered
+    # 1.776 GHz, scored a pass. The optimiser was not cheating; the row told
+    # it the frequency request was free, so it spent its budget elsewhere.
+    #
+    # **0.30 octaves is DERIVED, not chosen.** The peak's own excursion across
+    # the 45 mandated corners is **0.23-0.30 octaves** (session 23, measured off
+    # the 135-point artifacts), so a tolerance below ~0.15 is unmeetable at any
+    # target however well the design is centred, and one at 0.30 is the
+    # tightest honest promise: "the peak you asked for, within what process
+    # variation itself does to it". Same rule as S3_peaking_match, one axis
+    # over.
+    Tol("S3_f_peak_match", 0.30, "octaves",
+        "distance from the REQUESTED peak frequency. Measured basis: f_peak's "
+        "own PVT excursion is 0.23-0.30 octaves across the 45 mandated "
+        "corners, so anything tighter is a spec against physics; 0.5 (the "
+        "window half-width, which S3_f_peak uses) is +/-41 % and promises "
+        "nothing"),
     Tol("S3_peaking_match", 1.5, "dB",
         "distance from the REQUESTED peaking, not from the band. Measured "
         "basis: peaking's own PVT excursion is 1.48-1.65 dB across the 45 "
@@ -388,6 +442,43 @@ V5D_SPECS: tuple[str, ...] = (
     "S5_noise", "S6_power", "saturation", "tail_saturation",
 )
 
+#: **Reward v6: the set that separates the CONSTRAINT from the REQUEST on BOTH
+#: axes. The one the deliverable and the coverage map score on.**
+#:
+#: V5 carried `S3_f_peak` -- a distance-from-target row -- and nothing else
+#: about frequency, so **no spec set in this project had ever required the peak
+#: to lie inside S3's 1.25-2.5 GHz window** (G111). V6 replaces that one row
+#: with the two it was standing in for, exactly mirroring what peaking already
+#: had:
+#:
+#:     peaking    S3_peaking       (band 3-12 dB)   S3_peaking_match  (request)
+#:     frequency  S3_f_peak_band   (band 1.25-2.5)  S3_f_peak_match   (request)
+#:
+#: **`S3_f_peak` is NOT in this set, and that is not an oversight.** Keeping it
+#: alongside both replacements would score the frequency three times and count
+#: one miss twice in the shortfall sum. It stays defined, and V1-V5 keep using
+#: it, so every published number still reproduces.
+#:
+#: 13 rows. Listed by ENUMERATION (G101/G106).
+V6_SPECS: tuple[str, ...] = (
+    "S3_f_peak_band", "S3_f_peak_match",
+    "S3_peaking", "S3_peaking_match",
+    "S3_nyq_boost", "S5_noise", "S6_power",
+    "saturation", "tail_saturation",
+    "S8_eye_h", "S8_eye_w", "S7_area", "S4_hd3_nyq",
+)
+
+#: **Reward v6-device: V6 minus the rows `rl/env.py` cannot measure.**
+#: The RL training set, for the same reason `V5D_SPECS` existed: the env has no
+#: link bridge, so the eye, area and HD3 rows would raise rather than default.
+#: 9 rows, and the manifold is still genuinely 2-D.
+V6D_SPECS: tuple[str, ...] = (
+    "S3_f_peak_band", "S3_f_peak_match",
+    "S3_peaking", "S3_peaking_match",
+    "S3_nyq_boost", "S5_noise", "S6_power",
+    "saturation", "tail_saturation",
+)
+
 #: The S8 rows, named so a caller can ask "is this reward scoring the eye?"
 S8_SPECS: tuple[str, ...] = ("S8_eye_h", "S8_eye_w")
 
@@ -511,6 +602,12 @@ def margins(meas: Mapping[str, float],
         # §6h's `-|log2(f_peak / f_target)|`, with the half-width folded in so
         # the quantity is a MARGIN like every other row.
         "S3_f_peak": TOL["S3_f_peak"] - abs(f_oct - target_oct),
+        # **The BAND. Positive inside S3's window, negative by how far
+        # outside** -- the frequency twin of `S3_peaking` above, and the row
+        # whose absence let 4 of 16 coverage designs peak past 2.5 GHz
+        # unpenalised (G111). Emitted ALWAYS: it is a property of the circuit,
+        # not of anybody's request, so there is nothing to be conditional on.
+        "S3_f_peak_band": min(f_oct - _F_LO_OCT, _F_HI_OCT - f_oct),
         "S3_nyq_boost": float(meas["nyq_boost_db"]),
         "S5_noise": SPEC_VN_IN_MAX_VRMS - float(meas["inoise_vrms"]),
         "S6_power": SPEC_POWER_MAX_W - float(meas["power_w"]),
@@ -524,6 +621,9 @@ def margins(meas: Mapping[str, float],
     if target_peaking_db is not None:
         out["S3_peaking_match"] = (TOL["S3_peaking_match"]
                                    - abs(pk - float(target_peaking_db)))
+    # The frequency request, on the same terms: present only when asked for.
+    out["S3_f_peak_match"] = (TOL["S3_f_peak_match"]
+                              - abs(f_oct - target_oct))
 
     # S8, only when a real link result is in hand. Both are MEASURED-minus-
     # SPEC margins in the spec's own units, like every other row.
@@ -709,7 +809,7 @@ def reward_v1(meas: Optional[Mapping[str, float]],
 __all__: Sequence[str] = (
     "Tol", "TOLERANCES", "TOL", "SPEC_NAMES", "N_SPECS",
     "V0_SPECS", "V1_SPECS", "V2_SPECS", "V3_SPECS", "V4_SPECS", "V5_SPECS",
-    "V5D_SPECS",
+    "V5D_SPECS", "V6_SPECS", "V6D_SPECS",
     "S8_SPECS",
     "TOLERANCE_SCAN",
     "feasible_bonus", "invalid_reward", "headroom_band_top",

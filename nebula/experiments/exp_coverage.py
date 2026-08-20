@@ -205,7 +205,7 @@ class _Objective:
         ev = evaluate_at_points(u, self.screen.points,
                                 target_f_peak_hz=self.tf,
                                 target_peaking_db=self.tp,
-                                specs=R.V5_SPECS)
+                                specs=R.V6_SPECS)
         self.n_sims += ev.n_sims
         if self.log is not None:
             self.log.write(json.dumps({
@@ -414,7 +414,7 @@ def verify_request(res: RequestResult, best, screen: AdaptiveScreen) -> None:
 
 def _rescore(points: Sequence[dict], target_f_peak_hz: float,
              target_peaking_db: float) -> list[dict]:
-    """Re-score `verify_full` points against one request, on `V5_SPECS`.
+    """Re-score `verify_full` points against one request, on `V6_SPECS`.
 
     Uses the per-point margins the artifact already carries and adds the two
     request-dependent rows. **`S3_f_peak` is recomputed from
@@ -451,13 +451,13 @@ def _rescore(points: Sequence[dict], target_f_peak_hz: float,
         m["S3_f_peak"] = R.TOL["S3_f_peak"] - abs(float(f_oct) - tgt_oct)
         m["S3_peaking_match"] = (R.TOL["S3_peaking_match"]
                                  - abs(float(pk) - float(target_peaking_db)))
-        rows = [k for k in R.V5_SPECS if k in m]
+        rows = [k for k in R.V6_SPECS if k in m]
         failed = [k for k in rows if m[k] < 0.0]
         s = {k: max(0.0, -m[k] / R.TOL[k]) for k in rows}
         if failed:
             reward = -sum(min(v, 1.0) for v in s.values())
         else:
-            reward = (R.feasible_bonus(len(R.V5_SPECS))
+            reward = (R.feasible_bonus(len(R.V6_SPECS))
                       + min(m[k] / R.TOL[k] for k in rows))
         out.append({"cl_f": float(p["cl_f"]), "reward": float(reward),
                     "feasible": not failed, "failed": failed,
@@ -486,7 +486,7 @@ def run(budget: int = BUDGET_DESIGN_EVALS,
     with RUN_LOG.open("w", encoding="utf-8") as fh:
         fh.write(json.dumps({
             "event": "start", "budget_design_evals": budget,
-            "spec_set": list(R.V5_SPECS), "n_requests": len(requests),
+            "spec_set": list(R.V6_SPECS), "n_requests": len(requests),
             "peaking_requests": list(peakings),
             "freq_requests": list(freqs),
             "screen": [p.label for p in screen.points]}) + "\n")
@@ -518,7 +518,7 @@ def run(budget: int = BUDGET_DESIGN_EVALS,
     solved135 = sum(1 for r in results if r.n_full135_pass == 135)
     out = {
         "task": "spec coverage: does the framework answer every request?",
-        "spec_set": list(R.V5_SPECS),
+        "spec_set": list(R.V6_SPECS),
         "n_requests": len(requests),
         "n_solved_on_screen": sum(1 for r in results if r.solved_on_screen),
         "n_solved_pvt45": solved45,

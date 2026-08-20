@@ -87,7 +87,7 @@ def test_an_env_with_NO_targets_raises_rather_than_defaulting():
 # ── 2. the spec set the policy can actually be trained on ────────────────────
 
 
-def test_V5D_is_scorable_by_the_RL_ENV_which_has_no_link_or_area():
+def test_V6D_is_scorable_by_the_RL_ENV_which_has_no_link_or_area():
     """`rl/env.py` calls `reward()` with a target but **no `link`, no
     `area_mm2`, no `hd3_nyq_dbc`**. Asking it for `V5_SPECS` raises, which is
     `margins()` refusing to default a spec nobody measured — correct behaviour,
@@ -97,23 +97,23 @@ def test_V5D_is_scorable_by_the_RL_ENV_which_has_no_link_or_area():
                 pair_margin_v=0.64, tail_margin_v=0.35)
     tf = 1.7677669529663687e9
     # V5D scores with exactly what the env has.
-    rb = R.reward(meas, tf, specs=R.V5D_SPECS, target_peaking_db=7.5)
-    assert rb.valid and set(rb.margins) == set(R.V5D_SPECS)
+    rb = R.reward(meas, tf, specs=R.V6D_SPECS, target_peaking_db=7.5)
+    assert rb.valid and set(rb.margins) == set(R.V6D_SPECS)
     # V5 does not, and must not silently succeed.
     with pytest.raises(KeyError):
-        R.reward(meas, tf, specs=R.V5_SPECS, target_peaking_db=7.5)
+        R.reward(meas, tf, specs=R.V6_SPECS, target_peaking_db=7.5)
 
 
-def test_V5D_keeps_the_manifold_TWO_dimensional():
+def test_V6D_keeps_the_manifold_TWO_dimensional():
     """The single property that makes RL worth running at all. Without the
     request row a lookup table is provably optimal and the experiment is a
     foregone conclusion."""
-    assert "S3_peaking_match" in R.V5D_SPECS
+    assert "S3_peaking_match" in R.V6D_SPECS
     meas = dict(g_dc_db=-3.4, peaking_db=6.65, f_peak_oct=-0.0749,
                 nyq_boost_db=6.65, inoise_vrms=2.1e-4, power_w=7.1e-3,
                 pair_margin_v=0.64, tail_margin_v=0.35)
     tf = 1.7677669529663687e9
-    scores = {t: R.reward(meas, tf, specs=R.V5D_SPECS,
+    scores = {t: R.reward(meas, tf, specs=R.V6D_SPECS,
                           target_peaking_db=t).reward
               for t in (3.0, 5.0, 7.5, 10.0, 12.0)}
     assert len(set(scores.values())) > 1, (
@@ -121,10 +121,13 @@ def test_V5D_keeps_the_manifold_TWO_dimensional():
         f"{scores}")
 
 
-def test_V5D_is_V1_plus_exactly_the_request_row():
+def test_V6D_is_the_DEVICE_MEASURABLE_half_of_V6():
     """It must not quietly acquire rows the env cannot measure."""
-    assert set(R.V5D_SPECS) - set(R.V1_SPECS) == {"S3_peaking_match"}
-    assert set(R.V1_SPECS) - set(R.V5D_SPECS) == set()
+    assert set(R.V6D_SPECS) < set(R.V6_SPECS), "V6D must be a subset of V6"
+    # the rows the env genuinely cannot measure: no link bridge, no area,
+    # no transient. Absent by necessity, not by preference.
+    assert set(R.V6_SPECS) - set(R.V6D_SPECS) == {
+        "S8_eye_h", "S8_eye_w", "S7_area", "S4_hd3_nyq"}
 
 
 # ── 3. the arms share one evaluator ──────────────────────────────────────────
@@ -138,7 +141,7 @@ def test_every_arm_is_scored_through_the_SAME_evaluator_and_spec_set():
     for name in ("arm_policy", "arm_library", "arm_cmaes", "arm_random"):
         src = inspect.getsource(getattr(M, name))
         assert "_score(" in src, f"{name} does not score through _score()"
-    assert "specs=R.V5_SPECS" in inspect.getsource(M._score), (
+    assert "specs=R.V6_SPECS" in inspect.getsource(M._score), (
         "the shared evaluator must score the FULL competition spec set, not "
         "the device-only training subset")
 

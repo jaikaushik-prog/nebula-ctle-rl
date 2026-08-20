@@ -4160,3 +4160,70 @@ experiment is that nobody has ever measured this, not that it comes out well.
   by this run, which measures fixed sizings only.
 * The 45-corner column is compliance with the mandated grid **at the design
   load**. It is not a claim that the load is known.
+
+### OUTCOME — run 2026-08-21, 16 requests, 16 094 SPICE runs, 149.7 min
+
+    solved on the search screen        11 / 16
+    MANDATED 45-corner PVT grid        10 / 16    <- the competition's requirement
+    135-point load-swept grid           0 / 16    <- this project's extra axis
+    screen self-check                  15 / 16 audits predictive, worst optimism +0.018427
+    screen grew                        4 -> 5 points
+
+**Five of six predictions hit; the sixth was made unmeasurable by my own
+instrumentation. And the run found a defect bigger than anything it predicted
+— see THE FINDING below, which retracts part of the headline.**
+
+| | prediction | outcome |
+|---|---|---|
+| Q1 | >= 9 of 16 on the mandated grid (conf. 0.6) | **HIT** — 10 of 16 |
+| Q2 | 135-point coverage < half the 45-corner count (0.85) | **HIT**, emphatically — 0 of 16 against 10 |
+| Q3 | extremes (4, 10 dB) served less often than the middle (6, 8 dB) (0.7) | **HIT** — extremes 4/8, middle 6/8. Per request: 4 dB 3/4, 6 dB 4/4, 8 dB 2/4, 10 dB 1/4 |
+| Q4 | the self-check fires at least once (0.75) | **HIT** — 1 of 16 missed, +0.018427 at `tt/1.05/0C/33fF` |
+| Q5 | screen grows by at most 4 points (0.6) | **HIT** — grew by 1 |
+| Q6 | library seed beats random on >= 12 of 16 | **NOT SCORED — my fault.** `RequestResult` logs `seed_spread_oct` and **not which source produced the chosen seed**, so the arms cannot be separated after the fact. Pre-registering a quantity and then failing to instrument it is the same class of error as not pre-registering; recorded as a miss of experimental design, not as a null |
+
+### THE FINDING, AND IT WAS NOT PREDICTED: **there is no band constraint on the peak frequency at all**
+
+`S3_peaking` is a **band** — `min(pk - 3, 12 - pk)`, both edges enforced.
+`S3_f_peak` is a **distance from target** — `0.5 - |f_oct - target_oct|`.
+**Nothing anywhere in any spec set requires the peak to lie inside S3's stated
+1.25-2.5 GHz window.**
+
+It went unnoticed for the whole life of the project because **every published
+run used the window centre as its target**, and at the centre the two are the
+same statement:
+
+    target 1.768 GHz (the centre)  ->  row accepts [1.250, 2.500] GHz   == the window
+    target 2.253 GHz               ->  row accepts [1.593, 3.186] GHz   overhangs by +0.686 GHz
+    target 1.387 GHz               ->  row accepts [0.981, 1.962] GHz   underhangs by -0.269 GHz
+
+**This experiment is the first thing that ever asked for an off-centre target**,
+and it walked straight into the gap.
+
+**Measured consequence: 4 of 16 delivered designs peak OUTSIDE the spec window
+and are not penalised for it.**
+
+    asked 2.253 GHz  ->  delivered 3.174 GHz   (+0.674 past the ceiling)  scored 45/45 PASS
+    asked 2.253 GHz  ->  delivered 3.061 GHz   (+0.561)                   scored 43/45
+    asked 1.921 GHz  ->  delivered 2.949 GHz   (+0.449)                   scored  9/45
+    asked 1.627 GHz  ->  delivered 2.933 GHz   (+0.433)                   scored  0/45
+
+**RETRACTION: the 10 of 16 headline is overstated.** One of the ten designs
+scored 45/45 while peaking at 3.174 GHz, which is not a compliant CTLE under
+S3 however it scored. The honest count pending the corrected re-run is **at
+most 9 of 16**, and the corrected number is what the report will carry.
+
+This is the same defect family as the `target_peaking_db` fix earlier in this
+session, one axis over: **a row written for a CONSTRAINT reused as a REQUEST,
+with nobody re-deriving what it means when the target moves.** Peaking has both
+rows (`S3_peaking` the band, `S3_peaking_match` the request); frequency has
+only the request row, and it has been standing in for a band constraint that
+was never written. Recorded as **G111**.
+
+### What is unaffected
+
+The compliance measurements themselves are sound: every 45-corner and
+135-point count comes from `verify_full`, which re-simulates at every corner.
+What is wrong is the SCORING RULE applied to those measurements, and it is
+wrong in exactly one row. The screen self-check, the simulation counts, the
+wall clock and the per-corner margins all stand.
