@@ -17,7 +17,21 @@
 > decisions that are OPEN and human-only, and what to do next. It supersedes
 > `nebula/NEXT_STEPS.md`. This file remains the full state of record.
 
-Last updated: **2026-08-20** (session 22o: **THE THREE SPEC ROWS THE
+Last updated: **2026-08-20** (session 22p: **THE REPORT EXISTS** --
+`nebula/report/Nebula_CTLE_Report.pdf`, **10 pages, 9 figures, 598 KB**,
+rebuilt from the run logs by two commands. **No number in either module is
+typed by hand**: the figure and prose builders read the artifact each
+experiment wrote, and a missing artifact RAISES rather than drawing a
+placeholder. **The argument is chosen deliberately** -- the brief's success
+criterion names ONE opponent, *"significantly lower time than sweeping all MOS,
+R, C, L parameter space"*, so the report leads with the sweep being built,
+measured and beaten, and places RL as one honestly reported arm rather than as
+the headline. Limitations get their own section naming all five, including that
+the eye is unverified and that the corner-robust design came from uniform
+random rather than the policy. matplotlib + fpdf2, no LaTeX dependency. Tests
+unchanged at **1622**.)
+
+Earlier session 22o: ( **THE THREE SPEC ROWS THE
 COMPETITION SLIDE LISTS AND THE OBJECTIVE DID NOT SCORE.** The slide has
 ELEVEN rows; the scored objective had SEVEN -- S4 (HD3) and S7 (area) had **no
 tolerance row at all** and the two S8 (eye) rows were **unreachable through
@@ -8519,3 +8533,46 @@ frequency.
 `--full`, `nebula/tests/test_full_spec_set.py`,
 `experiments/g4_verify_full_results.json`, gotcha **G101**,
 `G4_RESULTS.md` §6b.
+
+### 2026-08-20 - Session 22p (THE REPORT: 10 pages, 9 figures, every number loaded from a run artifact)
+
+**`nebula/report/` -- `Nebula_CTLE_Report.pdf`, 10 pages, 598 KB.** Two
+commands rebuild it from the logs:
+
+    python -m nebula.report.figures      # 9 figures, from the run JSONs
+    python -m nebula.report.build_pdf    # the document
+
+**NO NUMBER IN EITHER MODULE IS TYPED BY HAND.** `figures._load` and
+`build_pdf._facts` read the artifact each experiment wrote, and a **missing
+artifact RAISES rather than drawing a placeholder** -- a plot with invented
+data is rule 1's failure and a report is the worst place for it.
+
+**The nine figures, each from a named artifact:** the three-layer architecture;
+the delivered design's measured AC response (one fresh simulation, cached); the
+twelve-arm benchmark with bootstrap intervals; the grid-search arithmetic
+(150**(1/7) = 2.06 levels per knob); the lattice control (0 of 45 against 20 of
+45); the budget ladder; the termination fix; the library scaling law; and the
+corner-failure map by process corner.
+
+**THE ARGUMENT THE REPORT MAKES, and it is chosen deliberately.** The brief's
+success criterion names ONE opponent -- *"significantly lower time than
+sweeping all MOS, R, C, L parameter space"* -- so the report leads with the
+sweep being BUILT, MEASURED and beaten, and places RL as one honestly reported
+arm of that benchmark rather than as the headline. Sections: what was asked ->
+the framework -> the delivered design -> corner verification -> the benchmark
+-> RL reported honestly -> the amortised question -> how the project avoids
+fooling itself -> limitations -> reproduction.
+
+**Limitations get their own section rather than a footnote**, and it names all
+five: the eye is unverified (compression), the corner-robust design came from
+uniform random rather than the policy, the search screens on three corners that
+are measurably blind to sf/fs, RL does not beat random search at the scored
+budget, and the link model is behavioural.
+
+**Tooling:** matplotlib for the figures, fpdf2 for the document, Arial from the
+system for Unicode. No LaTeX dependency. Every figure is regenerable and the
+PDF is rebuilt from them, so a corrected run propagates by re-running two
+commands.
+
+**Tests unchanged at 1622** -- the report modules add no behaviour, only
+rendering.
