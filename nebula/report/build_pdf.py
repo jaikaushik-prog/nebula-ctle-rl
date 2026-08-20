@@ -230,14 +230,26 @@ def build() -> Path:
         "Reinforcement learning is one arm of that benchmark, reported "
         "honestly.")
 
+    # **The headline ratio the brief's success criterion asks for.** Loaded
+    # from `exp_sweep_cost`'s artifact, never typed: the levels are derived
+    # from a MEASURED per-axis sensitivity of f_peak, and the denominator is a
+    # MEASURED `python -m nebula.design` runtime.
+    SW = _load("sweep_cost_results.json")
+    _ff = SW["full_factorial_at_8_workers"]
+    _sp = SW["speedup_vs_design"]["cmaes"]
     stats = [
+        ("Faster than sweeping the parameter space (extrapolated)",
+         f"{_sp:,.0f}x"),
+        ("   ... that sweep, in simulations and wall clock",
+         f"{_ff['n_simulations'] / 1e6:.2f} M  /  "
+         f"{_ff['wall_clock_hours']:,.0f} h"),
         ("Spec rows verified at 45 corners x 3 loads", "9 of 11"),
         ("Points the delivered design passes", f"{F['n_points']} of {F['n_points']}"),
         ("Search methods benchmarked on one evaluator", "6"),
         ("SPICE simulations behind this report", "> 250 000"),
-        ("Automated tests", "1622"),
-        ("Documented failure modes (gotchas)", "101"),
-        ("Pre-registered predictions, scored", "17"),
+        ("Automated tests", "1645"),
+        ("Documented failure modes (gotchas)", "103"),
+        ("Pre-registered predictions, scored", "19"),
     ]
     pdf.set_font("Body", "", 9.6)
     for k, v in stats:
@@ -270,7 +282,8 @@ def build() -> Path:
         [["S1 signalling", "NRZ, PCIe Gen2, 5.0 Gbps (Nyquist 2.5 GHz)", "fixed"],
          ["S2 topology", "1-stage CTLE, source degeneration + 1-tap DFE", "fixed"],
          ["S3 peaking", "3-12 dB, tunable, peak in 1.25-2.5 GHz", "THE binding constraint"],
-         ["S4 linearity", "HD3 < -30 dBc at 100 MHz", "verified, free"],
+         ["S4 linearity", "HD3 < -30 dBc at 100 MHz (no amplitude stated)",
+          "verified at 200 mVpp -- see section 9"],
          ["S5 noise", "< 1.5 mV rms, 10 MHz - 5 GHz", "scored"],
          ["S6 power", "< 15 mW", "scored"],
          ["S7 area", "< 0.05 mm2", "verified, free"],
@@ -349,12 +362,15 @@ def build() -> Path:
               [["S3 peaking", "3 - 12 dB", "9.780 dB", "inside"],
                ["S3 peak frequency", "1.25 - 2.50 GHz", "1.8906 GHz", "inside"],
                ["S3 boost at Nyquist", "> 0 dB", "+9.736 dB", "equalises"],
-               ["S4 HD3", "< -30 dBc", "-47.7 to -49.2 dBc", "17.7 - 19.2 dB"],
+               ["S4 HD3 @ 100 MHz, 200 mVpp", "< -30 dBc",
+                "-47.7 to -49.2 dBc", "17.7 - 19.2 dB"],
+               ["S4 HD3 @ 2.5 GHz, 535 mVpp", "reported, not required",
+                "-17.4 dBc", "FAILS by 12.6 dB"],
                ["S5 input noise", "< 1.5 mV rms", "0.2117 mV rms", "7.1x"],
                ["S6 power", "< 15 mW", "2.1616 mW", "6.9x"],
                ["S7 area", "< 0.05 mm2", "0.002150 mm2", "23x"]],
               [42, 40, 45, 43],
-              flags=["good"] * 7)
+              flags=["good"] * 4 + ["warn"] + ["good"] * 3)
     pdf.figure("f9_response.png",
                "Figure 2. The delivered design's measured AC response from "
                "ngspice. The peak sits inside S3's window and the stage is "
@@ -536,7 +552,7 @@ def build() -> Path:
         "project's designated strongest sentence was falsified by the "
         "experiment meant to confirm it, and three separate diagnoses of the "
         "RL result were withdrawn.",
-        "**1622 automated tests**, run before and after every change.",
+        "**1645 automated tests**, run before and after every change.",
     ])
     pdf.h2("Three findings that came out of that discipline")
     pdf.bullets([
@@ -551,14 +567,45 @@ def build() -> Path:
 
     # ── 9. limitations ───────────────────────────────────────────────────
     pdf.h1("Limitations, stated plainly")
+    pdf.figure("f10_hd3_amplitude.png",
+               "Figure 10. HD3 against input amplitude at three tones. The "
+               "dotted line is where S4 is verified (200 mVpp, a level the "
+               "specification does not state and the deck chose); the solid "
+               "line is what the link actually drives. S4's 100 MHz tone sits "
+               "below the CTLE zero at 114.97 MHz, where the degeneration is "
+               "still intact -- which is why the blue curve is 17 dB better "
+               "than the other two at every amplitude.")
     pdf.bullets([
-        "**The eye specification is not verified.** At the PCIe input drive "
-        "level this stage is pushed past its own measured linear limit, so the "
-        "small-signal model the eye is computed from no longer applies. The "
-        "link layer returns a failure rather than a plausible number. Nine of "
-        "eleven spec rows are verified at all 135 points; these two are "
-        "blocked, and the fix is a design decision about the operating point "
-        "rather than a missing feature.",
+        "**The eye specification is not verified on the delivered design, and "
+        "the reason is the objective rather than the circuit.** At the PCIe "
+        "input drive the stage is past its measured linear limit, so the "
+        "small-signal model the eye rests on no longer applies and the link "
+        "layer returns a failure rather than a plausible number. Measured on "
+        "the input axis: the linear input range is 520 mVpp at DC but only "
+        "172 mVpp at Nyquist, against a 535 mVpp drive -- a 3.1x overdrive at "
+        "all 135 points. The de-rate is the peaking itself: Cs shorts out the "
+        "same Rs the linear range is made of, so linear range at a frequency "
+        "is the DC range divided by the boost there. **But this is not a "
+        "topology limit.** A sample of 1 590 sizings found designs meeting S3 "
+        "whose linear range at Nyquist reaches 656 mVpp, and one of them "
+        "measures an eye 362.6-525.0 mV tall and 0.891-0.922 UI wide at all "
+        "135 points -- 3.6x the S8 height floor. That design fails S3 across "
+        "corners, because it was scored at nominal only. **No search has ever "
+        "been run with S3 and S8 in the objective at the same time**: the "
+        "scored spec set contains S3 and not S8. Whether both hold at once is "
+        "open, and it is a search question, not a physics one.",
+        "**S4 was verified at conditions the circuit never sees, and fails at "
+        "the ones it does.** The specification names 100 MHz and no amplitude; "
+        "the deck supplied 200 mVpp. The link drives 535 mVpp, and the data "
+        "sits at 2.5 GHz. Worse, the CTLE zero is at 114.97 MHz, so the "
+        "100 MHz test tone sits *below* the zero, where the degeneration is "
+        "fully intact and the stage is the most linear it ever is. Measured "
+        "HD3 crosses -30 dBc at 505 mVpp at 100 MHz and at 217 mVpp at "
+        "Nyquist -- **both below the drive** -- and at the actual operating "
+        "point (535 mVpp, 2.5 GHz) HD3 is -17.4 dBc, failing S4 by 12.6 dB. "
+        "The 17-19 dB of margin reported earlier in this document is real at "
+        "the stated conditions and does not survive the operating ones. This "
+        "retracts the earlier characterisation of S4 as *verified, free*.",
         "**The corner-robust design was found by uniform random search, not by "
         "the policy.** The corner-aware RL loop exists and is tested; it has "
         "not been run at scale.",

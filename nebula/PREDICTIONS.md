@@ -3309,4 +3309,110 @@ drive says only that peaking and linear range can coexist — prediction 6 is
 where the rest of the spec table gets its say, and it is not tested by this
 run.
 
-### Outcome — *not yet run.*
+### Outcome — **S8 IS NOT BLOCKED BY PHYSICS. A design in the box measures an eye 362-525 mV tall at ALL 135 corner points — it just fails S3.** Run 2026-08-20, 1 590 simulations, 9.0 min, plus 405 verification points.
+
+**4 hits, 3 misses.** Two of the misses are mine against the owner's suggested
+framing, and the owner's was the right one.
+
+**A DEFECT IN THE FIRST RUN, FOUND BY ITS OWN OUTPUT AND FIXED BEFORE ANYTHING
+WAS QUOTED.** The first execution binned by **peaking alone** and reported a
+front of 1 712 mVpp, 3.20x the drive, with a "crossing" at 11.5-12.0 dB. The
+design defining the front at 10 dB peaked at **19.95 GHz** with a DC gain of
+-14.53 dB. It is not an equaliser for this link: its response is flat by
+2.5 GHz, so its Nyquist de-rate is ~1, and that alone made it look three times
+more linear than any real candidate. **Filtering on peaking does not select
+CTLEs, it selects wideband attenuators.** `_LinearObjective` had the same hole
+and CMA-ES walked straight into it — it was optimising the de-rate, not the
+circuit. Fixed (`Probe.in_s3_window` carries peaking AND the 1.25-2.5 GHz
+window AND `has_interior_peak` AND positive Nyquist boost), and re-run in full.
+Every number below is from the corrected run. **415 of 1 589 probes meet S3
+at all.**
+
+#### The front, inside S3
+
+| peaking | n | front at Nyquist | vs drive |
+|---|---|---|---|
+| 3.0-3.5 dB | 16 | 442 mVpp | 0.83x |
+| **3.5-4.0 dB** | 19 | **656 mVpp** | **1.23x** |
+| 5.0-5.5 dB | 30 | 594 | 1.11x |
+| 8.0-8.5 dB | 28 | 617 | 1.15x |
+| **9.0-9.5 dB** | 22 | **550** | **1.03x** |
+| 9.5-10.0 dB | 14 | 420 | 0.79x |
+| 11.0-11.5 dB | 17 | 353 | 0.66x |
+
+Drive = **534.7 mVpp**. The front hovers **around 1.0x across the whole band**
+and is noisy bin to bin because it is a max over 10-38 samples, not a smooth
+envelope.
+
+#### Scoring
+
+1. **HIT (both clauses).** DC front rises with peaking: log-log slope against
+   `k` is **0.80**, inside the [0.7, 1.3] band. Nyquist front spread across
+   3-12 dB is **5.4 dB** (656 / 353), inside the "under 6 dB" band. **The
+   `k`-cancellation is real**: degeneration multiplies the DC range by `k` and
+   the peaking divides it by the same `k`.
+2. **HIT.** Best linear range at Nyquist anywhere inside S3: **656 mVpp**,
+   against a predicted [450, 900] and a point estimate of 650.
+3. **MISS.** "The drive IS reached at 3 dB" — the 3.0-3.5 dB bin reaches
+   **0.83x**. It is reached at 3.5-4.0 dB, not at the floor.
+4. **MISS on the claim, HIT on the band.** I predicted the drive IS reached at
+   9.78 dB at 65 % confidence and put the 9.5-10.0 dB bin in [400, 800] mVpp.
+   Measured **420 mVpp, 0.79x** — inside the band, and **the drive is NOT
+   reached**. **The owner's suggested prediction, that 9.78 dB is unreachable,
+   is CORRECT and mine was wrong.** The crossing sits at **9.0-9.5 dB**, where
+   the front is 550 mVpp against 534.7.
+5. **MISS, and it fires my own falsification clause.** The targeted CMA-ES arm
+   was to beat the pool arm by >= 1.3x. Measured ratios **0.40, 0.88, 1.03,
+   1.00, 0.94** — it ties or loses everywhere. The reason is legible: the
+   objective is lexicographic (real peak -> peaking band -> frequency window ->
+   linear range) and S3's yield is 5.3 %, so 150 simulations are spent reaching
+   feasibility and almost none on the quantity of interest. **Per the
+   pre-registered clause, the front is therefore UNDER-RESOLVED and every
+   number in it is a LOWER bound.** A second mechanism pushes the same way:
+   **28 probes compress within 5 % of the +/-0.8 V sweep edge**, so their DC
+   range is censored and their Nyquist range under-stated — and the censoring
+   is concentrated at high peaking, i.e. exactly where I conclude the front
+   falls below the drive. **That conclusion is the weakest one here and is
+   labelled as such.**
+6. **HIT, and by a different mechanism than the reasoning gave.** I predicted a
+   design clearing the drive would not meet S3+S5+S6+saturation simultaneously,
+   reasoning from `V_ov` eating output headroom on 1.8 V. The full 11-row,
+   135-point checklist on the two front designs:
+
+   | | delivered | front @ 3.7 dB | front @ 9.2 dB |
+   |---|---|---|---|
+   | rows PASS | 9 | 9 | 10 |
+   | rows FAIL | 0 | 2 (S3_f_peak 45/135, S3_peaking 20/135) | 1 (S3_f_peak 61/121) |
+   | rows NOT MEASURABLE | **2 (both S8)** | 0 | 0 |
+   | overdrive at Nyquist | 2.44-3.49x | **0.61-0.99x** | 0.79-1.16x |
+   | eye height | — | **362.6-525.0 mV** | 226.3-299.4 mV |
+   | eye width | — | **0.891-0.922 UI** | 0.781-0.812 UI |
+
+   The conflict is real. It is **not** with saturation, noise or power — the
+   3.7 dB front design passes S4, S5, S6, S7, both saturation rows **and both
+   S8 rows at 135 of 135 points**, with an eye **3.6x** the S8 height floor and
+   **2.2x** the width floor. It fails **S3 across corners**.
+
+#### **THE FINDING, which is larger than the question that was asked**
+
+> **The delivered design meets S3 at 135 of 135 points and cannot have its eye
+> computed at any of them. A design found in the same box, in a sample of
+> 1 590, meets S8 at 135 of 135 points with 3.6x margin and fails S3.
+> Neither is a complete design, and NO SEARCH HAS EVER BEEN RUN WITH BOTH IN
+> THE OBJECTIVE** — `V1_SPECS` contains S3 and not S8, `V2_SPECS` contains S8
+> and has never been used for a search (`reward_v1`: *"v2 is opt-in until a
+> human decides to re-run the baselines against it"*).
+
+So the answer to *"why can the eye still not be verified"* is not a physical
+limit and not a modelling limit. **It is that the objective never asked.** That
+is the same defect as entry 18's, one level up: there the reward was
+INDIFFERENT to linear range within its feasible plateau; here it is BLIND to
+the spec that linear range decides.
+
+**What this does NOT show.** That a single design can hold both at once. The
+front designs were scored at TT only and were never asked for corner
+robustness, which is why their S3 rows fail off-nominal; the delivered design
+was corner-robust precisely because it was scored that way. Whether S3 and S8
+are jointly satisfiable across 135 points is **open, and it is now a search
+question rather than a physics question** — which is the whole change this
+entry makes.

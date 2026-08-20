@@ -1,0 +1,165 @@
+{
+ "design_id": "57cba07581cd2603",
+ "corner": "tt/1.00/27C",
+ "deck_tone_hz": 100000000.0,
+ "deck_vin_diff_pk_v": 0.1,
+ "deck_vin_pp_mv": 200.0,
+ "deck_amplitude_provenance": "sky130_runner.HD3_VIN_DIFF_PK_V, inherited from the G0 prototype. S4 as written in CLAUDEwa.md sec 3 names a frequency and NO amplitude, so this is a choice the deck made, not a spec.",
+ "tx_swing_pp_mv": 800.0,
+ "drive_pp_mv": 534.6751340548916,
+ "drive_provenance": "LinkConfig.v_in_diff_pp_v -- PCIe Gen2 minimum TX swing less the mandated -3.5 dB de-emphasis, through a channel with 0 dB loss at DC. POST-CHANNEL, not the raw TX swing.",
+ "drive_over_deck_x": 2.673375670274458,
+ "f_zero_hz": 114974633.40029451,
+ "f_pole1_hz": 363277604.485121,
+ "f_pole2_hz": 11480416375.882519,
+ "fit_residual_db": 0.08355205572700905,
+ "deck_tone_over_f_zero": 0.869757067646748,
+ "sweeps": [
+  {
+   "tone_hz": 100000000.0,
+   "tone_label": "S4's stated tone",
+   "rows": [
+    {
+     "vin_pp_mv": 50,
+     "hd3_dbc": -72.37984566078968
+    },
+    {
+     "vin_pp_mv": 100,
+     "hd3_dbc": -60.29915433541518
+    },
+    {
+     "vin_pp_mv": 200,
+     "hd3_dbc": -48.00112373602862
+    },
+    {
+     "vin_pp_mv": 300,
+     "hd3_dbc": -40.515964027435594
+    },
+    {
+     "vin_pp_mv": 400,
+     "hd3_dbc": -34.89610473524432
+    },
+    {
+     "vin_pp_mv": 500,
+     "hd3_dbc": -30.22979732483404
+    },
+    {
+     "vin_pp_mv": 600,
+     "hd3_dbc": -26.153716406083714
+    },
+    {
+     "vin_pp_mv": 800,
+     "hd3_dbc": -19.507527157946935
+    },
+    {
+     "vin_pp_mv": 1000,
+     "hd3_dbc": -15.2468138818105
+    },
+    {
+     "vin_pp_mv": 1200,
+     "hd3_dbc": -13.00404384459479
+    }
+   ],
+   "crossing_mvpp": 505.1658775764053,
+   "hd3_at_deck_amplitude_dbc": -48.00112373602862
+  },
+  {
+   "tone_hz": 1250000000.0,
+   "tone_label": "S3 window, low edge",
+   "rows": [
+    {
+     "vin_pp_mv": 50,
+     "hd3_dbc": -54.379473834168444
+    },
+    {
+     "vin_pp_mv": 100,
+     "hd3_dbc": -42.29480539539796
+    },
+    {
+     "vin_pp_mv": 200,
+     "hd3_dbc": -30.18639812465695
+    },
+    {
+     "vin_pp_mv": 300,
+     "hd3_dbc": -23.35554394343335
+    },
+    {
+     "vin_pp_mv": 400,
+     "hd3_dbc": -19.07875828232679
+    },
+    {
+     "vin_pp_mv": 500,
+     "hd3_dbc": -16.391965703173646
+    },
+    {
+     "vin_pp_mv": 600,
+     "hd3_dbc": -14.695629620152943
+    },
+    {
+     "vin_pp_mv": 800,
+     "hd3_dbc": -12.873219348172702
+    },
+    {
+     "vin_pp_mv": 1000,
+     "hd3_dbc": -12.010718525797927
+    },
+    {
+     "vin_pp_mv": 1200,
+     "hd3_dbc": -11.548487746758202
+    }
+   ],
+   "crossing_mvpp": 202.22512689377245,
+   "hd3_at_deck_amplitude_dbc": -30.18639812465695
+  },
+  {
+   "tone_hz": 2500000000.0,
+   "tone_label": "Nyquist - where the data is",
+   "rows": [
+    {
+     "vin_pp_mv": 50,
+     "hd3_dbc": -55.35707865133476
+    },
+    {
+     "vin_pp_mv": 100,
+     "hd3_dbc": -43.29310731889844
+    },
+    {
+     "vin_pp_mv": 200,
+     "hd3_dbc": -31.320690266748873
+    },
+    {
+     "vin_pp_mv": 300,
+     "hd3_dbc": -24.688144898453647
+    },
+    {
+     "vin_pp_mv": 400,
+     "hd3_dbc": -20.59509581477693
+    },
+    {
+     "vin_pp_mv": 500,
+     "hd3_dbc": -18.03062503491957
+    },
+    {
+     "vin_pp_mv": 600,
+     "hd3_dbc": -16.39678684377373
+    },
+    {
+     "vin_pp_mv": 800,
+     "hd3_dbc": -14.58460881563806
+    },
+    {
+     "vin_pp_mv": 1000,
+     "hd3_dbc": -13.660548786483211
+    },
+    {
+     "vin_pp_mv": 1200,
+     "hd3_dbc": -13.123572382054675
+    }
+   ],
+   "crossing_mvpp": 216.81721449251566,
+   "hd3_at_deck_amplitude_dbc": -31.320690266748873
+  }
+ ],
+ "n_simulations": 31,
+ "wall_clock_s": 8.994760036468506
+}

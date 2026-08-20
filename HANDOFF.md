@@ -3811,6 +3811,49 @@ Plus: git init, .gitignore, 28 tests, Wilson-bound BER reporting.
   compared against it.** Here that is the transmitter's differential swing, so
   the limit belongs on the input axis.
 
+- **G104 -- (nebula) a constraint set that omits ONE clause selects a different
+  circuit family, and the omission is invisible in the output.**
+  `exp_linear_pareto` binned designs by **peaking alone** while asking which
+  sizing takes the most differential input. It reported a front of 1 712 mVpp,
+  3.20x the PCIe drive, and a clean-looking crossing at 11.5-12.0 dB. **The
+  design defining the front at 10 dB peaked at 19.95 GHz** with -14.53 dB of DC
+  gain. Its response is flat by 2.5 GHz, so its Nyquist de-rate is ~1, so it
+  reported roughly three times the usable input range of any real candidate --
+  and it is not an equaliser for this link at all. **Filtering on peaking does
+  not select CTLEs; it selects wideband attenuators.** The CMA-ES arm had the
+  same hole in its objective and walked straight into it: it was optimising the
+  de-rate rather than the circuit. With S3's frequency window, `has_interior_
+  peak` (G44) and positive Nyquist boost all applied, 415 of 1 589 probes
+  survive and the front drops to 656 mVpp, 1.23x.
+  **The general form: when a spec has several clauses, a filter that uses some
+  of them is not a loose filter, it is a filter for a DIFFERENT population.**
+  `CLAUDEwa.md` sec 3 spells out that S3 is three requirements; using one of
+  them silently redefined the question. `Probe.in_s3_window` is now the single
+  place that reading lives, and the unfiltered front is kept beside it as a
+  labelled contrast rather than deleted -- the gap between them measures how
+  much of an unconstrained front is artefact.
+
+- **G105 -- (nebula) a finite difference taken on a QUANTISED signal reports
+  the quantum, and it looks exactly like a small gradient.**
+  `exp_sweep_cost` sizes a factorial from the measured sensitivity of `f_peak`
+  to each box axis. Reading the peak off the `ac dec 50` lattice, **four of
+  seven axes came back at exactly 0.664386 octaves per box width with a
+  [min, max] of exactly [0.66, 0.66] across six independent reference
+  designs** -- which is `10 x` the lattice spacing over a 0.1 finite
+  difference, i.e. the `f_peak` reading moved by precisely ONE grid step every
+  time. That is the smallest non-zero number the measurement can express, not a
+  derivative. It took those axes from 2 levels to 12 each and the headline from
+  **3.4 M simulations to 58.2 M -- a factor of 1 296.**
+  **The tell is the zero spread.** A real gradient varies across reference
+  points; this one was pinned to an exact multiple of the quantum with no
+  variation at all. Fixed by differencing the **sub-lattice interpolated peak**
+  (`f_pk_interp_hz`, G74) instead, after which the same axes read 0.038, 0.246,
+  0.466 and 0.523 -- and `cs` comes back at 3.243 oct/box against the analytic
+  3.322 for `f_peak ~ (Rs*Cs)^-0.5`, a 2.4 % agreement that was not fitted.
+  **The general form: before differencing, check that the step moves the
+  reading by MANY quanta.** If the answer is an exact multiple of the
+  resolution with no spread, you have measured the instrument.
+
 ## 10. Environment
 
 - Windows 11, PowerShell 5.1 (+ Git Bash available), Python 3.13.14,
@@ -8742,3 +8785,137 @@ is the part with content), the box widening (not available -- see above), and
 the re-search. `CLAUDEwa.md` §8 rule 6 and `CONTINUE_HERE.md` §9 rule 7 both
 put the box, the tolerances and `V1_SPECS` outside an agent's authority, and
 `BASELINES.md` §7f makes any of them a full re-run event.
+
+### 2026-08-20 - Session 22r (S8 IS NOT BLOCKED BY PHYSICS -- a design in the box measures an eye at all 135 points and fails S3; no search has ever asked for both)
+
+**Items 1 (finished), 2, 3 and 6.1 of a six-item brief. Items 4 and 5 not
+started.**
+
+#### The headline: the objective never asked
+
+`exp_linear_pareto.py`, 1 590 simulations, 9.0 min, plus 405 verification
+points. The full 11-row, 135-point checklist on three designs:
+
+| | delivered | front @ 3.7 dB | front @ 9.2 dB |
+|---|---|---|---|
+| rows PASS | 9 | 9 | 10 |
+| rows FAIL | 0 | 2 (S3) | 1 (S3_f_peak) |
+| rows NOT MEASURABLE | **2 (both S8)** | 0 | 0 |
+| overdrive at Nyquist | 2.44-3.49x | **0.61-0.99x** | 0.79-1.16x |
+| eye height | -- | **362.6-525.0 mV** | 226.3-299.4 mV |
+| eye width | -- | **0.891-0.922 UI** | 0.781-0.812 UI |
+
+**The delivered design meets S3 at 135 of 135 points and cannot have its eye
+computed at any of them. A design found in the same box meets S8 at 135 of 135
+with 3.6x margin on height and fails S3.** Neither is complete, and **no search
+has ever been run with both in the objective**: `V1_SPECS` holds S3 and not S8,
+`V2_SPECS` holds S8 and has never been searched on. So *"why can the eye not be
+verified"* has a one-line answer -- **the objective never asked** -- and it is
+now a search question rather than a physics one. Same defect family as G102,
+one level up: there the reward was INDIFFERENT to linear range inside its
+plateau; here it is BLIND to the spec that linear range decides.
+
+#### The front, and two reasons it is a LOWER bound
+
+Inside S3 (band AND 1.25-2.5 GHz window AND positive Nyquist boost AND a real
+interior peak), 415 of 1 589 probes qualify. The attained linear input range at
+Nyquist hovers **around 1.0x the 534.7 mVpp drive** across the whole band --
+best **656 mVpp (1.23x) at 3.5-4.0 dB**, **550 mVpp (1.03x) at 9.0-9.5 dB**,
+falling to 0.66x by 11.5 dB. `PREDICTIONS.md` entry 19 scored **4 hits, 3
+misses**; the owner's suggested prediction that 9.78 dB is unreachable was
+**right** and mine that it is reachable was **wrong**.
+
+Two independent reasons the front under-states the box, both pre-registered as
+falsification clauses and both fired: the **targeted CMA-ES arm tied or lost to
+the pool arm** (ratios 0.40-1.03 against a predicted >= 1.3) because the
+lexicographic objective spends 150 simulations reaching S3's 5.3 % feasible
+region, and **28 probes compress within 5 % of the +/-0.8 V sweep edge**, which
+censors their DC range. The censoring is concentrated at high peaking, i.e.
+exactly where the front is concluded to fall below the drive, so **that
+conclusion is the weakest one in the session and is labelled as such.**
+
+#### A defect in the first run, caught by its own output
+
+The first execution binned by **peaking alone** and reported a front of
+1 712 mVpp, 3.20x the drive. The design defining it peaked at **19.95 GHz**
+with -14.53 dB of DC gain -- flat by 2.5 GHz, hence a Nyquist de-rate of ~1,
+hence three times more apparent linear range than any real candidate.
+`_LinearObjective` had the same hole and CMA-ES walked straight into it: it was
+optimising the de-rate, not the circuit. **Filtering on peaking does not select
+CTLEs, it selects wideband attenuators.** Now `Probe.in_s3_window`, and the
+unfiltered front is kept as a labelled CONTRAST rather than deleted.
+
+#### Item 2: S4 is verified at conditions the circuit never sees
+
+`exp_hd3_amplitude.py`, 31 simulations. **The deck's amplitude is 200 mVpp**
+(`HD3_VIN_DIFF_PK_V`, from the G0 prototype); S4 as written names a frequency
+and **no amplitude**. The link drives **535 mVpp**, 2.67x higher, with the data
+at 2.5 GHz.
+
+**And 100 MHz is the wrong frequency for a structural reason.** The fitted CTLE
+zero is at **114.97 MHz** (design equation: 114.81 MHz, agreeing to 0.14 %), so
+**S4's tone sits at 0.87x the zero -- BELOW it**, where `Cs` is still open and
+the full `Rs` degeneration is intact. That is the most linear the stage ever is.
+
+    HD3 (dBc)        100 MHz    1.25 GHz    2.5 GHz
+      200 mVpp        -48.00     -30.19     -31.32   <- S4 verified here
+      535 mVpp        -28.75     -15.71     -17.38   <- what the link does
+
+    -30 dBc crossing   505 mVpp   202 mVpp   217 mVpp
+    against a drive of 535 mVpp   0.94x      0.41x      0.38x
+
+**HD3 crosses -30 dBc below the drive at every tone**, and at the actual
+operating point it is **-17.4 dBc, failing S4 by 12.6 dB**. Added as a
+*reported, not required* row. The report's *"S4: verified, free"* is
+**retracted**. The 217 mVpp crossing at Nyquist independently corroborates the
+167-172 mVpp 1 dB compression limit measured from the DC transfer curve.
+
+#### Item 3: the number the brief's success criterion asks for
+
+`exp_sweep_cost.py`. **3 402 000 simulations, 92 hours at 8 workers** for a
+full factorial, against a **measured** 41.12 s for `python -m nebula.design
+--method cmaes` -- **8 090x** -- and 9.34 s for `--method library`, 35 600x.
+Labelled an EXTRAPOLATION and a LOWER bound throughout (the per-simulation cost
+is assumed to hold at 10^6 scale, which favours the sweep).
+
+**The level count is derived, not chosen**, because at d = 7 the answer is a
+power of it: `L_i = 1 + ceil(|d log2 f_peak / du_i| / 0.0664386)`, where the
+resolution is `ac dec 50`'s own spacing -- the quantisation G74 measured as
+capping the reward and tying 57 designs. Levels: **[2, 5, 9, 9, 50, 42, 2]**.
+The `cs` sensitivity comes back **3.243 oct/box against an analytic 3.322**
+(f_peak ~ (Rs*Cs)^-0.5), a 2.4 % agreement that was not fitted.
+
+**A defect found and fixed here too, worth 1 296x.** Reading `f_peak` off the
+`dec 50` lattice made **four of seven axes return a gradient of exactly
+0.664386 oct/box with zero spread across six reference designs** -- exactly one
+lattice step, i.e. the quantisation floor, not a derivative. It inflated those
+axes from 2 levels to 12 each and the answer from 3.4 M to 58.2 M simulations.
+Fixed by reading the **sub-lattice interpolated peak** (`f_pk_interp_hz`).
+`test_no_axis_reports_a_gradient_of_exactly_one_lattice_step` is the regression
+gate and it was watched go red on a reconstruction of the defect.
+
+#### Item 6.1: figure 1, and two more defects in it
+
+The RL layer box was drawn from y = 4.90 to 6.05 while the two header lines sat
+at 6.00 and 5.72 -- underneath it. Fixed with headroom rather than a smaller
+font. Rendering the fix exposed two more: **both inter-layer arrows pointed
+UP** while their labels (`params: dict[str, float]`, `DeviceResult`) describe a
+downward hand-off -- `annotate` puts the head at `xy`, and `xy` was the higher
+point -- and the figure carried 0.45 of dead space at the bottom.
+
+#### Also
+
+`report/figures.py` opens by promising that every figure LOADS a run artifact.
+`fig_hd3_amplitude` was simulating inline and caching beside the figures, which
+made the figure module a run producer. The run moved to
+`exp_hd3_amplitude.py`; the figure loads it.
+
+**Tests 1632 -> 1645.** Thirteen in `test_linear_and_sweep_cost.py`. **Two
+gates broken and watched go red**: defaulting `front(s3_only=False)` reddens 1,
+and reconstructing the lattice-quantisation defect in the artifact reddens 2.
+New `PREDICTIONS.md` entries 18 (retrospective, falsified external prediction)
+and 19 (pre-registered, 4 hits / 3 misses).
+
+**Not started: items 4 (corner-aware RL at scale) and 5 (tunability).** The PDF
+is deliberately NOT rebuilt -- item 6.4 gates that on items 1-5 landing -- but
+the prose and the page-1 counters are updated and the figures regenerate.

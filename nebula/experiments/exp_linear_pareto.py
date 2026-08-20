@@ -74,6 +74,10 @@ from nebula.rl.evaluator import build_point
 
 HERE = Path(__file__).resolve().parent
 RESULTS = HERE / "linear_pareto_results.json"
+#: The raw trial log. **Committed GZIPPED** (705 KB raw, ~80 KB packed);
+#: `.git` already carries an accidental 79 MB blob from session 22h and
+#: the rule since is that a run log over ~100 KB is compressed before it
+#: is tracked. `--analyse` reads the RESULTS json, not this.
 RUN_LOG = HERE / "linear_pareto_run.jsonl"
 
 #: Peaking bins for the `pool` arm, in dB. S3's band is 3-12; the range is
@@ -127,6 +131,36 @@ class Probe:
     #: bound rather than a limit. Carried so the front can exclude them or
     #: report them separately rather than silently treating a bound as a value.
     limit_is_lower_bound: bool = False
+    #: `has_real_peak` -- a genuine interior maximum, not a sweep-edge artefact
+    #: (G44). Recorded because a "peak" at the 10 MHz or 20 GHz sweep edge is
+    #: fictitious and its Nyquist de-rate is ~1, which makes it look like the
+    #: MOST linear design in the study.
+    has_real_peak: bool = False
+
+    @property
+    def in_s3_window(self) -> bool:
+        """**Does this design meet S3 at all?** Peaking band AND frequency
+        window AND positive boost at Nyquist -- `CLAUDEwa.md` sec 3 reads all
+        three as the requirement.
+
+        **The first version of this file binned by peaking ALONE, and the
+        result was worthless.** The design that defined the front at 10 dB
+        peaked at **19.95 GHz** with a DC gain of -14.5 dB: it is not an
+        equaliser for this link, and because its response is flat by 2.5 GHz
+        its Nyquist de-rate is ~1, so it reported ~3x more usable input range
+        than any real candidate. Filtering on peaking alone does not select
+        CTLEs, it selects wideband attenuators.
+        """
+        from nebula.common.types import SPEC_F_PEAK_HZ_RANGE, SPEC_PEAKING_DB_RANGE
+
+        if not (self.ok and self.has_real_peak):
+            return False
+        if self.peaking_db is None or self.f_peak_hz is None:
+            return False
+        lo, hi = SPEC_PEAKING_DB_RANGE
+        flo, fhi = SPEC_F_PEAK_HZ_RANGE
+        return (lo <= self.peaking_db <= hi and flo <= self.f_peak_hz <= fhi
+                and (self.nyq_boost_db or 0.0) > 0.0)
 
 
 def probe(u: Sequence[float], arm: str, cl_f: Optional[float] = None,
@@ -173,6 +207,7 @@ def probe(u: Sequence[float], arm: str, cl_f: Optional[float] = None,
         linear_in_dc_pp_v=lin_dc,
         linear_in_nyq_pp_v=lin_dc / (10.0 ** (boost / 20.0)),
         limit_is_lower_bound=lower,
+        has_real_peak=bool(pt.has_interior_peak),
     )
 
 
@@ -219,12 +254,24 @@ class _LinearObjective:
     The score is deliberately crude, because its job is to find a physical
     ceiling rather than to be a defensible design objective:
 
-        outside the peaking band ->  -|distance from the band|, in dB
-        inside it                ->  linear_in_nyq_pp_v, in volts
+        no real peak (G44)       ->  -1e3, the floor
+        outside the peaking band ->  -100 - |distance from the band|, dB
+        outside S3's f window    ->  -|distance from the window|, octaves
+        inside both              ->  linear_in_nyq_pp_v, in volts
 
-    Those two branches cannot touch: the first is <= 0 and the second is > 0.
-    An invalid simulation scores below both. **This objective never leaves this
-    file** and is not a candidate to replace `reward_v1`.
+    The four branches cannot touch, so the search is lexicographic: find a real
+    peak, then the right amount of it, then the right place, then buy linear
+    range.
+
+    **THE FREQUENCY BRANCH WAS MISSING IN THE FIRST VERSION AND IT INVALIDATED
+    THE ARM.** With only a peaking band to satisfy, CMA-ES walked straight to
+    designs peaking at ~20 GHz -- a flat response by 2.5 GHz, hence a Nyquist
+    de-rate of ~1, hence an apparent linear input range 3x anything a real
+    CTLE reaches. It was optimising the de-rate, not the circuit. `Probe.
+    in_s3_window` now carries the full S3 reading and the front applies it.
+
+    **This objective never leaves this file** and is not a candidate to replace
+    `reward_v1`.
     """
 
     def __init__(self, target_db: float, budget: int, half_db: float = BAND_HALF_DB):
@@ -245,11 +292,23 @@ class _LinearObjective:
         self.used += 1
         p = probe(u, arm=f"targeted@{self.target_db:g}")
         self.probes.append(p)
-        if not p.ok or p.peaking_db is None:
+        if not p.ok or p.peaking_db is None or not p.has_real_peak:
             return _Scored(-1e3)
         d = abs(p.peaking_db - self.target_db)
         if d > self.half_db:
-            return _Scored(-(d - self.half_db))
+            return _Scored(-100.0 - (d - self.half_db))
+        # In the peaking band; now S3's WINDOW, in octaves so the distance is
+        # in the same unit every other frequency result in this project uses.
+        from nebula.common.types import SPEC_F_PEAK_HZ_RANGE
+
+        flo, fhi = SPEC_F_PEAK_HZ_RANGE
+        f = float(p.f_peak_hz or 1.0)
+        if f < flo:
+            return _Scored(-math.log2(flo / f))
+        if f > fhi:
+            return _Scored(-math.log2(f / fhi))
+        if (p.nyq_boost_db or 0.0) <= 0.0:
+            return _Scored(-1e-6)          # in the window but boosting nothing
         return _Scored(float(p.linear_in_nyq_pp_v))
 
 
@@ -277,18 +336,28 @@ def run_targeted(target_db: float, budget: int = TARGET_BUDGET,
 
 
 def front(probes: Sequence[Probe], key: str,
-          edges: Sequence[float] = BIN_EDGES) -> list[dict]:
+          edges: Sequence[float] = BIN_EDGES,
+          s3_only: bool = True) -> list[dict]:
     """Max of `key` in each peaking bin, with the bin's population.
 
     **Designs whose `.dc` sweep never compressed are EXCLUDED from the max**
     and counted separately: their figure is a lower bound on the true limit,
     and taking a max over a mixture of limits and bounds would report a bound
     as the front.
+
+    **`s3_only` defaults to True and the default is the whole point.** Binning
+    by peaking alone admits designs peaking at 20 GHz, whose Nyquist de-rate is
+    ~1 and which therefore dominate the front while equalising nothing (see
+    `Probe.in_s3_window`). The `s3_only=False` front is computed too, and
+    reported as a CONTRAST rather than as a result: the gap between the two is
+    a measurement of how much of an unconstrained "linearity front" is
+    artefact.
     """
     rows = []
     for lo, hi in zip(edges[:-1], edges[1:]):
         inb = [p for p in probes
-               if p.ok and p.peaking_db is not None and lo <= p.peaking_db < hi]
+               if p.ok and p.peaking_db is not None and lo <= p.peaking_db < hi
+               and (p.in_s3_window if s3_only else True)]
         hard = [p for p in inb if not p.limit_is_lower_bound
                 and getattr(p, key) is not None]
         if not inb:
@@ -346,6 +415,8 @@ def run(pool_arm: bool = True, targeted_arm: bool = True,
     ok = [p for p in probes if p.ok]
     f_dc = front(probes, "linear_in_dc_pp_v")
     f_ny = front(probes, "linear_in_nyq_pp_v")
+    f_ny_unfiltered = front(probes, "linear_in_nyq_pp_v", s3_only=False)
+    s3 = [p for p in probes if p.ok and p.in_s3_window]
     out = {
         "n_simulations": len(probes),
         "n_ok": len(ok),
@@ -354,14 +425,23 @@ def run(pool_arm: bool = True, targeted_arm: bool = True,
         "drive_basis": ("PCIe Gen2 min TX swing 800 mVpp, -3.5 dB mandated "
                         "de-emphasis, channel at DC (0 dB by construction). "
                         "A POST-CHANNEL instantaneous excursion."),
+        "n_meeting_s3": len(s3),
         "front_dc": f_dc,
         "front_nyquist": f_ny,
+        #: The SAME front with S3's frequency window removed. Not a result --
+        #: a contrast. Its designs peak outside the band the link uses.
+        "front_nyquist_no_s3_window": f_ny_unfiltered,
         "crossing_nyquist": crossing(f_ny, drive),
         "crossing_dc": crossing(f_dc, drive),
+        "crossing_nyquist_no_s3_window": crossing(f_ny_unfiltered, drive),
         "max_linear_in_nyq_pp_v": max(
-            (p.linear_in_nyq_pp_v for p in ok
+            (p.linear_in_nyq_pp_v for p in s3
              if not p.limit_is_lower_bound and p.linear_in_nyq_pp_v is not None),
             default=None),
+        "n_censored_at_sweep_edge": sum(
+            1 for p in ok if not p.limit_is_lower_bound
+            and p.linear_in_dc_pp_v is not None
+            and p.linear_in_dc_pp_v >= 0.95 * 1.6),
         "n_lower_bound_only": sum(1 for p in ok if p.limit_is_lower_bound),
     }
     RESULTS.write_text(json.dumps(out, indent=1), encoding="utf-8")
@@ -372,6 +452,10 @@ def _report(out: dict) -> None:
     print(f"{out['n_simulations']} simulations, {out['n_ok']} ok, "
           f"{out['wall_clock_s'] / 60:.1f} min")
     print(f"drive = {1e3 * out['drive_pp_v']:.1f} mVpp   ({out['drive_basis']})")
+    print()
+    print(f"  meeting S3 (band + window + boost): {out['n_meeting_s3']} of "
+          f"{out['n_ok']}     censored at the sweep edge: "
+          f"{out['n_censored_at_sweep_edge']}")
     print()
     print("  peaking band   n   hard   front DC   front Nyq   vs drive")
     ny = {(r["peaking_lo_db"], r["peaking_hi_db"]): r for r in out["front_nyquist"]}

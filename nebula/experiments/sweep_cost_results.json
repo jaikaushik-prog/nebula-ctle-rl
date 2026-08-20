@@ -1,0 +1,152 @@
+{
+ "resolution_oct": 0.06643856189774724,
+ "resolution_basis": "ac dec 50: log10(f) samples 1/50 of a decade apart, so log2 samples (1/50)/log10(2) octaves apart. G74 / PEAK_INTERP.md measured that this quantisation alone capped the reward at +8.950669 and tied 57 designs across 8000 sims.",
+ "fd_step_u": 0.1,
+ "n_reference_designs": 6,
+ "sensitivity": [
+  {
+   "name": "w_in",
+   "median_oct": 0.03777316468131301,
+   "min_oct": 0.004639036862842742,
+   "max_oct": 0.13483660840766357,
+   "n_usable": 6,
+   "n_probes": 6,
+   "levels": 2
+  },
+  {
+   "name": "l_in",
+   "median_oct": 0.24608709227564615,
+   "min_oct": 0.04054332202488798,
+   "max_oct": 0.8350108680728471,
+   "n_usable": 6,
+   "n_probes": 6,
+   "levels": 5
+  },
+  {
+   "name": "i_bias",
+   "median_oct": 0.46589269709127423,
+   "min_oct": 0.15864527371698747,
+   "max_oct": 0.8735499514902486,
+   "n_usable": 6,
+   "n_probes": 6,
+   "levels": 9
+  },
+  {
+   "name": "rs",
+   "median_oct": 0.5229712080064093,
+   "min_oct": 0.32744476702937264,
+   "max_oct": 0.6525525084452842,
+   "n_usable": 6,
+   "n_probes": 6,
+   "levels": 9
+  },
+  {
+   "name": "cs",
+   "median_oct": 3.243025374336513,
+   "min_oct": 2.8156507313267647,
+   "max_oct": 3.305401555828965,
+   "n_usable": 6,
+   "n_probes": 6,
+   "levels": 50
+  },
+  {
+   "name": "rl",
+   "median_oct": 2.701935126771909,
+   "min_oct": 2.2519640285088807,
+   "max_oct": 3.432432310683806,
+   "n_usable": 6,
+   "n_probes": 6,
+   "levels": 42
+  },
+  {
+   "name": "vcm_in",
+   "median_oct": 0.0077014761263526086,
+   "min_oct": 0.00043046179278307035,
+   "max_oct": 0.01753040620916913,
+   "n_usable": 6,
+   "n_probes": 6,
+   "levels": 2
+  }
+ ],
+ "levels": [
+  2,
+  5,
+  9,
+  9,
+  50,
+  42,
+  2
+ ],
+ "cost_model": {
+  "sec_per_sim_at_8_workers": 0.09773,
+  "speedup_at_8_workers": 1.802,
+  "sec_per_sim_serial": 0.17610946,
+  "source": "baselines_results_interp_grid.json header.budget",
+  "run_total_sims": 31500,
+  "run_wall_s": 3227.300383900001,
+  "run_observed_sec_per_sim": 0.10245398044126988
+ },
+ "full_factorial_at_8_workers": {
+  "levels": [
+   2,
+   5,
+   9,
+   9,
+   50,
+   42,
+   2
+  ],
+  "n_simulations": 3402000,
+  "sec_per_sim": 0.09773,
+  "workers": 8,
+  "wall_clock_s": 332477.45999999996,
+  "wall_clock_hours": 92.35484999999998,
+  "wall_clock_years": 0.010535574948665296,
+  "is_extrapolation": true
+ },
+ "full_factorial_serial": {
+  "levels": [
+   2,
+   5,
+   9,
+   9,
+   50,
+   42,
+   2
+  ],
+  "n_simulations": 3402000,
+  "sec_per_sim": 0.17610946,
+  "workers": 1,
+  "wall_clock_s": 599124.38292,
+  "wall_clock_hours": 166.4234397,
+  "wall_clock_years": 0.018985106057494868,
+  "is_extrapolation": true
+ },
+ "design_runtimes": [
+  {
+   "method": "library",
+   "budget": 0,
+   "wall_clock_s": 9.33952260017395,
+   "returncode": 0,
+   "stderr_tail": ""
+  },
+  {
+   "method": "cmaes",
+   "budget": 150,
+   "wall_clock_s": 41.116520404815674,
+   "returncode": 0,
+   "stderr_tail": ""
+  }
+ ],
+ "speedup_vs_design": {
+  "library": 35598.97804560241,
+  "cmaes": 8086.225602910195
+ },
+ "wall_clock_s_of_this_analysis": 87.25119948387146,
+ "caveats": [
+  "The full-factorial wall clock is an EXTRAPOLATION, not a measurement: it assumes the measured per-simulation cost holds at 10^N scale, which is optimistic in the sweep's favour, so the ratio is a LOWER BOUND on the speed-up.",
+  "Levels are sized per-axis. A factorial's COMBINED resolution in a derived scalar is finer than any single axis, so this over-counts.",
+  "f_peak is one of seven scored rows; the same grid must place all seven with no extra degrees of freedom, so this under-counts.",
+  "The library method's zero simulations are amortised over ~600 already paid for (SPEC_CONDITIONED.md); the cmaes row is the from-scratch comparison."
+ ]
+}

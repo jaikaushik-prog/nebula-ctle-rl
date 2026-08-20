@@ -74,9 +74,15 @@ def _save(fig, name: str) -> Path:
 
 def fig_architecture() -> Path:
     """The three layers and where each deliverable attaches. Drawn, not data."""
-    fig, ax = plt.subplots(figsize=(7.0, 3.6))
+    fig, ax = plt.subplots(figsize=(7.0, 3.9))
     ax.set_xlim(0, 10)
-    ax.set_ylim(0, 6.2)
+    # **The header sat INSIDE the top box.** Boxes are drawn at y = 4.9 with
+    # height 1.15, so the RL layer occupies 4.90-6.05, and the two header lines
+    # were placed at 6.00 and 5.72 -- both underneath it. The fix is headroom,
+    # not a smaller font: the limit goes to 7.0 and the header to 6.65/6.35, so
+    # there is a clear 0.30 gap above the box and the layout survives a longer
+    # header line.
+    ax.set_ylim(0.45, 7.0)
     ax.axis("off")
 
     rows = [
@@ -96,14 +102,19 @@ def fig_architecture() -> Path:
                 color=colour)
         ax.text(0.95, y + 0.30, sub, fontsize=8.2, color=GREY)
 
+    # **These pointed UP while their labels described a downward hand-off.**
+    # `annotate` puts the HEAD at `xy` and the tail at `xytext`, so the original
+    # `xy=y0-0.12, xytext=y0-0.45` drew an arrow from the device box back into
+    # the RL box -- the opposite of what "params: dict[str, float]" means. The
+    # head is now the LOWER point.
     for y0, lab in ((4.9, "params: dict[str, float]"), (3.3, "DeviceResult")):
-        ax.annotate("", xy=(5.0, y0 - 0.12), xytext=(5.0, y0 - 0.45),
+        ax.annotate("", xy=(5.0, y0 - 0.45), xytext=(5.0, y0 - 0.12),
                     arrowprops=dict(arrowstyle="-|>", color=GREY, lw=1.0))
         ax.text(5.15, y0 - 0.34, lab, fontsize=7.4, color=GREY)
 
-    ax.text(0.6, 6.0, "python -m nebula.design    ·    python -m nebula.llm",
+    ax.text(0.6, 6.62, "python -m nebula.design    ·    python -m nebula.llm",
             fontsize=9, fontweight="bold", color=GOOD)
-    ax.text(0.6, 5.72, "deliverable 1: specs in -> schematic + specs out"
+    ax.text(0.6, 6.32, "deliverable 1: specs in -> schematic + specs out"
                        "     ·     deliverable 2: natural language wrapper",
             fontsize=7.6, color=GREY)
     ax.text(0.6, 0.95, "SKY130 PDK  ·  ngspice 41  ·  drawn passives, real "
@@ -438,9 +449,58 @@ def fig_response(force: bool = False) -> Path:
     return _save(fig, "f9_response.png")
 
 
+def fig_hd3_amplitude() -> Path:
+    """**HD3 against input amplitude, at three tones.** S4 names a frequency
+    and no amplitude; the deck supplied one, and it is 2.7x below the drive
+    and an octave below the CTLE zero.
+
+    Loads `exp_hd3_amplitude`'s artifact. **An earlier version simulated
+    inline and cached beside the figures**, which made this module a run
+    producer and put a SPICE call behind a plotting function -- against this
+    file's own opening contract.
+    """
+    d = _load("hd3_amplitude_results.json")
+    fig, ax = plt.subplots(figsize=(7.0, 3.4))
+
+    cols = [ACCENT, "#7a5c9e", WARN]
+    for s_, col in zip(d["sweeps"], cols):
+        v = np.array([r["vin_pp_mv"] for r in s_["rows"]], dtype=float)
+        h = np.array([r["hd3_dbc"] for r in s_["rows"]], dtype=float)
+        f = s_["tone_hz"]
+        lab = (f"{f / 1e6:.0f} MHz" if f < 1e9 else f"{f / 1e9:.2f} GHz")
+        ax.plot(v, h, "o-", color=col, lw=1.6, ms=4.0,
+                label=f"{lab}  -  {s_['tone_label']}")
+
+    ax.axhline(-30.0, color=INK, lw=1.2, ls="--")
+    ax.text(52, -28.6, "S4 limit,  HD3 < -30 dBc", fontsize=7.6, color=INK)
+
+    deck = d["deck_vin_pp_mv"]
+    drive = d["drive_pp_mv"]
+    ax.axvline(deck, color=GREY, lw=1.0, ls=":")
+    ax.axvline(drive, color=GOOD, lw=1.4)
+    ax.set_xscale("log")
+    lo, hi = ax.get_ylim()
+    ax.text(deck * 0.96, lo + 0.28 * (hi - lo),
+            f"S4 verified here\n{deck:.0f} mVpp", fontsize=7.2, color=GREY,
+            ha="right")
+    ax.text(drive * 1.05, lo + 0.28 * (hi - lo),
+            f"the link drives\n{drive:.0f} mVpp", fontsize=7.2, color=GOOD)
+    ax.axvspan(drive, ax.get_xlim()[1], color=WARN, alpha=0.05)
+
+    ax.set_xlabel("differential input amplitude at the CTLE (mVpp, log scale)")
+    ax.set_ylabel("HD3 (dBc)")
+    ax.set_title("S4 was verified 2.7x below the drive and an octave below "
+                 "the CTLE zero", fontsize=9.8, loc="left")
+    ax.legend(fontsize=7.4, frameon=False, loc="lower right",
+              bbox_to_anchor=(1.0, 0.03))
+    ax.grid(color=LIGHT, lw=0.6)
+    ax.set_axisbelow(True)
+    return _save(fig, "f10_hd3_amplitude.png")
+
+
 ALL = (fig_architecture, fig_benchmark, fig_lattice_control, fig_budget_ladder,
        fig_termination, fig_library_law, fig_corner_map, fig_grid_arithmetic,
-       fig_response)
+       fig_response, fig_hd3_amplitude)
 
 
 def main() -> int:
