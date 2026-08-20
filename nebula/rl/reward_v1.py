@@ -213,6 +213,34 @@ TOLERANCES: tuple[Tol, ...] = (
     Tol("S7_area", SPEC_AREA_MAX_MM2 / 3.0, "mm^2",
         "one third of S7's own 0.05 mm^2 limit, the same rule S5 and S6 use. "
         "Passives dominate; G2 measured 0.001092 mm^2, 46x inside spec"),
+    # ── THE REQUESTED PEAKING, added by session 23. See `V5_SPECS`. ────────
+    #
+    # **This row exists because the deliverable takes a spec as INPUT.** The
+    # competition slide asks for "a framework that takes target specs as input
+    # and outputs the final schematic and resulting specs". `S3_peaking` scores
+    # the BAND (3-12 dB), which is the right reading of the constraint and the
+    # wrong reading of a REQUEST: `margins()` accepts `target_peaking_db` and
+    # deliberately discards it, so one fixed design scores 8.999984 against
+    # targets of 3, 5, 7.5, 10 and 12 dB IDENTICALLY (SPEC_CONDITIONED.md §0).
+    # A user asking for 11 dB and receiving 6.4 dB with a PASS beside it is a
+    # tool ignoring its own input.
+    #
+    # **The tolerance is DERIVED FROM A MEASUREMENT, not chosen.** Peaking is
+    # itself a PVT quantity: across the 45 mandated corners it moves 1.48-1.65
+    # dB on the two compliant designs (and 2.09-2.45 dB on the one that fails).
+    # This row is scored PER CORNER like every other row, so a tolerance at or
+    # below half that excursion -- ~0.83 dB -- is unmeetable at ANY target by
+    # construction, however well centred the design is. 1.5 dB is the smallest
+    # round value that admits a correctly-centred design with ~0.67 dB of
+    # centring slack left over. Anything tighter is a spec against physics
+    # rather than against the circuit.
+    Tol("S3_peaking_match", 1.5, "dB",
+        "distance from the REQUESTED peaking, not from the band. Measured "
+        "basis: peaking's own PVT excursion is 1.48-1.65 dB across the 45 "
+        "corners on compliant designs, so half-excursion is ~0.83 dB and any "
+        "tolerance below that is unmeetable at every target; 1.5 dB leaves "
+        "~0.67 dB of centring slack. Parallel in form to S3_f_peak, which "
+        "folds its half-width in the same way"),
 )
 
 TOL: dict[str, float] = {t.name: t.value for t in TOLERANCES}
@@ -307,6 +335,32 @@ V3_SPECS: tuple[str, ...] = V2_SPECS + ("S4_hd3", "S7_area")
 V4_SPECS: tuple[str, ...] = tuple(
     s for s in V3_SPECS if s != "S4_hd3") + ("S4_hd3_nyq",)
 
+#: **Reward v5: V4 plus the REQUESTED peaking. The DELIVERABLE's spec set.**
+#:
+#: V1-V4 all read S3's peaking as a band and therefore score a design that
+#: lands anywhere in 3-12 dB identically. That is the correct reading of a
+#: CONSTRAINT and the wrong reading of a REQUEST, and the competition
+#: deliverable is a request: *"takes target specs as input"*. Session 22j
+#: measured the consequence -- one design scoring 8.999984 against five
+#: different peaking targets -- and called the spec manifold "effectively 1-D".
+#: **It is 1-D because this row was missing, not because the problem is.**
+#:
+#: `S3_peaking` is KEPT alongside `S3_peaking_match`, and that is deliberate
+#: rather than redundant: the band is still a hard constraint (a request for
+#: 2 dB must not be honoured by leaving S3), and the match row is the request.
+#: A design satisfies both or neither is meaningful.
+#:
+#: **V1, V2, V3 and V4 are UNTOUCHED.** Adding a row moves `len(specs)`, which
+#: moves the feasibility bonus `B = N + 1`, which moves every published reward
+#: number (`BASELINES.md` §7f). This set is opt-in and is the one the coverage
+#: map and the deliverable score on; the benchmark keeps scoring V1.
+#: Listed by ENUMERATION, never by addition to another tuple (G101/G106).
+V5_SPECS: tuple[str, ...] = (
+    "S3_f_peak", "S3_peaking", "S3_peaking_match", "S3_nyq_boost",
+    "S5_noise", "S6_power", "saturation", "tail_saturation",
+    "S8_eye_h", "S8_eye_w", "S7_area", "S4_hd3_nyq",
+)
+
 #: The S8 rows, named so a caller can ask "is this reward scoring the eye?"
 S8_SPECS: tuple[str, ...] = ("S8_eye_h", "S8_eye_w")
 
@@ -393,12 +447,20 @@ def margins(meas: Mapping[str, float],
     `contract.OBS_SCALES` declares, so `f_peak_oct` is octaves relative to
     Nyquist and the margins below never touch hertz.
 
-    `target_peaking_db` is accepted for the spec-conditioned form but is NOT
-    used: S3's peaking constraint is a BAND (3-12 dB), and CLAUDEwa.md §3 reads
-    the band as the requirement. Scoring distance from a requested point inside
-    the band instead would be a `match` term, which is what `reward.py` does
-    and what §6h replaces. Kept in the signature so the caller cannot silently
-    believe it is being honoured.
+    `target_peaking_db`, when given, produces the **`S3_peaking_match`** row --
+    distance from the REQUESTED peaking -- alongside `S3_peaking`, which stays
+    the BAND constraint (3-12 dB) that CLAUDEwa.md §3 reads as the requirement.
+    Both, not either: the band is what the circuit must satisfy, the match is
+    what the caller asked for, and a tool that honours only the first ignores
+    its own input (session 23; `V5_SPECS`).
+
+    **Until session 23 this argument was accepted and DISCARDED**, so one fixed
+    design scored 8.999984 against targets of 3, 5, 7.5, 10 and 12 dB
+    identically (`SPEC_CONDITIONED.md` §0). The row is emitted **only when the
+    argument is supplied**, on the same terms as S4/S7/S8 below -- present when
+    asked for, absent otherwise, never defaulted -- so `V1_SPECS` through
+    `V4_SPECS` select exactly the keys they always did and every published
+    reward number still reproduces bit for bit.
 
     `link` is a `LinkResult` (or None). When given AND `ok`, the two S8 rows are
     added; otherwise they are **ABSENT** from the returned dict rather than
@@ -428,6 +490,13 @@ def margins(meas: Mapping[str, float],
         "saturation": float(meas["pair_margin_v"]),
         "tail_saturation": float(meas["tail_margin_v"]),
     }
+
+    # The REQUESTED peaking, only when a request was actually made. Same form
+    # as `S3_f_peak` above -- the tolerance folded in so the quantity is a
+    # margin -- and present only when asked for, so V1..V4 are untouched.
+    if target_peaking_db is not None:
+        out["S3_peaking_match"] = (TOL["S3_peaking_match"]
+                                   - abs(pk - float(target_peaking_db)))
 
     # S8, only when a real link result is in hand. Both are MEASURED-minus-
     # SPEC margins in the spec's own units, like every other row.
@@ -612,7 +681,8 @@ def reward_v1(meas: Optional[Mapping[str, float]],
 
 __all__: Sequence[str] = (
     "Tol", "TOLERANCES", "TOL", "SPEC_NAMES", "N_SPECS",
-    "V0_SPECS", "V1_SPECS", "V2_SPECS", "V3_SPECS", "V4_SPECS", "S8_SPECS",
+    "V0_SPECS", "V1_SPECS", "V2_SPECS", "V3_SPECS", "V4_SPECS", "V5_SPECS",
+    "S8_SPECS",
     "TOLERANCE_SCAN",
     "feasible_bonus", "invalid_reward", "headroom_band_top",
     "headroom_reward",

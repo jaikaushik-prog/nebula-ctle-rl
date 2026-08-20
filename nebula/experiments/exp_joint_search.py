@@ -84,6 +84,8 @@ from nebula.rl.contract import (
     N_ACTIONS,
     f_peak_octaves,
 )
+from nebula.common.types import Corner
+from nebula.experiments.s9_yield import PROMOTION_LOADS, SCREEN_CORNERS
 from nebula.rl.evaluator import annotate_interpolated_peak, scored_meas
 
 HERE = Path(__file__).resolve().parent
@@ -111,8 +113,64 @@ SEED_PEAKING_BAND: tuple[float, float] = (9.0, 9.5)
 #: The 135-point verification is what closes it, and it is a separate step.
 SEARCH_ON_SCREEN: bool = True
 
-#: Simulation budget for the local refinement.
-BUDGET: int = 400
+#: **THE DELIVERY SCREEN (session 22u).** `SCREEN_CORNERS` plus the two corners
+#: five independent measurements say actually bind.
+#:
+#: **It is a SEPARATE constant and `s9_yield.SCREEN_CORNERS` is untouched, on
+#: purpose.** The benchmark's per-design cost is `len(SCREEN_CORNERS) x loads`;
+#: changing it would change every published arm's cost and trigger a
+#: `BASELINES.md` sec 7f re-run of the whole ranking. So the BENCHMARK screen
+#: and the DELIVERY screen are different objects. Nothing in `BASELINES.md`,
+#: `design.py` or any published number reads this tuple.
+#:
+#: **Why these two and not others.** The two ends of S3's window bind at
+#: opposite corners, and the 3-corner screen has a member of neither:
+#:
+#:   BOTTOM of the window (f_peak too LOW)   fs/0.95/125C, HEAVY load
+#:       session 22s's design failed 6 of 135 here, at 1.2417-1.2470 GHz
+#:   TOP of the window (f_peak too HIGH)     sf/1.05/0C, LIGHT load
+#:       session 22u's re-run failed 4 of 135 here, at 2.5005-2.5132 GHz
+#:
+#: Both loads are already in the screen's load ladder, so only the process and
+#: PVT members are new. 5 corners x 2 loads = **10 SPICE runs per design
+#: evaluation** against the 3-corner screen's 6.
+DELIVERY_SCREEN_CORNERS = SCREEN_CORNERS + (
+    Corner(process="fs", vdd_scale=0.95, temp_c=125.0),
+    Corner(process="sf", vdd_scale=1.05, temp_c=0.0),
+)
+
+#: **DESIGN EVALUATIONS, not SPICE runs -- and those are different numbers.**
+#:
+#: Session 22u found this file and `baselines.Objective` using the word
+#: "simulation" for two different things. `Objective.budget_sims` counts actual
+#: SPICE calls (`self.n_sims += n_sims` per corner-point), which is what
+#: `BASELINES.md`'s "150 to 2400 simulations" means. `BUDGET` here counts calls
+#: to `evaluate_joint`, each of which runs `len(corners) x len(loads)` SPICE
+#: decks. So the 22s and 22u runs, both described as "400 simulations", each
+#: cost **2400 SPICE runs** -- a 6x understatement, in a project whose headline
+#: claim is a ratio of simulation counts.
+#:
+#: The name now says the unit and `spice_runs_for()` converts, so the two can
+#: be compared without anyone doing the multiplication in their head.
+BUDGET_DESIGN_EVALS: int = 400
+
+#: Kept so any caller or note referring to `BUDGET` still resolves, and so the
+#: 22s/22u runs stay reproducible from this file.
+BUDGET = BUDGET_DESIGN_EVALS
+
+
+def spice_runs_for(n_design_evals: int,
+                   corners: Optional[Sequence] = None,
+                   loads: Optional[Sequence[float]] = None) -> int:
+    """SPICE decks a run of `n_design_evals` costs. THE conversion.
+
+    `BASELINES.md` budgets are in this unit; this file's are not. Anything
+    comparing the two must go through here.
+    """
+    c = len(corners if corners is not None else SCREEN_CORNERS)
+    ld = len(loads if loads is not None else (PROMOTION_LOADS[::2]
+                                              or PROMOTION_LOADS))
+    return int(n_design_evals) * c * ld
 
 #: Initial step size, normalised. Small: this is a refinement of a design that
 #: is already 10 of 11, not a fresh search. 0.12 is ~1.5 of `MAX_STEP`.
@@ -240,7 +298,6 @@ def evaluate_joint(u: Sequence[float],
     """
     from nebula.device.sky130_runner import run_point, swing_limits
     from nebula.experiments.exp_g2_closed_loop import FUNNEL_LOSS_DB
-    from nebula.experiments.s9_yield import PROMOTION_LOADS, SCREEN_CORNERS
     from nebula.link.bridge import device_result_from_point, evaluate_link
     from nebula.link.config import LinkConfig
     from nebula.rl.contract import sizing_from_u

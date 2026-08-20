@@ -4047,3 +4047,116 @@ directions, on the same row:
 
 and one measurement saying the gap between them is **0.0076 octaves** of centre
 frequency at a corner the search screen cannot see.
+
+---
+
+## 24. Session 23 — **spec coverage: does the framework answer every request, and does the new screen hold up?**
+
+**Written 2026-08-21 BEFORE the coverage run.** ~16 requests x (140 design
+evals x 4 decks + 24 probe decks + 135 verification points), roughly 10 000
+SPICE runs and ~1.5 h. Pre-registered because the headline number — *"the
+framework served N of 16 requests"* — is exactly the kind of result a post-hoc
+framing could soften, and because two of the predictions below could each
+retract a claim this project has been making.
+
+### What changed before the run, and why the run is only measurable now
+
+1. **`target_peaking_db` is live** (`V5_SPECS`, `S3_peaking_match`). It was
+   accepted and discarded, so one design scored 8.999984 against targets of
+   3, 5, 7.5, 10 and 12 dB identically. Coverage measured through the old
+   reward would have reported 16 of 16 with one circuit and meant nothing.
+2. **The search screen is `EDGE4_MANDATED`**, four (corner, load) pairs at the
+   design load, replacing `s9_yield.SCREEN_CORNERS` for delivery only.
+3. **The 45-corner and 135-point grids are reported as separate columns.** The
+   slide mandates 45 PVT corners; the load axis is this project's own, and
+   `CL_RANGE.md` §9 called it "arguably too conservative" on 2026-08-06.
+
+### FULL DISCLOSURE OF WHAT WAS RUN BEFORE WRITING THIS
+
+Three smoke runs, all on the request 7.5 dB @ 1.7678 GHz, all seen:
+
+* budget 25, random seeding: infeasible, reward -0.8938, delivered 9.78 dB @
+  2.837 GHz. Audit: screen PREDICTIVE, error 0.0, worst `sf/1.05/0C/14fF`.
+* budget 140, random seeding, load-swept `EDGE4`: infeasible, reward -0.5193,
+  delivered 6.33 dB @ 1.044 GHz, seed spread 1.3753 oct. 45-corner 45/45
+  (+13.3038); 135-point 70/135. **Audit: screen NOT predictive, error
+  +0.480679 at `tt/0.95/125C/14fF`, one point added.**
+* `choose_start` with the library seed: spread 1.0540 oct, 18 decks.
+
+**Those runs caused three changes** and the predictions below are made after
+them: seeding moved from "least spread" to "least worst-case `|f_oct -
+target|`" (spread ignores the request); the library was added as the zero-
+simulation proposal tier; and the search screen moved from the load-swept
+`EDGE4` to `EDGE4_MANDATED`. **No coverage sweep has been run.**
+
+### The predictions
+
+**Q1 — the framework serves a MAJORITY of requests on the mandated 45-corner
+grid.** At least 9 of 16 requests return a design passing all 12 `V5_SPECS`
+rows at 45/45 corners.
+*Basis:* across the 45 mandated corners a design's peak travels 0.23-0.30
+octaves in a 1.000-octave window, so there is +0.70 octaves of headroom, and
+`S3_peaking_match` has 1.5 dB against a 1.48-1.65 dB PVT excursion — tight but
+not closed. Confidence: **0.6.**
+*Falsifier:* fewer than 9.
+
+**Q2 — coverage is markedly WORSE on the 135-point load-swept grid**, fewer
+than half as many requests fully served as on the 45-corner grid.
+*Basis:* the same designs measured 0.94-1.02 octaves of excursion once the
+5.7x load sweep is included, against a 1.000-octave window. Confidence:
+**0.85.** *Falsifier:* 135-point coverage within 2 of the 45-corner count.
+
+**Q3 — coverage is NOT uniform across the request grid: the extreme peaking
+requests (4 dB and 10 dB) are served strictly less often than the middle two.**
+*Basis:* `S3_peaking` (the band) and `S3_peaking_match` (the request) bind
+together near the band edges, and peaking's own PVT excursion is 1.48-1.65 dB
+against a 1.5 dB tolerance, so a request at 10 dB has almost no room before
+the 12 dB band edge. Confidence: **0.7.**
+*Falsifier:* the extremes are served at least as often as the middle.
+
+**Q4 — THE ONE THAT COULD RETRACT SOMETHING. The screen self-check fires at
+least once, i.e. `EDGE4_MANDATED` is measured NOT predictive on at least one
+of the 16 requests.** Confidence: **0.75, and I want that on the record
+because the module argues the screen is a mechanism rather than a curve fit.**
+*Reasoning for:* it already fired once, on the load-swept variant, at
+`tt/0.95/125C/14fF` with error +0.4807 — a hot corner at the LIGHT load, a
+combination `EDGE4` does not carry. `EDGE4` was derived from designs where
+`S3_f_peak` binds; a design whose binding row is `S6_power` or `saturation`
+has its worst corner somewhere else entirely, and nothing in the derivation
+covers that.
+*Reasoning against:* at the design load the two smoke audits that ran were
+exact.
+*Falsifier:* 16 of 16 audits predictive.
+**If Q4 lands, the honest report is "a screen chosen for one spec row does not
+generalise to the others, and the self-check is what caught it" — which is a
+better result than a clean sweep, and it is the reason the check exists.**
+
+**Q5 — the screen grows by at most 4 points over the whole sweep.**
+*Basis:* the added points should cluster on the two or three rows that bind.
+Confidence: 0.6. *Falsifier:* more than 4 added, which would mean the worst
+corner is essentially design-specific and the whole screening idea is weaker
+than claimed.
+
+**Q6 — the library seed beats uniform random seeding on worst-case
+`|f_oct - target|`**, on at least 12 of 16 requests.
+*Basis:* the pool holds ~74 500 already-simulated designs re-scorable for free;
+uniform random's best of 24 measured a 1.375-octave excursion.
+Confidence: 0.8. *Falsifier:* 12 or fewer.
+
+### What I will report either way
+
+The full 16-row table (request, delivered peaking and f_peak, 45-corner count,
+135-point count, simulations, wall clock), the screen audit history including
+every miss, and the two coverage numbers side by side. **A low coverage number
+is reported as the headline if that is what it is** — the point of the
+experiment is that nobody has ever measured this, not that it comes out well.
+
+### What this does NOT settle
+
+* Nothing about RL. No policy is trained here; the arms are library-seeded
+  CMA-ES only. The RL comparison is a separate, later experiment.
+* Nothing about the tuning bank. Reading (B) of S3 — that 1.25-2.5 GHz is a
+  tuning range rather than a box every PVT corner must sit in — is not tested
+  by this run, which measures fixed sizings only.
+* The 45-corner column is compliance with the mandated grid **at the design
+  load**. It is not a claim that the load is known.
