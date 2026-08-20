@@ -142,6 +142,103 @@ def test_swing_limits_rejects_a_degenerate_curve():
         swing_limits(np.array([0.0, 1.0]), np.array([0.0, 1.0]))
 
 
+# ── the INPUT-referred linear range (session 22q) ───────────────────────────
+#
+# The stage's three swing limits were all OUTPUT-referred, and S8 is blocked
+# on the delivered design by a drive-level question: *how much differential
+# input can this thing take?* These tests pin the new projection against an
+# analytic expected value, and — the one that matters — pin that it is NOT the
+# output limit divided by the DC gain.
+
+
+def _tanh_linear_input_pp(gain, vsat, compression_db=1.0):
+    """The analytic input-referred compression point of `_tanh_curve`.
+
+    Incremental gain is `gain * sech^2(x)`, `x = gain*vid/vsat`, so `c` dB of
+    compression is `sech(x) = 10^(-c/40)`, i.e. `x = arccosh(10^(c/40))`, and
+    the differential input peak-to-peak is `2*vid = 2*vsat*x/gain`.
+
+    Derived here independently of the implementation: the module finds the
+    point by scanning a numerical gradient, this closes the same equation in
+    closed form.
+    """
+    x = math.acosh(10.0 ** (compression_db / 40.0))
+    return 2.0 * vsat * x / gain
+
+
+def test_linear_input_range_matches_the_analytic_1db_point():
+    gain, vsat = 1.789, 1.14
+    vid, vod = _tanh_curve(gain, vsat)
+    lim = swing_limits(vid, vod, compression_db=1.0)
+
+    assert lim.linear_in_pp_v == pytest.approx(
+        _tanh_linear_input_pp(gain, vsat), rel=0.02)
+
+
+def test_linear_input_range_is_NOT_the_output_limit_over_the_dc_gain():
+    """**The whole reason this field exists rather than a division.**
+
+    `linear_pp_v / g_dc` is only exact while the gain is still `g_dc`, and the
+    compression point is defined by the gain having dropped — so the naive
+    division systematically UNDER-reports the input the stage can take. On
+    this fixture it is out by ~4 %, and the error grows with the compression
+    threshold asked for.
+    """
+    gain, vsat = 1.789, 1.14
+    vid, vod = _tanh_curve(gain, vsat)
+    lim = swing_limits(vid, vod, compression_db=1.0)
+
+    naive = lim.linear_pp_v / lim.g_dc_v_per_v
+    assert naive < lim.linear_in_pp_v
+    assert lim.linear_in_pp_v / naive == pytest.approx(1.039, rel=0.01)
+
+    # and the discrepancy is not a constant: ask for 3 dB and it grows.
+    lim3 = swing_limits(vid, vod, compression_db=3.0)
+    assert (lim3.linear_in_pp_v / (lim3.linear_pp_v / lim3.g_dc_v_per_v)
+            > lim.linear_in_pp_v / naive)
+
+
+def test_input_and_output_limits_are_one_event_with_two_projections():
+    """Rule 9: not two definitions that can drift. The pair must satisfy
+    `|vod| = vsat*tanh(gain*vid/vsat)` at the SAME swept sample."""
+    gain, vsat = 1.789, 1.14
+    vid, vod = _tanh_curve(gain, vsat)
+    lim = swing_limits(vid, vod)
+
+    x = gain * (lim.linear_in_pp_v / 2.0) / vsat
+    assert lim.linear_pp_v / 2.0 == pytest.approx(vsat * math.tanh(x), rel=1e-6)
+
+
+def test_linear_input_range_is_none_when_compression_is_not_reached():
+    """Absent, never a fallback — and `max_swept_in_pp_v` carries the bound."""
+    vid = np.linspace(-0.05, 0.05, 201)
+    vod = -1.789 * vid
+    lim = swing_limits(vid, vod)
+    assert lim.linear_in_pp_v is None
+    assert lim.max_swept_in_pp_v == pytest.approx(0.1)
+
+
+def test_max_swept_in_pp_v_is_the_full_swept_differential_span():
+    vid, vod = _tanh_curve(span=0.8)
+    assert swing_limits(vid, vod).max_swept_in_pp_v == pytest.approx(1.6)
+
+
+def test_degeneration_widens_the_input_range_and_narrows_the_output_one():
+    """The physical direction, as a gate on the sign.
+
+    Degeneration trades gain for linear input range: at a fixed output
+    saturation level, halving the small-signal gain doubles the input the
+    stage takes before compressing while leaving the output limit where it
+    was. A sign error in the new field would invert this.
+    """
+    vsat = 1.14
+    hi = swing_limits(*_tanh_curve(gain=3.578, vsat=vsat))
+    lo = swing_limits(*_tanh_curve(gain=1.789, vsat=vsat))
+
+    assert lo.linear_in_pp_v == pytest.approx(2.0 * hi.linear_in_pp_v, rel=1e-3)
+    assert lo.linear_pp_v == pytest.approx(hi.linear_pp_v, rel=1e-3)
+
+
 def test_saturation_and_steering_limits_are_reported_separately():
     vid, vod = _tanh_curve()
     sat_ok = np.abs(vid) < 0.5

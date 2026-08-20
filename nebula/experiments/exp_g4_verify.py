@@ -156,6 +156,49 @@ def candidates(log: Path = SOURCE_LOG, n_control: int = 3) -> list[Candidate]:
 FULL_SPECS = R.V3_SPECS
 
 
+def _drive_headroom(pt, nyq_boost_db: float, cfg) -> dict:
+    """The four drive-headroom fields, from the sweep `run_point` already ran.
+
+    **Why the Nyquist de-rate is not an extra assumption.** A source-degenerated
+    pair gets its linear input range from `Rs` and its peaking from `Cs`
+    shorting that same `Rs` out at high frequency. So the measured peaking IS
+    the measurement of how much degeneration survives at the signal band, and
+
+        linear range at f  =  linear range at DC / |H(f)/H(0)|
+
+    with the ratio read off the SAME `.ac` curve the peaking is read off. No
+    new constant, no new simulation, one definition (rule 9).
+
+    **THIS IS A READABLE PROXY, NOT THE GATE, and the difference is measured
+    rather than assumed.** The gate in `link/bridge.py` compares the pulse
+    response's own peak excursion (G61 convention C -- it carries the
+    transmitter, the channel and the CTLE, so it needs no decision about which
+    input level pairs with which gain) against the measured output limit. This
+    number instead pairs the long-run input level with a single-frequency
+    de-rate. Measured on the delivered design over all 135 points: this reads
+    **1.18x to 1.26x (median 1.24x) HIGHER** than the gate's ratio, i.e. it is
+    consistently the STRICTER of the two, and the two agree on the verdict at
+    **135 of 135** points. Reported because "the drive is 3.1x the linear
+    input range at the signal band" is a sentence a reader can act on and
+    "output swing 903 mVpp exceeds the linear limit 333 mVpp" is not; used as
+    a gate it would be wrong, and it is not used as one.
+    """
+    from nebula.device.sky130_runner import measured_linear_input_pp_v
+
+    lin_dc = measured_linear_input_pp_v(pt)
+    drive = float(cfg.v_in_diff_pp_v)
+    if lin_dc is None:
+        # Not reached inside the swept range -- a LOWER bound, never a
+        # computed fallback. Absent stays absent (rule 1).
+        return {"linear_in_dc_pp_v": None, "linear_in_nyq_pp_v": None,
+                "drive_pp_v": drive, "drive_overdrive_x": None}
+    lin_nyq = lin_dc / (10.0 ** (nyq_boost_db / 20.0))
+    return {"linear_in_dc_pp_v": float(lin_dc),
+            "linear_in_nyq_pp_v": float(lin_nyq),
+            "drive_pp_v": drive,
+            "drive_overdrive_x": float(drive / lin_nyq)}
+
+
 @dataclass
 class FullPointResult:
     """One (corner, load) point scored against ALL ELEVEN spec rows.
@@ -182,6 +225,29 @@ class FullPointResult:
     vout_swing_v: Optional[float] = None
     eye_h_v: Optional[float] = None
     eye_w_ui: Optional[float] = None
+    # ── the drive-headroom row (session 22q) ────────────────────────────────
+    #
+    # S8 is blocked at every one of these points, and until now the blockage
+    # was reported only in OUTPUT volts -- a number a reader has to divide by
+    # a gain they must go and look up before it can be compared with anything
+    # the link does. These four fields state the same fact on the INPUT axis,
+    # in the units `PCIE_GEN2_TX_DIFF_PP_MIN_V` is written in, and cost **no
+    # extra simulation**: `run_point(swing=True)` already ran here.
+    #
+    #: 1 dB gain compression, differential input Vpp, measured on the `.dc`
+    #: transfer curve -- so it is the DEGENERATED linear range, i.e. at DC.
+    linear_in_dc_pp_v: Optional[float] = None
+    #: The same range **de-rated by the measured Nyquist boost**. The
+    #: degeneration that buys the linear range is exactly what `Cs` shorts out
+    #: to make the peaking, so the two are one knob read in opposite
+    #: directions and the number the EYE sees is this one, not the one above.
+    linear_in_nyq_pp_v: Optional[float] = None
+    #: What the link layer actually drives this input with, same units.
+    drive_pp_v: Optional[float] = None
+    #: `drive / linear_in_nyq`. **> 1 means the stage is being driven past its
+    #: linear range at the frequency the data lives at**, which is the S8
+    #: blockage, stated as one number.
+    drive_overdrive_x: Optional[float] = None
 
 
 def verify_full(cand: "Candidate",
@@ -277,7 +343,8 @@ def verify_full(cand: "Candidate",
                 hd3_dbc=dev.hd3_dbc, area_mm2=dev.area_mm2,
                 vout_swing_v=dev.vout_swing_v,
                 eye_h_v=(lr.eye_h_v if lr.ok else None),
-                eye_w_ui=(lr.eye_w_ui if lr.ok else None)))
+                eye_w_ui=(lr.eye_w_ui if lr.ok else None),
+                **_drive_headroom(pt, float(pt.nyquist_boost_db), cfg)))
 
     scored = [r for r in rows if r.ok]
     # **The checklist, per ROW.** Three counts per spec, and they mean
@@ -317,9 +384,45 @@ def verify_full(cand: "Candidate",
         "median_vout_swing_v": float(np.median(
             [r.vout_swing_v for r in scored if r.vout_swing_v is not None])
             ) if any(r.vout_swing_v is not None for r in scored) else None,
+        # **The drive-headroom row, across the grid.** Reported as a range
+        # rather than a median because the point of it is the SPREAD: the
+        # corner that compresses worst is the one that decides S8.
+        "drive_headroom": _drive_headroom_summary(scored),
         "worst_reward": (min((r.reward for r in scored), default=float("nan"))),
         "channel_loss_db_at_nyquist": loss_db,
         "points": [asdict(r) for r in rows],
+    }
+
+
+def _drive_headroom_summary(scored: Sequence["FullPointResult"]) -> Optional[dict]:
+    """Min/median/max of the drive-headroom row over the whole grid.
+
+    `n_compressed` is the count that matters: how many of the 135 points are
+    driven past their own linear range at the signal band. **It is reported
+    even when it is 135 of 135** -- a blocked spec with a measured reason is a
+    result, and the version of this checklist that reported only "S8 NOT
+    MEASURABLE" was true and useless.
+    """
+    ov = [r.drive_overdrive_x for r in scored if r.drive_overdrive_x is not None]
+    if not ov:
+        return None
+    dc = [r.linear_in_dc_pp_v for r in scored if r.linear_in_dc_pp_v is not None]
+    ny = [r.linear_in_nyq_pp_v for r in scored if r.linear_in_nyq_pp_v is not None]
+    dr = [r.drive_pp_v for r in scored if r.drive_pp_v is not None]
+    return {
+        "n_points_with_a_measured_limit": len(ov),
+        "n_points_without_one": len(scored) - len(ov),
+        "drive_pp_v": float(np.median(dr)),
+        "linear_in_dc_pp_v": {"min": float(np.min(dc)),
+                              "median": float(np.median(dc)),
+                              "max": float(np.max(dc))},
+        "linear_in_nyq_pp_v": {"min": float(np.min(ny)),
+                               "median": float(np.median(ny)),
+                               "max": float(np.max(ny))},
+        "overdrive_x": {"min": float(np.min(ov)),
+                        "median": float(np.median(ov)),
+                        "max": float(np.max(ov))},
+        "n_compressed": int(sum(1 for v in ov if v > 1.0)),
     }
 
 

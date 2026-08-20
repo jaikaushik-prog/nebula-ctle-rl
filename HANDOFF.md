@@ -3765,6 +3765,52 @@ Plus: git init, .gitignore, 28 tests, Wilson-bound BER reporting.
   exactly. Both are one-line fixes and neither would have been found by a test
   that only exercised the default path.
 
+- **G102 -- (nebula) a MAXIMIN reward gives no credit for exceeding a spec, so
+  "the optimiser bought margin on a met constraint" is a diagnosis that cannot
+  be true of it -- and the real defect is the opposite one.**
+  `reward_v1`'s feasible branch is `B + min_i(margin_i / tol_i)`. Session 22q
+  was asked to fix an optimiser that had supposedly spent its freedom buying
+  6.9x power margin and 7.1x noise margin. Re-scoring the **74 526 designs
+  already on disk** showed the mechanism does not exist: among 33 214 feasible
+  designs the binding row is `S3_f_peak` **94.5 %** of the time, `S6_power`
+  **0.6 %**, and `S5_noise` **0.0 % -- never**. Moving both to hard constraints
+  changes the reward on **210 of 33 214** designs and leaves the best one
+  unchanged. **A measured no-op.**
+  **What a maximin does instead is go FLAT.** Once every non-binding row clears
+  the minimum, the reward stops distinguishing them -- so within **0.001** of
+  the best score the pool holds 38 designs spanning **8.4x in tail current**,
+  and within 0.01, 355 designs spanning **11.3x**. The delivered operating
+  point was not chosen; it was drawn from a plateau.
+  **The general form: before removing a term from an objective, measure how
+  often it BINDS.** A term that binds 0 % of the time is already inert, and
+  deleting it changes nothing while looking like a fix. The lever on a flat
+  plateau is an ADDED term, not a removed one -- and the cheapest way to find
+  out which is to re-score the run logs, which costs no simulations because a
+  measurement does not know what it was aiming at (`spec_pool`).
+
+- **G103 -- (nebula) the peaking spec and the linear input range are ONE knob,
+  and every swing limit in this repo was reported at the wrong end of the
+  stage.** A source-degenerated CTLE gets its linear input range from `Rs` and
+  its peaking from `Cs` shorting that same `Rs` out at high frequency, so
+  `linear range at f = linear range at DC / |H(f)/H(0)|`. The delivered design
+  measures **520 mVpp of linear input range at DC** against a **535 mVpp**
+  drive -- 1.03x, essentially at its limit -- and **172 mVpp at Nyquist**,
+  which is **3.11x** over. **All of the S8 blockage is the de-rate, and the
+  de-rate is S3.** At the delivered 9.78 dB the DC range would have to be
+  1640 mVpp, wider than the sweep and most of a 1.8 V supply; at S3's 3 dB
+  floor, 756 mVpp.
+  This was invisible for months because `SwingLimits` reported all three of its
+  limits OUTPUT-referred, so the failure read *"output swing 903 mVpp exceeds
+  the linear limit 333 mVpp"* -- true, and requiring the reader to divide by a
+  gain they must look up before it can be compared with anything.
+  `SwingLimits.linear_in_pp_v` reads the same compression sample on the input
+  axis. **It is deliberately NOT `linear_pp_v / g_dc`**: the gain has already
+  dropped by definition at that point, so the division under-reports the usable
+  input by ~4 %, and the error grows with the compression threshold asked for.
+  **The general form: report a limit in the units of the quantity that is
+  compared against it.** Here that is the transmitter's differential swing, so
+  the limit belongs on the input axis.
+
 ## 10. Environment
 
 - Windows 11, PowerShell 5.1 (+ Git Bash available), Python 3.13.14,
@@ -8576,3 +8622,123 @@ commands.
 
 **Tests unchanged at 1622** -- the report modules add no behaviour, only
 rendering.
+
+### 2026-08-20 - Session 22q (S8 IS NOT BLOCKED BY UNDER-DRIVE. IT IS BLOCKED BY S3 -- the peaking and the linear input range are ONE KNOB read in opposite directions)
+
+**Item 1 of a six-item brief, step 1 of 4. The other three steps are held
+pending an owner decision, because measurement contradicted their premises.**
+
+**The brief's diagnosis:** *"the reward treats power and noise as scored (more
+margin = better), so the optimiser spent its degrees of freedom buying margin
+on constraints that were already satisfied, and starved the one spec that
+binds."* **Measured, and it is not what happens.**
+
+`reward_v1.reward`'s feasible branch is `B + min_i(margin_i / tol_i)` -- a
+MAXIMIN, not a sum. Exceeding a spec buys exactly nothing unless that spec is
+the binding minimum, which is `CLAUDEwa.md` §9's rule ("do not add bonus terms
+for exceeding a spec") already correctly implemented. Re-scoring the **74 526
+distinct designs already on disk** against 9 dB / 1.9 GHz (zero new
+simulations, `spec_pool`):
+
+    binding row among the 33 214 FEASIBLE designs
+      S3_f_peak         94.5 %
+      S3_peaking         3.5 %
+      tail_saturation    1.2 %
+      S6_power           0.6 %
+      saturation         0.2 %
+      S5_noise           0.0 %      <- NEVER binds
+
+`corr(reward, power) = -0.17`. And the proposed fix is a **measured no-op**:
+moving power and noise from scored to hard-constraint leaves the feasible set
+**identical** (33 214), changes the reward on **210 of 33 214** designs
+(0.63 %), and leaves the best design unchanged. Area was never in `V1_SPECS` at
+all, so that third of the change was already true.
+
+**WHAT THE REWARD ACTUALLY IS, IS INDIFFERENT -- and that is the real defect.**
+Within **0.001** of the best reward the pool holds 38 designs spanning
+**0.500-4.217 mA of tail current (8.4x)** and 0.92-7.56 mW; within 0.01, 355
+designs spanning **11.3x**. **The delivered 1.1376 mA was never bought. It was
+picked off a plateau that is flat in current across an order of magnitude.** So
+the fix is not to REMOVE terms -- it is to ADD one, and the plateau is where it
+will act.
+
+**Two hardware premises in the brief are also wrong.** `VDD_NOMINAL_V` is
+**1.8 V**, not 3.3 V (SKY130 `nfet_01v8`), and the `i_bias` box is already
+**0.5-8 mA** with its ceiling set by S6 itself: 8 mA x 1.8 V = 14.4 mW against
+a 15 mW limit. **The tail-current bound cannot be raised** without admitting
+designs that violate S6, and the optimiser picked 1.1376 mA from a range in
+which it already had 7x of headroom. Widening the box is not an available
+lever.
+
+**WHAT WAS BUILT: the input-referred linear range, and it costs no simulation.**
+All three of `SwingLimits`' limits were OUTPUT-referred, so the S8 blockage was
+only ever reported as *"output swing 903 mVpp exceeds the linear limit
+333 mVpp"* -- a sentence a reader must divide by a gain they have to go and
+look up. `SwingLimits.linear_in_pp_v` reads the SAME compression sample on the
+input axis, in the same differential-peak-to-peak volts as
+`PCIE_GEN2_TX_DIFF_PP_MIN_V`, so the comparison is a subtraction. **One event,
+two projections, one definition** (rule 9) -- and it is deliberately **not**
+`linear_pp_v / g_dc`, which under-reports by ~4 % because the gain has already
+dropped by the time the compression point is reached (there is a test).
+
+**THE ANSWER, at all 135 points of the delivered design (`verify_full`, which
+already ran `swing=True`, so this cost ZERO extra simulations):**
+
+                                          min   median      max
+      linear input range at DC           504      520      560  mVpp
+      linear input range at NYQUIST      153      172      219  mVpp
+      link drive at the CTLE input                535       mVpp
+      OVERDRIVE                         2.44x    3.11x    3.49x
+      compressed at                            135 of 135 points
+
+**At DC the design is 1.03x over -- essentially AT its limit, not far past it.
+The entire blockage is the 3.07x de-rate between DC and Nyquist, and that
+de-rate IS the peaking.** A source-degenerated pair gets its linear input range
+from `Rs` and its peaking from `Cs` shorting that same `Rs` out at the signal
+band, so
+
+      linear range at f  =  linear range at DC / |H(f)/H(0)|
+
+with the ratio read off the same `.ac` curve the peaking is read off -- no new
+constant. **S3 and S8 are one knob read in opposite directions.** At the
+delivered 9.78 dB the DC linear range would have to be 535 x 3.068 =
+**1640 mVpp**, wider than the +/-0.8 V sweep and most of a 1.8 V supply. At
+S3's **3 dB floor** it would only need **756 mVpp**.
+
+**So Item 1's success criterion is met in its second form:** the measured
+explanation for S8 is **not** "the small-signal model no longer applies" but
+*"the peaking the spec asks for divides the linear input range by the same
+factor, and at 9 dB on a 1.8 V supply the arithmetic does not close at
+PCIe Gen2 drive."* Whether ANY sizing in the box reaches 1640 mVpp -- or 756 at
+the 3 dB floor -- is one ~5-minute experiment and is **not yet run**.
+
+**A false alarm, raised and withdrawn before it reached anything.** The C4
+compression gate looked like it paired the long-run input level with the
+Nyquist gain, which is not a physical signal. It does not: `link/bridge.py`
+checks the pulse response's own **peak excursion** (G61 convention C), which
+carries TX, channel and CTLE and needs no such pairing. **The gate is sound.**
+The new input-referred row is therefore a READABLE PROXY and is documented as
+one -- measured at **1.18-1.26x (median 1.24x) stricter** than the gate over
+the 135 points, agreeing on the verdict at **135 of 135**. Used as a gate it
+would be wrong; it is not used as one.
+
+**Checklist unchanged: 9 of 11 rows PASS at 135 points, 2 NOT MEASURABLE.**
+Full-fidelity cost measured at **0.557 s/point** (135 points in 75.2 s) --
+a directly usable constant for the item-3 speed-up arithmetic.
+
+**Tests 1622 -> 1632.** Six in `test_sky130_runner.py` (the analytic tanh
+1 dB input point in closed form; that it is NOT the output limit over the DC
+gain, and that the discrepancy GROWS with the threshold; that both projections
+come off one sample; absent-stays-absent; the swept span; and that degeneration
+widens the input range while leaving the output one alone). Four in
+`test_g4_verify.py` for the de-rate arithmetic and the summary counter.
+**Both gates were broken and watched go red**: replacing `linear_in_pp_v` with
+`linear_pp_v / g_dc` reddens 3, reading `vod` instead of `vid` reddens 4, and
+flipping the sign of the de-rate exponent reddens 2. Restored, all green.
+
+**HELD PENDING AN OWNER DECISION (items 1.2-1.4 of the brief):** the reward
+restructure (measured no-op for its stated half; the linear-range scored term
+is the part with content), the box widening (not available -- see above), and
+the re-search. `CLAUDEwa.md` §8 rule 6 and `CONTINUE_HERE.md` §9 rule 7 both
+put the box, the tolerances and `V1_SPECS` outside an agent's authority, and
+`BASELINES.md` §7f makes any of them a full re-run event.

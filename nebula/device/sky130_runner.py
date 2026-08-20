@@ -41,6 +41,17 @@ transfer curve: the 1 dB gain-compression point (the honest *linear* swing,
 and the number `DeviceResult.vout_swing_v` should carry), the saturation
 limit, and the steering ceiling.
 
+**All three are OUTPUT-referred, and for one whole question that is the wrong
+end of the stage.** S8 fails on this project's delivered design because the
+required output swing exceeds the compression limit, and a reader wanting to
+know *how hard may I drive this input* has to divide that limit by a gain they
+must go and look up. `SwingLimits.linear_in_pp_v` reports the SAME compression
+event on the input axis, in the same differential-peak-to-peak volts as
+`LinkConfig.v_in_diff_pp_v` and `PCIE_GEN2_TX_DIFF_PP_MIN_V`, so the
+comparison the spec table needs is a subtraction rather than a conversion.
+Both projections come off one swept sample; neither is computed from the
+other.
+
 NOISE REFERENCE — checked, and it is NOT a factor of two
 --------------------------------------------------------
 This netlist names `Vid` as the `.noise` input source; the older ones name
@@ -826,6 +837,29 @@ class SwingLimits:
     steering_pp_v: Optional[float]      # a branch current reaching ~0
     max_swept_pp_v: float               # largest |vod| actually simulated
     compression_db: float
+    #: **The same compression event, referred to the INPUT** — the differential
+    #: input peak-to-peak amplitude at which incremental gain has fallen
+    #: `compression_db` below its value at `vid = 0`. `linear_pp_v` answers
+    #: *"how much output can this stage deliver"*; this answers *"how much
+    #: input can it be driven with"*, which is the question S8 turns on and the
+    #: one nothing in this project measured until now.
+    #:
+    #: **It is not `linear_pp_v / g_dc_v_per_v`.** That division is only exact
+    #: while the gain is still `g_dc`, and by construction it is not — the
+    #: point is defined by the gain having dropped. Both numbers come off the
+    #: SAME swept sample, so there is one compression event with two
+    #: projections rather than two definitions that can drift (rule 9).
+    #:
+    #: Units match `LinkConfig.v_in_diff_pp_v` and
+    #: `PCIE_GEN2_TX_DIFF_PP_MIN_V` exactly — differential peak-to-peak volts
+    #: — so the comparison the spec table needs is a subtraction, not a
+    #: conversion.
+    linear_in_pp_v: Optional[float] = None
+    #: Largest differential input actually swept, i.e. `2 * vid_max`. The
+    #: companion to `max_swept_pp_v`: when `linear_in_pp_v` is `None` the stage
+    #: did not compress anywhere inside this range, which is information (a
+    #: LOWER bound on its linear range) and not a failure.
+    max_swept_in_pp_v: float = 0.0
 
 
 def textbook_swing_pp_v(i_tail_per_side_a: float, rl: float) -> float:
@@ -868,12 +902,24 @@ def swing_limits(
 
     outward = np.argsort(np.abs(vid))
 
-    def _first(mask: np.ndarray) -> Optional[float]:
+    def _first(mask: np.ndarray) -> Optional[int]:
+        """Index of the first sample OUTWARD from vid=0 that trips `mask`."""
         for i in outward:
             if mask[i]:
-                return 2.0 * abs(float(vod[i]))
+                return int(i)
 
         return None
+
+    # ONE compression event, TWO projections. `_out` is the number this
+    # function has always returned; `_in` is the same sample read on the input
+    # axis. Deriving both from the same index is what stops the input-referred
+    # limit becoming a second definition that can drift from the output one
+    # (rule 9, G32).
+    def _out(i: Optional[int]) -> Optional[float]:
+        return None if i is None else 2.0 * abs(float(vod[i]))
+
+    def _in(i: Optional[int]) -> Optional[float]:
+        return None if i is None else 2.0 * abs(float(vid[i]))
 
     thr = g0 * 10.0 ** (-compression_db / 20.0)
     linear = _first(g < thr)
@@ -884,11 +930,13 @@ def swing_limits(
 
     return SwingLimits(
         g_dc_v_per_v=g0,
-        linear_pp_v=linear,
-        saturation_pp_v=sat,
-        steering_pp_v=steer,
+        linear_pp_v=_out(linear),
+        saturation_pp_v=_out(sat),
+        steering_pp_v=_out(steer),
         max_swept_pp_v=2.0 * float(np.max(np.abs(vod))),
         compression_db=compression_db,
+        linear_in_pp_v=_in(linear),
+        max_swept_in_pp_v=2.0 * float(np.max(np.abs(vid))),
     )
 
 
@@ -1347,7 +1395,7 @@ def _load_or_none(path: Path) -> Optional[np.ndarray]:
         return None
 
 
-def _hd3_source() -> str:
+def _hd3_source(vin_pk_v: float = None) -> str:
     """The transient tone, as a `sin()` spec appended to the AC source.
 
     Appending rather than replacing is what keeps `.op`, `.ac` and `.noise`
@@ -1356,7 +1404,8 @@ def _hd3_source() -> str:
     serves all four analyses and there is ONE input definition in the netlist
     (rule 9) rather than a second one that could drift.
     """
-    return f" sin(0 {HD3_VIN_DIFF_PK_V:.6g} {HD3_TONE_HZ:.6g})"
+    v = HD3_VIN_DIFF_PK_V if vin_pk_v is None else float(vin_pk_v)
+    return f" sin(0 {v:.6g} {HD3_TONE_HZ:.6g})"
 
 
 def _hd3_block() -> str:
@@ -1455,6 +1504,7 @@ def run_point(
     ac_sweep: bool = False,
     ac_peak_interp: bool = False,
     hd3: bool = False,
+    hd3_vin_pk_v: Optional[float] = None,
 ) -> Sky130Point:
     """Simulate one sizing point. Never raises — failures come back ok=False.
 
@@ -1552,7 +1602,7 @@ def run_point(
         noise_summary=noise_summary, noise_probe=noise_probe,
         f_top=f"{MAX_SEARCH_TOP_HZ / 1e9:g}g",
         ac_dump=(_AC_DUMP_BLOCK if ac_sweep else ""),
-        tran_src=_hd3_source() if hd3 else "",
+        tran_src=_hd3_source(hd3_vin_pk_v) if hd3 else "",
         hd3_block=_hd3_block() if hd3 else "",
     )
 
@@ -2020,10 +2070,35 @@ def measured_swing_pp_v(pt: Sky130Point, compression_db: float = 1.0) -> Optiona
     return lim.linear_pp_v
 
 
+def measured_linear_input_pp_v(pt: Sky130Point,
+                               compression_db: float = 1.0) -> Optional[float]:
+    """**The differential input the stage can take**, in Vpp. The other half
+    of `measured_swing_pp_v`, and the one the eye actually turns on.
+
+    S8 is blocked on this repository's delivered design because the required
+    OUTPUT swing exceeds the measured linear limit. That verdict has always
+    been reported in output volts, which is correct and is also the harder
+    number for a reader to act on: an output limit has to be divided by a gain
+    the reader has to look up before it can be compared with the amplitude the
+    link drives. This returns the comparison directly.
+
+    `None` on the same terms as `measured_swing_pp_v`: the sweep did not reach
+    compression, which is a LOWER bound (`SwingLimits.max_swept_in_pp_v`) and
+    never a fallback to a computed number.
+    """
+    if not pt.ok or pt.vid is None or pt.point is None:
+        return None
+    lim = swing_limits(pt.vid, pt.vod, pt.sat_ok, pt.id_min,
+                       compression_db=compression_db,
+                       i_ref_a=pt.point.i_tail_per_side_a)
+    return lim.linear_in_pp_v
+
+
 __all__: Sequence[str] = (
     "SizingPoint", "Sky130Point", "SwingLimits", "TunableSetting",
     "run_point", "run_tunable_sweep", "passive_block",
-    "swing_limits", "measured_swing_pp_v", "textbook_swing_pp_v",
+    "swing_limits", "measured_swing_pp_v", "measured_linear_input_pp_v",
+    "textbook_swing_pp_v",
     "lib_for_device", "NFET_01V8", "NFET_G5V0", "VALID_CORNERS",
     "SPICE_DIR", "TRIMMED_LIB", "CTLE_LIB",
 )

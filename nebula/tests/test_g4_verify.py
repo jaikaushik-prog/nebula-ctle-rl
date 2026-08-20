@@ -160,3 +160,95 @@ def test_the_verification_grid_is_S9s_own(monkeypatch):
     # is where session 22k-run's failures all landed
     assert {"sf", "fs"} <= {p for p, _, _ in grid}
     assert not ({"sf", "fs"} & {p for p, _, _ in screen})
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# The drive-headroom row (session 22q). **No ngspice** — the arithmetic that
+# turns an output-referred compression verdict into an input-referred one is
+# what is under test, not the circuit.
+# ─────────────────────────────────────────────────────────────────────────────
+
+
+@dataclass
+class _SwingStub:
+    """Enough of a `Sky130Point` for `measured_linear_input_pp_v`.
+
+    The curve is the same `tanh` fixture `test_sky130_runner.py` uses, so the
+    1 dB point here is the analytic one and not a number chosen to make a test
+    pass.
+    """
+
+    gain: float = 1.789
+    vsat: float = 1.14
+    ok: bool = True
+
+    def __post_init__(self):
+        self.vid = np.linspace(-0.8, 0.8, 801)
+        self.vod = -self.vsat * np.tanh(self.gain * self.vid / self.vsat)
+        self.sat_ok = None
+        self.id_min = None
+        self.point = type("P", (), {"i_tail_per_side_a": None})()
+
+
+@dataclass
+class _CfgStub:
+    v_in_diff_pp_v: float = 0.5346751340548916      # the committed default
+
+
+def test_drive_headroom_derates_the_dc_range_by_the_nyquist_boost():
+    """**The claim this row rests on**, as arithmetic.
+
+    `Cs` shorts out the same `Rs` that gives the pair its linear range, so the
+    measured peaking IS the measurement of how much degeneration survives at
+    the signal band. 9.736 dB of boost is a factor of 3.068.
+    """
+    pt = _SwingStub()
+    d = G4._drive_headroom(pt, nyq_boost_db=9.736, cfg=_CfgStub())
+
+    assert d["linear_in_nyq_pp_v"] == pytest.approx(
+        d["linear_in_dc_pp_v"] / 3.0680, rel=1e-3)
+    assert d["drive_overdrive_x"] == pytest.approx(
+        d["drive_pp_v"] / d["linear_in_nyq_pp_v"], rel=1e-12)
+
+
+def test_zero_boost_leaves_the_dc_range_alone():
+    """A stage with no peaking is not de-rated. Guards the sign of the
+    exponent — the bug that would make MORE peaking look like MORE headroom."""
+    pt = _SwingStub()
+    d = G4._drive_headroom(pt, nyq_boost_db=0.0, cfg=_CfgStub())
+    assert d["linear_in_nyq_pp_v"] == pytest.approx(d["linear_in_dc_pp_v"])
+
+    more = G4._drive_headroom(pt, nyq_boost_db=12.0, cfg=_CfgStub())
+    assert more["linear_in_nyq_pp_v"] < d["linear_in_nyq_pp_v"]
+    assert more["drive_overdrive_x"] > d["drive_overdrive_x"]
+
+
+def test_an_unreached_limit_stays_absent_and_is_never_computed():
+    """Rule 1. A stage that does not compress inside the sweep has a LOWER
+    bound on its linear range, not a known one — and `None` must survive."""
+    pt = _SwingStub()
+    pt.vid = np.linspace(-0.02, 0.02, 201)
+    pt.vod = -1.789 * pt.vid
+
+    d = G4._drive_headroom(pt, nyq_boost_db=9.736, cfg=_CfgStub())
+    assert d["linear_in_dc_pp_v"] is None
+    assert d["linear_in_nyq_pp_v"] is None
+    assert d["drive_overdrive_x"] is None
+    assert d["drive_pp_v"] == pytest.approx(0.5346751340548916)
+
+
+def test_drive_headroom_summary_counts_compressed_points():
+    """`n_compressed` is the number the checklist is for, so it is pinned."""
+    rows = [
+        G4.FullPointResult(
+            corner="tt", vdd_scale=1.0, temp_c=27.0, cl_f=3e-14, ok=True,
+            reason=None, margins={}, failed_specs=[], reward=1.0,
+            feasible=True, linear_in_dc_pp_v=0.52,
+            linear_in_nyq_pp_v=ny, drive_pp_v=0.535,
+            drive_overdrive_x=0.535 / ny)
+        for ny in (0.15, 0.20, 0.60)          # two compressed, one not
+    ]
+    s = G4._drive_headroom_summary(rows)
+    assert s["n_points_with_a_measured_limit"] == 3
+    assert s["n_compressed"] == 2
+    assert s["overdrive_x"]["max"] == pytest.approx(0.535 / 0.15)
