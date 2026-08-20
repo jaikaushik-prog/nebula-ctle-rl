@@ -63,13 +63,18 @@ import gzip
 import json
 import math
 import time
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Optional, Sequence
 
 import numpy as np
 
+from nebula.experiments.exp_g2_closed_loop import FUNNEL_LOSS_DB
 from nebula.experiments.s9_yield import PROMOTION_LOADS, SCREEN_CORNERS, all_corners
+from nebula.device.sky130_runner import run_point
+from nebula.link.bridge import device_result_from_point, evaluate_link
+from nebula.link.config import LinkConfig
+from nebula.rl.evaluator import build_point
 from nebula.rl import reward_v1 as R
 from nebula.rl.contract import N_ACTIONS, sizing_from_u
 from nebula.rl.evaluator import SpiceBudget, Verdict, evaluate, scoring_meas
@@ -143,6 +148,179 @@ def candidates(log: Path = SOURCE_LOG, n_control: int = 3) -> list[Candidate]:
         if len(control) >= n_control:
             break
     return list(robust.values()) + control
+
+
+#: **The full slide.** `V3_SPECS` -- eleven rows, every line the competition's
+#: own specification table lists. See `reward_v1.V3_SPECS` for why this is a
+#: separate set from the one the search optimises.
+FULL_SPECS = R.V3_SPECS
+
+
+@dataclass
+class FullPointResult:
+    """One (corner, load) point scored against ALL ELEVEN spec rows.
+
+    `verify()` scores the seven the search optimises. This scores those plus
+    S4 (HD3), S7 (area) and both S8 (eye) rows -- the three lines a judge
+    holding the competition slide would otherwise find blank.
+    """
+
+    corner: str
+    vdd_scale: float
+    temp_c: float
+    cl_f: float
+    ok: bool
+    reason: Optional[str]
+    margins: dict
+    failed_specs: list
+    reward: float
+    feasible: bool
+    measured_specs: list = field(default_factory=list)
+    unmeasured_specs: list = field(default_factory=list)
+    hd3_dbc: Optional[float] = None
+    area_mm2: Optional[float] = None
+    vout_swing_v: Optional[float] = None
+    eye_h_v: Optional[float] = None
+    eye_w_ui: Optional[float] = None
+
+
+def verify_full(cand: "Candidate",
+                corners: Optional[Sequence] = None,
+                loads: Sequence[float] = PROMOTION_LOADS,
+                loss_db: float = FUNNEL_LOSS_DB) -> dict:
+    """**Every spec row on the slide, at every corner.** The judge's checklist.
+
+    Runs the G2 closed-loop chain rather than the search evaluator, because
+    three of the eleven rows are not in the search's measurement vector:
+
+        run_point(swing=True, ac_sweep=True, hd3=True)   <- S4 needs the transient
+          -> device_result_from_point()                  <- carries hd3 and area
+            -> evaluate_link()                           <- S8, no extra SPICE
+
+    `G2_RESULTS.md` measured the cost: 0.2787 s at full fidelity against
+    0.1768 s for the search's `.op+.ac+.noise`, plus 0.0372 s of link
+    evaluation with **no** simulator call -- the eye is computed from the AC
+    curve the same invocation already produced.
+
+    **No short-circuit**, for the same reason `verify` has none: a verification
+    has to say WHICH rows failed and by how much.
+    """
+    corners = list(corners if corners is not None else all_corners())
+    cfg = LinkConfig(channel_loss_db_at_nyquist=loss_db)
+    rows: list[FullPointResult] = []
+    for c in corners:
+        for cl in loads:
+            sizing = sizing_from_u(np.asarray(cand.u), cl_f=float(cl))
+            base = dict(corner=c.process, vdd_scale=c.vdd_scale,
+                        temp_c=c.temp_c, cl_f=float(cl))
+            try:
+                point, _ = build_point(sizing, corner=c.process,
+                                       vdd_scale=c.vdd_scale)
+            except Exception as exc:                        # noqa: BLE001
+                rows.append(FullPointResult(
+                    **base, ok=False, reason=f"unrealisable geometry: {exc}",
+                    margins={}, failed_specs=list(FULL_SPECS),
+                    reward=float("nan"), feasible=False))
+                continue
+            pt = run_point(point, c.process, temp_c=c.temp_c, swing=True,
+                           ac_sweep=True, hd3=True)
+            if not pt.ok:
+                rows.append(FullPointResult(
+                    **base, ok=False, reason=pt.fail_reason, margins={},
+                    failed_specs=list(FULL_SPECS), reward=float("nan"),
+                    feasible=False))
+                continue
+            dev = device_result_from_point(pt)
+            if not dev.ok:
+                rows.append(FullPointResult(
+                    **base, ok=False, reason=dev.fail_reason, margins={},
+                    failed_specs=list(FULL_SPECS), reward=float("nan"),
+                    feasible=False))
+                continue
+            lr = evaluate_link(dev, cfg)
+            meas = {
+                "g_dc_db": dev.g_dc_db, "peaking_db": dev.peaking_db,
+                "f_peak_oct": math.log2(dev.f_peak_hz / 2.5e9),
+                # **Read off `pt` exactly as `rl/evaluator` reads them, not
+                # re-derived.** `DeviceResult` carries neither the Nyquist
+                # boost nor the saturation margins, and computing them a second
+                # way here would be two definitions of one number (rule 9).
+                "nyq_boost_db": float(pt.nyquist_boost_db),
+                "inoise_vrms": dev.vn_in_vrms, "power_w": dev.power_w,
+                "pair_margin_v": float(pt.vds) - float(pt.vdsat),
+                "tail_margin_v": float(pt.tail_margin_v),
+            }
+            m = R.margins(meas, LEGACY_TARGET.f_peak_hz,
+                          target_peaking_db=LEGACY_TARGET.peaking_db,
+                          link=(lr if lr.ok else None),
+                          hd3_dbc=dev.hd3_dbc, area_mm2=dev.area_mm2)
+            # **Per ROW, not all-or-nothing.** A row that cannot be
+            # measured at this point must not make the other ten unscorable:
+            # the first version of this returned "0 of 135 scorable" because
+            # S8 was blocked everywhere, which is true and useless. A checklist
+            # with nine ticks and two stated blockers is the deliverable; a
+            # blank page is not.
+            measured = [k for k in FULL_SPECS if k in m]
+            unmeasured = [k for k in FULL_SPECS if k not in m]
+            rb = R.reward(meas, LEGACY_TARGET.f_peak_hz, specs=tuple(measured),
+                          target_peaking_db=LEGACY_TARGET.peaking_db, link=lr,
+                          hd3_dbc=dev.hd3_dbc, area_mm2=dev.area_mm2)
+            rows.append(FullPointResult(
+                **base, ok=True,
+                reason=(None if not unmeasured else
+                        (lr.fail_reason if not lr.ok
+                         else f"unmeasured: {unmeasured}")),
+                margins={k: float(m[k]) for k in measured},
+                measured_specs=measured, unmeasured_specs=unmeasured,
+                failed_specs=[k for k in measured if m[k] < 0.0],
+                reward=float(rb.reward), feasible=bool(rb.feasible),
+                hd3_dbc=dev.hd3_dbc, area_mm2=dev.area_mm2,
+                vout_swing_v=dev.vout_swing_v,
+                eye_h_v=(lr.eye_h_v if lr.ok else None),
+                eye_w_ui=(lr.eye_w_ui if lr.ok else None)))
+
+    scored = [r for r in rows if r.ok]
+    # **The checklist, per ROW.** Three counts per spec, and they mean
+    # different things: how many points it was checked at, how many it failed,
+    # and how many it could not be measured at. Collapsing the third into the
+    # second would report a blocked spec as a failing one.
+    per_spec = {}
+    for name in FULL_SPECS:
+        checked = sum(1 for r in scored if name in r.measured_specs)
+        per_spec[name] = {
+            "checked_at": checked,
+            "failed_at": sum(1 for r in scored if name in r.failed_specs),
+            "unmeasurable_at": sum(1 for r in scored
+                                   if name in r.unmeasured_specs),
+            "verdict": ("PASS" if checked and not any(
+                name in r.failed_specs for r in scored)
+                else "FAIL" if checked else "NOT MEASURABLE"),
+        }
+    blocked = sorted({r.reason.split("(")[0].strip()
+                      for r in scored if r.reason})
+    return {
+        "design_id": cand.design_id, "role": cand.role,
+        "spec_set": list(FULL_SPECS), "n_spec_rows": len(FULL_SPECS),
+        "n_points": len(rows), "n_scored": len(scored),
+        "n_unscorable": len(rows) - len(scored),
+        "n_rows_passing": sum(1 for v in per_spec.values()
+                              if v["verdict"] == "PASS"),
+        "n_rows_failing": sum(1 for v in per_spec.values()
+                              if v["verdict"] == "FAIL"),
+        "n_rows_not_measurable": sum(1 for v in per_spec.values()
+                                     if v["verdict"] == "NOT MEASURABLE"),
+        "n_failed": sum(1 for r in scored if r.failed_specs),
+        "all_measured_rows_pass": bool(scored) and not any(
+            r.failed_specs for r in scored),
+        "per_spec": per_spec,
+        "blocking_reasons": blocked,
+        "median_vout_swing_v": float(np.median(
+            [r.vout_swing_v for r in scored if r.vout_swing_v is not None])
+            ) if any(r.vout_swing_v is not None for r in scored) else None,
+        "worst_reward": (min((r.reward for r in scored), default=float("nan"))),
+        "channel_loss_db_at_nyquist": loss_db,
+        "points": [asdict(r) for r in rows],
+    }
 
 
 @dataclass
@@ -242,6 +420,39 @@ def run(n_control: int = 3, out_path: Path = OUT_PATH) -> dict:
     return out
 
 
+FULL_OUT_PATH = HERE / "g4_verify_full_results.json"
+
+
+def run_full(n_control: int = 0, out_path: Path = FULL_OUT_PATH) -> dict:
+    """The eleven-row checklist, at 45 corners x 3 loads."""
+    cands = candidates(n_control=n_control)
+    t0 = time.perf_counter()
+    results = []
+    for c in cands:
+        r = verify_full(c)
+        results.append(r)
+        print(f"  {r['role']:<13} {r['design_id'][:12]:<14} "
+              f"{r['n_rows_passing']} rows PASS, "
+              f"{r['n_rows_failing']} FAIL, "
+              f"{r['n_rows_not_measurable']} not measurable "
+              f"(over {r['n_scored']}/{r['n_points']} points)", flush=True)
+        for name in r["spec_set"]:
+            v = r["per_spec"][name]
+            print(f"        {name:<16} {v['verdict']:<15} "
+                  f"checked {v['checked_at']:>3}  failed {v['failed_at']:>3}  "
+                  f"unmeasurable {v['unmeasurable_at']:>3}")
+        for b in r["blocking_reasons"]:
+            print(f"        blocked: {b[:96]}")
+    out = {"task": "G4 -- every spec row on the competition slide",
+           "spec_set": list(FULL_SPECS), "results": results,
+           "wall_s": time.perf_counter() - t0}
+    out_path.write_text(json.dumps(out, indent=1, default=str),
+                        encoding="utf-8")
+    print(f"  {out['wall_s'] / 60:.1f} min")
+    print(f"wrote {out_path}")
+    return out
+
+
 def main(argv: Optional[Sequence[str]] = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -249,9 +460,14 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     ap.add_argument("--list", action="store_true",
                     help="which designs would be verified; no SPICE")
     ap.add_argument("--controls", type=int, default=3)
+    ap.add_argument("--full", action="store_true",
+                    help="score ALL ELEVEN spec rows (V3_SPECS) at every "
+                         "corner -- the competition slide's own checklist. "
+                         "Adds the HD3 transient and the link evaluation, so "
+                         "~0.3 s per point against ~0.2 s.")
     args = ap.parse_args(argv)
-    if not (args.run or args.list):
-        ap.error("choose --list or --run")
+    if not (args.run or args.list or args.full):
+        ap.error("choose --list, --run or --full")
     if args.list:
         for c in candidates(n_control=args.controls):
             print(f"  {c.role:<13} {c.design_id[:14]:<16} from {c.source:<12} "
@@ -259,6 +475,8 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
                   f"worst at {c.claimed_worst_point}")
     if args.run:
         run(n_control=args.controls)
+    if args.full:
+        run_full(n_control=args.controls)
     return 0
 
 

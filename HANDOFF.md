@@ -17,7 +17,34 @@
 > decisions that are OPEN and human-only, and what to do next. It supersedes
 > `nebula/NEXT_STEPS.md`. This file remains the full state of record.
 
-Last updated: **2026-08-20** (session 22n: **PPO WAS TRAINED ON A DIFFERENT
+Last updated: **2026-08-20** (session 22o: **THE THREE SPEC ROWS THE
+COMPETITION SLIDE LISTS AND THE OBJECTIVE DID NOT SCORE.** The slide has
+ELEVEN rows; the scored objective had SEVEN -- S4 (HD3) and S7 (area) had **no
+tolerance row at all** and the two S8 (eye) rows were **unreachable through
+`reward()`**. **Two defects found by trying to add a row: G101 -- `V1_SPECS`
+was defined by EXCLUSION** (`everything not S8-prefixed`), so the two new rows
+would have joined it automatically, taking it 7 -> 9, changing `B = N + 1` and
+**shifting every published reward by exactly 2.0 with nothing in the diff to
+show for it**; and **`reward()` accepted `link` and never forwarded it**, so
+`V2_SPECS` raised `KeyError('S8_eye_h')` -- a spec set with tolerances, a
+docstring and no reachable caller (G73's family). Both tolerances are **one
+third of the limit**, the rule S5/S6 already use; the HD3 margin is
+`limit - measured` because more negative is better, and there is a test for the
+sign. `V3_SPECS` is the whole slide, **verification only** -- V1 untouched and
+all **1622** tests pass. **THE CHECKLIST at 45 corners x 3 loads on the
+delivered design: NINE of eleven rows PASS at all 135 points** (HD3 -47.7 to
+-49.2 dBc against < -30; area 0.002150 mm^2 against < 0.05, 23x inside).
+**S8 is BLOCKED BY COMPRESSION and that is the verification working** -- output
+swing 335-941 mVpp against a linear limit of ~147-339, so the small-signal fit
+the eye rests on no longer applies and `evaluate_link` returns `ok=False`
+rather than a plausible number. Not new (G2 measured 61 %; HANDOFF §8 calls it
+the top open design question and a human's call) -- what is new is that it
+holds for the DELIVERED design at EVERY corner and is reported per row. A
+mistake I made and fixed: the first version scored all-or-nothing and reported
+**"0 of 135 scorable"**, true and useless; a checklist with nine ticks and two
+stated blockers is the deliverable. Tests **1614 -> 1622**.)
+
+Earlier session 22n: ( **PPO WAS TRAINED ON A DIFFERENT
 OBJECTIVE FROM THE ONE IT WAS SCORED ON -- worth 0.0413, and G3's grid clause
 FLIPS.** Two lines: `env.py` set `terminated = bool(rb.feasible)` while the
 metric scored `B + min(margin/tol)`, *how far PAST the band you get* -- **so the
@@ -3701,6 +3728,28 @@ Plus: git init, .gitignore, 28 tests, Wilson-bound BER reporting.
   no amount of tuning finds it, because it is not in the hyperparameters, it is
   in the MDP. `nebula/tests/test_ppo_terminate.py` pins the seam and
   `PREDICTIONS.md` entry 17 is the measurement.
+
+- **G101 -- (nebula) a spec set defined by EXCLUSION grows silently, and the
+  growth moves every published number.** `V1_SPECS` read
+  `tuple(n for n in SPEC_NAMES if not n.startswith("S8_"))` -- *everything that
+  is not S8*. Session 22o added two tolerance rows the competition slide
+  requires (S4 HD3, S7 area); neither is S8-prefixed, so **both would have
+  joined V1 automatically**, taking it from seven rows to nine. `len(specs)`
+  feeds the feasibility bonus `B = N + 1`, which sets the floor of the feasible
+  band, so **every reward this project has published would have shifted by
+  exactly 2.0** -- the +8.950669 ceiling, the whole `BASELINES.md` ranking, the
+  G4 verdicts -- with **nothing in the diff to show for it**, because the diff
+  would have added two `Tol(...)` lines and touched no number.
+  **The general form: a set defined by what it EXCLUDES has no owner.** Adding
+  a member elsewhere silently changes it, and the change is invisible at the
+  point of edit. List the members. `V1_SPECS` and `V2_SPECS` are now literal
+  tuples and `test_v1_is_LISTED_not_derived_by_exclusion` pins the seven.
+  **Found alongside a second defect in the same file:** `reward()` accepted a
+  `link` argument and **never forwarded it to `margins()`**, so asking for
+  `V2_SPECS` raised `KeyError('S8_eye_h')` -- a spec set with tolerances, a
+  docstring, a published rationale and **no reachable caller**. G73's family
+  exactly. Both are one-line fixes and neither would have been found by a test
+  that only exercised the default path.
 
 ## 10. Environment
 
@@ -8403,3 +8452,70 @@ best-evidenced item on that list.
 **Tests 1607 -> 1614.** Four gates broken and watched go red. New:
 `experiments/exp_ppo_terminate.py`, `nebula/tests/test_ppo_terminate.py`,
 `experiments/ppo_terminate_results.json`, gotcha **G100**.
+
+### 2026-08-20 - Session 22o (the three spec rows the competition slide lists and the objective did not score)
+
+**The slide has ELEVEN spec rows. The scored objective had SEVEN.** S4 (HD3)
+and S7 (area) had **no tolerance row at all**; the two S8 (eye) rows existed
+but were **unreachable through `reward()`**. A judge holding that slide would
+have found three blanks. Two are now closed and the third is blocked for a
+named, measured, pre-existing reason.
+
+**TWO DEFECTS IN `reward_v1.py`, BOTH FOUND BY TRYING TO ADD A ROW:**
+
+* **G101 -- `V1_SPECS` was defined by EXCLUSION** (`everything not S8-prefixed`).
+  Adding S4 and S7 would have grown it from seven rows to nine, which changes
+  `len(specs)`, which changes `B = N + 1`, which would have **shifted every
+  published reward by exactly 2.0** -- the +8.950669 ceiling, the whole
+  `BASELINES.md` ranking, the G4 verdicts -- **with nothing in the diff to show
+  for it.** V1 and V2 are now literal tuples.
+* **`reward()` accepted `link` and never forwarded it to `margins()`**, so
+  `V2_SPECS` raised `KeyError('S8_eye_h')`. A spec set with tolerances, a
+  docstring, a published rationale and no reachable caller -- G73's family.
+
+**THE NEW ROWS ARE DERIVED, NOT CHOSEN.** Both tolerances are **one third of
+the limit**, which is exactly the rule `S5_noise` and `S6_power` already use.
+The HD3 margin is `limit - measured` because HD3 is a NEGATIVE dBc number and
+more negative is better -- a sign error there would score the most linear
+designs as the worst, which is a mistake session 21 already made once on the
+compression gate. There is a test for the sign.
+
+**`V3_SPECS` = the whole slide, ELEVEN rows, FOR VERIFICATION ONLY.** Scoring
+the search on it would change the problem and force a §7f re-run. V1 is
+untouched and **all 1622 tests pass**, so every published number reproduces.
+
+**THE CHECKLIST, at 45 corners x 3 loads, on the delivered design
+`57cba07581cd2603`: NINE of eleven rows PASS at all 135 points.**
+
+    S4 HD3     -47.7 to -49.2 dBc   against < -30      margin 17.7-19.2 dB
+    S7 area     0.002150 mm^2       against < 0.05     23x inside
+
+**S8 IS BLOCKED BY COMPRESSION AND THAT IS THE VERIFICATION WORKING.** The link
+refuses at every point -- *output swing 335-941 mVpp exceeds the linear limit
+~147-339 mVpp* -- because the eye rests on a small-signal pole-zero fit and the
+stage is driven past its own measured linear limit at the PCIe drive level.
+`evaluate_link` returns `ok=False` rather than a plausible number (rule 1).
+**Not new:** `G2_RESULTS.md` measured it on 61 % of designs and HANDOFF §8
+already lists it as *"the top open design question and a human's call"* with
+three routes on record. What is new is that it now holds for the **delivered**
+design at **every corner**, and is reported **per row** rather than silently
+absent.
+
+**A DESIGN MISTAKE I MADE AND FIXED.** The first version scored a point
+all-or-nothing against the eleven rows, so a blocked S8 made the other nine
+unscorable: it reported **"0 of 135 scorable"**, which is true and useless. A
+checklist with nine ticks and two stated blockers is the deliverable; a blank
+page is not. Scoring is now per ROW, with three counts each -- checked at,
+failed at, unmeasurable at -- because collapsing the third into the second
+would report a blocked spec as a failing one.
+
+**The control still fails on the same row it always did:** the strongest
+TT-only design fails `S3_f_peak` at **66 of 135 points** while passing every
+other measurable row, so the corner axis remains entirely a story about peak
+frequency.
+
+**Tests 1614 -> 1622.** Four gates broken and watched go red. New:
+`reward_v1.V3_SPECS` + the S4/S7 rows, `exp_g4_verify.verify_full` and
+`--full`, `nebula/tests/test_full_spec_set.py`,
+`experiments/g4_verify_full_results.json`, gotcha **G101**,
+`G4_RESULTS.md` §6b.

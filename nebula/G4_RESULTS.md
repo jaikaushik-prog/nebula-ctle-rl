@@ -188,6 +188,90 @@ simulations, which is under 15 seconds.
 
 ---
 
+## 6b. The full slide — all eleven spec rows, at every corner
+
+**Added session 22o.** The competition's own specification table lists eleven
+rows. The scored objective had **seven**: S4 (HD3) and S7 (area) had no
+tolerance row at all, and the two S8 (eye) rows existed but were unreachable
+through `reward()`. A judge holding that slide would have found three blanks.
+
+`exp_g4_verify --full` scores every row at 45 corners × 3 loads, using the G2
+closed-loop chain rather than the search evaluator, because three of the rows
+are not in the search's measurement vector:
+
+    run_point(swing=True, ac_sweep=True, hd3=True)   <- S4 needs the transient
+      -> device_result_from_point()                   <- carries HD3 and area
+        -> evaluate_link()                            <- S8, no extra SPICE call
+
+### The verified design, `57cba07581cd2603`
+
+| spec row | verdict | checked at | failed at |
+|---|---|---|---|
+| S3 peaking | **PASS** | 135 | 0 |
+| S3 peak frequency | **PASS** | 135 | 0 |
+| S3 Nyquist boost | **PASS** | 135 | 0 |
+| **S4 HD3** | **PASS** | 135 | 0 |
+| S5 input noise | **PASS** | 135 | 0 |
+| S6 power | **PASS** | 135 | 0 |
+| **S7 area** | **PASS** | 135 | 0 |
+| S8 eye height | **NOT MEASURABLE** | 0 | — |
+| S8 eye width | **NOT MEASURABLE** | 0 | — |
+| pair saturation | **PASS** | 135 | 0 |
+| tail saturation | **PASS** | 135 | 0 |
+
+**Nine of eleven rows pass at every one of 135 points. Two are not measurable,
+for a named and measured reason.**
+
+### S4 and S7, the two rows that had no home
+
+Both pass by a wide margin at every corner, which is the finding rather than a
+reason to have left them unscored:
+
+| | measured | limit | margin |
+|---|---|---|---|
+| **HD3** | −47.7 to −49.2 dBc | < −30 dBc | **17.7–19.2 dB** |
+| **area** | 0.002150 mm² | < 0.05 mm² | **23× inside** |
+
+`CLAUDEwa.md` §3 called S4 *"relatively relaxed — do not over-engineer"*. That
+is now measured across the full PVT grid rather than asserted.
+
+### S8 is blocked by COMPRESSION, and that is the honest answer
+
+The link layer refuses to compute an eye, at all 135 points, with:
+
+    output swing 335–941 mVpp exceeds the linear limit ~147–339 mVpp
+
+**This is not a defect in the verification — it is the verification working.**
+The eye is built from a small-signal pole-zero fit, and at the PCIe input drive
+level this CTLE is driven past its own measured linear limit, so the model the
+eye rests on no longer applies. `evaluate_link` returns `ok=False` rather than
+a plausible number, which is exactly what `CLAUDEwa.md` §8 rule 1 demands.
+
+It is also **not new**: `G2_RESULTS.md` measured it on 168 of 276 designs
+(61 %) with a median overshoot of 1.29×, and `HANDOFF.md` §8 lists it as *"the
+top open design question and it is a human's call"*, with three routes on
+record — reach below S3's 3 dB floor, declare the low-loss end of the channel
+family out of scope, or accept that the CTLE must attenuate and re-derive the
+box's `rl` range downward.
+
+**What session 22o adds is that the blockage now holds for the DELIVERED
+design at every corner, and is reported per row rather than silently absent.**
+The median output swing of the verified design is **335.2 mVpp**.
+
+### The control still fails, and still on the same row
+
+| design | rows passing | rows failing | not measurable |
+|---|---|---|---|
+| `57cba07581cd` (corner-robust) | **9** | 0 | 2 |
+| `c9d52866743d` (screen survivor) | 8 | **1** — `S3_f_peak` at 6 points | 2 |
+| `6484611d7a84` (best at TT only) | 8 | **1** — `S3_f_peak` at **66** points | 2 |
+
+The nominal-only control fails the peak-frequency row at **66 of 135 points**.
+S4, S7 and every other measurable row pass for all three — so the corner axis
+is entirely a story about `S3_f_peak`, which is what §3 already showed.
+
+---
+
 ## 7. What is still open
 
 * **The corner-aware RL loop has not been run at scale.** `rl/corner_env.py`
