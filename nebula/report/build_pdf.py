@@ -49,16 +49,38 @@ def _facts() -> dict:
     term = _load("ppo_terminate_results.json")["analysis"]["per_budget"]
     g4 = _load("g4_verify_results.json")
     g4full = _load("g4_verify_full_results.json")
+    joint = _load("joint_verify_full_results.json")
     robust = [r for r in g4["results"] if r["role"] == "robust"]
     winner = [r for r in robust if r["all_points_pass"]][0]
     worst_ctrl = max((r for r in g4["results"] if r["role"] == "nominal_only"),
                      key=lambda r: r["n_failed"])
     full_win = [r for r in g4full["results"] if r["role"] == "robust"][0]
+    full_joint = joint["results"][0]
     return {
         "rank": rank, "term": term,
         "winner": winner, "worst_ctrl": worst_ctrl, "full": full_win,
+        "joint": full_joint,
         "n_points": winner["n_points"],
+        # **Session 22u.** These four cells were HAND-TYPED as "11 of 11" and
+        # "0" against artifacts that did not exist. They do now, and the
+        # numbers they carry are different, because `verify_full` was scoring
+        # the quantised peak (G108). A literal in the prose is a number nothing
+        # can falsify; these are read.
+        "rows": _rows_cells(full_win, full_joint),
     }
+
+
+def _rows_cells(delivered: dict, joint: dict) -> dict:
+    """The compliance counters for the two designs, from their own artifacts."""
+    def cell(r: dict) -> dict:
+        eye = r["per_spec"]["S8_eye_h"]
+        return {
+            "passing": f"{r['n_rows_passing']} of {r['n_spec_rows']}",
+            "failing": str(r["n_rows_failing"]),
+            "not_measurable": str(r["n_rows_not_measurable"]),
+            "eye_at": f"{eye['checked_at']} of {r['n_points']}",
+        }
+    return {"delivered": cell(delivered), "joint": cell(joint)}
 
 
 class Report(FPDF):
@@ -243,13 +265,22 @@ def build() -> Path:
         ("   ... that sweep, in simulations and wall clock",
          f"{_ff['n_simulations'] / 1e6:.2f} M  /  "
          f"{_ff['wall_clock_hours']:,.0f} h"),
-        ("Spec rows passing at 45 corners x 3 loads", "11 of 11"),
-        ("Points the delivered design passes", f"{F['n_points']} of {F['n_points']}"),
+        # **These two lines used to describe DIFFERENT DESIGNS** -- "11 of 11
+        # rows" was the joint-search winner and "135 of 135 points" the
+        # delivered one -- and the first was measured on the quantised peak and
+        # is not true of either (G108). Both now name one design and are read
+        # from its artifact.
+        ("Spec rows the delivered design passes, at 45 corners x 3 loads",
+         f"{F['rows']['delivered']['passing']}  "
+         f"({F['rows']['delivered']['not_measurable']} not measurable, "
+         f"{F['rows']['delivered']['failing']} failing)"),
+        ("   ... at how many of those points",
+         f"{F['full']['n_scored']} of {F['full']['n_points']}"),
         ("Search methods benchmarked on one evaluator", "6"),
         ("SPICE simulations behind this report", "> 250 000"),
-        ("Automated tests", "1653"),
-        ("Documented failure modes (gotchas)", "107"),
-        ("Pre-registered predictions, scored", "21"),
+        ("Automated tests", "1665"),
+        ("Documented failure modes (gotchas)", "108"),
+        ("Pre-registered predictions, scored", "22"),
     ]
     pdf.set_font("Body", "", 9.6)
     for k, v in stats:
@@ -447,10 +478,13 @@ def build() -> Path:
         "400-simulation local search, seeded at the most linear design the "
         "earlier sweep found and steered by the measured sensitivity of the "
         "peak frequency to Cs:")
+    _d, _j = F["rows"]["delivered"], F["rows"]["joint"]
     pdf.table(["", "delivered", "joint search"],
-              [["rows passing at 135 points", "9 of 11", "**11 of 11**"],
-               ["rows failing", "0", "0"],
-               ["eye measurable at", "0 of 135", "98 of 135"],
+              [["rows passing at 135 points", _d["passing"], _j["passing"]],
+               ["rows failing", _d["failing"], _j["failing"]],
+               ["rows not measurable", _d["not_measurable"],
+                _j["not_measurable"]],
+               ["eye measurable at", _d["eye_at"], _j["eye_at"]],
                ["eye height", "-", "377.1 - 539.4 mV  (spec > 100)"],
                ["eye width", "-", "0.844 - 0.875 UI  (spec > 0.4)"],
                ["HD3 at 2.5 GHz, 535 mVpp", "-17.4 dBc  FAILS", "-42.7 dBc"],
@@ -460,12 +494,24 @@ def build() -> Path:
     pdf.body(
         "**The peak frequency was bought with peaking, as predicted before the "
         "run**: 9.15 dB down to 6.37 dB, still comfortably inside S3's band. "
-        "The remaining 37 points are where the eye cannot be computed, and "
-        "**all 37 are at corners the search screen does not contain** -- 27 of "
-        "them at the low supply, where output headroom is tightest. That is "
-        "the fourth independent measurement of this screen's blind spot in "
-        "this project, and it is an argument for a mixed corner rather than "
-        "for a different design.")
+        "The 37 points where the eye cannot be computed are **all at corners "
+        "the search screen does not contain** -- 27 of them at the low supply, "
+        "where output headroom is tightest. That is the fourth independent "
+        "measurement of this screen's blind spot in this project, and it is an "
+        "argument for a mixed corner.")
+    pdf.callout(
+        "RETRACTION, AND IT IS THE MOST IMPORTANT ONE IN THIS REPORT. An "
+        "earlier draft printed 11 of 11 rows and zero failures in the right-"
+        "hand column above. That was measured on the raw ac dec 50 frequency "
+        "lattice, and S3's 1.2500 GHz floor falls between two of its samples "
+        "-- 1.202264 and 1.258925 GHz -- with nothing in between. A true peak "
+        "anywhere from 1.230269 to 1.250000 GHz is nearer to 1.258925 and is "
+        "reported as it, so a failing design is rounded into a passing one "
+        "across a 1.6 % band of frequency. This design's six worst corners "
+        "measure 1.2417 to 1.2470 GHz -- every one inside that band. Scored on "
+        "the interpolated peak, as the search itself always was, it fails S3 "
+        "at 6 of 135 points. The table above is the corrected measurement, "
+        "loaded from the verification artifact. See section 8, G108.")
 
     pdf.h1("Tunability, and what the control actually trades")
     pdf.body(
@@ -703,11 +749,11 @@ def build() -> Path:
         "**Pre-registration.** Any experiment whose result could be argued for "
         "afterwards gets its prediction, with acceptance bands and "
         "falsification conditions, committed to version control *before* it "
-        "runs. Seventeen entries; the misses are recorded as misses and "
+        "runs. Twenty-two entries; the misses are recorded as misses and "
         "nothing above an outcome heading is ever edited.",
         "**Every gate is proved able to fail.** A check that cannot go red is "
         "not a check. Each is deliberately broken, watched fail, and restored.",
-        "**A failure catalogue of 101 entries.** Most describe something that "
+        "**A failure catalogue of 108 entries.** Most describe something that "
         "reported success and exited zero -- the simulator reporting failures "
         "as warnings, a benchmark run in a fixed order measuring the order, an "
         "aggregate rate hiding a systematic bias.",
@@ -769,13 +815,16 @@ def build() -> Path:
                "still intact -- which is why the blue curve is 17 dB better "
                "than the other two at every amplitude.")
     pdf.bullets([
-        "**The eye is now verified -- but at 98 of 135 points, not 135.** "
-        "See section 5a: a joint search meeting every row produced a design "
-        "whose eye measures 377-539 mV at every point where it can be "
-        "computed, and cannot be computed at 37, all of them at corners the "
-        "3-corner search screen does not contain and 27 of them at VDD 0.95. "
-        "Until the screen carries a mixed and a low-supply member, a search "
-        "will keep inheriting that hole.",
+        "**The eye is now verified -- but at 98 of 135 points, not 135, and "
+        "on a design that fails S3 at 6 of 135.** A joint search asking for "
+        "the eye and the peaking together produced a design whose eye measures "
+        "377-539 mV at every point where it can be computed, and cannot be "
+        "computed at 37, all of them at corners the 3-corner search screen "
+        "does not contain and 27 of them at VDD 0.95. Scored on the "
+        "interpolated peak its peak frequency drops below S3's 1.25 GHz floor "
+        "at six slow-hot heavily-loaded corners, so it is not a shippable "
+        "design as it stands. Until the screen carries a mixed and a "
+        "low-supply member, a search will keep inheriting that hole.",
         "**On the DELIVERED design the eye is not verifiable at all, and "
         "the reason is the objective rather than the circuit.** At the PCIe "
         "input drive the stage is past its measured linear limit, so the "

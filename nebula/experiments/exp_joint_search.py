@@ -78,7 +78,13 @@ from typing import Optional, Sequence
 import numpy as np
 
 from nebula.rl import reward_v1 as R
-from nebula.rl.contract import ACTION_NAMES, ACTION_SPACE, N_ACTIONS
+from nebula.rl.contract import (
+    ACTION_NAMES,
+    ACTION_SPACE,
+    N_ACTIONS,
+    f_peak_octaves,
+)
+from nebula.rl.evaluator import annotate_interpolated_peak, scored_meas
 
 HERE = Path(__file__).resolve().parent
 RESULTS = HERE / "joint_search_results.json"
@@ -202,7 +208,8 @@ class JointEval:
 
 def evaluate_joint(u: Sequence[float],
                    corners: Optional[Sequence] = None,
-                   loads: Optional[Sequence[float]] = None) -> JointEval:
+                   loads: Optional[Sequence[float]] = None,
+                   ac_peak_interp: bool = True) -> JointEval:
     """Score one sizing on `V4_SPECS`, worst over corners and loads.
 
     Never raises.
@@ -265,6 +272,7 @@ def evaluate_joint(u: Sequence[float],
             # stated conditions -- that is the whole point of the row.
             pt = run_point(point, c.process, temp_c=c.temp_c, swing=True,
                            ac_sweep=True, hd3=True,
+                           ac_peak_interp=ac_peak_interp,
                            hd3_vin_pk_v=drive_pk, hd3_tone_hz=cfg.nyquist_hz)
             tag = f"{c.process}/{c.vdd_scale:.2f}/{c.temp_c:g}C/cl={cl*1e15:.1f}fF"
             if not pt.ok:
@@ -290,12 +298,22 @@ def evaluate_joint(u: Sequence[float],
             n_scorable += 1
             meas = {
                 "g_dc_db": dev.g_dc_db, "peaking_db": dev.peaking_db,
-                "f_peak_oct": math.log2(dev.f_peak_hz / 2.5e9),
+                "f_peak_oct": f_peak_octaves(float(dev.f_peak_hz)),
                 "nyq_boost_db": float(pt.nyquist_boost_db),
                 "inoise_vrms": dev.vn_in_vrms, "power_w": dev.power_w,
                 "pair_margin_v": float(pt.vds) - float(pt.vdsat),
                 "tail_margin_v": float(pt.tail_margin_v),
             }
+            # **THE PEAK THIS SEARCH IS STEERED BY** (session 22u, G108).
+            # Until now this scored `dev.f_peak_hz`, the raw `ac dec 50`
+            # lattice value -- and S3's 1.2500 GHz floor falls between two of
+            # its samples, so the objective reported a pass at 1.258925 GHz for
+            # circuits whose peak was anywhere down to 1.2303 GHz. The search
+            # was not merely blind to those six corners; it was REWARDED for
+            # walking into the rounding band. Same two functions the compliance
+            # matrix and the four benchmark arms reach the peak through.
+            annotate_interpolated_peak(meas, None, pt)
+            meas = scored_meas(meas, ac_peak_interp)
             # `hd3_dbc` is deliberately NOT passed: this deck's transient
             # ran at Nyquist and at the drive amplitude, so the number is the
             # `S4_hd3_nyq` row's, and feeding it to the 100 MHz row as well

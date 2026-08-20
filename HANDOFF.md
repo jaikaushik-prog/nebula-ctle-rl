@@ -3892,6 +3892,41 @@ Plus: git init, .gitignore, 28 tests, Wilson-bound BER reporting.
   scorable reported "2 of 6" beside a feasible verdict -- two fields of one
   record disagreeing about the same run.
 
+- **G108 -- (nebula) a QUANTISED measurement rounds a marginal failure into a
+  pass whenever the spec threshold falls between two samples, and the rounding
+  is always toward whichever sample is nearer -- which near a threshold is a
+  coin flip that the published result never discloses.**
+  `exp_g4_verify.verify_full` -- the 135-point compliance matrix every S8
+  result and every margin number in this project is reported on -- read
+  `pt.f_pk_hz`, the raw `ac dec 50` peak, while `verify()` **in the same file**
+  scored the interpolated one (G74). Two verification routines, one file,
+  different instruments; rule 9's failure in the file rule 9 was written for.
+  **The cost was not the size of the correction.** S3's floor is 1.2500 GHz and
+  the lattice's neighbouring samples are **1.202264** and **1.258925 GHz**, so
+  there is no sample between them and the floor lies inside the gap. A true
+  peak anywhere in **[1.230269, 1.250000) GHz** is nearest to 1.258925 and is
+  reported as it -- **a failing design rounded into a passing one, over a
+  1.6 %-wide band of frequency.** Session 22s's joint-search winner sat in that
+  band at its six worst corners (measured 1.2417-1.2470 GHz), which is why it
+  was published as **"11 of 11 rows, ZERO failures"** and re-measures as
+  **10 of 11 with `S3_f_peak` failing at 6 of 135 points**, minimum normalised
+  margin **-0.019126** where the lattice said **+0.020528**.
+  **The tell, and it is cheap to look for: count the distinct values.** Across
+  135 PVT points the lattice returned **15 distinct `f_peak` values** and the
+  parabola returned **135**. A sweep whose output takes fifteen values at
+  135 conditions is not measuring the conditions; it is reporting its own grid,
+  and the giveaway in the artifact was a **six-way exact tie at the minimum
+  margin** -- six physically distinct corners, one number, ordered by nothing.
+  **The general form: when a threshold falls between two samples, "passes" is a
+  statement about the grid.** Before quoting a margin, ask how many quanta
+  separate the measurement from the threshold; if the answer is below one, the
+  verdict is the instrument's, not the circuit's. Same family as G105 (a finite
+  difference on a quantised signal reports the quantum) -- there the quantum
+  was mistaken for a gradient, here for a pass.
+  `nebula/tests/test_verify_paths_agree.py` pins the seam, `PREDICTIONS.md`
+  entry 22 is the measurement, and `evaluator.annotate_interpolated_peak` /
+  `evaluator.scored_meas` are the one definition both routines now reach.
+
 ## 10. Environment
 
 - Windows 11, PowerShell 5.1 (+ Git Bash available), Python 3.13.14,
@@ -9209,3 +9244,129 @@ else in it changed.
 
 **Tests 1653 before this commit** (`1653 passed, 11 deselected, 278.99s`). No
 executable code changed yet.
+
+#### RUN AND OUTCOME (same session, after the pre-registration was committed)
+
+**The fix.** One definition rather than two that happen to agree:
+
+    evaluator.annotate_interpolated_peak()   the additive `_interp` pair,
+                                             lifted verbatim out of evaluate()
+    evaluator.scored_meas()                  scoring_meas's rule at the level
+                                             of a measurement vector, because
+                                             verify_full holds no EvalResult
+
+`verify_full` now forwards `ac_peak_interp`, **defaults it to True**, and
+routes through both. Only the SCORED vector changes -- the eye is fitted from
+the whole AC curve, so S8 cannot move and cannot be made to. Every point in the
+artifact now carries `f_peak_oct_lattice` / `f_peak_oct_scored` /
+`peaking_db_*` / `peak_interp_status`, so the correction is auditable from the
+artifact rather than from a scratch script. Four gates, each watched go red
+against the pre-fix code and then green.
+
+**`exp_joint_search --verify`, which the module docstring has promised since
+22s and which did not exist.** The report's *"11 of 11 rows"* and *"98 of 135"*
+were **hand-typed with no artifact behind them**. It now runs the winner
+through the same `verify_full` the delivered design goes through -- a
+comparison between two designs measured by two routines measures the routines
+-- and writes `joint_verify_full_results.json`.
+
+**PREDICTIONS entry 22 scored 5 hits and 1 miss.** P1 hit both halves to five
+decimals (+0.021015 at fs/0.95/125C/78fF, predicted +0.0210 and a move from ss
+to fs). P5 -- *"the interpolated peaking is never below the lattice peaking"* --
+**missed** on 18 of 538 points by at most **3.6 microdecibels**, which is
+round-off in the parabola solve; scored a miss because the right response to an
+absolute claim violated 0.003 % of the time is to narrow the claim.
+
+#### THE HEADLINE, AND IT IS A RETRACTION
+
+**The joint-search winner does not pass 11 of 11 rows. It passes 10, and
+`S3_f_peak` FAILS at 6 of 135 points.**
+
+| | delivered `57cba07581cd` | joint winner `0d9821102dfa` |
+|---|---|---|
+| rows PASS / FAIL / NOT MEASURABLE | **9 / 0 / 2** | **10 / 1 / 0** |
+| minimum normalised margin | **+0.021015** (+2.1 %) | **-0.019126** (-1.9 %) |
+| binding row and point | `S3_f_peak` at fs/0.95/125C/78fF | `S3_f_peak` at fs/0.95/125C/78fF |
+| `f_peak` over 135 points | 1.2591 - 2.4120 GHz | **1.2417** - 2.4169 GHz |
+| points outside S3's 1.25-2.5 GHz | **0 of 135** | **6 of 135** |
+| eye measurable at | 0 of 135 | 98 of 135 |
+
+**The mechanism is exact, and it is now G108.** All six failing points had the
+lattice reporting `f_peak` = **1.258925 GHz**, the first `ac dec 50` sample
+above S3's floor. The next sample down is **1.202264 GHz**, so **nothing lies
+between them and S3's 1.2500 GHz floor sits inside the gap**:
+
+    a TRUE peak in [1.230269, 1.250000) GHz  ->  reported as 1.258925 GHz
+                                             ->  a FAIL rounded into a PASS
+
+The six measured peaks are **1.2417, 1.2435, 1.2437, 1.2453, 1.2453 and
+1.2470 GHz -- every one inside that band.** A **1.6 %-wide** blind band in
+frequency, and the design the project was weighing up for delivery sat in it at
+its six worst corners.
+
+**The instrument, in one number.** Over the same 135 PVT points the lattice
+returns **15 distinct values of `f_peak`; the parabola returns 135.** The
+compliance matrix was binning the whole corner sweep into fifteen buckets --
+which is why it reported a **six-way exact tie** at its own minimum margin, and
+why it could not say which corner binds. That supersedes session 22t's
+*"the margin is below the instrument"*: **the corner RANKING was below the
+instrument**, and the open decision it feeds (extend the 3-corner screen) is a
+decision about which corners.
+
+**Session 22t's conclusion is superseded, not merely refined.** It measured
+both designs at an identical **+0.0205** and concluded *"they are identical --
+there is no 99 %-margin design to trade away."* That was true of the lattice
+reading and false of the physical fact. On one instrument they are **+0.021015
+and -0.019126 -- opposite signs.** The external review's *recommendation* was
+still wrong for the reason 22t gave; its instinct that the two designs were not
+interchangeable was right for a reason nobody had measured.
+
+**A number from 22t I could not reproduce.** It records *"PVT spread consumes
+97.9 % of S3's one-octave window."* No method I tried reproduces 97.9 % from
+either artifact on either instrument. Measured here as
+`log2(max f_peak / min f_peak)` over 135 points on the interpolated peak:
+**93.8 %** (delivered), **96.1 %** (joint winner), **102.2 %** (`c9d52866743d`).
+The finding survives and improves: the PVT spread of `f_peak` is 94-102 % of
+the entire specification window, and **the design that fails is the one whose
+spread exceeds it.** S3-across-corners is decided by a few per cent of an
+octave on a window PVT very nearly fills unaided. **The specification is thin.**
+
+#### The report
+
+`build_pdf` now **reads** the compliance counters from both artifacts instead
+of typing them, carries a **retraction callout** naming the rounding band, and
+its two cover lines each name **one** design -- they used to describe two
+(*"11 of 11 rows"* was the joint winner, *"135 of 135 points"* the delivered
+one). The three stale prose literals the 22t review found are corrected
+(*"Seventeen entries"* -> twenty-two, *"101 entries"* -> 108). **The generated
+report numbers did not move**, because `_facts()` reads
+`g4_verify_results.json` -- the `verify()` path -- which was already correct;
+what moved is prose that was never generated. Making the grounding checker
+cover the body (`CONTINUE_HERE.md` §6.1 item 3) remains open and is now
+better motivated: a hand-typed number stated a retracted result for a day.
+
+#### AND THE SAME DEFECT WAS IN THE SEARCH ITSELF -- found while writing this up
+
+I had drafted a paragraph saying the joint search was safe because it scored
+through `baselines.Objective`, which has used the interpolated peak since 22e.
+**I checked before committing it and it is false.** `exp_joint_search.
+evaluate_joint` does not use `Objective`; it is a second closed-loop path and
+it builds its own measurement vector:
+
+    exp_g4_verify.py:361      "f_peak_oct": math.log2(dev.f_peak_hz / 2.5e9)
+    exp_joint_search.py:293   "f_peak_oct": math.log2(dev.f_peak_hz / 2.5e9)
+
+**Those are the only two sites in the repository that hand-build `f_peak_oct`,
+and they are exactly the two paths that bypass `evaluate`.** One of them is the
+compliance matrix; the other is the objective the joint search was steered by.
+So the search was **optimising the quantised peak near a threshold**: the
+reward told it 1.258925 GHz -- a pass, +0.0103 of margin -- while the circuit
+was at 1.2417 GHz, a fail. It did not merely fail to notice the six corners; it
+was rewarded for walking into the rounding band and then graded there.
+
+That is a materially different conclusion from the one I was about to write,
+and it is the reason to state the general form loudly: **a hand-built
+measurement vector is a second definition of the objective, and the two places
+this repository has one are the two places it went wrong.** Both now route
+through `annotate_interpolated_peak` + `scored_meas`, and
+`test_no_hand_built_f_peak_oct` fails on any new occurrence.

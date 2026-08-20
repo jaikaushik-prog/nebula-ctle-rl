@@ -76,7 +76,7 @@ from nebula.link.bridge import device_result_from_point, evaluate_link
 from nebula.link.config import LinkConfig
 from nebula.rl.evaluator import build_point
 from nebula.rl import reward_v1 as R
-from nebula.rl.contract import N_ACTIONS, sizing_from_u
+from nebula.rl.contract import N_ACTIONS, f_peak_octaves, sizing_from_u
 from nebula.rl.evaluator import (
     SpiceBudget,
     Verdict,
@@ -358,7 +358,7 @@ def verify_full(cand: "Candidate",
             lr = evaluate_link(dev, cfg)
             meas = {
                 "g_dc_db": dev.g_dc_db, "peaking_db": dev.peaking_db,
-                "f_peak_oct": math.log2(dev.f_peak_hz / 2.5e9),
+                "f_peak_oct": f_peak_octaves(float(dev.f_peak_hz)),
                 # **Read off `pt` exactly as `rl/evaluator` reads them, not
                 # re-derived.** `DeviceResult` carries neither the Nyquist
                 # boost nor the saturation margins, and computing them a second

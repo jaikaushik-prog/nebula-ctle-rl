@@ -3757,3 +3757,195 @@ finding underneath is the one to report either way: at the worst corner
 `f_peak` reaches 1.2589 GHz against S3's 1.2500 GHz floor, so PVT spread
 consumes 97.9 % of S3's one-octave window.** Every design lands at the edge
 because the specification is thin, not because the design is.
+
+### OUTCOME — run 2026-08-20, `exp_g4_verify --full --controls 1` (2.6 min) and `exp_joint_search --verify` (0.8 min)
+
+**Five hits, one miss on a literal claim at 3.6 microdecibels, and one result
+that was not predicted because it was not asked: the joint-search winner does
+NOT pass 11 of 11 rows. It passes 10, and `S3_f_peak` fails at 6 of 135
+points.**
+
+| | prediction | measured | |
+|---|---|---|---|
+| P1 | delivered min margin **+0.0210 ± 0.0005**, binding point moves ss → **fs**/0.95/125C/78fF | **+0.021015 at fs/0.95/125C/78.0fF** | **HIT**, both halves |
+| P2 | delivered verdicts unchanged: 9 PASS / 0 FAIL / 2 NOT MEASURABLE | 9 / 0 / 2 | **HIT** |
+| P3 | `c9d52866743d` still FAILS | 8 PASS / 1 FAIL | **HIT** |
+| P4 | `\|Δf_peak_oct\| <= 0.033219` everywhere | max **0.033219** | **HIT**, and tight |
+| P5 | `peaking_db_interp >= peaking_db` everywhere | **18 of 538 points negative**, worst **−3.56e-06 dB** | **MISS** |
+| P6 | the 6-way tie at the minimum collapses to at most 1 | **1** on all three designs it was about | **HIT** |
+
+**P5 is scored a miss and it is a miss of the claim, not of the physics.** The
+vertex of a concave parabola is at or above every sample that defined it, in
+exact arithmetic. The largest violation measured is **3.6 microdecibels**,
+which is round-off in the parabola solve and five orders of magnitude below
+anything this project reports. Recorded as a miss because the prediction said
+*"every point"* and the right response to an absolute claim that is violated
+0.003 % of the time is to narrow the claim, not to widen the band afterwards.
+
+**P4 is worth a second look precisely because it held exactly.** One point
+returned **0.033219** octaves — the bound itself, to six figures. That is the
+constraint being tight rather than broken (a true peak landing exactly midway
+between two samples), and it is the reading that says the interpolation is
+doing what its docstring claims.
+
+**P6's disclosed nuance.** The prediction was written about the delivered
+design's six-way tie and it holds there. The *nominal-only control* still shows
+a **7-way tie** at its minimum — and the reason is documented behaviour, not a
+residual defect: those 7 points are the only `refused` interpolations in the
+whole run (G44 sweep-edge maxima on a design that peaks at 19.95 GHz), and a
+refusal correctly falls back to the lattice rather than to the invalid floor.
+**All 538 other points interpolated to a vertex.**
+
+### THE RESULT THAT WAS NOT PREDICTED
+
+**The joint-search winner loses its headline.** Session 22s reported it as
+*"11 of 11 rows PASS at 135 points, ZERO failures"*, and the shipped report
+prints that beside the delivered design's 9 of 11. Re-measured on the
+interpolated peak, through the same `verify_full`:
+
+| | delivered `57cba07581cd` | joint winner `0d9821102dfa` |
+|---|---|---|
+| rows passing / failing / not measurable | **9 / 0 / 2** | **10 / 1 / 0** |
+| minimum normalised margin | **+0.021015** (+2.1 %) | **−0.019126** (−1.9 %) |
+| binding row and point | `S3_f_peak` at fs/0.95/125C/78fF | `S3_f_peak` at fs/0.95/125C/78fF |
+| `f_peak` across 135 points | 1.2591 – 2.4120 GHz | **1.2417** – 2.4169 GHz |
+| points with `f_peak` outside S3's 1.25–2.5 GHz | **0 of 135** | **6 of 135** |
+| eye measurable at | 0 of 135 | 98 of 135 |
+
+**And the mechanism is exact.** All six of the joint winner's failing points
+had the lattice reporting `f_peak` = **1.258925 GHz** — the first `ac dec 50`
+grid point above S3's 1.2500 GHz floor. The neighbouring grid point is
+**1.202264 GHz**, so **there is no sample between 1.2023 and 1.2589, and S3's
+floor lies inside that gap**:
+
+    a TRUE peak anywhere in [1.230269, 1.250000) GHz  ->  reported as 1.258925
+                                                      ->  a FAIL rounded into a PASS
+
+The six measured peaks are **1.2417, 1.2435, 1.2437, 1.2453, 1.2453 and
+1.2470 GHz — every one of them inside that band.** The lattice cannot express a
+marginal S3 failure at the low edge of the window; it rounds it up onto a
+passing value. That is a **1.6 %-wide** blind band in frequency, and the design
+the project was considering shipping sits in it at its six worst corners.
+
+### THE INSTRUMENT, IN ONE NUMBER
+
+Across the same 135 PVT points, `meas ac MAX` reports
+
+    15 distinct values of f_peak   (lattice)
+    135 distinct values of f_peak  (parabola)
+
+**The lattice was binning the entire PVT sweep into fifteen buckets.** That is
+why the compliance matrix reported a six-way tie at its own minimum, and it is
+why it could not say which corner binds. This is the sharper statement of
+session 22t's finding and it supersedes *"the margin is below the instrument"*.
+
+### A NUMBER FROM SESSION 22t THAT I COULD NOT REPRODUCE, AND WHAT I MEASURE INSTEAD
+
+22t recorded *"PVT spread consumes 97.9 % of S3's one-octave frequency
+window."* I could not reproduce 97.9 % from either artifact by any method I
+tried, on either instrument. **Measured here, as `log2(max f_peak / min f_peak)`
+over the 135 points, on the interpolated peak:**
+
+    delivered  57cba07581cd    1.2591 - 2.4120 GHz   0.9378 oct   93.8 %
+    joint      0d9821102dfa    1.2417 - 2.4169 GHz   0.9608 oct   96.1 %
+    robust #2  c9d52866743d    1.2410 - 2.5206 GHz   1.0223 oct  102.2 %
+
+**The finding survives and gets better.** The PVT spread of `f_peak` is 94–102 %
+of the *entire* specification window, and the design that fails is the one whose
+spread **exceeds** it (102.2 %). So S3-across-corners is not decided by design
+quality in any broad sense — it is decided by a few per cent of an octave, on a
+window that PVT very nearly fills on its own. **The specification is thin**, and
+the previous instrument could not resolve the margin that decides it.
+
+### CONSEQUENCE THAT IS NOT MINE TO DECIDE
+
+`CONTINUE_HERE.md` §5 OPEN item 1 — which design ships — was framed as
+*"9 rows, no eye"* versus *"11 rows, eye at 98 of 135"*. **That framing was an
+artifact.** On one instrument it is *"0 corner failures, no measurable eye,
++2.1 % margin"* versus *"an eye at 98 of 135, and a real S9 failure at 6 of
+135 corners, −1.9 % margin"*. Under `CLAUDEwa.md` §3, *"a design that meets
+everything at TT/27 °C and fails at SS/125 °C is a failed design and must score
+as such"* — so the joint winner, as it stands, is a failed design at S9.
+**It is also 400 simulations of local search away from not being one**, and the
+question of whether to re-run the joint search with the corrected objective is
+a human decision, not mine.
+
+---
+
+## 23. Session 22u — **the joint search, re-run on an objective that can see the S3 floor**
+
+**Written 2026-08-20 after entry 22 was scored and BEFORE the re-run.** ~400
+simulations, ~15 min, plus a 0.8 min 135-point verification. Pre-registered
+because it decides whether a retraction stands as a retraction or as a
+retraction plus a corrected result, and that is exactly the kind of outcome a
+post-hoc framing could soften.
+
+### Why it is being re-run at all
+
+Entry 22 found that `exp_joint_search.evaluate_joint` built its own measurement
+vector — `math.log2(dev.f_peak_hz / 2.5e9)`, the raw `ac dec 50` lattice — so
+**the objective the search was steered by could not see S3's 1.2500 GHz floor**:
+the nearest samples are 1.202264 and 1.258925 GHz, and any true peak from
+1.230269 GHz upward reports as 1.258925, a pass with +0.0103 of margin. The
+winner sits at 1.2417–1.2470 GHz at its six worst corners. **It was not blind to
+those corners; it was rewarded for reaching them.** That is now fixed, in the
+same two functions every other scoring path in the project uses.
+
+The owner ordered the joint search in session 22s. This is that task continuing
+on a corrected objective, not a new direction — and the choice of *which design
+ships* remains `CONTINUE_HERE.md` §5 OPEN item 1 and is not mine.
+
+### Predictions
+
+**Q1 — the old winner is now INFEASIBLE on the very screen it was found on.**
+Re-scored on the corrected objective at the 6 screen points its reward drops out
+of the feasible band (below 12.0).
+*Basis, and it is strong:* its 135-point artifact shows `S3_f_peak` at
+**−0.014650** normalised at **ss/0.95/125C/78.0fF**, which **is** a screen
+corner at a screened load. Confidence: very high.
+*Falsifier:* it scores feasible.
+
+**Q2 — the re-run finds a design feasible on the screen**, reward > 12.0.
+*Basis:* the correction needed is ~0.008 octaves of `f_peak`, and `cs` moves the
+peak at a measured 3.243 octaves per box width, so the required step is ~0.2 %
+of one axis — far inside `sigma0 = 0.12`. Confidence: **0.85**.
+*Falsifier:* 400 simulations end infeasible.
+
+**Q3 — the headline question: does it pass 11 of 11 rows at 135 points with
+zero failures?** Confidence: **0.55, and I want that number on the record
+because it is barely better than a coin flip.**
+*Reasoning for:* the gap to close is small and the search now sees it.
+*Reasoning against:* the search still screens on 3 corners with **no `fs` and
+no `sf` member**, and the worst 135-point corner was **fs**/0.95/125C/78fF,
+which sits **0.0022 octaves beyond** the worst screened corner. A design tuned
+to +ε on the screen inherits −(ε−0.0022) at fs. This is the same blind spot,
+now measured for the fifth time.
+*Falsifier:* any row fails at any of the 135 points.
+
+**Q4 — conditional on Q3 failing, the failing points are again slow-hot and
+heavily loaded, at UNSCREENED corners**, i.e. `fs`/`sf` at 125 C and 78 fF.
+*Falsifier:* failures at a screened corner, or at low temperature, or at the
+light load — any of which would mean the mechanism is not the one above.
+
+**Q5 — the eye stays measurable at 98 ± 15 of 135**, and every point where it
+is measurable still passes both S8 rows.
+*Basis:* the design moves by a fraction of one axis; the 37 gaps are a corner
+property (27 of 37 at VDD 0.95), not a design property.
+*Falsifier:* outside [83, 113], or any S8 failure.
+
+**Q6 — peaking lands in 6.0–8.5 dB**, i.e. it goes UP from 6.37 dB or holds.
+*Basis:* session 22s measured that `f_peak` is bought with peaking in the other
+direction (9.15 → 6.37 dB moved the peak DOWN); moving it back up should return
+some of it. Confidence: moderate — this is the loosest of the six.
+*Falsifier:* outside the band.
+
+### What I will report either way
+
+The 135-point compliance matrix for whichever design the re-run produces,
+**beside** the delivered design's, both on the interpolated peak, with the
+minimum normalised margin and its binding corner on every row — which is the
+deliverable the external review asked for and which entry 22 unblocked.
+**If Q3 fails, the honest headline is that this project does not currently have
+a design meeting all eleven rows at all 135 points**, and the argument for a
+fifth and sixth screen corner becomes an argument with a number attached rather
+than a preference.

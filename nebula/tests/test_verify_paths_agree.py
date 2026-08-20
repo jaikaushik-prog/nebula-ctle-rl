@@ -308,3 +308,47 @@ def test_the_joint_artifact_records_WHAT_THE_SEARCH_SAW_too(monkeypatch,
     assert '"searched_on"' in src
     for k in ("spec_set", "n_points", "reward"):
         assert k in src
+
+
+def test_no_hand_built_f_peak_oct_anywhere_in_the_package():
+    """**The general form of G108, as a gate.**
+
+    Exactly two sites in this repository ever hand-built the objective's
+    frequency channel — `math.log2(dev.f_peak_hz / 2.5e9)` — and they were
+    precisely the two code paths that bypass `evaluator.evaluate`: the
+    135-point compliance matrix and the joint search's own objective. **Both
+    were wrong, in the same way, for the same reason.**
+
+    `contract.f_peak_octaves` says of itself "THE conversion; nothing else may
+    write it". This makes that sentence enforceable.
+    """
+    import re
+    from pathlib import Path
+
+    root = Path(G4.__file__).resolve().parent.parent
+    pat = re.compile(r"log2\(\s*[\w.\[\]\"']+f_p(?:ea)?k_hz\s*/\s*2\.5e9")
+    offenders = []
+    for p in root.rglob("*.py"):
+        if "tests" in p.parts or "__pycache__" in p.parts:
+            continue
+        for i, line in enumerate(p.read_text(encoding="utf-8").splitlines(), 1):
+            if pat.search(line):
+                offenders.append(f"{p.relative_to(root)}:{i}: {line.strip()}")
+    assert not offenders, (
+        "these sites build the objective's frequency channel by hand instead "
+        "of going through contract.f_peak_octaves + evaluator.scored_meas, "
+        "which is how G108 happened twice:\n  " + "\n  ".join(offenders))
+
+
+def test_the_joint_search_objective_scores_the_INTERPOLATED_peak():
+    """The search was steered by the quantised peak near a threshold, so the
+    reward reported a pass at 1.258925 GHz for circuits sitting at 1.2417.
+    It was not blind to those corners — it was rewarded for reaching them."""
+    from nebula.experiments import exp_joint_search as J
+
+    src = inspect.getsource(J.evaluate_joint)
+    assert "ac_peak_interp=ac_peak_interp" in src
+    assert "scored_meas(" in src
+    assert "f_peak_octaves(" in src
+    assert inspect.signature(J.evaluate_joint).parameters[
+        "ac_peak_interp"].default is True
