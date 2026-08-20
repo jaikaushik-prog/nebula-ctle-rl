@@ -230,3 +230,102 @@ def test_no_axis_reports_a_gradient_of_exactly_one_lattice_step():
             f"{round(ratio)} lattice quanta with zero spread across "
             f"{s['n_usable']} probes -- that is the quantisation, not a "
             f"derivative. Read the peak from f_pk_interp_hz.")
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Session 22s: the joint objective and the tunable bank. **No ngspice.**
+#
+# Two of these are regression gates for defects the first run exposed:
+#   * V4 must not contain `S4_hd3` -- the deck that scores it runs ONE
+#     transient, at Nyquist, so keeping the 100 MHz row would score a
+#     specification with a measurement 30 dB away from its stated conditions.
+#   * `n_scorable` must be stamped after the corner loop, not inside it.
+# ─────────────────────────────────────────────────────────────────────────────
+
+
+def test_v4_does_not_carry_the_100mhz_hd3_row():
+    """**The regression gate for the KeyError run's second defect.**
+
+    `S4_hd3` means HD3 at 100 MHz / 200 mVpp everywhere it is published. The
+    V4 deck measures at 2.5 GHz / 535 mVpp -- 30 dB away on the delivered
+    design -- so the two may not share a spec set fed by one transient.
+    """
+    from nebula.rl import reward_v1 as R
+
+    assert "S4_hd3_nyq" in R.V4_SPECS
+    assert "S4_hd3" not in R.V4_SPECS, (
+        "V4 scores a Nyquist transient; carrying the 100 MHz row would put a "
+        "2.5 GHz measurement under a 100 MHz name (G32).")
+    assert "S4_hd3" in R.V3_SPECS          # V3 keeps it -- it is verified there
+    assert set(R.V4_SPECS) - {"S4_hd3_nyq"} == set(R.V3_SPECS) - {"S4_hd3"}
+
+
+def test_the_published_spec_sets_are_untouched_by_v4():
+    """`BASELINES.md` sec 7f: moving V1 is a full re-run event."""
+    from nebula.rl import reward_v1 as R
+
+    assert len(R.V1_SPECS) == 7
+    assert len(R.V2_SPECS) == 9
+    assert len(R.V3_SPECS) == 11
+    assert len(R.V4_SPECS) == 11
+    assert R.V1_SPECS == (
+        "S3_f_peak", "S3_peaking", "S3_nyq_boost",
+        "S5_noise", "S6_power", "saturation", "tail_saturation")
+
+
+def test_hd3_nyq_margin_has_the_sign_a_more_negative_reading_deserves():
+    """More negative HD3 is better, so the margin is `limit - measured`."""
+    from nebula.rl import reward_v1 as R
+
+    meas = {"peaking_db": 9.0, "f_peak_oct": -0.4, "nyq_boost_db": 8.0,
+            "inoise_vrms": 2e-4, "power_w": 2e-3,
+            "pair_margin_v": 0.2, "tail_margin_v": 0.1}
+    good = R.margins(meas, 1.9e9, hd3_nyq_dbc=-42.75)["S4_hd3_nyq"]
+    bad = R.margins(meas, 1.9e9, hd3_nyq_dbc=-17.38)["S4_hd3_nyq"]
+    assert good > 0 and bad < 0
+    assert good == pytest.approx(12.75)
+    assert bad == pytest.approx(-12.62)
+
+
+def test_the_graded_invalid_band_orders_by_evaluability_and_stays_below_infeasible():
+    """A design with an unscorable corner must never outrank a merely bad one.
+
+    The band is `invalid_reward(N) + n_scorable / n_points`, so it lives in
+    `[-(N+3), -(N+2))` while the worst infeasible score is `-N`.
+    """
+    from nebula.rl import reward_v1 as R
+
+    n = len(R.V4_SPECS)
+    floor = R.invalid_reward(n)
+    worst_infeasible = -float(n)
+    for k in range(0, 6):
+        r = floor + k / 6.0
+        assert floor <= r < floor + 1.0
+        assert r < worst_infeasible
+    # and it is strictly increasing in evaluability
+    assert floor + 5 / 6.0 > floor + 1 / 6.0
+
+
+def test_bank_holds_the_zero_while_moving_the_degeneration():
+    """The bank's construction: `Rs * Cs` constant on the TOTAL resistance.
+
+    Holding it on the segment value instead would let the switch shift the
+    zero, worst at the low-Rs end where the switch is the largest fraction.
+    """
+    from nebula.experiments import exp_tunable_trade as T
+
+    product, ron = 430.9 * 3.217e-12, 16.5
+    rows = T.bank_settings(product, ron, n=8)
+    zeros = [1.0 / (2 * math.pi * rs_tot * cs) for _, rs_tot, cs in rows]
+    assert max(zeros) / min(zeros) == pytest.approx(1.0, abs=1e-9)
+    # the switch is IN the total, and Rs really does move
+    for rs_seg, rs_tot, _ in rows:
+        assert rs_tot == pytest.approx(rs_seg + ron)
+    assert rows[-1][1] / rows[0][1] > 5.0
+
+
+def test_bank_rejects_an_unknown_base():
+    from nebula.experiments import exp_tunable_trade as T
+
+    with pytest.raises(ValueError):
+        T.base_design("whatever")

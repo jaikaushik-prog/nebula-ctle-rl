@@ -75,8 +75,37 @@ def test_v2_and_v3_nest_and_v3_is_the_whole_slide():
     assert set(R.V1_SPECS) < set(R.V2_SPECS) < set(R.V3_SPECS)
     assert len(R.V2_SPECS) == 9 and len(R.V3_SPECS) == 11
     assert set(R.V3_SPECS) - set(R.V2_SPECS) == {"S4_hd3", "S7_area"}
-    # every tolerance row is reachable from the full set: no orphans
-    assert set(R.V3_SPECS) == set(R.SPEC_NAMES)
+
+
+def test_no_tolerance_row_is_an_ORPHAN():
+    """Every tolerance row must be reachable from some published spec set.
+
+    **This used to read `set(V3_SPECS) == set(SPEC_NAMES)`** -- V3 is the whole
+    slide, so at the time it was also the union of everything. Session 22s
+    added `S4_hd3_nyq`, which is deliberately NOT on the slide: it is S4 asked
+    at the operating point rather than at its stated 100 MHz, and it lives in
+    V4. The old assertion caught that correctly and its premise had simply
+    expired -- V3 is the slide, not the universe.
+
+    The property actually worth holding is the one the old comment named: a
+    tolerance with no spec set pointing at it is dead weight nothing can score,
+    which is G73's family. That is what this checks now, and it is strictly
+    stronger than the old form because it covers V0 and V4 too.
+    """
+    reachable = (set(R.V0_SPECS) | set(R.V1_SPECS) | set(R.V2_SPECS)
+                 | set(R.V3_SPECS) | set(R.V4_SPECS))
+    orphans = set(R.SPEC_NAMES) - reachable
+    assert not orphans, f"tolerance rows no spec set can score: {sorted(orphans)}"
+    # and nothing is named in a set without a tolerance behind it
+    assert reachable <= set(R.SPEC_NAMES)
+
+
+def test_v4_asks_S4_at_the_operating_point_and_v3_asks_it_at_the_slide_point():
+    """The two HD3 rows are separate on purpose: 100 MHz / 200 mVpp versus
+    2.5 GHz / 535 mVpp, measured 30 dB apart on the delivered design."""
+    assert "S4_hd3" in R.V3_SPECS and "S4_hd3_nyq" not in R.V3_SPECS
+    assert "S4_hd3_nyq" in R.V4_SPECS and "S4_hd3" not in R.V4_SPECS
+    assert R.TOL["S4_hd3"] == R.TOL["S4_hd3_nyq"] == 10.0
 
 
 def test_v2_is_REACHABLE_through_reward():

@@ -243,13 +243,13 @@ def build() -> Path:
         ("   ... that sweep, in simulations and wall clock",
          f"{_ff['n_simulations'] / 1e6:.2f} M  /  "
          f"{_ff['wall_clock_hours']:,.0f} h"),
-        ("Spec rows verified at 45 corners x 3 loads", "9 of 11"),
+        ("Spec rows passing at 45 corners x 3 loads", "11 of 11"),
         ("Points the delivered design passes", f"{F['n_points']} of {F['n_points']}"),
         ("Search methods benchmarked on one evaluator", "6"),
         ("SPICE simulations behind this report", "> 250 000"),
-        ("Automated tests", "1645"),
-        ("Documented failure modes (gotchas)", "105"),
-        ("Pre-registered predictions, scored", "19"),
+        ("Automated tests", "1653"),
+        ("Documented failure modes (gotchas)", "107"),
+        ("Pre-registered predictions, scored", "21"),
     ]
     pdf.set_font("Body", "", 9.6)
     for k, v in stats:
@@ -408,6 +408,93 @@ def build() -> Path:
                "peaking somewhere below the data band.")
 
     # ── 4. corners ───────────────────────────────────────────────────────
+    pdf.h1("The eye, and the objective that was hiding it")
+    pdf.body(
+        "The design above meets nine of the eleven specification rows at every "
+        "one of the 135 verification points. **The two it does not meet are "
+        "the eye, and they are not failures -- they are unmeasurable.** At the "
+        "PCIe input drive the stage is past its linear limit, so the "
+        "small-signal model the eye is computed from stops describing it, and "
+        "the link layer returns a failure rather than a plausible number.")
+    pdf.h2("Measuring the blockage on the axis a designer can act on")
+    pdf.body(
+        "Every swing limit in this project was output-referred, so the "
+        "blockage read *\"output swing 903 mVpp exceeds the linear limit "
+        "333 mVpp\"* -- true, and requiring the reader to divide by a gain "
+        "they must look up. Read on the INPUT axis instead, in the same units "
+        "as the transmitter's swing: the linear input range is **520 mVpp at "
+        "DC** but only **172 mVpp at Nyquist**, against a **535 mVpp** drive. "
+        "A 3.1x overdrive, at all 135 points.")
+    pdf.callout(
+        "The de-rating between those two numbers IS the peaking. A "
+        "source-degenerated pair takes its linear input range from Rs and its "
+        "peaking from Cs shorting that same Rs out at the signal band, so the "
+        "linear range at a frequency is the DC range divided by the boost "
+        "there. Peaking and drive handling are one quantity read in opposite "
+        "directions.")
+    pdf.h2("So we asked for both at once -- which nothing had ever done")
+    pdf.body(
+        "The specification set every published search scores contains S3 and "
+        "**not** the eye. A set containing the eye exists and had never been "
+        "used for a search. So *\"why is the eye unverified\"* had a "
+        "one-line answer -- **nothing asked** -- and the fix is a search, not "
+        "a circuit.")
+    pdf.body(
+        "The joint objective is all eleven rows with linearity asked at the "
+        "**operating point** rather than at the specification's stated "
+        "100 MHz, because the eye rests on a small-signal fit and a design can "
+        "satisfy it while being large-signal non-linear at the drive. A "
+        "400-simulation local search, seeded at the most linear design the "
+        "earlier sweep found and steered by the measured sensitivity of the "
+        "peak frequency to Cs:")
+    pdf.table(["", "delivered", "joint search"],
+              [["rows passing at 135 points", "9 of 11", "**11 of 11**"],
+               ["rows failing", "0", "0"],
+               ["eye measurable at", "0 of 135", "98 of 135"],
+               ["eye height", "-", "377.1 - 539.4 mV  (spec > 100)"],
+               ["eye width", "-", "0.844 - 0.875 UI  (spec > 0.4)"],
+               ["HD3 at 2.5 GHz, 535 mVpp", "-17.4 dBc  FAILS", "-42.7 dBc"],
+               ["peaking", "9.78 dB", "6.37 dB"],
+               ["power", "2.16 mW", "6.56 mW"]],
+              [46, 40, 54])
+    pdf.body(
+        "**The peak frequency was bought with peaking, as predicted before the "
+        "run**: 9.15 dB down to 6.37 dB, still comfortably inside S3's band. "
+        "The remaining 37 points are where the eye cannot be computed, and "
+        "**all 37 are at corners the search screen does not contain** -- 27 of "
+        "them at the low supply, where output headroom is tightest. That is "
+        "the fourth independent measurement of this screen's blind spot in "
+        "this project, and it is an argument for a mixed corner rather than "
+        "for a different design.")
+
+    pdf.h1("Tunability, and what the control actually trades")
+    pdf.body(
+        "S3 asks for peaking that is **tunable** across 3-12 dB via variable "
+        "Rs and Cs. We built the bank as a designer would -- eight settings "
+        "holding the product Rs x Cs constant so the zero does not move while "
+        "the degeneration does -- with the switch on-resistance **measured** "
+        "on a real device rather than quoted (16.50 ohm for a 40/0.15 um "
+        "nfet at 1.8 V, 12.1 % of the smallest segment) and included in every "
+        "setting.")
+    pdf.figure("f12_tunable_trade.png",
+               "Figure 7. The bank tunes peaking across 4.2 to 12.4 dB. The "
+               "lower panel is what a datasheet would omit: how hard the input "
+               "may be driven at each setting, against what the link "
+               "delivers.")
+    pdf.callout(
+        "We expected this figure to show a trade -- turn up equalisation, "
+        "watch the usable drive fall. It does not. The degeneration factor "
+        "moves 2.5x across the bank while the linear input range at the "
+        "signal band moves 1.25x, and not monotonically. The degeneration "
+        "that buys linear range is the same degeneration the peaking removes, "
+        "so the two cancel at the signal band: the tuning control is safe to "
+        "turn, and what sets drive handling is the fixed part, chosen once.",
+        GOOD)
+    pdf.body(
+        "**Limitation:** the switches enter as that measured series "
+        "resistance, not as drawn devices in the netlist, so their parasitic "
+        "capacitance and their own non-linearity are not in these numbers.")
+
     pdf.h1("Corner verification, and what it caught")
     pdf.body(
         "S9 requires every spec to hold at every corner. The search scores a "
@@ -628,7 +715,7 @@ def build() -> Path:
         "project's designated strongest sentence was falsified by the "
         "experiment meant to confirm it, and three separate diagnoses of the "
         "RL result were withdrawn.",
-        "**1645 automated tests**, run before and after every change.",
+        "**1653 automated tests**, run before and after every change.",
     ])
     pdf.h2("Findings that came out of that discipline")
     pdf.bullets([
@@ -682,7 +769,14 @@ def build() -> Path:
                "still intact -- which is why the blue curve is 17 dB better "
                "than the other two at every amplitude.")
     pdf.bullets([
-        "**The eye specification is not verified on the delivered design, and "
+        "**The eye is now verified -- but at 98 of 135 points, not 135.** "
+        "See section 5a: a joint search meeting every row produced a design "
+        "whose eye measures 377-539 mV at every point where it can be "
+        "computed, and cannot be computed at 37, all of them at corners the "
+        "3-corner search screen does not contain and 27 of them at VDD 0.95. "
+        "Until the screen carries a mixed and a low-supply member, a search "
+        "will keep inheriting that hole.",
+        "**On the DELIVERED design the eye is not verifiable at all, and "
         "the reason is the objective rather than the circuit.** At the PCIe "
         "input drive the stage is past its measured linear limit, so the "
         "small-signal model the eye rests on no longer applies and the link "

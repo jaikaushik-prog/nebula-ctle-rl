@@ -296,7 +296,16 @@ V3_SPECS: tuple[str, ...] = V2_SPECS + ("S4_hd3", "S7_area")
 #:
 #: V1, V2 and V3 are UNTOUCHED. This set is for search; every published
 #: baseline number stays scored on V1 (`BASELINES.md` sec 7f).
-V4_SPECS: tuple[str, ...] = V3_SPECS + ("S4_hd3_nyq",)
+#: **`S4_hd3` is NOT in this set, and leaving it in was a bug caught on the
+#: first run.** The deck that scores V4 runs ONE transient, at Nyquist and at
+#: the drive amplitude. Keeping V3's `S4_hd3` row would have scored the
+#: 100 MHz specification using the 2.5 GHz measurement -- 30 dB apart on the
+#: delivered design -- which is precisely the two-definitions-of-one-quantity
+#: failure `S4_hd3_nyq` was split out to avoid. The 100 MHz row is verified
+#: separately by `verify_full`, which runs its own transient at S4's stated
+#: conditions.
+V4_SPECS: tuple[str, ...] = tuple(
+    s for s in V3_SPECS if s != "S4_hd3") + ("S4_hd3_nyq",)
 
 #: The S8 rows, named so a caller can ask "is this reward scoring the eye?"
 S8_SPECS: tuple[str, ...] = ("S8_eye_h", "S8_eye_w")

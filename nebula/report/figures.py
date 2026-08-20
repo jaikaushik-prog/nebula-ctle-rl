@@ -563,9 +563,78 @@ def fig_hd3_amplitude() -> Path:
     return _save(fig, "f10_hd3_amplitude.png")
 
 
+def fig_tunable_trade() -> Path:
+    """**The tuning bank, with the drive it has to accept drawn across it.**
+
+    S3 asks for tunable peaking and the obvious deliverable is a table of
+    settings. This plots the setting against BOTH what it buys (peaking) and
+    what a reader needs in order to use it (how hard the input may be driven),
+    against the 535 mVpp the link actually delivers.
+
+    **The result is not the trade it was built to show.** Across the bank the
+    degeneration factor `k` moves ~2.9x while the linear input range at the
+    signal band moves 0.88x -- flat. The degeneration that buys DC linear range
+    is the same degeneration the peaking removes, so the two cancel at Nyquist:
+    **the tuning control does not trade drive for equalisation.** That trade
+    lives in the fixed part of the design, not in the bank.
+
+    **Two stacked panels, not twin axes.** On shared axes the peaking curve
+    visually crosses the drive line -- two quantities on two different scales
+    appearing to intersect, which is the one thing this figure must not
+    suggest.
+    """
+    d = _load("tunable_trade_results.json")
+    s = [r for r in d["settings"] if r["ok"]]
+    code = np.array([r["code"] for r in s], dtype=float)
+    pk = np.array([r["peaking_db"] for r in s])
+    lin = np.array([1e3 * r["linear_in_nyq_pp_v"] for r in s])
+    inw = np.array([r["in_s3_window"] for r in s], dtype=bool)
+    drive = 1e3 * d["drive_pp_v"]
+
+    fig, (ax, bx) = plt.subplots(2, 1, figsize=(7.0, 4.3), sharex=True,
+                                 gridspec_kw={"hspace": 0.16})
+
+    ax.plot(code, pk, "o-", color=ACCENT, lw=1.8, ms=5.5)
+    if (~inw).any():
+        ax.scatter(code[~inw], pk[~inw], s=115, facecolors="none",
+                   edgecolors=WARN, lw=1.5, zorder=4,
+                   label="peak outside S3's 1.25-2.5 GHz window")
+        ax.legend(fontsize=7.2, frameon=False, loc="upper left")
+    ax.axhspan(3.0, 12.0, color=GOOD, alpha=0.08)
+    ax.text(code[-1], 3.2, "S3 band: 3 - 12 dB", fontsize=7.4, color=GOOD,
+            ha="right")
+    ax.set_ylabel("HF peaking (dB)")
+    ax.set_ylim(min(2.6, pk.min() - 0.6), max(12.9, pk.max() + 0.6))
+    ax.grid(color=LIGHT, lw=0.6)
+    ax.set_axisbelow(True)
+    ax.set_title(f"The bank tunes peaking {pk.min():.1f} to {pk.max():.1f} dB "
+                 f"-- and leaves drive handling where it was",
+                 fontsize=9.8, loc="left")
+
+    bx.plot(code, lin, "s-", color=INK, lw=1.8, ms=5.0)
+    bx.axhline(drive, color=WARN, lw=1.6)
+    bx.text(code[-1], drive * 1.05,
+            f"PCIe Gen2 drive at the CTLE input, {drive:.0f} mVpp",
+            fontsize=7.6, color=WARN, ha="right")
+    bx.fill_between(code, lin, drive, where=lin < drive, color=WARN,
+                    alpha=0.09, interpolate=True)
+    bx.set_ylabel("linear input range\nat Nyquist (mVpp)")
+    bx.set_xlabel("bank setting (3-bit control)")
+    bx.set_ylim(0, max(drive, lin.max()) * 1.32)
+    bx.set_xticks(code)
+    bx.grid(color=LIGHT, lw=0.6)
+    bx.set_axisbelow(True)
+    k_span = 10 ** (pk.max() / 20) / 10 ** (pk.min() / 20)
+    bx.text(code[0], lin.max() * 0.40,
+            f"flat: {lin.max() / lin.min():.2f}x across the whole bank,\n"
+            f"while the degeneration factor k moves {k_span:.1f}x",
+            fontsize=7.4, color=GREY)
+    return _save(fig, "f12_tunable_trade.png")
+
+
 ALL = (fig_architecture, fig_benchmark, fig_lattice_control, fig_budget_ladder,
        fig_termination, fig_library_law, fig_corner_map, fig_grid_arithmetic,
-       fig_response, fig_hd3_amplitude, fig_sweep_cost)
+       fig_response, fig_hd3_amplitude, fig_sweep_cost, fig_tunable_trade)
 
 
 def main() -> int:

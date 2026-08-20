@@ -3854,6 +3854,44 @@ Plus: git init, .gitignore, 28 tests, Wilson-bound BER reporting.
   reading by MANY quanta.** If the answer is an exact multiple of the
   resolution with no spread, you have measured the instrument.
 
+- **G106 -- (nebula) a spec set assembled by ADDING a row to another set
+  inherits every row that set already had, including one the new deck cannot
+  measure.** `V4_SPECS` was written as `V3_SPECS + ("S4_hd3_nyq",)` to score
+  the joint search. V3 contains `S4_hd3`, which means *HD3 at 100 MHz and
+  200 mVpp*; the V4 deck runs **one** transient, at 2.5 GHz and 535 mVpp,
+  because that is the point of the new row. So the 100 MHz specification would
+  have been scored with a measurement **30 dB away on the delivered design** --
+  the exact two-definitions-of-one-quantity failure the new row was split out
+  to prevent, reintroduced by the `+` one line later.
+  **The general form: `A + (new,)` is a claim that every member of `A` is still
+  measurable by whatever will score the result.** Check it, or list the members.
+  V4 is now `tuple(s for s in V3_SPECS if s != "S4_hd3") + ("S4_hd3_nyq",)` and
+  `test_v4_does_not_carry_the_100mhz_hd3_row` pins it. Same family as G101,
+  which was a set defined by exclusion growing silently; this is a set defined
+  by ADDITION inheriting silently.
+
+- **G107 -- (nebula) "cannot be scored" and "fails" are different verdicts, and
+  collapsing them either kills a search or fakes a pass.** Three distinct
+  things happen at a corner: a row is met, a row is violated, or the row cannot
+  be evaluated at all -- the pole-zero fit is rejected (residual 0.564 dB
+  against a 0.50 gate), or the eye cannot be computed because the stage
+  compresses. `reward_v1.margins` omits an unmeasurable row rather than
+  defaulting it, which is right, so asking for a spec set containing it raises
+  `KeyError` rather than scoring a fiction.
+  **But routing every unscorable point to the flat invalid floor leaves a
+  search with no gradient anywhere near a design that is one corner short**,
+  and the seed for session 22s was exactly that. The band is therefore GRADED
+  by evaluability -- `invalid_reward(N) + n_scorable/n_points`, bounded strictly
+  below the worst infeasible score so an unscorable design can never outrank a
+  merely bad one -- and the **gate itself is untouched**. Loosening a 0.50 dB
+  fit residual to make a seed evaluable would make every eye number downstream
+  of it unfounded, which is the move this repository exists to refuse.
+  **Second half of the same gotcha:** the count must be stamped AFTER the
+  corner loop. Setting `n_scorable` inside it wrote the RUNNING total onto
+  whichever point happened to be worst, so a design with all six points
+  scorable reported "2 of 6" beside a feasible verdict -- two fields of one
+  record disagreeing about the same run.
+
 ## 10. Environment
 
 - Windows 11, PowerShell 5.1 (+ Git Bash available), Python 3.13.14,
@@ -8919,3 +8957,121 @@ and 19 (pre-registered, 4 hits / 3 misses).
 **Not started: items 4 (corner-aware RL at scale) and 5 (tunability).** The PDF
 is deliberately NOT rebuilt -- item 6.4 gates that on items 1-5 landing -- but
 the prose and the page-1 counters are updated and the figures regenerate.
+
+### 2026-08-20 - Session 22s (ELEVEN OF ELEVEN ROWS PASS AT 135 POINTS -- the eye was never blocked by the circuit, only by the objective; and the tuning bank does NOT trade drive for equalisation)
+
+**Owner's order: A (report correctness pass), B (joint search), C (tunability
+reframed). Item 4 last, not started.**
+
+#### B -- the headline
+
+`exp_joint_search.py`, 400 simulations, 15.2 min, plus 135 verification points.
+A local CMA-ES seeded at session 22r's 9.2 dB front design, scoring **`V4_SPECS`
+= the eleven competition rows with S4 asked at the OPERATING point**, on the
+worst of 3 screen corners x 2 loads.
+
+    seed, scored on V4    reward -13.1667   5 of 6 scorable, S3_f_peak -2.997
+    best                  reward +12.0205   FEASIBLE, all 11 rows
+                          peaking 6.37 dB   f_peak 1.259 GHz   6.56 mW
+                          HD3@Nyquist -42.75 dBc   eye 377 mV / 0.875 UI
+
+**At 135 points: 11 of 11 rows PASS, ZERO failures.** Against the delivered
+design's 9 PASS + 2 NOT MEASURABLE. Eye **377.1-539.4 mV** (spec > 100) and
+**0.844-0.875 UI** (spec > 0.4).
+
+**The honest qualifier, and it is not small: S8 is MEASURABLE at 98 of 135
+points.** The 37 gaps are **all at unscreened corners, none at screened ones**,
+15 of them at `sf`, and **27 of 37 at VDD 0.95 with zero at 1.05** -- low supply
+squeezes output headroom and the stage compresses. So the headline is **"11 of
+11 rows, zero failures, eye measurable at 98 of 135"**, not "11 of 11 at 135".
+
+**This is the FOURTH independent measurement of the 3-corner screen's blind
+spot** (G4_RESULTS 8 of 135; design.py 23 and 45 of 135; now 37 of 135), and
+`CONTINUE_HERE.md` §5 item 9 -- *should the screen gain a mixed corner?* -- now
+has four.
+
+`PREDICTIONS.md` entry 20 scored **5 hits, 1 miss**. The owner's prediction that
+`f_peak` would be bought with peaking, landing at 6-8 dB, is a **HIT at
+6.37 dB**. My prediction that 135 points would NOT reach 11 of 11 is a **MISS on
+the claim** -- 0 failures -- while its blind-spot reasoning held exactly, in a
+different failure mode (unmeasurable, not failing).
+
+**Two defects the first execution exposed, both now regression gates:**
+* **V4 still carried V3's `S4_hd3`.** That row means *HD3 at 100 MHz /
+  200 mVpp*; the V4 deck runs ONE transient at 2.5 GHz / 535 mVpp, 30 dB away
+  on the delivered design. It would have scored the 100 MHz specification with
+  the Nyquist measurement -- the exact confusion `S4_hd3_nyq` was split out to
+  prevent, reintroduced one line later. **The prediction's "reward > 13.0"
+  threshold is void as a result (12 rows became 11), and entry 20 discloses
+  that rather than quietly rescoring.**
+* **`KeyError('S8_eye_h')`** -- a design whose eye cannot be COMPUTED is
+  unscorable on V4, not failing, because `margins` omits S8 rather than
+  defaulting it. Now routed into the graded band with the fit rejections.
+
+**The graded invalid band, and why the gate was not touched.** The seed is
+rejected by the pole-zero fit gate at `ss/0.95/125C` (residual **0.564 dB**
+against the 0.50 limit) -- which is also why `verify_full` reported it at 121
+of 135 points, not 135. Scoring that at the flat invalid floor leaves a search
+with no gradient near the seed, so the band is graded by the fraction of points
+scorable: `invalid_reward(N) + n_scorable/n_points`, strictly below the worst
+infeasible score. **Loosening the residual limit would have made the seed
+evaluable and every downstream eye number unfounded.**
+
+#### C -- tunability, and it contradicts its own framing
+
+`exp_tunable_trade.py`. Eight bank settings holding **`Rs * Cs` constant on the
+TOTAL resistance** (switch included) so the zero does not move -- measured flat
+at 177.0 MHz to four figures across all eight codes.
+
+| base | peaking span | `k` span | linear range at Nyquist | vs drive |
+|---|---|---|---|---|
+| delivered | 4.52 - 14.28 dB | 3.1x | 130 - 201 mVpp | 0.24 - 0.38x |
+| joint winner | 4.24 - 12.37 dB | 2.5x | **386 - 483 mVpp** | 0.72 - 0.90x |
+
+**The bank was built to expose the drive-vs-equalisation trade as a dial, and
+the trade is not there.** `k` moves **2.5x** while the linear input range at
+the signal band moves **1.25x, non-monotonically** -- the `k`-cancellation of
+session 22q measured a second time and far more cleanly, because here
+everything but `Rs` and `Cs` is held fixed so nothing else can be doing the
+work. **The tuning control moves equalisation and leaves drive handling
+alone**; what sets how hard the stage may be driven is the fixed part, chosen
+once. For a designer that is the better sentence.
+
+Switch on-resistance **measured, not quoted**: `Ron = 16.50 ohm` for a
+40/0.15 um nfet_01v8 at `Vgs = 1.8 V`, the `dV/dI` slope over 5-45 mV of
+`Vds` -- **12.1 %** of the lowest segment. **Limitation in the artifact and the
+report:** switches enter as that series resistance, not as drawn devices, so
+their parasitic capacitance and own non-linearity are absent.
+
+#### A -- the report correctness pass
+
+* **S4 retracted.** Every HD3 number now carries its tone and amplitude; a
+  second row reports **-17.4 dBc at 2.5 GHz / 535 mVpp**, failing by 12.6 dB;
+  section 9 carries the retraction and the reason (the CTLE zero is at
+  114.97 MHz, so S4's tone sits *below* it where the degeneration is intact).
+* **Sweep cost**: new figure f11 (measured per-axis sensitivity -> derived
+  levels -> cost), a subsection stating `1 + ceil(sensitivity / 0.0664386)` and
+  why a hand-picked level count IS the answer at d = 7, and **8,086x** on
+  page 1. G105 in a callout.
+* **The objective**: new subsection -- the feasible branch is a MAXIMIN, so
+  exceeding a met spec is worth nothing; `S6_power` binds 0.6 % of the time and
+  `S5_noise` **0.0 %**; the hard-constraint proposal was implemented and
+  measured as a **no-op** (210 of 33 214 rewards move, best design unchanged).
+* **Section 8** gains G104, G105 and a subsection on the **114.97 vs
+  114.81 MHz** zero agreement -- two independent routes to one number, 0.14 %
+  apart with nothing fitted, as evidence the device layer draws what we believe
+  it draws.
+* Counters: 1645 -> **1653** tests, **107** gotchas, **21** pre-registrations.
+
+#### A mistake made and recovered
+
+A scripted splice into `report/figures.py` matched the wrong anchor and deleted
+five figure functions. Caught immediately by the import failing, restored with
+`git checkout HEAD -- `, and the addition re-applied through a unique anchor.
+**Nothing was lost because the file had been committed minutes earlier** --
+which is the argument for the commit-often rule rather than for a cleverer
+script. Every figure regenerates: 12 of 12.
+
+**Tests 1645 -> 1653.** New gates, each broken and watched go red: V4 carrying
+the 100 MHz HD3 row (reddens 2), and the bank holding `Rs * Cs` on the segment
+rather than the total so the switch shifts the zero (reddens 1).

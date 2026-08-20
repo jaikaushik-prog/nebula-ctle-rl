@@ -266,6 +266,16 @@ def evaluate_joint(u: Sequence[float],
                 bad_point = bad_point or tag
                 continue
             lr = evaluate_link(dev, cfg)
+            if not lr.ok:
+                # **An eye that cannot be COMPUTED is unscorable, not failing.**
+                # `margins` omits the S8 rows when the link result is absent --
+                # deliberately, so nothing scores a defaulted eye -- so asking
+                # for V4 here would raise. Same category as the fit rejection
+                # above, and it is the category the DELIVERED design falls into
+                # at all six points.
+                first_bad = first_bad or lr.fail_reason
+                bad_point = bad_point or tag
+                continue
             n_scorable += 1
             meas = {
                 "g_dc_db": dev.g_dc_db, "peaking_db": dev.peaking_db,
@@ -275,9 +285,13 @@ def evaluate_joint(u: Sequence[float],
                 "pair_margin_v": float(pt.vds) - float(pt.vdsat),
                 "tail_margin_v": float(pt.tail_margin_v),
             }
+            # `hd3_dbc` is deliberately NOT passed: this deck's transient
+            # ran at Nyquist and at the drive amplitude, so the number is the
+            # `S4_hd3_nyq` row's, and feeding it to the 100 MHz row as well
+            # would put a 2.5 GHz measurement under a 100 MHz name.
             rb = R.reward(meas, TARGET_F_PEAK_HZ, specs=R.V4_SPECS,
-                          link=(lr if lr.ok else None), hd3_dbc=dev.hd3_dbc,
-                          area_mm2=dev.area_mm2, hd3_nyq_dbc=dev.hd3_dbc)
+                          link=lr, area_mm2=dev.area_mm2,
+                          hd3_nyq_dbc=dev.hd3_dbc)
             ev = JointEval(
                 u=u, ok=True, reward=float(rb.reward),
                 feasible=bool(rb.feasible), worst_point=tag,
@@ -288,7 +302,6 @@ def evaluate_joint(u: Sequence[float],
                 eye_h_v=(lr.eye_h_v if lr.ok else None),
                 eye_w_ui=(lr.eye_w_ui if lr.ok else None),
                 reason=(None if lr.ok else lr.fail_reason))
-            ev.n_scorable = n_scorable
             ev.n_points = n_points
             if worst is None or ev.reward < worst.reward:
                 worst = ev
@@ -309,6 +322,12 @@ def evaluate_joint(u: Sequence[float],
             hd3_nyq_dbc=(worst.hd3_nyq_dbc if worst else None),
             eye_h_v=(worst.eye_h_v if worst else None),
             eye_w_ui=(worst.eye_w_ui if worst else None))
+    # **Stamped AFTER the loop, not inside it.** Setting this per point wrote
+    # the RUNNING count onto whichever point happened to be worst, so a design
+    # with all six points scorable could report "2 of 6" beside a feasible
+    # verdict -- two fields of one record disagreeing about the same run.
+    worst.n_scorable = n_scorable
+    worst.n_points = n_points
     return worst
 
 

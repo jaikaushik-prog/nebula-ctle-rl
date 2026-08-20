@@ -3518,4 +3518,130 @@ limit would make the seed evaluable and every downstream eye number
 unfounded — it is the exact move this file's discipline exists to refuse. The
 graded invalid band gives the search a path out **without** moving the gate.
 
-### Outcome — *not yet run.*
+### Outcome — **11 of 11 rows PASS at 135 points, ZERO failures. The eye is measurable at 98 of them, and all 37 gaps are at UNSCREENED corners.** Run 2026-08-20, 400 simulations, 15.2 min, plus 135 verification points.
+
+**5 hits, 1 miss**, and the miss is in the good direction.
+
+    seed, scored on V4    reward -13.1667   5 of 6 points scorable, S3_f_peak -2.997
+    best                  reward +12.0205   FEASIBLE, all 11 rows
+                          peaking 6.37 dB   f_peak 1.259 GHz   6.56 mW
+                          HD3@Nyquist -42.75 dBc   eye 377 mV / 0.875 UI
+    improvement                    +25.19
+
+**A row-count change between the prediction and the run, disclosed rather than
+rescored quietly.** Entry 20 was written against a 12-row `V4_SPECS` and
+predicted "reward > 13.0". The first execution then raised `KeyError` and
+exposed a defect: V4 still carried V3's `S4_hd3` row, whose name means *HD3 at
+100 MHz and 200 mVpp*, while this deck runs ONE transient at Nyquist and the
+drive amplitude — so the 100 MHz specification would have been scored with the
+2.5 GHz measurement, 30 dB away. That is exactly the confusion `S4_hd3_nyq` was
+split out to prevent, reintroduced one line later. `S4_hd3` was removed from V4,
+which makes it **11 rows and the feasible threshold 12.0**, not 13.0.
+Prediction 2 is scored on its substance — *all rows feasible* — and the
+threshold it quoted is void.
+
+#### Scoring
+
+1. **HIT.** *(the owner's prediction, adopted.)* Peaking landed at **6.37 dB**,
+   inside the predicted 6-8 dB and inside the [5.0, 9.2] band, and strictly
+   below the seed's 9.154 dB. `f_peak` was indeed bought with peaking.
+2. **HIT on substance** (see the disclosure above): **all 11 rows feasible on
+   the screen**, reward 12.0205 against a feasibility floor of 12.0.
+3. **HIT.** The pole-zero fit rejection at `ss/0.95/125C` is gone — the
+   winner's own worst point IS `ss/0.95/125C/cl=78.0fF` and it is feasible, and
+   no screened corner is unscorable. The gate was never touched.
+4. **MISS on the claim, and the reasoning held.** I predicted the winner would
+   NOT reach 11 of 11 at 135 points, with 1-25 points **failing**, concentrated
+   at `sf`/`fs`. Measured: **0 failing points, 11 of 11 rows PASS.** But S8 is
+   *measurable* at only **98 of 135**, and the 37 gaps are:
+
+   | | count |
+   |---|---|
+   | at **unscreened** corners | **37 of 37** |
+   | at screened corners | **0** |
+   | `sf` | 15 of 27 |
+   | `ff` | 13 of 27 |
+   | `tt` (off-nominal VDD/temp) | 9 of 27 |
+   | at VDD 0.95 | 27 |
+   | at VDD 1.00 | 10 |
+   | at VDD 1.05 | **0** |
+
+   So the blind-spot mechanism was right and the failure MODE was wrong: the
+   search inherits the screen's gaps as points where the eye **cannot be
+   computed**, not as points where a row fails. The physical story is clean —
+   every gap is at low supply, where output headroom is tightest and the stage
+   compresses. **This is the fourth independent measurement of the 3-corner
+   screen's blind spot** (`G4_RESULTS.md`'s 8 of 135, `design.py`'s 23 of 135
+   and 45 of 135, now 37 of 135), and `CONTINUE_HERE.md` §5 item 9 — *should
+   the screen gain a mixed corner?* — now has a fourth.
+5. **HIT, comfortably.** Eye height **377.1-539.4 mV** against a predicted
+   > 150 mV and a 100 mV spec; width 0.844-0.875 UI against 0.4.
+6. **HIT.** HD3 at Nyquist and drive amplitude: **-42.75 dBc** at the worst
+   screen point, against a predicted < -32 and a -30 limit. **The row never
+   bound** — so the instruction to include it was insurance that did not have
+   to be claimed, rather than the load-bearing constraint. Worth stating in
+   both directions: it did not relocate the failure, and nothing here shows it
+   would not have.
+
+#### What this settles, and what it does not
+
+**Settles:** a design meeting S3, S5, S6, S7, S4-at-100 MHz, both saturation
+rows **and both S8 rows** exists in this box, and a 400-simulation local search
+found it. The two half-designs of session 22r were an artefact of the
+objective, not of the circuit.
+
+**Does not settle:** that the eye holds at all 135 points. It holds at 98 and
+is unmeasurable at 37, and until the screen carries an `sf`/`fs` member and a
+low-VDD member a search will keep inheriting that hole. **The honest headline
+is "11 of 11 rows, zero failures, eye measurable at 98 of 135" — not
+"11 of 11 at 135 points".**
+
+**Not a benchmark result.** This is a local search from a known-good seed, with
+`CmaConfig.x0` set; it cannot be ranked against `BASELINES.md`, whose every arm
+starts from uniform random.
+
+---
+
+## 21. Session 22s — **the tunable bank, and what its control actually trades**
+
+**Written and run 2026-08-20**, `exp_tunable_trade.py`, 8 settings x 2 base
+designs plus one switch measurement. **No pre-registration**: the run is ~20
+simulations and under two minutes, well below the 10-minute threshold, and
+nothing about it could be argued for after the fact — the bank is a sweep with
+a fixed construction and no free choices. Recorded here because the result
+contradicts the framing it was built to demonstrate.
+
+**The expected deliverable** was the Pareto trade exposed as a dial: turn up
+equalisation, watch the usable drive fall, and read off the setting where the
+stage stops accepting PCIe Gen2.
+
+**Measured, holding `Rs * Cs` constant so the zero does not move
+(114.8 / 177.0 MHz, flat to 4 significant figures across all 8 codes):**
+
+| base | peaking span | `k` span | linear range at Nyquist | vs drive |
+|---|---|---|---|---|
+| delivered design | 4.52 - 14.28 dB | 3.1x | 130 - 201 mVpp | 0.24 - 0.38x |
+| joint-search winner | 4.24 - 12.37 dB | 2.5x | **386 - 483 mVpp** | 0.72 - 0.90x |
+
+**The trade is not there.** On the winner the degeneration factor `k` moves
+**2.5x** across the bank while the linear input range at the signal band moves
+**1.25x, and not monotonically**. That is the `k`-cancellation of entry 19
+prediction 1, measured a second time and far more cleanly — here everything
+except `Rs` and `Cs` is held fixed, so nothing else can be doing the work:
+
+    linear range at Nyquist  =  (DC range, which scales with k) / (boost, which also scales with k)
+
+**So the tuning control moves equalisation and leaves drive handling alone.**
+The drive-vs-equalisation trade the Pareto front appeared to show came from the
+*other* box axes co-varying, not from `Rs`/`Cs`. For a designer that is the
+better sentence: **the bank is safe to turn — what sets how hard you may drive
+this stage is the fixed part, chosen once.**
+
+Switch on-resistance was **measured, not quoted**: `Ron = 16.50 ohm` for a
+40/0.15 um nfet_01v8 at `Vgs = 1.8 V`, read as the `dV/dI` slope over 5-45 mV
+of `Vds`, which is **12.1 %** of the lowest segment resistance and is included
+in every setting's `Rs` and in the `Rs * Cs` product.
+
+**Limitation, stated in the artifact and in the report:** the switches enter as
+that series resistance, not as drawn devices in the CTLE netlist, so their
+parasitic capacitance and their own non-linearity are not in these numbers.
