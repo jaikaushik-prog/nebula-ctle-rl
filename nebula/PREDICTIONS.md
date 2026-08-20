@@ -4227,3 +4227,100 @@ The compliance measurements themselves are sound: every 45-corner and
 What is wrong is the SCORING RULE applied to those measurements, and it is
 wrong in exactly one row. The screen self-check, the simulation counts, the
 wall clock and the per-corner margins all stand.
+
+---
+
+## 25. Session 23 — **corner-aware, spec-conditioned RL, on a problem that is finally 2-D**
+
+### PROCESS DISCLOSURE, FIRST, BECAUSE IT IS A RULE 3 VIOLATION
+
+**This entry was written AFTER `exp_corner_rl --run` was launched.** The
+launch was ~1 minute earlier; at the moment of writing **no artifact exists**
+(`corner_rl_run.jsonl` and `corner_rl_results.json` are both absent — the run
+log is only written after training completes) and **no result of any kind has
+been seen**, not even a partial one. The console had printed exactly one line:
+`training on 64 targets, testing on 16 held out, 4 screen points`.
+
+Rule 3 says pre-register **before** the run, not before the results. I broke
+it. Recording it here rather than back-dating the entry, because the whole
+value of this file is that it cannot be edited after an outcome. A reader who
+discounts this entry relative to entries 22–24 is reading it correctly.
+
+### Why the published null does not settle this
+
+`BASELINES.md` measures PPO as indistinguishable from uniform random at every
+budget from 150 to 2400 simulations. That measurement stands and is not
+retracted. It was made on a problem degenerate in two ways:
+
+1. **The spec manifold was 1-D.** `margins()` discarded `target_peaking_db`, so
+   one design scored 8.999984 against targets of 3, 5, 7.5, 10 and 12 dB
+   identically. **On a 1-D manifold a lookup table is provably optimal** —
+   which is exactly what session 22j measured (50 random designs served 100 %
+   of held-out targets). Fixed this session (`S3_peaking_match`).
+2. **The policy was never shown a corner.** Every published RL run is P1,
+   nominal only. `rl/corner_env.py` was built for this and never run.
+
+### The claim under test, stated so it cannot be moved afterwards
+
+**NOT "RL beats CMA-ES on one request."** On a 7-D continuous box a classical
+optimiser should win a single query. This experiment does not test that and
+the report must not claim it.
+
+The claim is **amortised**, and the honest competitor is the **library lookup**,
+not random search — because the pool is P1-only by construction and cannot
+answer a corner question however it is re-scored.
+
+### Predictions
+
+**Q1 — the policy's median reward on held-out requests BEATS uniform random**
+at equal per-request simulation cost. Confidence: **0.7.**
+*Basis:* random has no memory across the 64 training targets; the policy has
+seen the box 1200 times. *Falsifier:* median ≤ random's.
+
+**Q2 — the policy does NOT beat fresh CMA-ES at 200 design evaluations per
+request.** Confidence: **0.75, and I want it on the record as a prediction of
+our own method LOSING.** *Basis:* CMA-ES spends 800 SPICE runs per request and
+the policy spends one episode. *Falsifier:* the policy's median reward ≥
+CMA-ES's — which I would then have to explain rather than celebrate.
+
+**Q3 — THE ONE THAT MATTERS. The policy beats the LIBRARY LOOKUP on median
+reward over the 16 held-out requests.** Confidence: **0.55 — barely better
+than a coin flip, and that is the honest number.**
+*For:* the library is corner-blind by construction; these rewards are scored
+on the worst of 4 corners including both mixed-process ones.
+*Against:* 74 500 designs is a very large pool, and session 22j measured a
+lookup answering 32 of 32 held-out targets. A large enough pool may contain a
+corner-robust design by luck even though it was never selected for one.
+*Falsifier:* library median ≥ policy median.
+**If Q3 fails, the RL contribution claim should be dropped from the report and
+replaced with the measured negative plus this explanation.** That is written
+down before the result, on purpose.
+
+**Q4 — fewer than half the arms produce a FEASIBLE design on any given
+request**, i.e. most held-out requests are hard for everything.
+*Basis:* the coverage sweep served 10 of 16 with 200 design evals AND
+library+archive warm-starting; these targets are drawn uniformly, so several
+will sit near the band edges where the sweep already measured 1 of 4.
+Confidence: 0.6. *Falsifier:* most arms feasible on most requests.
+
+**Q5 — the break-even request count against CMA-ES is under 200.**
+*Basis:* training is ~4800 SPICE runs; CMA-ES costs ~800 per request against
+the policy's ~8, so break-even ≈ 4800 / 792 ≈ 6 requests. I predict the
+measured number lands in **[3, 60]**. Confidence: 0.65.
+*Falsifier:* outside that band.
+
+### What I will report either way
+
+The four-arm table (feasible count, median reward, simulations per request,
+wall clock per request), the break-even arithmetic, and an explicit statement
+of whether the RL contribution claim survives. **A completed negative is the
+result if that is what it is** — this experiment has been deferred four times
+and reporting it honestly is worth more than winning it.
+
+### What this does NOT settle
+
+* Extrapolation. The split is INTERPOLATION — held-out targets lie inside the
+  training hull. Asking for a spec outside it is a separate, harder question.
+* The 135-point load-swept grid. Everything here is the mandated 45-corner
+  framing at the design load (G109).
+* Any claim about PPO as an algorithm. One policy, one seed, one architecture.

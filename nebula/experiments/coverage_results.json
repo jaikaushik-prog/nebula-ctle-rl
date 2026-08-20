@@ -15,12 +15,12 @@
   "S4_hd3_nyq"
  ],
  "n_requests": 16,
- "n_solved_on_screen": 11,
- "n_solved_pvt45": 10,
+ "n_solved_on_screen": 1,
+ "n_solved_pvt45": 8,
  "n_solved_full135": 0,
  "budget_design_evals": 200,
- "total_sims": 16094,
- "wall_clock_s": 8979.254838705063,
+ "total_sims": 24294,
+ "wall_clock_s": 12517.00694179535,
  "screen_report": {
   "screen": [
    {
@@ -40,141 +40,159 @@
     "why": "BOTTOM edge, slow-MOS variant. At the DESIGN load: the mandated grid is 45 PVT corners and does not sweep load"
    },
    {
-    "label": "tt/1.05/0C/33fF",
-    "why": "ADDED BY SELF-CHECK: beat the screen by +0.018427"
+    "label": "fs/0.95/27C/78fF",
+    "why": "ADDED BY SELF-CHECK: beat the screen by +0.649192"
+   },
+   {
+    "label": "sf/1.05/0C/14fF",
+    "why": "ADDED BY SELF-CHECK: beat the screen by +13.727608"
+   },
+   {
+    "label": "fs/0.95/125C/78fF",
+    "why": "ADDED BY SELF-CHECK: beat the screen by +0.108327"
+   },
+   {
+    "label": "ss/0.95/125C/78fF",
+    "why": "ADDED BY SELF-CHECK: beat the screen by +0.005377"
    }
   ],
-  "n_points": 5,
+  "n_points": 8,
   "n_audits": 16,
-  "n_predictive": 15,
-  "worst_error": 0.018426521536664353,
+  "n_predictive": 12,
+  "worst_error": 13.727607509364212,
   "audits": [
    {
     "screen_worst": -0.3549585375287503,
-    "full_worst": -0.3549585375287503,
-    "full_worst_label": "fs/0.95/125C/33fF",
-    "was_predictive": true,
-    "error": 0.0,
-    "added": []
-   },
-   {
-    "screen_worst": 13.11335871394247,
-    "full_worst": 13.11335871394247,
-    "full_worst_label": "sf/1.05/0C/33fF",
-    "was_predictive": true,
-    "error": 0.0,
-    "added": []
-   },
-   {
-    "screen_worst": 13.446084829650498,
-    "full_worst": 13.427658308113834,
-    "full_worst_label": "tt/1.05/0C/33fF",
+    "full_worst": -1.0041501954139866,
+    "full_worst_label": "fs/0.95/27C/78fF",
     "was_predictive": false,
-    "error": 0.018426521536664353,
+    "error": 0.6491916578852364,
     "added": [
-     "tt/1.05/0C/33fF"
+     "fs/0.95/27C/78fF"
     ]
    },
    {
-    "screen_worst": 13.488964845712605,
-    "full_worst": 13.488964845712605,
-    "full_worst_label": "sf/1.05/0C/33fF",
+    "screen_worst": 13.311436464237831,
+    "full_worst": -0.4161710451263816,
+    "full_worst_label": "sf/1.05/0C/14fF",
+    "was_predictive": false,
+    "error": 13.727607509364212,
+    "added": [
+     "sf/1.05/0C/14fF"
+    ]
+   },
+   {
+    "screen_worst": -0.01818734546673384,
+    "full_worst": -0.1265144104462932,
+    "full_worst_label": "fs/0.95/125C/78fF",
+    "was_predictive": false,
+    "error": 0.10832706497955935,
+    "added": [
+     "fs/0.95/125C/78fF"
+    ]
+   },
+   {
+    "screen_worst": -0.14909910192349685,
+    "full_worst": -0.15447637412616588,
+    "full_worst_label": "ss/0.95/125C/78fF",
+    "was_predictive": false,
+    "error": 0.005377272202669037,
+    "added": [
+     "ss/0.95/125C/78fF"
+    ]
+   },
+   {
+    "screen_worst": -1.0,
+    "full_worst": -1.0,
+    "full_worst_label": "tt/1.00/27C/14fF",
     "was_predictive": true,
     "error": 0.0,
     "added": []
    },
    {
-    "screen_worst": 13.35279507376246,
-    "full_worst": 13.35279507376246,
-    "full_worst_label": "fs/0.95/125C/33fF",
+    "screen_worst": -0.0792780007172577,
+    "full_worst": -0.0792780007172577,
+    "full_worst_label": "fs/0.95/125C/78fF",
     "was_predictive": true,
     "error": 0.0,
     "added": []
    },
    {
-    "screen_worst": 13.35240330635108,
-    "full_worst": 13.35240330635108,
-    "full_worst_label": "sf/1.05/0C/33fF",
+    "screen_worst": -0.3181057300474852,
+    "full_worst": -0.3181057300474852,
+    "full_worst_label": "fs/0.95/125C/78fF",
     "was_predictive": true,
     "error": 0.0,
     "added": []
    },
    {
-    "screen_worst": 13.447174213355195,
-    "full_worst": 13.447174213355195,
-    "full_worst_label": "fs/0.95/125C/33fF",
+    "screen_worst": -0.1034036167082919,
+    "full_worst": -0.1034036167082919,
+    "full_worst_label": "fs/0.95/125C/78fF",
     "was_predictive": true,
     "error": 0.0,
     "added": []
    },
    {
-    "screen_worst": 13.313852227698373,
-    "full_worst": 13.313852227698373,
-    "full_worst_label": "ss/0.95/125C/33fF",
+    "screen_worst": -1.0,
+    "full_worst": -1.0,
+    "full_worst_label": "tt/1.00/27C/14fF",
     "was_predictive": true,
     "error": 0.0,
     "added": []
    },
    {
-    "screen_worst": -0.3784609669404932,
-    "full_worst": -0.3784609669404932,
-    "full_worst_label": "fs/0.95/125C/33fF",
+    "screen_worst": -0.15325809658130152,
+    "full_worst": -0.15325809658130152,
+    "full_worst_label": "fs/0.95/125C/78fF",
     "was_predictive": true,
     "error": 0.0,
     "added": []
    },
    {
-    "screen_worst": 13.222118482664376,
-    "full_worst": 13.222118482664376,
-    "full_worst_label": "fs/0.95/125C/33fF",
+    "screen_worst": -0.24538559652751876,
+    "full_worst": -0.24538559652751876,
+    "full_worst_label": "sf/1.05/0C/14fF",
     "was_predictive": true,
     "error": 0.0,
     "added": []
    },
    {
-    "screen_worst": 13.145195270705791,
-    "full_worst": 13.145195270705791,
-    "full_worst_label": "fs/0.95/125C/33fF",
+    "screen_worst": -0.08888219375969353,
+    "full_worst": -0.08888219375969353,
+    "full_worst_label": "sf/1.05/0C/14fF",
     "was_predictive": true,
     "error": 0.0,
     "added": []
    },
    {
-    "screen_worst": -0.23448791688697276,
-    "full_worst": 13.113552203698163,
-    "full_worst_label": "sf/0.95/0C/33fF",
-    "was_predictive": true,
-    "error": -13.348040120585136,
-    "added": []
-   },
-   {
-    "screen_worst": 13.18009570254572,
-    "full_worst": 13.18009570254572,
-    "full_worst_label": "sf/1.05/0C/33fF",
+    "screen_worst": -1.3042433333333345,
+    "full_worst": -1.3042433333333345,
+    "full_worst_label": "fs/0.95/125C/78fF",
     "was_predictive": true,
     "error": 0.0,
     "added": []
    },
    {
-    "screen_worst": -0.970527407078565,
-    "full_worst": -0.7317996520132432,
-    "full_worst_label": "fs/0.95/125C/33fF",
-    "was_predictive": true,
-    "error": -0.23872775506532184,
-    "added": []
-   },
-   {
-    "screen_worst": -0.2369701361360328,
-    "full_worst": -0.2369701361360328,
-    "full_worst_label": "sf/1.05/0C/33fF",
+    "screen_worst": -1.0,
+    "full_worst": -1.0,
+    "full_worst_label": "tt/0.95/0C/14fF",
     "was_predictive": true,
     "error": 0.0,
     "added": []
    },
    {
-    "screen_worst": 13.011540408494866,
-    "full_worst": 13.011540408494866,
-    "full_worst_label": "sf/1.05/0C/33fF",
+    "screen_worst": -1.0,
+    "full_worst": -1.0,
+    "full_worst_label": "tt/1.00/27C/14fF",
+    "was_predictive": true,
+    "error": 0.0,
+    "added": []
+   },
+   {
+    "screen_worst": -0.1523639272061601,
+    "full_worst": -0.1523639272061601,
+    "full_worst_label": "fs/0.95/125C/78fF",
     "was_predictive": true,
     "error": 0.0,
     "added": []
@@ -203,7 +221,7 @@
    "delivered_f_peak_hz": 1467193608.5177126,
    "n_sims": 834,
    "n_design_evals": 200,
-   "wall_s": 441.88267970085144,
+   "wall_s": 383.4485309123993,
    "seed_spread_oct": 1.0523491415585182,
    "verified": true,
    "n_pvt45_pass": 39,
@@ -219,10 +237,10 @@
     "UNSCORABLE"
    ],
    "audit": {
-    "was_predictive": true,
-    "error": 0.0,
-    "full_worst_label": "fs/0.95/125C/33fF",
-    "points_added": 0
+    "was_predictive": false,
+    "error": 0.6491916578852364,
+    "full_worst_label": "fs/0.95/27C/78fF",
+    "points_added": 1
    },
    "reason": "best on screen was infeasible (S3_peaking)"
   },
@@ -230,236 +248,239 @@
    "peaking_db": 4.0,
    "f_peak_hz": 1626677319.302417,
    "solved_on_screen": true,
-   "design_id": "a4d76659b798a3b4",
+   "design_id": "66da31b2e03891b1",
    "u": [
-    0.34786918928754423,
-    0.0,
-    0.8896606915946079,
-    0.179688522322778,
+    0.18567128740445962,
+    0.1580443604214177,
+    0.8976453849149083,
+    0.27265110469922044,
     1.0,
-    0.5582972591706351,
-    0.23115168296595784
+    0.47032918782464284,
+    1.0
    ],
-   "screen_reward": 13.11335871394247,
+   "screen_reward": 13.311436464237831,
    "screen_worst_point": "sf/1.05/0C/33fF",
    "screen_worst_spec": "S3_f_peak",
-   "delivered_peaking_db": 4.626997000984297,
-   "delivered_f_peak_hz": 2211842621.945466,
-   "n_sims": 836,
+   "delivered_peaking_db": 4.896672056989978,
+   "delivered_f_peak_hz": 2065097450.142783,
+   "n_sims": 1036,
    "n_design_evals": 200,
-   "wall_s": 450.8852207660675,
+   "wall_s": 433.7312824726105,
    "seed_spread_oct": 0.7455750322089667,
    "verified": true,
    "n_pvt45_pass": 45,
    "n_pvt45_total": 45,
-   "pvt45_worst": 13.11335871394247,
-   "n_full135_pass": 99,
-   "full135_worst": -0.535158328830821,
-   "n_unscorable": 0,
-   "failing_rows": [
-    "S3_f_peak"
-   ],
-   "audit": {
-    "was_predictive": true,
-    "error": 0.0,
-    "full_worst_label": "sf/1.05/0C/33fF",
-    "points_added": 0
-   },
-   "reason": null
-  },
-  {
-   "peaking_db": 4.0,
-   "f_peak_hz": 1921093976.6100154,
-   "solved_on_screen": true,
-   "design_id": "7e484d9a4110ba92",
-   "u": [
-    0.047413854151787,
-    0.0,
-    0.59111365860236,
-    0.48445865757596923,
-    0.7095859570789088,
-    0.8056051654294103,
-    0.3864801142787584
-   ],
-   "screen_reward": 13.446084829650498,
-   "screen_worst_point": "sf/1.05/0C/33fF",
-   "screen_worst_spec": "S3_peaking_match",
-   "delivered_peaking_db": 4.830872755524251,
-   "delivered_f_peak_hz": 2213987231.0785713,
-   "n_sims": 838,
-   "n_design_evals": 200,
-   "wall_s": 424.04053831100464,
-   "seed_spread_oct": 1.1194500130718412,
-   "verified": true,
-   "n_pvt45_pass": 45,
-   "n_pvt45_total": 45,
-   "pvt45_worst": 13.427658308113834,
-   "n_full135_pass": 105,
-   "full135_worst": -0.2693958289765521,
+   "pvt45_worst": 13.311436464237831,
+   "n_full135_pass": 96,
+   "full135_worst": -0.4161710451263816,
    "n_unscorable": 0,
    "failing_rows": [
     "S3_f_peak"
    ],
    "audit": {
     "was_predictive": false,
-    "error": 0.018426521536664353,
-    "full_worst_label": "tt/1.05/0C/33fF",
+    "error": 13.727607509364212,
+    "full_worst_label": "sf/1.05/0C/14fF",
     "points_added": 1
    },
    "reason": null
   },
   {
    "peaking_db": 4.0,
-   "f_peak_hz": 2253126156.5270753,
-   "solved_on_screen": true,
-   "design_id": "fffd3a5b3c1d1248",
+   "f_peak_hz": 1921093976.6100154,
+   "solved_on_screen": false,
+   "design_id": "c15f9bc7050a40d8",
    "u": [
-    0.2449853512167769,
-    0.630817436129898,
-    0.5331038660831318,
-    0.48876267560897885,
-    0.7415046445372759,
-    0.6336385146579858,
-    0.5187299661753315
+    0.055147613029423566,
+    0.5105028877187728,
+    0.4812548484902148,
+    0.5839399203088841,
+    0.6331088205504916,
+    0.667875600954175,
+    0.6094164529961875
    ],
-   "screen_reward": 13.488964845712605,
-   "screen_worst_point": "sf/1.05/0C/33fF",
-   "screen_worst_spec": "S3_peaking_match",
-   "delivered_peaking_db": 4.766552731431093,
-   "delivered_f_peak_hz": 2281737914.4156394,
-   "n_sims": 1040,
+   "screen_reward": -0.01818734546673384,
+   "screen_worst_point": "sf/1.05/0C/14fF",
+   "screen_worst_spec": "S3_f_peak",
+   "delivered_peaking_db": 4.984702211122854,
+   "delivered_f_peak_hz": 2734016154.8591,
+   "n_sims": 1238,
    "n_design_evals": 200,
-   "wall_s": 539.1879217624664,
+   "wall_s": 553.5222549438477,
+   "seed_spread_oct": 1.086407012236848,
+   "verified": true,
+   "n_pvt45_pass": 45,
+   "n_pvt45_total": 45,
+   "pvt45_worst": 13.445053144991101,
+   "n_full135_pass": 114,
+   "full135_worst": -0.1265144104462932,
+   "n_unscorable": 0,
+   "failing_rows": [
+    "S3_f_peak"
+   ],
+   "audit": {
+    "was_predictive": false,
+    "error": 0.10832706497955935,
+    "full_worst_label": "fs/0.95/125C/78fF",
+    "points_added": 1
+   },
+   "reason": "best on screen was infeasible (S3_f_peak)"
+  },
+  {
+   "peaking_db": 4.0,
+   "f_peak_hz": 2253126156.5270753,
+   "solved_on_screen": false,
+   "design_id": "689addefae496ef8",
+   "u": [
+    0.015281651980930844,
+    0.027382029852256823,
+    0.836779052992164,
+    0.3957820524855488,
+    0.8417645825074496,
+    0.5009003944454075,
+    0.6386016841984918
+   ],
+   "screen_reward": -0.14909910192349685,
+   "screen_worst_point": "fs/0.95/125C/78fF",
+   "screen_worst_spec": "S3_f_peak",
+   "delivered_peaking_db": 3.9130673898795743,
+   "delivered_f_peak_hz": 1512964927.0131166,
+   "n_sims": 1440,
+   "n_design_evals": 200,
+   "wall_s": 680.8312423229218,
    "seed_spread_oct": 1.0949651109253529,
    "verified": true,
    "n_pvt45_pass": 45,
    "n_pvt45_total": 45,
-   "pvt45_worst": 13.488964845712605,
-   "n_full135_pass": 45,
-   "full135_worst": -1.0,
+   "pvt45_worst": 13.330436876271209,
+   "n_full135_pass": 120,
+   "full135_worst": -0.15447637412616588,
    "n_unscorable": 0,
    "failing_rows": [
     "S3_f_peak"
    ],
    "audit": {
-    "was_predictive": true,
-    "error": 0.0,
-    "full_worst_label": "sf/1.05/0C/33fF",
-    "points_added": 0
+    "was_predictive": false,
+    "error": 0.005377272202669037,
+    "full_worst_label": "ss/0.95/125C/78fF",
+    "points_added": 1
    },
-   "reason": null
+   "reason": "best on screen was infeasible (S3_f_peak)"
   },
   {
    "peaking_db": 6.0,
    "f_peak_hz": 1386961840.0848064,
-   "solved_on_screen": true,
-   "design_id": "0a27b9cb83c1dbfa",
+   "solved_on_screen": false,
+   "design_id": "dfabdecdef8c255b",
    "u": [
-    0.0349670448226977,
-    0.06610998276311791,
-    0.6661451724918982,
-    0.4954064754192927,
-    0.9363380986537087,
-    0.5986036011144336,
-    0.4789284228501577
+    0.5924462618816894,
+    0.5384294555008002,
+    0.4135033340135839,
+    1.0,
+    0.16337898525444414,
+    1.0,
+    0.35311749352438554
    ],
-   "screen_reward": 13.35279507376246,
-   "screen_worst_point": "fs/0.95/125C/33fF",
-   "screen_worst_spec": "S3_peaking_match",
-   "delivered_peaking_db": 5.02919261064369,
-   "delivered_f_peak_hz": 1468286843.8591475,
-   "n_sims": 1042,
+   "screen_reward": -1.0,
+   "screen_worst_point": "sf/1.05/0C/33fF",
+   "screen_worst_spec": "S3_f_peak",
+   "delivered_peaking_db": 6.209120576852102,
+   "delivered_f_peak_hz": 3003704477.5803556,
+   "n_sims": 1642,
    "n_design_evals": 200,
-   "wall_s": 539.7001247406006,
+   "wall_s": 835.5638272762299,
    "seed_spread_oct": 1.0023838429198055,
    "verified": true,
-   "n_pvt45_pass": 45,
+   "n_pvt45_pass": 0,
    "n_pvt45_total": 45,
-   "pvt45_worst": 13.35279507376246,
-   "n_full135_pass": 90,
-   "full135_worst": -0.5488824604744384,
-   "n_unscorable": 0,
+   "pvt45_worst": -1.0,
+   "n_full135_pass": 0,
+   "full135_worst": -1.0,
+   "n_unscorable": 7,
    "failing_rows": [
-    "S3_f_peak"
+    "S3_f_peak",
+    "S3_peaking_match",
+    "UNSCORABLE"
    ],
    "audit": {
     "was_predictive": true,
     "error": 0.0,
-    "full_worst_label": "fs/0.95/125C/33fF",
+    "full_worst_label": "tt/1.00/27C/14fF",
     "points_added": 0
    },
-   "reason": null
+   "reason": "best on screen was infeasible (S3_f_peak)"
   },
   {
    "peaking_db": 6.0,
    "f_peak_hz": 1626677319.302417,
-   "solved_on_screen": true,
-   "design_id": "e57a88c547792b3e",
+   "solved_on_screen": false,
+   "design_id": "0a3683f25a1a31d3",
    "u": [
-    1.0,
-    0.6588893824087892,
-    0.8561128728483783,
-    0.3614039941423404,
-    0.9931752807089373,
-    0.44357471122755454,
-    0.4180205817864729
+    0.7342264002271941,
+    0.4549341758335275,
+    0.8197681168721598,
+    0.2790425255941468,
+    0.9870765402881778,
+    0.5193368394710492,
+    0.5970264235207586
    ],
-   "screen_reward": 13.35240330635108,
-   "screen_worst_point": "sf/1.05/0C/33fF",
+   "screen_reward": -0.0792780007172577,
+   "screen_worst_point": "fs/0.95/125C/78fF",
    "screen_worst_spec": "S3_peaking_match",
-   "delivered_peaking_db": 6.9713950404733795,
-   "delivered_f_peak_hz": 1992583430.8335927,
-   "n_sims": 1044,
+   "delivered_peaking_db": 4.383083957057874,
+   "delivered_f_peak_hz": 1149702910.3234293,
+   "n_sims": 1644,
    "n_design_evals": 200,
-   "wall_s": 516.4578719139099,
+   "wall_s": 845.3955655097961,
    "seed_spread_oct": 0.9627819747219049,
    "verified": true,
-   "n_pvt45_pass": 45,
+   "n_pvt45_pass": 44,
    "n_pvt45_total": 45,
-   "pvt45_worst": 13.35240330635108,
-   "n_full135_pass": 90,
-   "full135_worst": -1.0,
+   "pvt45_worst": -0.005369864508910045,
+   "n_full135_pass": 128,
+   "full135_worst": -0.0792780007172577,
    "n_unscorable": 0,
    "failing_rows": [
-    "S3_f_peak"
+    "S3_f_peak",
+    "S3_peaking_match"
    ],
    "audit": {
     "was_predictive": true,
     "error": 0.0,
-    "full_worst_label": "sf/1.05/0C/33fF",
+    "full_worst_label": "fs/0.95/125C/78fF",
     "points_added": 0
    },
-   "reason": null
+   "reason": "best on screen was infeasible (S3_peaking_match)"
   },
   {
    "peaking_db": 6.0,
    "f_peak_hz": 1921093976.6100154,
-   "solved_on_screen": true,
-   "design_id": "898bad4a5364590e",
+   "solved_on_screen": false,
+   "design_id": "f33d29d49855156b",
    "u": [
-    0.2495759680038864,
-    0.48260929011515785,
-    0.7559171201316742,
-    0.5137222929033427,
-    0.9332773017895482,
-    0.5118286237207379,
-    0.6365717401649216
+    0.26585078139252294,
+    0.04406370197611098,
+    0.8164406289719116,
+    0.40185759720378667,
+    1.0,
+    0.4713267843594463,
+    0.5538813564204775
    ],
-   "screen_reward": 13.447174213355195,
-   "screen_worst_point": "fs/0.95/125C/33fF",
-   "screen_worst_spec": "S3_peaking_match",
-   "delivered_peaking_db": 5.170761320032792,
-   "delivered_f_peak_hz": 1625308292.5694788,
-   "n_sims": 1046,
+   "screen_reward": -0.3181057300474852,
+   "screen_worst_point": "fs/0.95/125C/78fF",
+   "screen_worst_spec": "S3_f_peak",
+   "delivered_peaking_db": 5.929788851670501,
+   "delivered_f_peak_hz": 1216617136.084665,
+   "n_sims": 1646,
    "n_design_evals": 200,
-   "wall_s": 549.2703654766083,
-   "seed_spread_oct": 1.1194500130718412,
+   "wall_s": 850.0748841762543,
+   "seed_spread_oct": 1.0723508779565134,
    "verified": true,
    "n_pvt45_pass": 45,
    "n_pvt45_total": 45,
-   "pvt45_worst": 13.447174213355195,
-   "n_full135_pass": 84,
-   "full135_worst": -0.6150437763501704,
+   "pvt45_worst": 13.130350688057598,
+   "n_full135_pass": 114,
+   "full135_worst": -0.3181057300474852,
    "n_unscorable": 0,
    "failing_rows": [
     "S3_f_peak"
@@ -467,40 +488,40 @@
    "audit": {
     "was_predictive": true,
     "error": 0.0,
-    "full_worst_label": "fs/0.95/125C/33fF",
+    "full_worst_label": "fs/0.95/125C/78fF",
     "points_added": 0
    },
-   "reason": null
+   "reason": "best on screen was infeasible (S3_f_peak)"
   },
   {
    "peaking_db": 6.0,
    "f_peak_hz": 2253126156.5270753,
-   "solved_on_screen": true,
-   "design_id": "8ac6eb6fda34616f",
+   "solved_on_screen": false,
+   "design_id": "a99aab17eb96a7a2",
    "u": [
-    0.623367262638034,
-    0.5982310672216387,
-    0.7953677168742954,
-    0.4167605266993631,
-    0.9229408899704638,
-    0.4907693250486808,
-    0.5310232320956225
+    0.06741635499995775,
+    0.06983528362048227,
+    0.6705173608746344,
+    0.44689969411409586,
+    0.8491710539606386,
+    0.4384526699149427,
+    0.6467505475552253
    ],
-   "screen_reward": 13.313852227698373,
-   "screen_worst_point": "ss/0.95/125C/33fF",
+   "screen_reward": -0.1034036167082919,
+   "screen_worst_point": "fs/0.95/125C/78fF",
    "screen_worst_spec": "S3_f_peak",
-   "delivered_peaking_db": 5.059532599686332,
-   "delivered_f_peak_hz": 1776274081.5870194,
-   "n_sims": 1046,
+   "delivered_peaking_db": 4.8851430223364405,
+   "delivered_f_peak_hz": 1537116258.8702416,
+   "n_sims": 1646,
    "n_design_evals": 200,
-   "wall_s": 516.691023349762,
-   "seed_spread_oct": 1.1792482980648211,
+   "wall_s": 818.7380607128143,
+   "seed_spread_oct": 1.0581100418778588,
    "verified": true,
    "n_pvt45_pass": 45,
    "n_pvt45_total": 45,
-   "pvt45_worst": 13.313852227698373,
-   "n_full135_pass": 87,
-   "full135_worst": -0.7562587258248648,
+   "pvt45_worst": 13.326978655324693,
+   "n_full135_pass": 113,
+   "full135_worst": -0.1034036167082919,
    "n_unscorable": 0,
    "failing_rows": [
     "S3_f_peak"
@@ -508,40 +529,207 @@
    "audit": {
     "was_predictive": true,
     "error": 0.0,
-    "full_worst_label": "ss/0.95/125C/33fF",
+    "full_worst_label": "fs/0.95/125C/78fF",
     "points_added": 0
    },
-   "reason": null
+   "reason": "best on screen was infeasible (S3_f_peak)"
   },
   {
    "peaking_db": 8.0,
    "f_peak_hz": 1386961840.0848064,
    "solved_on_screen": false,
-   "design_id": "4427e780a6b9a7cd",
+   "design_id": "bd88ee4988f7af76",
    "u": [
-    0.2761947593134234,
-    0.8014781300761862,
-    0.6280913920318292,
-    0.789435077450316,
-    0.9408672217675922,
-    0.6775267317011248,
-    0.49124648393725
+    0.8269642653011178,
+    0.6383887345887419,
+    0.847353141277494,
+    0.4975415731162025,
+    0.768647245694359,
+    0.4348560514286142,
+    0.8293567590597205
    ],
-   "screen_reward": -0.3784609669404932,
-   "screen_worst_point": "fs/0.95/125C/33fF",
-   "screen_worst_spec": "S3_peaking_match",
-   "delivered_peaking_db": 5.93230854958926,
-   "delivered_f_peak_hz": 1426431007.4004903,
-   "n_sims": 1046,
+   "screen_reward": -1.0,
+   "screen_worst_point": "sf/1.05/0C/33fF",
+   "screen_worst_spec": "S3_f_peak",
+   "delivered_peaking_db": 8.352808635060601,
+   "delivered_f_peak_hz": 3362254509.6300077,
+   "n_sims": 1646,
    "n_design_evals": 200,
-   "wall_s": 514.3648254871368,
+   "wall_s": 845.6928279399872,
    "seed_spread_oct": 1.1725585127013205,
    "verified": true,
-   "n_pvt45_pass": 39,
+   "n_pvt45_pass": 0,
    "n_pvt45_total": 45,
-   "pvt45_worst": -0.3784609669404932,
-   "n_full135_pass": 39,
-   "full135_worst": -1.4408687199864112,
+   "pvt45_worst": -1.0,
+   "n_full135_pass": 0,
+   "full135_worst": -1.0,
+   "n_unscorable": 0,
+   "failing_rows": [
+    "S3_f_peak",
+    "S3_peaking_match"
+   ],
+   "audit": {
+    "was_predictive": true,
+    "error": 0.0,
+    "full_worst_label": "tt/1.00/27C/14fF",
+    "points_added": 0
+   },
+   "reason": "best on screen was infeasible (S3_f_peak)"
+  },
+  {
+   "peaking_db": 8.0,
+   "f_peak_hz": 1626677319.302417,
+   "solved_on_screen": false,
+   "design_id": "682b4f6c59d00558",
+   "u": [
+    0.5029251218901752,
+    0.3939124639214647,
+    0.8393071342775978,
+    0.5114517181043119,
+    1.0,
+    0.4710430469693519,
+    0.8518357339304847
+   ],
+   "screen_reward": -0.15325809658130152,
+   "screen_worst_point": "fs/0.95/125C/78fF",
+   "screen_worst_spec": "S3_f_peak",
+   "delivered_peaking_db": 6.981163748363746,
+   "delivered_f_peak_hz": 1090733800.14181,
+   "n_sims": 1646,
+   "n_design_evals": 200,
+   "wall_s": 812.8057126998901,
+   "seed_spread_oct": 0.9931227108842912,
+   "verified": true,
+   "n_pvt45_pass": 45,
+   "n_pvt45_total": 45,
+   "pvt45_worst": 13.367166912276527,
+   "n_full135_pass": 117,
+   "full135_worst": -0.15325809658130152,
+   "n_unscorable": 0,
+   "failing_rows": [
+    "S3_f_peak"
+   ],
+   "audit": {
+    "was_predictive": true,
+    "error": 0.0,
+    "full_worst_label": "fs/0.95/125C/78fF",
+    "points_added": 0
+   },
+   "reason": "best on screen was infeasible (S3_f_peak)"
+  },
+  {
+   "peaking_db": 8.0,
+   "f_peak_hz": 1921093976.6100154,
+   "solved_on_screen": false,
+   "design_id": "3d42e8fb712502ca",
+   "u": [
+    0.7121407604480865,
+    0.4279614179933107,
+    1.0,
+    0.4764908302286258,
+    1.0,
+    0.3829318429982578,
+    0.7158687614168368
+   ],
+   "screen_reward": -0.24538559652751876,
+   "screen_worst_point": "sf/1.05/0C/14fF",
+   "screen_worst_spec": "S3_f_peak",
+   "delivered_peaking_db": 9.555916598164224,
+   "delivered_f_peak_hz": 2842996665.876758,
+   "n_sims": 1646,
+   "n_design_evals": 200,
+   "wall_s": 837.4723317623138,
+   "seed_spread_oct": 1.1024593685977873,
+   "verified": true,
+   "n_pvt45_pass": 31,
+   "n_pvt45_total": 45,
+   "pvt45_worst": -0.08863411494093897,
+   "n_full135_pass": 76,
+   "full135_worst": -0.24538559652751876,
+   "n_unscorable": 0,
+   "failing_rows": [
+    "S3_f_peak",
+    "S3_peaking_match",
+    "S6_power"
+   ],
+   "audit": {
+    "was_predictive": true,
+    "error": 0.0,
+    "full_worst_label": "sf/1.05/0C/14fF",
+    "points_added": 0
+   },
+   "reason": "best on screen was infeasible (S3_f_peak)"
+  },
+  {
+   "peaking_db": 8.0,
+   "f_peak_hz": 2253126156.5270753,
+   "solved_on_screen": false,
+   "design_id": "2ce2b136cace6a31",
+   "u": [
+    0.23170760891126402,
+    0.0,
+    0.7967122752573446,
+    0.5446785422348552,
+    0.8163556192283121,
+    0.5270017121640562,
+    0.5976384612573488
+   ],
+   "screen_reward": -0.08888219375969353,
+   "screen_worst_point": "sf/1.05/0C/14fF",
+   "screen_worst_spec": "S3_f_peak",
+   "delivered_peaking_db": 8.757859583929163,
+   "delivered_f_peak_hz": 3286083618.125916,
+   "n_sims": 1646,
+   "n_design_evals": 200,
+   "wall_s": 817.243204832077,
+   "seed_spread_oct": 1.1023566095007338,
+   "verified": true,
+   "n_pvt45_pass": 45,
+   "n_pvt45_total": 45,
+   "pvt45_worst": 13.529265142492338,
+   "n_full135_pass": 120,
+   "full135_worst": -0.08888219375969353,
+   "n_unscorable": 0,
+   "failing_rows": [
+    "S3_f_peak"
+   ],
+   "audit": {
+    "was_predictive": true,
+    "error": 0.0,
+    "full_worst_label": "sf/1.05/0C/14fF",
+    "points_added": 0
+   },
+   "reason": "best on screen was infeasible (S3_f_peak)"
+  },
+  {
+   "peaking_db": 10.0,
+   "f_peak_hz": 1386961840.0848064,
+   "solved_on_screen": false,
+   "design_id": "8a4b94d4835bb92d",
+   "u": [
+    0.7135996423617992,
+    0.6725701372313562,
+    0.7360034198770946,
+    0.6806310653883837,
+    0.39361491713087005,
+    0.25420021704615015,
+    0.5154793041355379
+   ],
+   "screen_reward": -1.3042433333333345,
+   "screen_worst_point": "fs/0.95/125C/78fF",
+   "screen_worst_spec": "S3_f_peak",
+   "delivered_peaking_db": 8.043634999999998,
+   "delivered_f_peak_hz": 19952620000.0,
+   "n_sims": 1646,
+   "n_design_evals": 200,
+   "wall_s": 826.9606292247772,
+   "seed_spread_oct": 1.0311341659633075,
+   "verified": true,
+   "n_pvt45_pass": 0,
+   "n_pvt45_total": 45,
+   "pvt45_worst": -1.0,
+   "n_full135_pass": 0,
+   "full135_worst": -1.3042433333333345,
    "n_unscorable": 6,
    "failing_rows": [
     "S3_f_peak",
@@ -551,292 +739,40 @@
    "audit": {
     "was_predictive": true,
     "error": 0.0,
-    "full_worst_label": "fs/0.95/125C/33fF",
-    "points_added": 0
-   },
-   "reason": "best on screen was infeasible (S3_peaking_match)"
-  },
-  {
-   "peaking_db": 8.0,
-   "f_peak_hz": 1626677319.302417,
-   "solved_on_screen": true,
-   "design_id": "40a3cee97403b416",
-   "u": [
-    0.9064261677308212,
-    0.880188086583951,
-    0.5613777650379266,
-    0.7388537036455729,
-    0.6290502487600315,
-    0.8019994463879488,
-    0.5753886357892283
-   ],
-   "screen_reward": 13.222118482664376,
-   "screen_worst_point": "fs/0.95/125C/33fF",
-   "screen_worst_spec": "S3_peaking_match",
-   "delivered_peaking_db": 6.833177723996564,
-   "delivered_f_peak_hz": 1625675759.0018811,
-   "n_sims": 1046,
-   "n_design_evals": 200,
-   "wall_s": 543.4986834526062,
-   "seed_spread_oct": 0.9816237165161412,
-   "verified": true,
-   "n_pvt45_pass": 45,
-   "n_pvt45_total": 45,
-   "pvt45_worst": 13.222118482664376,
-   "n_full135_pass": 52,
-   "full135_worst": -1.0,
-   "n_unscorable": 45,
-   "failing_rows": [
-    "S3_f_peak",
-    "UNSCORABLE"
-   ],
-   "audit": {
-    "was_predictive": true,
-    "error": 0.0,
-    "full_worst_label": "fs/0.95/125C/33fF",
-    "points_added": 0
-   },
-   "reason": null
-  },
-  {
-   "peaking_db": 8.0,
-   "f_peak_hz": 1921093976.6100154,
-   "solved_on_screen": true,
-   "design_id": "70dd00159d2b9108",
-   "u": [
-    0.402889398960221,
-    0.6827882821994993,
-    0.6265982915452789,
-    0.7156430099628905,
-    0.7903119858901613,
-    0.5774504578461336,
-    0.3969366872386541
-   ],
-   "screen_reward": 13.145195270705791,
-   "screen_worst_point": "fs/0.95/125C/33fF",
-   "screen_worst_spec": "S3_peaking_match",
-   "delivered_peaking_db": 6.717792906058687,
-   "delivered_f_peak_hz": 1755734059.5315363,
-   "n_sims": 1046,
-   "n_design_evals": 200,
-   "wall_s": 515.3392217159271,
-   "seed_spread_oct": 1.1079474852746167,
-   "verified": true,
-   "n_pvt45_pass": 45,
-   "n_pvt45_total": 45,
-   "pvt45_worst": 13.145195270705791,
-   "n_full135_pass": 52,
-   "full135_worst": -1.0,
-   "n_unscorable": 0,
-   "failing_rows": [
-    "S3_f_peak"
-   ],
-   "audit": {
-    "was_predictive": true,
-    "error": 0.0,
-    "full_worst_label": "fs/0.95/125C/33fF",
-    "points_added": 0
-   },
-   "reason": null
-  },
-  {
-   "peaking_db": 8.0,
-   "f_peak_hz": 2253126156.5270753,
-   "solved_on_screen": false,
-   "design_id": "49013a2770ddc4ff",
-   "u": [
-    0.9580255903818632,
-    0.09817420879989057,
-    0.3659056599333866,
-    1.0,
-    0.23460019125467788,
-    1.0,
-    0.5442244318098843
-   ],
-   "screen_reward": -0.23448791688697276,
-   "screen_worst_point": "sf/1.05/0C/33fF",
-   "screen_worst_spec": "S4_hd3_nyq",
-   "delivered_peaking_db": 8.036936594004418,
-   "delivered_f_peak_hz": 3061499076.2417054,
-   "n_sims": 1046,
-   "n_design_evals": 200,
-   "wall_s": 522.9858815670013,
-   "seed_spread_oct": 0.9688097516207382,
-   "verified": true,
-   "n_pvt45_pass": 43,
-   "n_pvt45_total": 45,
-   "pvt45_worst": 13.113552203698163,
-   "n_full135_pass": 67,
-   "full135_worst": -0.9091357424600984,
-   "n_unscorable": 7,
-   "failing_rows": [
-    "S3_f_peak",
-    "S3_peaking_match",
-    "UNSCORABLE"
-   ],
-   "audit": {
-    "was_predictive": true,
-    "error": -13.348040120585136,
-    "full_worst_label": "sf/0.95/0C/33fF",
-    "points_added": 0
-   },
-   "reason": "best on screen was infeasible (S4_hd3_nyq)"
-  },
-  {
-   "peaking_db": 10.0,
-   "f_peak_hz": 1386961840.0848064,
-   "solved_on_screen": true,
-   "design_id": "881be336d087c58d",
-   "u": [
-    0.28255107214503516,
-    0.6830466555075407,
-    0.396797170129065,
-    0.9985882622888934,
-    0.5347191207072584,
-    0.7788348698817762,
-    0.6911314959228679
-   ],
-   "screen_reward": 13.18009570254572,
-   "screen_worst_point": "sf/1.05/0C/33fF",
-   "screen_worst_spec": "S3_f_peak",
-   "delivered_peaking_db": 10.999477274855916,
-   "delivered_f_peak_hz": 1842775399.4720936,
-   "n_sims": 1046,
-   "n_design_evals": 200,
-   "wall_s": 518.8718268871307,
-   "seed_spread_oct": 1.0311341659633075,
-   "verified": true,
-   "n_pvt45_pass": 44,
-   "n_pvt45_total": 45,
-   "pvt45_worst": 13.18009570254572,
-   "n_full135_pass": 74,
-   "full135_worst": -0.445422993916214,
-   "n_unscorable": 17,
-   "failing_rows": [
-    "S3_f_peak",
-    "UNSCORABLE"
-   ],
-   "audit": {
-    "was_predictive": true,
-    "error": 0.0,
-    "full_worst_label": "sf/1.05/0C/33fF",
-    "points_added": 0
-   },
-   "reason": null
-  },
-  {
-   "peaking_db": 10.0,
-   "f_peak_hz": 1626677319.302417,
-   "solved_on_screen": false,
-   "design_id": "f8edacef9c8fc7d2",
-   "u": [
-    0.5934960040179048,
-    0.6703548440417285,
-    0.22948222263096157,
-    1.0,
-    0.2958587068234796,
-    0.8263668722500866,
-    0.23170248363694723
-   ],
-   "screen_reward": -0.970527407078565,
-   "screen_worst_point": "sf/1.05/0C/33fF",
-   "screen_worst_spec": "S3_f_peak",
-   "delivered_peaking_db": 9.10636561687487,
-   "delivered_f_peak_hz": 2933262759.569043,
-   "n_sims": 1046,
-   "n_design_evals": 200,
-   "wall_s": 481.5562741756439,
-   "seed_spread_oct": 1.0039172600161472,
-   "verified": true,
-   "n_pvt45_pass": 0,
-   "n_pvt45_total": 45,
-   "pvt45_worst": -0.7317996520132432,
-   "n_full135_pass": 0,
-   "full135_worst": -1.060599461219038,
-   "n_unscorable": 30,
-   "failing_rows": [
-    "S3_f_peak",
-    "S3_peaking_match",
-    "UNSCORABLE"
-   ],
-   "audit": {
-    "was_predictive": true,
-    "error": -0.23872775506532184,
-    "full_worst_label": "fs/0.95/125C/33fF",
+    "full_worst_label": "fs/0.95/125C/78fF",
     "points_added": 0
    },
    "reason": "best on screen was infeasible (S3_f_peak)"
   },
   {
    "peaking_db": 10.0,
-   "f_peak_hz": 1921093976.6100154,
+   "f_peak_hz": 1626677319.302417,
    "solved_on_screen": false,
-   "design_id": "bff6aabb35b9edf4",
+   "design_id": "27d23ad24cb860ce",
    "u": [
-    0.6211771753201611,
-    0.6387476274228613,
-    0.7235055708622912,
-    0.7504508045206216,
-    0.6756539727423287,
-    0.5513153389761382,
-    0.7436727655326397
+    0.4797456358582191,
+    0.032586009221966736,
+    0.9680441513496382,
+    0.4783354501567689,
+    1.0,
+    0.3120036504826745,
+    0.38145861972952944
    ],
-   "screen_reward": -0.2369701361360328,
-   "screen_worst_point": "sf/1.05/0C/33fF",
+   "screen_reward": -1.0,
+   "screen_worst_point": "sf/1.05/0C/14fF",
    "screen_worst_spec": "S3_f_peak",
-   "delivered_peaking_db": 11.035425610079491,
-   "delivered_f_peak_hz": 2949382966.0149527,
-   "n_sims": 1046,
+   "delivered_peaking_db": 10.899346248635734,
+   "delivered_f_peak_hz": 3561107070.6485467,
+   "n_sims": 1646,
    "n_design_evals": 200,
-   "wall_s": 423.8475773334503,
-   "seed_spread_oct": 1.086701464399636,
+   "wall_s": 667.5578005313873,
+   "seed_spread_oct": 1.0971454145106008,
    "verified": true,
-   "n_pvt45_pass": 9,
+   "n_pvt45_pass": 1,
    "n_pvt45_total": 45,
-   "pvt45_worst": -0.2369701361360328,
-   "n_full135_pass": 54,
+   "pvt45_worst": -0.6298268993572234,
+   "n_full135_pass": 40,
    "full135_worst": -1.0,
-   "n_unscorable": 0,
-   "failing_rows": [
-    "S3_f_peak"
-   ],
-   "audit": {
-    "was_predictive": true,
-    "error": 0.0,
-    "full_worst_label": "sf/1.05/0C/33fF",
-    "points_added": 0
-   },
-   "reason": "best on screen was infeasible (S3_f_peak)"
-  },
-  {
-   "peaking_db": 10.0,
-   "f_peak_hz": 2253126156.5270753,
-   "solved_on_screen": true,
-   "design_id": "46e75546e6439bdf",
-   "u": [
-    0.21823813534321004,
-    0.1531762123385241,
-    0.8196746590498969,
-    0.7463198008192221,
-    0.6841415967593527,
-    0.5769211790119215,
-    0.43349028741234985
-   ],
-   "screen_reward": 13.011540408494866,
-   "screen_worst_point": "sf/1.05/0C/33fF",
-   "screen_worst_spec": "S3_f_peak",
-   "delivered_peaking_db": 11.380781446406967,
-   "delivered_f_peak_hz": 3173682686.20004,
-   "n_sims": 1046,
-   "n_design_evals": 200,
-   "wall_s": 421.6207344532013,
-   "seed_spread_oct": 1.0200914505762961,
-   "verified": true,
-   "n_pvt45_pass": 45,
-   "n_pvt45_total": 45,
-   "pvt45_worst": 13.011540408494866,
-   "n_full135_pass": 88,
-   "full135_worst": -0.7925986188330092,
    "n_unscorable": 0,
    "failing_rows": [
     "S3_f_peak",
@@ -845,10 +781,92 @@
    "audit": {
     "was_predictive": true,
     "error": 0.0,
-    "full_worst_label": "sf/1.05/0C/33fF",
+    "full_worst_label": "tt/0.95/0C/14fF",
     "points_added": 0
    },
-   "reason": null
+   "reason": "best on screen was infeasible (S3_f_peak)"
+  },
+  {
+   "peaking_db": 10.0,
+   "f_peak_hz": 1921093976.6100154,
+   "solved_on_screen": false,
+   "design_id": "7906b035313c3fa1",
+   "u": [
+    0.4871419295600587,
+    0.3685967920721239,
+    0.9600917118627248,
+    0.5981759353258385,
+    0.8266545811258915,
+    0.03511990994489131,
+    0.6899458519088398
+   ],
+   "screen_reward": -1.0,
+   "screen_worst_point": "sf/1.05/0C/33fF",
+   "screen_worst_spec": "S3_f_peak",
+   "delivered_peaking_db": 11.145828754372001,
+   "delivered_f_peak_hz": 7527623156.143965,
+   "n_sims": 1646,
+   "n_design_evals": 200,
+   "wall_s": 626.0319623947144,
+   "seed_spread_oct": 1.0806133504565776,
+   "verified": true,
+   "n_pvt45_pass": 0,
+   "n_pvt45_total": 45,
+   "pvt45_worst": -1.0,
+   "n_full135_pass": 0,
+   "full135_worst": -1.0,
+   "n_unscorable": 0,
+   "failing_rows": [
+    "S3_f_peak"
+   ],
+   "audit": {
+    "was_predictive": true,
+    "error": 0.0,
+    "full_worst_label": "tt/1.00/27C/14fF",
+    "points_added": 0
+   },
+   "reason": "best on screen was infeasible (S3_f_peak)"
+  },
+  {
+   "peaking_db": 10.0,
+   "f_peak_hz": 2253126156.5270753,
+   "solved_on_screen": false,
+   "design_id": "9589600e2e2f88cd",
+   "u": [
+    0.14721368030774376,
+    0.0,
+    0.8620869834753848,
+    0.7722253822125132,
+    0.7816617387994866,
+    0.5766439304128934,
+    0.5107568656054219
+   ],
+   "screen_reward": -0.1523639272061601,
+   "screen_worst_point": "fs/0.95/125C/78fF",
+   "screen_worst_spec": "S3_f_peak",
+   "delivered_peaking_db": 8.997006927871011,
+   "delivered_f_peak_hz": 1511253971.9968905,
+   "n_sims": 1646,
+   "n_design_evals": 200,
+   "wall_s": 677.2925634384155,
+   "seed_spread_oct": 1.0749029986912941,
+   "verified": true,
+   "n_pvt45_pass": 45,
+   "n_pvt45_total": 45,
+   "pvt45_worst": 13.143281333199075,
+   "n_full135_pass": 114,
+   "full135_worst": -0.1523639272061601,
+   "n_unscorable": 0,
+   "failing_rows": [
+    "S3_f_peak"
+   ],
+   "audit": {
+    "was_predictive": true,
+    "error": 0.0,
+    "full_worst_label": "fs/0.95/125C/78fF",
+    "points_added": 0
+   },
+   "reason": "best on screen was infeasible (S3_f_peak)"
   }
  ]
 }
