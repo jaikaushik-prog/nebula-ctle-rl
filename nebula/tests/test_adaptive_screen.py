@@ -244,3 +244,51 @@ def test_every_screen_point_carries_its_reason():
     """A corner in a screen with no stated reason is a guess nobody can audit."""
     for sp in EDGE4:
         assert len(sp.why) > 30, f"{sp.label} has no reasoning attached"
+
+
+# ── the reference-grid gate (G110) ───────────────────────────────────────────
+
+
+def test_the_audit_references_the_grid_the_SCREEN_TARGETS_not_the_full_sweep():
+    """**G110, and it cost a whole 16-request sweep.**
+
+    `EDGE4_MANDATED` is four corners at the DESIGN load, because the search
+    targets the mandated 45-corner grid. `verify_request` verifies on all 135
+    points -- correct -- and originally handed those 135 to `audit_screen`, so
+    a screen was graded on its ability to predict a load sweep it deliberately
+    does not cover. It "missed" on 4 of 5 requests and every point it was told
+    to add was at 14 fF or 78 fF, never the 33 fF design load. The screen was
+    right; the reference was wrong. Worse, the correction COMPOUNDED: 4 -> 8
+    screen points in five requests, 6.4 -> 11.3 min per request.
+
+    Pinned by reading the source, because the defect is a wrong ARGUMENT at one
+    call site and no assertion on the returned values can see it.
+    """
+    import inspect
+
+    from nebula.experiments import exp_coverage as C
+
+    src = inspect.getsource(C.verify_request)
+    assert "audit_screen(best, m45)" in src, (
+        "the screen must be audited against the design-load grid it targets "
+        "(m45), not against the full 135-point load sweep")
+    assert "rescored" in src, "the 135-point characterisation must still run"
+
+
+def test_an_audit_against_a_SUPERSET_grid_is_what_manufactures_failures():
+    """The mechanism, demonstrated on synthetic points so it cannot be missed.
+
+    Same design, same screen verdict. Graded against its own grid it is
+    predictive; graded against a grid carrying a harder axis it is not -- and
+    the "fix" appends a point from an axis the screen was never asked about.
+    """
+    own_grid = _fake_full([+2.0, +1.0, +0.5])          # the 45-corner truth
+    superset = own_grid + [{"corner": "tt", "vdd_scale": 1.0, "temp_c": 27.0,
+                            "cl_f": 7.8e-14, "reward": -0.3}]   # heavy load
+    verdict = _eval(+0.5)
+    assert audit_screen(verdict, own_grid).was_predictive is True
+    wrong = audit_screen(verdict, superset)
+    assert wrong.was_predictive is False
+    assert wrong.added and "78fF" in wrong.added[0].label, (
+        "the manufactured correction comes from the axis the screen does not "
+        "cover -- which is the tell")

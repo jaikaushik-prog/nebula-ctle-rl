@@ -394,7 +394,17 @@ def verify_request(res: RequestResult, best, screen: AdaptiveScreen) -> None:
     res.verified = True
 
     if best is not None:
-        audit = audit_screen(best, rescored)
+        # **AUDIT AGAINST THE GRID THE SCREEN TARGETS, NOT A DIFFERENT ONE.**
+        # The screen is `EDGE4_MANDATED` -- four corners at the DESIGN load --
+        # because D8 searches the mandated 45-corner grid. Auditing it against
+        # all 135 points asks it to predict the worst case of a load sweep it
+        # deliberately does not cover, so it "missed" on 4 of the first 5
+        # requests and every point it was told to add was at 14 fF or 78 fF.
+        # The screen was right and the reference was wrong: a self-check that
+        # grades against the wrong grid manufactures failures and then
+        # "corrects" them, growing the screen by one point per request and
+        # inflating the cost of every request after it.
+        audit = audit_screen(best, m45)
         added = screen.extend(audit)
         res.audit = {"was_predictive": audit.was_predictive,
                      "error": audit.error,

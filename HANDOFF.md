@@ -3964,31 +3964,47 @@ Plus: git init, .gitignore, 28 tests, Wilson-bound BER reporting.
   CHARACTERISATION, in separate columns, and drop neither.** Merging them
   understates a genuine pass; dropping the study is the actual shortcut.
 
-- **G110 -- (nebula) a screen derived from the corners where ONE spec row binds
-  does not generalise to designs where a DIFFERENT row binds, and the failure
-  looks exactly like the screen working.**
-  `adaptive_screen.EDGE4` was built from the corners that bind `S3_f_peak`:
-  the peak is set by an R x C product, `sf`/`fs` are the extreme **passive**
-  corners, and f_peak is perfectly monotone in temperature (135/135) and load
-  (135/135). It reproduces the full-135 worst case **exactly on 3 of 3**
-  designs -- all three of which fail on `S3_f_peak`.
-  **The first design it met whose binding row was elsewhere broke it.** A
-  coverage smoke run produced a design failing `S6_power` and `S3_f_peak`
-  together; its true worst point was **`tt/0.95/125C/14fF`** -- hot with a
-  **LIGHT** load, a combination EDGE4 does not carry because under the f_peak
-  mechanism hot always pairs with heavy. The screen was optimistic by
-  **+0.480680**.
-  **The tell is that the derivation names a row.** If the reasoning behind a
-  screen is "this is where <row> binds", the screen is a heuristic for that
-  row and nothing else, however many designs confirm it -- because the designs
-  that confirmed it were selected by the same row.
-  **The mitigation is not a better screen; it is a screen that checks itself.**
-  Every candidate that gets shipped is verified on the full grid anyway, so
-  comparing the screen's verdict against that verification is **free**, and any
-  point that beats the screen is appended to it. A run where the check never
-  fires is evidence FOR the screen, and is evidence only because it ran.
-  `experiments/adaptive_screen.py::AdaptiveScreen`, pinned by
-  `nebula/tests/test_adaptive_screen.py` (15 tests, 2 gates watched red).
+- **G110 -- (nebula) AUDIT A SCREEN AGAINST THE GRID IT TARGETS, NOT A LARGER
+  ONE. A self-check that grades against the wrong reference MANUFACTURES
+  failures, then "corrects" them, and the correction is unbounded.**
+  **This entry was rewritten. Its first version drew a different and largely
+  wrong conclusion, and the retraction is the useful part.**
+  `adaptive_screen.EDGE4_MANDATED` is four corners at the **design load**,
+  because the competition mandates 45 PVT corners and the load axis is this
+  project's own (G109). `exp_coverage.verify_request` verified each winner on
+  all **135** points -- correct, that is the robustness characterisation -- and
+  then handed **those 135 points** to `audit_screen`. So a screen built to
+  predict a 45-corner grid was graded on its ability to predict a 5.7x load
+  sweep it deliberately does not cover.
+  **The tell was in the corrections, not in the failures.** The audit reported
+  the screen optimistic on **4 of the first 5 requests** and appended one point
+  each time -- and **every single appended point was at 14 fF or 78 fF, never
+  at the 33 fF design load.** A screen that is wrong in a structured way, where
+  the structure is exactly the axis the reference has and the screen does not,
+  is not wrong; the reference is.
+  **The cost was compounding, which is what makes this worse than a wrong
+  number.** Each spurious point made every subsequent request more expensive:
+  screen 4 -> 5 -> 6 -> 7 -> 8 points, per-request wall clock 6.4 -> 7.2 ->
+  9.2 -> 11.3 min, on a 16-request sweep that would have ended near 19 points
+  and ~30 min per request. **A self-correcting mechanism with a wrong reference
+  does not converge; it runs away, and it looks like diligence while doing it.**
+  **The general form: a validation set and the thing being validated must be
+  the same population.** Before trusting any "our shortcut was checked", ask
+  what it was checked *against*, and confirm that reference is the population
+  the shortcut claims to summarise.
+  **What the first version of this entry claimed, and what survives.** It said
+  the lesson was *"a screen derived from where one spec row binds does not
+  generalise to designs where a different row binds"*, citing a miss at
+  `tt/0.95/125C/14fF` (error +0.4807). That miss came from the load-swept
+  `EDGE4`, which does carry 14 fF points, so it is not explained by the
+  reference bug and the row-dependence reading may still hold -- but it rests
+  on **one** observation, and the four that appeared to confirm it were this
+  bug. **Recorded as unproven rather than deleted** (rule 10): if a later run
+  shows the screen missing on the grid it actually targets, that is the
+  evidence, and it does not exist yet.
+  `experiments/exp_coverage.py::verify_request` now audits against the
+  design-load grid; `nebula/tests/test_adaptive_screen.py` pins the audit's
+  direction (pessimistic is safe, optimistic is not).
 
 ## 10. Environment
 
