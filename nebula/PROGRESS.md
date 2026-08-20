@@ -205,10 +205,91 @@ Budget each setting as a full SPICE run.
 
 ---
 
-## 5b. OPEN DEBT — **`S3_f_peak`'s tolerance is a CONSTRAINT tolerance being used as a REQUEST tolerance**
+## 5a. THE COVERAGE SWEEP — first result, and the retraction it forced
 
-**Found 2026-08-21 mid-coverage-run. Owner has approved the fix; it is
-sequenced AFTER the RL experiment and MUST NOT be dropped.**
+**Run 2026-08-21. 16 requests, 16 094 SPICE runs, 149.7 min.**
+`PREDICTIONS.md` entry 24 has the full scoring: **5 of 6 predictions hit**; Q6
+was **not scorable because I pre-registered a quantity and then failed to log
+it** — recorded as a miss of experimental design, not as a null.
+
+    solved on the search screen        11 / 16
+    MANDATED 45-corner PVT grid        10 / 16   <- RETRACTED, see below
+    135-point load-swept grid           0 / 16
+    screen self-check                  15 / 16 predictive, worst optimism +0.018427
+    screen grew                        4 -> 5 points
+
+**The screen works.** 15 of 16 audits found `EDGE4_MANDATED` predictive on the
+grid it targets, worst error +0.018. The "4 corners instead of 45" claim is
+sound, at a measured 1 046 SPICE runs and ~8.7 min per request.
+
+**RETRACTION: 10 of 16 is at most 9 of 16.** The sweep exposed **G111** —
+nothing in this project has ever required the peak to lie *inside* S3's
+window — and 4 of 16 delivered designs peak outside it, one of them scoring
+45/45 at **3.174 GHz**. Fixed (§5b); the corrected number comes from the
+re-run, which is owed.
+
+---
+
+## 5b. **G111 — the frequency band constraint that was never written.** FIXED; RE-RUN OWED
+
+**Found 2026-08-21 by the coverage sweep. Fixed the same day. The re-run is
+committed work and MUST NOT be dropped.**
+
+`S3_peaking` is a **band**: `min(pk - 3, 12 - pk)`, both edges enforced.
+`S3_f_peak` is a **distance from target**: `0.5 - |f_oct - target_oct|`.
+**So no spec set — V0 through V5, every published run, the whole benchmark —
+ever required the peak to lie inside 1.25-2.5 GHz.**
+
+It hid because **every published run targeted the window centre**, where the
+two statements coincide exactly:
+
+    target 1.768 GHz (the centre) -> accepts [1.250, 2.500] GHz == the window
+    target 2.253 GHz              -> accepts [1.593, 3.186] GHz, +0.686 over
+    target 1.387 GHz              -> accepts [0.981, 1.962] GHz, -0.269 under
+
+The coverage sweep was the **first experiment ever to ask for an off-centre
+target**. Measured consequence — 4 of 16 designs outside the window, unpenalised:
+
+    asked 2.253 GHz -> delivered 3.174 GHz  (+0.674 past the ceiling)  45/45 PASS
+    asked 2.253 GHz -> delivered 3.061 GHz                             43/45
+    asked 1.921 GHz -> delivered 2.949 GHz                              9/45
+    asked 1.627 GHz -> delivered 2.933 GHz                              0/45
+
+**The general rule, now G111:** for every spec that is a RANGE, confirm that
+one row enforces the range and a **different** row enforces the request. One
+row cannot do both except at a single point.
+
+### The fix, and the second half of the same defect
+
+| axis | band (constraint) | match (request) |
+|---|---|---|
+| peaking | `S3_peaking`, 1.0 dB | `S3_peaking_match`, 1.5 dB |
+| frequency | **`S3_f_peak_band`, 0.5 oct** (new) | **`S3_f_peak_match`, 0.30 oct** (new) |
+
+`S3_f_peak`'s 0.5-octave tolerance was **also** too loose as a request: ±41 %,
+half the whole window, so any design peaking anywhere in band satisfied any
+request. Measured: *asked 2.253 GHz, delivered 1.776 GHz, scored a pass.* The
+optimiser was not cheating — the row told it the frequency request was free.
+0.30 octaves is **derived** from f_peak's own 0.23-0.30 octave PVT excursion:
+anything tighter is a spec against physics.
+
+**`V6_SPECS` (13 rows) carries both new rows and DROPS `S3_f_peak`** — keeping
+all three would count one frequency miss three times in the shortfall sum.
+`V6D_SPECS` (9 rows) is the device-measurable half, for RL training.
+**V1–V5 untouched**, pinned by test.
+
+**Owed:** re-run the coverage sweep on V6 and **publish both numbers**. The gap
+between the loose and honest counts is itself the measurement of how much the
+old rule was flattering us.
+
+---
+
+## 5c. OPEN DEBT — superseded, retained for the record
+
+**The original §5b entry described only the loose-tolerance half of G111.**
+Kept because rule 10 forbids deleting a superseded finding: the entry was
+correct as far as it went, and it missed that the *band* row was absent
+entirely, which is the larger half.
 
 `S3_f_peak`'s margin is `0.5 - |f_oct - target_oct|`, and **0.5 octaves is half
 of S3's entire window**. That is the right number for the question *"is the
@@ -247,8 +328,8 @@ the measurement of how much the loose tolerance was flattering us.
 | 2 | `experiments/adaptive_screen.py` — EDGE-4, spread probe, D2 self-check | — | **DONE**, 15 tests, 2 gates watched red |
 | 3 | `rl/reward_v1.py` — `S3_peaking_match` + `V5_SPECS` (D6) | — | **DONE**, 12 tests, 3 gates watched red |
 | 4 | `experiments/exp_coverage.py` — the 16-request coverage sweep | ~10 000 sims, ~1.5 h | **RUNNING** |
-| **5** | **Corner-aware RL vs random / CMA-ES / library lookup.** `rl/corner_env.py` is built, tested, and **has never been run** — deferred four times. **Owner moved this ahead of item 6 on 2026-08-21**, because a surprising result here changes what the report is about | ~2 h | **NEXT** |
-| **6** | **Tighten the frequency request (§5b) and re-run the sweep.** Owner: *"polishing numbers is much needed for honesty."* Report both the loose and the honest coverage number | ~1.5 h | **committed, do not drop** |
+| **5** | **Corner-aware RL vs random / CMA-ES / library lookup.** Pre-registered as entry 25 (with a disclosed rule-3 violation: written after launch, before any artifact existed) | ~2.5 h | **RUNNING** |
+| **6** | **Re-run the coverage sweep on `V6_SPECS`** (§5b). Owner: *"polishing numbers is much needed for honesty."* **Publish both the old and the corrected coverage number** | ~2.5 h | **committed, do not drop** |
 | 7 | 2-D tuning bank (`Cs` axis) + the reading-(B) criterion | ~1 100 sims, ~8 min | built, not run |
 | 8 | Fair benchmark — **all six methods**: uniform, LHS, **grid**, CMA-ES, GP-BO, PPO, plus the hybrid. **Grid is not optional**: *"significantly lower time than sweeping all MOS, R, C, L parameter space"* is the slide's own success criterion, so the sweep is the baseline we claim to beat. Dropping GP-BO would be dropping the strongest fair rival | ~1 h | |
 | 9 | Option B: deliberate output loading, to desensitise the load axis. Measure device output capacitance with `device/cap_probe.py` first rather than inferring it (§4b infers ~90 fF) | ~30 sims | |
@@ -289,8 +370,10 @@ fourth deferral.
 | `adaptive_screen.EDGE4_MANDATED` | the same 4 edges at the design load — **the search screen** (D8) | exact on 2/3, +0.146 on the third, all inside the feasible band |
 | `adaptive_screen.probe_spread` | f_peak PVT excursion from **2 AC-only decks** | **exact to 5 dp** on both verified designs, 0.41 s vs ~50 s |
 | `adaptive_screen.AdaptiveScreen` | the self-check; appends any corner that beats the screen | **already caught one miss**: +0.4807 at `tt/0.95/125C/14fF` |
-| `reward_v1.V5_SPECS` | the request is honoured | asking 10 dB and delivering 6.65 dB is now INFEASIBLE; was identical to asking 6.65 |
-| `exp_coverage` | the coverage sweep | running |
+| `reward_v1.V6_SPECS` | both axes get a band row AND a request row | asking 10 dB and delivering 6.65 dB is now INFEASIBLE (was identical to asking 6.65); a peak at 3.174 GHz now FAILS (was 45/45 PASS) |
+| `exp_coverage` | the coverage sweep | **ran**: 10/16 (retracted to <=9), 16 094 sims, 149.7 min |
+| `exp_corner_rl` | the RL experiment, deferred 4x | running |
+| `report/figures_v2` | the four figures a judge reads first | compliance matrix rendered: 11/11 rows at 45/45 corners |
 
 ### Two things learned the hard way, worth not repeating
 
