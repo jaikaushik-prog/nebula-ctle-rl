@@ -51,10 +51,13 @@ human in the loop. Deliverables that already exist and run:
 | # | Decision | Consequence |
 |---|---|---|
 | D1 | **Extend the search screen with mixed `sf`/`fs` corners.** Closes `CONTINUE_HERE.md` §5 OPEN item 2 | Delivery screen becomes 4 (corner, load) pairs. `s9_yield.SCREEN_CORNERS` and every published benchmark arm stay untouched — no `BASELINES.md` §7f re-run |
-| D2 | **The screen must re-check itself**, ~5× per run, against the full 135 points; any corner that beats the screen's prediction is added mid-run | Removes the dependence on the screen being guessed correctly |
-| D3 | **Global, spread-first search** — global CMA-ES restarts over the whole box, gated on f_peak PVT spread | Targets the low-spread family the local search cannot reach |
-| D4 | **Ship the tuning bank live, and report BOTH readings of S3** | See §5 — this is the session's largest change |
+| D2 | **The screen must re-check itself** against the full 135 points; any corner that beats the screen's prediction is added mid-run | Removes the dependence on the screen being guessed correctly. Implemented free: the audit rides on the verification every winner needs anyway |
+| D3 | **Global, spread-first search** — global CMA-ES, seeded by the zero-simulation library lookup plus AC-only spread probes | Targets the low-excursion family the local search cannot reach |
+| D4 | **Ship the tuning bank live, and report BOTH readings of S3** | See §5 |
 | D5 | Maintain this file alongside `HANDOFF.md` | `HANDOFF.md` stays the source of truth; this is the entry point |
+| **D6** | **Make `target_peaking_db` LIVE.** A judge asking for 11 dB must not be handed 6.4 dB with a PASS beside it | `V5_SPECS` + `S3_peaking_match`. **V1–V4 bit-identical**, pinned by test, so no `BASELINES.md` §7f re-run |
+| **D7** | **The deliverable is the FRAMEWORK, not one design.** Measure *spec coverage* — for every request a judge might type, does the framework return a PVT-compliant circuit? | `exp_coverage.py` is now the centrepiece. The single-design searches are demoted to one cell of its grid |
+| **D8** | **Search on the MANDATED 45-corner grid; report the 135-point load sweep separately** | The slide mandates PVT (5 process × VDD±5% × 0–125 °C = 45) and says nothing about load. See §5 |
 
 ---
 
@@ -102,7 +105,59 @@ mechanism, which is good but is not proof.
 
 ---
 
-## 5. The S3 reading — the session's biggest finding
+## 4b. THE LOAD AXIS — the finding that reframed the project
+
+**Two thirds of the difficulty this project has been fighting comes from an
+axis the competition never asked for.**
+
+The slide mandates *"PVT (TT, SS, FF, SF, FS; VDD ±5%; 0–125 °C)"* = 5 × 3 × 3
+= **45 corners**. It says nothing about load capacitance. This project has been
+grading itself on **135 points** — those 45 corners × 3 load capacitances
+spanning **5.7×** — a third axis of our own (`CL_RANGE.md`).
+
+Decomposing the f_peak PVT excursion by axis, over the 135-point artifacts:
+
+| what varies | share of the total excursion |
+|---|---|
+| **load capacitance (our axis)** | **56 – 74 %** |
+| temperature | 18 – 21 % |
+| process | 8 – 22 % |
+| supply voltage | 0.5 – 0.7 % |
+
+| grid | excursion | headroom in S3's 1.000-oct window |
+|---|---|---|
+| 45 mandated corners, design load | **0.23 – 0.30 oct** | **+0.70 oct** |
+| 135 points, load swept | 0.94 – 1.02 oct | ~0.00, sometimes negative |
+
+**Consequence, verified bit-identically on an independent re-run
+(max Δreward = 0.000e+00 over 135 points):** design `c507a3ba6f58` passes
+**all 11 competition spec rows at 45 of 45 mandated PVT corners** at the design
+load — every margin positive, tightest `S3_f_peak` at +0.296 of a 0.5
+tolerance — and at the heavy load too. It fails only at the *lightest* load, at
+4 corners.
+
+**This is not a shortcut, and the reason is dated.** `CL_RANGE.md` §9, written
+**2026-08-06**, two weeks before any of these results existed:
+
+> *"'Screen `cl` like a PVT corner' is a conservative reading, and **arguably
+> too conservative**. Temperature varies during operation; `cl` does not. It is
+> **fixed the moment the following stage is laid out, and known to the designer
+> at that point**… the yield it produces should be read as **a lower bound on
+> what a tunable part could achieve**."*
+
+The methodological error being corrected: we let a **design-time uncertainty**
+("we have not built the DFE summer yet") masquerade as an **operating
+condition** ("the load varies at runtime"). Only the second belongs in a PVT
+grid. Process belongs because you cannot measure which die you got; load does
+not, because you can read it off the layout you drew.
+
+**Reporting rule (D8):** the 45-corner column is **compliance**; the 135-point
+column is **robustness characterisation**, always shown, never merged into the
+PVT claim, and never dropped. Dropping it would be the actual shortcut.
+
+---
+
+## 5. The S3 reading — the session's other big finding
 
 The competition slide says:
 
@@ -154,14 +209,42 @@ Budget each setting as a full SPICE run.
 
 | # | Task | Cost | Status |
 |---|---|---|---|
-| 1 | Pre-register `PREDICTIONS.md` entry 24 (bands + falsifiers) **before** any run | — | **do first, rule 3** |
-| 2 | `experiments/adaptive_screen.py` — EDGE-4, spread probe, D2 self-check + tests | — | |
-| 3 | `rl/reward_v1.py` — append `S3_spread` tolerance row + `V5_SPECS` (**by enumeration**, G101/G106) | — | |
-| 4 | `experiments/exp_hybrid_search.py` — global CMA-ES on the tiered evaluator | ~1 600 sims, ~11 min | |
-| 5 | 2-D tuning bank (`Cs` axis) + the reading-(B) 135-point criterion | ~1 100 sims, ~8 min | |
-| 6 | Fair benchmark: random / CMA-ES / PPO / hybrid, one evaluator, equal budgets | ~6 400 sims, ~42 min | |
-| 7 | **Corner-aware RL** — `rl/corner_env.py` is built, tested, and has never been run. The one defensible RL niche (a design lookup is nominal-only by construction and cannot answer corners) | ~2 h | |
-| 8 | Report: compliance matrix on page 1; renumber figures; point the grounding checker at report prose | — | |
+| 1 | Pre-register `PREDICTIONS.md` entry 24 | — | **DONE**, committed before the run |
+| 2 | `experiments/adaptive_screen.py` — EDGE-4, spread probe, D2 self-check | — | **DONE**, 15 tests, 2 gates watched red |
+| 3 | `rl/reward_v1.py` — `S3_peaking_match` + `V5_SPECS` (D6) | — | **DONE**, 12 tests, 3 gates watched red |
+| 4 | `experiments/exp_coverage.py` — the 16-request coverage sweep | ~10 000 sims, ~1.5 h | **RUNNING** |
+| 5 | 2-D tuning bank (`Cs` axis) + the reading-(B) criterion | ~1 100 sims, ~8 min | |
+| 6 | Option B: deliberate output loading, to desensitise the load axis (~20 sims). Measure device output capacitance with `device/cap_probe.py` first rather than inferring it (§4b infers ~90 fF) | ~30 sims | |
+| 7 | Fair benchmark: random / CMA-ES / PPO / hybrid, one evaluator, equal budgets | ~6 400 sims, ~42 min | |
+| 8 | **Corner-aware RL** — `rl/corner_env.py` is built, tested, and has never been run. The one defensible RL niche (a design lookup is nominal-only by construction and cannot answer corners) | ~2 h | |
+| 9 | Report: compliance matrix on page 1; renumber figures; point the grounding checker at report prose | — | |
+
+### What is built and working (session 23)
+
+| module | what it does | measured |
+|---|---|---|
+| `adaptive_screen.EDGE4` | 4 (corner, load) pairs, load-swept framing | reproduces the full-135 worst **exactly** on 3/3 designs; live re-check gave −0.015150 in **4 decks / 1.8 s** vs 135 decks / 50 s |
+| `adaptive_screen.EDGE4_MANDATED` | the same 4 edges at the design load — **the search screen** (D8) | exact on 2/3, +0.146 on the third, all inside the feasible band |
+| `adaptive_screen.probe_spread` | f_peak PVT excursion from **2 AC-only decks** | **exact to 5 dp** on both verified designs, 0.41 s vs ~50 s |
+| `adaptive_screen.AdaptiveScreen` | the self-check; appends any corner that beats the screen | **already caught one miss**: +0.4807 at `tt/0.95/125C/14fF` |
+| `reward_v1.V5_SPECS` | the request is honoured | asking 10 dB and delivering 6.65 dB is now INFEASIBLE; was identical to asking 6.65 |
+| `exp_coverage` | the coverage sweep | running |
+
+### Two things learned the hard way, worth not repeating
+
+* **Rank seeds by worst-case `|f_oct − target|`, not by spread.** Spread
+  ignores the request: a design whose peak travels 0.3 octaves but sits at
+  5 GHz has a superb spread and serves nothing. The first smoke run started
+  from exactly such a design.
+* **The spread probe must NOT score inside the search loop.** It scores 3 of
+  12 rows, so its reward is systematically higher than a fully-evaluated
+  infeasible design's, and mixing them builds an objective that rewards *not
+  being measured*. It seeds the search and reports; nothing else.
+* **`EDGE4` was derived from designs where `S3_f_peak` binds.** A design whose
+  binding row is `S6_power` or `saturation` has its worst corner elsewhere —
+  which is exactly the miss the self-check caught. The screen is a good
+  heuristic for one row, not a universal truth, and the self-check is what
+  makes that safe.
 
 ---
 

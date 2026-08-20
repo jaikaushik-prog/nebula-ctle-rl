@@ -3927,6 +3927,69 @@ Plus: git init, .gitignore, 28 tests, Wilson-bound BER reporting.
   entry 22 is the measurement, and `evaluator.annotate_interpolated_peak` /
   `evaluator.scored_meas` are the one definition both routines now reach.
 
+- **G109 -- (nebula) a UNCERTAINTY ABOUT A DESIGN-TIME CONSTANT is not an
+  OPERATING CONDITION, and putting it in the PVT grid multiplies the difficulty
+  of the whole problem by an axis nobody asked for.**
+  This project grades on **135 points** = 45 mandated PVT corners x **3 load
+  capacitances spanning 5.7x**. The competition slide mandates *"PVT (TT, SS,
+  FF, SF, FS; VDD +/-5%; 0-125 C)"* -- 5 x 3 x 3 = **45 corners** -- and says
+  nothing about load. The third axis is ours (`CL_RANGE.md`).
+  **Measured share of the f_peak PVT excursion, by axis:** load **56-74 %**,
+  temperature 18-21 %, process 8-22 %, supply **0.5-0.7 %**. Across the 45
+  mandated corners a design's peak travels **0.23-0.30 octaves** in S3's
+  1.000-octave window (**+0.70 of headroom**); add the load sweep and it travels
+  **0.94-1.02** (zero, sometimes negative). **Five sessions of "our margin is
+  0.0076 octaves" were two thirds an artifact of our own third axis.**
+  Design `c507a3ba6f58` passes **all 11 rows at 45 of 45 mandated corners** at
+  the design load (tightest margin `S3_f_peak` +0.296 of a 0.5 tolerance) and
+  at the heavy load, failing only at the lightest load at 4 corners --
+  reproduced **bit-identically** on an independent re-run, max |delta reward|
+  = 0.000e+00 over 135 points.
+  **The distinction that decides it: does the quantity vary while the chip is
+  running?** Temperature and supply do. Process does not, but is unknowable
+  per-die, so it belongs. **Load does not vary and IS knowable** -- it is fixed
+  the moment the next stage is laid out, and the designer can read it off the
+  layout. Our 5.7x was epistemic ("we have not designed the DFE summer yet"),
+  not physical, and epistemic uncertainty about a constant is resolved by
+  designing the next stage or by a tuning knob, not by demanding one fixed
+  sizing survive all of it simultaneously.
+  **This is not hindsight.** `CL_RANGE.md` §9, dated 2026-08-06, says
+  *"'screen cl like a PVT corner' is a conservative reading, and arguably too
+  conservative... it is fixed the moment the following stage is laid out, and
+  KNOWN to the designer at that point... the yield it produces should be read
+  as a lower bound on what a tunable part could achieve."* The caveat was
+  written, committed, and then forgotten for two weeks while the project fought
+  the consequence.
+  **The rule: report the mandated grid as COMPLIANCE and the extra axis as
+  CHARACTERISATION, in separate columns, and drop neither.** Merging them
+  understates a genuine pass; dropping the study is the actual shortcut.
+
+- **G110 -- (nebula) a screen derived from the corners where ONE spec row binds
+  does not generalise to designs where a DIFFERENT row binds, and the failure
+  looks exactly like the screen working.**
+  `adaptive_screen.EDGE4` was built from the corners that bind `S3_f_peak`:
+  the peak is set by an R x C product, `sf`/`fs` are the extreme **passive**
+  corners, and f_peak is perfectly monotone in temperature (135/135) and load
+  (135/135). It reproduces the full-135 worst case **exactly on 3 of 3**
+  designs -- all three of which fail on `S3_f_peak`.
+  **The first design it met whose binding row was elsewhere broke it.** A
+  coverage smoke run produced a design failing `S6_power` and `S3_f_peak`
+  together; its true worst point was **`tt/0.95/125C/14fF`** -- hot with a
+  **LIGHT** load, a combination EDGE4 does not carry because under the f_peak
+  mechanism hot always pairs with heavy. The screen was optimistic by
+  **+0.480680**.
+  **The tell is that the derivation names a row.** If the reasoning behind a
+  screen is "this is where <row> binds", the screen is a heuristic for that
+  row and nothing else, however many designs confirm it -- because the designs
+  that confirmed it were selected by the same row.
+  **The mitigation is not a better screen; it is a screen that checks itself.**
+  Every candidate that gets shipped is verified on the full grid anyway, so
+  comparing the screen's verdict against that verification is **free**, and any
+  point that beats the screen is appended to it. A run where the check never
+  fires is evidence FOR the screen, and is evidence only because it ran.
+  `experiments/adaptive_screen.py::AdaptiveScreen`, pinned by
+  `nebula/tests/test_adaptive_screen.py` (15 tests, 2 gates watched red).
+
 ## 10. Environment
 
 - Windows 11, PowerShell 5.1 (+ Git Bash available), Python 3.13.14,

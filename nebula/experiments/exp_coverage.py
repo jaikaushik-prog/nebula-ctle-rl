@@ -115,15 +115,19 @@ FREQ_REQUESTS: tuple[float, ...] = tuple(
 
 #: Design evaluations per request. Each costs `len(screen)` SPICE decks, so
 #: the SPICE budget is `BUDGET_DESIGN_EVALS * 4` at the starting screen.
-BUDGET_DESIGN_EVALS: int = 140
+BUDGET_DESIGN_EVALS: int = 200
 
 #: How many random candidates to probe when choosing a starting point. Each
 #: costs 2 AC-only decks.
-N_SEED_PROBES: int = 24
+N_SEED_PROBES: int = 16
 
 #: CMA-ES initial step. Larger than the joint search's 0.12 because this is a
 #: fresh search per request rather than a refinement of a known design.
 SIGMA0: float = 0.25
+
+#: How many previously-solved designs to re-probe when seeding. Bounded so
+#: the seeding cost does not grow with the sweep: 6 x 2 decks = 12.
+ARCHIVE_MAX: int = 6
 
 BASE_SEED: int = 23_0821
 
@@ -169,6 +173,7 @@ class RequestResult:
     pvt45_worst: Optional[float] = None
     n_full135_pass: Optional[int] = None
     full135_worst: Optional[float] = None
+    n_unscorable: int = 0
     failing_rows: list = field(default_factory=list)
     audit: Optional[dict] = None
     reason: Optional[str] = None
@@ -217,7 +222,8 @@ class _Objective:
 
 
 def choose_start(target_f_peak_hz: float, target_peaking_db: float,
-                 rng: np.random.Generator, n: int = N_SEED_PROBES) -> tuple[Optional[np.ndarray], Optional[float], int]:
+                 rng: np.random.Generator, n: int = N_SEED_PROBES,
+                 archive: Optional[Sequence[Sequence[float]]] = None) -> tuple[Optional[np.ndarray], Optional[float], int]:
     """Probe `n` random candidates; start from the best `S3_f_peak` worst case.
 
     **Two AC-only decks each**, and the ranked quantity is not "spread" but
@@ -273,6 +279,14 @@ def choose_start(target_f_peak_hz: float, target_peaking_db: float,
     except Exception:                                           # noqa: BLE001
         pass
 
+    # **Then every design this sweep has already produced.** Adjacent requests
+    # have adjacent answers, so a solved neighbour is a far better start than
+    # anything random -- and this is the amortisation the deliverable's "fewer
+    # simulations than sweeping" claim actually rests on: the Nth request is
+    # cheaper than the first BECAUSE of the first. Two decks to check each.
+    for au in (archive or ()):
+        _consider(np.asarray(au, dtype=float))
+
     for _ in range(n):
         _consider(rng.uniform(0.0, 1.0, N_ACTIONS))
     return best_u, best_spread, n_sims
@@ -280,13 +294,15 @@ def choose_start(target_f_peak_hz: float, target_peaking_db: float,
 
 def solve_request(peaking_db: float, f_peak_hz: float, screen: AdaptiveScreen,
                   budget: int = BUDGET_DESIGN_EVALS, seed: int = 0,
-                  log=None) -> tuple[RequestResult, Optional[object]]:
+                  log=None, archive: Optional[Sequence[Sequence[float]]] = None
+                  ) -> tuple[RequestResult, Optional[object]]:
     """Run the framework on one spec request. Returns (result, best eval)."""
     from nebula.experiments.baselines import BudgetExhausted, CmaConfig, method_cmaes
 
     t0 = time.time()
     rng = np.random.default_rng(seed)
-    x0, spread, probe_sims = choose_start(f_peak_hz, peaking_db, rng)
+    x0, spread, probe_sims = choose_start(f_peak_hz, peaking_db, rng,
+                                          archive=archive)
 
     obj = _Objective(screen, f_peak_hz, peaking_db, budget, log)
     try:
@@ -364,9 +380,13 @@ def verify_request(res: RequestResult, best, screen: AdaptiveScreen) -> None:
     m45 = [r for r in rescored if abs(r["cl_f"] - design_load) < 1e-20]
     res.n_pvt45_total = len(m45)
     res.n_pvt45_pass = sum(1 for r in m45 if r["feasible"])
-    res.pvt45_worst = min((r["reward"] for r in m45), default=None)
+    res.pvt45_worst = min((r["reward"] for r in m45
+                           if r["reward"] is not None), default=None)
     res.n_full135_pass = sum(1 for r in rescored if r["feasible"])
-    res.full135_worst = min((r["reward"] for r in rescored), default=None)
+    res.full135_worst = min((r["reward"] for r in rescored
+                             if r["reward"] is not None), default=None)
+    # Counted, never folded into the reward (G107).
+    res.n_unscorable = sum(1 for r in rescored if r.get("unscorable"))
     rows: set = set()
     for r in rescored:
         rows.update(r["failed"])
@@ -394,8 +414,19 @@ def _rescore(points: Sequence[dict], target_f_peak_hz: float,
     out = []
     for p in points:
         if not p.get("ok"):
-            out.append({"cl_f": float(p["cl_f"]), "reward": -1e3,
-                        "feasible": False, "failed": ["UNSCORABLE"],
+            # **`reward=None`, NOT a large negative number — G107, and this
+            # code committed the gotcha the same session it was written down.**
+            # The first version scored an unscorable point at -1e3, and
+            # `audit_screen` then compared the screen's -1.0 against it and
+            # reported the screen "optimistic by +999.0", appending a bogus
+            # point to the screen and contaminating every request after it.
+            # "Cannot be scored" and "fails" are different verdicts: an
+            # unscorable point is counted (below, and it still blocks
+            # compliance) but it is not a NUMBER the screen can be audited
+            # against, because the screen has no number to compare either.
+            out.append({"cl_f": float(p["cl_f"]), "reward": None,
+                        "feasible": False, "unscorable": True,
+                        "failed": ["UNSCORABLE"],
                         "corner": p["corner"], "vdd_scale": p["vdd_scale"],
                         "temp_c": p["temp_c"]})
             continue
@@ -437,6 +468,9 @@ def run(budget: int = BUDGET_DESIGN_EVALS,
     t0 = time.time()
     screen = AdaptiveScreen(EDGE4_MANDATED)
     results: list[RequestResult] = []
+    #: Designs this sweep has already produced, newest first, capped so the
+    #: seeding cost stays bounded. Each entry costs 2 AC-only decks to check.
+    archive: list = []
     requests = [(pk, f) for pk in peakings for f in freqs]
 
     with RUN_LOG.open("w", encoding="utf-8") as fh:
@@ -451,10 +485,14 @@ def run(budget: int = BUDGET_DESIGN_EVALS,
                   f"{f / 1e9:.3f} GHz  (screen has {screen.n_points} points)",
                   flush=True)
             res, best = solve_request(pk, f, screen, budget=budget,
-                                      seed=BASE_SEED + i, log=fh)
+                                      seed=BASE_SEED + i, log=fh,
+                                      archive=archive)
             if verify and res.u is not None:
                 verify_request(res, best, screen)
             results.append(res)
+            if res.u is not None:
+                archive.insert(0, list(res.u))
+                del archive[ARCHIVE_MAX:]
             print(f"      screen {'FEASIBLE' if res.solved_on_screen else 'infeasible'}"
                   f"  reward {res.screen_reward if res.screen_reward is None else round(res.screen_reward, 4)}"
                   f"  |  45-corner {res.n_pvt45_pass}/{res.n_pvt45_total}"
