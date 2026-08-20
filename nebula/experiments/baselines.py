@@ -874,6 +874,13 @@ class CmaConfig:
 
     sigma0: float = 0.3
     popsize: Optional[int] = None       # None -> 4 + floor(3 ln d)
+    #: Starting mean, normalised. `None` -> uniform random, which is what
+    #: every published baseline in this repo used and what the benchmark must
+    #: keep using. **Set it only for a deliberately LOCAL search**, e.g.
+    #: refining a design an earlier study already found; a benchmark arm that
+    #: started from a known-good point would not be comparable with the others.
+    #: Session 22s uses it, `BASELINES.md` does not.
+    x0: Optional[Sequence[float]] = None
 
 
 def method_cmaes(obj: Objective, rng: np.random.Generator,
@@ -903,7 +910,10 @@ def method_cmaes(obj: Objective, rng: np.random.Generator,
     damps = 1 + 2 * max(0.0, math.sqrt((mueff - 1) / (d + 1)) - 1) + cs
     chiN = math.sqrt(d) * (1 - 1 / (4 * d) + 1 / (21 * d * d))
 
-    xmean = rng.uniform(0.0, 1.0, d)
+    xmean = (rng.uniform(0.0, 1.0, d) if cfg.x0 is None
+             else np.clip(np.asarray(cfg.x0, dtype=float), 0.0, 1.0))
+    if xmean.shape != (d,):
+        raise ValueError(f"x0 has {xmean.shape}, expected ({d},)")
     sigma = cfg.sigma0
     pc = np.zeros(d)
     psig = np.zeros(d)

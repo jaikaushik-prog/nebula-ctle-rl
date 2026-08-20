@@ -3416,3 +3416,106 @@ was corner-robust precisely because it was scored that way. Whether S3 and S8
 are jointly satisfiable across 135 points is **open, and it is now a search
 question rather than a physics question** — which is the whole change this
 entry makes.
+
+---
+
+## 20. Session 22s — **the search nobody has run: S3 and S8 and HD3-at-Nyquist in one objective**
+
+**Written:** 2026-08-20, session 22s, **before `exp_joint_search.py --run` was
+executed.**
+**Experiment:** `python -m nebula.experiments.exp_joint_search --run` — local
+CMA-ES seeded at session 22r's 9.2 dB front design, `sigma0` = 0.12, budget
+400 simulations, scoring **`V4_SPECS`** (all eleven competition rows plus
+`S4_hd3_nyq`) on the worst of 3 screen corners x 2 loads. Then
+`verify_full` at all 135 points on the winner.
+
+### Declared inputs — measured before this entry, NOT predicted
+
+1. Session 22r's two half-designs: the delivered one meets S3 at 135 of 135
+   and has **no measurable eye at any of them**; the 9.2 dB front design meets
+   S8 at 135 of 135 (226-299 mV, 0.781-0.812 UI) and **fails `S3_f_peak`**.
+   Neither had ever been asked for both.
+2. The seed's `f_peak` is **2.0893 GHz**; the log-centre of S3's window is
+   **1.7678 GHz**. It must travel **-0.241 octaves**.
+3. Measured `f_peak` sensitivities (`exp_sweep_cost`, on the interpolated
+   peak): **cs 3.243, rl 2.702** octaves per box width, every other axis below
+   0.53. So the analytic first guess is `u_cs` **0.8045 -> 0.8789**.
+4. **Scored on `V4_SPECS`, the seed comes back at -14.1667 with 5 of 6 screen
+   points scorable.** The sixth, `ss/0.95/125C/cl=13.6fF`, is rejected by the
+   pole-zero fit gate at **0.564 dB against the 0.50 dB limit** — which is also
+   why `verify_full` reported it at 121 of 135 points, not 135. At the worst
+   scorable point its `S3_f_peak` margin is **-2.997** and its
+   **HD3 at Nyquist is -36.20 dBc, which PASSES** by 6.2 dB.
+5. The delivered design's HD3 at Nyquist and drive amplitude is **-17.38 dBc**,
+   failing by 12.6 dB. This is why S8 alone is not the objective.
+
+### Predictions
+
+1. **`f_peak` is bought with peaking, and the winner lands at 6-8 dB.**
+   *(This is the owner's prediction, adopted.)* Reasoning: at fixed `Rs`,
+   lowering `f_z = 1/(Rs*Cs)` to drag the peak down means raising `Cs`, which
+   the measured sensitivity says is the dominant knob; but `k` — and hence
+   peaking — is set by `(gm+gmbs)*Rs/2` and does not move with `Cs`, so the
+   peak comes down at roughly constant peaking. The trade actually available
+   is through `rl` (2.702 oct/box, and it moves `g_dc` too). **Band: final
+   peaking in [5.0, 9.2] dB, and strictly below the seed's 9.154 dB.**
+   I hold this at 60 % — the mechanism the owner names is real but `Cs` alone
+   should move `f_peak` with only a second-order effect on peaking, so a
+   winner at ~9 dB with more `Cs` is also consistent with the physics.
+2. **The search reaches 12 of 12 rows FEASIBLE on the screen** (reward > 13.0).
+   Confidence 65 %. Reasoning: the seed is one row short on the screen and the
+   row is a distance-to-target, which is the smoothest row in the set; the
+   analytic guess says the required move is 0.074 of one box axis, well inside
+   `sigma0` = 0.12.
+3. **The pole-zero fit rejection at `ss/0.95/125C` is FIXED as a side effect,
+   not fought.** Confidence 55 %. Reasoning: the residual is 0.564 against a
+   0.50 gate — a 13 % miss — and moving the peak by a quarter octave changes
+   the response shape the fit has to describe. **If instead the winner still
+   has an unscorable corner, the graded invalid band will show it: any reward
+   below -14.0 means the search never escaped it.**
+4. **At 135 points the winner does NOT reach 11 of 11.** Confidence 60 %, and
+   this is the prediction I most expect to be argued with. Reasoning:
+   `G4_RESULTS.md` measured that the 3-corner screen has **no `sf` or `fs`
+   member** and that designs certified on it failed 8 of 135 full-grid points,
+   **every one at an unscreened corner**; `nebula/design.py` reproduced it at
+   23 of 135 and 45 of 135. A search that sees 6 points inherits that blind
+   spot. **Band: 1 to 25 failing points of 135, concentrated at `sf`/`fs`.**
+5. **The eye survives the move.** Band: final eye height **> 150 mV** at every
+   scorable point (the seed has 226-299 mV, and 100 mV is the spec). If the
+   eye collapses toward the floor, `f_peak` was bought with linearity and the
+   whole exercise has relocated the failure rather than closed it — which is
+   exactly what this objective exists to prevent, so it would be a real
+   finding about the objective and not only about the design.
+6. **HD3 at Nyquist stays inside spec throughout.** The seed is at -36.20 dBc
+   with 6.2 dB of margin. Band: final **< -32 dBc**. **If this row ends up
+   binding, the owner's instruction was right for a reason stronger than
+   stated** — that S3+S8 alone would have relocated the failure into
+   large-signal linearity.
+
+### What would falsify the reasoning
+
+* If the winner's reward is **below -14.0**, it never left the graded invalid
+  band and predictions 1-2 are untestable from this run — the result would be
+  about the fit gate, not about the specification trade.
+* If `peaking` ends up **above** the seed's 9.154 dB, prediction 1's mechanism
+  is backwards and the `Cs`/`k` decoupling argument needs re-deriving before
+  any of it is quotable.
+* If the 135-point verification fails at **screened** corners, the blind-spot
+  explanation in prediction 4 is wrong and something more basic is broken.
+
+### Guard against over-claiming
+
+**This is a LOCAL search from a known-good point and is not a benchmark arm.**
+It cannot be ranked against `BASELINES.md`, every method of which starts from
+uniform random. A success here is the existence claim — *a design meeting all
+eleven rows exists in this box, and here it is* — and nothing about which
+optimiser is better. A failure here is equally narrow: it would bound what 400
+simulations reach from one seed, not what the box contains.
+
+**The fit gate is not to be touched.** The seed is unscorable at one screen
+corner because a 0.564 dB residual exceeds a 0.50 dB limit. Relaxing that
+limit would make the seed evaluable and every downstream eye number
+unfounded — it is the exact move this file's discipline exists to refuse. The
+graded invalid band gives the search a path out **without** moving the gate.
+
+### Outcome — *not yet run.*

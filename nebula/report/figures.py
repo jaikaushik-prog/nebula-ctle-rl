@@ -13,9 +13,7 @@ drawing a placeholder, because a plot with invented data is exactly the failure
 from __future__ import annotations
 
 import json
-import math
 from pathlib import Path
-from typing import Optional
 
 import matplotlib
 matplotlib.use("Agg")
@@ -296,7 +294,6 @@ def fig_library_law(force: bool = False) -> Path:
         d = json.loads(cache.read_text(encoding="utf-8"))
     else:
         from nebula.experiments import spec_pool as SP
-        from nebula.rl import reward_v1 as R
         from nebula.rl import spec_dist as SD
 
         pool = SP.load_pool()
@@ -392,6 +389,74 @@ def fig_grid_arithmetic() -> Path:
                 fontsize=8, color=ACCENT,
                 arrowprops=dict(arrowstyle="->", color=ACCENT, lw=1.0))
     return _save(fig, "f8_grid_arithmetic.png")
+
+
+def fig_sweep_cost() -> Path:
+    """**What sweeping the parameter space actually costs**, and where the
+    level count comes from.
+
+    `fig_grid_arithmetic` answers the MATCHED-budget question (150 simulations
+    buys 2.06 levels per knob at d = 7). This answers the brief's own
+    question, which is not about a matched budget: what would an exhaustive
+    sweep cost?
+
+    **The level count is derived, and the derivation is the left panel.** Each
+    axis gets `1 + ceil(sensitivity / 0.0664386)` levels, where the divisor is
+    `ac dec 50`'s own frequency spacing -- the quantisation G74 measured as
+    capping the reward and tying 57 designs. At d = 7 the answer is a product,
+    so a level count picked by hand IS the result; this one is measured.
+    """
+    d = _load("sweep_cost_results.json")
+    sens = d["sensitivity"]
+    res = d["resolution_oct"]
+    ff = d["full_factorial_at_8_workers"]
+
+    fig, (ax, bx) = plt.subplots(1, 2, figsize=(7.0, 2.9),
+                                 gridspec_kw={"width_ratios": [1.35, 1.0]})
+
+    names = [s_["name"] for s_ in sens][::-1]
+    vals = np.array([s_["median_oct"] for s_ in sens][::-1])
+    lv = [s_["levels"] for s_ in sens][::-1]
+    y = np.arange(len(names))
+    ax.barh(y, np.maximum(vals, 1e-3),
+            color=[ACCENT if v > 1.0 else GREY for v in vals], height=0.62)
+    ax.axvline(res, color=WARN, lw=1.2, ls="--")
+    # Below the lowest bar, not above the highest one: the top bar's "N levels"
+    # annotation lives there and the two collided.
+    ax.text(res * 0.85, -0.95,
+            f"ac dec 50 resolution\n{res:.4f} octaves", fontsize=6.6,
+            color=WARN, va="center", ha="right")
+    for yi, (v, l) in enumerate(zip(vals, lv)):
+        ax.text(max(v, 1e-3) * 1.25, yi, f"{l} levels", fontsize=7.2,
+                va="center", color=INK)
+    ax.set_yticks(y)
+    ax.set_yticklabels(names, fontsize=8)
+    ax.set_ylim(-1.5, len(names) - 0.4)
+    ax.set_xscale("log")
+    ax.set_xlim(3e-3, 30.0)
+    ax.set_xlabel("measured |d log2(f_peak) / du|  (octaves per box width)")
+    ax.set_title("Levels are derived from a measured sensitivity",
+                 fontsize=9.0, loc="left")
+    ax.grid(axis="x", color=LIGHT, lw=0.6)
+    ax.set_axisbelow(True)
+
+    sims = [ff["n_simulations"], 150]
+    labs = ["full factorial\n(extrapolated)", "nebula.design\n--method cmaes"]
+    bx.bar([0, 1], sims, color=[WARN, GOOD], width=0.55)
+    bx.set_yscale("log")
+    bx.set_xticks([0, 1])
+    bx.set_xticklabels(labs, fontsize=7.6)
+    bx.set_ylabel("SPICE simulations")
+    for i, (v, t) in enumerate(zip(sims, (f"{ff['wall_clock_hours']:,.0f} h",
+                                          f"{d['design_runtimes'][1]['wall_clock_s']:.0f} s"))):
+        bx.text(i, v * 1.6, f"{v:,}\n{t}", ha="center", fontsize=7.6,
+                fontweight="bold")
+    bx.set_ylim(50, sims[0] * 60)
+    bx.set_title(f"{d['speedup_vs_design']['cmaes']:,.0f}x", fontsize=13,
+                 loc="left", color=GOOD, fontweight="bold")
+    bx.grid(axis="y", color=LIGHT, lw=0.6)
+    bx.set_axisbelow(True)
+    return _save(fig, "f11_sweep_cost.png")
 
 
 def fig_response(force: bool = False) -> Path:
@@ -500,7 +565,7 @@ def fig_hd3_amplitude() -> Path:
 
 ALL = (fig_architecture, fig_benchmark, fig_lattice_control, fig_budget_ladder,
        fig_termination, fig_library_law, fig_corner_map, fig_grid_arithmetic,
-       fig_response, fig_hd3_amplitude)
+       fig_response, fig_hd3_amplitude, fig_sweep_cost)
 
 
 def main() -> int:

@@ -194,6 +194,22 @@ TOLERANCES: tuple[Tol, ...] = (
         "CLAUDEwa.md sec 3 calls S4 'relatively relaxed' and measured ~60 dB "
         "inside spec, so this row is expected never to bind -- which is the "
         "finding, not a reason to leave it unscored"),
+    # ── S4 AT NYQUIST, added by session 22s. See `V4_SPECS` below. ────────
+    #
+    # **A SEPARATE ROW RATHER THAN A DIFFERENT CONDITION ON `S4_hd3`, and that
+    # is rule 9 rather than fussiness.** `S4_hd3` means "HD3 at 100 MHz and
+    # 200 mVpp" everywhere it has ever been published. Session 22r measured
+    # the same circuit at -48.00 dBc there and **-17.38 dBc** at 2.5 GHz and
+    # 535 mVpp -- a 30 dB difference under one name would be exactly G32: two
+    # definitions of one quantity, with a reader unable to tell which produced
+    # a given number. Same tolerance (one third of the 30 dB limit), different
+    # row, both reportable side by side.
+    Tol("S4_hd3_nyq", 10.0, "dB",
+        "one third of S4's own 30 dB limit, as S4_hd3 uses -- but measured at "
+        "NYQUIST and at the amplitude the link actually drives, not at S4's "
+        "stated 100 MHz / 200 mVpp. S4's tone sits at 0.87x the CTLE zero "
+        "where the degeneration is still intact; this row is the same spec "
+        "asked at the operating point"),
     Tol("S7_area", SPEC_AREA_MAX_MM2 / 3.0, "mm^2",
         "one third of S7's own 0.05 mm^2 limit, the same rule S5 and S6 use. "
         "Passives dominate; G2 measured 0.001092 mm^2, 46x inside spec"),
@@ -261,6 +277,26 @@ V2_SPECS: tuple[str, ...] = V1_SPECS + ("S8_eye_h", "S8_eye_w")
 #: -30 limit and area 0.001092 mm^2 against 0.05 -- and **that is the finding**.
 #: A spec that is free is worth demonstrating, not worth leaving unmeasured.
 V3_SPECS: tuple[str, ...] = V2_SPECS + ("S4_hd3", "S7_area")
+
+#: **Reward v4: the JOINT set -- every V3 row, with S4 asked at the operating
+#: point instead of at its stated conditions.**
+#:
+#: Session 22r left the project with two half-designs: one meeting S3 at 135 of
+#: 135 points whose eye cannot be computed at any of them, and one meeting S8
+#: at 135 of 135 with 3.6x margin that fails S3. **Neither had ever been asked
+#: for both**, because V1 (what every search scores) contains S3 and not S8,
+#: and V2/V3 contain S8 and have never been searched on.
+#:
+#: **S8 alone is not enough and that is a measurement, not a guess.** The eye
+#: is computed from a small-signal AC fit, so a design can satisfy S8 while
+#: being large-signal non-linear at the drive -- the compression gate catches
+#: the gross case, but HD3 at Nyquist is the transient-verified version and it
+#: relocates rather than removes the failure. `S4_hd3_nyq` is in this set for
+#: that reason.
+#:
+#: V1, V2 and V3 are UNTOUCHED. This set is for search; every published
+#: baseline number stays scored on V1 (`BASELINES.md` sec 7f).
+V4_SPECS: tuple[str, ...] = V3_SPECS + ("S4_hd3_nyq",)
 
 #: The S8 rows, named so a caller can ask "is this reward scoring the eye?"
 S8_SPECS: tuple[str, ...] = ("S8_eye_h", "S8_eye_w")
@@ -340,7 +376,8 @@ def margins(meas: Mapping[str, float],
             target_peaking_db: Optional[float] = None,
             link: Optional[object] = None,
             hd3_dbc: Optional[float] = None,
-            area_mm2: Optional[float] = None) -> dict:
+            area_mm2: Optional[float] = None,
+            hd3_nyq_dbc: Optional[float] = None) -> dict:
     """Signed margins, in natural units. ONE definition (rule 9).
 
     `meas` is `evaluator.EvalResult.meas`: already in the units
@@ -401,6 +438,8 @@ def margins(meas: Mapping[str, float],
     # limit the margin is +31.10 dB.
     if hd3_dbc is not None:
         out["S4_hd3"] = SPEC_HD3_MAX_DBC - float(hd3_dbc)
+    if hd3_nyq_dbc is not None:
+        out["S4_hd3_nyq"] = SPEC_HD3_MAX_DBC - float(hd3_nyq_dbc)
     if area_mm2 is not None:
         out["S7_area"] = SPEC_AREA_MAX_MM2 - float(area_mm2)
     return out
@@ -462,6 +501,7 @@ def reward(
     headroom: Optional[Mapping[str, float]] = None,
     hd3_dbc: Optional[float] = None,
     area_mm2: Optional[float] = None,
+    hd3_nyq_dbc: Optional[float] = None,
 ) -> RewardBreakdown:
     """The §6h scalar plus its full decomposition. FOUR bands, exactly ordered.
 
@@ -525,7 +565,8 @@ def reward(
     # -- a spec set with tolerances, a docstring and no reachable caller
     # (G73's family). Fixed in session 22o along with S4 and S7.**
     m_all = margins(meas, target_f_peak_hz, target_peaking_db, link=link,
-                    hd3_dbc=hd3_dbc, area_mm2=area_mm2)
+                    hd3_dbc=hd3_dbc, area_mm2=area_mm2,
+                    hd3_nyq_dbc=hd3_nyq_dbc)
     m = {k: m_all[k] for k in specs}
     s = shortfalls(m, specs)
     violated = [k for k, v in s.items() if v > 0.0]
@@ -562,7 +603,7 @@ def reward_v1(meas: Optional[Mapping[str, float]],
 
 __all__: Sequence[str] = (
     "Tol", "TOLERANCES", "TOL", "SPEC_NAMES", "N_SPECS",
-    "V0_SPECS", "V1_SPECS", "V2_SPECS", "V3_SPECS", "S8_SPECS",
+    "V0_SPECS", "V1_SPECS", "V2_SPECS", "V3_SPECS", "V4_SPECS", "S8_SPECS",
     "TOLERANCE_SCAN",
     "feasible_bonus", "invalid_reward", "headroom_band_top",
     "headroom_reward",

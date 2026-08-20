@@ -248,7 +248,7 @@ def build() -> Path:
         ("Search methods benchmarked on one evaluator", "6"),
         ("SPICE simulations behind this report", "> 250 000"),
         ("Automated tests", "1645"),
-        ("Documented failure modes (gotchas)", "103"),
+        ("Documented failure modes (gotchas)", "105"),
         ("Pre-registered predictions, scored", "19"),
     ]
     pdf.set_font("Body", "", 9.6)
@@ -283,7 +283,7 @@ def build() -> Path:
          ["S2 topology", "1-stage CTLE, source degeneration + 1-tap DFE", "fixed"],
          ["S3 peaking", "3-12 dB, tunable, peak in 1.25-2.5 GHz", "THE binding constraint"],
          ["S4 linearity", "HD3 < -30 dBc at 100 MHz (no amplitude stated)",
-          "verified at 200 mVpp -- see section 9"],
+          "FAILS at the operating point -- section 9"],
          ["S5 noise", "< 1.5 mV rms, 10 MHz - 5 GHz", "scored"],
          ["S6 power", "< 15 mW", "scored"],
          ["S7 area", "< 0.05 mm2", "verified, free"],
@@ -327,6 +327,36 @@ def build() -> Path:
         "writes the sized schematic, its measured specs, and the SPICE deck "
         "that produced them. The second adds natural-language entry and a "
         "written explanation.")
+
+    pdf.h2("What the objective scores, and what it deliberately does not")
+    pdf.body(
+        "Once a design meets every specification the score is "
+        "**B + min(margin / tolerance)** over the specification rows -- a "
+        "*maximin*. Exceeding a requirement is worth exactly nothing unless "
+        "that requirement is the one currently binding. This is deliberate: "
+        "an objective that pays for surplus margin will trade a met "
+        "specification against an unmet one.")
+    pdf.body(
+        "**We measured what that means in practice**, by re-scoring the "
+        "74 526 distinct designs already simulated -- at zero further "
+        "simulation cost, because a measurement does not know what it was "
+        "aiming at. Among the 33 214 that meet every specification, the "
+        "binding row is the peak frequency **94.5 %** of the time, peaking "
+        "3.5 %, tail headroom 1.2 %, **power 0.6 %** and **noise 0.0 % -- it "
+        "never binds at all**. So the delivered design's 6.9x power and 7.1x "
+        "noise margins were not bought by the objective; they are free "
+        "consequences of satisfying S3.")
+    pdf.body(
+        "A reviewer proposed making power, noise and area hard pass/fail "
+        "constraints instead of scored terms, on the reasoning that the "
+        "optimiser was spending its freedom buying margin it did not need. "
+        "**We implemented and measured the change rather than arguing about "
+        "it: the feasible set is identical, 210 of 33 214 rewards move, and "
+        "the best design does not change.** A no-op. The real defect is the "
+        "opposite one -- a maximin goes *flat*: within 0.001 of the best "
+        "attainable score the population spans **8.4x in tail current**. The "
+        "objective is not greedy, it is indifferent, and the fix is an added "
+        "term rather than a removed one. See section 9.")
 
     pdf.h2("The language model is deliberately outside the design loop")
     pdf.body(
@@ -445,6 +475,52 @@ def build() -> Path:
         "only one that never improves it. Feasible and good are different "
         "things.", WARN)
 
+    pdf.h2("What the sweep would actually cost")
+    pdf.body(
+        "The comparison above is at a *matched* budget, which is the right "
+        "way to rank methods and the wrong way to answer the brief's "
+        "sentence. That sentence is not about a matched budget: it asks what "
+        "an exhaustive sweep costs. **So we sized one.**")
+    pdf.body(
+        "The level count is the whole answer, because at seven dimensions the "
+        "total is a product -- choosing 8 levels instead of 6 changes it by "
+        "7.5x, so a number picked by hand *is* the result. Ours is derived: "
+        "each axis gets **1 + ceil(sensitivity / 0.0664386)** levels, where "
+        "the sensitivity is the **measured** |d log2(f_peak) / du| at real "
+        "designs and the divisor is the AC sweep's own frequency resolution -- "
+        "the same quantisation that capped this project's reward and tied 57 "
+        "designs at the ceiling. Below that spacing a finer grid buys nothing "
+        "the simulator can resolve; above it, the grid cannot place a peak.")
+    pdf.figure("f11_sweep_cost.png",
+               f"Figure 6. Left: the measured sensitivity per axis and the "
+               f"levels it implies. Cs and RL dominate -- the measured Cs "
+               f"figure, 3.243 octaves per box width, agrees with the analytic "
+               f"f_peak ~ (Rs Cs)^-0.5 prediction of 3.322 to 2.4 %, which was "
+               f"not fitted. Right: the resulting cost against the delivered "
+               f"tool, both measured on the same machine.")
+    pdf.body(
+        f"**{SW['full_factorial_at_8_workers']['n_simulations']:,} simulations, "
+        f"{SW['full_factorial_at_8_workers']['wall_clock_hours']:,.0f} hours** "
+        f"at the measured throughput and eight workers, against a measured "
+        f"{SW['design_runtimes'][1]['wall_clock_s']:.1f} s for "
+        f"`python -m nebula.design --method cmaes`: **{_sp:,.0f}x**. The "
+        f"factorial figure is an *extrapolation*, not a measurement -- nobody "
+        f"ran 3.4 million simulations -- and it assumes the per-simulation "
+        f"cost holds at that scale, which favours the sweep. The ratio is "
+        f"therefore a lower bound. It also cuts both ways: a factorial "
+        f"resolves a derived quantity better than any single axis (so this "
+        f"over-counts), while the same grid must place six more specification "
+        f"rows with no extra freedom (so it under-counts). Neither correction "
+        f"is applied.")
+    pdf.callout(
+        "An earlier version of this calculation read the peak frequency off "
+        "the simulator's discrete lattice and got 58.2 million simulations. "
+        "Four of the seven axes had come back with a sensitivity of exactly "
+        "one lattice step, with zero spread across six reference designs -- "
+        "the quantisation, not a derivative. The tell was the zero spread. "
+        "Differencing the interpolated peak instead moved the answer by "
+        "1 296x.", WARN)
+
     pdf.h2("A control that gives the ranking its meaning")
     pdf.body(
         "Before this ranking existed, the reward could not distinguish the "
@@ -554,7 +630,7 @@ def build() -> Path:
         "RL result were withdrawn.",
         "**1645 automated tests**, run before and after every change.",
     ])
-    pdf.h2("Three findings that came out of that discipline")
+    pdf.h2("Findings that came out of that discipline")
     pdf.bullets([
         "The reward's own ceiling was a property of the simulator's frequency "
         "grid, not of the circuit -- and eight of ten methods were tied at it.",
@@ -563,7 +639,37 @@ def build() -> Path:
         "2.0, with nothing in the change to show for it.",
         "A confidence interval that moved when an unrelated arm was added, "
         "because one random stream was shared across the analysis.",
+        "**A constraint set that drops one clause selects a different circuit "
+        "family, and the output looks fine.** Asked which sizing tolerates the "
+        "most input drive, we binned candidates by peaking and got an answer "
+        "3.2x better than anything real: the design defining it peaked at "
+        "**19.95 GHz** with -14.5 dB of DC gain. Its response is flat by "
+        "2.5 GHz, so the de-rating that penalises a genuine equaliser did not "
+        "touch it. S3 has three clauses -- amount of peaking, where it sits, "
+        "and boost at Nyquist -- and filtering on the first alone does not "
+        "select equalisers, it selects wideband attenuators. **The search we "
+        "pointed at the same objective optimised straight into the same "
+        "hole**, because a CMA-ES rewards whatever the score actually "
+        "measures. With all three clauses applied, 415 of 1 589 candidates "
+        "survive and the answer drops to 1.23x.",
+        "**A finite difference taken on a quantised reading reports the "
+        "quantum.** Four of seven axes returned a peak-frequency sensitivity "
+        "of exactly one lattice step with zero spread across six independent "
+        "reference designs. That is the smallest number the measurement can "
+        "express, not a derivative, and it moved the headline cost figure by "
+        "1 296x. The tell was the zero spread.",
     ])
+    pdf.h2("One cross-check worth stating on its own")
+    pdf.body(
+        "The delivered design's CTLE zero, fitted from the simulated AC "
+        "response, is **114.97 MHz**. The design equation 1 / (2 pi Rs Cs), "
+        "evaluated on the drawn component values, gives **114.81 MHz** -- "
+        "**0.14 % apart**, with nothing fitted between them. Two independent "
+        "routes to one number agreeing to a part in seven hundred is the "
+        "strongest single piece of evidence that the device layer is drawing "
+        "the circuit we believe it is drawing, rather than something that "
+        "merely simulates without complaint. The same check on the peak-"
+        "frequency sensitivity of Cs agrees to 2.4 %.")
 
     # ── 9. limitations ───────────────────────────────────────────────────
     pdf.h1("Limitations, stated plainly")
