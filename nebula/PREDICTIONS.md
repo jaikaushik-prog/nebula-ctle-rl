@@ -3645,3 +3645,115 @@ in every setting's `Rs` and in the `Rs * Cs` product.
 **Limitation, stated in the artifact and in the report:** the switches enter as
 that series resistance, not as drawn devices in the CTLE netlist, so their
 parasitic capacitance and their own non-linearity are not in these numbers.
+
+---
+
+## 22. Session 22u — **the compliance matrix is scored on the coarse lattice. What moves when it is not?**
+
+**Written 2026-08-20, BEFORE the fix is implemented and before `--full` is
+re-run.** `CONTINUE_HERE.md` §4 / §6.1 item 1. The run is ~2.5 min of ngspice,
+below the 10-minute threshold that entry 21 used to skip pre-registration, and
+this one is pre-registered anyway because the headline number it moves —
+*"minimum normalised margin"* — is the number an external review asked us to
+put beside every pass count, and any post-hoc framing of it would be exactly
+the kind of claim this file exists to prevent.
+
+### The defect, restated
+
+Two verification paths in `exp_g4_verify.py` disagree about which peak they
+score.
+
+* `verify()` — 7 rows (`V1_SPECS`), takes `ac_peak_interp=True`, and scores the
+  **sub-lattice interpolated** peak through `evaluator.scoring_meas`.
+* `verify_full()` — 11 rows (`V3_SPECS`), the **135-point compliance matrix the
+  whole S8 result is reported on**, calls `run_point(...)` without
+  `ac_peak_interp` and reads `pt.f_pk_hz` through `link/bridge.py:205`. That is
+  the **quantised** peak, i.e. exactly the defect session 22e was spent
+  removing from the benchmark (G74 / `PEAK_INTERP.md`).
+
+### FULL DISCLOSURE OF WHAT WAS READ BEFORE WRITING THIS
+
+Nothing was run. Two artifacts already on disk were read, and they constrain
+the answer tightly enough that the predictions below are near-deductions rather
+than guesses. Stating that here rather than claiming more foresight than I had:
+
+**From `g4_verify_full_results.json` (the LATTICE path, 11 rows), delivered
+design `57cba07581cd`:**
+
+    minimum normalised margin  +0.020528  S3_f_peak  at ss/0.95/125C/78.0fF
+    the six smallest raw S3_f_peak margins are ALL EXACTLY 0.0103 octaves
+    the next six are ALL EXACTLY 0.0596
+
+**From `g4_verify_results.json` (the INTERPOLATED path, 7 rows), same design:**
+
+    worst reward +8.02102 at fs/0.95/125C/78.0fF, worst row S3_f_peak,
+    all 135 points pass.  B = len(V1_SPECS) + 1 = 8, so the minimum
+    normalised margin on the interpolated path is already known: +0.02102.
+
+    and the six worst points are SIX DISTINCT numbers:
+    +8.02102 (fs/0.95) +8.02545 (fs/1.00) +8.02952 (fs/1.05)
+    +8.03419 (ss/0.95) +8.03824 (ss/1.00) +8.04188 (ss/1.05)
+
+**That contrast is the whole finding and it was visible without simulating.**
+The lattice collapses six physically distinguishable corners onto one tied
+value, so the published compliance matrix **cannot say which corner binds** —
+it reports a six-way tie where the instrument that can resolve them reports a
+monotone ordering in both process and supply. "The margin is below the
+instrument" was the right diagnosis; **"the corner ranking is below the
+instrument" is the sharper one**, and it is the one that matters, because the
+next decision on the list (§5 OPEN item 2, extend the screen) is a decision
+about *which corners*.
+
+### The predictions
+
+**P1 — the number barely moves, the corner does.**
+After the fix, `verify_full`'s minimum normalised margin for `57cba07581cd`
+lands at **+0.0210 ± 0.0005** (i.e. essentially unchanged from +0.0205), and
+the binding point moves from **ss/0.95/125C/78.0fF** to
+**fs/0.95/125C/78.0fF**.
+*Basis:* the 11-row set adds S8, S4 and S7, whose margins on this design are
+1–2 orders of magnitude larger than S3_f_peak's, so the 11-row minimum should
+equal the 7-row minimum.
+*Falsifier:* a minimum outside [0.0205, 0.0215], or a different binding point.
+
+**P2 — no verdict changes for the delivered design.**
+Still **9 PASS, 0 FAIL, 2 NOT MEASURABLE** at 135 points.
+*Falsifier:* any row's verdict flips.
+
+**P3 — the second robust design still FAILS.**
+`c9d52866743d` is at −0.013686 on the lattice path and `verify()` already fails
+it at 8 of 135 points on the interpolated path. It stays FAIL.
+*Falsifier:* it comes back all-pass.
+
+**P4 — the correction is bounded by half a lattice step, everywhere.**
+`|Δ f_peak_oct| <= 0.033219` at every one of the 3 x 135 points.
+*Basis:* `SizingPoint.d_f_peak_octaves` says so BY CONSTRUCTION.
+*Falsifier:* any point exceeding it — which would not be a small correction but
+evidence that the Python argmax and `meas ac MAX` disagree about which sample
+is the maximum, and would stop the session.
+
+**P5 — the interpolated peaking is never below the lattice peaking.**
+`peaking_db_interp >= peaking_db` at every point, since the vertex of a concave
+parabola is at or above every sample that defined it.
+*Falsifier:* one counterexample.
+
+**P6 — the tie count collapses.**
+On the lattice, 6 of 135 points share the minimum S3_f_peak margin exactly.
+After the fix, **at most 1** point does.
+*Falsifier:* two or more points still tied to 6 decimal places.
+
+### What would make me stop rather than continue
+
+P4 failing. Everything else is a result either way; P4 failing means the peak
+is not being read consistently, and no margin number should be published until
+that is understood.
+
+### What this does NOT settle
+
+Whether the delivered design or the joint-search winner ships (§5 OPEN item 1).
+Both are measured at ~2 % of the `S3_f_peak` tolerance and the review's premise
+that they differ by 50x was already falsified in session 22t. **The physical
+finding underneath is the one to report either way: at the worst corner
+`f_peak` reaches 1.2589 GHz against S3's 1.2500 GHz floor, so PVT spread
+consumes 97.9 % of S3's one-octave window.** Every design lands at the edge
+because the specification is thin, not because the design is.

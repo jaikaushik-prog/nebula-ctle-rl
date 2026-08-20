@@ -1,15 +1,15 @@
 # CONTINUE_HERE.md — the brief for the next agent
 
-**Written 2026-08-19, at the end of sessions 22e–22g; updated the same day
-at the end of sessions 22h and 22i, which built grid search, ran the
-benchmark again, and then laddered the simulation budget 16x.** Supersedes
-`nebula/NEXT_STEPS.md`, which was written 2026-08-08 and is now wrong in its
-first table (it says G2 is not started and the sweep has not run; both are done).
+**Rewritten 2026-08-20, at the end of session 22s.** Supersedes the
+2026-08-19 version, which was written at the end of session 22i and is now
+wrong in its headline: it says the eye is unverifiable and that corners are the
+only remaining niche for RL. The first is no longer true. The second still is.
 
-**This file is not a substitute for `HANDOFF.md`.** It is the *entry point*:
-where the project stands today, what the last four sessions changed, what is
-decided, what is open, and what to do next. Every number below traces to a run
-in this repository and to a commit.
+**26 days to the 15 Sept deadline. Demo 25 Sept at BITS Goa.**
+
+This file is the *entry point*, not a substitute for `HANDOFF.md`. It tells you
+where the project stands, what changed in the last four sessions, what is
+decided, what is open, and exactly what to do next.
 
 ---
 
@@ -17,446 +17,423 @@ in this repository and to a commit.
 
 | # | File | Why | Time |
 |---|---|---|---|
-| 1 | **this file**, §§1–8 | the situation and the decision | 10 min |
-| 2 | `CLAUDEwa.md` §§1–3, §7 | the contract, the spec table, the gates | 15 min |
-| 3 | `HANDOFF.md` §0 header, §9 gotchas **G92–G98** | state, and the seven traps found this week | 25 min |
-| 4 | `nebula/BASELINES.md` §12 (+§12.6), then **§13** and **§14** | the sweep, its control, the grid arm, and the budget ladder | 35 min |
-| 5 | `nebula/PEAK_INTERP.md` §0, §5, §7 | why the reward changed and what it cost | 10 min |
-| 6 | `nebula/PREDICTIONS.md` entries 10–15 | how this project makes claims | 30 min |
-| 7 | `PLAN.md` §2 (D1–D7), §7, §8 | the team's decisions and cut order | 10 min |
+| 1 | **this file**, §§1–9 | the situation and the direction | 20 min |
+| 2 | `CLAUDEwa.md` §§1–3, §7, §8 | the contract, the spec table, the gates, the standing rules | 20 min |
+| 3 | `HANDOFF.md` §9 gotchas **G100–G107** | the eight traps found in the last four sessions | 25 min |
+| 4 | `nebula/PREDICTIONS.md` entries **18–21** | how this project makes claims, and four recent scorings | 30 min |
+| 5 | `nebula/CHANNEL_MODEL.md` §§6, 8 + the DFE table | **four measured results that are NOT in the report** — see §6.3 | 20 min |
+| 6 | `nebula/BASELINES.md` §§13, 14 | the benchmark and the budget ladder | 20 min |
 
-**Do not skim 3 and 6.** The gotchas are the highest-value-per-line thing in the
-repo, and `PREDICTIONS.md` is the discipline that makes the results worth
-anything: **pre-register, commit, then run.** Five predictions were missed this
-week and all five are written up as misses — including entry 14's, where the
-band held and the *claim* was wrong, which is scored as a miss on purpose.
+**Do not skim 3 and 4.** The gotchas are the highest-value-per-line thing in
+the repo. `PREDICTIONS.md` is the discipline that makes the results worth
+anything: **pre-register, commit, then run.** Recent entries include several
+scored misses, one of which falsified an instruction given by the owner's own
+reviewer — those are the asset, not an embarrassment.
 
 ---
 
-## 1. The situation in 60 seconds
+## 1. The situation in 90 seconds
 
-The reward function had a defect that made the benchmark unable to rank
-anything. It is fixed, and the fix is proved by a matched control. The benchmark
-then ran for the first time and produced a real ranking. **In that ranking PPO
-— our RL method — is second-last, behind uniform random search.** Three separate
-diagnoses of why have been made and two of them were wrong; the current one is
-that at a 150-simulation budget the policy gradient is *uninformative*, not
-absent, and no hyperparameter fixes that.
+Two things changed the shape of the project since the last rewrite.
 
-**Session 22i then laddered the budget 16×, and it produced the clearest
-sentence this project has about its own method.** At 150 simulations PPO is
-0.0426 behind uniform random. Give it 2400 and 23 policy updates instead of 1
-and that deficit closes — **and PPO is *not separable* from uniform random at
-any rung of the ladder.** Meanwhile CMA-ES reaches **8.9999** against a ceiling
-of 9.0000 while PPO and random both stall at ~8.994, and that 0.006 **does not
-close**: CMA-ES is separably better than PPO at **every single budget tested**.
+**The eye is no longer blocked.** For months, S8 could not be evaluated on the
+delivered design at any corner: the stage is driven past its linear limit, so
+the small-signal fit the eye rests on stops describing it. Session 22q measured
+*why* — `linear input range at f = linear range at DC / |H(f)/H(0)|`, because
+`Cs` shorts out the same `Rs` the linear range is made of, so **peaking and
+drive handling are one knob read in opposite directions** (G103). Session 22r
+then found designs in the same box whose eye computes at all 135 points. The
+cause was never the circuit: **`V1_SPECS`, which every published search scores,
+contains S3 and not S8, and the sets containing S8 had never been searched on.**
+Session 22s asked for both at once and got **11 of 11 rows passing at 135
+points, zero failures**, eye 377–539 mV against a 100 mV floor.
 
-> **PPO is not broken. It is a random search with extra steps.**
+**The reward's real defect is the opposite of the one everyone assumes.** It is
+a maximin, so exceeding a met spec buys nothing — `S5_noise` binds **0.0 %** of
+the time and `S6_power` **0.6 %** across 33 214 feasible designs. What it does
+instead is go **flat**: within 0.001 of the best score the population spans
+**8.4× in tail current** (G102). The delivered operating point was drawn from a
+plateau, not chosen. **The lever is an added term, not a removed one**, and
+that has been measured but not yet exploited (§6.2 item 3).
 
-**Session 22h built the baseline G3 names and this project did not have —
-grid search — and re-ran everything.** Grid comes **last**, below PPO, and the
-reason is resolution rather than adaptivity: at d = 7 a 150-simulation budget
-buys `150 ** (1/7)` = **2.06 levels per axis**, so even a policy that does not
-learn out-resolves a factorial. **G3 now fails on both of its clauses and can
-be *scored* on both, which it could not be before.** The same run reproduced
-all twelve pre-existing group medians at **0.00e+00** — the benchmark is
-bit-for-bit deterministic — and that determinism is what caught **G96**.
-
-**27 days to the 15 Sept deadline.**
+RL is unchanged and still a null: **statistically indistinguishable from
+uniform random search at every budget from 150 to 2400 simulations**, while
+CMA-ES is separably better at every one. Session 22n closed 97 % of the gap by
+fixing an objective/termination mismatch and it still did not win.
 
 ---
 
 ## 2. Gate status — honest
 
-From `CLAUDEwa.md` §7.
-
 | Gate | Due | Criterion | Status |
 |---|---|---|---|
 | G0 | 2 Aug | toolchain runs four analyses | **passed** |
-| G1 | 3 Aug | hand reference meets S3–S7 at TT | **substantially passed** |
-| G2 | 20 Aug | one full evaluation, params → ngspice → fit → eye → reward | **PASSED** (session 21, `G2_RESULTS.md`) |
-| **G3** | **3 Sep** | **RL beats random search AND grid search at TT, with a plot** | **grid clause MET (22n, separable win); random clause NOT met — indistinguishable, not a loss. Fails on one clause of two** |
-| G4 | 12 Sep | corner-robust design generated and verified | **MET 2026-08-20, 23 days early** (`G4_RESULTS.md`): 135 of 135 points at 45 corners x 3 loads. Found by uniform random search, not by RL |
+| G1 | 3 Aug | hand reference meets S3–S7 at TT | **substantially passed** (`device/spice/g1_handdesign.cir`, generic BSIM4 1.2 V card — **never re-measured on SKY130 and never in the benchmark table**) |
+| G2 | 20 Aug | one full evaluation end to end | **PASSED** (`G2_RESULTS.md`) |
+| G3 | 3 Sep | RL beats random **and** grid at TT | **FAILS one clause of two.** Grid clause MET (separable win, 22n). Random clause NOT met — indistinguishable, not a loss |
+| G4 | 12 Sep | corner-robust design generated and verified | **MET** 2026-08-20, 23 days early. Found by uniform random, not by the policy |
 | G5 | 15 Sep | submitted | — |
 
+**Both competition deliverables exist:** `python -m nebula.design` (specs in,
+schematic + specs out) and `python -m nebula.llm` (natural language wrapper,
+with a grounding guard). The report exists:
+`nebula/report/Nebula_CTLE_Report.pdf`, 12 figures, rebuilt from run artifacts
+by two commands.
+
 ---
 
-## 3. What sessions 22e–22h did
+## 3. What sessions 22q–22s established
 
-Thirteen commits, `9f9eca8` … the grid arm. ~92 000 simulations, ~4 hours of
-compute.
+### 3.1 The linear-range mechanism (22q, G103)
 
-### 3.1 The reward ceiling was removed at its source (`PEAK_INTERP.md`)
+Every swing limit in the repo was **output-referred**, so the S8 blockage read
+*"output swing 903 mVpp exceeds the linear limit 333 mVpp"* — true, and
+requiring the reader to divide by a gain they must look up.
+`SwingLimits.linear_in_pp_v` now reads the same compression sample on the input
+axis, in the same units as the transmitter's swing. On the delivered design at
+135 points:
 
-`meas ac g_pk MAX` can only report frequencies on the `ac dec 50` lattice —
-0.0664386 octaves apart. `reward_v1`'s `S3_f_peak` margin is
-`0.5 − |log2(f_peak/f_target)|`, so the reward inherited the lattice: the best
-attainable score was **+8.950669** and **57 distinct designs tied there across
-8000 simulations** (G74, `DIFFICULTY.md`).
+    linear input range at DC        504 /  520 /  560 mVpp
+    linear input range at NYQUIST   153 /  172 /  219 mVpp
+    link drive at the CTLE input              535 mVpp
+    OVERDRIVE                      2.44 / 3.11 / 3.49 x
 
-Fixed by fitting a parabola through the three samples bracketing the discrete
-maximum, in `(log2 f, dB)`, and taking its vertex. **Zero extra simulations** —
-the curve is already dumped. `dec` was **not** raised.
+**At DC it is 1.03× over — essentially at its limit. All of the blockage is the
+3.07× de-rate, and the de-rate is the peaking.**
 
-* the 57 ties became **57 distinct rewards**, 29 above the old ceiling
-* validated against a `dec 500` sweep: the vertex is **172× closer** to the
-  truth, worse on **0 of 14** designs
-* **63 designs in 8000 change feasibility** (39 gain, 24 lose) — this is a
-  change of *problem*, not only of resolution
-* opt-in everywhere; `V1_SPECS`, the tolerances, the box and every seed untouched
+### 3.2 The front, and the two half-designs (22r)
 
-### 3.2 The G3 sweep ran for the first time (`BASELINES.md` §12)
+1 590 simulations across the box, filtered to designs actually meeting S3
+(band **and** 1.25–2.5 GHz window **and** positive Nyquist boost — filtering on
+peaking alone selects **wideband attenuators**, G104). The attainable linear
+range at Nyquist hovers around **1.0× the drive** across the whole band.
 
-`baselines_run.jsonl` had contained **a header and nothing else**. 170 runs,
-25 869 simulations, **42.1 minutes** — not the 12 hours §7a predicted, because
-that estimate predated the library trims.
+That produced two half-designs — one meeting S3 at 135/135 with no computable
+eye, one meeting S8 at 135/135 and failing S3 — and the observation that
+**nothing had ever asked for both**.
 
-```
-cmaes+screen 8.9974 > gp_bo 8.9955 > gp_bo+screen 8.9921 > uniform+screen 8.9860
-> cmaes 8.9736 > lhs+screen 8.9661 > uniform 8.9532 > lhs 8.9419
-> ppo+screen 8.9288 > ppo 8.9106
-```
+### 3.3 The joint search (22s)
 
-**20 of 45 P1 pairs separate.** `PREDICTIONS.md` entry 6's ordering, written
-months earlier, is confirmed wherever the sample resolves it.
+`V4_SPECS` = the eleven competition rows with S4 asked at the **operating
+point** (2.5 GHz, 535 mVpp) rather than its stated 100 MHz / 200 mVpp.
+`exp_joint_search.py`, local CMA-ES seeded at 22r's most linear S3-valid
+design, 400 simulations.
 
-### 3.3 The lattice control, which is the most persuasive table in the repo
-
-Same 170 runs, same seeds, one flag off:
-
-| | lattice | interpolated |
+| | delivered | joint winner |
 |---|---|---|
-| **separable P1 pairs (of 45)** | **0** | **20** |
-| groups whose median is 8.950670 | **8 of 10** | 0 of 10 |
-| distinct median values | 3 | 10 |
-| groups with a **zero-width** CI | 6 | 0 |
+| rows passing at 135 points | 9 of 11 | **11 of 11** |
+| rows failing | 0 | **0** |
+| eye measurable at | 0 of 135 | **98 of 135** |
+| eye height / width | — | 377.1–539.4 mV / 0.844–0.875 UI |
+| HD3 @ 2.5 GHz, 535 mVpp | −17.4 dBc **FAILS** | **−42.7 dBc** |
+| peaking / power | 9.78 dB / 2.16 mW | 6.37 dB / 6.56 mW |
 
-The benchmark did not rank coarsely. **It resolved nothing at all.**
+**The qualifier is not small: the eye is measurable at 98 of 135.** All 37 gaps
+are at corners the 3-corner search screen has no member of, 27 of them at
+VDD 0.95. That is the **fourth** independent measurement of that blind spot.
 
-### 3.4 PPO was diagnosed three times; twice wrongly
+### 3.4 Tunability, which contradicted its own framing (22s)
 
-* **"exploration collapsed"** — **measured false.** Entropy *rises*
-  (9.942 → 9.956) against 9.9326 for an untrained 7-D Gaussian; `log_std` is
-  unchanged; `ent_coef` is already 0.0.
-* **"PPO gets one gradient update"** — **true.** 1.57 simulations per env step
-  (a third of the budget is episode resets), so 150 sims buys ~96 steps, and at
-  `rollout_steps=64` that is one update.
-* Fixing it (`rollout_steps` 64 → 8, eleven updates) bought **+0.0106,
-  not separable** — **24.8 % of the gap to *uniform random***. Monotone, real,
-  and far too small to matter.
-* **"the policy never started"** — **RETRACTED, measured** (entry 13, 10 seeds
-  per arm). Entropy sits within **0.02** of an untrained 7-D Gaussian and
-  `log_std` within **0.008** of its initialisation in both arms: the spread
-  never narrows. But the mean action moves **0.167 → 0.389** going from 2 to 12
-  updates — 2.33× the movement for 6× the updates. **The policy moves; the
-  design does not improve.** The gradient is *uninformative*, not absent, which
-  is the worse of the two readings: more updates move the policy further along
-  a direction that is not up. Median anytime gain over the final third is
-  **0.0 in both arms** — though per seed it is 7 of 10 and 6 of 9 at exactly
-  zero with a minority making one late jump, which is a search finding things
-  by luck rather than by policy.
+Eight bank settings holding `Rs × Cs` constant on the **total** resistance so
+the zero does not move (flat at 177.0 MHz to four figures), switch `Ron`
+**measured** at 16.50 Ω rather than quoted. Result: `k` moves **2.5×** while
+the linear input range at the signal band moves **1.25×, non-monotonically**.
+**The tuning control does not trade drive for equalisation** — the `k`s cancel
+at the signal band. What sets drive handling is the fixed part, chosen once.
 
-### 3.5 Session 22h — grid search, built and run (`BASELINES.md` §13)
+### 3.5 The speed-up number the brief's success criterion asks for (22r)
 
-`METHODS` had no grid, so **G3 was not failing its grid clause; it could not be
-evaluated on it.** `method_grid` is a centred full factorial sized to the budget
-and then refined. 210 runs, 31 879 simulations.
-
-```
-cmaes+screen 8.9974 > gp_bo 8.9955 > gp_bo+screen 8.9921 > uniform+screen 8.9860
-> cmaes 8.9736 > lhs+screen 8.9661 > uniform 8.9532 > lhs 8.9419
-> ppo+screen 8.9288 > ppo 8.9106 > grid+screen 8.8886 > grid 8.8886
-```
-
-**34 of 66 P1 pairs separate.** Four things to carry forward:
-
-* **The arithmetic is the finding.** `L**d` at d = 7 means 150 simulations buys
-  `150 ** (1/7)` = **2.06 levels per axis**: L = 2 is 128 points and fits,
-  L = 3 is 2 187 and is 14.6× the budget. **The grid loses on RESOLUTION, not
-  adaptivity** — `uniform` and `lhs` are not adaptive either and both beat it —
-  because the binding reward row is a *distance to a target* and a continuous
-  sampler resolves each axis 150 ways.
-* **`P1/grid`'s CI is exactly zero wide, and that is the METHOD.** 19 of 20
-  seeds return the identical 8.888648. **A different zero from §3.3's**, where
-  the *objective* could not resolve. So its 20 replicates are one lattice plus
-  20 short random tails, and a "separable at n = 20" verdict involving it is
-  arithmetically true and inferentially weak.
-* **The pre-screen bought the grid RESOLUTION — 5.19× more simulated points on
-  the 3-level lattice — and moved the median by +0.0000**, the smallest delta
-  of the six methods. Eleven of twenty screened seeds finished on the *same*
-  design as the unscreened arm. **The coarse lattice's best point is a wall.**
-* **Grid is the FASTEST method in the study to a feasible design (median 1.0
-  simulation, screened) and the only one that never reaches the reward
-  ceiling** — 0 of 20, twice, across 6 000 simulations. *Feasible is not good.*
-
-And the run reproduced **all twelve** pre-existing group medians at
-**0.00e+00**, which is how **G96** was caught: the separable-pair count still
-moved 20 → 22 of 45 because `analyse` shared one bootstrap RNG across groups in
-pool-completion order. Fixed; the ten arms then give 20 of 45 exactly and §3.3's
-control still gives 0 of 45.
+**3 402 000 simulations, 92 hours** for a genuine full factorial against a
+**measured** 41.12 s for `python -m nebula.design --method cmaes` — **8 086×**.
+Levels are **derived**, not chosen: `1 + ceil(sensitivity / 0.0664386)`, the
+`ac dec 50` spacing. Labelled an extrapolation and a lower bound throughout.
 
 ---
 
-## 4. **The thing you most need to know: G3 is failing, and the plan says stop**
+## 4. **READ THIS BEFORE TOUCHING THE MARGIN NUMBERS — a live defect**
 
-`CLAUDEwa.md` §7 states G3's criterion and its fallback verbatim:
+An external review asked for the **minimum normalised margin** to be reported
+next to every pass count. That is a good idea and **it cannot be done honestly
+today.** Measured 2026-08-20 while checking the review:
 
-> **G3** | Sep 3 | RL beats random search **and** grid search at TT, with a plot
-> | *Fallback if failed:* **Stop and debug the reward function. Do not proceed
-> to corners.**
+* Both the delivered design and the joint winner have a minimum normalised
+  margin of **exactly +0.0205 (2.1 % of tolerance)** on `S3_f_peak`, at
+  135 points. **They are identical** — so the review's premise that the
+  delivered design "sits at ~99 % of tolerance" is **false**, and its argument
+  against swapping designs does not hold.
+* **That 2.05 % is below the measurement's own resolution.** Both designs'
+  extreme margins land *exactly* on the `ac dec 50` lattice (indices
+  **105.000** and **112.000**). One lattice step is **13.3 %** of the
+  `S3_f_peak` tolerance, so "2.05 % of tolerance" is **0.154 lattice steps**.
+* **The cause is a disagreement inside one file.** `verify()` takes
+  `ac_peak_interp=True` and scores the interpolated peak;
+  `verify_full()` goes through `link/bridge.py:205`, which uses `pt.f_pk_hz` —
+  the **quantised** peak, i.e. exactly the defect session 22e was spent
+  removing from the benchmark (G74 / `PEAK_INTERP.md`). **The 135-point
+  compliance matrix everything is about is scored on the coarse lattice.**
 
-Measured: **PPO 8.9106 against uniform random 8.9532.** RL does not beat random
-search at TT. Two consequences, and neither is an agent's call:
+**So: fix `verify_full` to score the interpolated peak BEFORE reporting any
+margin number.** This is item 1 of §6.1 and it is a prerequisite for four other
+tasks. It is not yet written up as a gotcha because it is not yet fixed —
+write it up when you fix it.
 
-1. **The prescribed fallback has already been executed once, and it worked
-   without fixing G3.** The reward function *did* have a defect — the lattice
-   ceiling — it was found, fixed, and proved fixed by a control. RL still loses.
-   The current diagnosis (§3.4) says a second reward-debugging pass will not
-   change it either, because the problem is the sample budget, not the reward.
-2. **"Do not proceed to corners" conflicts with G4 being mandatory and with
-   spec S9.** Someone has to decide whether that rule still binds now that the
-   reward defect it was aimed at has been found and removed.
-
-**The gap that made G3 unscoreable is CLOSED (session 22h).** `METHODS` held
-`uniform, lhs, cmaes, gp_bo, ppo` and no grid, so G3 was not failing its grid
-clause — it could not be evaluated on it. `method_grid` is now built, tested
-and run, and `BASELINES.md` §13 is the write-up. **The verdict on the full
-criterion:**
-
-* **RL vs random search: LOSES.** `ppo` 8.9106 against `uniform` 8.9532.
-* **RL vs grid search: does not separably win.** `ppo` sits above `grid`
-  8.8886 on the point estimate, but `ppo`'s interval [8.8100, 8.9302] contains
-  the grid's entire (zero-width) interval, so §7h's own rule reports **not
-  separable at this sample size**.
-
-So **G3 fails on both clauses.** Building the arm made the gate answerable, not
-passable — which is what its pre-registration (`PREDICTIONS.md` entry 14) said
-it would do.
+**The physical finding underneath it, which is worth its own paragraph in the
+report:** at the worst corner both designs' `f_peak` reaches **1.2589 GHz**
+against S3's **1.2500 GHz** floor. **PVT spread consumes 97.9 % of S3's
+one-octave frequency window.** Every design lands at the edge because the
+window is almost exactly the size of the corner spread. That is a property of
+the process, not of any design, and it reframes "our margin is thin" as "the
+specification is thin".
 
 ---
 
-## 5. Decisions — made, and open
+## 5. Decisions — made, and OPEN
 
-### Made (by the owner, this session)
+### Made and recorded
 
-| # | Decision | Consequence |
+| Decision | Where | Consequence |
 |---|---|---|
-| 1 | Switch the benchmark to the interpolated peak | Done. Every flag still defaults OFF; the lattice path is what runs unless asked |
-| 2 | Run the sweep | Done, plus the lattice control |
-| 3 | Tune PPO's `rollout_steps` | Done. Null result, reported as one |
-
-### Made by the agent, flagged, and reversible
-
-| Decision | Where | Why | Reverse by |
-|---|---|---|---|
-| A refused interpolation scores the **lattice** value, not the invalid floor | `evaluator.scoring_meas` | The floor punches a hole in the reward landscape for a numerical reason; the same mistake `validate`'s G44 comment records. **Fired 2 times in 25 869 simulations** | one argument |
-| A **bottom**-edge peak carries the lattice pair forward; a **top**-edge one is refused | `evaluator.evaluate` | 10 MHz is both a grid point and the boundary, so nothing was rounded. Mirrors the asymmetry `peak_is_sweep_edge` already makes | one branch |
+| Do not build the hard-constraint reward flag | owner, 22r | It measures as a **no-op**: identical feasible set, 210 of 33 214 rewards move, best design unchanged. Recorded as a falsified external prediction, `PREDICTIONS.md` entry 18 |
+| `i_bias` box stays 0.5–8 mA | owner, 22r | VDD is **1.8 V**, not 3.3; the ceiling is already S6's limit (8 mA × 1.8 V = 14.4 mW) |
+| Ship the input-referred linear-range measurement | owner, 22r | Done; in the 135-point checklist at zero extra simulation cost |
+| Order: report fixes → joint search → tunability → RL last | owner, 22s | Done through tunability |
 
 ### **OPEN — human only. Do not decide these.**
 
-1. **Does G3's "do not proceed to corners" rule still bind?** (§4)
-2. **Should the benchmark's published baselines move onto the interpolated
-   path permanently?** It changes 63 of 8000 S3 verdicts; `BASELINES.md` §7f
-   makes it a re-run event.
-3. **The two PPO environment-contract changes** (`PEAK_INTERP.md` §7,
-   `PREDICTIONS.md` entry 12's closing section):
-   * `reset()` spends a simulation per episode — a third of PPO's budget
-   * `terminated = bool(rb.feasible)` ends the episode at first feasibility, so
-     the policy is trained to *reach* the band while the benchmark scores how
-     far *past* it you get
-4. **`PLAN.md` §8 lists the spec-conditioned policy as the FIRST thing to cut.**
-   That ordering was written before PPO was known to lose head-to-head. If it
-   stands and time gets tight, the submission ships with no answer to *"why not
-   just use CMA-ES?"*
-5. Whether to re-run the corner and load screens on the interpolated peak
-   (interacts with G66's own re-run scope — cost them together).
-6. **NEW (22h): restore P2?** `SEC_PER_SIM_AT_8` was **17.4× wrong** — 1.698
-   from a pre-library-trim pilot against the sweeps' own end-to-end 0.09773 and
-   0.11095 s/sim. Fixing it means the **fully crossed** design (3 rungs × 6
-   methods × 2 screen arms, 81 000 sims) costs **~2.2 h**, so **P2's cut, which
-   was purely budgetary, no longer has a reason.** The other two cuts stand on
-   reasons that were never about cost: P3's screened arm is EPISTEMIC (the
-   screen's calibration off nominal is unmeasured, so the arm would confound
-   "the screen helps" with "the screen is miscalibrated"), and P3's PPO arm is
-   STRUCTURAL. Restoring P2 changes what the benchmark measures, so it is not
-   an agent's call.
-7. **NEW (22j): DOES THE SPEC-CONDITIONED CONTRIBUTION SURVIVE?** Measured
-   before building it (`SPEC_CONDITIONED.md`): a lookup over designs already
-   simulated serves **32 of 32 held-out targets**, and on the unbiased sub-pool
-   **50 random designs serve 100 % of them, 600 reach 8.9899 of a 9.0
-   ceiling**, with `gap ~= 7.6/N`. Crossover against CMA-ES-at-150 is **~2
-   spec requests**. So a policy would have to beat **zero simulations at
-   8.99**, on a target space that is 2-D with **one dimension inert** — and
-   `CLAUDEwa.md` §7 claims this as contribution #2 while `PLAN.md` §8 already
-   lists it first-to-cut. **The measurement supports the cut; making the cut is
-   yours.** Sub-decision: making `target_peaking_db` LIVE would make the
-   problem genuinely 2-D and might make amortisation interesting again — and
-   would move every published reward number (a §7f re-run event).
-8. **NEW (22i): the repository is getting large, and part of it was my
-   mistake.** `.git` was 98 MB before 22h and now carries an accidental 79 MB
-   blob (commit `3ee4ea1`, a results JSON that duplicated its own run log —
-   fixed forward, but the blob is in history) plus 32 MB of ladder log.
-   Removing the blob needs a history rewrite. **Owner's call**, and it is not
-   urgent — the repo is private and nothing is broken.
-9. **NEW (22k/22l): should the corner screen gain a MIXED corner?** Now the
-   best-supported decision on this list, evidenced three times.
-   `G4_RESULTS.md`: of the 2 designs the 3-corner screen certified, one fails
-   8 of 135 full-grid points and **all 8 are at unscreened corners**, every one
-   at `sf` or `fs` -- of which the screen has **no member**. Then
-   `nebula/design.py` reproduced it on fresh designs: a nominal library answer
-   fails **23 of 135** (21 unscreened), and CMA-ES **searching on the screen
-   itself** at a 400-simulation budget fails **45 of 135** (42 unscreened).
-   **The search inherits the screen's blind spot.** Adding one mixed corner
-   takes the search from 3 corners to 4 (+33 %) and changes the benchmark, so
-   it is an owner's call -- but nothing else on this list has three independent
-   measurements behind it.
-10. **NEW (22h): pin the warm-up/control configuration?** 7g takes it from
-   `jobs[0]`, i.e. the head of the shuffle, so **adding a method silently
-   changed which configuration the timing control measures** — it became
-   `P3/uniform`, whose 6-simulations-per-design short-circuiting is far noisier
-   per simulation, and the 22h sweep came back `timing_void` (ratio 1.408).
-   Pinning it to a P1 arm is a two-line change with a fairness argument on both
-   sides.
+1. **Which design ships?** The delivered V1 design (9 rows, no eye) or the
+   joint winner (11 rows, eye at 98 of 135)? The cover of the report currently
+   **conflates the two** — it reports "11 of 11 rows" beside "135 of 135
+   points", which are different designs. This must be resolved before the PDF
+   goes out.
+2. **Extend the search screen with a mixed (`sf`/`fs`) and a low-VDD (0.95)
+   member?** Four independent measurements now support it: 8/135
+   (`G4_RESULTS.md`), 23/135 and 45/135 (`design.py`), 37/135 (joint search).
+   **Cost:** more corners per design changes the benchmark's per-design cost,
+   so keep the *benchmark* screen and the *delivery* screen separable or you
+   trigger a `BASELINES.md` §7f re-run of every published arm.
+3. **The compression decision, open since session 16** — `HANDOFF.md` §8 lists
+   three routes (reach below S3's 3 dB floor; declare the low-loss end of the
+   channel family out of scope; re-derive the `rl` range downward) and none has
+   been chosen through four sessions and one full report. **An unmade decision
+   reads as a defect; a made one reads as engineering.**
+4. **Does the RL contribution claim survive?** `PLAN.md` §8 lists the
+   spec-conditioned policy as first to cut. Session 22j measured that a lookup
+   over already-simulated designs serves 32 of 32 held-out targets and that
+   **50 random designs serve 100 % of them**. See §6.2 item 5 for the one
+   experiment that could still produce an affirmative result.
+5. **Should `target_peaking_db` become live?** It is accepted by
+   `reward_v1.margins` and **deliberately ignored**, so one design scores
+   identically against targets of 3, 5, 7.5, 10 and 12 dB. **The spec manifold
+   is effectively 1-D**, which is why a lookup table is the optimal policy.
+   Making it live would make the problem genuinely 2-D — and would move every
+   published reward number (a §7f re-run event).
 
 ---
 
-## 6. What to do next — recommended order
+## 6. What to do next
 
-**Both of the top two map directly onto `CLAUDEwa.md` §7's own two claimed
-contributions**, which is the strongest argument for them.
+An external review of the shipped PDF against `HANDOFF.md` produced a task
+list. **I verified its load-bearing claims against the repo on 2026-08-20.**
+Two premises are wrong (§4 above, and "there is no human reference point" —
+`g1_handdesign.cir` exists and G1 passed). The rest is accurate. The ordering
+below is mine, after that verification.
 
-| # | Task | Time | Why | Maps to |
-|---|---|---|---|---|
-| ~~1~~ | ~~**Build `method_grid` and re-run**~~ | **DONE, session 22h** | G3 is now scoreable on both clauses and fails both. `BASELINES.md` §13 | G3's literal criterion |
-| **2** | **Task 3 — corners in the loop (G4)** | 2–3 d | Mandatory: spec S9, and `PLAN.md` "never cut". P3 is now known **hard, not empty** — `uniform` found 2 of 20 | contribution **#1**, "reward on worst-case corner, not nominal" |
-| ~~3~~ | ~~**Task 4 — spec-conditioned policy**~~ | **RE-PRICED, 22j** | Its opponent is not CMA-ES-from-scratch but a **table lookup** costing ~600 simulations once and then nothing. `SPEC_CONDITIONED.md`. **Owner's call (§5 item 7).** | contribution **#2** |
-| **4** | **Report + slides** | ~7 d | Mandatory. Run it *alongside* 2–3, not after | — |
-| 5 | `FAIRNESS.md` (task 2 leftover) | ½ d | One table: every asymmetry, which way it cut, what was done. Cheap credibility | — |
-| — | ~~PPO contract changes~~ | 1–2 d | Measured ceiling on that path is small. Only if 3 stalls | — |
+### 6.1 Do first — cheap, and one is a correctness bug
 
-~13 days of work in 27, of which **task 1 is done**. **Task 2 (corners, G4)
-is now the top item.** The slack is deliberate; `CLAUDEwa.md` §7 says protect
-it.
+1. **Fix `verify_full` to score the interpolated peak** (§4). Prerequisite for
+   every margin number. Add a test that the two verification paths agree on
+   `f_peak` for the same design, and watch it go red against today's code.
+2. **Report numbering and cross-references.** Figures 6 and 7 each appear
+   **twice**, and the sequence is out of document order
+   (1, 2, 7, 3, 4, 5, 6, 6, 7, 8, 9, 10). "section 5a" does not exist. Three
+   "section 9" cites now point at the amortisation section because session 22s
+   added two sections and did not renumber. **Session 22s caused this.**
+   Renumber from a single source of truth; add a test that numbers are unique
+   and contiguous and that every internal cross-reference resolves.
+3. **Point `llm/grounding.py`'s numeric-literal checker at report prose.**
+   `build_pdf._facts()` generates the cover counters, but the body carries
+   hand-typed literals — line 706 says *"Seventeen entries"* and line 710
+   *"a failure catalogue of 101 entries"* against actual values of **21** and
+   **107**. Both understate us, which makes it worse: it shows the "no number
+   is typed by hand" claim does not cover the body. A miss must **fail the
+   build**, not repair the text. Add a red-gate test that injects a wrong
+   literal. This is also demoable — the grounding checker turned on its own
+   report.
+4. **Fix the cover conflation** (§5 OPEN item 1) once the owner says which
+   design ships, and put the eye-measurability qualifier **on the cover**.
 
-### Three results already banked for the report
+### 6.2 High value
 
-1. **0 → 20 separable pairs** (§3.3). One flag, matched control.
-2. **The ranking table** (§3.2), with pre-registered predictions scored.
-3. **The pre-screen's true cost**: free in simulations, **1.34× in wall clock**
-   for model-based methods (GP-BO model time 127.1 s → 207.9 s), because a
-   screened proposal costs no simulation but still costs a full acquisition
-   optimisation. First measurement of this anywhere in the project.
-4. **(22h) The answer to "why not just sweep the parameter space?"** — which is
-   the competition's own sentence. At a matched 150-simulation budget the sweep
-   is the **worst of six methods**, it is the **only one that never reaches the
-   reward ceiling** (0 of 20 seeds, twice, across 6 000 simulations), and it is
-   the **fastest of all twelve arms to a first feasible design** (median **1.0
-   simulation** with the pre-screen). *Feasible is not good*, and this is the
-   cleanest demonstration of that in the project.
-5. **(22h) The benchmark is bit-for-bit deterministic** — twelve group medians
-   reproduced at **0.00e+00** across two independently ordered sweeps.
-6. **(22i) The budget ladder** (`BASELINES.md` §14). *At a matched budget, from
-   150 to 2400 simulations, our PPO agent is statistically indistinguishable
-   from uniform random search at every budget tested, while CMA-ES is
-   separably better at every budget tested.* One table, one control, 96 000
-   simulations — and it settles the "it just needs more data" objection that a
-   panel will certainly raise.
+5. **Corner-aware RL at scale — deferred three times, now first.**
+   `rl/corner_env.py` is built and tested (10 tests, ngspice smoke passed) and
+   has never been run. Session 22j identified the asymmetry that makes this the
+   only defensible niche left: *a lookup provably cannot answer corners,
+   because the pool is P1-only by construction.* Three arms on **worst-corner
+   reward at held-out spec targets**: corner-conditioned PPO, library lookup
+   (blind to corners by construction), fresh CMA-ES per spec.
+   **Pre-register bands, falsifiers, and an explicit statement of what result
+   would make us drop the RL contribution claim entirely.** Report either way —
+   a completed negative beats a deferred one.
+   **Also decide and record:** `CLAUDEwa.md` §7 says *reward* on the worst
+   corner, not *observe* it. If the policy is to generalise across corners it
+   may need corner context in the observation. `which_corner_binds()` is the
+   first evidence.
+6. **Write up the four measured results that never reached the report.** This
+   is the best value-per-hour in the project — all four are already measured
+   and sitting in `CHANNEL_MODEL.md`:
+   * **DFE sufficiency.** Across 21 channel members a 1-tap DFE is sufficient;
+     a second tap buys **14.7 %**; a twenty-tap DFE still leaves 31 %, because
+     **31.2 % of the residual sits beyond 20 UI** — the √f algebraic tail,
+     exactly what decision feedback is worst at. **This derives the mandated
+     S2 topology rather than assuming it**, and it is the most
+     analog-engineer-legible result in the repo. Today the DFE appears once, in
+     a box in Figure 1, which is what invites *"did you actually do the DFE?"*
+   * **The burden mismatch.** The mandated −3.5 dB TX de-emphasis is worth
+     exactly 3.5 dB of the CTLE's job, so the required burden across the family
+     spans **−0.5 … +8.5 dB**. **The top 3.5 dB of S3's range is never called
+     for.** The delivered design sits at 9.78 dB — *outside the maximum burden
+     the link ever needs*. It compresses because it is over-equalising a
+     channel that needs less. Section 11 reports the failure without the cause.
+   * **The channel construction.** `IL_dB(f) = A√f + B·f`, so **loss at DC is
+     exactly 0 by construction** — which is what puts near-full TX swing at the
+     CTLE input at low frequency, which sets the 535 mVpp drive, which fails S4
+     and blocks S8. The construction and the failure are causally linked and
+     the report presents only the failure. Add an **eye and HD3 vs channel
+     loss** sweep.
+   * **State plainly, currently buried:** S8's 100 mV vertical is met with the
+     CTLE *attenuating* by 13–15 dB. **The eye-height spec was never binding.**
+7. **Rescope the RL section to what was measured.** The report attributes the
+   null to G100 (terminate-on-success vs a metric rewarding overshoot) — true
+   and incomplete. The deeper cause is §5 OPEN item 5: the spec manifold is
+   **1-D**, and on a 1-D manifold a lookup table *is* the optimal policy, which
+   is exactly what the amortisation section measured. Write the claim as
+   *"RL confers no advantage over random search on a 1-D spec manifold at
+   d = 7, on this objective, at the budgets tested — and here is where the
+   crossover would have to be"*, **not** the unscoped implication that RL does
+   not work for analog sizing, which we cannot support and which reads as the
+   project failing its own title.
+8. **Harvest the maximin plateau — zero simulations.** Re-score the **74 526
+   designs already on disk** through `spec_pool` with a lexicographic
+   tiebreak: maximise `min(margin/tol)`, then minimise tail current among
+   designs within ε of the maximum. Report the power reduction at unchanged
+   compliance. Pre-register the expected reduction. This **executes** G102's
+   "the fix is an added term" claim rather than describing it.
+9. **Disclose or re-fit the pre-screen.** At benchmark conditions its
+   false-rejection rate is **3.88 %** — ten times its 1 % design budget — and
+   `f_peak` MdAPE is **15.85 %**. Six of twelve benchmark arms are `+screen`,
+   including `cmaes+screen`, the arm behind the 8 086× headline, and the report
+   says nothing. Prefer a re-fit: 457 valid rows exist in
+   `baselines_pilot.jsonl`, `prescreen.accuracy_from_log()` is the measurement
+   to beat, and the mechanism the numbers point at is the `I_D = i_bias/2`
+   assumption, which is 4–8 % optimistic against the real mirror (session 13);
+   `solve_bias` already takes `mirror_efficiency`. Pre-register the expected
+   improvement. If the re-fit does not land, **put the caveat in the benchmark
+   section and mark every screened arm.**
+
+### 6.3 Worth doing, lower priority
+
+10. **The hand-designed baseline as a benchmark row.** Not "we had no human
+    baseline" — G1 passed and `g1_handdesign.cir` exists. What is missing is a
+    **SKY130 re-measurement** of it and a row in the benchmark table with
+    designer-hours attached. Natural home for the gm/I_D work
+    (`GMID_MAP.md`), which is built, tested and unwired; note honestly that its
+    stated mechanism was **falsified** (38.07 % device vs 37.74 % design
+    coordinates) and its real benefit was **1.16×** on simulations per valid
+    design. That honesty is an asset here.
+11. **Report restructure**, leading with an **executive summary + hard
+    compliance matrix** (spec / requirement / measured / PVT points passing /
+    minimum normalised margin) on page one. Two framing rules: **lead with the
+    measured number, not the extrapolated one** — *"spec in, PVT-verified
+    transistor-level schematic out, in 41 seconds"* is unimpeachable while
+    8 086× is an extrapolation we ourselves label as such, so it belongs in
+    the benchmark section rather than the cover; and **every claim currently
+    phrased as an apology gets a decision or a cause attached** — rigour that
+    only ever points inward reads as a project that beat itself.
+    **Sequence this after item 3**, so the grounding checker catches stale
+    numbers introduced during the move.
+12. **Demo capture:** `nebula.llm` → schematic → specs → verification.
 
 ---
 
 ## 7. Commands
 
 ```bash
-# environment
 conda activate nebula          # ngspice 41; use ngspice_con.exe, NOT ngspice.exe (G20)
-                               # NOTE: the TEST SUITE runs on the SYSTEM python
-                               # (the conda env has no torch). ngspice is found
-                               # by absolute path either way.
+                               # the TEST SUITE runs on the SYSTEM python (conda env has no torch)
 
-# tests — before and after ANY change. 1510 tests, ~4 min, from the repo root
+# tests — before and after ANY change, from the repo root. 1653 tests, ~4 min
 python -m pytest tests nebula/tests -q -m "not slow"
 
+# the deliverables
+python -m nebula.design --peaking 9 --f-peak 1.9e9 --robust --verify --out out/
+python -m nebula.llm "I need about 9 dB of peaking with the peak near 1.9 GHz"
+
+# the report: figures then PDF, both from run artifacts
+python -m nebula.report.figures
+python -m nebula.report.build_pdf
+
+# session 22q-22s experiments
+python -m nebula.experiments.exp_linear_pareto --run      # 1590 sims, ~9 min
+python -m nebula.experiments.exp_hd3_amplitude --run      # 31 sims
+python -m nebula.experiments.exp_sweep_cost --run         # ~90 sims + 2 timed design runs
+python -m nebula.experiments.exp_joint_search --run       # 400 sims, ~15 min
+python -m nebula.experiments.exp_tunable_trade --run --base joint   # ~20 sims
+
 # the benchmark
-python -m nebula.experiments.baselines --budget            # allocation, no SPICE
-python -m nebula.experiments.baselines --sweep --interp    # 25 500 sims, ~42 min
-python -m nebula.experiments.baselines --sweep --tag lattice   # the control
-python -m nebula.experiments.baselines --analyse <log.jsonl>   # works on a PARTIAL log
-
-# task 1's three sub-experiments
-python -m nebula.experiments.exp_peak_interp --funnel      # 300 sims, ~2 min
-python -m nebula.experiments.exp_peak_interp --dense 30    # 60 sims, dec 50 vs dec 500
-python -m nebula.experiments.exp_peak_interp --pools       # 8000 sims, ~33 min
-python -m nebula.experiments.exp_peak_interp --analyse --plot
-
-# PPO
-python -m nebula.experiments.exp_ppo_updates --run         # 6000 sims, ~24 min
-python -m nebula.experiments.exp_ppo_updates --instrument  # entropy/log_std/curve
+python -m nebula.experiments.baselines --sweep --interp   # 25 500 sims, ~42 min
+python -m nebula.experiments.baselines --analyse <log.jsonl>
 ```
 
-**Measured rate: 0.24–0.27 s/simulation** serial on this machine, ~1.80× at 8
-workers (G75's figure *on this workload*, not the 2.98× measured on the
-simulator alone). A 25 500-simulation sweep is **42 minutes**, not 12 hours.
+**Measured throughput: 0.0977 s/simulation at 8 workers**, 0.176 s serial.
+A full-fidelity 11-row evaluation at one corner is **0.557 s**.
 
 ---
 
-## 8. Traps — the four found this week, and the ones that bit
+## 8. Traps that still bite
 
-**New gotchas, all in `HANDOFF.md` §9:**
+**The standing ones:** G20 (`ngspice_con`, not `ngspice`), G26/G30 (ngspice
+reports failures as warnings and exits 0 — parse and assert), G29 (`.spiceinit`
+read at parse time from the cwd), G31 (instance W/L are plain numbers in
+**microns**), G36 (use the trimmed library), G44 (a peak at the sweep edge is
+fictitious), G70 (**one concurrent ngspice = 4.8× slower** — do not run
+experiments alongside the test suite; session 22r got a spurious
+`test_pdk_trim` failure exactly this way), G71 (the first configuration pays
+the cold cache).
 
-* **G92** — *two arithmetics over the same events are ONE measurement.* G89 was
-  called "supported two independent ways"; both statistics came from the same 9
-  and 16 counts. Doubling the events killed it. Same family as G71.
-* **G93** — `wrdata` writes **8 significant figures** while `meas` works on the
-  full-precision vector, so on a flat response the two disagree about which
-  sample is the maximum — **by a whole grid step**. Fired once in 4543. Caught
-  only because `run_point(ac_peak_interp=True)` cross-checks its argmax.
-* **G94** — *a per-simulation rate measured at a fraction of the real budget is
-  wrong in both directions.* Calibrating at 40 simulations and extrapolating to
-  150 put PPO at 2.33× (real: 1.01×) and GP-BO at 1.54× (real: 2.43×). Fixed
-  startup over-charges the margin; `O(n³)` under-charges it.
-* **G95** — *rule 9 applies to FILESYSTEM PATHS.* `sweep()` defaulted its output
-  to `baselines_results.json`, the same name `--prescreen` writes, and silently
-  destroyed 1890 samples of pre-screen calibration. Both writers reported
-  success. Recovered with `git checkout HEAD~1 --`.
+**The eight from the last four sessions — all in `HANDOFF.md` §9:**
 
-* **G96** — *one shared bootstrap RNG made a headline number depend on the
-  completion order of an unrelated arm.* Adding the `grid` arm reproduced all
-  twelve medians at **0.00e+00** and still moved the separable-pair count
-  **20 → 22 of 45**. Seed per unit of analysis, from a stable function of that
-  unit's identity. Same family as G71, one level up: there the order
-  contaminated the measurement, here it contaminated the *analysis of* it.
+* **G100** — an episode that terminates on the condition your metric rewards
+  exceeding is two objectives, not one.
+* **G101** — a spec set defined by **exclusion** grows silently.
+* **G102** — a **maximin** gives no credit for exceeding a spec, so "the
+  optimiser bought margin" cannot be true of it. **Before removing a term from
+  an objective, measure how often it BINDS.** A term binding 0 % of the time is
+  already inert.
+* **G103** — the peaking spec and the linear input range are **one knob**, and
+  every swing limit was reported at the wrong end of the stage.
+* **G104** — a constraint set that drops one clause selects a **different
+  circuit family**. Filtering on peaking alone admitted a 19.95 GHz wideband
+  attenuator that looked 3× more linear, and CMA-ES optimised into the same
+  hole.
+* **G105** — a finite difference on a **quantised** signal reports the quantum.
+  Four of seven axes returned exactly one lattice step with **zero spread**;
+  worth **1 296×** on the headline. **The tell is the zero spread.**
+* **G106** — `A + (new,)` is a claim that every member of `A` is still
+  measurable by whatever will score the result.
+* **G107** — **"cannot be scored" is not "fails."** Collapsing them either
+  kills a search or fakes a pass. Grade the invalid band by evaluability;
+  **never loosen the gate.**
 
-**Three mistakes made this week that are not gotchas but are instructive:**
+**Three process mistakes worth not repeating:**
 
-* **A diagnostic that consumed the resource it measured.** The policy-movement
-  probe called `env.reset()`, which *simulates* — so it spent budget from the
-  run it was reporting on, and (being outside the `try`) its `BudgetExhausted`
-  killed the experiment at job 11 of 20. **An instrument must not consume the
-  resource under measurement.**
-* **A single probe point is not a function comparison.** The same seed reads
-  0.633 on one observation and 0.209 averaged over 32. A tanh can be saturated
-  at one point and steep at another.
-* **G97** — *`anytime_curve` CLAMPS rather than truncates*, so asking it for a
-  short prefix of a long run folds every later trial into the last cell. It
-  manufactured "34 of 40 curves mismatched, worst difference 9.18" out of data
-  that actually agreed at 0.0.
-* **G98** — *a ratio metric must be run against its own reference.* Entry 15's
-  headline read 0.960 / 0.893 / 0.632 / 0.988 / **0.623×** when the control was
-  measured against itself, where it must read 1.000×, because a median of
-  monotone step functions has plateaus. Three of eleven predictions were
-  written against the wrong line. **The only reason it was catchable is that
-  the control was in the run.**
-* **A prediction band that spans zero cannot test a directional claim.** Entry
-  14 predicted "grid beats PPO, by 0.02" with a band of −0.06…+0.10. Grid lost
-  by 0.0220 — inside the band, and the claim was wrong. Scored as a miss on the
-  claim rather than a hit on the band.
-
-**Standing traps that still bite:** G20 (`ngspice_con`, not `ngspice`), G26/G30
-(ngspice reports failures as warnings and exits 0 — parse and assert), G29
-(`.spiceinit` is read at parse time from the cwd), G31 (instance W/L are plain
-numbers in **microns**), G36 (use the trimmed library), G44 (a peak at the sweep
-edge is fictitious), G70 (one concurrent ngspice = 4.8× slower), G71 (the first
-configuration pays the cold cache, whichever one it is).
+* A scripted splice into `report/figures.py` matched the wrong anchor and
+  deleted **five figure functions** (22s). Recovered only because the file had
+  been committed minutes earlier. **Commit often; prefer a unique anchor or the
+  edit tool over index-based splicing.**
+* Writing a session's counters into the report **before** running the suite —
+  1664 was written, 1653 was measured. Run first, then write.
+* Pre-registering after a debug run has been seen. If it happens, **disclose
+  the debug run in full inside the entry** (entry 19 does this).
 
 ---
 
@@ -465,71 +442,85 @@ configuration pays the cold cache, whichever one it is).
 1. **Update `HANDOFF.md` in the same commit as any change.** A change without a
    handoff update is incomplete.
 2. **Run the suite before and after.** `python -m pytest tests nebula/tests -q
-   -m "not slow"` — **1510 tests, ~4 min**. Report the count both times. Never
+   -m "not slow"` — **1653 tests, ~4 min**. Report the count both times. Never
    commit with failures.
-3. **Pre-register anything costing more than ~10 minutes.** Write the prediction
-   *and its acceptance band* into `PREDICTIONS.md`, **commit it**, then run.
-   Record misses as misses; nothing above an Outcome heading may be edited.
-4. **Every gate gets a test that proves it can fail.** Break the input, watch it
-   go red, restore it, and say in your report that you did.
-5. **Never fabricate a number.** Unknown stays empty and fails loudly.
+3. **Pre-register anything whose result could be argued for afterwards.**
+   `PREDICTIONS.md`, with acceptance bands and falsifiers, **committed before
+   the run**. Record misses as misses. **Nothing above an outcome heading is
+   ever edited.**
+4. **Every new gate is deliberately broken, watched go red, and restored** —
+   and say so in your report.
+5. **Never fabricate a number.** A missing artifact raises; it does not get a
+   placeholder. This applies to prose as much as to plots.
 6. **ngspice's exit code is not a success signal.** Parse the output and assert.
-7. **Do not modify without asking:** `common/params.py`, `rl/contract.py`,
-   `rl/env.py`, `V1_SPECS`, the box, the tolerances, the pre-screen. (`env.py`
-   *was* touched this session, additively and default-off, with the reason
-   recorded — see §5.)
-8. **You may not decide anything in §5's OPEN list.** State the options with the
-   measured numbers behind each and ask.
-9. Windows: no non-ASCII in `print()`; run pytest from the repo root.
-10. Commit as `Jai Kaushik <jaikaushik-prog@users.noreply.github.com>` (G12).
+7. **Do not modify without an explicit human decision:** `common/params.py`,
+   `rl/contract.py`, `rl/env.py`, `V1_SPECS`, the box, the tolerances, the
+   pre-screen. **Wrap, do not replace** — `rl/corner_env.py` is the precedent.
+8. **Do not change `V1_SPECS`.** Anything that shifts `B = N + 1` invalidates
+   every published reward, the +8.950669 ceiling, the whole `BASELINES.md`
+   ranking and the G4 verdicts. New spec sets are **new tuples defined by
+   enumeration**, never by exclusion (G101) and never by addition to another
+   set without checking every inherited member (G106).
+9. **Do not loosen the pole-zero fit residual limit** to make the eye
+   evaluable. Session 22s established that this would make every downstream eye
+   number unfounded.
+10. **Do not delete** the unfiltered linear-range front, the failed
+    predictions, or any retraction. **The misses are the asset.**
+11. **Do not report a nominal design as corner-verified, or an extrapolation as
+    a measurement**, anywhere.
+12. **Do not let the LLM wrapper near the optimiser.** The grep test stays.
+13. **You may not decide anything in §5's OPEN list.** State the options with
+    the measured numbers behind each and ask.
+14. Windows: no non-ASCII in `print()`; run pytest from the repo root.
+15. Commit as `Jai Kaushik <jaikaushik-prog@users.noreply.github.com>` (G12).
     **The repo is PRIVATE and must stay private** (G1).
+16. **If a task contradicts a measurement you make, stop and report the
+    contradiction** rather than proceeding. Two items in the review that
+    produced §6 did exactly this and the measurement won both times.
 
 ---
 
-## 10. What is new on disk
+## 10. What is new on disk since the last rewrite
 
 | Path | What |
 |---|---|
-| `nebula/PEAK_INTERP.md` | task 1: the ceiling, removed and validated |
-| `nebula/BASELINES.md` §12, §12.6 | the sweep and the lattice control |
-| `nebula/experiments/exp_peak_interp.py` | funnel replay, `dec 500` validation, pool replay |
-| `nebula/experiments/exp_ppo_updates.py` | `rollout_steps` arms + `--instrument` |
-| `nebula/experiments/baselines_run_{interp,lattice}.jsonl.gz` | 25 869 trial rows each (56 MB raw; committed gzipped) |
-| `nebula/experiments/baselines_results_{interp,lattice}.json` | per-run summaries + analysis |
-| `nebula/experiments/ppo_updates_run.jsonl` | 40 PPO runs across four `rollout_steps` |
-| `nebula/figures/peak_interp.png` | the three-panel task-1 figure |
-| `device/sky130_runner.py` | `interpolate_peak_log_f`, `parabolic_vertex`, `MAX_SEARCH_BOT_HZ`, 3 new `Sky130Point` fields |
-| `rl/evaluator.py` | `scoring_meas`, `INTERP_KEYS`, `meas_with_interpolated_peak`, `interp_was_refused` |
-| `nebula/tests/test_peak_interp.py` | 28 tests |
-| `PREDICTIONS.md` entries 9–14 | six pre-registrations, five scored |
-| `experiments/baselines.py` | **(22h)** `method_grid`, `grid_levels`, `grid_level_of`, `group_seed` (G96), the measured throughput constants |
-| `experiments/baselines_run_interp_grid.jsonl.gz` | **(22h)** the 210-run sweep with the grid arm |
-| `nebula/BASELINES.md` §13 | **(22h)** the grid arm, seven subsections |
+| `device/sky130_runner.py` | `linear_in_pp_v` / `max_swept_in_pp_v`, `measured_linear_input_pp_v`, parameterised HD3 tone and amplitude |
+| `experiments/exp_linear_pareto.py` | the attainable linear-range front, two arms, S3-filtered |
+| `experiments/exp_hd3_amplitude.py` | HD3 vs amplitude at three tones |
+| `experiments/exp_sweep_cost.py` | the 8 086× extrapolation, with derived levels |
+| `experiments/exp_joint_search.py` | the S3+S8+HD3 joint search, `V4_SPECS` |
+| `experiments/exp_tunable_trade.py` | the bank, and the `k`-cancellation |
+| `rl/reward_v1.py` | `S4_hd3_nyq` tolerance row, `V4_SPECS` (V1–V3 untouched) |
+| `experiments/baselines.py` | `CmaConfig.x0` — local seeding, used by nothing in `BASELINES.md` |
+| `experiments/exp_g4_verify.py` | the drive-headroom row in the 135-point checklist |
+| `report/figures.py` | `fig_hd3_amplitude`, `fig_sweep_cost`, `fig_tunable_trade`; Figure 1 fixed |
+| `tests/test_linear_and_sweep_cost.py` | 19 tests |
+| `PREDICTIONS.md` entries 18–21 | one falsified external prediction, three scored pre-registrations |
+| `HANDOFF.md` §9 | gotchas **G102–G107** |
 
 ---
 
 ## 11. The one-paragraph version, if you read nothing else
 
-The reward could not rank anything and now it can — proved by a matched control
-that separates **0 of 45** pairs against **20 of 45**, a contrast that survived
-being re-derived under G96's fix. The benchmark has now run twice and produced
-an honest ranking of **twelve** arms in which **grid search comes last and our
-RL comes second-last, both behind uniform random search** — so **G3 fails on
-both of its clauses**, and after session 22h it can at last be *scored* on both,
-because the grid baseline its criterion names did not exist until then. PPO's
-failure has been diagnosed three times, twice wrongly, and the current reading
-is that a 150-simulation budget is smaller than a policy-gradient method's
-minimum viable sample size — so no hyperparameter fixes it. **The grid's failure
-is different and sharper: at seven dimensions 150 simulations buys `150**(1/7)`
-= 2.06 levels per parameter, and the reward pays for resolution, so even a
-policy that provably does not learn out-resolves a factorial.** The same run
-proved the benchmark **bit-for-bit deterministic** (twelve medians at 0.00e+00)
-and, through that, caught **G96**. Session 22i then laddered the budget 16×
-and answered the objection a panel will certainly raise: **more simulations
-close PPO's deficit to random search and never take it past random search**,
-while CMA-ES is separably better at every budget tested — *PPO is not broken,
-it is a random search with extra steps*. The two things worth the remaining 27 days
-are the two contributions `CLAUDEwa.md` §7 already claims: **corner-aware
-evaluation** (mandatory anyway, and now the top item) and the **spec-conditioned
-policy**, which is the only regime where the policy gets enough experience to
-learn and the only answer to *"why not just use CMA-ES?"*.
+**The eye was never blocked by the circuit — it was blocked by the objective**,
+which contains S3 and not S8, so nothing had ever asked for both. Asking for
+both produced a design passing **11 of 11 rows at 135 points with zero
+failures**, whose eye is measurable at **98** of them; all 37 gaps are at
+corners the 3-corner search screen has no member of, which is now the
+**fourth** measurement of that blind spot and the best-supported open decision
+on the list. **Before you report any margin number, read §4:** the 135-point
+compliance matrix is scored on the coarse `ac dec 50` lattice, so today's
+"2.1 % of tolerance" is **0.154 lattice steps** — below the instrument — and
+the two designs are identical on it, which falsifies the external review's
+premise that we would be trading a 99 % margin for a 2 % one. The physical
+finding underneath is better than the artifact: **PVT spread consumes 97.9 % of
+S3's one-octave frequency window**, so every design lands at the edge because
+the specification is thin, not because the design is. RL remains a null and is
+**correctly** a null — the spec manifold is 1-D, and on a 1-D manifold a lookup
+table is the optimal policy — but the one experiment that could still produce
+an affirmative result, **corner-aware RL at scale**, is built, tested, deferred
+three times, and is now first. After that, the highest value in the project is
+writing: **four measured results in `CHANNEL_MODEL.md` never reached the
+report**, and one of them — that a 1-tap DFE is sufficient because 31.2 % of
+the residual sits beyond 20 UI — *derives the topology the brief mandates*
+instead of assuming it.

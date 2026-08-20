@@ -9075,3 +9075,137 @@ script. Every figure regenerates: 12 of 12.
 **Tests 1645 -> 1653.** New gates, each broken and watched go red: V4 carrying
 the 100 MHz HD3 row (reddens 2), and the bank holding `Rs * Cs` on the segment
 rather than the total so the switch shifts the zero (reddens 1).
+
+### 2026-08-20 - Session 22t (CONTINUE_HERE rewritten as the entry point; an external review verified against the repo, and TWO of its premises are FALSE)
+
+**No simulations. Verification and writing only.** An external review of
+`nebula/report/Nebula_CTLE_Report.pdf` against this file produced a task list.
+Every load-bearing claim in it was checked against the repository before any of
+it was acted on, per `CLAUDEwa.md` §8 rule 1 and the review's own instruction
+that *"if any of the numbers disagree with what you measure, the measurement
+wins -- report the disagreement and stop."* Two premises did disagree.
+
+#### FALSE PREMISE 1, and it inverts the recommendation it supports
+
+The review states the delivered design *"sits at ~99 % of tolerance"* while the
+joint-search winner sits at 2 %, and argues against shipping the joint design
+on that basis. **Measured, from both 135-point artifacts:**
+
+    delivered      min normalised margin +0.0205 (2.1 %) on S3_f_peak at ss/0.95/125C/78fF
+    joint winner   min normalised margin +0.0205 (2.1 %) on S3_f_peak at tt/0.95/125C/78fF
+
+**They are identical.** There is no 99 %-margin design to trade away. The
+argument does not hold.
+
+#### AND A LIVE DEFECT UNDERNEATH IT -- the margin is below the instrument
+
+Both designs' extreme margins land **exactly on the `ac dec 50` lattice**
+(indices **105.000** and **112.000**, checked arithmetically). One lattice step
+is **13.3 %** of the `S3_f_peak` tolerance, so the reported "2.05 % of
+tolerance" is **0.154 lattice steps** -- six times finer than the measurement
+can resolve.
+
+**The cause is a disagreement inside one file.** `exp_g4_verify.verify()` takes
+`ac_peak_interp=True` and scores the interpolated peak;
+`verify_full()` goes through `link/bridge.py:205`, which uses `pt.f_pk_hz` --
+the **quantised** peak. **So the 135-point compliance matrix, the artifact the
+whole S8 result rests on, is scored on exactly the lattice session 22e was
+spent removing from the benchmark (G74).** Not yet fixed; it is item 1 of
+`CONTINUE_HERE.md` §6.1 and a prerequisite for four other tasks. It gets its
+gotcha number when it is fixed, not before.
+
+**The physical finding underneath is better than the artifact.** At the worst
+corner both designs' `f_peak` reaches **1.2589 GHz** against S3's **1.2500 GHz**
+floor: **PVT spread consumes 97.9 % of S3's one-octave frequency window.** Every
+design lands at the edge because the window is almost exactly the size of the
+corner spread. That is a property of the process, not of any design, and it
+reframes *"our margin is thin"* as *"the specification is thin"*.
+
+#### FALSE PREMISE 2
+
+The review states *"there is no human reference point anywhere in the
+project."* **`device/spice/g1_handdesign.cir` exists and G1 is a gate this
+project passed** (substantially, session 8, audited). What is true and worth
+doing is narrower: it has never been re-measured on SKY130 and has never
+appeared in the benchmark table.
+
+#### What the review got right, confirmed against the repo
+
+* **`build_pdf` prose carries hand-typed literals** -- line 706 *"Seventeen
+  entries"* and line 710 *"a failure catalogue of 101 entries"* against actual
+  **21** and **107**, while `_facts()` generates the cover counters correctly.
+  Both understate us, which makes it worse: it shows the *"no number is typed
+  by hand"* claim does not cover the body.
+* **Figure numbering is broken and session 22s caused it.** Figures 6 and 7
+  each appear **twice** and the sequence is out of document order
+  (1, 2, 7, 3, 4, 5, 6, 6, 7, 8, 9, 10). *"section 5a"* does not exist, and
+  three *"section 9"* cites now point at the amortisation section because 22s
+  added two sections without renumbering.
+* **The cover conflates two designs** -- "11 of 11 rows" beside "135 of 135
+  points" describes the joint winner and the delivered design respectively.
+* **The pre-screen's error rate is undisclosed**: false rejection **3.88 %**
+  against a 1 % budget, `f_peak` MdAPE **15.85 %**, on six of twelve benchmark
+  arms including the one behind the 8 086x headline.
+* **`CHANNEL_MODEL.md` holds four measured results that never reached the
+  report**, confirmed verbatim: a 1-tap DFE is sufficient because **31.2 % of
+  the residual sits beyond 20 UI** and a second tap buys **14.7 %** -- which
+  *derives* the mandated S2 topology rather than assuming it; the required CTLE
+  burden spans **-0.5 to +8.5 dB** so **the top 3.5 dB of S3 is never called
+  for** and the delivered design at 9.78 dB is over-equalising; channel loss at
+  DC is **0 by construction**, which is what sets the 535 mVpp drive that fails
+  S4 and blocks S8.
+* **`reward_v1.margins` accepts `target_peaking_db` and deliberately ignores
+  it**, so the spec manifold is effectively **1-D** -- on which a lookup table
+  *is* the optimal policy. The RL null should be scoped to that, not left as an
+  unscoped implication that RL does not work for analog sizing.
+* **`rl/corner_env.py` is built and tested (10 tests) and has never been run.**
+  Deferred as "item 4" in two consecutive briefs.
+
+#### What changed on disk
+
+`nebula/CONTINUE_HERE.md` **rewritten end to end**. The previous version was
+written at the end of session 22i and its headline -- that the eye is
+unverifiable and corners are the only remaining RL niche -- is now half wrong.
+The new file carries: the situation after 22q-22s, gate status, the §4 warning
+about the lattice defect **before** anyone reports a margin number, five OPEN
+owner-only decisions, a verified and re-ordered task list, the eight new
+gotchas G100-G107, three process mistakes worth not repeating, and sixteen
+standing rules.
+
+**No code changed. Tests unchanged at 1653.**
+
+### 2026-08-20 - Session 22u (the compliance matrix's lattice defect: PRE-REGISTERED, not yet run)
+
+**No simulations yet. This commit is a prediction and a cleanup.**
+
+`CONTINUE_HERE.md` §6.1 item 1 -- `verify_full()` scores the QUANTISED peak
+(`pt.f_pk_hz` via `link/bridge.py:205`) while `verify()` scores the
+interpolated one, so the 135-point compliance matrix the whole S8 result is
+reported on sits on the `ac dec 50` lattice. `PREDICTIONS.md` **entry 22**
+pre-registers six falsifiable predictions about what changes when it is fixed,
+**with full disclosure of the two artifacts read first** -- because they
+constrain the answer tightly and claiming more foresight than that would be
+dishonest.
+
+**The sharper form of the defect, found while writing the entry.** It is not
+only that the margin is finer than the instrument. On the LATTICE path the six
+smallest `S3_f_peak` margins on the delivered design are all **exactly 0.0103
+octaves** and the next six all **exactly 0.0596** -- a six-way tie. On the
+INTERPOLATED path (`g4_verify_results.json`, already on disk) the same six
+points are six **distinct** numbers, monotone in both process and supply:
+
+    +8.02102 fs/0.95   +8.02545 fs/1.00   +8.02952 fs/1.05
+    +8.03419 ss/0.95   +8.03824 ss/1.00   +8.04188 ss/1.05
+
+**So the published compliance matrix cannot say WHICH corner binds** -- it
+reports a tie where the finer instrument reports an ordering. That matters
+because the next decision on the list (extend the 3-corner screen, four
+independent measurements now support it) is a decision about *which corners*.
+
+**Also in this commit:** the session 22t entry had been appended to this file
+**twice** -- two near-identical write-ups of one session, from an interrupted
+run. The longer of the two is kept; the earlier duplicate is deleted. Nothing
+else in it changed.
+
+**Tests 1653 before this commit** (`1653 passed, 11 deselected, 278.99s`). No
+executable code changed yet.
