@@ -77,7 +77,14 @@ from nebula.link.config import LinkConfig
 from nebula.rl.evaluator import build_point
 from nebula.rl import reward_v1 as R
 from nebula.rl.contract import N_ACTIONS, sizing_from_u
-from nebula.rl.evaluator import SpiceBudget, Verdict, evaluate, scoring_meas
+from nebula.rl.evaluator import (
+    SpiceBudget,
+    Verdict,
+    annotate_interpolated_peak,
+    evaluate,
+    scored_meas,
+    scoring_meas,
+)
 
 HERE = Path(__file__).resolve().parent
 
@@ -225,6 +232,25 @@ class FullPointResult:
     vout_swing_v: Optional[float] = None
     eye_h_v: Optional[float] = None
     eye_w_ui: Optional[float] = None
+    # ── which peak this row was scored on (session 22u) ─────────────────────
+    #
+    # **Both peaks, on every point, so the artifact states its own instrument.**
+    # Until 22u this checklist read `pt.f_pk_hz` -- the `ac dec 50` lattice --
+    # while `verify()` in the same file read the interpolated one. Recording
+    # the pair makes the correction auditable from the artifact instead of
+    # from a scratch script, and makes it impossible for a future reader to
+    # have to guess which number a published margin came from.
+    #
+    #: `log2(f_pk / 1.7678 GHz)` off the raw `meas ac MAX` lattice reading.
+    f_peak_oct_lattice: Optional[float] = None
+    #: The same, off the parabola -- and the one the margins above use.
+    f_peak_oct_scored: Optional[float] = None
+    peaking_db_lattice: Optional[float] = None
+    peaking_db_scored: Optional[float] = None
+    #: `"vertex"`, `"boundary_bottom_lattice_is_exact"`, `"refused"`, or None
+    #: when the interpolation was not asked for. **"not asked" and "asked and
+    #: impossible" are different facts** and must not collapse (G85).
+    peak_interp_status: Optional[str] = None
     # ── the drive-headroom row (session 22q) ────────────────────────────────
     #
     # S8 is blocked at every one of these points, and until now the blockage
@@ -253,7 +279,8 @@ class FullPointResult:
 def verify_full(cand: "Candidate",
                 corners: Optional[Sequence] = None,
                 loads: Sequence[float] = PROMOTION_LOADS,
-                loss_db: float = FUNNEL_LOSS_DB) -> dict:
+                loss_db: float = FUNNEL_LOSS_DB,
+                ac_peak_interp: bool = True) -> dict:
     """**Every spec row on the slide, at every corner.** The judge's checklist.
 
     Runs the G2 closed-loop chain rather than the search evaluator, because
@@ -267,6 +294,30 @@ def verify_full(cand: "Candidate",
     0.1768 s for the search's `.op+.ac+.noise`, plus 0.0372 s of link
     evaluation with **no** simulator call -- the eye is computed from the AC
     curve the same invocation already produced.
+
+    **`ac_peak_interp` defaults to True, and it did not used to exist (session
+    22u).** `verify()` below has scored the sub-lattice interpolated peak since
+    session 22e; this path did not, so the two verification routines in this
+    one file disagreed about which peak they read, and the 135-point compliance
+    matrix -- the artifact every S8 result and every margin number is reported
+    on -- was the one still on the `ac dec 50` lattice. That is G74's defect,
+    surviving in the place it mattered most, and rule 9's failure (two
+    definitions of one quantity) in the place rule 9 was written for.
+
+    **The cost was not the size of the correction.** One lattice step is 13.3 %
+    of `S3_f_peak`'s tolerance, so the headline margin moved by a fraction of
+    a step. What the lattice did was collapse **six physically distinct corners
+    onto one tied margin**, so the matrix reported a six-way tie where the
+    finer instrument reports an ordering that is monotone in process and in
+    supply -- and the open decision it feeds is a decision about *which*
+    corners.
+
+    **Only the SCORED measurement vector changes.** `dev`, and therefore the
+    eye, is untouched: `evaluate_link` fits the whole AC curve rather than
+    reading the peak scalar, so S8 does not move and cannot be made to move by
+    this flag. Kept as an argument, defaulting to the correct value, so the
+    lattice behaviour stays reproducible for anyone re-deriving a published
+    number -- the same shape as `verify()`.
 
     **No short-circuit**, for the same reason `verify` has none: a verification
     has to say WHICH rows failed and by how much.
@@ -289,7 +340,8 @@ def verify_full(cand: "Candidate",
                     reward=float("nan"), feasible=False))
                 continue
             pt = run_point(point, c.process, temp_c=c.temp_c, swing=True,
-                           ac_sweep=True, hd3=True)
+                           ac_sweep=True, hd3=True,
+                           ac_peak_interp=ac_peak_interp)
             if not pt.ok:
                 rows.append(FullPointResult(
                     **base, ok=False, reason=pt.fail_reason, margins={},
@@ -315,6 +367,24 @@ def verify_full(cand: "Candidate",
                 "inoise_vrms": dev.vn_in_vrms, "power_w": dev.power_w,
                 "pair_margin_v": float(pt.vds) - float(pt.vdsat),
                 "tail_margin_v": float(pt.tail_margin_v),
+            }
+            # **THE PEAK THIS CHECKLIST IS SCORED ON**, through the same two
+            # functions the search arms and the RL env reach it by, so this
+            # file cannot drift away from them again (session 22u, rule 9).
+            # `annotate_` is additive; `scored_meas` performs the swap and, on
+            # a refusal, falls back to the lattice rather than to the invalid
+            # floor -- see `scoring_meas` for the measured reason (1 valid
+            # design in 4543).
+            lattice = {k: meas[k] for k in ("f_peak_oct", "peaking_db")}
+            bookkeeping: dict = {}
+            annotate_interpolated_peak(meas, bookkeeping, pt)
+            meas = scored_meas(meas, ac_peak_interp)
+            peak_audit = {
+                "f_peak_oct_lattice": float(lattice["f_peak_oct"]),
+                "f_peak_oct_scored": float(meas["f_peak_oct"]),
+                "peaking_db_lattice": float(lattice["peaking_db"]),
+                "peaking_db_scored": float(meas["peaking_db"]),
+                "peak_interp_status": bookkeeping.get("peak_interp_status"),
             }
             m = R.margins(meas, LEGACY_TARGET.f_peak_hz,
                           target_peaking_db=LEGACY_TARGET.peaking_db,
@@ -344,6 +414,7 @@ def verify_full(cand: "Candidate",
                 vout_swing_v=dev.vout_swing_v,
                 eye_h_v=(lr.eye_h_v if lr.ok else None),
                 eye_w_ui=(lr.eye_w_ui if lr.ok else None),
+                **peak_audit,
                 **_drive_headroom(pt, float(pt.nyquist_boost_db), cfg)))
 
     scored = [r for r in rows if r.ok]
@@ -367,6 +438,11 @@ def verify_full(cand: "Candidate",
                       for r in scored if r.reason})
     return {
         "design_id": cand.design_id, "role": cand.role,
+        # **The artifact states its own instrument.** A margin quoted to four
+        # decimals off a lattice that quantises this row at 13.3 % of its
+        # tolerance is a different measurement from the same margin off the
+        # parabola, and a reader must not have to infer which one they hold.
+        "ac_peak_interp": bool(ac_peak_interp),
         "spec_set": list(FULL_SPECS), "n_spec_rows": len(FULL_SPECS),
         "n_points": len(rows), "n_scored": len(scored),
         "n_unscorable": len(rows) - len(scored),

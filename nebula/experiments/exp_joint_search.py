@@ -84,6 +84,17 @@ HERE = Path(__file__).resolve().parent
 RESULTS = HERE / "joint_search_results.json"
 RUN_LOG = HERE / "joint_search_run.jsonl"
 
+#: The 135-point checklist for the winner of the joint search.
+#:
+#: **This file did not exist until session 22u, and the report's headline table
+#: was typing its numbers by hand.** `build_pdf` generates the cover counters
+#: from artifacts but the body carried literals -- *"11 of 11"*, *"98 of 135"*,
+#: *"377.1 - 539.4 mV"* -- with no artifact behind them, which is the one thing
+#: `CLAUDEwa.md` §8 rule 1 forbids. `--verify` runs the same `verify_full` the
+#: delivered design is measured by, on the winner read out of `RESULTS`, and
+#: writes what it measured.
+VERIFY_RESULTS = HERE / "joint_verify_full_results.json"
+
 #: The seed: session 22r's best design in the 9.0-9.5 dB peaking bin, read from
 #: `linear_pareto_run.jsonl` rather than transcribed.
 SEED_PEAKING_BAND: tuple[float, float] = (9.0, 9.5)
@@ -433,15 +444,90 @@ def _report(d: dict) -> None:
         print(f"\n  improvement over the seed: {d['improvement']:+.4f}")
 
 
+def verify(out_path: Path = VERIFY_RESULTS) -> dict:
+    """**The winner, on all 135 points, through the SAME routine as the rest.**
+
+    Deliberately `exp_g4_verify.verify_full` rather than anything local. Two
+    reasons, both earned:
+
+    * The delivered design's checklist comes from that function, and a
+      comparison between two designs measured by two routines measures the
+      routines. G32 is that failure one level down.
+    * `verify_full` is where session 22u fixed the lattice defect, so anything
+      re-implementing it here would inherit the bug it was written to remove.
+
+    The winner's box coordinates are **read out of `RESULTS`**, never
+    transcribed. If the search has not been run, this raises rather than
+    inventing a design.
+    """
+    from nebula.experiments.exp_g4_verify import Candidate, verify_full
+    from nebula.rl.contract import design_id, sizing_from_u
+
+    if not RESULTS.exists():
+        raise FileNotFoundError(
+            f"{RESULTS.name} missing: run `--run` before `--verify`; there is "
+            f"no winner to verify and one will not be invented")
+    d = json.loads(RESULTS.read_text(encoding="utf-8"))
+    best = d.get("best")
+    if not best or not best.get("ok"):
+        raise ValueError(
+            "the recorded joint-search winner is not a valid design; there is "
+            "nothing to verify")
+
+    u = tuple(float(x) for x in best["u"])
+    did = design_id(sizing_from_u(np.asarray(u)))
+    cand = Candidate(design_id=did, u=u, role="joint_winner",
+                     source="exp_joint_search",
+                     claimed_reward=float(best["reward"]),
+                     claimed_worst_point=best.get("worst_point"))
+
+    t0 = time.perf_counter()
+    r = verify_full(cand)
+    out = {
+        "task": "the joint-search winner, on every spec row at every corner",
+        # **The claim being checked, beside the check.** The search scored this
+        # design on 6 points (3 screen corners x 2 loads) and V4_SPECS; this
+        # runs 135 points and V3_SPECS. They are different questions and the
+        # artifact has to say so or a reader will read the 6-point reward as if
+        # it were a 135-point one.
+        "searched_on": {"spec_set": list(d["spec_set"]),
+                        "n_points": best.get("n_points"),
+                        "reward": float(best["reward"])},
+        "spec_set": list(r["spec_set"]),
+        "wall_s": time.perf_counter() - t0,
+        "results": [r],
+    }
+    out_path.write_text(json.dumps(out, indent=1, default=str),
+                        encoding="utf-8")
+    print(f"  joint_winner {did[:12]}  "
+          f"{r['n_rows_passing']} rows PASS, {r['n_rows_failing']} FAIL, "
+          f"{r['n_rows_not_measurable']} not measurable "
+          f"(over {r['n_scored']}/{r['n_points']} points)")
+    for name in r["spec_set"]:
+        v = r["per_spec"][name]
+        print(f"        {name:<16} {v['verdict']:<15} "
+              f"checked {v['checked_at']:>3}  failed {v['failed_at']:>3}  "
+              f"unmeasurable {v['unmeasurable_at']:>3}")
+    print(f"  {out['wall_s'] / 60:.1f} min")
+    print(f"wrote {out_path}")
+    return out
+
+
 def main(argv: Optional[Sequence[str]] = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--run", action="store_true")
+    ap.add_argument("--verify", action="store_true",
+                    help="the winner on 45 corners x 3 loads, all eleven spec "
+                         "rows, through exp_g4_verify.verify_full")
     ap.add_argument("--analyse", action="store_true")
     ap.add_argument("--budget", type=int, default=BUDGET)
     ap.add_argument("--sigma0", type=float, default=SIGMA0)
     a = ap.parse_args(argv)
     if a.analyse:
         _report(json.loads(RESULTS.read_text(encoding="utf-8")))
+        return 0
+    if a.verify:
+        verify()
         return 0
     if not a.run:
         ap.print_help()

@@ -603,49 +603,7 @@ def evaluate(
         "w_tail_um": sizing.w_tail_um, "nf_tail": sizing.nf_tail,
         "runtime_s": pt.runtime_s,
     }
-    if pt.peak_interp is not None:
-        # ADDITIVE, ALWAYS. `f_peak_oct` and `peaking_db` above are untouched;
-        # these are the parallel pair. Present only when the interpolation
-        # succeeded, so "absent" means "refused" and never "equal to the grid
-        # value" — G85's shape of mistake, a sentinel read as a measurement.
-        raw["peak_interp_ok"] = bool(pt.peak_interp.get("ok"))
-        raw["peak_interp_reason"] = pt.peak_interp.get("reason")
-        raw["peak_interp_edge"] = pt.peak_interp.get("edge")
-        raw["peak_interp_curvature_db"] = pt.peak_interp.get("curvature_db")
-        if pt.has_interp_peak:
-            raw["peak_interp_status"] = "vertex"
-            meas["f_peak_oct_interp"] = f_peak_octaves(float(pt.f_pk_interp_hz))
-            meas["peaking_db_interp"] = float(pt.peaking_interp_db)
-            raw["f_pk_interp_hz"] = float(pt.f_pk_interp_hz)
-            raw["g_pk_interp_db"] = float(pt.g_pk_interp_db)
-            raw["d_f_peak_octaves"] = float(pt.d_f_peak_octaves)
-        elif pt.peak_interp.get("edge") == "bottom":
-            # **THE MAXIMUM IS AT THE BOTTOM OF THE WINDOW, AND THE LATTICE
-            # VALUE IS THEN EXACT RATHER THAN APPROXIMATE.** 10 MHz is a grid
-            # point AND the boundary, so `meas ac MAX` reported the true
-            # maximum of the searched interval; there is no sub-grid position
-            # to find and nothing has been rounded. Carrying the lattice pair
-            # forward is the RIGHT answer here, not a fallback.
-            #
-            # WHY THE TWO EDGES ARE TREATED DIFFERENTLY, since geometrically
-            # they are the same situation. It mirrors a decision this repo
-            # already made deliberately and wrote down: `peak_is_sweep_edge`
-            # is the TOP half of `has_interior_peak` only, because a response
-            # still rising at 20 GHz has a FICTITIOUS peak (G44) while a
-            # monotonically falling one has a real, correctly measured, merely
-            # useless one. `validate` rejects the first and accepts the second,
-            # and its comment records why: rejecting the second erased the
-            # reward gradient over the whole low-peaking region of the box,
-            # which is where a randomly initialised policy starts. Refusing
-            # these designs on the interpolated path would rebuild exactly that
-            # hole, one layer up — the interpolated arm would see an invalid
-            # floor where the discrete arm sees a large, graded S3 miss.
-            raw["peak_interp_status"] = "boundary_bottom_lattice_is_exact"
-            meas["f_peak_oct_interp"] = float(meas["f_peak_oct"])
-            meas["peaking_db_interp"] = float(meas["peaking_db"])
-            raw["d_f_peak_octaves"] = 0.0
-        else:
-            raw["peak_interp_status"] = "refused"
+    annotate_interpolated_peak(meas, raw, pt)
 
     if geo is not None:
         # The REALISED passive values, not the requested ones. The reward and
@@ -679,6 +637,78 @@ INTERP_KEYS: tuple[tuple[str, str], ...] = (
     ("f_peak_oct", "f_peak_oct_interp"),
     ("peaking_db", "peaking_db_interp"),
 )
+
+
+def annotate_interpolated_peak(meas: dict, raw: Optional[dict], pt) -> None:
+    """Add the parallel `_interp` pair to `meas`, in place. **One definition.**
+
+    ADDITIVE, ALWAYS. `f_peak_oct` and `peaking_db` are left exactly as they
+    were; these are the parallel pair, and a caller who wants the refined
+    objective has to swap them explicitly through `meas_with_interpolated_peak`
+    (or `scored_meas`). That is the whole safety argument for G74: a reward
+    computed from an un-swapped `meas` is bit-identical with the flag on or
+    off, so no published number can move.
+
+    The keys are present ONLY when the interpolation succeeded, so "absent"
+    means "refused" and never "equal to the grid value" — G85's shape of
+    mistake, a sentinel read as a measurement.
+
+    **Why this is a function and not four lines inside `evaluate`.** Session
+    22u found `exp_g4_verify.verify_full` — the 135-point compliance matrix
+    every S8 and margin number is reported on — scoring `pt.f_pk_hz`, the
+    QUANTISED peak, while `verify()` beside it scored the interpolated one.
+    Two verification paths in one file disagreeing about which peak they read
+    is rule 9's failure (exactly one definition, referenced, never redeclared),
+    and the cost was not the 0.15-lattice-step error in the headline margin: it
+    was that the lattice collapses six physically distinct corners onto one
+    tied value, so the matrix could not say WHICH corner binds.
+
+    `raw` may be `None` for a caller that keeps no bookkeeping dict; the `meas`
+    side is identical either way.
+    """
+    if pt.peak_interp is None:                  # the flag was off; nothing to add
+        return
+    if raw is not None:
+        raw["peak_interp_ok"] = bool(pt.peak_interp.get("ok"))
+        raw["peak_interp_reason"] = pt.peak_interp.get("reason")
+        raw["peak_interp_edge"] = pt.peak_interp.get("edge")
+        raw["peak_interp_curvature_db"] = pt.peak_interp.get("curvature_db")
+    if pt.has_interp_peak:
+        meas["f_peak_oct_interp"] = f_peak_octaves(float(pt.f_pk_interp_hz))
+        meas["peaking_db_interp"] = float(pt.peaking_interp_db)
+        if raw is not None:
+            raw["peak_interp_status"] = "vertex"
+            raw["f_pk_interp_hz"] = float(pt.f_pk_interp_hz)
+            raw["g_pk_interp_db"] = float(pt.g_pk_interp_db)
+            raw["d_f_peak_octaves"] = float(pt.d_f_peak_octaves)
+    elif pt.peak_interp.get("edge") == "bottom":
+        # **THE MAXIMUM IS AT THE BOTTOM OF THE WINDOW, AND THE LATTICE
+        # VALUE IS THEN EXACT RATHER THAN APPROXIMATE.** 10 MHz is a grid
+        # point AND the boundary, so `meas ac MAX` reported the true
+        # maximum of the searched interval; there is no sub-grid position
+        # to find and nothing has been rounded. Carrying the lattice pair
+        # forward is the RIGHT answer here, not a fallback.
+        #
+        # WHY THE TWO EDGES ARE TREATED DIFFERENTLY, since geometrically
+        # they are the same situation. It mirrors a decision this repo
+        # already made deliberately and wrote down: `peak_is_sweep_edge`
+        # is the TOP half of `has_interior_peak` only, because a response
+        # still rising at 20 GHz has a FICTITIOUS peak (G44) while a
+        # monotonically falling one has a real, correctly measured, merely
+        # useless one. `validate` rejects the first and accepts the second,
+        # and its comment records why: rejecting the second erased the
+        # reward gradient over the whole low-peaking region of the box,
+        # which is where a randomly initialised policy starts. Refusing
+        # these designs on the interpolated path would rebuild exactly that
+        # hole, one layer up — the interpolated arm would see an invalid
+        # floor where the discrete arm sees a large, graded S3 miss.
+        meas["f_peak_oct_interp"] = float(meas["f_peak_oct"])
+        meas["peaking_db_interp"] = float(meas["peaking_db"])
+        if raw is not None:
+            raw["peak_interp_status"] = "boundary_bottom_lattice_is_exact"
+            raw["d_f_peak_octaves"] = 0.0
+    elif raw is not None:
+        raw["peak_interp_status"] = "refused"
 
 
 def meas_with_interpolated_peak(meas: Optional[Mapping[str, float]]) -> dict:
@@ -749,12 +779,31 @@ def scoring_meas(ev: "EvalResult", ac_peak_interp: bool) -> Optional[dict]:
     Reversible in one argument if a human decides otherwise; nothing in the
     ranking can turn on 0.022 % of the population either way.
     """
-    if not ac_peak_interp or ev.meas is None:
-        return ev.meas
+    return scored_meas(ev.meas, ac_peak_interp)
+
+
+def scored_meas(meas: Optional[Mapping[str, float]],
+                ac_peak_interp: bool) -> Optional[dict]:
+    """`scoring_meas`'s rule, at the level of a measurement vector.
+
+    `scoring_meas` takes an `EvalResult` because that is what the four search
+    arms and the RL env hold. **`verify_full` holds no `EvalResult`** — it runs
+    the G2 closed-loop chain, not the search evaluator, because three of the
+    eleven rows are not in the search's measurement vector. Before session 22u
+    that meant it scored the lattice peak while `verify()` beside it scored the
+    interpolated one. Splitting the rule out here rather than re-implementing
+    the two lines there is rule 9: one definition, referenced.
+
+    Flag off returns the argument itself, unwrapped and uncopied, so the
+    identity property `test_scoring_meas_is_the_identity_when_the_flag_is_off`
+    pins survives the split.
+    """
+    if not ac_peak_interp or meas is None:
+        return meas                                     # type: ignore[return-value]
     try:
-        return meas_with_interpolated_peak(ev.meas)
+        return meas_with_interpolated_peak(meas)
     except ValueError:
-        return dict(ev.meas)
+        return dict(meas)
 
 
 def interp_was_refused(ev: "EvalResult") -> bool:
@@ -859,6 +908,8 @@ __all__: Sequence[str] = (
     "Verdict", "EvalResult", "SpiceBudget", "CrossCheck",
     "evaluate", "validate", "build_point", "geometry_tag",
     "independent_recompute", "cross_check_sample",
+    "annotate_interpolated_peak", "meas_with_interpolated_peak",
+    "scoring_meas", "scored_meas", "interp_was_refused", "INTERP_KEYS",
     "G_DB_LIMITS", "F_PEAK_HZ_LIMITS", "NOISE_VRMS_LIMITS",
     "I_SUPPLY_A_LIMITS", "RAIL_SLACK_V",
 )
