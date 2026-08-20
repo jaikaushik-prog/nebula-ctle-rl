@@ -1,9 +1,10 @@
 # CONTINUE_HERE.md — the brief for the next agent
 
-**Rewritten 2026-08-20, at the end of session 22s.** Supersedes the
-2026-08-19 version, which was written at the end of session 22i and is now
-wrong in its headline: it says the eye is unverifiable and that corners are the
-only remaining niche for RL. The first is no longer true. The second still is.
+**Updated 2026-08-20 at the end of session 22u.** The 22s version's headline —
+*"11 of 11 rows PASS at 135 points"* — **has been retracted.** It was measured
+on the coarse frequency lattice; on the corrected instrument that design passes
+10 of 11. Read §4, which is now the outcome rather than the warning. Everything
+else in the 22s brief stands.
 
 **26 days to the 15 Sept deadline. Demo 25 Sept at BITS Goa.**
 
@@ -19,8 +20,8 @@ decided, what is open, and exactly what to do next.
 |---|---|---|---|
 | 1 | **this file**, §§1–9 | the situation and the direction | 20 min |
 | 2 | `CLAUDEwa.md` §§1–3, §7, §8 | the contract, the spec table, the gates, the standing rules | 20 min |
-| 3 | `HANDOFF.md` §9 gotchas **G100–G107** | the eight traps found in the last four sessions | 25 min |
-| 4 | `nebula/PREDICTIONS.md` entries **18–21** | how this project makes claims, and four recent scorings | 30 min |
+| 3 | `HANDOFF.md` §9 gotchas **G100–G108** | the nine traps found in the last five sessions | 25 min |
+| 4 | `nebula/PREDICTIONS.md` entries **18–23** | how this project makes claims; **22 and 23 are session 22u's retraction and re-run** | 40 min |
 | 5 | `nebula/CHANNEL_MODEL.md` §§6, 8 + the DFE table | **four measured results that are NOT in the report** — see §6.3 | 20 min |
 | 6 | `nebula/BASELINES.md` §§13, 14 | the benchmark and the budget ladder | 20 min |
 
@@ -45,8 +46,12 @@ drive handling are one knob read in opposite directions** (G103). Session 22r
 then found designs in the same box whose eye computes at all 135 points. The
 cause was never the circuit: **`V1_SPECS`, which every published search scores,
 contains S3 and not S8, and the sets containing S8 had never been searched on.**
-Session 22s asked for both at once and got **11 of 11 rows passing at 135
-points, zero failures**, eye 377–539 mV against a 100 mV floor.
+Session 22s asked for both at once and reported **11 of 11 rows passing at 135
+points**. **Session 22u retracted that** (§4): it was scored on the coarse
+frequency lattice, and so was the objective that found it. The eye result is
+real and got better — the re-run's design measures an eye at **135 of 135
+points, 368.8–497.3 mV** — but **no design currently meets all eleven rows at
+all 135 points**, and the gap is 0.0076 octaves of centre frequency.
 
 **The reward's real defect is the opposite of the one everyone assumes.** It is
 a maximin, so exceeding a met spec buys nothing — `S5_noise` binds **0.0 %** of
@@ -71,7 +76,7 @@ fixing an objective/termination mismatch and it still did not win.
 | G1 | 3 Aug | hand reference meets S3–S7 at TT | **substantially passed** (`device/spice/g1_handdesign.cir`, generic BSIM4 1.2 V card — **never re-measured on SKY130 and never in the benchmark table**) |
 | G2 | 20 Aug | one full evaluation end to end | **PASSED** (`G2_RESULTS.md`) |
 | G3 | 3 Sep | RL beats random **and** grid at TT | **FAILS one clause of two.** Grid clause MET (separable win, 22n). Random clause NOT met — indistinguishable, not a loss |
-| G4 | 12 Sep | corner-robust design generated and verified | **MET** 2026-08-20, 23 days early. Found by uniform random, not by the policy |
+| G4 | 12 Sep | corner-robust design generated and verified | **MET** 2026-08-20, 23 days early, and **re-confirmed on the corrected instrument in 22u**. Found by uniform random, not by the policy. Note it is `V1_SPECS` (7 rows); the **eleven**-row claim does not hold for any design — §4.5 |
 | G5 | 15 Sep | submitted | — |
 
 **Both competition deliverables exist:** `python -m nebula.design` (specs in,
@@ -83,6 +88,8 @@ by two commands.
 ---
 
 ## 3. What sessions 22q–22s established
+
+**Read §4 first.** 3.3 below is retained as written and is partly retracted.
 
 ### 3.1 The linear-range mechanism (22q, G103)
 
@@ -119,18 +126,19 @@ point** (2.5 GHz, 535 mVpp) rather than its stated 100 MHz / 200 mVpp.
 `exp_joint_search.py`, local CMA-ES seeded at 22r's most linear S3-valid
 design, 400 simulations.
 
-| | delivered | joint winner |
+| | delivered | joint winner, **as reported in 22s** |
 |---|---|---|
-| rows passing at 135 points | 9 of 11 | **11 of 11** |
-| rows failing | 0 | **0** |
+| rows passing at 135 points | 9 of 11 | ~~11 of 11~~ → **10 of 11** (22u) |
+| rows failing | 0 | ~~0~~ → **1**, `S3_f_peak` at 6 of 135 |
 | eye measurable at | 0 of 135 | **98 of 135** |
 | eye height / width | — | 377.1–539.4 mV / 0.844–0.875 UI |
 | HD3 @ 2.5 GHz, 535 mVpp | −17.4 dBc **FAILS** | **−42.7 dBc** |
 | peaking / power | 9.78 dB / 2.16 mW | 6.37 dB / 6.56 mW |
 
-**The qualifier is not small: the eye is measurable at 98 of 135.** All 37 gaps
-are at corners the 3-corner search screen has no member of, 27 of them at
-VDD 0.95. That is the **fourth** independent measurement of that blind spot.
+**Struck through rather than deleted, per rule 10.** The eye numbers stand; the
+row counts were scored on the lattice and §4 has the corrected ones. All 37
+eye gaps are at corners the 3-corner screen has no member of, 27 at VDD 0.95 —
+the **fourth** measurement of that blind spot, and 22u made it five.
 
 ### 3.4 Tunability, which contradicted its own framing (22s)
 
@@ -150,42 +158,91 @@ Levels are **derived**, not chosen: `1 + ceil(sensitivity / 0.0664386)`, the
 
 ---
 
-## 4. **READ THIS BEFORE TOUCHING THE MARGIN NUMBERS — a live defect**
+## 4. THE LATTICE DEFECT — FIXED, and it retracted a headline
 
-An external review asked for the **minimum normalised margin** to be reported
-next to every pass count. That is a good idea and **it cannot be done honestly
-today.** Measured 2026-08-20 while checking the review:
+The 22s brief carried this section as a live defect and a warning. Session 22u
+fixed it, and the fix changed a published result. **This is now the first thing
+to understand about the project's compliance numbers.**
 
-* Both the delivered design and the joint winner have a minimum normalised
-  margin of **exactly +0.0205 (2.1 % of tolerance)** on `S3_f_peak`, at
-  135 points. **They are identical** — so the review's premise that the
-  delivered design "sits at ~99 % of tolerance" is **false**, and its argument
-  against swapping designs does not hold.
-* **That 2.05 % is below the measurement's own resolution.** Both designs'
-  extreme margins land *exactly* on the `ac dec 50` lattice (indices
-  **105.000** and **112.000**). One lattice step is **13.3 %** of the
-  `S3_f_peak` tolerance, so "2.05 % of tolerance" is **0.154 lattice steps**.
-* **The cause is a disagreement inside one file.** `verify()` takes
-  `ac_peak_interp=True` and scores the interpolated peak;
-  `verify_full()` goes through `link/bridge.py:205`, which uses `pt.f_pk_hz` —
-  the **quantised** peak, i.e. exactly the defect session 22e was spent
-  removing from the benchmark (G74 / `PEAK_INTERP.md`). **The 135-point
-  compliance matrix everything is about is scored on the coarse lattice.**
+### 4.1 What was wrong (G108)
 
-**So: fix `verify_full` to score the interpolated peak BEFORE reporting any
-margin number.** This is item 1 of §6.1 and it is a prerequisite for four other
-tasks. It is not yet written up as a gotcha because it is not yet fixed —
-write it up when you fix it.
+`verify_full()` — the 135-point compliance matrix every S8 result and every
+margin number is reported on — read `pt.f_pk_hz`, the raw `ac dec 50` peak,
+while `verify()` **in the same file** scored the interpolated one. And
+`exp_joint_search.evaluate_joint`, the **objective the joint search was steered
+by**, did the same. Those were the only two sites in the repository that
+hand-built `f_peak_oct`, and they were exactly the two code paths that bypass
+`evaluator.evaluate`.
 
-**The physical finding underneath it, which is worth its own paragraph in the
-report:** at the worst corner both designs' `f_peak` reaches **1.2589 GHz**
-against S3's **1.2500 GHz** floor. **PVT spread consumes 97.9 % of S3's
-one-octave frequency window.** Every design lands at the edge because the
-window is almost exactly the size of the corner spread. That is a property of
-the process, not of any design, and it reframes "our margin is thin" as "the
-specification is thin".
+**S3's 1.2500 GHz floor falls between two lattice samples** — 1.202264 and
+1.258925 GHz, with nothing in between — so **a true peak anywhere in
+[1.230269, 1.250000) GHz is reported as 1.258925: a failing design rounded into
+a passing one, across a 1.6 %-wide band of frequency.**
 
----
+The controlled A/B, one design, one flag, same six points:
+
+    ac_peak_interp=False   +12.0205  FEASIBLE    f_peak 1.2589 GHz
+    ac_peak_interp=True     -0.0147  INFEASIBLE  f_peak 1.2437 GHz
+
+**15.2 MHz of reading error decided a shipped result.** Over 135 PVT points the
+lattice returns **15 distinct `f_peak` values; the parabola returns 135** — the
+matrix was binning the whole corner sweep into fifteen buckets, which is why it
+reported a **six-way exact tie** at its own minimum margin.
+
+### 4.2 What it retracted
+
+Session 22s's *"11 of 11 rows PASS at 135 points, zero failures"* is **10 of 11**
+on the corrected instrument, with `S3_f_peak` failing at 6 of 135. The search
+was then re-run on the corrected objective (`PREDICTIONS.md` entry 23):
+**400 simulations, zero feasible designs, best −0.0006.**
+
+### 4.3 The finding underneath, and it is the good one
+
+For the re-run's best design, over 135 points:
+
+    f_peak                                  1.2568 - 2.5132 GHz
+    that PVT span                           0.99977 octaves
+    S3's frequency window                   1.00000 octaves    <- 99.98 % FULL
+    slack at the bottom / overflow at top   0.00783 / 0.00760 oct
+    room left after a PERFECT re-centring   0.00023 oct
+
+**PVT spread fills 99.98 % of S3's frequency window.** A compliant design exists
+with two hundredths of one per cent of an octave to spare; this one misses it by
+**0.0076 octaves = 0.53 % in frequency**. One lattice step is 0.0664 octaves —
+**nine times the entire error being corrected**, which is why the reading had to
+be right. *"Our margin is thin"* is properly *"the window is exactly as wide as
+the process makes the quantity vary."*
+
+(22t's *"97.9 % of the window"* could not be reproduced by any method and is
+superseded by the measured 93.8 / 96.1 / 100.0 / 102.2 % above and in
+`PREDICTIONS.md` entry 22.)
+
+### 4.4 And the search did not fail — it solved the problem it was shown
+
+It drove its worst **screened** corner to **−0.000576**, four decimal places
+from feasible. **Three of the four real failures are at `sf`, a process corner
+the 3-corner screen has no member of**, and the true binding point is
+`sf`/1.05/0C at **−0.015150 — twenty-six times worse than anything the search
+could see.** Fifth measurement of that blind spot, and **the first with the
+correction quantified**: 0.0076 octaves, well inside what `cs` delivers at a
+measured 3.243 oct/box. That makes §5 OPEN item 2 the highest-value decision on
+the list.
+
+### 4.5 Where S9 actually stands
+
+**There is no design meeting all eleven rows at all 135 points.** Two miss by a
+hair, in opposite directions, on the same row:
+
+| | `57cba07581cd` (delivered) | `c507a3ba6f58` (re-run) |
+|---|---|---|
+| rows PASS / FAIL / NOT MEASURABLE | **9 / 0 / 2** | **10 / 1 / 0** |
+| min normalised margin | **+0.021015** (+2.1 %) | **−0.015150** (−1.5 %) |
+| binding point | `S3_f_peak` fs/0.95/125C/78fF | `S3_f_peak` sf/1.05/0C/14fF |
+| eye | **not measurable anywhere** | **135 of 135**, 368.8–497.3 mV, 0.844–0.891 UI |
+
+**G4 still stands**: it was `verify()` on `V1_SPECS`, which has always used the
+interpolated peak, and the delivered design passes 135 of 135 there. What does
+not stand is the eleven-row claim.
 
 ## 5. Decisions — made, and OPEN
 
@@ -200,14 +257,24 @@ specification is thin".
 
 ### **OPEN — human only. Do not decide these.**
 
-1. **Which design ships?** The delivered V1 design (9 rows, no eye) or the
-   joint winner (11 rows, eye at 98 of 135)? The cover of the report currently
-   **conflates the two** — it reports "11 of 11 rows" beside "135 of 135
-   points", which are different designs. This must be resolved before the PDF
-   goes out.
+1. **Which design ships — and it is now a real trade, not an artifact.**
+   §4.5 has the table. `57cba07581cd`: S3 passes at 135/135 with **+2.1 %**
+   margin, **no measurable eye anywhere**. `c507a3ba6f58`: eye passes at
+   **135/135** (368.8–497.3 mV), S3 **fails at 4/135** with −1.5 % margin.
+   Neither is eleven-for-eleven. **A third option now exists and may be the
+   right one: spend ~400 more simulations with `sf` and a low-VDD member in the
+   search screen** (OPEN item 2), because §4.4 measured that the correction
+   needed is 0.0076 octaves and the search is already at −0.000576 on the
+   corners it can see. *The report's cover conflation is fixed and every
+   compliance cell is now loaded from an artifact.*
 2. **Extend the search screen with a mixed (`sf`/`fs`) and a low-VDD (0.95)
-   member?** Four independent measurements now support it: 8/135
-   (`G4_RESULTS.md`), 23/135 and 45/135 (`design.py`), 37/135 (joint search).
+   member? — NOW THE HIGHEST-VALUE DECISION ON THIS LIST.** **Five** independent
+   measurements: 8/135 (`G4_RESULTS.md`), 23/135 and 45/135 (`design.py`),
+   37/135 (22s), and **4/135 in 22u where three of the four failures are at
+   `sf` and the search had driven its screened worst case to −0.000576.** It is
+   no longer "the screen has a blind spot"; it is **"the screen's blind spot is
+   the only thing between this project and an eleven-row design, and the gap is
+   0.0076 octaves."**
    **Cost:** more corners per design changes the benchmark's per-design cost,
    so keep the *benchmark* screen and the *delivery* screen separable or you
    trigger a `BASELINES.md` §7f re-run of every published arm.
@@ -240,9 +307,11 @@ below is mine, after that verification.
 
 ### 6.1 Do first — cheap, and one is a correctness bug
 
-1. **Fix `verify_full` to score the interpolated peak** (§4). Prerequisite for
-   every margin number. Add a test that the two verification paths agree on
-   `f_peak` for the same design, and watch it go red against today's code.
+1. ~~**Fix `verify_full` to score the interpolated peak**~~ — **DONE, session
+   22u**, and it retracted a headline (§4). The same defect was in
+   `exp_joint_search.evaluate_joint` and was found by the gate written for the
+   first one. `nebula/tests/test_verify_paths_agree.py` (14 tests) pins the
+   seam, including `test_no_hand_built_f_peak_oct_anywhere_in_the_package`.
 2. **Report numbering and cross-references.** Figures 6 and 7 each appear
    **twice**, and the sequence is out of document order
    (1, 2, 7, 3, 4, 5, 6, 6, 7, 8, 9, 10). "section 5a" does not exist. Three
@@ -251,16 +320,15 @@ below is mine, after that verification.
    Renumber from a single source of truth; add a test that numbers are unique
    and contiguous and that every internal cross-reference resolves.
 3. **Point `llm/grounding.py`'s numeric-literal checker at report prose.**
-   `build_pdf._facts()` generates the cover counters, but the body carries
-   hand-typed literals — line 706 says *"Seventeen entries"* and line 710
-   *"a failure catalogue of 101 entries"* against actual values of **21** and
-   **107**. Both understate us, which makes it worse: it shows the "no number
-   is typed by hand" claim does not cover the body. A miss must **fail the
-   build**, not repair the text. Add a red-gate test that injects a wrong
-   literal. This is also demoable — the grounding checker turned on its own
-   report.
-4. **Fix the cover conflation** (§5 OPEN item 1) once the owner says which
-   design ships, and put the eye-measurability qualifier **on the cover**.
+   **Still open, and now much better motivated.** The three stale literals 22t
+   found are corrected and the whole compliance table is generated (22u) — but
+   a hand-typed number **stated a retracted result for a day**, which is the
+   argument in one sentence. A miss must **fail the build**, not repair the
+   text. Add a red-gate test that injects a wrong literal. Demoable: the
+   grounding checker turned on its own report.
+4. ~~**Fix the cover conflation**~~ — **DONE, 22u.** Both cover lines name one
+   design and are read from its artifact, and the retraction is a callout in
+   the body. What remains is the owner's call on which design ships (§5 item 1).
 
 ### 6.2 High value
 
@@ -361,7 +429,7 @@ below is mine, after that verification.
 conda activate nebula          # ngspice 41; use ngspice_con.exe, NOT ngspice.exe (G20)
                                # the TEST SUITE runs on the SYSTEM python (conda env has no torch)
 
-# tests — before and after ANY change, from the repo root. 1653 tests, ~4 min
+# tests — before and after ANY change, from the repo root. 1667 tests, ~4 min
 python -m pytest tests nebula/tests -q -m "not slow"
 
 # the deliverables
@@ -377,6 +445,8 @@ python -m nebula.experiments.exp_linear_pareto --run      # 1590 sims, ~9 min
 python -m nebula.experiments.exp_hd3_amplitude --run      # 31 sims
 python -m nebula.experiments.exp_sweep_cost --run         # ~90 sims + 2 timed design runs
 python -m nebula.experiments.exp_joint_search --run       # 400 sims, ~15 min
+python -m nebula.experiments.exp_joint_search --verify    # 135 points, ~0.8 min
+python -m nebula.experiments.exp_g4_verify --full         # 135 points x N, ~2.6 min
 python -m nebula.experiments.exp_tunable_trade --run --base joint   # ~20 sims
 
 # the benchmark
@@ -423,6 +493,12 @@ the cold cache).
 * **G107** — **"cannot be scored" is not "fails."** Collapsing them either
   kills a search or fakes a pass. Grade the invalid band by evaluability;
   **never loosen the gate.**
+* **G108** — **a QUANTISED measurement rounds a marginal failure into a pass**
+  whenever the spec threshold falls between two samples. S3's 1.2500 GHz floor
+  sits between the `ac dec 50` samples 1.202264 and 1.258925 GHz, so every true
+  peak in a **1.6 %-wide band** was reported as passing. **The tell is cheap:
+  count the distinct values** — 15 across 135 PVT points where the refined
+  reading gives 135. Same family as G105.
 
 **Three process mistakes worth not repeating:**
 
@@ -442,7 +518,7 @@ the cold cache).
 1. **Update `HANDOFF.md` in the same commit as any change.** A change without a
    handoff update is incomplete.
 2. **Run the suite before and after.** `python -m pytest tests nebula/tests -q
-   -m "not slow"` — **1653 tests, ~4 min**. Report the count both times. Never
+   -m "not slow"` — **1667 tests, ~4 min**. Report the count both times. Never
    commit with failures.
 3. **Pre-register anything whose result could be argued for afterwards.**
    `PREDICTIONS.md`, with acceptance bands and falsifiers, **committed before
@@ -497,30 +573,41 @@ the cold cache).
 | `tests/test_linear_and_sweep_cost.py` | 19 tests |
 | `PREDICTIONS.md` entries 18–21 | one falsified external prediction, three scored pre-registrations |
 | `HANDOFF.md` §9 | gotchas **G102–G107** |
+| **— session 22u —** | |
+| `rl/evaluator.py` | `annotate_interpolated_peak`, `scored_meas` — **the one definition both verification paths and the joint objective now reach** |
+| `experiments/exp_g4_verify.py` | `verify_full(ac_peak_interp=True)`; five per-point audit fields; the artifact states its own instrument |
+| `experiments/exp_joint_search.py` | `--verify` (the 135-point checklist, promised since 22s and missing); the objective now scores the interpolated peak |
+| `experiments/joint_verify_full_results.json` | **new** — the joint design's checklist, so the report stops typing it |
+| `report/build_pdf.py` | every compliance cell **loaded**, the retraction callout, the 99.98 %-full-window table |
+| `tests/test_verify_paths_agree.py` | 14 tests, four watched go red |
+| `PREDICTIONS.md` entries 22–23 | the lattice defect, and the re-run: **7 hits, 5 misses across the two** |
+| `HANDOFF.md` §9 | gotcha **G108** |
 
 ---
 
 ## 11. The one-paragraph version, if you read nothing else
 
-**The eye was never blocked by the circuit — it was blocked by the objective**,
-which contains S3 and not S8, so nothing had ever asked for both. Asking for
-both produced a design passing **11 of 11 rows at 135 points with zero
-failures**, whose eye is measurable at **98** of them; all 37 gaps are at
-corners the 3-corner search screen has no member of, which is now the
-**fourth** measurement of that blind spot and the best-supported open decision
-on the list. **Before you report any margin number, read §4:** the 135-point
-compliance matrix is scored on the coarse `ac dec 50` lattice, so today's
-"2.1 % of tolerance" is **0.154 lattice steps** — below the instrument — and
-the two designs are identical on it, which falsifies the external review's
-premise that we would be trading a 99 % margin for a 2 % one. The physical
-finding underneath is better than the artifact: **PVT spread consumes 97.9 % of
-S3's one-octave frequency window**, so every design lands at the edge because
-the specification is thin, not because the design is. RL remains a null and is
-**correctly** a null — the spec manifold is 1-D, and on a 1-D manifold a lookup
-table is the optimal policy — but the one experiment that could still produce
-an affirmative result, **corner-aware RL at scale**, is built, tested, deferred
-three times, and is now first. After that, the highest value in the project is
-writing: **four measured results in `CHANNEL_MODEL.md` never reached the
-report**, and one of them — that a 1-tap DFE is sufficient because 31.2 % of
-the residual sits beyond 20 UI — *derives the topology the brief mandates*
-instead of assuming it.
+**The compliance matrix was reading the peak frequency off a grid too coarse to
+answer the question it was being asked, and fixing it retracted this project's
+headline.** `verify_full` scored `pt.f_pk_hz` — the raw `ac dec 50` peak —
+while `verify()` in the same file scored the interpolated one, and so did the
+objective the joint search was steered by. S3's 1.2500 GHz floor falls between
+two lattice samples, so **every true peak in a 1.6 %-wide band was rounded from
+a fail into a pass**; on one design with one flag changed, `+12.0205 FEASIBLE`
+becomes `−0.0147 INFEASIBLE`. Session 22s's *"11 of 11 rows at 135 points"* is
+**10 of 11**, and re-running the search on the corrected objective found **zero
+feasible designs in 400 simulations**. **That is a better result than a pass
+would have been**, because of what it measured: over 135 PVT points `f_peak`
+spans **0.99977 octaves against a specification window of exactly 1.00000** —
+**the spread fills 99.98 % of the window** — so a compliant design exists with
+0.00023 octaves to spare and the re-run misses it by **0.0076 octaves, 0.53 %
+in frequency**. One lattice step is 0.0664 octaves, nine times that error,
+which is why the instrument decided the verdict. **And the search did not
+fail:** it drove its worst *screened* corner to −0.000576 while three of its
+four real failures sit at `sf`, a corner the 3-corner screen has no member of —
+the **fifth** measurement of that blind spot and the first with the correction
+quantified. So the eye, unverifiable for months, is now measured and passing at
+**135 of 135 points** on a design that misses S3 by half a per cent, while the
+delivered design passes S3 at 135 of 135 and has no measurable eye at all.
+**Nothing meets all eleven rows yet, the gap is one corner in a search screen,
+and adding it is the highest-value decision on the list.**

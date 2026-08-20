@@ -9370,3 +9370,98 @@ measurement vector is a second definition of the objective, and the two places
 this repository has one are the two places it went wrong.** Both now route
 through `annotate_interpolated_peak` + `scored_meas`, and
 `test_no_hand_built_f_peak_oct` fails on any new occurrence.
+
+#### THE RE-RUN -- 400 simulations on the corrected objective, and it is a better result than a pass
+
+Pre-registered as `PREDICTIONS.md` entry 23, six predictions, committed before
+the run. **Two hits, four misses, and the four misses are the finding.**
+
+**Q1 hit, and it is the cleanest experiment in the session.** One design, one
+flag, the same six points, the same code:
+
+    ac_peak_interp=False   reward +12.0205  FEASIBLE    f_peak 1.2589 GHz  S3_f_peak +0.010264
+    ac_peak_interp=True    reward  -0.0147  INFEASIBLE  f_peak 1.2437 GHz  S3_f_peak -0.007325
+
+**15.2 MHz of reading error, and it is the entire difference between a shipped
+result and a retracted one.** That is the controlled A/B G108 rests on.
+
+**Q2 and Q3 missed: 400 simulations, ZERO feasible designs**, best **-0.0006**.
+I had put Q2 at 0.85 confidence.
+
+**Q4 missed and INVERTED, which is the result.** I predicted failures at slow,
+hot, heavily-loaded, unscreened corners -- the end the old design fell through.
+Measured:
+
+    sf  1.05   0C  13.6fF   f_peak 2.5132 GHz   -0.015150   unscreened
+    sf  1.00   0C  13.6fF   f_peak 2.5077 GHz   -0.008918   unscreened
+    sf  0.95   0C  13.6fF   f_peak 2.5023 GHz   -0.002647   unscreened
+    ff  1.05   0C  13.6fF   f_peak 2.5005 GHz   -0.000576   SCREENED
+
+**Cold, LIGHT load, and at the TOP of S3's window.** The search escaped the
+1.25 GHz floor and ran straight into the 2.50 GHz ceiling. **`f_peak` is pinned
+against both ends at once.**
+
+#### THE NUMBER THIS SESSION EXISTS FOR
+
+    f_peak over 135 PVT points              1.2568 - 2.5132 GHz
+    that PVT span                           0.99977 octaves
+    S3's frequency window                   1.00000 octaves   <- 99.98 % FULL
+    slack at the bottom                     0.00783 oct
+    overflow at the top                     0.00760 oct
+    room left after a PERFECT re-centring   0.00023 oct
+
+**PVT spread fills 99.98 % of S3's frequency window.** A compliant design exists
+with two hundredths of one per cent of an octave to spare, and this one misses
+it by **0.0076 octaves = 0.53 % in frequency**. So S3 is not unsatisfiable; it
+is satisfiable by a hair, and **one lattice step is 0.0664 octaves -- nine times
+the entire error being corrected.** That is why the frequency reading had to be
+right, and it is the honest form of every thin-margin sentence in this project:
+**the margin is thin because the window is.**
+
+#### THE SEARCH DID NOT FAIL -- it solved the problem it was shown
+
+It drove its worst **screened** corner to **-0.000576**, four decimal places
+from feasible. **Three of the four real failures are at `sf`, which the
+3-corner screen has no member of**, and the true binding point is `sf`/1.05/0C
+at **-0.015150 -- twenty-six times worse than anything the search could see.**
+
+**Fifth independent measurement of the screen blind spot** (8/135 `G4_RESULTS`;
+23 and 45/135 `design.py`; 37/135 session 22s; 4/135 here) and **the first with
+the required correction quantified**: 0.0076 octaves, well inside what `cs`
+delivers at a measured 3.243 oct/box. `CONTINUE_HERE.md` §5 OPEN item 2 now has
+a number rather than a preference behind it.
+
+#### AND THE EYE IS NOW VERIFIED EVERYWHERE
+
+Q5 missed **upward**: predicted 98 +/- 15 of 135, measured **135 of 135, all
+passing** -- **368.8 - 497.3 mV** against a 100 mV floor and **0.844 - 0.891 UI**
+against 0.4. The eye was unverifiable for months, then verifiable at 98 points,
+and is now verified at **every corner S9 names**.
+
+#### WHERE THE PROJECT ACTUALLY STANDS ON S9
+
+**There is no design meeting all eleven rows at all 135 points.** There are two
+that each miss by a hair, in opposite directions, on the same row:
+
+    delivered  57cba07581cd   S3 passes 135/135, +2.1 % margin, eye NOT MEASURABLE anywhere
+    re-run     c507a3ba6f58   eye passes 135/135, S3 fails at 4/135, -1.5 % margin
+
+and one measurement saying the gap is **0.0076 octaves of centre frequency at a
+corner the screen cannot see.** G4 was recorded as MET on 2026-08-20 on the
+delivered design and **that verdict still stands** -- it was `verify()` on
+`V1_SPECS`, which has always used the interpolated peak, and it passes 135 of
+135. What does not stand is the eleven-row claim.
+
+#### One more two-definitions defect, created and removed in the same session
+
+Fixing the scored margin left `JointEval.f_peak_hz` reporting `dev.f_peak_hz`,
+so the console printed *"f_peak 1.2589 GHz"* beside a margin computed at
+1.2437 -- **two fields of one record disagreeing about the same run**, G107's
+second half, introduced by my own fix. It now reports the peak it was scored
+on. Noticed only because the Q1 A/B printed both fields side by side, which is
+an argument for printing them side by side.
+
+**Tests 1653 -> 1667.** New gates: four watched go red against the pre-fix
+`verify_full` (a `KeyError` and three source assertions), plus
+`test_no_hand_built_f_peak_oct_anywhere_in_the_package`, which **immediately
+caught a second occurrence I had missed** in `exp_g4_verify.py:361`.

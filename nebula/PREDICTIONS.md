@@ -3949,3 +3949,101 @@ deliverable the external review asked for and which entry 22 unblocked.
 a design meeting all eleven rows at all 135 points**, and the argument for a
 fifth and sixth screen corner becomes an argument with a number attached rather
 than a preference.
+
+### OUTCOME — run 2026-08-20, 400 simulations in 15.5 min plus a 0.8 min verification
+
+**Two hits, four misses — and the four misses are the result.** The re-run did
+not produce a feasible design, and *why* it did not is the most useful thing
+this session measured.
+
+| | prediction | measured | |
+|---|---|---|---|
+| Q1 | the old winner is now INFEASIBLE on its own screen | **+12.0205 FEASIBLE → −0.0147 INFEASIBLE** | **HIT** |
+| Q2 | a screen-feasible design is found (conf. 0.85) | **0 feasible in 400**; best **−0.0006** | **MISS** |
+| Q3 | 11 of 11 rows at 135 points (conf. 0.55) | **10 of 11**, `S3_f_peak` fails at 4 | **MISS** |
+| Q4 | failures at slow-hot, heavy load, unscreened | **cold, LIGHT load; 1 of 4 SCREENED** | **MISS, inverted** |
+| Q5 | eye measurable at 98 ± 15 of 135 | **135 of 135**, all passing | **MISS, upward** |
+| Q6 | peaking in 6.0–8.5 dB | **7.18 dB** | **HIT** |
+
+### Q1, which is the cleanest experiment in this session
+
+One design, one flag, the same six points, the same code:
+
+    ac_peak_interp=False   reward +12.0205  FEASIBLE    f_peak 1.2589 GHz  S3_f_peak +0.010264
+    ac_peak_interp=True    reward  -0.0147  INFEASIBLE  f_peak 1.2437 GHz  S3_f_peak -0.007325
+
+**15.2 MHz of reading error, and it is the entire difference between a shipped
+result and a retracted one.** This is the controlled A/B that G108 rests on.
+
+### Q4 IS THE FINDING, AND IT INVERTED
+
+I predicted the failures would be **slow, hot and heavily loaded** — the end
+the previous design failed at. Measured:
+
+    sf  1.05    0C  13.6fF   f_peak 2.5132 GHz   -0.015150   unscreened
+    sf  1.00    0C  13.6fF   f_peak 2.5077 GHz   -0.008918   unscreened
+    sf  0.95    0C  13.6fF   f_peak 2.5023 GHz   -0.002647   unscreened
+    ff  1.05    0C  13.6fF   f_peak 2.5005 GHz   -0.000576   SCREENED
+
+**Cold, light-load, and at the TOP of S3's window.** The search escaped the
+1.25 GHz floor the old design fell through and ran straight into the 2.50 GHz
+ceiling. **The peak frequency is pinned against both ends at once**, which is
+the physical consequence of a fact this project already had and had not
+connected: the PVT spread of `f_peak` is essentially the width of the entire
+specification.
+
+### THE NUMBER THIS SESSION EXISTS FOR
+
+For the re-run's best design, over 135 PVT points:
+
+    f_peak            1.2568 - 2.5132 GHz
+    PVT span          0.99977 octaves
+    S3's window       1.00000 octaves       <- 99.98 % FULL
+    slack at bottom   0.00783 oct
+    overflow at top   0.00760 oct
+    room left after a perfect re-centring   0.00023 oct
+
+**A design that fits exists, and this one misses it by 0.0076 octaves — 0.53 %
+in frequency.** S3 is not unsatisfiable; it is satisfiable with **0.02 % of an
+octave to spare**, and the whole remaining job is to shift the centre by half a
+per cent. That reframes every "our margin is thin" sentence in this project:
+**the margin is thin because the specification is exactly as wide as the process
+makes the quantity vary**, and the previous instrument could not resolve the
+0.0076 octaves that decide it (one lattice step is 0.0664).
+
+### WHY THE SEARCH COULD NOT DO IT — the fifth measurement of the screen blind spot
+
+The search optimised to **−0.000576 at `ff`/1.05/0C**, which *is* a screen
+corner: it drove its screened worst case to within **0.06 % of tolerance** of
+feasible. **Three of the four real failures are at `sf`, which the 3-corner
+screen has no member of**, and the true binding point is `sf`/1.05/0C at
+−0.015150 — twenty-six times worse than anything the search could see.
+
+**The search did not fail. It solved the problem it was shown, to four
+decimal places, and the problem it was shown was missing a corner.**
+
+That is now the fifth independent measurement of this blind spot (8/135 in
+`G4_RESULTS.md`; 23 and 45/135 in `design.py`; 37/135 in session 22s; 4/135
+here) and the first one where **the required correction is quantified**:
+0.0076 octaves, well inside what `cs` delivers at a measured 3.243 octaves per
+box width. `CONTINUE_HERE.md` §5 OPEN item 2 now has a number attached.
+
+### Q5's miss is the good news, and it is worth its own line
+
+**The eye is measurable at 135 of 135 points and passes at every one**:
+**368.8 – 497.3 mV** against a 100 mV floor and **0.844 – 0.891 UI** against
+0.4. The previous design managed 98 of 135. So the eye — unverifiable for
+months, then verifiable at 98 points — is now verified **everywhere, at every
+corner S9 names**, on a design that misses S3 by half a per cent of frequency.
+
+### The honest summary
+
+**This project does not currently have a design meeting all eleven rows at all
+135 points.** It has two designs that each miss by a hair, in opposite
+directions, on the same row:
+
+    delivered  57cba07581cd   S3 passes at 135/135, +2.1 % margin, eye NOT MEASURABLE anywhere
+    re-run     c507a3ba6f58   eye passes at 135/135, S3 fails at 4/135, -1.5 % margin
+
+and one measurement saying the gap between them is **0.0076 octaves** of centre
+frequency at a corner the search screen cannot see.

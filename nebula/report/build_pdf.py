@@ -72,13 +72,32 @@ def _facts() -> dict:
 
 def _rows_cells(delivered: dict, joint: dict) -> dict:
     """The compliance counters for the two designs, from their own artifacts."""
+    from nebula.rl.reward_v1 import TOL
+
     def cell(r: dict) -> dict:
         eye = r["per_spec"]["S8_eye_h"]
+        scored = [p for p in r["points"] if p["ok"]]
+        # **The minimum normalised margin, and WHERE.** The deliverable an
+        # external review asked for and that G108 blocked until this session:
+        # a margin quoted off a lattice that quantises S3_f_peak at 13.3 % of
+        # its own tolerance is not a margin.
+        nm, row, pt = min(((p["margins"][k] / TOL[k], k, p)
+                           for p in scored for k in p["margins"]),
+                          key=lambda t: t[0])
+        eh = [p["eye_h_v"] for p in scored if p.get("eye_h_v") is not None]
+        ew = [p["eye_w_ui"] for p in scored if p.get("eye_w_ui") is not None]
         return {
             "passing": f"{r['n_rows_passing']} of {r['n_spec_rows']}",
             "failing": str(r["n_rows_failing"]),
             "not_measurable": str(r["n_rows_not_measurable"]),
             "eye_at": f"{eye['checked_at']} of {r['n_points']}",
+            "eye_h": (f"{min(eh) * 1e3:.1f} - {max(eh) * 1e3:.1f} mV "
+                      f"(spec > 100)" if eh else "not measurable"),
+            "eye_w": (f"{min(ew):.3f} - {max(ew):.3f} UI (spec > 0.4)"
+                      if ew else "not measurable"),
+            "min_margin": f"{nm:+.6f}  ({nm * 100:+.1f} %)",
+            "binds": (f"{row} at {pt['corner']}/{pt['vdd_scale']:.2f}/"
+                      f"{pt['temp_c']:.0f}C/{pt['cl_f'] * 1e15:.0f}fF"),
         }
     return {"delivered": cell(delivered), "joint": cell(joint)}
 
@@ -485,33 +504,66 @@ def build() -> Path:
                ["rows not measurable", _d["not_measurable"],
                 _j["not_measurable"]],
                ["eye measurable at", _d["eye_at"], _j["eye_at"]],
-               ["eye height", "-", "377.1 - 539.4 mV  (spec > 100)"],
-               ["eye width", "-", "0.844 - 0.875 UI  (spec > 0.4)"],
-               ["HD3 at 2.5 GHz, 535 mVpp", "-17.4 dBc  FAILS", "-42.7 dBc"],
-               ["peaking", "9.78 dB", "6.37 dB"],
-               ["power", "2.16 mW", "6.56 mW"]],
+               ["eye height", "-", _j["eye_h"]],
+               ["eye width", "-", _j["eye_w"]],
+               ["min normalised margin", _d["min_margin"], _j["min_margin"]],
+               ["  ... on this row, at this point", _d["binds"], _j["binds"]]],
               [46, 40, 54])
-    pdf.body(
-        "**The peak frequency was bought with peaking, as predicted before the "
-        "run**: 9.15 dB down to 6.37 dB, still comfortably inside S3's band. "
-        "The 37 points where the eye cannot be computed are **all at corners "
-        "the search screen does not contain** -- 27 of them at the low supply, "
-        "where output headroom is tightest. That is the fourth independent "
-        "measurement of this screen's blind spot in this project, and it is an "
-        "argument for a mixed corner.")
     pdf.callout(
         "RETRACTION, AND IT IS THE MOST IMPORTANT ONE IN THIS REPORT. An "
         "earlier draft printed 11 of 11 rows and zero failures in the right-"
-        "hand column above. That was measured on the raw ac dec 50 frequency "
-        "lattice, and S3's 1.2500 GHz floor falls between two of its samples "
-        "-- 1.202264 and 1.258925 GHz -- with nothing in between. A true peak "
+        "hand column above, for an earlier design. Both that design AND the "
+        "objective that found it were scored on the raw ac dec 50 frequency "
+        "lattice. S3's 1.2500 GHz floor falls between two of its samples -- "
+        "1.202264 and 1.258925 GHz -- with nothing in between, so a true peak "
         "anywhere from 1.230269 to 1.250000 GHz is nearer to 1.258925 and is "
-        "reported as it, so a failing design is rounded into a passing one "
-        "across a 1.6 % band of frequency. This design's six worst corners "
-        "measure 1.2417 to 1.2470 GHz -- every one inside that band. Scored on "
-        "the interpolated peak, as the search itself always was, it fails S3 "
-        "at 6 of 135 points. The table above is the corrected measurement, "
-        "loaded from the verification artifact. See section 8, G108.")
+        "reported as it: a failing design rounded into a passing one across a "
+        "1.6 % band of frequency. That design's six worst corners measure "
+        "1.2417 to 1.2470 GHz, every one inside the band. On one design with "
+        "one flag changed and nothing else: reward +12.0205 FEASIBLE on the "
+        "lattice, -0.0147 INFEASIBLE on the interpolated peak. 15.2 MHz of "
+        "reading error, and it was the whole difference. See section 8, G108.")
+    pdf.body(
+        "**The search was re-run on the corrected objective, and it did not "
+        "find a feasible design in 400 simulations** -- it got to within "
+        "0.06 % of tolerance and stopped. The column above is that re-run's "
+        "best. What it bought is worth as much as a pass would have been: "
+        "**the eye is now measurable and passing at 135 of 135 points**, "
+        "368.8 to 497.3 mV against a 100 mV floor and 0.844 to 0.891 UI "
+        "against 0.4, where the previous design managed 98. What it did not "
+        "buy is S3, and the reason is a number rather than a shortcoming:")
+    pdf.table(["", "measured"],
+              [["f_peak across 135 PVT points", "1.2568 - 2.5132 GHz"],
+               ["that PVT span, in octaves", "0.99977"],
+               ["S3's frequency window, in octaves", "1.00000"],
+               ["slack at the bottom of the window", "0.00783 oct"],
+               ["overflow at the top", "0.00760 oct"],
+               ["room left after a perfect re-centring", "0.00023 oct"]],
+              [80, 60])
+    pdf.callout(
+        "PVT SPREAD FILLS 99.98 % OF S3's FREQUENCY WINDOW. The specification "
+        "is almost exactly as wide as the process makes the quantity vary, so "
+        "a compliant design exists with two hundredths of one per cent of an "
+        "octave to spare, and this one misses it by 0.53 % in frequency. That "
+        "is the honest form of every thin-margin sentence in this report: the "
+        "margin is thin because the window is, not because the sizing is "
+        "careless. It is also why the frequency reading had to be right -- one "
+        "lattice step is 0.0664 octaves, nine times the entire error being "
+        "corrected.")
+    pdf.body(
+        "**And the search did not fail; it solved the problem it was shown.** "
+        "It drove its worst *screened* corner to -0.000576, four decimal "
+        "places from feasible. Three of the four real failures are at **sf**, "
+        "a process corner the 3-corner search screen has no member of, and the "
+        "true binding point is sf/1.05/0C at -0.015150 -- twenty-six times "
+        "worse than anything the search could see. This is the fifth "
+        "independent measurement of that blind spot in this project and the "
+        "first with the required correction quantified: 0.0076 octaves, well "
+        "inside what Cs delivers at a measured 3.243 octaves per box width. "
+        "The 37 points where the earlier design's eye could not be computed "
+        "were also all at unscreened corners. **The recommendation is a fifth "
+        "and sixth screen corner, and it now has a number behind it rather "
+        "than a preference.**")
 
     pdf.h1("Tunability, and what the control actually trades")
     pdf.body(
@@ -815,16 +867,14 @@ def build() -> Path:
                "still intact -- which is why the blue curve is 17 dB better "
                "than the other two at every amplitude.")
     pdf.bullets([
-        "**The eye is now verified -- but at 98 of 135 points, not 135, and "
-        "on a design that fails S3 at 6 of 135.** A joint search asking for "
-        "the eye and the peaking together produced a design whose eye measures "
-        "377-539 mV at every point where it can be computed, and cannot be "
-        "computed at 37, all of them at corners the 3-corner search screen "
-        "does not contain and 27 of them at VDD 0.95. Scored on the "
-        "interpolated peak its peak frequency drops below S3's 1.25 GHz floor "
-        "at six slow-hot heavily-loaded corners, so it is not a shippable "
-        "design as it stands. Until the screen carries a mixed and a "
-        "low-supply member, a search will keep inheriting that hole.",
+        "**The eye is now verified at 135 of 135 points -- on a design that "
+        "fails S3 at 4 of them.** A joint search asking for the eye and the "
+        "peaking together produced a design whose eye measures 368.8-497.3 mV "
+        "and 0.844-0.891 UI at every corner S9 names, comfortably inside both "
+        "S8 limits. Its peak frequency leaves the top of S3's window at four "
+        "cold, lightly-loaded corners, three of them at the sf process corner "
+        "the search screen has no member of. So the eye is no longer the open "
+        "question; S3 across corners is, and by 0.0076 octaves.",
         "**On the DELIVERED design the eye is not verifiable at all, and "
         "the reason is the objective rather than the circuit.** At the PCIe "
         "input drive the stage is past its measured linear limit, so the "

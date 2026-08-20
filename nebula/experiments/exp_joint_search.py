@@ -326,7 +326,14 @@ def evaluate_joint(u: Sequence[float],
                 feasible=bool(rb.feasible), worst_point=tag,
                 worst_spec=rb.worst_spec, n_violated=rb.n_violated,
                 margins={k: float(v) for k, v in rb.margins.items()},
-                peaking_db=dev.peaking_db, f_peak_hz=dev.f_peak_hz,
+                # **REPORT THE PEAK THAT WAS SCORED**, not the lattice one it
+                # was derived from. Leaving `dev.f_peak_hz` here printed
+                # "f_peak 1.2589 GHz" beside a margin computed at 1.2417 --
+                # two fields of one record disagreeing about the same run,
+                # which is the second half of G107 and the exact confusion
+                # this session exists to remove.
+                peaking_db=float(meas["peaking_db"]),
+                f_peak_hz=2.5e9 * 2.0 ** float(meas["f_peak_oct"]),
                 power_w=dev.power_w, hd3_nyq_dbc=dev.hd3_dbc,
                 eye_h_v=(lr.eye_h_v if lr.ok else None),
                 eye_w_ui=(lr.eye_w_ui if lr.ok else None),
