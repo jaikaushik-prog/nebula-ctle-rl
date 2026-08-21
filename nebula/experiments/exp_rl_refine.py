@@ -175,7 +175,20 @@ def refine_one(net, target, seed: int) -> RefineResult:
 
     base = _budget_calls(env.env)
     best_u = np.array(env.env._u, dtype=float)
-    best_r = -np.inf
+    # **The starting design is a CANDIDATE, not just a starting point.**
+    #
+    # This was `-np.inf`, so only step rewards competed and the first edit won
+    # by default: **the policy was structurally incapable of returning "I
+    # looked, and the design I was given was best."** A refiner that cannot
+    # decline to edit is not a refiner; it is forced to change something.
+    #
+    # Measured cost of that defect (entry 27): the policy BROKE 3 of the
+    # library's 9 working designs -- +10.3282 -> -0.3970, +10.0944 -> -0.3569,
+    # +10.0009 -> -0.0841 -- and declining was the correct move in all three.
+    #
+    # `lib_ev.reward` is the same design scored through the same evaluator, so
+    # this is a like-for-like comparison rather than two scales meeting.
+    best_r = float(lib_ev.reward)
     n_steps = 0
     done = False
     while not done:
