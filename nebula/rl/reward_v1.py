@@ -479,6 +479,34 @@ V6D_SPECS: tuple[str, ...] = (
     "saturation", "tail_saturation",
 )
 
+#: **Reward v6-VERIFY: what the 135-point checklist can actually measure.**
+#: `V6_SPECS` with `S4_hd3_nyq` replaced by `S4_hd3`.
+#:
+#: **The two HD3 rows are the same spec asked at different conditions, and only
+#: one of them is the competition's.** The slide says *"Linearity HD3 < -30 dB
+#: (100 MHz diff input)"*; `S4_hd3` is that row. `S4_hd3_nyq` is this project's
+#: harder self-imposed version -- the same spec at the operating point,
+#: 2.5 GHz and the amplitude the link actually delivers -- and session 22r
+#: measured them **30 dB apart on one design** (-48.00 vs -17.38 dBc), which is
+#: why they are separate rows rather than one row under two conditions (G32).
+#:
+#: `exp_g4_verify.verify_full` runs ONE transient, at S4's stated 100 MHz, so
+#: it produces `S4_hd3` and cannot produce `S4_hd3_nyq` without a second
+#: transient at every one of 135 points. **The search scores the harder row;
+#: the checklist scores the slide's row.** Both are reported, neither is
+#: silently substituted for the other.
+#:
+#: This set exists because the alternative -- letting the verification quietly
+#: score 12 rows while claiming 13 -- is exactly G115, which cost a whole
+#: coverage run today. Listed by ENUMERATION (G101/G106).
+V6V_SPECS: tuple[str, ...] = (
+    "S3_f_peak_band", "S3_f_peak_match",
+    "S3_peaking", "S3_peaking_match",
+    "S3_nyq_boost", "S5_noise", "S6_power",
+    "saturation", "tail_saturation",
+    "S8_eye_h", "S8_eye_w", "S7_area", "S4_hd3",
+)
+
 #: The S8 rows, named so a caller can ask "is this reward scoring the eye?"
 S8_SPECS: tuple[str, ...] = ("S8_eye_h", "S8_eye_w")
 
@@ -809,7 +837,7 @@ def reward_v1(meas: Optional[Mapping[str, float]],
 __all__: Sequence[str] = (
     "Tol", "TOLERANCES", "TOL", "SPEC_NAMES", "N_SPECS",
     "V0_SPECS", "V1_SPECS", "V2_SPECS", "V3_SPECS", "V4_SPECS", "V5_SPECS",
-    "V5D_SPECS", "V6_SPECS", "V6D_SPECS",
+    "V5D_SPECS", "V6_SPECS", "V6D_SPECS", "V6V_SPECS",
     "S8_SPECS",
     "TOLERANCE_SCAN",
     "feasible_bonus", "invalid_reward", "headroom_band_top",

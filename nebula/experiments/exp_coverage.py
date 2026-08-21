@@ -471,19 +471,26 @@ def _rescore(points: Sequence[dict], target_f_peak_hz: float,
         # **RAISE on a missing row rather than filtering it away.** The filter
         # was the defect; an assertion is the fix. A verification that cannot
         # score every row it claims to score must fail loudly.
-        missing = [k for k in R.V6_SPECS if k not in m]
+        missing = [k for k in R.V6V_SPECS if k not in m]
         if missing:
             raise KeyError(
                 f"the 135-point verification cannot score {missing} and would "
-                f"otherwise have silently reported a {len(R.V6_SPECS) - len(missing)}"
-                f"-row result as a {len(R.V6_SPECS)}-row one")
-        rows = list(R.V6_SPECS)
+                f"otherwise have silently reported a "
+                f"{len(R.V6V_SPECS) - len(missing)}-row result as a "
+                f"{len(R.V6V_SPECS)}-row one")
+        # **`V6V_SPECS`, not `V6_SPECS`.** `verify_full` runs one transient at
+        # S4's stated 100 MHz, so it yields `S4_hd3` and not the operating-point
+        # `S4_hd3_nyq` the SEARCH scores. Substituting one for the other
+        # silently would be G32 (two definitions of one quantity); dropping it
+        # silently would be G115 again. Naming a verification set is the only
+        # option that is neither.
+        rows = list(R.V6V_SPECS)
         failed = [k for k in rows if m[k] < 0.0]
         s = {k: max(0.0, -m[k] / R.TOL[k]) for k in rows}
         if failed:
             reward = -sum(min(v, 1.0) for v in s.values())
         else:
-            reward = (R.feasible_bonus(len(R.V6_SPECS))
+            reward = (R.feasible_bonus(len(R.V6V_SPECS))
                       + min(m[k] / R.TOL[k] for k in rows))
         out.append({"cl_f": float(p["cl_f"]), "reward": float(reward),
                     "feasible": not failed, "failed": failed,

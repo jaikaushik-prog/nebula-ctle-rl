@@ -228,6 +228,24 @@ def test_V6_replaces_the_old_row_rather_than_ADDING_to_it():
     assert "S3_f_peak" in R.V1_SPECS, "V1 must be untouched"
 
 
+def test_the_SEARCH_and_the_VERIFICATION_sets_differ_only_in_the_HD3_ROW():
+    """**Two HD3 rows, one spec, different conditions -- and only one of them
+    is measurable at 135 points.**
+
+    The slide says HD3 < -30 dB at 100 MHz; that is `S4_hd3`. `S4_hd3_nyq` is
+    this project's harder self-imposed version at the operating point, measured
+    30 dB apart on one design. `verify_full` runs ONE transient, at the slide's
+    100 MHz, so the checklist can only produce `S4_hd3`.
+
+    Substituting one for the other silently would be G32; dropping it silently
+    would be G115 again. Naming a verification set is the only option that is
+    neither -- and this pins that the two sets differ in nothing else.
+    """
+    assert set(R.V6_SPECS) - set(R.V6V_SPECS) == {"S4_hd3_nyq"}
+    assert set(R.V6V_SPECS) - set(R.V6_SPECS) == {"S4_hd3"}
+    assert len(R.V6_SPECS) == len(R.V6V_SPECS)
+
+
 def test_V6_mirrors_the_peaking_axis_exactly():
     """Both axes end up with one band row and one request row. If they ever
     stop mirroring, one of them has drifted."""
@@ -247,7 +265,7 @@ def test_the_new_frequency_rows_did_not_move_any_PUBLISHED_spec_set(specs):
 # ── 4. the verification must score every row it claims to (G115) ─────────────
 
 
-def test_the_135_point_verification_SCORES_EVERY_V6_ROW():
+def test_the_135_point_verification_SCORES_EVERY_V6V_ROW():
     """**The bug that let a 10.818 GHz peak verify at 45 of 45 corners.**
 
     `_rescore` computed `S3_f_peak` -- not even a member of `V6_SPECS` -- plus
@@ -266,14 +284,14 @@ def test_the_135_point_verification_SCORES_EVERY_V6_ROW():
 
     pt = {"ok": True, "cl_f": 3.26e-14, "corner": "tt", "vdd_scale": 1.0,
           "temp_c": 27.0,
-          "margins": {k: 1.0 for k in R.V6_SPECS
+          "margins": {k: 1.0 for k in R.V6V_SPECS
                       if not k.startswith(("S3_f_peak", "S3_peaking_match"))},
           "f_peak_oct_scored": math.log2(1.9e9 / 2.5e9),
           "peaking_db_scored": 7.0}
     out = _rescore([pt], 1.921e9, 7.0)[0]
-    assert set(out["margins"]) == set(R.V6_SPECS), (
-        f"verification scored {len(out['margins'])} of {len(R.V6_SPECS)} rows; "
-        f"missing {sorted(set(R.V6_SPECS) - set(out['margins']))}")
+    assert set(out["margins"]) == set(R.V6V_SPECS), (
+        f"verification scored {len(out['margins'])} of {len(R.V6V_SPECS)} "
+        f"rows; missing {sorted(set(R.V6V_SPECS) - set(out['margins']))}")
 
 
 def test_a_peak_FAR_outside_the_window_cannot_verify_as_compliant():
@@ -285,7 +303,7 @@ def test_a_peak_FAR_outside_the_window_cannot_verify_as_compliant():
 
     pt = {"ok": True, "cl_f": 3.26e-14, "corner": "tt", "vdd_scale": 1.0,
           "temp_c": 27.0,
-          "margins": {k: 1.0 for k in R.V6_SPECS
+          "margins": {k: 1.0 for k in R.V6V_SPECS
                       if not k.startswith(("S3_f_peak", "S3_peaking_match"))},
           "f_peak_oct_scored": math.log2(10.818e9 / 2.5e9),
           "peaking_db_scored": 9.99}
