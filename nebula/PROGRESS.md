@@ -336,6 +336,56 @@ the measurement of how much the loose tolerance was flattering us.
 | 10 | Report: compliance matrix on page 1; renumber figures; point the grounding checker at report prose | ~2 h | |
 | 11 | Demo capture: plain-English request → schematic → specs → verification | ~1 h | |
 
+### THE RL DIAGNOSIS (2026-08-21) — it is simulator cost, not the algorithm
+
+**The policy is untrained, and the evidence is the parameter that tracks
+learning rather than the score.** PPO's `log_std` starts at 0.0 and *shrinks*
+as a policy grows confident. After 1200 steps it reads **−0.05 to +0.053** —
+unmoved. Sigma ≈ 1.0 is also as large as the entire `tanh`-bounded action, so
+what the policy chose was drowned out by its own sampling.
+
+**1200 steps is ~1 % of one training run**, and the reason is arithmetic:
+
+    one step = 4 SPICE decks = 1.26 s
+
+      1 200 steps     0.4 h    <- what was run
+    120 000 steps    42   h    <- roughly what PPO needs
+
+**Second defect, measured:** `rl/env.py` **ends the episode on an unbuildable
+design** (line ~425, `if not ev.valid: return ..., True, False, info`). At
+evaluation the policy used **5, 13, 12 SPICE calls** against CMA-ES's 800 — it
+was getting **1–3 of its 8 moves** and could never back out of a bad edit.
+
+**Per simulation it was never losing.** Request 1: policy **−3.0 in 5 sims**,
+CMA-ES **−2.0 in 800**.
+
+#### The fix, built and tested, NOT yet run
+
+`rl/analytic_env.py` — the same MDP off `prescreen.predict_response`:
+
+| | SPICE | analytic |
+|---|---|---|
+| per step | 1.26 s | **0.00047 s** (measured) |
+| 1 000 000 steps | 350 h | **7.9 min** |
+| steps per episode | 1–3 | **8.00** (full horizon) |
+
+Model accuracy, **measured** (`prescreen.accuracy()`), not quoted: f_peak
+median error **4.93 %**, bias −0.023 oct; peaking MAE **0.284 dB**, bias
+−0.009 dB; **p99 f_peak error 1.078 oct** — accurate and unbiased typically,
+with a real tail. Right for pre-training, wrong for anything else.
+
+**Three fences, because it invents 4 of 8 observation channels** (the equations
+give no noise, power or saturation): it scores only `V6A_SPECS`, the 5 rows it
+genuinely predicts; the invented channels are filled with their `OBS_SCALES`
+centres so they normalise to **exactly 0.0** — no information rather than wrong
+information; and every result is stamped `is_analytic`, with a source check
+forbidding the module from importing the device layer at all.
+**No number from that env is reportable.** 13 tests, three fences watched red.
+
+**Plan:** pre-train ~1 M analytic steps (~8 min) → fine-tune on SPICE (~1 h) →
+re-run the 16-request comparison (~3 h). The run in progress is the **"before"**
+measurement and should be kept.
+
 ### Why the RL work is NOT hopeless, and the framing that follows
 
 `BASELINES.md` measures PPO as indistinguishable from uniform random at every
