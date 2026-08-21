@@ -8,6 +8,11 @@ that a reader can reconstruct from the code.
 **Read `CONTINUE_HERE.md` §§4, 5 and `HANDOFF.md` §9 gotchas before touching
 anything.** This file does not replace them.
 
+**If you are here to build the SAC + CMA-ES hybrid, read
+`nebula/NEXT_AGENT_SAC.md`** — it is the implementation brief, and its §2
+carries three design traps found by measurement that will otherwise cost a day
+each.
+
 **Updated 2026-08-21, session 23.** 25 days to the 15 Sept deadline.
 
 ---
