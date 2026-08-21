@@ -242,3 +242,70 @@ def test_the_new_frequency_rows_did_not_move_any_PUBLISHED_spec_set(specs):
     """Both rows are emitted unconditionally by `margins()`, so the only thing
     keeping V1-V5 fixed is that they do not NAME them. Pinned."""
     assert "S3_f_peak_band" not in specs and "S3_f_peak_match" not in specs
+
+
+# ── 4. the verification must score every row it claims to (G115) ─────────────
+
+
+def test_the_135_point_verification_SCORES_EVERY_V6_ROW():
+    """**The bug that let a 10.818 GHz peak verify at 45 of 45 corners.**
+
+    `_rescore` computed `S3_f_peak` -- not even a member of `V6_SPECS` -- plus
+    `S3_peaking_match`, then selected rows with
+    `[k for k in V6_SPECS if k in m]`. That filter silently dropped
+    `S3_f_peak_band` and `S3_f_peak_match`, so the verification scored 11 rows
+    while reporting a 13-row result, and **never applied the frequency
+    constraint at all**.
+
+    Third instance in one session of a single shape: a set built by FILTERING
+    loses members without saying so (G101, G106).
+    """
+    import math
+
+    from nebula.experiments.exp_coverage import _rescore
+
+    pt = {"ok": True, "cl_f": 3.26e-14, "corner": "tt", "vdd_scale": 1.0,
+          "temp_c": 27.0,
+          "margins": {k: 1.0 for k in R.V6_SPECS
+                      if not k.startswith(("S3_f_peak", "S3_peaking_match"))},
+          "f_peak_oct_scored": math.log2(1.9e9 / 2.5e9),
+          "peaking_db_scored": 7.0}
+    out = _rescore([pt], 1.921e9, 7.0)[0]
+    assert set(out["margins"]) == set(R.V6_SPECS), (
+        f"verification scored {len(out['margins'])} of {len(R.V6_SPECS)} rows; "
+        f"missing {sorted(set(R.V6_SPECS) - set(out['margins']))}")
+
+
+def test_a_peak_FAR_outside_the_window_cannot_verify_as_compliant():
+    """The measured case, verbatim: 10.0 dB @ 1.921 GHz requested, 10.818 GHz
+    delivered, previously verified at 45 of 45 corners."""
+    import math
+
+    from nebula.experiments.exp_coverage import _rescore
+
+    pt = {"ok": True, "cl_f": 3.26e-14, "corner": "tt", "vdd_scale": 1.0,
+          "temp_c": 27.0,
+          "margins": {k: 1.0 for k in R.V6_SPECS
+                      if not k.startswith(("S3_f_peak", "S3_peaking_match"))},
+          "f_peak_oct_scored": math.log2(10.818e9 / 2.5e9),
+          "peaking_db_scored": 9.99}
+    out = _rescore([pt], 1.921e9, 10.0)[0]
+    assert out["feasible"] is False
+    assert "S3_f_peak_band" in out["failed"]
+
+
+def test_a_row_that_cannot_be_scored_RAISES_rather_than_being_dropped():
+    """An assertion replaced the filter, because the filter was the defect."""
+    import math
+
+    import pytest as _pytest
+
+    from nebula.experiments.exp_coverage import _rescore
+
+    pt = {"ok": True, "cl_f": 3.26e-14, "corner": "tt", "vdd_scale": 1.0,
+          "temp_c": 27.0,
+          "margins": {"S3_nyq_boost": 1.0},          # almost everything absent
+          "f_peak_oct_scored": math.log2(1.9e9 / 2.5e9),
+          "peaking_db_scored": 7.0}
+    with _pytest.raises(KeyError):
+        _rescore([pt], 1.921e9, 7.0)

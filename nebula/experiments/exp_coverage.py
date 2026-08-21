@@ -448,10 +448,36 @@ def _rescore(points: Sequence[dict], target_f_peak_hz: float,
                 f"point {p.get('corner')} carries no scored peak; refusing to "
                 f"re-score against an instrument that is not stated (G108)")
         tgt_oct = math.log2(float(target_f_peak_hz) / 2.5e9)
-        m["S3_f_peak"] = R.TOL["S3_f_peak"] - abs(float(f_oct) - tgt_oct)
+        f_oct = float(f_oct)
+        # **All four request-dependent rows, and the BAND rows are the two that
+        # were missing.** `_rescore` used to compute `S3_f_peak` -- which is not
+        # even in `V6_SPECS` -- plus `S3_peaking_match`, and then filtered with
+        # `[k for k in V6_SPECS if k in m]`. That filter SILENTLY DROPPED
+        # `S3_f_peak_band` and `S3_f_peak_match`, so the 135-point verification
+        # scored 11 rows while believing it scored 13 and **never applied the
+        # frequency constraint at all**.
+        #
+        # Measured cost: a design delivering its peak at **10.818 GHz** -- 4.3x
+        # outside S3's 1.25-2.5 GHz window -- was verified at **45 of 45
+        # corners**. Another at 19.953 GHz scored 36 of 45. Both rows would have
+        # returned -2.11 and -2.19.
+        #
+        # Third instance today of one shape: **a set built by FILTERING loses
+        # members without saying so** (G101, G106).
+        m["S3_f_peak_band"] = min(f_oct - R._F_LO_OCT, R._F_HI_OCT - f_oct)
+        m["S3_f_peak_match"] = R.TOL["S3_f_peak_match"] - abs(f_oct - tgt_oct)
         m["S3_peaking_match"] = (R.TOL["S3_peaking_match"]
                                  - abs(float(pk) - float(target_peaking_db)))
-        rows = [k for k in R.V6_SPECS if k in m]
+        # **RAISE on a missing row rather than filtering it away.** The filter
+        # was the defect; an assertion is the fix. A verification that cannot
+        # score every row it claims to score must fail loudly.
+        missing = [k for k in R.V6_SPECS if k not in m]
+        if missing:
+            raise KeyError(
+                f"the 135-point verification cannot score {missing} and would "
+                f"otherwise have silently reported a {len(R.V6_SPECS) - len(missing)}"
+                f"-row result as a {len(R.V6_SPECS)}-row one")
+        rows = list(R.V6_SPECS)
         failed = [k for k in rows if m[k] < 0.0]
         s = {k: max(0.0, -m[k] / R.TOL[k]) for k in rows}
         if failed:

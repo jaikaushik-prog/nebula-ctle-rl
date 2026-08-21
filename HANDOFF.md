@@ -4156,6 +4156,42 @@ Plus: git init, .gitignore, 28 tests, Wilson-bound BER reporting.
   transfers; making the SPICE env revert rather than terminate (the wrapper
   precedent exists).
 
+- **G115 -- (nebula) a set built by FILTERING loses members without saying so,
+  and the third instance of it in one session verified a design whose peak was
+  4.3x outside spec at 45 of 45 corners.**
+  `exp_coverage._rescore` re-scores the 135-point verification against one
+  request. It computed `m["S3_f_peak"]` -- **a row that is not even a member of
+  `V6_SPECS`** -- plus `S3_peaking_match`, and then selected what to score with
+
+      rows = [k for k in R.V6_SPECS if k in m]
+
+  `S3_f_peak_band` and `S3_f_peak_match` were never computed, so the filter
+  dropped them **silently**. The verification scored **11 rows while reporting
+  a 13-row result**, and the frequency constraint added hours earlier to fix
+  G111 was **never applied in verification at all**.
+  **Measured cost, from the run that was supposed to be the corrected one:**
+
+      asked 10.0 dB @ 1.921 GHz  ->  delivered 10.818 GHz  ->  45 of 45 PASS
+      asked  8.0 dB @ 1.627 GHz  ->  delivered 19.953 GHz  ->  36 of 45
+
+  Both rows would have returned **-2.11** and **-2.19**. 19.953 GHz is the top
+  of the AC sweep, i.e. G44's fictitious peak, verified as compliant.
+  **The tell was in the artifact, not the code:** a delivered `f_peak` of
+  10.8 GHz beside a 45/45 verdict is impossible if the window is being checked.
+  **Read the delivered VALUES, not just the verdicts** -- a pass beside an
+  absurd measurement means the check is not running, and the verdict column
+  alone can never show it.
+  **The fix is an assertion, because the filter WAS the defect:** every
+  `V6_SPECS` row must be present or `_rescore` raises. A verification that
+  cannot score every row it claims to score must fail loudly rather than
+  quietly report a smaller result.
+  **Same shape as G101 (a spec set defined by exclusion grows silently) and
+  G106 (`A + (new,)` claims every member of A is still measurable).** The
+  general rule: **`[x for x in CONTRACT if <available>]` is a silent contract
+  violation.** If the contract says thirteen rows, thirteen must be scorable or
+  the call fails.
+  `nebula/tests/test_spec_request_is_honoured.py` (27 tests, one watched red).
+
 ## 10. Environment
 
 - Windows 11, PowerShell 5.1 (+ Git Bash available), Python 3.13.14,
