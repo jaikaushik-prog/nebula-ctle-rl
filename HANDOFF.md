@@ -4044,6 +4044,38 @@ Plus: git init, .gitignore, 28 tests, Wilson-bound BER reporting.
   `nebula/tests/test_spec_request_is_honoured.py` (24 tests, 2 gates watched
   go red), `PREDICTIONS.md` entry 24's outcome is the measurement.
 
+- **G112 -- (nebula) in a script whose expensive phase runs FIRST, a name error
+  in a later phase is not a cheap bug: it costs the whole expensive phase, and
+  it survives every check that does not execute that line.**
+  `exp_corner_rl` trains a policy for ~20-25 minutes and then evaluates four
+  arms. It died **twice** in the arms, on two different undefined names --
+  `SpiceBudget.n_calls` (the attribute is `calls`) and an `ArmResult(n_eye_ok=)`
+  keyword that was never added to the dataclass. Both cost a full training run.
+  **`python -c "import module"` passed. The whole test suite passed.** Neither
+  name is reachable without running the thing.
+  **One of the two did not even crash**, and that is the worse half:
+  `getattr`-shaped access printed `trained: 1200 env steps, **None** SPICE
+  calls, 19.3 min` and continued. A wrong value that FORMATS CLEANLY is more
+  dangerous than one that raises -- that `None` was the training cost, which is
+  the denominator of the break-even ratio the experiment exists to compute.
+  **Three defences, cheapest first:**
+  1. **Static-check the construction sites.** Walk the module's AST and assert
+     every `ArmResult(...)` keyword is a real dataclass field. Costs
+     microseconds, covers call sites no cheap test reaches:
+     `test_every_ArmResult_construction_uses_REAL_fields`.
+  2. **Pin attribute names against the REAL class**, not a mock --
+     `assert hasattr(SpiceBudget(), "calls")` and
+     `assert not hasattr(SpiceBudget(), "n_calls")`, so a rename upstream
+     reddens here instead of reintroducing `None` into a results table.
+  3. **Checkpoint the expensive phase before the cheap one runs**, and make the
+     checkpoint carry the numbers downstream arithmetic divides by. Loading one
+     without them must RAISE: a checkpoint reporting zero training cost would
+     print an infinitely good speed-up.
+  **The general form: order your script so the cheap, failure-prone phase runs
+  BEFORE the expensive one where you can, and where you cannot, make the
+  expensive phase's output durable.** Every minute of an expensive phase is a
+  minute you are betting on code you have not executed yet.
+
 ## 10. Environment
 
 - Windows 11, PowerShell 5.1 (+ Git Bash available), Python 3.13.14,
