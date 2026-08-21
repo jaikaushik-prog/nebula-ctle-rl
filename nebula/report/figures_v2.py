@@ -370,11 +370,20 @@ def fig_screen_audit(artifact: str = "coverage_results.json",
     described because the asymmetry is the entire point of the figure.
     """
     d = _load(artifact)
-    rows = [(r["screen_reward"], r["audit"]["full_worst"], r["audit"])
-            for r in d["requests"]
-            if r.get("audit") and r.get("screen_reward") is not None]
+    # **Read `screen_report.audits`, not the per-request `audit` stub.** The
+    # per-request record carries only the verdict and the error; the screen's
+    # own report carries both sides of the comparison, and a figure whose whole
+    # job is "predicted vs measured" needs both from ONE source rather than
+    # joining two (rule 9 / G32).
+    audits = (d.get("screen_report") or {}).get("audits") or []
+    rows = [(a["screen_worst"], a["full_worst"], a) for a in audits
+            if a.get("screen_worst") is not None
+            and a.get("full_worst") is not None]
     if not rows:
-        raise ValueError(f"{artifact} carries no screen audits to plot")
+        raise ValueError(
+            f"{artifact} carries no screen audits to plot. A run whose screen "
+            f"was never checked has nothing to say about its own shortcut, and "
+            f"drawing an empty diagonal would imply it did.")
 
     x = np.array([a for a, _, _ in rows])
     yv = np.array([b for _, b, _ in rows])

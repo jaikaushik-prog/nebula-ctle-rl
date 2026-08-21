@@ -475,6 +475,15 @@ def run(budget: int = BUDGET_DESIGN_EVALS,
         peakings: Sequence[float] = PEAKING_REQUESTS,
         freqs: Sequence[float] = FREQ_REQUESTS,
         verify: bool = True) -> dict:
+    from nebula.experiments.runlock import hold, stamp
+
+    with hold("coverage", meta={"budget_design_evals": budget}):
+        return _run(budget, peakings, freqs, verify)
+
+
+def _run(budget, peakings, freqs, verify) -> dict:
+    from nebula.experiments.runlock import stamp
+
     t0 = time.time()
     screen = AdaptiveScreen(EDGE4_MANDATED)
     results: list[RequestResult] = []
@@ -518,6 +527,12 @@ def run(budget: int = BUDGET_DESIGN_EVALS,
     solved135 = sum(1 for r in results if r.n_full135_pass == 135)
     out = {
         "task": "spec coverage: does the framework answer every request?",
+        # **Provenance, so two runs can never be confused again.** On
+        # 2026-08-21 a superseded coverage run finished after the corrected
+        # one and silently overwrote its artifact; nothing in either file said
+        # which process wrote it, so the loss was invisible until a figure was
+        # rendered from the wrong one.
+        **stamp(),
         "spec_set": list(R.V6_SPECS),
         "n_requests": len(requests),
         "n_solved_on_screen": sum(1 for r in results if r.solved_on_screen),

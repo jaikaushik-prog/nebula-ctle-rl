@@ -384,8 +384,18 @@ def run(train_steps: int = TRAIN_STEPS, n_test: int = N_TEST_TARGETS,
         cmaes_budget: int = CMAES_BUDGET, seed: int = SEED,
         arms: Sequence[str] = ("policy", "library", "cmaes", "random"),
         reuse_checkpoint: bool = True) -> dict:
+    from nebula.experiments.runlock import hold
+
+    with hold("corner_rl", meta={"train_steps": train_steps}):
+        return _run(train_steps, n_test, cmaes_budget, seed, arms,
+                    reuse_checkpoint)
+
+
+def _run(train_steps, n_test, cmaes_budget, seed, arms,
+         reuse_checkpoint) -> dict:
     import torch
 
+    from nebula.experiments.runlock import stamp
     from nebula.rl.ppo import PPOConfig, train
 
     t0 = time.time()
@@ -494,6 +504,7 @@ def run(train_steps: int = TRAIN_STEPS, n_test: int = N_TEST_TARGETS,
 
     out = {
         "task": "corner-aware, spec-conditioned RL vs library, CMA-ES, random",
+        **stamp(),
         "spec_set": list(R.V6_SPECS),
         "screen": [p.label for p in points],
         "train_steps": train_steps, "train_sims": train_sims,

@@ -4076,6 +4076,48 @@ Plus: git init, .gitignore, 28 tests, Wilson-bound BER reporting.
   expensive phase's output durable.** Every minute of an expensive phase is a
   minute you are betting on code you have not executed yet.
 
+- **G113 -- (nebula) a completed run can silently OVERWRITE a completed run,
+  and the failure is invisible because the surviving file looks perfectly
+  normal. This is worse than producing a wrong number: it produces a RIGHT
+  number and then replaces it with a wrong one.**
+  On 2026-08-21 two coverage sweeps ran concurrently. The older was believed
+  killed by `Stop-Process`, was not, and **finished last**:
+
+      run          screen audit    solved on screen   mandated 45-corner   SPICE    wall
+      b234jcq3l    correct              11 / 16          **10 / 16**       16 094   149.7 min
+      bjzvuvxy7    the G110 bug          1 / 16          **8 / 16**        24 294   209 min  <- WON
+
+  The 10/16 had already been read, reported, and written into
+  `PREDICTIONS.md` entry 24 by the time the file underneath it changed. It was
+  caught only because a FIGURE rendered from the artifact printed 8/16 and
+  disagreed with the prose.
+  **Three failures stacked and only the first was visible at the time:**
+  1. the surviving artifact was from the run with the known-bad audit;
+  2. **both runs' WALL CLOCKS are inflated** -- G70, one concurrent ngspice is
+     ~4.8x slower, so `b234jcq3l`'s 7-9 min per request should have been ~6.
+     **Simulation COUNTS survive concurrency; MINUTES do not.** Any claim in
+     simulations stands; any claim in minutes from that window does not;
+  3. no run id, no refusal, no warning. **An artifact that cannot be attributed
+     to a writer is how (1) stayed invisible.**
+  **The tell, and it is the only one available: a rendered figure disagreeing
+  with the prose.** Both numbers were internally consistent; only the
+  cross-check between two representations of the same run caught it. Render the
+  figure before quoting the number.
+  **`experiments/runlock.py` fixes the part that turns a mistake into a wrong
+  published number.** `hold(name)` REFUSES TO START if a live holder exists --
+  refusing to start rather than warning at the end, because a warning cannot
+  un-inflate a wall clock two ngspice streams already shared. Abandoned locks
+  break automatically (a run blocked by a crash three days ago is a worse
+  failure than the one prevented) and an **unknowable** process state counts as
+  ALIVE, because a false "dead" breaks a lock that is doing its job. Every
+  artifact now carries `stamp()`: pid, start time, host.
+  `nebula/tests/test_runlock.py` (10 tests, one watched go red) also asserts
+  that every experiment writing a shared artifact actually TAKES the lock --
+  a lock nobody acquires is decoration.
+  The superseded artifact is in `experiments/quarantine/` with a README, kept
+  rather than deleted (rule 10): the concurrency failure is only legible with
+  both runs side by side.
+
 ## 10. Environment
 
 - Windows 11, PowerShell 5.1 (+ Git Bash available), Python 3.13.14,
