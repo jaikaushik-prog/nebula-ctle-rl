@@ -78,6 +78,7 @@ from typing import Optional, Sequence
 import numpy as np
 
 import nebula.rl.reward_v1 as R
+from nebula.experiments import search_score as SS
 from nebula.experiments.adaptive_screen import (
     EDGE4,
     EDGE4_MANDATED,
@@ -165,6 +166,11 @@ class RequestResult:
     design_id: Optional[str] = None
     u: Optional[list] = None
     screen_reward: Optional[float] = None
+    #: The UNCLIPPED rank score of the winner (`search_score`). Recorded beside
+    #: `screen_reward`, never instead of it: the clipped one is the verdict, this
+    #: one is what the search steered on, and the pair is what makes the fix
+    #: auditable from the artifact alone rather than from the code that ran.
+    screen_search_score: Optional[float] = None
     screen_worst_point: Optional[str] = None
     screen_worst_spec: Optional[str] = None
     delivered_peaking_db: Optional[float] = None
@@ -187,10 +193,32 @@ class RequestResult:
 
 
 class _Objective:
-    """`method_cmaes`'s surface, scoring one spec request on the live screen."""
+    """`method_cmaes`'s surface, scoring one spec request on the live screen.
+
+    **The search ranks on an UNCLIPPED score; the verdict stays the clipped V6
+    reward.** Those are two different jobs and conflating them cost this project
+    four requests. `reward_v1` scores an infeasible design as
+    `-sum(min(shortfall, 1.0))`, so past one tolerance a row's penalty stops
+    growing — and `S3_f_peak_match`'s tolerance is 0.30 octaves. Measured
+    consequence in `coverage_results_AFTER_seeding_fix.json`: **all four
+    out-of-window requests scored exactly -2.0000**, because a peak at 10.303 GHz
+    and a legal one at 2.500 GHz are the same number of *saturated rows*. The
+    search had no gradient pulling the peak home and returned whatever it held.
+
+    `search_score.score_design_eval` restores that gradient (see that module for
+    the transform and its three proved properties). What is reported has not
+    moved: `self.best` is still a real `DesignEval`, `res.screen_reward` is still
+    `reward_v1`'s clipped number, and `solved_on_screen` is still `ev.feasible`.
+    Only the ORDER in which candidates are preferred changes — which is the one
+    thing that was broken.
+
+    `rank_unclipped=False` restores the exact previous behaviour, so the two are
+    comparable in a test rather than by assertion.
+    """
 
     def __init__(self, screen: AdaptiveScreen, target_f_peak_hz: float,
-                 target_peaking_db: float, budget_design_evals: int, log):
+                 target_peaking_db: float, budget_design_evals: int, log,
+                 rank_unclipped: bool = True):
         self.screen = screen
         self.tf = float(target_f_peak_hz)
         self.tp = float(target_peaking_db)
@@ -198,7 +226,12 @@ class _Objective:
         self.used = 0
         self.n_sims = 0
         self.log = log
+        self.rank_unclipped = bool(rank_unclipped)
         self.best = None
+        #: The rank score of `self.best`. Kept separately BECAUSE `best.reward`
+        #: is the clipped verdict and comparing the new score against it would
+        #: mix the two scales -- the exact confusion this class now avoids.
+        self.best_score: Optional[float] = None
 
     def check_budget(self) -> None:
         from nebula.experiments.baselines import BudgetExhausted
@@ -214,18 +247,30 @@ class _Objective:
                                 target_peaking_db=self.tp,
                                 specs=R.V6_SPECS)
         self.n_sims += ev.n_sims
+        score = (SS.score_design_eval(ev, R.V6_SPECS) if self.rank_unclipped
+                 else float(ev.reward))
         if self.log is not None:
+            # **Both numbers are logged, every evaluation.** The run log is how
+            # this fix gets audited after the fact, and an entry carrying only
+            # one of the two would leave nothing to check the other against --
+            # the shape of the pre-registration miss in entry 24, where a
+            # quantity was predicted and then not written down.
             self.log.write(json.dumps({
                 "i": self.used, "n_sims": self.n_sims,
                 "target_peaking_db": self.tp, "target_f_peak_hz": self.tf,
                 "u": list(ev.u), "ok": ev.ok, "reward": ev.reward,
+                "search_score": score, "rank_unclipped": self.rank_unclipped,
                 "feasible": ev.feasible, "worst_point": ev.worst_point,
                 "worst_spec": ev.worst_spec, "peaking_db": ev.peaking_db,
                 "f_peak_hz": ev.f_peak_hz, "reason": ev.reason}) + "\n")
             self.log.flush()
-        if self.best is None or ev.reward > self.best.reward:
-            self.best = ev
-        return ev
+        if self.best is None or score > self.best_score:
+            self.best, self.best_score = ev, score
+        # `method_cmaes` reads `.reward` and nothing else, and uses it only as an
+        # argsort key -- so this steers the search without touching
+        # `baselines.py`, which every published benchmark arm was measured
+        # through. `self.best` remains the real `DesignEval`.
+        return SS.RankView(reward=score)
 
 
 def library_candidates(target_f_peak_hz: float, target_peaking_db: float,
@@ -427,6 +472,7 @@ def solve_request(peaking_db: float, f_peak_hz: float, screen: AdaptiveScreen,
     res.u = list(best.u)
     res.design_id = design_id(sizing_from_u(np.asarray(best.u)))
     res.screen_reward = best.reward
+    res.screen_search_score = obj.best_score
     res.screen_worst_point = best.worst_point
     res.screen_worst_spec = best.worst_spec
     res.delivered_peaking_db = best.peaking_db

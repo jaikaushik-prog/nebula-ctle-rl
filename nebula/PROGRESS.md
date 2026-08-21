@@ -33,7 +33,7 @@ human in the loop. Deliverables that already exist and run:
 
 | | state |
 |---|---|
-| Test suite | **1667 passed**, 11 deselected, 4m50s (`python -m pytest tests nebula/tests -q -m "not slow"`) |
+| Test suite | **1806 passed**, 11 deselected, ~5 min (4m44s / 5m19s on two runs), measured 2026-08-22 on system Python 3.13.14 (`python -m pytest tests nebula/tests -q -m "not slow"`). The **system** interpreter, not the conda env — that env has no `torch`, and `ngspice_con.exe` is found by absolute path anyway (G69) |
 | Gates G0–G2 | passed |
 | G3 (RL beats random + grid) | **fails one clause** — RL is indistinguishable from random at every budget |
 | G4 (corner-robust design) | met on `V1_SPECS` (7 rows); **not** on the 11 competition rows |
@@ -325,6 +325,66 @@ the measurement of how much the loose tolerance was flattering us.
 
 ---
 
+## 5d. THE SEARCH WAS RANKING ON A FLAT SCORE — fixed, pre-registered, SWEEP NOT YET RUN
+
+**Sessions 25-26. `HANDOFF.md` §9 G116. This is the current front of the
+project and the reason the sweep in §6 is owed.**
+
+The seeding fix (§5a, `PREDICTIONS.md` entry 29) took coverage from 6/16 to
+8/16 and then **traded one failure mode for another**: at 10 dB the requested
+boost started landing accurately and the *frequency* blew out by a factor of
+seven. Entry 29 recorded that as **unexplained rather than guessed at**. It is
+now explained, and it was not the seeder.
+
+**`reward_v1` scores an infeasible design as `-sum(min(v, 1.0))`**, where `v` is
+each row's shortfall in units of its own tolerance. **Past one tolerance a row's
+penalty stops growing**, and `TOL["S3_f_peak_match"]` is 0.30 octaves. So every
+badly-placed peak scores the same. Read from
+`coverage_results_AFTER_seeding_fix.json` — all four out-of-window requests
+scored **exactly -2.000000**, an integer, because it is just *how many rows are
+saturated*:
+
+    ask  4.0 dB @ 2.253 GHz  ->   4.33 dB @  8.413 GHz  (+1.901 oct)  0/45
+    ask 10.0 dB @ 2.253 GHz  ->  10.74 dB @ 11.778 GHz  (+2.386 oct)  0/45
+    ask 10.0 dB @ 1.627 GHz  ->  10.55 dB @ 10.684 GHz  (+2.715 oct)  0/45
+    ask 10.0 dB @ 1.387 GHz  ->  10.15 dB @ 10.303 GHz  (+2.893 oct)  0/45
+
+**A CTLE peaking at 10.3 GHz and one peaking legally at 2.5 GHz were the same
+number to the optimiser.** The gradient pulling a runaway peak back into the
+window was exactly **0.0**. The search was not failing — it could not tell its
+candidates apart.
+
+**The fix is a wrapper, per §8 rule 7.** `experiments/search_score.py` gives the
+*search* an uncapped score to rank on; the *verdict* stays `reward_v1`'s clipped
+number. `reward_v1.py`, the tolerances, `V1_SPECS`, the box, the pre-screen and
+`baselines.py` are **untouched** — measured, not asserted. Below one tolerance
+the new score is the old one times a positive constant, so **the eight requests
+that already pass provably cannot be re-ranked**. `rank_unclipped=False`
+reproduces the old behaviour exactly, so the two regimes are comparable by test
+rather than by argument.
+
+**A second instance of the same bug** was found in
+`adaptive_screen.evaluate_at_points`, which picked a design's worst PVT point on
+the clipped number — so with two saturated points, "worst" was whichever tied
+first, i.e. arbitrary. **Two consumers found; the grep for others is not done.**
+
+**Status: 34 tests pass, including 3 that had never executed anywhere** (they
+need the SKY130 PDK, which `rl/contract.py` reads at module load — G118); three
+sabotage runs, one of which **stayed green and exposed a test that asserted
+nothing** (G117). `PREDICTIONS.md` **entry 30 is committed ahead of the run**
+with five falsifiable predictions, a 10-13/16 band, a no-regression clause, and
+a disclosure that the plateau was confirmed by a zero-SPICE re-score first.
+
+**THE SWEEP HAS NOT RUN.** `python -m nebula.experiments.exp_coverage`, ~95 min,
+compared against 9 screen / 8 pvt45 / 0 full135 and 13 718 sims. Do not run it
+alongside the test suite (G70).
+
+**The pre-agreed decision rule, chosen by the owner before the run and not
+renegotiable after it:** keep PPO if the sweep shows it can learn, defined as
+**>= 5/16**; below that, drop PPO and implement SAC per `NEXT_AGENT_SAC.md`.
+
+---
+
 ## 6. Next steps, in order
 
 | # | Task | Cost | Status |
@@ -332,7 +392,8 @@ the measurement of how much the loose tolerance was flattering us.
 | 1 | Pre-register `PREDICTIONS.md` entry 24 | — | **DONE**, committed before the run |
 | 2 | `experiments/adaptive_screen.py` — EDGE-4, spread probe, D2 self-check | — | **DONE**, 15 tests, 2 gates watched red |
 | 3 | `rl/reward_v1.py` — `S3_peaking_match` + `V5_SPECS` (D6) | — | **DONE**, 12 tests, 3 gates watched red |
-| 4 | `experiments/exp_coverage.py` — the 16-request coverage sweep | ~10 000 sims, ~1.5 h | **RUNNING** |
+| 4 | `experiments/exp_coverage.py` — the 16-request coverage sweep | ~10 000 sims, ~1.5 h | **DONE.** Artifact `coverage_results_AFTER_seeding_fix.json`: 16 requests, 9 screen / **8 pvt45** / 0 full135, 13 718 sims, 5737.3 s (95.6 min) |
+| **4b** | **Re-run the sweep with `rank_unclipped=True`** (§5d). Pre-registered as **entry 30**, committed ahead of the run; band 10-13/16; compare against row 4's artifact | ~14 000 sims, ~1.6 h | **NEXT — NOT RUN.** Do not run it alongside the test suite (G70) |
 | **5** | **Corner-aware RL vs random / CMA-ES / library lookup.** Pre-registered as entry 25 (with a disclosed rule-3 violation: written after launch, before any artifact existed) | ~2.5 h | **RUNNING** |
 | **6** | **Re-run the coverage sweep on `V6_SPECS`** (§5b). Owner: *"polishing numbers is much needed for honesty."* **Publish both the old and the corrected coverage number** | ~2.5 h | **committed, do not drop** |
 | 7 | 2-D tuning bank (`Cs` axis) + the reading-(B) criterion | ~1 100 sims, ~8 min | built, not run |

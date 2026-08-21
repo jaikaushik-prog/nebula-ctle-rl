@@ -8,6 +8,13 @@ else in the 22s brief stands.
 
 **26 days to the 15 Sept deadline. Demo 25 Sept at BITS Goa.**
 
+> **2026-08-22 — a search-ranking fix is committed; the sweep it enables is
+> NOT run.** `nebula/experiments/search_score.py` + its 34 tests, plus 4 edits
+> to `exp_coverage.py`, fix a plateau that made four coverage requests
+> unrankable. Pre-registered as `PREDICTIONS.md` **entry 30**; summarised in
+> `PROGRESS.md` **§5d**. Read **`nebula/SESSION_25_HANDOFF.md`** for the
+> reasoning before doing anything in `experiments/`.
+
 This file is the *entry point*, not a substitute for `HANDOFF.md`. It tells you
 where the project stands, what changed in the last four sessions, what is
 decided, what is open, and exactly what to do next.
@@ -18,9 +25,10 @@ decided, what is open, and exactly what to do next.
 
 | # | File | Why | Time |
 |---|---|---|---|
+| 0 | **`nebula/SESSION_25_HANDOFF.md`** | **read FIRST — the reasoning behind the search-score fix (committed 2026-08-22); its §6 items 1-3 are done, items 4-5 (the sweep and the decision rule) are open** | 10 min |
 | 1 | **this file**, §§1–9 | the situation and the direction | 20 min |
 | 2 | `CLAUDEwa.md` §§1–3, §7, §8 | the contract, the spec table, the gates, the standing rules | 20 min |
-| 3 | `HANDOFF.md` §9 gotchas **G100–G108** | the nine traps found in the last five sessions | 25 min |
+| 3 | `HANDOFF.md` §9 gotchas **G100–G119** | the twenty traps found in the last six sessions | 30 min |
 | 4 | `nebula/PREDICTIONS.md` entries **18–23** | how this project makes claims; **22 and 23 are session 22u's retraction and re-run** | 40 min |
 | 5 | `nebula/CHANNEL_MODEL.md` §§6, 8 + the DFE table | **four measured results that are NOT in the report** — see §6.3 | 20 min |
 | 6 | `nebula/BASELINES.md` §§13, 14 | the benchmark and the budget ladder | 20 min |
@@ -429,7 +437,8 @@ below is mine, after that verification.
 conda activate nebula          # ngspice 41; use ngspice_con.exe, NOT ngspice.exe (G20)
                                # the TEST SUITE runs on the SYSTEM python (conda env has no torch)
 
-# tests — before and after ANY change, from the repo root. 1667 tests, ~4 min
+# tests — before and after ANY change, from the repo root.
+# 1806 passed, 11 deselected, ~5 min (4m44s / 5m19s, 2026-08-22, system Python 3.13.14)
 python -m pytest tests nebula/tests -q -m "not slow"
 
 # the deliverables
@@ -518,8 +527,8 @@ the cold cache).
 1. **Update `HANDOFF.md` in the same commit as any change.** A change without a
    handoff update is incomplete.
 2. **Run the suite before and after.** `python -m pytest tests nebula/tests -q
-   -m "not slow"` — **1667 tests, ~4 min**. Report the count both times. Never
-   commit with failures.
+   -m "not slow"` — **1806 passed, 11 deselected, ~5 min** (measured 2026-08-22).
+   Report the count both times. Never commit with failures.
 3. **Pre-register anything whose result could be argued for afterwards.**
    `PREDICTIONS.md`, with acceptance bands and falsifiers, **committed before
    the run**. Record misses as misses. **Nothing above an outcome heading is

@@ -4823,3 +4823,217 @@ discarded".
   for exactly this request during development, so a good candidate exists.
 * The 135-point load-swept column is 0 of 16 in both runs and is unaffected by
   any of this.
+
+---
+
+## 30. Session 25 — **the search was ranking on a score that stops getting worse**
+
+**Written 2026-08-22 BEFORE the sweep is run.** The code is on disk and its
+tests are green; the simulator has not been touched. Verifiable from git
+history: this entry is committed *before* `exp_coverage` is invoked, and the
+commit that carries it carries no result.
+
+This entry discharges entry 29's forward reference (*"the corrected coverage run
+— entry 30 will carry its final numbers"*) and answers the question entry 29
+left open. Entry 29's OUTCOME says the 10 dB runaway is **"stated as unexplained
+rather than guessed at"** and proposes logging every candidate the seeder
+probed. **That diagnostic is not needed. The seeder was probing fine; the
+ranking could not tell its candidates apart.**
+
+### DISCLOSURE — the plateau was confirmed before this entry was written
+
+**Required, and the precedent is entry 19.** This is not a blind
+pre-registration and must not be read as one:
+
+1. The clipping defect was **found and confirmed by a zero-SPICE re-score**
+   against the live `reward_v1.shortfalls` on 2026-08-22, *before* a word of
+   this entry existed.
+2. It was then **corroborated from a stored artifact**,
+   `coverage_results_AFTER_seeding_fix.json`, also before this entry.
+3. The transform's arithmetic below (the `penalty` column) was **computed, not
+   predicted** — it is a property of a formula, so it is not evidence about the
+   sweep either way.
+4. `search_score.py` and its 34 tests were **written and passing** before this
+   entry.
+
+**What is therefore NOT pre-registered:** that the plateau exists, and that the
+transform restores a strict ordering over the four observed misses. Both are
+already established and neither is claimed as a prediction.
+
+**What IS pre-registered, and is genuinely unknown:** whether restoring the
+gradient *changes the outcome of a search* — i.e. §Predictions Q1–Q5. Knowing
+the ranking was flat says nothing about whether CMA-ES, given a slope, walks
+down it. That is what the sweep tests.
+
+### Declared inputs — measured before this entry, NOT predicted
+
+1. **The clip.** `reward_v1.reward` scores an infeasible design as
+   `spec_r = -sum(min(v, 1.0) for v in s.values())`, where `v` is a per-row
+   shortfall in units of that row's tolerance. **Past one tolerance a row's
+   contribution is pinned at 1.0.**
+2. **The tolerances that make it bite:** `TOL["S3_f_peak_match"] = 0.30`
+   octaves, `TOL["S3_peaking_match"] = 1.5` dB. `len(V6_SPECS) = 13`.
+3. **The four affected requests**, read from
+   `coverage_results_AFTER_seeding_fix.json`. Every one recorded
+   `screen_reward` of **exactly -2.000000** — an integer, because it is simply
+   *how many rows are fully saturated* (`S3_f_peak_band` + `S3_f_peak_match`)
+   and carries nothing about how far out:
+
+        ask dB  ask GHz | got dB   got GHz | oct err |  v    clipped  penalty
+          4.0    2.253  |  4.33     8.413  |  +1.901 | 6.34   1.000   2.8464
+         10.0    2.253  | 10.74    11.778  |  +2.386 | 7.95   1.000   3.0736
+         10.0    1.627  | 10.55    10.684  |  +2.715 | 9.05   1.000   3.2028
+         10.0    1.387  | 10.15    10.303  |  +2.893 | 9.64   1.000   3.2663
+        ---- a legally-placed reference, for contrast ----------------------
+         (1.387 GHz ask -> 2.500 GHz)      |  +0.850 | 2.83   1.000   2.0414
+
+   **All five score the same clipped 1.000. The gradient pulling a runaway peak
+   back into the legal window is exactly 0.0.** A CTLE peaking at 10.3 GHz and
+   one peaking at 2.5 GHz were the same number to the optimiser, and all four
+   requests returned 0 of 45 corners.
+4. **The baseline run**, same artifact: 16 requests, **9 solved on screen / 8 at
+   45 corners / 0 at 135 points**, `total_sims` **13 718**, wall clock 5737.3 s
+   = **95.6 min**, mean **857.4** simulations per request, `budget_design_evals`
+   = 200. Nine `screen_reward` values in the feasible band **+14.055772 to
+   +14.437233**; four at **-2.000000**; one at **-1.000000**; two small
+   negatives (**-0.355881**, **-0.692555**).
+   `coverage_results_BEFORE_seeding_fix.json` has **none** at -2.0, so the
+   plateau pile-up is specific to the post-seeding-fix run — which is the run
+   this sweep must be compared against.
+5. **A second, independent instance of the same defect.**
+   `adaptive_screen.evaluate_at_points` selected a design's worst PVT point with
+   `pr.reward < worst.reward` — the **clipped** number — so with two points both
+   saturated, "worst" was whichever tied first, i.e. arbitrary.
+   `score_design_eval` re-derives the minimum using the unclipped score, so that
+   choice is now determined. Found by reading the same plateau twice; it was on
+   nobody's list.
+6. **Test state, measured 2026-08-22 on this box:** full suite **1806 passed, 11
+   deselected, 0 failed** (318.5 s); `nebula/tests/test_search_score.py`
+   **34 passed**. The 3 tests that had never executed anywhere — both
+   `_Objective` seam tests and
+   `test_method_cmaes_reads_only_the_attribute_rankview_provides` — **run and
+   pass here**, confirmed by name, because this box has the SKY130 PDK that
+   `rl/contract.py` reads at module load.
+7. **Three sabotage runs** (`CONTINUE_HERE.md` §9 rule 4): deleting the `log1p`
+   tail → 6 red; deleting the `/ROW_CAP` division → 2 red; deleting the G107
+   guard → **green, i.e. the gate was not gating.** The third is why the guard
+   test was rewritten to carry a complete margins dict plus one scorable point;
+   it then went 1 red and restoring gave 34 green.
+
+### The change, and why it is a wrapper
+
+Per row, given `v = shortfall = max(0, -margin/tol)`:
+
+    penalty(v) = min(v, 1.0) + W * log1p(max(0, v - 1.0))    capped at ROW_CAP
+    search_spec_reward = -sum(penalty_i) / ROW_CAP           in [-N, 0]
+
+`SEARCH_TAIL_W = 1.0`, `SEARCH_ROW_CAP = 4.0`, `N = 13`. Neither constant was
+fitted to an outcome. `ROW_CAP` saturates at `v = 21.1` tolerances = a
+**6.33-octave** miss; the widest miss ever observed in this project is 3.09
+octaves, so the cap is inert on real data and exists only to bound the
+arithmetic.
+
+Three properties, each pinned by a test:
+
+1. **Bit-identical to the clip for `v <= 1`** — `log1p(0.0)` is exactly `0.0`,
+   and the `/ROW_CAP` division is one positive constant applied to every
+   candidate, which cannot reorder anything. **All eight already-solved requests
+   live entirely in this region.**
+2. **Strictly monotone past the clip** — the `penalty` column above. That is the
+   recovered gradient and it is the entire point.
+3. **Band-safe** — an uncapped, undivided penalty sum would put a badly
+   infeasible design near **-50**, below `reward_v1`'s **-16** invalid floor, so
+   the search would start preferring **unbuildable** designs over measurable
+   ones. That is G107 committed on purpose. `ROW_CAP` is a band-safety
+   requirement, **not a tuning knob**.
+
+**`reward_v1.py` is untouched, deliberately.** Editing `min(v, 1.0)` there would
+silently re-base every published reward in `BASELINES.md`, the +8.950669
+ceiling, and the whole arm ranking (`PROGRESS.md` §8 rule 7). It is also not
+desirable: the clip is *correct for scoring* — one catastrophic row must not
+drown out the other twelve — and wrong only for *searching*. So the verdict
+stays clipped and a second, private scalar does the ranking.
+**`screen_reward` remains the reportable number; `screen_search_score` is a
+private ranking key and is not a compliance result anywhere.**
+
+### Predictions
+
+**Q1 — 45-corner coverage lands in 10–13 of 16.** Currently **8 of 16**.
+Confidence: **0.55.** *For:* four requests failed for a reason that is now
+removed, and solutions are known to exist in the box (entry 29's analytic scan
+found 10.01 dB @ 1.378 GHz for exactly the hardest of them). *Against:* a
+gradient is not a guarantee the search follows it to a legal point within 200
+design evaluations, and three of the four must cross ~2.9 octaves.
+**Falsifier: 9 or fewer.** A band, not a point, because the mechanism is
+established but its yield is not.
+
+**Q2 — at least 2 of the 4 plateau requests reach 45 of 45.** Confidence:
+**0.6.** *Falsifier:* 1 or fewer. This is the direct test of the fix and is
+deliberately weaker than Q1 requires, so Q1 can fail while the mechanism is
+still shown to work.
+
+**Q3 — the runaway SHAPE disappears: none of the 4 delivers a peak above
+4 GHz.** Confidence: **0.75.** This is the mechanism test and **it can pass even
+if Q1 and Q2 both fail** — a request that moves from 11.8 GHz to 2.6 GHz has
+followed the restored gradient even if it still misses the window.
+*Falsifier:* any of the four still delivers above 4 GHz.
+
+**Q4 — the 8 already-solved requests do not regress: at least 7 of 8 still pass
+45 of 45.** Confidence: **0.8.** *For:* property 1 — in the region all eight
+occupy, the new score is the old score times a positive constant, so the
+*winner* cannot be re-ranked. *Against, and this is why it is 0.8 and not 0.95:*
+CMA-ES is **path-dependent**. Early infeasible candidates now rank differently,
+so the sampling trajectory changes and a different local optimum may be reached.
+The invariance protects the scoring of the winner, **not the route to it.**
+*Falsifier:* 6 or fewer of the 8.
+
+**Q5 — simulation cost does not rise materially: `total_sims` within ±10 % of
+13 718, i.e. 12 346 to 15 090.** Confidence: **0.9.** *For:* cost is
+budget-dominated, not score-dominated — `budget_design_evals = 200` is a hard
+cap and per-request `n_sims` ran in a band of just **848–860** across all 16
+requests, and all 16 are verified regardless of whether they pass.
+*Against:* nothing in the change touches the budget, so a large move would
+itself indicate a bug. *Falsifier:* outside that band.
+
+### What would make me stop rather than iterate
+
+**If Q3 fails — the peaks still run away — the diagnosis is wrong**, or the fix
+is not reaching the ranking, and the next step is to verify the seam is live
+(`rank_unclipped` is logged per evaluation for exactly this reason) rather than
+to try a second transform. **If Q3 passes and Q1 and Q2 both fail**, the
+ranking is fixed and the *reachability* is the binding constraint — that points
+at the tuning bank or at the 200-evaluation budget, not at a third scoring
+heuristic. Record it and move; do not tune `W` or `ROW_CAP` to buy coverage.
+**Neither `reward_v1.py`, the tolerances, nor `baselines.py` may be edited to
+make a number move** — loosening a tolerance to buy coverage is the G111 defect
+committed on purpose, and this module is the alternative to it.
+
+### The decision rule — pre-agreed, and NOT renegotiable after the result
+
+The owner chose both of these by explicit answer **before** the run:
+
+* **Order:** coverage sweep first, not a PPO re-run first.
+* **Threshold:** keep PPO if the sweep shows it can learn, defined as
+  **>= 5 of 16**. Below that, drop PPO and implement SAC per
+  `nebula/NEXT_AGENT_SAC.md`.
+
+**Do not renegotiate this number after seeing the result.** If it needs to
+change, the change and its reason go in this file *above* an outcome heading,
+and the owner decides.
+
+### What this does NOT establish, whatever the outcome
+
+* **Nothing about the 135-point load-swept column**, which was 0 of 16 in both
+  prior runs and is untouched by this change. The compliance/characterisation
+  split stays (D8): the slide mandates **45** corners; the **135**-point grid
+  adds this project's own load axis. **They are never merged into one number.**
+* **Nothing about RL.** This is a change to the CMA-ES search's ranking. It
+  cannot make PPO better and is not evidence for or against the RL contribution
+  claim.
+* **Nothing about whether the eleven-row design exists.** This sweep is scored
+  on `V6_SPECS` (13 rows) at 45 corners, which is not the eleven-row question
+  in `CONTINUE_HERE.md` §4.5.
+* **Not that the four requests were the only casualties.** Any consumer that
+  ranks on `reward_v1`'s infeasible number is on the same plateau; two were
+  found (`_Objective`, `adaptive_screen.evaluate_at_points`) and **the grep for
+  others has not been done.**

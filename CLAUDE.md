@@ -22,7 +22,11 @@ guessable. Start with these, in order:
 
 0. `nebula/CONTINUE_HERE.md` — **the entry point (2026-08-19).** Where the
    project stands, what is decided, what is OPEN, what to do next.
-1. `HANDOFF.md` — state, session log, gotchas **G1–G95**
+   **As of 2026-08-22: read `nebula/SESSION_25_HANDOFF.md` (row 0 of its read
+   table) first — it is the reasoning behind the unclipped-search-score fix,
+   which is now committed. A coverage sweep is owed against it
+   (`nebula/PROGRESS.md` §5d).**
+1. `HANDOFF.md` — state, session log, gotchas **G1–G119**
 2. `CLAUDEwa.md` — the Nebula contract
 3. `nebula/G0_RESULTS.md` — toolchain findings + the cost model
 4. `nebula/NRZ_RETARGET_AUDIT.md` — the 24 PAM-4 assumptions, 3 fixed
@@ -39,12 +43,19 @@ zero**.
    §8 next steps, §9 gotchas). A change without a handoff update is
    incomplete.
 2. **Run the test suite before and after changes** (from repo root):
-   `python -m pytest tests nebula/tests -q -m "not slow"` — **407 tests,
-   ~1.5 min** (`tests/` 92 + `nebula/tests/` 315). Report the count before and
-   after. Never commit with failures. Add tests for anything you fix or build.
-   - `-m "not slow"` deselects 2 tests that re-derive golden values from the
-     full SKY130 library (~30 s each). Run them after a PDK update.
+   `python -m pytest tests nebula/tests -q -m "not slow"` — **1806 passed,
+   11 deselected, ~5 min** (4m44s and 5m19s on two runs, measured 2026-08-22 on
+   system Python 3.13.14).
+   Report the count before and after. Never commit with failures. Add tests for
+   anything you fix or build.
+   - Use the **system** interpreter, not the conda env `nebula` — that env has
+     no `torch`, and `ngspice_con.exe` is found by absolute path regardless
+     (HANDOFF §9 G69), so activation buys nothing for the suite.
+   - `-m "not slow"` deselects 11 tests, incl. ones that re-derive golden values
+     from the full SKY130 library (~30 s each). Run them after a PDK update.
    - Either suite runs standalone; the two `conftest.py` files do not collide.
+   - Do **not** run the suite alongside an experiment sweep (G70): one
+     concurrent ngspice makes it ~4.8x slower and the timings become meaningless.
 3. **Git identity:** commit with the global config
    (`Jai Kaushik <jaikaushik-prog@users.noreply.github.com>`). Never use the
    BITS Pilani email (wrong GitHub attribution — see HANDOFF §9 G12).

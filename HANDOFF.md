@@ -4192,6 +4192,108 @@ Plus: git init, .gitignore, 28 tests, Wilson-bound BER reporting.
   the call fails.
   `nebula/tests/test_spec_request_is_honoured.py` (27 tests, one watched red).
 
+- **G116 -- (nebula) a CLIPPED penalty is not only a scoring choice, it is a
+  SEARCH-KILLER. Anything that RANKS on `reward_v1`'s infeasible number is
+  optimising on a flat plateau.**
+  `reward_v1.reward` scores an infeasible design as
+  `-sum(min(v, 1.0) for v in s.values())`, `v` being a per-row shortfall in
+  units of that row's tolerance. **Past one tolerance a row's contribution is
+  pinned at 1.0**, and `TOL["S3_f_peak_match"]` is 0.30 octaves -- so a 2.9-octave
+  miss and a 0.9-octave miss are the same number.
+  **Measured cost, from `coverage_results_AFTER_seeding_fix.json`:** all four
+  out-of-window coverage requests recorded `screen_reward` of **exactly
+  -2.000000** -- an integer, because it is simply *how many rows are fully
+  saturated* (`S3_f_peak_band` + `S3_f_peak_match`) and carries nothing about how
+  far out. Four requests, four different failures, one score:
+
+      ask  4.0 dB @ 2.253 GHz  ->   4.33 dB @  8.413 GHz  (+1.901 oct)  0/45
+      ask 10.0 dB @ 2.253 GHz  ->  10.74 dB @ 11.778 GHz  (+2.386 oct)  0/45
+      ask 10.0 dB @ 1.627 GHz  ->  10.55 dB @ 10.684 GHz  (+2.715 oct)  0/45
+      ask 10.0 dB @ 1.387 GHz  ->  10.15 dB @ 10.303 GHz  (+2.893 oct)  0/45
+
+  **The gradient pulling a runaway peak back into the legal window was exactly
+  0.0.** The optimiser was not failing; it could not tell its candidates apart.
+  **The tell is an INTEGER score, or a set of identical scores on designs that
+  fail differently.** If several failures report the same number to machine
+  precision, the metric has saturated -- check before blaming the search.
+  **The same bug existed independently in a second place:**
+  `adaptive_screen.evaluate_at_points` picked a design's worst PVT point with
+  `pr.reward < worst.reward`, the clipped number, so with two saturated points
+  "worst" was whichever tied first, i.e. arbitrary.
+  **The fix is a WRAPPER, not a two-character edit** (`PROGRESS.md` §8 rule 7):
+  `experiments/search_score.py` gives the *search* an uncapped score while the
+  *verdict* stays `reward_v1`'s clipped one. Editing `min(v, 1.0)` in
+  `reward_v1.py` would silently re-base every published reward in
+  `BASELINES.md`, the +8.950669 ceiling and the whole arm ranking. The clip is
+  **correct for scoring** -- one catastrophic row must not drown out the other
+  twelve -- and wrong only for **searching**; those are two jobs and conflating
+  them cost four requests.
+  **Two consumers were found. The grep for others has not been done.**
+  `nebula/tests/test_search_score.py` (34 tests, three sabotage runs).
+
+- **G117 -- (nebula) a SABOTAGE RUN THAT STAYS GREEN means the test passed for
+  the wrong reason. It is the only way to find a decorative gate.**
+  `CONTINUE_HERE.md` §9 rule 4 requires every new gate be deliberately broken,
+  watched go red, and restored. Three sabotages of `search_score.py`:
+
+      delete the log1p tail          ->  6 red
+      delete the /ROW_CAP division   ->  2 red
+      delete the G107 `ev.ok` guard  ->  GREEN -- the gate was not gating
+
+  The third one is the lesson. `test_an_unscorable_design_passes_through_as_the_floor`
+  used an eval with empty `points`/`margins`, so `score_margins` returned `None`
+  and the function **fell back to `ev.reward` anyway** -- the assertion held for
+  a reason unrelated to the guard it claimed to test. Rewritten to carry a
+  complete margins dict plus one scorable point (realistic, because
+  `evaluate_at_points`'s unscorable branch sets
+  `margins=(worst.margins if worst else {})`), it then went 1 red, and restoring
+  gave 34 green.
+  **Without the sabotage step this would have shipped as a test that asserts
+  nothing.** A green sabotage is not a relief, it is a finding.
+
+- **G118 -- (nebula) `rl/contract.py` READS THE PDK AT MODULE LOAD, so importing
+  anything under `experiments/` requires the SKY130 install -- and tests that do
+  cannot run anywhere but a box with the PDK.**
+  Session 25 developed `search_score.py` in a Linux sandbox with numpy only.
+  31 of its 34 tests ran there; **3 could not run at all** -- the two
+  `_Objective` seam tests and
+  `test_method_cmaes_reads_only_the_attribute_rankview_provides` -- because they
+  import `exp_coverage` / `baselines`, which pull `rl/contract.py`, which reads
+  `C:/Users/DELL/sky130A` at import time. They were reported as **"3 deferred"**
+  and were **verified on the owner's Windows box in session 26: all 3 pass**,
+  confirmed by name rather than by a total.
+  **Consequence for anyone reviewing a test count from a sandbox:** a suite that
+  reports N passed may have silently *collected* fewer than it should. The
+  ngspice binary is found by absolute path (`_DEFAULT_NGSPICE`, G69) so it does
+  **not** need conda activated -- but the PDK is a hard import-time dependency
+  and there is no fallback.
+
+- **G119 -- (nebula) a LINE-ENDING DIFF IS A PROPERTY OF THE ENVIRONMENT, NOT
+  THE REPO. A phantom 338,478-line diff cost a session's worth of planning.**
+  `SESSION_25_HANDOFF.md` §7.1 recorded the working tree as **203 files,
+  338,478 insertions/deletions** of pure CRLF-vs-LF noise, instructed the next
+  agent to use `--ignore-all-space` for every diff, and made "fix the line
+  endings" a prerequisite commit. **On the owner's Windows box none of that is
+  true.** Measured 2026-08-22:
+
+      git status --short                     ->  7 entries (4 modified, 3 untracked)
+      git diff --stat                        ->  4 files, 63 insertions, 5 deletions
+      git diff --ignore-all-space --stat     ->  4 files, 63 insertions, 5 deletions
+
+  **The plain diff and the whitespace-ignoring diff are identical**, so there was
+  no debt and nothing to bury the real change in.
+  **Mechanism:** `core.autocrlf = true` is set here and there is no
+  `.gitattributes`, so git converts CRLF back to LF before it compares or
+  commits -- a CRLF worktree against an LF history is a **zero** diff. Session 25
+  measured in a **Linux sandbox**, where `autocrlf` defaults to off and the same
+  tree genuinely does look like a total rewrite. The number was real where it was
+  taken and is an artifact of where it was taken.
+  **The check is two commands and it is cheap: run `git diff --stat` AND
+  `git diff --ignore-all-space --stat`. If they agree, there is no line-ending
+  debt** -- and do not run `git add --renormalize .` to fix a diff you have not
+  reproduced locally. Same family as the repo's third named failure mode (*two
+  definitions of one thing*), except here the two definitions are two machines.
+
 ## 10. Environment
 
 - Windows 11, PowerShell 5.1 (+ Git Bash available), Python 3.13.14,
@@ -9750,3 +9852,161 @@ the discrepancy stays visible instead of being silently resolved.
 IDs are a real defect in the catalogue and should be renumbered, but doing it
 here would have touched five unrelated entries in a commit about frequency
 quantisation.
+
+### 2026-08-21 - Session 23 (RECONSTRUCTED -- the log skipped this session entirely; the RL contribution claim was DROPPED and coverage went 6/16 -> 8/16)
+
+**This entry was written in session 26, from the git log and `PREDICTIONS.md`
+entries 24-29, because session 23 never wrote one.** It is a reconstruction and
+says so; anything not evidenced by a commit or an artifact is marked as unknown
+rather than filled in.
+
+**On the numbering, and this is a correction.**
+`SESSION_25_HANDOFF.md` §6 item 3 says *"sessions 23 and 24 are missing
+entirely."* **Session 23 is missing and has been reconstructed here. There is no
+evidence that a session 24 ever existed:** `PREDICTIONS.md` entries **24-29 all
+self-label "Session 23"**, `NEXT_AGENT_SAC.md` line 3 reads *"Written
+2026-08-21, end of session 23"*, `PROGRESS.md` §3 reads *"Decisions made
+(session 23, by the owner)"*, and a grep for "session 24" across every `.md` in
+the repo returns **nothing**. So the numbering appears to run **23 -> 25**, with
+25 being the Claude-desktop session. No entry has been invented for a 24
+(§9 rule 5: never fabricate).
+
+**Scope:** 31 commits, all dated 2026-08-21, `9201526`..`45c4e51`.
+
+**The arc, in order:**
+
+1. **Spec coverage became the headline experiment** (entry 24, `9201526`): does
+   the framework answer *every* request, not just the one it was tuned on?
+   `target_peaking_db` went live, so the spec manifold is 2-D for the first time
+   (`CONTINUE_HERE.md` §5 OPEN item 5).
+2. **Three defects in the coverage instrument, found in sequence** -- and each
+   one invalidated the run before it: **G110** (the self-check audited the screen
+   against the *wrong grid*), **G111** (**nothing had ever required the peak to
+   be INSIDE S3's window** -- a row written as "distance from target" is not a
+   band constraint), and **G115** (the *corrected* run never applied the
+   correction: `[k for k in R.V6_SPECS if k in m]` silently dropped the two rows
+   G111 had just added, so verification **scored 11 rows while reporting a
+   13-row result** and passed a design whose peak was 4.3x outside spec at 45 of
+   45 corners).
+3. **The RL contribution claim was DROPPED**, by the condition registered in
+   advance (`471efd1`, entry 26). The measured finding is that **a library
+   lookup over already-simulated designs is the method** -- entry 27 then asked
+   whether RL adds anything *on top of* retrieval, and entry 28 gave the refiner
+   permission to decline. Entry 26 is recorded with **"NO PREDICTIONS WERE
+   REGISTERED"** in its own title, which is the discipline working against its
+   author.
+4. **The RL blocker was diagnosed as simulator cost, not the algorithm**
+   (`df34554`, `7d42003`), and an analytic pre-training env was built. **G114**
+   records what warm-starting a policy into a *different* environment costs.
+5. **Two process gotchas earned the hard way:** **G112** (a name error in a late
+   phase throws away the whole expensive phase -- one run died after 19.3 min of
+   training on a wrong attribute name) and **G113** (a completed run silently
+   **overwrote** another completed run).
+6. **The seeding fix, and the result this session is judged on** (entry 29,
+   `1e8ef61`, `45c4e51`): rank candidate seeds on **both** requested axes rather
+   than frequency alone, plus a zero-simulation analytic pre-scan.
+   **Five of five predictions hit:**
+
+       MANDATED 45-corner coverage      6 / 16  ->  8 / 16
+       low  boost (4-6 dB)              6 / 8   ->  6 / 8
+       high boost (8-10 dB)             0 / 8   ->  2 / 8
+       SPICE per request                ~993    ->  860   (predicted < +20 %, it FELL)
+       screen self-check                14/16   ->  16/16 predictive
+
+   **And it traded one failure mode for another, which is the finding.** At
+   10 dB the boost is now hit almost exactly and the frequency blows out by a
+   factor of seven (10.15 dB @ **10.303 GHz** against 10.0 dB @ 1.387 GHz asked).
+   Entry 29 states this as **unexplained rather than guessed at** and proposes a
+   seeder-candidate log. **Session 25 explained it instead -- see G116; the
+   seeder was fine and the ranking was flat.**
+7. **`NEXT_AGENT_SAC.md`** was written at the end of the session (`8b9b28c`) as
+   the implementation brief for a SAC hybrid, and **`PROGRESS.md` was created**
+   as a lean brief alongside the much larger `CONTINUE_HERE.md`.
+
+**Gotchas added:** G109-G115 (seven).
+**Not known from the artifacts:** the session's own test counts, and where a
+session boundary would have fallen inside the 31 commits.
+
+### 2026-08-22 - Session 26 (session 25's search-ranking fix: 3 never-run tests VERIFIED, entry 30 pre-registered, the CRLF debt DISPROVED. The sweep has NOT run)
+
+**No simulations. This commit is a fix, a pre-registration and a correction.**
+Session 25 ran in the Claude desktop app and left the code on disk with its
+reasoning in `nebula/SESSION_25_HANDOFF.md`; this session verified it on the
+owner's box, pre-registered the outcome, and stopped **before** the sweep.
+
+**1. The defect session 25 found, now G116.** The coverage search ranked
+candidates on `reward_v1`'s infeasible score, which clips each row's shortfall at
+one tolerance -- so past 0.30 octaves of frequency error **every miss scores the
+same**. All four out-of-window requests recorded `screen_reward` of **exactly
+-2.000000** while sitting 1.901, 2.386, 2.715 and 2.893 octaves off. The
+gradient pulling a runaway peak home was **0.0**. The fix is a wrapper,
+`experiments/search_score.py`: the *search* ranks on an uncapped score, the
+*verdict* stays `reward_v1`'s clipped number, and `reward_v1.py` is untouched
+(§9 G116 has the transform and the three proved properties). A second, independent
+instance of the same bug was found in `adaptive_screen.evaluate_at_points`.
+
+**2. The three tests that had never executed anywhere now pass.** Session 25
+developed in a Linux sandbox with numpy only and reported **"31 passed, 3
+deferred"**; the 3 import `exp_coverage`/`baselines`, which pull
+`rl/contract.py`, which reads the SKY130 PDK at module load (**G118**). On this
+box **all 34 pass**, and the 3 were confirmed **by name** rather than by a total,
+because a count cannot distinguish "ran and passed" from "never collected":
+
+    test_method_cmaes_reads_only_the_attribute_rankview_provides   PASSED
+    test_objective_ranks_on_the_unclipped_score_and_reports_the_clipped_one   PASSED
+    test_objective_with_rank_unclipped_false_reproduces_the_old_behaviour     PASSED
+
+**3. `PREDICTIONS.md` entry 30 is pre-registered and committed BEFORE the run**
+(§9 rule 3 / `PROGRESS.md` §8 rule 3). Five falsifiable predictions with a
+band on 45-corner coverage (**8/16 now, 10-13/16 predicted**), an explicit
+no-regression clause on the eight solved requests, a cost band, and **a full
+disclosure section** stating that the plateau was already confirmed by a
+zero-SPICE re-score and from a stored artifact *before* the entry was written.
+The precedent for that disclosure is entry 19. **What is pre-registered is
+narrower than the entry's subject:** that the plateau exists is *established*,
+not predicted; what is genuinely unknown is whether a search given a slope walks
+down it.
+
+**4. The CRLF debt in `SESSION_25_HANDOFF.md` §7.1 does not exist -- G119.**
+That section reports **203 files, 338,478 insertions/deletions** of line-ending
+noise and makes a hygiene commit a prerequisite. Measured here, `git status
+--short` returns **7 entries** and the plain `git diff --stat` and
+`git diff --ignore-all-space --stat` are **identical** at 4 files / 63
+insertions / 5 deletions. `core.autocrlf = true` on this box normalises CRLF
+before comparing, so there is no debt; session 25's Linux sandbox had it off,
+where the same tree does look like a total rewrite. **The owner's decision was
+to record the finding and skip the commit rather than add a `.gitattributes`.**
+No `git add --renormalize` was run.
+
+**5. The test count in the docs was wrong in both directions, and is now
+measured.** `CLAUDE.md` claimed **407** (`tests/` 92 + `nebula/tests/` 315,
+~1.5 min, "deselects 2"); `PROGRESS.md` claimed **1667**, 11 deselected, 4m50s.
+Measured on this box, system Python 3.13.14:
+
+    python -m pytest tests nebula/tests -q -m "not slow"
+    1806 passed, 11 deselected, 1 warning in 318.54s (0:05:18)   <- before the doc edits
+    1806 passed, 11 deselected, 1 warning in 283.87s (0:04:43)   <- after, same counts
+
+The **11 deselected** matches `PROGRESS.md`, so the `slow` marker set has not
+moved and the +139 is genuine test growth across sessions 23-25 (34 of it is
+`test_search_score.py`). `CLAUDE.md`'s 407 and its "deselects 2" are both stale
+and are corrected in this commit. **The single warning is pre-existing**
+(`scikit-rf not installed`, `python_models/channel.py:24`) and belongs to the
+other project.
+
+**6. Which interpreter runs the suite -- the two briefs disagreed.**
+`CONTINUE_HERE.md` §7 says the **system** Python because the conda env has no
+torch; `SESSION_25_HANDOFF.md` §8 says `conda activate nebula`. **Measured:
+`torch` is absent from the conda env and present in system Python, and
+`ngspice_con.exe` is located by absolute path (`_DEFAULT_NGSPICE`, G69) so it
+does not need conda at all.** `CONTINUE_HERE.md` is right; activating conda
+would lose torch and gain nothing.
+
+**Gotchas added:** G116-G119 (four). Three come from
+`SESSION_25_HANDOFF.md` §7.2; G119 is this session's.
+**Tests: 1806 passed, 11 deselected, 0 failed, both before and after** -- the
+code change was already on disk and green when this session started, and the
+documentation changes in this commit are not executable.
+**NOT DONE, and deliberately:** the coverage sweep
+(`python -m nebula.experiments.exp_coverage`) has **not** been run. It is the
+next action, and entry 30 is now committed ahead of it.
