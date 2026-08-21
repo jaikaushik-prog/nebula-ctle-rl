@@ -4481,3 +4481,95 @@ and the result is what that usually produces.
   What is measured is that **this transfer**, done this way, destroyed it.
 * The break-even arithmetic remains unreportable: still a ratio over a policy
   that solves nothing.
+
+---
+
+## 27. Session 23 — **does RL add anything ON TOP of retrieval?**
+
+**Written 2026-08-21 BEFORE the code exists, let alone the run.** Registering
+early and deliberately: entry 25 was written a minute after its run launched
+and entry 26 was not registered at all. Both are on the record as process
+failures. This one is written while the coverage re-run occupies the simulator
+and `exp_rl_refine.py` has not been created — verifiable from git history.
+
+### Why the previous RL result does not answer this question
+
+Entries 25 and 26 compared:
+
+    library    pick the best of ~74 500 ALREADY-SIMULATED designs
+    policy     start from a UNIFORM RANDOM design and make 8 edits
+
+**Those are not the same problem.** The lookup was handed a very large head
+start and the policy was asked to beat it from nothing; it lost 1 to 9. That
+measures the difficulty gap as much as it measures either method.
+
+The question the deliverable actually raises — and the one the owner's original
+brief described, with RL as the proposal/refinement layer rather than a
+from-scratch designer — is:
+
+> **Given the library's answer, does the policy make it better?**
+
+    step 1   library retrieves a start point       0 SPICE
+    step 2   policy makes <= 8 refining edits     ~32 SPICE
+                                                   ----
+                                                   ~32 SPICE per request
+
+### Two changes, both stated before the run
+
+1. **The policy starts from the library's design**, not from uniform random.
+2. **`max_step` drops from 0.15 to 0.04.** At 0.15 an 8-step episode can travel
+   1.2 box widths — it is a search stride, not a refinement stride, and it can
+   leave a good neighbourhood on the first move. 0.04 x 8 = 0.32 box widths,
+   which is a refinement. **This is a change to a published constant and is
+   therefore made in the WRAPPER, not in `rl/contract.py` (rule 7).**
+
+The pre-trained policy (`rl_policy_pretrained.pt`, 200 000 analytic steps) is
+used. **Not the fine-tuned one** — G114 measured that fine-tuning returned it to
+its initialisation.
+
+### The bar, and it is not moveable afterwards
+
+    library, measured (entry 25):   9 / 16 feasible, median +10.0476, 4.0 sims/request
+
+### Predictions
+
+**Q1 — the refined policy beats the library on feasibility**, i.e. **10 or more
+of 16**. Confidence: **0.4.**
+*For:* it starts from the library's answer, so it should be able to at least
+match it, and 7 of the library's 16 failures are near-misses that small edits
+could plausibly close.
+*Against:* the same policy solved 1 of 16 from random starts, and nothing has
+been retrained since. A policy that is weak everywhere does not become strong
+because its starting point improved.
+*Falsifier:* 9 or fewer.
+
+**Q2 — the refined policy does not make things WORSE than the library it
+started from**, i.e. no worse than 8 of 16. Confidence: **0.55, and the fact
+that this is barely a coin flip is the honest state of it.**
+*Against:* the policy's edits are the same edits that produced 1 of 16, and
+`max_step = 0.04` reduces but does not remove the risk of walking out of a good
+design. **A policy that degrades what it is given is a real and reportable
+outcome.**
+*Falsifier:* 7 or fewer.
+
+**Q3 — the median reward improves over the library's +10.0476.** Confidence:
+**0.35.** *Falsifier:* median at or below +10.0476.
+
+**Q4 — cost lands in 25-45 SPICE calls per request**, against the library's 4.
+*Basis:* up to 8 edits x 4 screen points, minus episodes that end early.
+Confidence: 0.7. *Falsifier:* outside that band.
+
+### The decision rule, written before the result
+
+* **Q1 hits** -> there is a real, honest RL contribution: *retrieval finds the
+  neighbourhood, RL refines it*, at ~8x the library's simulation cost. Report
+  it with the cost stated.
+* **Q1 misses and Q2 hits** -> RL neither helps nor harms on top of retrieval.
+  **The contribution claim stays dropped**; the report says the experiment was
+  run and what it measured.
+* **Q2 also misses** -> RL actively degrades a retrieved design. That is the
+  strongest negative available and it gets reported as such, with the
+  degradation quantified.
+
+**No fourth branch. There is no result here that reopens the RL claim other
+than Q1.**
