@@ -4324,3 +4324,70 @@ and reporting it honestly is worth more than winning it.
 * The 135-point load-swept grid. Everything here is the mandated 45-corner
   framing at the design load (G109).
 * Any claim about PPO as an algorithm. One policy, one seed, one architecture.
+
+### OUTCOME — run 2026-08-21, 16 held-out requests, 163.3 min, 25 793 SPICE runs
+
+    arm          feasible   median reward   sims/request   s/request
+    policy         0 / 16      -3.0000            8.1          3.6
+    library        9 / 16     +10.0476            4.0          8.1
+    cmaes         14 / 16     +10.2569          800.0        314.2
+    random         5 / 16      -0.3093          800.0        286.7
+
+    training (paid once): 1200 env steps, 5400 SPICE calls
+
+**Three hits, two misses — and Q3's miss fires the drop condition I wrote in
+advance.**
+
+| | prediction | outcome |
+|---|---|---|
+| Q1 | policy's median beats uniform random (0.7) | **MISS** — −3.0000 against −0.3093. The policy is worse in absolute terms, on 8.1 sims/request against random's 800 |
+| Q2 | policy does NOT beat fresh CMA-ES (0.75) | **HIT** — −3.0000 against +10.2569, and not close |
+| Q3 | **policy beats the LIBRARY LOOKUP (0.55)** | **MISS** — −3.0000 against +10.0476. **This is the falsifier I named** |
+| Q4 | fewer than half the arms feasible per request (0.6) | **HIT** — mean 1.75 of 4 arms = 43.8 %; 7 of 16 requests had fewer than half |
+| Q5 | break-even vs CMA-ES in [3, 60] requests | **HIT** — measured **7** (5400 training sims / 791.9 saved per request) |
+
+### THE DROP CONDITION, AND WHAT HONOURING IT MEANS HERE
+
+Entry 25 said: *"If Q3 fails, the RL contribution claim should be dropped from
+the report and replaced with the measured negative plus this explanation."*
+
+**Q3 failed. The claim as it stood is dropped.** The policy trained for this
+experiment solves **0 of 16** held-out requests and is beaten by a table lookup
+costing 4 simulations.
+
+**What is NOT permitted here is treating the diagnosis as an escape.** The
+diagnosis — `log_std` unmoved at −0.05..+0.053 after 1200 steps, i.e. the
+network never trained — was made and committed **before this run finished**,
+and it is independently checkable from the checkpoint on disk. So the correct
+handling is:
+
+* **this result stands, as a measured negative, in the report**;
+* the retrained policy is a **separate, pre-committed follow-up** (entry 26,
+  to be written before that run), not a revision of this one;
+* **if the retrained policy also loses to the library, the RL contribution
+  claim is dropped permanently** and the report says so.
+
+### THE BREAK-EVEN NUMBER IS REAL AND MUST NOT BE QUOTED
+
+**7 requests** is arithmetically correct and **meaningless as stated**: it is
+the point at which the policy's training cost is repaid by an answer that
+solves nothing. A cost-amortisation figure for a method with a 0 % success rate
+is a ratio with a worthless numerator. **It is recorded here and is not
+reportable until the policy solves something.**
+
+### THE RESULT THAT WAS NOT PREDICTED, AND IT IS THE GOOD ONE
+
+**The library lookup beats uniform random search on QUALITY while spending
+1/200th of the simulations.**
+
+    library    9 of 16 feasible      4 sims/request
+    random     5 of 16 feasible    800 sims/request
+
+Nothing in this entry predicted that, because the library was framed only as
+the arm the policy had to beat. It is the strongest amortisation evidence this
+project has produced and it owes nothing to RL: **re-scoring designs that were
+already simulated answers 56 % of unseen requests for four simulations each**,
+where two hundred times the search budget spent from scratch answers 31 %.
+
+Against CMA-ES (14 of 16 at 800 sims/request) the honest framing is a
+**cost/quality trade with both ends measured**, not a winner.
