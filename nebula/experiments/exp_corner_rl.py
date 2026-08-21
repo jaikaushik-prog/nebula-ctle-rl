@@ -173,6 +173,12 @@ class ArmResult:
     worst_point: Optional[str] = None
     worst_spec: Optional[str] = None
     reason: Optional[str] = None
+    #: Screen points where the eye could be COMPUTED, of `len(_screen())`.
+    #: **Reported beside the reward, never inside it.** Scoring the eye put
+    #: every arm at the invalid floor -- see `_score` -- because the fit is
+    #: rejected under compression, which is a fact about the circuit and not
+    #: about the search. Keeping the count means the fact is still published.
+    n_eye_ok: int = 0
 
 
 def _budget_calls(env) -> int:

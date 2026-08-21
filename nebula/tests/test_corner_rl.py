@@ -256,3 +256,47 @@ def test_the_policy_is_CHECKPOINTED_before_the_arms_run():
     i_save = src.index("torch.save")
     i_arms = src.index("arm_policy(")
     assert i_save < i_arms, "the policy must be saved BEFORE the arms run"
+
+
+def test_every_ArmResult_construction_uses_REAL_fields():
+    """**Caught nothing, twice, and cost two 20-minute training runs.**
+
+    Both failures had the same shape: an attribute or keyword that does not
+    exist, in a code path that only executes AFTER training. `python -c
+    "import ..."` passes, the tests pass, training runs for 25 minutes, and
+    then the first arm raises.
+
+    Checked statically over the module's AST so it costs nothing and covers
+    every call site, including ones no cheap test would reach.
+    """
+    import ast
+    import dataclasses
+    import inspect
+
+    from nebula.experiments import exp_corner_rl as M
+
+    fields = {f.name for f in dataclasses.fields(M.ArmResult)}
+    tree = ast.parse(inspect.getsource(M))
+    seen = 0
+    for node in ast.walk(tree):
+        if (isinstance(node, ast.Call) and isinstance(node.func, ast.Name)
+                and node.func.id == "ArmResult"):
+            seen += 1
+            for kw in node.keywords:
+                assert kw.arg in fields, (
+                    f"ArmResult(..., {kw.arg}=...) is not a field: {sorted(fields)}")
+            assert len(node.args) <= len(fields)
+    assert seen >= 4, f"expected one construction per arm, found {seen}"
+
+
+def test_the_checkpoint_records_its_own_TRAINING_COST():
+    """The break-even number divides by this. A checkpoint that does not carry
+    it must RAISE rather than let a zero print an infinitely good result."""
+    import inspect
+
+    from nebula.experiments import exp_corner_rl as M
+
+    src = inspect.getsource(M.run)
+    assert '"train_sims"' in src, "the checkpoint must save its SPICE cost"
+    assert "cannot be computed" in src, (
+        "loading a checkpoint without a recorded training cost must raise")
