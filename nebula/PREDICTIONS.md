@@ -4391,3 +4391,93 @@ where two hundred times the search budget spent from scratch answers 31 %.
 
 Against CMA-ES (14 of 16 at 800 sims/request) the honest framing is a
 **cost/quality trade with both ends measured**, not a winner.
+
+---
+
+## 26. Session 23 — **the retrained policy. NO PREDICTIONS WERE REGISTERED, and the claim is dropped.**
+
+### PROCESS FAILURE, FIRST
+
+**This run was not pre-registered at all.** I chained it to launch
+automatically when the benchmark finished, said *"I'll pre-register that before
+the results land"*, and the chain fired first. Entry 25 was written a minute
+late; **this one was not written at all until after the numbers existed.**
+
+Rule 3 exists so a result cannot be framed after it is known. **Nothing below
+is protected by that discipline** and a reader should treat this entry as
+strictly weaker evidence than entries 22–25. The only defence available is that
+the two things it turns on — the drop condition, and the diagnosis — were
+**both committed before this run started** (entry 25 and `PROGRESS.md`
+respectively), and both are checkable in git history.
+
+### What ran
+
+    1. pre-train   200 000 analytic steps   17.4 min    0 SPICE calls
+    2. measure     16 held-out requests, on SPICE
+    3. fine-tune     3 000 SPICE steps      47.2 min   13 688 SPICE calls
+    4. measure     the same 16, on SPICE
+
+### The numbers
+
+    policy, untrained (entry 25)   0 / 16 feasible   median  -3.0000    8.1 sims/req
+    policy, PRE-TRAINED only       1 / 16 feasible   median  -0.7261   16.7 sims/req
+    policy, AFTER fine-tuning      0 / 16 feasible   median  -3.0000    7.3 sims/req
+    library lookup (entry 25)      9 / 16 feasible   median +10.0476    4.0 sims/req
+
+### THE DROP CONDITION IS HONOURED
+
+Entry 25: *"if the retrained policy also loses to the library, the RL
+contribution claim is dropped permanently and the report says so."*
+
+**It lost — 1 of 16 against 9 of 16. The claim is dropped.** The report will
+carry the measured negative and the diagnosis, not a contribution claim.
+
+### Finding 1 — the diagnosis was right, and insufficient
+
+`log_std` is the parameter that never moved on the 1200-step run:
+
+    1 200 SPICE steps        -0.05 .. +0.053    sigma 1.000   <- never trained
+    200 000 analytic steps   -3.022 .. -0.719   sigma 0.199   <- trained hard
+
+**So budget WAS a real blocker and removing it WAS necessary.** The policy went
+from 0/16 to 1/16 and its median improved from −3.0000 to −0.7261.
+
+**It was not sufficient, and 1 of 16 is one success in sixteen — weak evidence
+of anything.** The honest statement is that the training-budget defect is fixed
+and the policy is still not competitive with a table lookup costing four
+simulations.
+
+### Finding 2 — **fine-tuning on SPICE ERASED the pre-training.** This is the good one
+
+    after 200 000 analytic steps   log_std  -3.022 .. -0.719   sigma 0.199
+    after   3 000 SPICE steps      log_std  -0.097 .. +0.063   sigma 0.988
+
+**Three thousand SPICE steps returned a converged policy to its initialisation
+value.** Feasibility went 1/16 → 0/16, median −0.7261 → −3.0000, and episodes
+got *shorter* (16.7 → 7.3 sims/request), i.e. the policy started producing
+unbuildable designs sooner. That is catastrophic forgetting, measured rather
+than inferred, and **the `log_std` diagnostic caught it exactly as designed.**
+
+Three mechanisms, none excluded, all fixable and none yet tested:
+
+1. **A fresh optimiser at full learning rate.** `ppo.train` builds a new Adam
+   each call, so a converged policy is hit with initial-scale updates.
+2. **The reward scale changes between the two stages.** Analytic scores
+   `V6A_SPECS` (5 rows, invalid floor −8); SPICE scores `V6D_SPECS` (9 rows,
+   floor −12). The value function transfers wrong, so the advantages — and
+   therefore the policy updates — are large and misdirected.
+3. **The episode dynamics change.** The analytic env REVERTS a bad edit; the
+   SPICE env TERMINATES on one. The state distribution the policy is fine-tuned
+   on is not the one it was trained on.
+
+**Warm-starting a policy across two environments that differ in reward scale,
+episode termination AND optimiser state is three uncontrolled changes at once**,
+and the result is what that usually produces.
+
+### What is NOT claimed
+
+* Not that PPO cannot do this. One architecture, one seed, one schedule.
+* Not that pre-training does not work — it demonstrably trained the network.
+  What is measured is that **this transfer**, done this way, destroyed it.
+* The break-even arithmetic remains unreportable: still a ratio over a policy
+  that solves nothing.

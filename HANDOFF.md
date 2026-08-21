@@ -4118,6 +4118,44 @@ Plus: git init, .gitignore, 28 tests, Wilson-bound BER reporting.
   rather than deleted (rule 10): the concurrency failure is only legible with
   both runs side by side.
 
+- **G114 -- (nebula) warm-starting a policy into a DIFFERENT environment
+  erases it, and the tell is the exploration parameter returning to its
+  initial value.**
+  Session 23 pre-trained a policy on the analytic env (200 000 steps, 17.4 min,
+  zero SPICE) and then fine-tuned it on the SPICE env for 3000 steps:
+
+      after 200 000 analytic steps   log_std  -3.022 .. -0.719   sigma 0.199
+      after   3 000 SPICE steps      log_std  -0.097 .. +0.063   sigma 0.988
+
+  **3000 steps returned a converged policy to its initialisation.** Feasibility
+  1/16 -> 0/16, median -0.7261 -> -3.0000, and episodes got SHORTER (16.7 ->
+  7.3 SPICE calls per request) -- the policy began producing unbuildable
+  designs sooner than before it was "improved".
+  **Three uncontrolled changes at once, which is the actual error:**
+  1. **fresh optimiser at full learning rate** -- `ppo.train` builds a new Adam
+     per call, so a converged policy is hit with initial-scale updates;
+  2. **the reward scale changes** -- analytic scores `V6A_SPECS` (5 rows,
+     invalid floor -8), SPICE scores `V6D_SPECS` (9 rows, floor -12), so the
+     value function transfers wrong and the advantages are large and
+     misdirected;
+  3. **the episode dynamics change** -- the analytic env REVERTS a bad edit,
+     the SPICE env TERMINATES on one, so the state distribution differs.
+  **The general form: "fine-tune on the real thing" is three changes wearing
+  one name.** Reward scale, episode structure and optimiser state each have to
+  transfer deliberately, and changing them together makes the failure
+  undiagnosable -- which is why this entry lists mechanisms it has NOT
+  separated rather than naming a cause.
+  **The cheap instrument is the one that caught it: log 'is it learning?'
+  separately from 'is it good?'.** `log_std` moving is learning; `log_std`
+  returning to its initial value is unlearning; neither is visible in the
+  reward, which was already negative in both states. `exp_rl_pretrain.
+  _policy_diagnostics` records it every stage, and the run prints an explicit
+  warning when the before/after median does not improve.
+  Fixes to try, none yet tested: a much lower fine-tune learning rate; keeping
+  the optimiser state; matching the two spec sets so the value function
+  transfers; making the SPICE env revert rather than terminate (the wrapper
+  precedent exists).
+
 ## 10. Environment
 
 - Windows 11, PowerShell 5.1 (+ Git Bash available), Python 3.13.14,
