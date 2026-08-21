@@ -327,3 +327,47 @@ def test_a_row_that_cannot_be_scored_RAISES_rather_than_being_dropped():
           "peaking_db_scored": 7.0}
     with _pytest.raises(KeyError):
         _rescore([pt], 1.921e9, 7.0)
+
+
+def test_an_UNMEASURABLE_EYE_makes_the_point_unscorable_not_a_crash():
+    """**G107 inside the assertion.** The eye is computed from a pole-zero fit
+    that is rejected under compression (G103: peaking and drive handling are
+    one knob), so at some corners it genuinely cannot be measured. That point
+    is UNSCORABLE — counted, blocking compliance, but not a code defect.
+    """
+    import math
+
+    from nebula.experiments.exp_coverage import _rescore
+
+    pt = {"ok": True, "cl_f": 3.26e-14, "corner": "sf", "vdd_scale": 1.05,
+          "temp_c": 0.0,
+          "margins": {k: 1.0 for k in R.V6V_SPECS
+                      if k not in R.S8_SPECS
+                      and not k.startswith(("S3_f_peak", "S3_peaking_match"))},
+          "f_peak_oct_scored": math.log2(1.9e9 / 2.5e9),
+          "peaking_db_scored": 7.0}
+    out = _rescore([pt], 1.921e9, 7.0)[0]
+    assert out["unscorable"] is True
+    assert out["reward"] is None, "an unscorable point must not carry a number"
+    assert out["feasible"] is False, "it still blocks compliance"
+
+
+def test_a_MISSING_DEVICE_ROW_still_raises():
+    """The eye may be absent; a device row may not. G115 was exactly a device
+    row going missing behind a filter, and weakening the assertion to let the
+    eye through must not weaken it for anything else."""
+    import math
+
+    import pytest as _pytest
+
+    from nebula.experiments.exp_coverage import _rescore
+
+    pt = {"ok": True, "cl_f": 3.26e-14, "corner": "tt", "vdd_scale": 1.0,
+          "temp_c": 27.0,
+          "margins": {k: 1.0 for k in R.V6V_SPECS
+                      if k not in R.S8_SPECS and k != "S6_power"
+                      and not k.startswith(("S3_f_peak", "S3_peaking_match"))},
+          "f_peak_oct_scored": math.log2(1.9e9 / 2.5e9),
+          "peaking_db_scored": 7.0}
+    with _pytest.raises(KeyError, match="S6_power"):
+        _rescore([pt], 1.921e9, 7.0)

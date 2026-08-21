@@ -252,7 +252,11 @@ def test_the_policy_is_CHECKPOINTED_before_the_arms_run():
 
     from nebula.experiments import exp_corner_rl as M
 
-    src = inspect.getsource(M.run)
+    # `run()` is now a thin run-lock wrapper around `_run()` (the lock was
+    # added after a finished run silently overwrote another finished run's
+    # artifact -- G113). Inspect where the work actually is, not where it used
+    # to be.
+    src = inspect.getsource(M._run)
     i_save = src.index("torch.save")
     i_arms = src.index("arm_policy(")
     assert i_save < i_arms, "the policy must be saved BEFORE the arms run"
@@ -296,7 +300,7 @@ def test_the_checkpoint_records_its_own_TRAINING_COST():
 
     from nebula.experiments import exp_corner_rl as M
 
-    src = inspect.getsource(M.run)
+    src = inspect.getsource(M._run)
     assert '"train_sims"' in src, "the checkpoint must save its SPICE cost"
     assert "cannot be computed" in src, (
         "loading a checkpoint without a recorded training cost must raise")

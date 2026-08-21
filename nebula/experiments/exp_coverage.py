@@ -473,11 +473,34 @@ def _rescore(points: Sequence[dict], target_f_peak_hz: float,
         # score every row it claims to score must fail loudly.
         missing = [k for k in R.V6V_SPECS if k not in m]
         if missing:
+            # **Two causes, and only one of them is a bug (G107).**
+            #
+            # The EYE can be genuinely unmeasurable at a corner: it is computed
+            # from a pole-zero fit that is rejected when the stage is driven
+            # past its linear range, and G103 established that peaking and
+            # drive handling are one knob. That is a fact about the circuit at
+            # that corner -- the point is UNSCORABLE, exactly as
+            # `evaluate_at_points` treats it, and "cannot be scored" is not
+            # "fails".
+            #
+            # Any OTHER missing row is a code defect: G115 was `_rescore`
+            # forgetting to compute two rows and a filter hiding it. Those must
+            # still raise, or the assertion is worthless.
+            if set(missing) <= set(R.S8_SPECS):
+                out.append({"cl_f": float(p["cl_f"]), "reward": None,
+                            "feasible": False, "unscorable": True,
+                            "failed": ["EYE_UNMEASURABLE"],
+                            "corner": p["corner"],
+                            "vdd_scale": p["vdd_scale"],
+                            "temp_c": p["temp_c"]})
+                continue
             raise KeyError(
                 f"the 135-point verification cannot score {missing} and would "
                 f"otherwise have silently reported a "
                 f"{len(R.V6V_SPECS) - len(missing)}-row result as a "
-                f"{len(R.V6V_SPECS)}-row one")
+                f"{len(R.V6V_SPECS)}-row one. The eye may be absent (it is "
+                f"physically unmeasurable under compression); these rows may "
+                f"not.")
         # **`V6V_SPECS`, not `V6_SPECS`.** `verify_full` runs one transient at
         # S4's stated 100 MHz, so it yields `S4_hd3` and not the operating-point
         # `S4_hd3_nyq` the SEARCH scores. Substituting one for the other
