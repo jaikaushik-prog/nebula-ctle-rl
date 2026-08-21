@@ -221,11 +221,38 @@ def _env_points(points):
 
 
 def _score(u, t: SpecTarget) -> tuple:
+    """**THE shared evaluator. Every arm goes through it (`BASELINES.md` §7d).**
+
+    Scores `V6D_SPECS` -- the nine device-measurable rows -- and NOT the full
+    `V6_SPECS`, and the reason is a measurement rather than a convenience.
+
+    Scored on `V6_SPECS`, the first run of this experiment returned **-16.0000,
+    the invalid floor, for every arm on every request**: the eye is computed
+    from a pole-zero fit that is rejected whenever the stage is driven past its
+    linear range, and G103 established that peaking and drive handling are one
+    knob, so a double-digit peaking request guarantees compression. Measured on
+    the library's answer to 10.25 dB @ 1.410 GHz: output swing **675.6 mVpp
+    against a 193.9 mVpp linear limit**, at all four corners.
+
+    That is a true and important property **of the circuit**, and reporting it
+    as the benchmark's headline would have been reporting it as a property of
+    the SEARCH -- four arms pinned at the floor with no gradient between them,
+    which measures nothing about which one searches better.
+
+    So the comparison runs on the rows every arm and the RL env can all score,
+    and **eye computability is reported as its own number** rather than folded
+    into the reward. Two clean measurements instead of one degenerate one.
+    """
     from nebula.experiments.adaptive_screen import evaluate_at_points
 
     ev = evaluate_at_points(u, _screen(), target_f_peak_hz=t.f_peak_hz,
-                            target_peaking_db=t.peaking_db, specs=R.V6_SPECS)
+                            target_peaking_db=t.peaking_db, specs=R.V6D_SPECS)
     return ev
+
+
+def _eye_points(ev) -> int:
+    """How many screen points had a COMPUTABLE eye. Reported, never scored."""
+    return sum(1 for p in getattr(ev, "points", ()) if p.ok and p.eye_h_v is not None)
 
 
 def arm_policy(net, t: SpecTarget, points, seed: int) -> ArmResult:
@@ -257,7 +284,8 @@ def arm_policy(net, t: SpecTarget, points, seed: int) -> ArmResult:
     return ArmResult("policy", t.peaking_db, t.f_peak_hz, float(ev.reward),
                      bool(ev.feasible), int(used + ev.n_sims),
                      time.time() - t0, list(map(float, best_u)),
-                     ev.worst_point, ev.worst_spec, ev.reason)
+                     ev.worst_point, ev.worst_spec, ev.reason,
+                     n_eye_ok=_eye_points(ev))
 
 
 def arm_library(t: SpecTarget, seed: int = 0) -> ArmResult:
@@ -277,7 +305,7 @@ def arm_library(t: SpecTarget, seed: int = 0) -> ArmResult:
     return ArmResult("library", t.peaking_db, t.f_peak_hz, float(ev.reward),
                      bool(ev.feasible), int(ev.n_sims), time.time() - t0,
                      [float(x) for x in lib["u"]], ev.worst_point,
-                     ev.worst_spec, ev.reason)
+                     ev.worst_spec, ev.reason, n_eye_ok=_eye_points(ev))
 
 
 def arm_cmaes(t: SpecTarget, budget: int = CMAES_BUDGET,
@@ -317,7 +345,8 @@ def arm_cmaes(t: SpecTarget, budget: int = CMAES_BUDGET,
                      obj.n_sims, time.time() - t0,
                      (list(map(float, b.u)) if b else None),
                      (b.worst_point if b else None),
-                     (b.worst_spec if b else None), (b.reason if b else None))
+                     (b.worst_spec if b else None), (b.reason if b else None),
+                     n_eye_ok=(_eye_points(b) if b else 0))
 
 
 def arm_random(t: SpecTarget, budget: int = CMAES_BUDGET,
@@ -338,7 +367,8 @@ def arm_random(t: SpecTarget, budget: int = CMAES_BUDGET,
                      bool(best and best.feasible), n_sims, time.time() - t0,
                      (list(map(float, best.u)) if best else None),
                      (best.worst_point if best else None),
-                     (best.worst_spec if best else None), None)
+                     (best.worst_spec if best else None), None,
+                     n_eye_ok=(_eye_points(best) if best else 0))
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -346,7 +376,10 @@ def arm_random(t: SpecTarget, budget: int = CMAES_BUDGET,
 
 def run(train_steps: int = TRAIN_STEPS, n_test: int = N_TEST_TARGETS,
         cmaes_budget: int = CMAES_BUDGET, seed: int = SEED,
-        arms: Sequence[str] = ("policy", "library", "cmaes", "random")) -> dict:
+        arms: Sequence[str] = ("policy", "library", "cmaes", "random"),
+        reuse_checkpoint: bool = True) -> dict:
+    import torch
+
     from nebula.rl.ppo import PPOConfig, train
 
     t0 = time.time()
@@ -360,22 +393,66 @@ def run(train_steps: int = TRAIN_STEPS, n_test: int = N_TEST_TARGETS,
     # ---- train -------------------------------------------------------------
     env = SpecConditionedCornerEnv(points, split.train, seed=seed)
     t_train = time.time()
-    net, stats = train(env, PPOConfig(seed=seed, total_steps=train_steps))
-    train_s = time.time() - t_train
+    # **Reuse a checkpoint when its provenance matches**, so a crash in the
+    # arms below does not cost the 19.3 minutes of training again. Matching is
+    # on the things that would make the policy a DIFFERENT policy -- step
+    # count, seed, and both dimensions -- and a mismatch retrains rather than
+    # loading something that merely fits in memory.
+    from nebula.rl.ppo import ActorCritic
+
+    ck = None
+    if reuse_checkpoint and POLICY_CKPT.exists():
+        c = torch.load(POLICY_CKPT, weights_only=False)
+        same = (int(c.get("train_steps", -1)) == int(train_steps)
+                and int(c.get("seed", -1)) == int(seed)
+                and int(c.get("obs_dim", -1)) == int(env.observation_dim)
+                and int(c.get("act_dim", -1)) == int(env.action_dim))
+        if same:
+            ck = c
+        else:
+            print(f"  checkpoint present but provenance differs; retraining",
+                  flush=True)
+    if ck is not None:
+        net = ActorCritic(env.observation_dim, env.action_dim,
+                          PPOConfig(seed=seed).hidden,
+                          PPOConfig(seed=seed).log_std_init)
+        net.load_state_dict(ck["state_dict"])
+        stats = None
+        train_s = 0.0
+        train_sims_ck = ck.get("train_sims")
+        print(f"  LOADED policy from {POLICY_CKPT.name} "
+              f"({train_steps} steps, seed {seed}) -- training skipped",
+              flush=True)
+    else:
+        net, stats = train(env, PPOConfig(seed=seed, total_steps=train_steps))
+        train_s = time.time() - t_train
+        train_sims_ck = None
     # **Checkpoint immediately.** The first run of this file trained for
     # 19.3 minutes and then died in the evaluation loop on a typo, losing the
     # policy. Training is the expensive, non-reproducible-in-a-hurry part; the
     # arms after it are cheap to re-run.
     import torch
 
-    torch.save({"state_dict": net.state_dict(), "train_steps": train_steps,
-                "seed": seed, "obs_dim": env.observation_dim,
-                "act_dim": env.action_dim,
-                "train_targets": [(t.peaking_db, t.f_peak_hz)
-                                  for t in split.train]},
-               POLICY_CKPT)
-    print(f"  checkpointed policy -> {POLICY_CKPT.name}", flush=True)
-    train_sims = _budget_calls(env.env)
+    if ck is None:
+        torch.save({"state_dict": net.state_dict(),
+                    "train_steps": train_steps, "seed": seed,
+                    "obs_dim": env.observation_dim,
+                    "act_dim": env.action_dim,
+                    "train_sims": _budget_calls(env.env),
+                    "train_targets": [(t.peaking_db, t.f_peak_hz)
+                                      for t in split.train]},
+                   POLICY_CKPT)
+        print(f"  checkpointed policy -> {POLICY_CKPT.name}", flush=True)
+    # **The checkpoint carries its own training cost.** Reading the live env's
+    # budget after loading a checkpoint would report ~0 SPICE calls for a
+    # policy that cost thousands -- the break-even arithmetic below divides by
+    # this number, so a zero here would print an infinitely good result.
+    train_sims = (train_sims_ck if ck is not None else _budget_calls(env.env))
+    if train_sims is None:
+        raise ValueError(
+            "the checkpoint does not record its training SPICE cost, so the "
+            "break-even number cannot be computed. Delete it and retrain "
+            "rather than publishing a ratio with an unknown denominator.")
     print(f"  trained: {train_steps} env steps, {train_sims} SPICE calls, "
           f"{train_s / 60:.1f} min", flush=True)
 
@@ -440,6 +517,10 @@ def _summarise(rows: Sequence) -> dict:
             "mean_sims": float(np.mean([x["n_sims"] for x in rs])),
             "total_sims": int(sum(x["n_sims"] for x in rs)),
             "mean_wall_s": float(np.mean([x["wall_s"] for x in rs])),
+            "n_with_computable_eye": sum(1 for x in rs
+                                         if x.get("n_eye_ok", 0) > 0),
+            "n_with_eye_at_every_point": sum(
+                1 for x in rs if x.get("n_eye_ok", 0) >= 4),
         }
     return out
 

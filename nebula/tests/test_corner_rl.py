@@ -141,9 +141,14 @@ def test_every_arm_is_scored_through_the_SAME_evaluator_and_spec_set():
     for name in ("arm_policy", "arm_library", "arm_cmaes", "arm_random"):
         src = inspect.getsource(getattr(M, name))
         assert "_score(" in src, f"{name} does not score through _score()"
-    assert "specs=R.V6_SPECS" in inspect.getsource(M._score), (
-        "the shared evaluator must score the FULL competition spec set, not "
-        "the device-only training subset")
+    assert "specs=R.V6D_SPECS" in inspect.getsource(M._score), (
+        "every arm must go through ONE spec set. V6D and not V6: scored on "
+        "V6 the first run returned the invalid floor (-16.0) for every arm on "
+        "every request, because the eye's pole-zero fit is rejected under "
+        "compression (G103) -- a property of the circuit reported as a "
+        "property of the search")
+    # ...and the eye is still MEASURED, just not folded into the reward.
+    assert "n_eye_ok" in inspect.getsource(M.arm_library)
 
 
 def test_the_screen_has_ONE_definition_shared_by_the_env_and_the_scorer():

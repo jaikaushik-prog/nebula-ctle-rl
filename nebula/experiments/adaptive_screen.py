@@ -374,13 +374,28 @@ def evaluate_at_points(u: Sequence[float],
         meas = scored_meas(meas, ac_peak_interp)
 
         lr = evaluate_link(dev, cfg)
-        if not lr.ok:
+        # **An uncomputable eye only makes the point UNSCORABLE if the spec set
+        # actually asks for the eye.** Session 23: scoring `V6D_SPECS` -- the
+        # device rows, which is all `rl/env.py` can measure -- every point on
+        # every arm came back at the invalid floor, because the link fit is
+        # rejected whenever the stage is driven past its linear range (G103:
+        # peaking and drive handling are one knob, so a 10 dB request
+        # guarantees it). That is a real property of the CIRCUIT and it was
+        # being reported as a property of the SEARCH, with all four benchmark
+        # arms pinned at -16.0 and no gradient between them.
+        #
+        # A caller not scoring S8 must not be blocked by S8's instrument. The
+        # eye's absence is still RECORDED (`eye_h_v` stays None) so nothing can
+        # later mistake "not asked for" for "measured and fine".
+        needs_eye = any(k in specs for k in R.S8_SPECS)
+        if not lr.ok and needs_eye:
             first_bad = first_bad or lr.fail_reason
             bad_point = bad_point or sp.label
             results.append(PointResult(sp.label, False, reason=lr.fail_reason))
             continue
 
-        rb = R.reward(meas, target_f_peak_hz, specs=specs, link=lr,
+        rb = R.reward(meas, target_f_peak_hz, specs=specs,
+                      link=(lr if lr.ok else None),
                       target_peaking_db=target_peaking_db,
                       area_mm2=dev.area_mm2, hd3_nyq_dbc=dev.hd3_dbc)
         pr = PointResult(
@@ -389,7 +404,10 @@ def evaluate_at_points(u: Sequence[float],
             margins={k: float(v) for k, v in rb.margins.items()},
             worst_spec=rb.worst_spec, f_peak_oct=float(meas["f_peak_oct"]),
             peaking_db=float(meas["peaking_db"]), power_w=dev.power_w,
-            hd3_nyq_dbc=dev.hd3_dbc, eye_h_v=lr.eye_h_v, eye_w_ui=lr.eye_w_ui)
+            hd3_nyq_dbc=dev.hd3_dbc,
+            eye_h_v=(lr.eye_h_v if lr.ok else None),
+            eye_w_ui=(lr.eye_w_ui if lr.ok else None),
+            reason=(None if lr.ok else lr.fail_reason))
         results.append(pr)
         if worst is None or pr.reward < worst.reward:
             worst = pr
