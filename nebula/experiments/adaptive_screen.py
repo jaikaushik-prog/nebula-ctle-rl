@@ -464,6 +464,16 @@ class Spread:
     slack_oct: float = float("-inf")
     n_sims: int = 0
     reason: Optional[str] = None
+    #: **Peaking, measured by the same two AC decks.** The probe always had
+    #: this number and threw it away, so `choose_start` could only rank
+    #: candidates on FREQUENCY -- and an 8 dB request would happily start from
+    #: a 5 dB design that sat near the right frequency, then have to climb 3 dB,
+    #: which drags the peak up because peaking and peak frequency are
+    #: multiplicatively coupled through the same `Rs`. Measured signature of
+    #: that: every high-boost coverage failure missed with boost LOW and
+    #: frequency HIGH, on both axes, every time.
+    peaking_lo_db: float = 0.0
+    peaking_hi_db: float = 0.0
 
     @property
     def worth_evaluating(self) -> bool:
@@ -489,8 +499,12 @@ def probe_spread(u: Sequence[float],
                       reason=ev.reason or "probe point unscorable")
     lo, hi = min(octs), max(octs)
     spread = hi - lo
+    pks = [p.peaking_db for p in ev.points
+           if p.ok and p.peaking_db is not None]
     return Spread(ok=True, spread_oct=spread, lo_oct=lo, hi_oct=hi,
-                  slack_oct=1.0 - spread, n_sims=ev.n_sims)
+                  slack_oct=1.0 - spread, n_sims=ev.n_sims,
+                  peaking_lo_db=(min(pks) if pks else 0.0),
+                  peaking_hi_db=(max(pks) if pks else 0.0))
 
 
 # ─────────────────────────────────────────────────────────────────────────────

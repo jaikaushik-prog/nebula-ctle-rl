@@ -129,6 +129,13 @@ SIGMA0: float = 0.25
 #: the seeding cost does not grow with the sweep: 6 x 2 decks = 12.
 ARCHIVE_MAX: int = 6
 
+#: Library designs re-scored against the request and probed. Each costs 2
+#: AC-only decks; the re-scoring itself is free.
+N_LIBRARY_SEEDS: int = 4
+
+#: Analytic-scan candidates probed. Same 2 decks each; the scan is free.
+N_ANALYTIC_SEEDS: int = 4
+
 BASE_SEED: int = 23_0821
 
 
@@ -221,6 +228,79 @@ class _Objective:
         return ev
 
 
+def library_candidates(target_f_peak_hz: float, target_peaking_db: float,
+                       k: int = 4) -> list:
+    """The best `k` already-simulated designs by BOTH requested axes.
+
+    **Zero simulations.** A measurement does not know what it was aiming at, so
+    the ~74 500 designs this project has already run can be re-scored against a
+    new request for free (`SPEC_CONDITIONED.md`).
+
+    Replaces a single `solve_library` call, which ranks on a reward that
+    **ignores the requested peaking** (`margins()` discarded `target_peaking_db`
+    until session 23) and only breaks near-ties on it. Ranking `k` candidates
+    on both axes is what lets a high-boost request start from a high-boost
+    design -- the library holds 13 236 in-window designs at 7-9 dB and the
+    search was not asking for them.
+
+    Returns `[]` if the pool is unavailable: a missing artifact is a worse
+    start, not a wrong answer.
+    """
+    try:
+        from nebula.experiments import spec_pool as SP
+
+        pool = SP.load_pool()
+        tgt_oct = math.log2(float(target_f_peak_hz) / 2.5e9)
+        pk = np.array([m["peaking_db"] for m in pool.meas], dtype=float)
+        fo = np.array([m["f_peak_oct"] for m in pool.meas], dtype=float)
+        dev = np.maximum(np.abs(fo - tgt_oct) / R.TOL["S3_f_peak_match"],
+                         np.abs(pk - float(target_peaking_db))
+                         / R.TOL["S3_peaking_match"])
+        idx = np.argsort(dev)[:int(k)]
+        return [np.asarray(pool.u[i], dtype=float) for i in idx]
+    except Exception:                                           # noqa: BLE001
+        return []
+
+
+def analytic_candidates(target_f_peak_hz: float, target_peaking_db: float,
+                        rng: np.random.Generator, k: int = 4,
+                        n_scan: int = 20_000) -> list:
+    """The best `k` of `n_scan` random designs, scored by the DESIGN EQUATIONS.
+
+    **Zero simulations**, ~10 s of CPU. Exists for the requests the library
+    cannot serve: its in-window coverage is 76.5 % at 7-9 dB and **34.9 % at
+    11-13 dB**, and the high-boost band is where coverage failed.
+
+    **Nothing here is reported.** The analytic model is unbiased typically
+    (f_peak median error 4.93 %, peaking MAE 0.284 dB) and off by a full octave
+    at the p99, so it is fit to CHOOSE WHERE TO LOOK and unfit to answer
+    anything. Every candidate it proposes is then measured by the same 2-deck
+    probe as every other candidate, and only that measurement ranks it.
+    """
+    try:
+        from nebula.experiments import prescreen as P
+        from nebula.rl.contract import sizing_from_u
+
+        tgt_oct = math.log2(float(target_f_peak_hz) / 2.5e9)
+        scored = []
+        for _ in range(int(n_scan)):
+            u = rng.uniform(0.0, 1.0, N_ACTIONS)
+            try:
+                pr = P.predict_response(sizing_from_u(u).params)
+            except Exception:                                   # noqa: BLE001
+                continue
+            if not np.isfinite(pr.f_peak_hz) or pr.f_peak_hz <= 0:
+                continue
+            dev = max(abs(pr.f_peak_oct - tgt_oct) / R.TOL["S3_f_peak_match"],
+                      abs(pr.peaking_db - float(target_peaking_db))
+                      / R.TOL["S3_peaking_match"])
+            scored.append((dev, u))
+        scored.sort(key=lambda t: t[0])
+        return [u for _, u in scored[:int(k)]]
+    except Exception:                                           # noqa: BLE001
+        return []
+
+
 def choose_start(target_f_peak_hz: float, target_peaking_db: float,
                  rng: np.random.Generator, n: int = N_SEED_PROBES,
                  archive: Optional[Sequence[Sequence[float]]] = None) -> tuple[Optional[np.ndarray], Optional[float], int]:
@@ -247,12 +327,31 @@ def choose_start(target_f_peak_hz: float, target_peaking_db: float,
     n_sims = 0
 
     def _consider(u):
+        """**Rank on BOTH axes the user asked about, not just frequency.**
+
+        Was `max_c |f_oct - target_oct|` -- the frequency alone. So an 8 dB
+        request could start from a 5 dB design sitting near the right
+        frequency, and the search then had to climb 3 dB, which drags the peak
+        UP because peaking and peak frequency are multiplicatively coupled
+        through the same `Rs`. Measured signature: every high-boost coverage
+        failure missed with **boost low AND frequency high**, on both axes,
+        every time -- 0 of 5 high-boost requests against 6 of 8 low-boost.
+
+        Each axis is divided by its own tolerance so the two are comparable,
+        and the worse of the two ranks -- the same maximin shape the objective
+        itself uses, so the seed is chosen by the criterion the search will be
+        graded on rather than by a different one.
+        """
         nonlocal best_u, best_dev, best_spread, n_sims
         sp = probe_spread(u)
         n_sims += sp.n_sims
         if not sp.ok:
             return
-        dev = max(abs(sp.lo_oct - tgt_oct), abs(sp.hi_oct - tgt_oct))
+        dev_f = max(abs(sp.lo_oct - tgt_oct), abs(sp.hi_oct - tgt_oct))
+        dev_pk = max(abs(sp.peaking_lo_db - float(target_peaking_db)),
+                     abs(sp.peaking_hi_db - float(target_peaking_db)))
+        dev = max(dev_f / R.TOL["S3_f_peak_match"],
+                  dev_pk / R.TOL["S3_peaking_match"])
         if dev < best_dev:
             best_dev, best_u, best_spread = dev, np.asarray(u, float), sp.spread_oct
 
@@ -269,15 +368,20 @@ def choose_start(target_f_peak_hz: float, target_peaking_db: float,
     # It is wrapped because the library is an ARTIFACT: if the pool logs are
     # absent this must degrade to random probing, not raise. A missing pool is
     # a worse start, not a wrong answer.
-    try:
-        from nebula.design import solve_library
-        from nebula.rl.spec_dist import SpecTarget
+    for cand in library_candidates(target_f_peak_hz, target_peaking_db,
+                                   k=N_LIBRARY_SEEDS):
+        _consider(cand)
 
-        lib = solve_library(SpecTarget(peaking_db=float(target_peaking_db),
-                                       f_peak_hz=float(target_f_peak_hz)))
-        _consider(np.asarray(lib["u"], dtype=float))
-    except Exception:                                           # noqa: BLE001
-        pass
+    # **An analytic pre-scan, for the requests the library cannot serve.**
+    # Library in-window coverage collapses at the extremes -- 76.5 % of its
+    # 7-9 dB designs sit inside S3's window but only 34.9 % of its 11-13 dB
+    # ones -- and that is exactly where coverage failed. The scan costs CPU and
+    # **zero simulations**, and it is measured that solutions exist there: over
+    # 60 000 analytic designs the in-window fraction is FLAT across boost bands
+    # (20.4 % at 3-5 dB, 22.5 % at 11-13 dB).
+    for cand in analytic_candidates(target_f_peak_hz, target_peaking_db,
+                                    rng, k=N_ANALYTIC_SEEDS):
+        _consider(cand)
 
     # **Then every design this sweep has already produced.** Adjacent requests
     # have adjacent answers, so a solved neighbour is a far better start than
