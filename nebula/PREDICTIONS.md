@@ -4680,3 +4680,86 @@ the fix does not do what it claims. *Falsifier:* any `broke_it`.
 **Nothing below 11 reopens the RL contribution claim.** Two of sixteen is the
 minimum I am willing to call a contribution, and even that gets reported with
 n = 16 attached.
+
+---
+
+## 29. Session 23 — **seed the search on BOTH things the user asked for**
+
+**Written 2026-08-21 BEFORE the code exists**, while the fourth coverage run
+occupies the simulator. Verifiable from git history.
+
+### The diagnosis this acts on
+
+The corrected coverage run (entry 30 will carry its final numbers) shows a
+clean split by requested boost:
+
+    low boost  (4-6 dB)   6 of 8 requests pass 45/45
+    high boost (8-10 dB)  0 of 5
+
+and every high-boost failure misses **in the same direction on both axes**:
+
+    asked  8.0 dB @ 1.63 GHz  ->  delivered 5.20 dB @ 2.50 GHz
+    asked  8.0 dB @ 1.92 GHz  ->  delivered 7.30 dB @ 2.83 GHz
+    asked  8.0 dB @ 2.25 GHz  ->  delivered 6.33 dB @ 3.37 GHz
+
+**Boost too low, frequency too high, every time.** A consistent signed error on
+both axes is a starting-point problem, not noise.
+
+### It is NOT an impossibility, and that is measured
+
+60 000 random designs through the analytic model, zero SPICE. Fraction landing
+inside S3's 1.25-2.5 GHz window, by boost band:
+
+    3-5 dB  20.4 %   5-7 dB  21.2 %   7-9 dB  22.8 %   9-11 dB  21.2 %   11-13 dB  22.5 %
+
+**Flat.** High boost is no harder to place in the window than low boost. And
+the library holds **13 236 already-simulated designs** at 7-9 dB that are
+already inside the window.
+
+### The mechanism
+
+`choose_start` ranks candidate seeds by `max_c |f_oct - target_oct|` -- **the
+frequency only**. Nothing requires the seed to have anything like the requested
+BOOST. So an 8 dB request can start from a 5 dB design that happens to sit near
+1.63 GHz, and the search must then climb 3 dB -- which drags the peak upward,
+because peaking and peak frequency are multiplicatively coupled through the
+same `Rs`. The observed signed errors are exactly that climb.
+
+### The change
+
+1. **Rank seeds on both axes**, each normalised by its own tolerance:
+   `max(|f_oct - tgt_oct| / TOL_f, |pk - tgt_pk| / TOL_pk)`.
+2. **An analytic pre-scan** when the library is thin at the requested boost.
+   Library in-window coverage collapses at the extremes -- 76.5 % at 7-9 dB but
+   **34.9 % at 11-13 dB** -- which is where the failures cluster. The scan
+   costs ~30 s of CPU and zero simulations.
+
+### Predictions
+
+**Q1 — high-boost coverage improves from 0 of 5 to at least 2 of 5.**
+Confidence: **0.6.** *For:* solutions demonstrably exist in quantity and the
+search currently starts away from them. *Against:* a better start is not a
+guarantee the search holds the boost once it moves. *Falsifier:* 1 or fewer.
+
+**Q2 — the signed-error signature disappears**: high-boost requests no longer
+miss with boost-low-AND-frequency-high on a majority of failures.
+Confidence: **0.65.** This is the mechanism test, and it can pass even if Q1
+fails. *Falsifier:* the majority of remaining failures still show both signs.
+
+**Q3 — low-boost coverage does NOT regress.** At least 5 of 8, against the
+current 6 of 8. Confidence: **0.8.** A seeding change that fixes one end by
+breaking the other is not a fix. *Falsifier:* 4 or fewer.
+
+**Q4 — total coverage improves.** Confidence: **0.55.** *Falsifier:* equal or
+worse than the run this is compared against.
+
+**Q5 — simulation cost per request rises by less than 20 %.** The analytic scan
+is free in SPICE terms and the seed probes are 2 decks each. Confidence: 0.75.
+
+### What would make me stop rather than iterate
+
+**If Q1 and Q2 both fail, the starting-point diagnosis is wrong** and the
+high-boost failures are something else -- most likely the boost/frequency
+coupling being genuinely unresolvable at a fixed setting, which points at the
+tuning bank rather than at the search. Record that and move to the bank rather
+than trying a third seeding heuristic.
