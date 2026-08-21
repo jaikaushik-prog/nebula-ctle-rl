@@ -4573,3 +4573,110 @@ Confidence: 0.7. *Falsifier:* outside that band.
 
 **No fourth branch. There is no result here that reopens the RL claim other
 than Q1.**
+
+### OUTCOME — run 2026-08-21, 16 held-out requests
+
+    library start     9 / 16 feasible   median +10.0476    4.0 sims/request
+    after refining    8 / 16 feasible   median  +4.9622   21.8 sims/request
+
+    requests the policy FIXED : 2
+    requests the policy BROKE : 3
+    median paired delta       : -0.1058
+
+**One hit, three misses. `_report` applied the decision rule mechanically and
+printed: "Q1 miss, Q2 hit. The contribution claim STAYS DROPPED."**
+
+| | prediction | outcome |
+|---|---|---|
+| Q1 | refined policy beats the library, >= 10/16 (0.4) | **MISS** — 8 of 16 |
+| Q2 | does not make things worse than 8/16 (0.55) | **HIT**, exactly at the boundary — 8 |
+| Q3 | median improves over +10.0476 (0.35) | **MISS** — +4.9622 |
+| Q4 | cost in 25–45 sims/request (0.7) | **MISS**, low — 21.8. Episodes still end early on the SPICE env, which TERMINATES on a bad edit; only the analytic env reverts |
+
+### The unpredicted result: **the policy is not neutral, it is HIGH-VARIANCE**
+
+"Neither helps nor harms" is the decision rule's label and it undersells what
+the paired data shows. Per-request deltas range from **+10.175** to **−10.725**:
+
+    request  6.40 dB @ 2.478 GHz   -0.0495 -> +10.1255   +10.175  RESCUED
+    request  5.74 dB @ 1.305 GHz   -0.0304 -> +10.0085   +10.039  RESCUED
+    request  6.83 dB @ 1.829 GHz  +10.3282 ->  -0.3970   -10.725  DESTROYED
+    request  9.57 dB @ 2.171 GHz  +10.0944 ->  -0.3569   -10.451  DESTROYED
+    request 10.25 dB @ 1.410 GHz  +10.0009 ->  -0.0841   -10.085  DESTROYED
+
+**It solved two requests the library could not, and broke three the library
+had already solved.** Net −1. A method that both rescues and destroys is a
+different object from one that does nothing, and the median (−0.1058) hides it
+completely.
+
+### A DEFECT IN MY OWN HARNESS, FOUND WHILE READING THE RESULT
+
+`refine_one` initialises `best_r = -np.inf` and only enters *step* rewards into
+the comparison. **The starting design's own reward is never a candidate.** So
+the first edit always wins by default and **the policy is structurally
+incapable of returning "I looked, and the design I was given was best."**
+
+A refiner that cannot decline to edit is not a refiner; it is forced to change
+something. All three DESTROYED rows are cases where declining would have been
+correct and was not available.
+
+**This result stands as measured and the claim stays dropped.** The defect is
+in the measurement apparatus, not in the method, so the honest response is a
+corrected re-run **pre-registered separately** (entry 28) — not a re-reading of
+this one. Arithmetically the corrected version is bounded below by the
+library's 9 of 16, because the start point becomes a candidate; that is a
+property of the fix, not a prediction, and it is exactly why entry 28 has to
+state its bar before running.
+
+---
+
+## 28. Session 23 — **the refiner, allowed to decline**
+
+**Written 2026-08-21 BEFORE the one-line fix is applied**, and the predictions
+below are made knowing entry 27's per-request numbers. That is a weaker
+position than a blind pre-registration and it is stated rather than hidden:
+**the floor is arithmetic, so predicting it is not a forecast.**
+
+### The fix
+
+`refine_one` sets `best_r = -np.inf`, so only *step* rewards compete and the
+starting design is never a candidate. One line: seed `best_r` with the
+library design's own score. The policy can then return the design it was given.
+
+### What is genuinely predicted, and what is not
+
+**NOT a prediction: >= 9 of 16.** With the start as a candidate the result
+cannot be worse than the library's 9, because "return the start" is always
+available. Reporting that as a success would be reporting arithmetic.
+
+**Q1 — the refiner reaches 11 of 16**, i.e. it keeps the library's 9 and adds
+back both requests it rescued in entry 27. Confidence: **0.5.**
+*For:* both rescues came from episodes whose best step beat the start, so the
+fix does not disturb them. *Against:* the fix changes which design is returned
+on every request, so the two rescues are not guaranteed to survive re-running
+with a different accepted point. *Falsifier:* 10 or fewer.
+
+**Q2 — zero requests are BROKEN**, i.e. no request that was feasible from the
+library comes back infeasible. Confidence: **0.9.** This is close to arithmetic
+and is stated so the run can falsify the fix itself: if anything still breaks,
+the fix does not do what it claims. *Falsifier:* any `broke_it`.
+
+**Q3 — the median paired delta becomes >= 0.** Confidence: **0.85.**
+*Falsifier:* below zero.
+
+**Q4 — cost stays under 45 SPICE calls per request.** Confidence: 0.8.
+
+### The decision rule, unchanged in spirit from entry 27
+
+* **11 or more** -> RL adds something measurable on top of retrieval:
+  *"retrieval finds the neighbourhood, the policy improves two requests in
+  sixteen, at ~5x the simulation cost."* Modest, real, reportable **with the
+  cost and the sample size stated**.
+* **10** -> one net improvement in sixteen. **Too weak to carry a contribution
+  claim**; report as measured and leave the claim dropped.
+* **9** -> the policy declines every time. The honest reading is that the
+  refiner is a no-op and the library is the whole method.
+
+**Nothing below 11 reopens the RL contribution claim.** Two of sixteen is the
+minimum I am willing to call a contribution, and even that gets reported with
+n = 16 attached.
