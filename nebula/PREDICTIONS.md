@@ -4763,3 +4763,63 @@ high-boost failures are something else -- most likely the boost/frequency
 coupling being genuinely unresolvable at a fixed setting, which points at the
 tuning bank rather than at the search. Record that and move to the bank rather
 than trying a third seeding heuristic.
+
+### OUTCOME — run 2026-08-21, 16 requests, 13 718 SPICE runs, 95.6 min
+
+    MANDATED 45-corner coverage      6 / 16  ->  8 / 16
+    low  boost (4-6 dB)              6 / 8   ->  6 / 8
+    high boost (8-10 dB)             0 / 8   ->  2 / 8
+    SPICE per request                ~993    ->  860
+    screen self-check                14/16   ->  16 / 16 predictive, screen stayed at 4 points
+
+**Five of five predictions hit — and the 10 dB band traded one failure mode for
+a different one, which is the finding.**
+
+| | prediction | outcome |
+|---|---|---|
+| Q1 | high-boost improves to >= 2 (0.6) | **HIT** — 0 of 8 to 2 of 8 |
+| Q2 | the boost-low-AND-frequency-high signature disappears (0.65) | **HIT** — see below; boost is now hit accurately and the failures changed shape entirely |
+| Q3 | low boost does not regress below 5 of 8 (0.8) | **HIT** — 6 of 8, unchanged |
+| Q4 | total coverage improves (0.55) | **HIT** — 6 to 8 |
+| Q5 | cost rises < 20 % (0.75) | **HIT**, and it FELL — 993 to 860 per request |
+
+### The 8 dB band is genuinely fixed, and the mechanism is confirmed
+
+    asked 8.0 dB @ 1.63 GHz   before  5.20 dB @ 2.50 GHz   0/45
+                              after   9.04 dB @ 1.86 GHz  45/45
+    asked 8.0 dB @ 1.92 GHz   before  7.30 dB @ 2.83 GHz   0/45
+                              after   8.51 dB @ 2.08 GHz  44/45
+
+**The requested boost is now being delivered** (8.29, 9.04, 8.51, 9.41 dB
+against 8.0 asked, where before it was 7.30, 5.20, 7.30, 6.33) and the peak
+stopped running away. That is exactly the predicted mechanism: the search was
+starting from designs with the wrong boost and having to climb.
+
+### THE NEW FAILURE, AND IT WAS NOT PREDICTED
+
+**At 10 dB the boost is now hit almost exactly and the frequency blows out by a
+factor of seven:**
+
+    asked 10.0 dB @ 1.39 GHz  ->  10.15 dB @ 10.30 GHz   0/45
+    asked 10.0 dB @ 1.63 GHz  ->  10.55 dB @ 10.68 GHz   0/45
+    asked 10.0 dB @ 2.25 GHz  ->  10.74 dB @ 11.78 GHz   0/45
+
+Before the change these missed the boost (8.42, 8.53, 6.15 dB) with the
+frequency merely wandering. **The fix removed the boost error and replaced it
+with a catastrophic frequency error.** The seed ranking is
+`max(dev_f / 0.30, dev_pk / 1.5)`, which should reject a 10 GHz candidate at
+~9.6 normalised units, so **either no better candidate survived the 2-deck
+probe, or the probe is rejecting the good ones.**
+
+**This is stated as unexplained rather than guessed at.** The next diagnostic is
+to log, per request, every candidate the seeder probed and why each was
+rejected — the run currently records only the winner's spread, which is not
+enough to tell "no good candidate existed" from "a good candidate was
+discarded".
+
+### What this does NOT establish
+
+* Not that 10 dB is unreachable. The analytic scan found 10.01 dB @ 1.378 GHz
+  for exactly this request during development, so a good candidate exists.
+* The 135-point load-swept column is 0 of 16 in both runs and is unaffected by
+  any of this.
