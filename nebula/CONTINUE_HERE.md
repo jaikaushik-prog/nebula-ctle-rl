@@ -8,12 +8,14 @@ else in the 22s brief stands.
 
 **26 days to the 15 Sept deadline. Demo 25 Sept at BITS Goa.**
 
-> **2026-08-22 — a search-ranking fix is committed; the sweep it enables is
-> NOT run.** `nebula/experiments/search_score.py` + its 34 tests, plus 4 edits
-> to `exp_coverage.py`, fix a plateau that made four coverage requests
-> unrankable. Pre-registered as `PREDICTIONS.md` **entry 30**; summarised in
-> `PROGRESS.md` **§5d**. Read **`nebula/SESSION_25_HANDOFF.md`** for the
-> reasoning before doing anything in `experiments/`.
+> **2026-08-22 — the search-ranking fix is committed AND its sweep has run.**
+> `nebula/experiments/search_score.py` fixed a plateau that made four coverage
+> requests unrankable, and it worked: all four runaway peaks came home from
+> 8-12 GHz to ~2 GHz. **But the mandated coverage number went 8/16 -> 7/16 and
+> `PREDICTIONS.md` entry 30 scored only 2 of 5** — the aggregate improved
+> (+27 % corner passes) while the binary all-45 metric fell by one. Read
+> entry 30's OUTCOME, `PROGRESS.md` **§5e**, and gotchas **G120-G121** before
+> concluding anything about it. The next lever is **reachability**, not scoring.
 
 This file is the *entry point*, not a substitute for `HANDOFF.md`. It tells you
 where the project stands, what changed in the last four sessions, what is
@@ -28,7 +30,7 @@ decided, what is open, and exactly what to do next.
 | 0 | **`nebula/SESSION_25_HANDOFF.md`** | **read FIRST — the reasoning behind the search-score fix (committed 2026-08-22); its §6 items 1-3 are done, items 4-5 (the sweep and the decision rule) are open** | 10 min |
 | 1 | **this file**, §§1–9 | the situation and the direction | 20 min |
 | 2 | `CLAUDEwa.md` §§1–3, §7, §8 | the contract, the spec table, the gates, the standing rules | 20 min |
-| 3 | `HANDOFF.md` §9 gotchas **G100–G119** | the twenty traps found in the last six sessions | 30 min |
+| 3 | `HANDOFF.md` §9 gotchas **G100–G121** | the twenty-two traps found in the last six sessions | 30 min |
 | 4 | `nebula/PREDICTIONS.md` entries **18–23** | how this project makes claims; **22 and 23 are session 22u's retraction and re-run** | 40 min |
 | 5 | `nebula/CHANNEL_MODEL.md` §§6, 8 + the DFE table | **four measured results that are NOT in the report** — see §6.3 | 20 min |
 | 6 | `nebula/BASELINES.md` §§13, 14 | the benchmark and the budget ladder | 20 min |

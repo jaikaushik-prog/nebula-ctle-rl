@@ -22,11 +22,12 @@ guessable. Start with these, in order:
 
 0. `nebula/CONTINUE_HERE.md` — **the entry point (2026-08-19).** Where the
    project stands, what is decided, what is OPEN, what to do next.
-   **As of 2026-08-22: read `nebula/SESSION_25_HANDOFF.md` (row 0 of its read
-   table) first — it is the reasoning behind the unclipped-search-score fix,
-   which is now committed. A coverage sweep is owed against it
-   (`nebula/PROGRESS.md` §5d).**
-1. `HANDOFF.md` — state, session log, gotchas **G1–G119**
+   **As of 2026-08-22: the unclipped-search-score fix is committed and its
+   sweep has RUN — `PREDICTIONS.md` entry 30 scored 2 of 5 and mandated
+   coverage went 8/16 -> 7/16. Read entry 30's OUTCOME and
+   `nebula/PROGRESS.md` §5e before drawing conclusions;
+   `nebula/SESSION_25_HANDOFF.md` has the reasoning behind the fix itself.**
+1. `HANDOFF.md` — state, session log, gotchas **G1–G121**
 2. `CLAUDEwa.md` — the Nebula contract
 3. `nebula/G0_RESULTS.md` — toolchain findings + the cost model
 4. `nebula/NRZ_RETARGET_AUDIT.md` — the 24 PAM-4 assumptions, 3 fixed

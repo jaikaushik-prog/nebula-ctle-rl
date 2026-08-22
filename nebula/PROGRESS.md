@@ -375,13 +375,66 @@ nothing** (G117). `PREDICTIONS.md` **entry 30 is committed ahead of the run**
 with five falsifiable predictions, a 10-13/16 band, a no-regression clause, and
 a disclosure that the plateau was confirmed by a zero-SPICE re-score first.
 
-**THE SWEEP HAS NOT RUN.** `python -m nebula.experiments.exp_coverage`, ~95 min,
-compared against 9 screen / 8 pvt45 / 0 full135 and 13 718 sims. Do not run it
-alongside the test suite (G70).
+**THE SWEEP RAN on 2026-08-22** (`--run`, 16 requests, 13 718 sims, 96.6 min;
+artifacts `coverage_results_AFTER_unclip_fix.json` + the matching `.jsonl`).
+**Entry 30 scored 2 of 5. See §5e.**
 
 **The pre-agreed decision rule, chosen by the owner before the run and not
 renegotiable after it:** keep PPO if the sweep shows it can learn, defined as
 **>= 5/16**; below that, drop PPO and implement SAC per `NEXT_AGENT_SAC.md`.
+**Applied as written: 7/16 >= 5/16, so PPO stays.**
+
+---
+
+## 5e. THE SWEEP RESULT — the mechanism is confirmed, the headline is a MISS
+
+**`PREDICTIONS.md` entry 30 OUTCOME. `HANDOFF.md` §9 G120, G121.**
+
+**2 of 5 predictions confirmed, 3 falsified.** The mandated coverage number
+**went down**, 8/16 -> 7/16, against a predicted 10-13/16.
+
+| | prediction | falsifier | result | |
+|---|---|---|---|---|
+| Q1 | 45-corner coverage 10-13/16 | <= 9 | **7/16** (was 8) | **MISS** |
+| Q2 | >= 2 of 4 plateau requests at 45/45 | <= 1 | **0 of 4** | **MISS** |
+| Q3 | no peak above 4 GHz | any above | **all 4 below 2.4 GHz** | **HIT** |
+| Q4 | >= 7 of 8 solved still pass | <= 6 | **6 of 8** | **MISS** |
+| Q5 | sims within 12 346-15 090 | outside | **13 718, identical** | **HIT** |
+
+**What worked.** Every runaway peak came home and every one rose off the
+-2.0000 plateau:
+
+    ask 10.0 dB @ 2.253 GHz   10.74 dB @ 11.778 GHz -> 10.79 dB @ 2.370 GHz
+                              screen -2.0000, 0/45  -> screen +14.0472, 43/45
+
+Three more went 0/45 -> 11, 20 and 6 of 45. **The G116 diagnosis is established:
+the search could not tell its candidates apart, and now it can.**
+
+**Why the headline still fell — this is the finding (G121).** The aggregate moved
+strongly the right way while the binary moved the wrong way:
+
+    solved on the search screen        9 -> 11
+    MANDATED 45-corner (all 45)        8 ->  7    <- the falsified number
+    AGGREGATE corner passes          459 -> 585 of 720   (+126, +27 %)
+    improved / regressed / unchanged   8 /  2 / 6
+
+**Neither regression violated a spec (G120).** `6.0 dB @ 1.387` (45->44) and
+`8.0 dB @ 1.627` (45->34) both kept a **positive** `pvt45_worst` -- every corner
+that could be *measured* passed. The lost corners are **unmeasurable eyes**. On
+the 34/45 case the delivered design moved by **0.12 dB and 19 MHz** and 11
+corners swung: **CMA-ES is path-dependent, and an invariance proof over the
+scoring is not one over the route.** Entry 30's Q4 predicted that mechanism and
+still got the number wrong; it is recorded as a miss, not a partial hit.
+
+**Not done, on the pre-registered instruction:** `SEARCH_TAIL_W` and
+`SEARCH_ROW_CAP` were **not touched** after seeing the result, and `reward_v1.py`,
+the tolerances and `baselines.py` remain untouched. Entry 30 committed in advance
+that this branch points at **reachability** -- the tuning bank (§6 item 7) or the
+200-evaluation budget -- not at a third scoring heuristic.
+
+**Open:** why `n_unscorable` rose 74 -> 133 over the 135-point grid, and whether
+the 45/45 cliff (four requests now at 40, 43, 44, 44 of 45) is the binding
+constraint rather than the search.
 
 ---
 
@@ -393,7 +446,9 @@ renegotiable after it:** keep PPO if the sweep shows it can learn, defined as
 | 2 | `experiments/adaptive_screen.py` — EDGE-4, spread probe, D2 self-check | — | **DONE**, 15 tests, 2 gates watched red |
 | 3 | `rl/reward_v1.py` — `S3_peaking_match` + `V5_SPECS` (D6) | — | **DONE**, 12 tests, 3 gates watched red |
 | 4 | `experiments/exp_coverage.py` — the 16-request coverage sweep | ~10 000 sims, ~1.5 h | **DONE.** Artifact `coverage_results_AFTER_seeding_fix.json`: 16 requests, 9 screen / **8 pvt45** / 0 full135, 13 718 sims, 5737.3 s (95.6 min) |
-| **4b** | **Re-run the sweep with `rank_unclipped=True`** (§5d). Pre-registered as **entry 30**, committed ahead of the run; band 10-13/16; compare against row 4's artifact | ~14 000 sims, ~1.6 h | **NEXT — NOT RUN.** Do not run it alongside the test suite (G70) |
+| **4b** | **Re-run the sweep with `rank_unclipped=True`** (§5d). Pre-registered as **entry 30**, committed ahead of the run | ~14 000 sims, ~1.6 h | **DONE 2026-08-22.** 13 718 sims, 96.6 min. **Entry 30 scored 2 of 5; coverage 8/16 -> 7/16 (§5e).** Mechanism confirmed, headline a miss |
+| **4c** | **Reachability, not scoring** -- the branch entry 30 pre-committed to. Either the 2-D tuning bank (item 7) or raising `budget_design_evals` above 200. **Do NOT tune `SEARCH_TAIL_W`/`SEARCH_ROW_CAP`, `reward_v1.py`, the tolerances or `baselines.py`** to buy coverage | TBD | **NEXT** |
+| **4d** | **Explain the unmeasurable eyes.** `n_unscorable` rose **74 -> 133** over the 135-point grid, and both 45-corner regressions are lost eyes rather than spec violations (G120). Decide whether the 45/45 cliff or the search is the binding constraint | ~0 sims to start (artifacts exist) | open, not spun as a finding |
 | **5** | **Corner-aware RL vs random / CMA-ES / library lookup.** Pre-registered as entry 25 (with a disclosed rule-3 violation: written after launch, before any artifact existed) | ~2.5 h | **RUNNING** |
 | **6** | **Re-run the coverage sweep on `V6_SPECS`** (§5b). Owner: *"polishing numbers is much needed for honesty."* **Publish both the old and the corrected coverage number** | ~2.5 h | **committed, do not drop** |
 | 7 | 2-D tuning bank (`Cs` axis) + the reading-(B) criterion | ~1 100 sims, ~8 min | built, not run |

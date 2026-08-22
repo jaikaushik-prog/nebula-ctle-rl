@@ -5037,3 +5037,106 @@ and the owner decides.
   ranks on `reward_v1`'s infeasible number is on the same plateau; two were
   found (`_Objective`, `adaptive_screen.evaluate_at_points`) and **the grep for
   others has not been done.**
+
+### OUTCOME (run 2026-08-22, 16 requests, 13 718 SPICE runs, 96.6 min)
+
+**SCORE: 2 of 5 confirmed, 3 of 5 FALSIFIED. The headline prediction missed, and
+it missed in the direction that matters — the mandated coverage number went
+DOWN.** Artifacts: `coverage_results_AFTER_unclip_fix.json`,
+`coverage_run_AFTER_unclip_fix.jsonl`. Nothing above this heading was edited.
+
+| | prediction | falsifier | result | verdict |
+|---|---|---|---|---|
+| **Q1** | 45-corner coverage 10-13 / 16 | <= 9 | **7 / 16** (was 8) | **FALSIFIED** |
+| **Q2** | >= 2 of the 4 plateau requests at 45/45 | <= 1 | **0 of 4** | **FALSIFIED** |
+| **Q3** | none of the 4 delivers a peak above 4 GHz | any above | **all 4 below 2.4 GHz** | **CONFIRMED** |
+| **Q4** | >= 7 of 8 solved requests still pass 45/45 | <= 6 | **6 of 8** | **FALSIFIED** |
+| **Q5** | `total_sims` in 12 346 - 15 090 | outside | **13 718, bit-identical** | **CONFIRMED** |
+
+**Q3 — the mechanism worked, emphatically.** Every runaway peak came home, and
+every one of the four rose off the -2.0000 plateau:
+
+    ask               before                  after              45-corner
+     4.0 dB @ 2.253    4.33 dB @  8.413 GHz    3.46 dB @ 2.206    0 -> 11/45
+    10.0 dB @ 2.253   10.74 dB @ 11.778 GHz   10.79 dB @ 2.370    0 -> 43/45
+    10.0 dB @ 1.627   10.55 dB @ 10.684 GHz   11.17 dB @ 2.195    0 -> 20/45
+    10.0 dB @ 1.387   10.15 dB @ 10.303 GHz    9.99 dB @ 1.998    0 ->  6/45
+
+`10.0 dB @ 2.253 GHz` went from an unrankable -2.0000 with **zero** corners to
+`screen_reward` **+14.0472** with **43 of 45** — two corners short of a full
+pass. **The diagnosis in this entry is confirmed: the search could not tell its
+candidates apart, and now it can.**
+
+**Q1/Q2 — and yet coverage fell 8 -> 7.** The aggregate moved strongly the right
+way while the binary metric moved the wrong way:
+
+    solved on the search screen        9 -> 11
+    MANDATED 45-corner (all 45)        8 ->  7     <- the falsified number
+    135-point load grid                0 ->  0     (unchanged, as declared)
+    AGGREGATE corner passes          459 -> 585  of 720   (+126, +27 %)
+    requests improved / regressed / unchanged      8 / 2 / 6
+    n_unscorable (over the 135 pts)   74 -> 133
+
+**Q4 — the two regressions did not violate a single spec.** Both kept a
+*positive* worst scorable reward, i.e. every corner that could be **measured**
+passed comfortably:
+
+    6.0 dB @ 1.387 GHz   45 -> 44/45   pvt45_worst +14.081 -> +14.215  (better)
+    8.0 dB @ 1.627 GHz   45 -> 34/45   pvt45_worst +14.306 -> +14.251
+
+The lost corners are ones where the **eye became unmeasurable**, which
+`n_pvt45_pass` correctly counts as a non-pass while `pvt45_worst` silently
+excludes it (see G120). On `8.0 dB @ 1.627 GHz` the delivered design moved by
+**0.12 dB and 19 MHz** and **11 corners swung** — see G121.
+
+**The cause is the one this entry named in advance.** Q4's own "Against" clause
+reads: *"CMA-ES is path-dependent... a different local optimum may be reached.
+The invariance protects the scoring of the winner, not the route to it."* That is
+exactly what happened. **The prediction identified its own failure mechanism
+correctly and still got the number wrong** — which is the argument for
+pre-registering the mechanism and the number separately, not for treating a
+correct mechanism as a partial hit. **Q1, Q2 and Q4 are misses. They are not
+re-scored as anything else.**
+
+**The invariance proof held.** Property 1 said the eight solved requests could
+not be *re-ranked*, and no counter-example appeared: every one still scores in
+the +14.06 to +14.45 band, and `pvt45_worst` improved or held on six of eight.
+What the proof never claimed — and what the run demonstrates — is that an
+identical *ranking* of the winner does not imply an identical *search path* to
+it.
+
+**Q5 was bit-identical**, 13 718 -> 13 718, because `budget_design_evals = 200`
+is a hard cap that every request reaches. Wall clock 5737.3 s -> 5796.3 s
+(+1.0 %).
+
+**Screen self-check: 16 of 16 audits predictive, worst optimism +0.000000, the
+screen was never extended (4 points, started at 4).** This was checked against
+the apparent contradiction "screen feasible at +14.20, 45-corner 34/45" and
+there is **no G110/G115 repeat**: the audit compares worst *scorable* screen
+prediction against worst *scorable* full-grid truth, and on that request it read
+**-0.0487, i.e. pessimistic**. The screen did not lie; the unmeasurable corners
+are outside what either number describes.
+
+### What this outcome licenses, per the rule written above it
+
+This is precisely the branch this entry pre-committed to: **Q3 passes, Q1 and Q2
+fail.** The registered instruction was *"the ranking is fixed and the
+reachability is the binding constraint - that points at the tuning bank or at the
+200-evaluation budget, not at a third scoring heuristic. Record it and move; do
+not tune `W` or `ROW_CAP` to buy coverage."*
+
+**`SEARCH_TAIL_W` and `SEARCH_ROW_CAP` were not touched after seeing this
+result, and `reward_v1.py`, the tolerances and `baselines.py` remain
+untouched.** The next lever is reachability — the tuning bank (§6 item 7) or the
+200-evaluation budget — not a third scoring heuristic.
+
+**Decision rule, applied as written and not renegotiated: 7/16 >= 5/16, so PPO
+stays.** One observation for the owner, flagged rather than acted on: **this
+sweep runs CMA-ES, not PPO**, so 7/16 is not evidence about whether PPO can
+learn. If the threshold was meant to gate on a PPO number, the rule needs
+restating *above* a future outcome heading, by the owner, before that run.
+
+**Retained as open, and not spun as a finding:** why 59 more points became
+unmeasurable, and whether the 45/45 cliff (four requests now sit at 40, 43, 44
+and 44 of 45) is the binding constraint rather than the search. Neither was
+predicted and neither is claimed.

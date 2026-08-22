@@ -4294,6 +4294,57 @@ Plus: git init, .gitignore, 28 tests, Wilson-bound BER reporting.
   reproduced locally. Same family as the repo's third named failure mode (*two
   definitions of one thing*), except here the two definitions are two machines.
 
+- **G120 -- (nebula) a "WORST" STATISTIC THAT EXCLUDES THE POINTS THAT FAIL.
+  `pvt45_worst` can read a comfortable +14.25 on a design that scores 34 of 45
+  corners, and neither number is wrong.**
+  `exp_coverage` line ~533: `pvt45_worst = min(r["reward"] for r in m45 if
+  r["reward"] is not None)`. An **unscorable** point has `reward = None` and is
+  **dropped from the min**, while `n_pvt45_pass` (line ~532) counts `feasible`
+  and correctly treats that same point as a **non-pass**. So the two fields
+  answer different questions:
+
+      n_pvt45_pass   how many corners PASSED          (unscorable counts as fail)
+      pvt45_worst    the worst reward among corners   (unscorable EXCLUDED)
+                     that could be MEASURED
+
+  **Measured 2026-08-22:** `8.0 dB @ 1.627 GHz` recorded `n_pvt45_pass` 34/45
+  with `pvt45_worst` **+14.251** and `failing_rows` including
+  `EYE_UNMEASURABLE`. Read together and unexamined, those invite the conclusion
+  *"the screen lied"* -- **it did not**; the request's own audit read
+  **-0.0487, i.e. pessimistic**, and the screen was never extended.
+  **Rule: read `n_pvt45_pass` and `pvt45_worst` together, and read "worst" as
+  "worst MEASURABLE".** A run whose coverage falls while every `pvt45_worst`
+  holds or improves has not started violating specs -- it has started losing
+  eyes. Those need different fixes, and G107 (*"cannot be scored" is not
+  "fails"*) is the same distinction one level down.
+
+- **G121 -- (nebula) the 45/45 BINARY METRIC IS A CLIFF. A one-request move in
+  it is inside the run-to-run variation of a stochastic search, so a real
+  improvement can report as a regression.**
+  Measured 2026-08-22, the unclipped-search-score sweep against its
+  seeding-fix baseline, same budget, same 13 718 sims:
+
+      MANDATED 45-corner (all 45 pass)     8 -> 7      <- headline FELL
+      AGGREGATE corner passes            459 -> 585 of 720   (+126, +27 %)
+      requests improved / regressed        8  /  2     (6 unchanged)
+      solved on the search screen          9 -> 11
+
+  **The two regressions moved almost nothing.** `8.0 dB @ 1.627 GHz` shifted by
+  **0.12 dB and 19 MHz** in delivered response -- and **11 of 45 corners
+  swung**. `6.0 dB @ 1.387 GHz` lost exactly one corner. Meanwhile four requests
+  now sit at **40, 43, 44 and 44 of 45**: one corner short is scored identically
+  to zero corners.
+  **Cause: CMA-ES is path-dependent.** Changing how *infeasible* candidates rank
+  changes the sampling trajectory, so a different local optimum is reached even
+  where the winner's own score is provably unchanged. An invariance proof over
+  the *scoring* is not an invariance proof over the *route*.
+  **Rule: report the aggregate corner count alongside the binary, and never
+  conclude anything from a +-1 move in the binary alone.** Also do not let a
+  correctly-predicted *mechanism* launder a falsified *number*
+  (`PREDICTIONS.md` entry 30 predicted this exact failure mode in its own Q4
+  "Against" clause and still scored the number wrong -- it is recorded as a
+  miss).
+
 ## 10. Environment
 
 - Windows 11, PowerShell 5.1 (+ Git Bash available), Python 3.13.14,
@@ -10010,3 +10061,77 @@ documentation changes in this commit are not executable.
 **NOT DONE, and deliberately:** the coverage sweep
 (`python -m nebula.experiments.exp_coverage`) has **not** been run. It is the
 next action, and entry 30 is now committed ahead of it.
+**-> It ran later the same day, on the owner's instruction. See the next entry:
+entry 30 scored 2 of 5, the mandated coverage number went 8/16 -> 7/16, and
+Q1/Q2/Q4 are recorded as misses.**
+
+### 2026-08-22 - Session 26b (the sweep RAN: entry 30 scored 2 of 5, coverage 8/16 -> 7/16. The mechanism is confirmed and the headline is a MISS)
+
+**`python -m nebula.experiments.exp_coverage --run`, 16 requests, 13 718 SPICE
+runs, 96.6 min.** Artifacts preserved as
+`coverage_results_AFTER_unclip_fix.json` and
+`coverage_run_AFTER_unclip_fix.jsonl` (G113 -- a completed run has silently
+overwritten a completed run in this project before). Entry 30's OUTCOME section
+carries the full scoring; nothing above its outcome heading was edited.
+
+**THE HEADLINE IS A MISS.** Predicted 10-13 of 16 at 0.55 confidence; measured
+**7 of 16**, which is **one worse than the 8/16 baseline**. Falsifier was
+"9 or fewer". Also falsified: **0 of 4** plateau requests reached 45/45
+(predicted >= 2), and **6 of 8** previously-solved requests held (predicted
+>= 7, falsifier <= 6 -- it landed exactly on the falsifier).
+
+**THE MECHANISM IS CONFIRMED.** All four runaway peaks came home from 8.4-11.8
+GHz to **1.998-2.370 GHz**, and all four rose off the -2.0000 plateau
+(0/45 -> 11, 43, 20 and 6 of 45). `10.0 dB @ 2.253 GHz` went from an unrankable
+-2.0000 with zero corners to `screen_reward` **+14.0472** at **43 of 45**.
+The G116 diagnosis is therefore established, not merely plausible: the search
+could not tell its candidates apart, and now it can.
+
+**THE AGGREGATE MOVED THE OPPOSITE WAY TO THE HEADLINE, WHICH IS THE FINDING
+(G121).** Corner passes **459 -> 585 of 720 (+27 %)**, screen-feasible 9 -> 11,
+8 requests improved against 2 regressed and 6 unchanged -- and the binary
+all-45 count still fell by one. Four requests now sit at 40, 43, 44 and 44 of
+45, where one corner short scores identically to zero.
+
+**NEITHER REGRESSION VIOLATED A SPEC (G120).** `6.0 dB @ 1.387 GHz` (45->44) and
+`8.0 dB @ 1.627 GHz` (45->34) both kept a **positive** `pvt45_worst`
+(+14.215 and +14.251) -- every corner that could be *measured* passed
+comfortably. The lost corners are **unmeasurable eyes**, which `n_pvt45_pass`
+counts as non-passes while `pvt45_worst` excludes from its minimum. On the
+34/45 case the delivered design moved by **0.12 dB and 19 MHz** and 11 corners
+swung.
+
+**Cause, and it was named in advance:** CMA-ES is path-dependent. Entry 30's Q4
+"Against" clause predicted this exact failure mode -- *"the invariance protects
+the scoring of the winner, not the route to it"* -- and the number is still
+scored as a miss. **A correctly-predicted mechanism does not launder a falsified
+number.**
+
+**No G110/G115 repeat.** "16 of 16 audits predictive, worst optimism
++0.000000" looked like it contradicted "screen feasible at +14.20, 45-corner
+34/45". Checked: the audit compares worst *scorable* prediction against worst
+*scorable* truth and read **-0.0487, i.e. pessimistic** on that request; the
+screen was never extended (4 points, started at 4). The screen did not lie.
+
+**What was NOT done, on the pre-registered instruction.** Entry 30 committed in
+advance that if Q3 passed while Q1 and Q2 failed, *"the ranking is fixed and the
+reachability is the binding constraint... Record it and move; do not tune `W` or
+`ROW_CAP` to buy coverage."* **`SEARCH_TAIL_W` and `SEARCH_ROW_CAP` were not
+touched after seeing the result**, and `reward_v1.py`, the tolerances and
+`baselines.py` remain untouched. Next lever is reachability -- the tuning bank
+or the 200-evaluation budget.
+
+**Decision rule, applied as written: 7/16 >= 5/16, so PPO stays.** Flagged for
+the owner rather than acted on: **this sweep runs CMA-ES, not PPO**, so 7/16 is
+not evidence about whether PPO can learn. If the threshold was meant to gate on
+a PPO number, that restatement is the owner's to make, above a future outcome
+heading.
+
+**Open, and not spun as findings:** why 59 more points became unmeasurable
+(`n_unscorable` 74 -> 133 over the 135-point grid), and whether the 45/45 cliff
+rather than the search is now the binding constraint.
+
+**Gotchas added:** G120, G121 (two).
+**Tests: 1806 passed, 11 deselected, 0 failed** (287.9 s), run after the sweep
+overwrote `coverage_results.json` -- confirming no test depends on that
+artifact's contents.
