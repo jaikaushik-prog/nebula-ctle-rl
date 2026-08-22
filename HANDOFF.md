@@ -10487,3 +10487,90 @@ every line of the round, because 14 of 15 firing looks like success in a summary
 
 **Tests: 1834 passed before -> 1861 passed, 11 deselected, 0 failed after**
 (253.7 s), the 27 new gates being the difference.
+
+### 2026-08-22 -- session 26c (continued): entry 32 RAN. 1 of 16 was measuring DEPTH, not the library.
+
+**`python -m nebula.experiments.exp_hybrid --topk 8`, 512 decks, 315.4 s, exit 0.
+All 6 pre-registered predictions HOLD, and `A = 6` is the central estimate
+exactly.** Artifact `nebula/experiments/hybrid_topk_scan.json`.
+
+**`accepted_at_k = [1, 4, 5, 5, 6, 6, 6, 6]`.** The 1-of-16 in entry 31 was **not
+a property of the library**. It was a property of **looking once**. Trying five
+candidates instead of one takes the hit rate to **6 of 16** for 260 decks, against
+13 718 for the plain search. Nothing about the library, the ranking, the
+tolerances, the screen or the specs changed -- only the depth did.
+
+| # | Prediction | Result | Verdict |
+|---|---|---|---|
+| Q1 | rank-1 reproduces entry 31 bit-identically | **16 of 16**, max\|du\| < 1e-9 | HOLDS |
+| Q2 | `3 <= A <= 10`, central 6 | **A = 6** | HOLDS, exact |
+| Q3 | >= 70 % of unscorable cite output swing | **115/116 = 99.1 %** | HOLDS |
+| Q4 | median `accepted_rank` >= 2 | `[1,2,2,2,3,5]`, median **2.0** | HOLDS |
+| Q5 | `deployed < 512`, per-row `deployed <= measured` | **380**, 0 violations | HOLDS |
+| Q6 | > 15 % implied saving | **35.6 %** at k=5 | HOLDS |
+
+128 candidates scored: **7 feasible, 5 infeasible, 116 unscorable.** Entry 31 had
+**one** positive; this has **seven**.
+
+**Q1 is the load-bearing one.** It re-measured entry 31 rather than assuming it,
+and the rank-1 proposals came back bit-identical with identical verdicts. So entry
+31's numbers stand and are reproducible; what this session withdraws is the
+*reading* of them ("the free proposal is almost never good enough"), not the
+measurement.
+
+**The pre-registration's one real miss was a cost claim, not a hypothesis.** It
+costed the bet at k=8 and predicted ~9000 decks there (actual 8954, right). But
+**k=8 is not the operating point** -- the curve is flat from k=5, so ranks 6-8
+spend 120 decks and buy nothing:
+
+| k | A | proposal decks | implied full-sweep | vs 13 718 |
+|---|---|---|---|---|
+| 1 | 1 | 64 | 12 925 | 5.8 % |
+| 2 | 4 | 124 | 10 412 | 24.1 % |
+| 3 | 5 | 172 | 9 603 | 30.0 % |
+| **5** | **6** | **260** | **8 834** | **35.6 % -- optimum** |
+| 8 | 6 | 380 | 8 954 | 34.7 % |
+
+**`k = 5` dominates `k = 8`:** same `A`, 120 fewer decks. This is precisely what
+the "one run yields the whole curve" design was for -- the optimum was **not** the
+value the run was configured at, and running k=1 and k=8 as two experiments would
+have missed it entirely. **`DEFAULT_TOPK` is left at 8.** Changing a constant on
+the strength of the run that measured it is tuning; it needs its own
+pre-registration.
+
+**The stated downside did not materialise, and it was real.** At `A = 1`, k=8
+would have been *worse* than k=1 (2.4 % vs 5.78 %), because a deployed proposer
+pays 8x4=32 decks on every miss. That was written before the run. It came back the
+other way.
+
+**The decision rule fires at `A >= 5`: retrieval is ALIVE.** The library does
+contain corner-robust designs at these targets. PROGRESS row **4k** unblocks -- 128
+labelled (design, pass/fail-at-corners) pairs with 7 positives, where entry 31's 1
+positive was unfittable. Note what any such fit must predict: **99.1 % of failures
+are output-swing compression**, and per this session's correction that label exists
+**only** in this artifact and **never** in the pool -- so the fit is on these 128
+rows and needs held-out validation, not a re-fit on the same rows.
+
+**And the bar for SAC is now 35.6 %, not zero.** That is the whole reason the
+retrieval control was measured before building the policy: a learned proposer that
+saves 20 % would now be a regression, and without this number it would have looked
+like a win.
+
+**What this does NOT establish, restated because `A = 6` invites over-reading:**
+
+* **No compliance number.** 4 screen points, not 45 and not 135. `A = 6` is **not**
+  "6 of 16 requests now meet spec" -- it is "6 of 16 got a usable *starting* design
+  for free". Mandated-corner coverage is still **7/16** (entry 30) and this run
+  does not move it.
+* **`A = 6` is not the library's ceiling** -- k > 8 untried -- and is
+  simultaneously the ceiling for re-ranking *within* the top 8.
+* **Nothing about SAC**, beyond setting the bar it must clear.
+
+**The ~90-minute full hybrid sweep remains UNRUN.** `A >= 5` makes it defensible,
+not authorised; the pre-committed branch says explicitly that it stays the owner's
+call, and entry 31's rule still stands.
+
+Nothing in `common/params.py`, `rl/`, the specs, the box, the tolerances, the
+screen or `reward_v1.py` was touched. `exp_coverage.library_candidates` unmodified.
+Entry 31's artifact unmodified. Tests unchanged at **1861 passed, 11 deselected**
+(no code change in this half of the session -- run, score, record).

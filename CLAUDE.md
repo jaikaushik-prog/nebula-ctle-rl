@@ -22,20 +22,24 @@ guessable. Start with these, in order:
 
 0. `nebula/CONTINUE_HERE.md` — **the entry point (2026-08-19).** Where the
    project stands, what is decided, what is OPEN, what to do next.
-   **As of 2026-08-22 (session 26c): stage 0 is MEASURED at k=1, and a deeper
-   measurement is BUILT BUT NOT RUN.** `nebula/experiments/exp_hybrid.py` — the
+   **As of 2026-08-22 (session 26c): stage 0 is MEASURED at two depths, and the
+   depth is what mattered.** `nebula/experiments/exp_hybrid.py` — the
    "propose, else fall back to the search" wrapper — is committed, and its
    64-deck k=1 scan RAN: entry 31 scored 5 of 5, with only **1 of 16** free
    proposals accepted (1 infeasible, 14 unscorable, **all 14 on output-swing
    compression**). Entry 31's closing recommendation — re-rank the library on
    swing headroom, "the pool already carries it" — **was checked and is FALSE**:
    the pool has no swing field, and no nominal channel separates the 1 success
-   from the 14 failures. What replaced it is `scan_topk`, which scores the top
-   **k=8** candidates per request instead of the top 1 (**512 decks, ~12 min**),
-   is pre-registered as `PREDICTIONS.md` **entry 32** with 27 gates and 15 of 15
-   sabotages fired, and is **NOT YET RUN** —
-   `python -m nebula.experiments.exp_hybrid --topk 8`. The **~90-minute full
-   sweep still needs the owner's say-so** (entry 31's rule fires against it).
+   from the 14 failures. What replaced it, `scan_topk`, scores the top **k=8**
+   candidates per request instead of the top 1 — and it **RAN**: entry 32 scored
+   **6 of 6**, `accepted_at_k = [1,4,5,5,6,6,6,6]`, so **A = 6 of 16** and the
+   old 1-of-16 was measuring **depth**, not the library. **`k=5` is the optimum**
+   (same A for 120 fewer decks): **35.6 % fewer simulations** than the
+   13 718-deck search, against k=1's 5.8 %. `DEFAULT_TOPK` stays 8 — retuning it
+   on the run that measured it would be tuning. **The bar for SAC is now 35.6 %,
+   not zero.** But `A = 6` is **not** a compliance number: mandated-corner
+   coverage is still **7/16**. The **~90-minute full sweep still needs the
+   owner's say-so** — `A >= 5` makes it defensible, not authorised.
    Read `nebula/PROGRESS.md` §5h, then §5g, then entries 31-32, then G122-G125.
    The prior line stopped here: entry 30's sweep RAN, scored 2 of 5, and
    mandated coverage went 8/16 -> 7/16 (`PROGRESS.md` §5e;

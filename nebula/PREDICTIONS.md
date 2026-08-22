@@ -5587,3 +5587,96 @@ sabotage passed, because the test's data (one acceptance at rank 3) gives
 a rank-1 and a rank-3 acceptance, which separates them (`[1,1,2]` vs `[1,0,1]`).
 Recorded because a gate that cannot distinguish the bug it names is worse than no
 gate: it reports safety it does not provide.
+
+### OUTCOME (2026-08-22, session 26c) — RAN. **6 of 6 predictions HOLD. A = 6, the central estimate exactly.**
+
+`nebula/experiments/hybrid_topk_scan.json`, 512 decks measured, **315.4 s**
+wall-clock, exit 0. Command: `python -m nebula.experiments.exp_hybrid --topk 8`.
+
+**The headline: `accepted_at_k = [1, 4, 5, 5, 6, 6, 6, 6]`.**
+
+The 1-of-16 from entry 31 was **not a property of the library**. It was a
+property of **looking once**. Trying five candidates instead of one takes the
+hit rate to **6 of 16** — a **6x** improvement for **260 decks**, against 13 718
+for the plain search. Nothing about the library, the ranking, the tolerances, the
+screen or the specs changed; only the depth did.
+
+| # | Prediction | Result | Verdict |
+|---|---|---|---|
+| Q1 | rank-1 reproduces entry 31 bit-identically in `u`, same `ok`/`feasible` | **16 of 16 identical**, max\|du\| < 1e-9 | **HOLDS** |
+| Q2 | `3 <= A <= 10`, central **6** | **A = 6** | **HOLDS — central estimate exact** |
+| Q3 | >= 70 % of unscorable still cite output swing | **115 of 116 = 99.1 %** | **HOLDS** |
+| Q4 | median `accepted_rank` >= 2 | ranks `[1,2,2,2,3,5]`, **median 2.0** | **HOLDS** |
+| Q5 | `total_sims_deployed < 512`, and per-row `deployed <= measured` | **380 < 512**, **0** row violations | **HOLDS** |
+| Q6 | > 15 % implied saving | **35.6 % at k=5**, 34.7 % at k=8 | **HOLDS** |
+
+Candidate tally: **128 scored — 7 feasible, 5 infeasible, 116 unscorable.**
+Entry 31 had **one** positive; this has **seven**, and 128 labels.
+
+### The one thing the pre-registration got wrong, and it is a cost claim, not a hypothesis
+
+Entry 32 costed the bet at k=8 and predicted ~9000 decks there. That number is
+right (8954) but **k=8 is not the operating point** — the curve is flat from k=5,
+so ranks 6-8 spend 120 decks and buy **nothing**:
+
+| k | A | proposal decks | implied full-sweep | vs 13 718 |
+|---|---|---|---|---|
+| 1 | 1 | 64 | 12 925 | 5.8 % (entry 31) |
+| 2 | 4 | 124 | 10 412 | 24.1 % |
+| 3 | 5 | 172 | 9 603 | 30.0 % |
+| 4 | 5 | 216 | 9 647 | 29.7 % |
+| **5** | **6** | **260** | **8 834** | **35.6 % — the optimum** |
+| 6 | 6 | 300 | 8 874 | 35.3 % |
+| 7 | 6 | 340 | 8 914 | 35.0 % |
+| 8 | 6 | 380 | 8 954 | 34.7 % |
+
+**`k = 5` dominates `k = 8`**: same `A`, 120 fewer decks. This is exactly what
+the "one run yields the whole curve" design was for — the optimum was **not**
+the value the run was configured at, and a k=1-then-k=8 pair of experiments
+would have missed it. **Recorded, not acted on:** changing `DEFAULT_TOPK` to 5
+would be tuning a constant on the run that measured it. The curve is the
+finding; any default change is a separate, pre-registered decision.
+
+The stated downside **did not materialise**. It was real: at `A = 1`, k=8 would
+have been *worse* than k=1 (2.4 % vs 5.78 %). The measurement came back the
+other way.
+
+### The decision rule fires: `A = 6 >= 5` — **retrieval is ALIVE**
+
+Per the pre-agreed branch, and not renegotiated:
+
+* The library **does** contain corner-robust designs at these targets. Entry
+  31's "the free proposal is almost never good enough" was **an artefact of
+  depth-1 sampling**, and this run withdraws that reading of it while leaving
+  entry 31's own numbers intact — they reproduced exactly.
+* **Next step is the ranking fit**, now that it is possible: 128 labelled
+  (design, pass/fail-at-corners) pairs with 7 positives. Note what it must
+  predict — **99.1 % of failures are output-swing compression**, and per the
+  correction at the head of this entry that label exists **only** in this
+  artifact, never in the pool. So the fit is on *these 128 rows*, and any
+  claim from it needs held-out validation, not a re-fit on the same rows.
+* **The ~90-minute full hybrid sweep stays UNRUN.** `A >= 5` makes it defensible,
+  not authorised — the branch says explicitly that it "stays the **owner's**
+  call", and entry 31's rule still stands.
+
+### What this still does not establish
+
+Unchanged from the pre-registration, restated because `A = 6` invites
+over-reading:
+
+* **No compliance number.** 4 screen points, not 45 and not 135. `A = 6` is
+  **not** "6 of 16 requests now meet spec" — it is "6 of 16 got a usable
+  starting design for free". The mandated-corner coverage figure is still
+  **7/16** from entry 30 and this run does not move it.
+* **`A = 6` is not the library's ceiling** — k > 8 was not tried, and it is
+  simultaneously the ceiling for re-ranking *within* the top 8.
+* **Nothing about SAC.** This is the retrieval **control** a learned policy must
+  beat. The bar for SAC is now **35.6 %, not zero** — which is the point of
+  having measured it first.
+* The 4 V6 rows a pool row cannot evaluate, and whether RL is the right
+  optimiser, are both untouched.
+
+**Provenance:** `run_host` JAI, `k` 8, `source` library, screen identical to
+entry 31's (`EDGE4_MANDATED`, 4 points, 32.63 fF), same 13-row `spec_set`.
+`exp_coverage.library_candidates` unmodified; entry 31's artifact unmodified;
+no tolerance, spec, box or reward change in this session.

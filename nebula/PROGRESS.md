@@ -13,7 +13,7 @@ anything.** This file does not replace them.
 carries three design traps found by measurement that will otherwise cost a day
 each.
 
-**Updated 2026-08-21, session 23.** 25 days to the 15 Sept deadline.
+**Updated 2026-08-22, session 26c.** 24 days to the 15 Sept deadline.
 
 ---
 
@@ -33,7 +33,7 @@ human in the loop. Deliverables that already exist and run:
 
 | | state |
 |---|---|
-| Test suite | **1806 passed**, 11 deselected, ~5 min (4m44s / 5m19s on two runs), measured 2026-08-22 on system Python 3.13.14 (`python -m pytest tests nebula/tests -q -m "not slow"`). The **system** interpreter, not the conda env — that env has no `torch`, and `ngspice_con.exe` is found by absolute path anyway (G69) |
+| Test suite | **1861 passed**, 11 deselected, ~4 min (254 s), measured 2026-08-22 on system Python 3.13.14 (`python -m pytest tests nebula/tests -q -m "not slow"`). The **system** interpreter, not the conda env — that env has no `torch`, and `ngspice_con.exe` is found by absolute path anyway (G69) |
 | Gates G0–G2 | passed |
 | G3 (RL beats random + grid) | **fails one clause** — RL is indistinguishable from random at every budget |
 | G4 (corner-robust design) | met on `V1_SPECS` (7 rows); **not** on the 11 competition rows |
@@ -576,7 +576,7 @@ so no result moves; but "zero simulations" is not "zero cost", and the residual
 
 ---
 
-## 5h. THE SWING LEVER WAS A FALSE LEAD — depth is the one that can be measured. Entry 32, NOT YET RUN
+## 5h. THE SWING LEVER WAS A FALSE LEAD — depth was the real one. Entry 32 RAN: **1 of 16 -> 6 of 16, 35.6 % fewer sims**
 
 §5f named a lever and §5g recommended it: rank the library on **swing headroom**
 as well as target match, for free, because "the pool already carries
@@ -664,14 +664,50 @@ inspection), and `scan_topk` writes a **third** artifact,
 `hybrid_topk_scan.json`, because writing into `hybrid_proposal_scan.json` would
 overwrite the result entry 31 quotes — G113's exact shape.
 
-**Status: built, 27 gates green, 15 of 15 sabotages fired, pre-registered, NOT
-YET RUN.** The ~90-minute full sweep remains unrun and needs the owner's say-so in
-every branch. Two gotchas came out of the gate work: **G124** (`design_id` does
+**Status: RAN, 315 s, exit 0. All 6 predictions HOLD and `A = 6` is the central
+estimate exactly.** The ~90-minute full sweep remains unrun and needs the owner's
+say-so in every branch. Two gotchas came out of the gate work: **G124** (`design_id` does
 not join across artifact boundaries — bit-identical sizing, different ids, and the
 failure mode is a silent *empty* join that reads as a real finding) and **G125** (a
 sabotage that passes and a gate that cannot distinguish its own bug are the same
 thing — one of these gates was worthless while looking thorough, because its test
 data gave the same answer under the correct and the broken rule).
+
+### THE RESULT: `accepted_at_k = [1, 4, 5, 5, 6, 6, 6, 6]`
+
+**The 1-of-16 was not a property of the library. It was a property of looking
+once.** Five candidates instead of one takes the hit rate to **6 of 16** — 6x,
+for 260 decks against the search's 13 718. Nothing about the library, the
+ranking, the tolerances, the screen or the specs changed; only the depth did.
+128 candidates scored: **7 feasible, 5 infeasible, 116 unscorable**, and
+**115 of the 116 (99.1 %) are still output-swing compression**. Entry 31's rank-1
+proposals reproduced **bit-identically 16 of 16**, so entry 31's own numbers stand
+— it is the *reading* of them that this withdraws.
+
+| k | A | proposal decks | implied full-sweep | vs 13 718 |
+|---|---|---|---|---|
+| 1 | 1 | 64 | 12 925 | 5.8 % (entry 31) |
+| 2 | 4 | 124 | 10 412 | 24.1 % |
+| 3 | 5 | 172 | 9 603 | 30.0 % |
+| **5** | **6** | **260** | **8 834** | **35.6 % — optimum** |
+| 8 | 6 | 380 | 8 954 | 34.7 % |
+
+**The pre-registration's one real miss was a cost claim, not a hypothesis:** it
+costed the bet at k=8, but the curve is **flat from k=5**, so ranks 6-8 spend 120
+decks and buy nothing. **`k = 5` dominates `k = 8`** — same `A`, 120 fewer decks.
+This is exactly what "one run yields the whole curve" was for: the optimum was
+**not** the value the run was configured at, and a k=1-then-k=8 pair of
+experiments would have missed it. `DEFAULT_TOPK` is **left at 8** — changing a
+constant on the run that measured it is tuning, and needs its own
+pre-registration.
+
+**The decision rule fires at `A >= 5`: retrieval is ALIVE.** The library does hold
+corner-robust designs at these targets. Row **4k** unblocks — 128 labels with 7
+positives, where entry 31 had 1. **And the bar for SAC is now 35.6 %, not zero**,
+which is the entire reason the control was measured first. What it does **not**
+say: `A = 6` is not "6 of 16 requests meet spec" — it is "6 of 16 got a usable
+starting design for free". Mandated-corner coverage is still **7/16** (entry 30)
+and this run does not move it.
 
 ## 6. Next steps, in order
 
@@ -689,8 +725,8 @@ data gave the same answer under the correct and the broken rule).
 | **4g** | **The ~90-minute full hybrid sweep -- THE OWNER'S CALL.** Entry 31 pre-commits the rule: run it if **>= 3** proposals are accepted; **do not** run it if **<= 1**. The search is *budget-bound* (both prior sweeps cost **exactly 13 718 decks**), so at zero acceptances the hybrid costs **64 decks MORE** than the plain search and its coverage number is predicted unchanged at 7/16 +-1 | ~14 000 sims, ~1.6 h | **RULE SAYS DO NOT RUN** -- 4f returned `n_accepted = 1`, which is `<= 1`. Recommendation is to skip it; **still the owner's decision**, not taken unilaterally |
 | **4h** | ~~**The lever 4f identified: make the proposer swing-aware.**~~ **WITHDRAWN 2026-08-22 — the premise was false.** The pool has no swing field (`pair_margin_v` / `tail_margin_v` are DC `vds - vdsat`; the screen rejects on a *measured* 1 dB compression point), **no** nominal channel separates the 1 accepted design from the 14 failures, and n=1 in the positive class makes any fitted rule unfalsifiable. See §5h and `PREDICTIONS.md` entry 32's correction | — | **withdrawn, superseded by 4j** |
 | **4i** | **Cache `spec_pool.load_pool` (G123).** It is called once per `library_candidates` invocation with no cache, so the 74 526-row pool is re-parsed per request: **89-161 s of the scan's 250.4 s**. An `lru_cache` is the whole fix. Also **unexplained**: the residual 1.4-2.5 s/deck vs the coverage sweep's 0.42 s/deck average | ~0 sims | open, low priority -- affects **no** result (every claim is in decks, not seconds), only wall-clock estimates. **Deliberately not done in 26c**: `load_pool` returns a mutable object shared by every caller, so memoising it changes aliasing, not just speed |
-| **4j** | **Measure how DEEP the library must be searched (`exp_hybrid.scan_topk`, entry 32).** Score the top **k=8** candidates per request on the same 4-corner screen, record the rank of the first feasible one. Replaces 4h: it **measures** instead of predicting, needs no model, and one run yields the whole hit-rate-vs-k curve for k=1..8 -- whose k=1 column re-measures entry 31's 1-of-16 | **512 decks, ~12 min** (vs 13 718 for the plain search) | **built, tested (27 gates, 15/15 sabotages fired), pre-registered as entry 32 -- NOT YET RUN** |
-| **4k** | **Fit a ranking on the labels 4j produces.** Entry 31 gave 16 labelled candidates with **1** positive, which is unfittable. A k=8 scan gives ~128 labelled (design, pass/fail-at-corners) pairs. Only worth starting if 4j returns `A >= 5` -- the pre-committed branch | 0 sims to fit, 64-512 to re-measure | **blocked on 4j's number**, and then on the owner |
+| **4j** | **Measure how DEEP the library must be searched (`exp_hybrid.scan_topk`, entry 32).** Score the top **k=8** candidates per request on the same 4-corner screen, record the rank of the first feasible one. Replaces 4h: it **measures** instead of predicting, needs no model, and one run yields the whole hit-rate-vs-k curve for k=1..8 -- whose k=1 column re-measures entry 31's 1-of-16 | **512 decks, 315 s measured** (vs 13 718 for the plain search) | **DONE 2026-08-22. 6 of 6 predictions HOLD. `accepted_at_k=[1,4,5,5,6,6,6,6]`: A=6 of 16, and k=5 is the optimum at 35.6 % fewer sims. See §5h** |
+| **4k** | **Fit a ranking on the labels 4j produces.** Entry 31 gave 16 labelled candidates with **1** positive, which is unfittable. A k=8 scan gives ~128 labelled (design, pass/fail-at-corners) pairs. Only worth starting if 4j returns `A >= 5` -- the pre-committed branch | 0 sims to fit, 64-512 to re-measure | **UNBLOCKED: 4j returned A=6 >= 5.** 128 labels, **7** positives. Must predict output-swing compression (99.1 % of failures), a label that exists **only** in `hybrid_topk_scan.json` and never in the pool -- so held-out validation, not a re-fit on the same rows |
 | **5** | **Corner-aware RL vs random / CMA-ES / library lookup.** Pre-registered as entry 25 (with a disclosed rule-3 violation: written after launch, before any artifact existed) | ~2.5 h | **RUNNING** |
 | **6** | **Re-run the coverage sweep on `V6_SPECS`** (§5b). Owner: *"polishing numbers is much needed for honesty."* **Publish both the old and the corrected coverage number** | ~2.5 h | **committed, do not drop** |
 | 7 | 2-D tuning bank (`Cs` axis) + the reading-(B) criterion | ~1 100 sims, ~8 min | built, not run |

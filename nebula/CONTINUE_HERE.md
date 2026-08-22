@@ -6,11 +6,12 @@ on the coarse frequency lattice; on the corrected instrument that design passes
 10 of 11. Read §4, which is now the outcome rather than the warning. Everything
 else in the 22s brief stands.
 
-**26 days to the 15 Sept deadline. Demo 25 Sept at BITS Goa.**
+**24 days to the 15 Sept deadline. Demo 25 Sept at BITS Goa.**
 
 > **2026-08-22 (session 26c) — READ THIS FIRST: the lever the block below
-> recommends does not exist, and a different one is built, tested and
-> pre-registered but NOT YET RUN.**
+> recommends does not exist. The one that replaced it RAN, and the answer is
+> that the free proposal is good enough 6 times in 16, not 1 — the old number
+> was measuring how DEEP it looked, not what the library holds.**
 >
 > Session 26b's closing recommendation (row 4h, repeated in the blockquote below)
 > was *"rank the library on swing headroom too — the pool already carries
@@ -51,8 +52,29 @@ else in the 22s brief stands.
 > search from it), and `scan_topk` writes a **third** artifact so it cannot
 > overwrite entry 31's (G113).
 >
-> **To run it:** `python -m nebula.experiments.exp_hybrid --topk 8`. The
-> ~90-minute **full sweep still needs the owner's say-so** in every branch.
+> **RAN, 315 s, exit 0. All 6 predictions HOLD and `A = 6` is the central
+> estimate exactly.** `accepted_at_k = [1, 4, 5, 5, 6, 6, 6, 6]` — 128 candidates
+> scored, **7 feasible / 5 infeasible / 116 unscorable**, and **115 of the 116
+> (99.1 %) are still output-swing compression**. Entry 31's rank-1 proposals
+> reproduced **bit-identically 16 of 16**, so entry 31's numbers stand — it is the
+> *reading* of them this withdraws.
+>
+> **`k = 5` is the optimum, not the k=8 the run was configured at**: same `A = 6`
+> for 120 fewer decks (260 vs 380), implying **8 834 decks against the search's
+> 13 718 — 35.6 % saved**, where k=1 saved 5.8 %. The curve is flat from k=5, so
+> ranks 6-8 buy nothing. This is what "one run yields the whole curve" was for; a
+> k=1-then-k=8 pair would have missed it. **`DEFAULT_TOPK` is left at 8** —
+> changing a constant on the run that measured it is tuning, and needs its own
+> pre-registration.
+>
+> **The decision rule fires at `A >= 5`: retrieval is ALIVE**, so row **4k**
+> (fit a ranking on the 128 labels, 7 positives) unblocks, and **the bar for SAC
+> is now 35.6 %, not zero** — which is why the control was measured first. What
+> this does **NOT** say: `A = 6` is not "6 of 16 meet spec", it is "6 of 16 got a
+> usable *starting* design for free". Mandated-corner coverage is still **7/16**
+> (entry 30) and this run does not move it. The
+> ~90-minute **full sweep still needs the owner's say-so** — `A >= 5` makes it
+> defensible, not authorised.
 > New gotchas **G124** (`design_id` does not join across artifact boundaries —
 > bit-identical sizing, different ids; the failure mode is a silent *empty* join
 > that reads as a real finding) and **G125** (a sabotage that passes and a gate
