@@ -22,18 +22,25 @@ guessable. Start with these, in order:
 
 0. `nebula/CONTINUE_HERE.md` — **the entry point (2026-08-19).** Where the
    project stands, what is decided, what is OPEN, what to do next.
-   **As of 2026-08-22 (session 26b): the SAC track has started and stage 0 is
-   MEASURED. `nebula/experiments/exp_hybrid.py` — the "propose, else fall back to
-   the search" wrapper — is committed with 28 tests, pre-registered as
-   `PREDICTIONS.md` entry 31, and its 64-deck scan has RUN: entry 31 scored
-   5 of 5, and only 1 of 16 free proposals was accepted (1 infeasible,
-   14 unscorable, all 14 on output-swing compression). Entry 31's pre-committed
-   rule therefore fires AGAINST the ~90-minute full sweep — do NOT run it without
-   the owner's say-so. Read `nebula/PROGRESS.md` §5g, entry 31's OUTCOME, and
-   G122-G123 first. The prior line stopped here: entry 30's sweep RAN, scored
-   2 of 5, and mandated coverage went 8/16 -> 7/16 (`PROGRESS.md` §5e;
-   `nebula/SESSION_25_HANDOFF.md` has the reasoning behind that fix).**
-1. `HANDOFF.md` — state, session log, gotchas **G1–G123**
+   **As of 2026-08-22 (session 26c): stage 0 is MEASURED at k=1, and a deeper
+   measurement is BUILT BUT NOT RUN.** `nebula/experiments/exp_hybrid.py` — the
+   "propose, else fall back to the search" wrapper — is committed, and its
+   64-deck k=1 scan RAN: entry 31 scored 5 of 5, with only **1 of 16** free
+   proposals accepted (1 infeasible, 14 unscorable, **all 14 on output-swing
+   compression**). Entry 31's closing recommendation — re-rank the library on
+   swing headroom, "the pool already carries it" — **was checked and is FALSE**:
+   the pool has no swing field, and no nominal channel separates the 1 success
+   from the 14 failures. What replaced it is `scan_topk`, which scores the top
+   **k=8** candidates per request instead of the top 1 (**512 decks, ~12 min**),
+   is pre-registered as `PREDICTIONS.md` **entry 32** with 27 gates and 15 of 15
+   sabotages fired, and is **NOT YET RUN** —
+   `python -m nebula.experiments.exp_hybrid --topk 8`. The **~90-minute full
+   sweep still needs the owner's say-so** (entry 31's rule fires against it).
+   Read `nebula/PROGRESS.md` §5h, then §5g, then entries 31-32, then G122-G125.
+   The prior line stopped here: entry 30's sweep RAN, scored 2 of 5, and
+   mandated coverage went 8/16 -> 7/16 (`PROGRESS.md` §5e;
+   `nebula/SESSION_25_HANDOFF.md` has the reasoning behind that fix).
+1. `HANDOFF.md` — state, session log, gotchas **G1–G125**
 2. `CLAUDEwa.md` — the Nebula contract
 3. `nebula/G0_RESULTS.md` — toolchain findings + the cost model
 4. `nebula/NRZ_RETARGET_AUDIT.md` — the 24 PAM-4 assumptions, 3 fixed
@@ -50,9 +57,10 @@ zero**.
    §8 next steps, §9 gotchas). A change without a handoff update is
    incomplete.
 2. **Run the test suite before and after changes** (from repo root):
-   `python -m pytest tests nebula/tests -q -m "not slow"` — **1834 passed,
-   11 deselected, ~6 min** (411 s, measured 2026-08-22 on system Python 3.13.14;
-   it was 1806 before `nebula/tests/test_hybrid.py` added 28).
+   `python -m pytest tests nebula/tests -q -m "not slow"` — **1861 passed,
+   11 deselected, ~4 min** (254 s, measured 2026-08-22 on system Python 3.13.14;
+   it was 1834 before `nebula/tests/test_hybrid_topk.py` added 27, and 1806
+   before `nebula/tests/test_hybrid.py` added 28).
    Report the count before and after. Never commit with failures. Add tests for
    anything you fix or build.
    - Use the **system** interpreter, not the conda env `nebula` — that env has

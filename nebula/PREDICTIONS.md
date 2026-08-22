@@ -5403,3 +5403,187 @@ stands unchanged — no compliance number (the scan verifies nothing at 45 or 13
 points), nothing about SAC, nothing about the 4 V6 rows a pool row cannot
 evaluate, and nothing about whether RL should be the optimiser.
 
+
+---
+
+## 32. Session 26c — **how DEEP must the proposer look before a candidate survives the corners?**
+
+### A CORRECTION to entry 31, made before anything is built on it
+
+Entry 31's closing paragraph ("The lever this identifies, stated but NOT pulled")
+claims:
+
+> The pool already carries the information that would fix this
+> (`pair_margin_v`, `tail_margin_v` are pool-evaluable ...), so a swing-aware
+> ranking would cost **zero** simulations.
+
+**That claim is false.** It was asserted, not checked. Entry 31's OUTCOME is left
+exactly as written — a pre-registered record is not edited after the fact — so
+the correction lives here, where the work that depends on it is:
+
+1. **There is no swing field in the pool.** `spec_pool.REQUIRED_MEAS` carries
+   `pair_margin_v` and `tail_margin_v`, which are **DC operating-point headroom**
+   (`vds - vdsat`). What the screen actually rejects on is `vout_swing_v`, the
+   **measured 1 dB compression point**, produced by a swept simulation
+   (`sky130_runner.measured_swing_pp_v` via `swing_limits`) which deliberately
+   refuses to fall back to a computed `4*I*RL`. Two different physical
+   quantities; the pool holds only the first. A "swing-aware ranking" over this
+   pool is not available at zero simulations, because the pool has no swing in it.
+2. **No nominal channel separates the outcomes anyway.** Measured over all 16
+   scan rows joined back to their pool rows: every one of `pair_margin_v`,
+   `tail_margin_v`, `g_dc_db`, `peaking_db`, `nyq_boost_db`, `inoise_vrms`,
+   `power_w` **overlaps** between the one accepted design and the 14 unscorable
+   ones. The accepted design has *less* pair margin than 12 of the 14
+   (695 mV vs up to 1190 mV) and *more* power than 13 of the 14 (5.55 mW).
+   Pool rows are nominal (`tt/1.00/27C`); the failure is a **corner**
+   phenomenon. A nominal predictor of a corner failure is not merely unfitted
+   here — it is unfittable from this pool.
+3. **n = 1 in the positive class.** Any ranking rule fitted to a single success
+   is unfalsifiable. There is nothing to validate against.
+
+So the lever entry 31 named cannot be pulled as named. This entry pulls a
+different one, and the difference is that this one measures instead of predicting.
+
+### What is being measured
+
+`exp_hybrid.scan_topk` scores the top **k = 8** library candidates per request on
+the same 4-corner screen, and records the **rank of the first feasible one**. The
+k=1 scan tried exactly one candidate per request. This asks the question that
+needs no model: **how many must it try before one survives?**
+
+One run at k=8 yields the whole hit-rate-vs-k curve for k=1..8 (`accepted_at_k`),
+so k=2 and k=4 are not separate experiments, and the **k=1 column re-measures
+entry 31's result rather than assuming it**.
+
+Cost: 16 requests x 8 candidates x 4 decks = **512 decks**, ~12 min. Against
+13 718 decks for the plain search.
+
+### The facts established BEFORE the run (all zero-simulation)
+
+1. **The library is not short of options.** In-tolerance candidates per request
+   (both axes within `TOL`): min 2066, median 4986, max 17478, **115 261 total**
+   across the 16. The k=1 scan sampled one of ~5000.
+2. **The top 8 are genuinely different designs, not near-duplicates.** Within
+   each request's top 8: nominal power spans **3.3x to 11.9x** (median 5.4x),
+   `pair_margin_v` spans 252-1174 mV (median 894 mV), and the designs are up to
+   **0.98 apart in the normalised [0,1] design box** (median max|du| 0.85). All
+   8 are distinct rows in every request. This is the fact that makes depth worth
+   measuring; near-duplicates would have shown ~1.0x and tiny max|du|.
+3. **Depth is nearly free in target match.** `dev` across ranks 1-8 stays within
+   **0.003 to 0.080** — under 8 % of tolerance — so the 8th candidate is not a
+   worse answer to the request than the 1st. Depth buys diversity without
+   spending accuracy.
+4. **Some in-tolerance candidates have strongly negative DC gain** (`g_dc_db`
+   down to **-14.9 dB** at 10 dB @ 1.387 GHz). Peaking is a *ratio*, so a
+   heavily attenuating stage can match both requested axes. Noted because it is
+   a plausible mechanism for swing failure and because it means "in tolerance"
+   is a weaker statement than it sounds.
+5. **A traceability defect, found and NOT fixed here.** A scan row cannot be
+   joined to its pool row by `design_id`: all 16 mismatch despite **bit-identical
+   `u`** (max|du| < 1e-9). Cause identified — pool rows were written as
+   `design_id(sizing, geometry_tag)` (e.g.
+   `rs[res_high_po:w8l8.125m1]cs[...]rl[...]`) while the hybrid path calls
+   `design_id(sizing)` with no tag. Joins in this entry are therefore on `u`.
+   This matters later, not now: grouped train/test splits for SAC need a stable
+   key. Left as a recorded defect rather than a silent workaround.
+
+### Predictions
+
+Scored strictly. `A` = `n_accepted` at k=8 (out of 16).
+
+**The two hypotheses this discriminates**, stated before the number exists:
+
+* **H-independent** — the top 8 are 8 real tries at p ~ 1/16 each, so
+  `A ~ 16*(1-(1-1/16)^8) = 6.5`. Fact 2 above is why this is the central
+  expectation.
+* **H-correlated** — matching the target at nominal constrains swing at the
+  corners more than fact 2 suggests, and the extra 7 tries buy almost nothing:
+  `A ~ 1-2`.
+
+| # | Prediction | Falsified by |
+|---|---|---|
+| Q1 | **`accepted_at_k[0] == 1`**, and every request's rank-1 candidate is bit-identical in `u` to entry 31's proposal with the same `ok`/`feasible` verdict | any mismatch — which would mean the measurement is not reproducible and everything in entry 31 is in question |
+| Q2 | **`3 <= A <= 10`**, central estimate **6** | `A <= 2` (H-correlated wins) or `A >= 11` |
+| Q3 | The failure *kind* is unchanged: of all candidates with `ok == False`, **>= 70 % still cite output-swing compression** | a different dominant `reason`, which would mean depth trades one failure for another |
+| Q4 | Of the requests accepted at all, **median `accepted_rank` >= 2** | median rank 1, which would mean rank 1 was fine all along and entry 31 was unlucky |
+| Q5 | **`total_sims_deployed < 512`** and every `n_sims_deployed <= n_sims_measured` | either inequality violated — an accounting bug, not a result |
+
+**Q6 — the cost claim, and its downside stated in advance.** A deployed k=8
+proposer pays `8*4 = 32` decks on every **miss**, not 4. So implied full-sweep
+cost is `total_sims_deployed + (16 - A) * 857.375` against the baseline 13 718:
+
+| A | implied decks | vs 13 718 |
+|---|---|---|
+| 1 | ~13 400 | **2.4 % saving — WORSE than k=1's 5.78 %** |
+| 3 | ~11 600 | 15 % saving |
+| 6 | ~9 000 | 34 % saving |
+| 10 | ~5 400 | 61 % saving |
+
+**Predicted: > 15 % saving.** The first row is the honest downside and the reason
+this is a real bet: **if depth does not help, k=8 is strictly worse than k=1**,
+because it spends 8x the proposal budget on every request it still fails.
+
+### The decision rule — pre-agreed, and NOT renegotiable after the result
+
+* **`A >= 5`** — retrieval is alive. The run also produces ~128 labelled
+  (design, pass/fail-at-corners) candidates, which is the first dataset a
+  ranking rule could actually be **fitted and validated** on (entry 31 had one
+  positive; this would have ~40). Next step becomes that fit. Whether to then
+  spend ~90 min on the full hybrid sweep stays the **owner's** call.
+* **`2 <= A <= 4`** — marginal. Report it, do **not** run the full sweep, and
+  recommend moving to SAC *generation* rather than deeper retrieval.
+* **`A <= 1`** — **retrieval is dead at these targets.** The library does not
+  contain corner-robust designs for this request grid, no re-ranking of it can
+  help, and the SAC proposer must **generate** rather than retrieve. Say so
+  plainly, do not run the full sweep, and record it as a result about the
+  deliverable rather than a null.
+
+In all three branches the ~90-minute sweep stays unrun without the owner's
+explicit say-so, per entry 31's still-standing rule.
+
+### What is prohibited, restated because the temptation is now specific
+
+`A` is about to be a number that could be made to look better. **Untouched, in
+every branch:** the tolerances (G111), the screen points, `V6_SPECS`, the box,
+`reward_v1.py`, `SEARCH_TAIL_W`, `SEARCH_ROW_CAP`, and
+`exp_coverage.library_candidates` itself — which `choose_start` uses to seed the
+fallback search, so re-ranking it in place would silently change the search and
+break comparability with the 13 718-deck baseline every published coverage
+number was measured against. `scan_topk` **wraps** it and does not replace it.
+
+### What this does NOT establish, whatever the number is
+
+* **No compliance number.** The scan verifies nothing at 45 or 135 points. It
+  cannot produce a coverage figure and does not write `hybrid_results.json`.
+* **`A` is not the library's ceiling.** It is a lower bound (k > 8 could do
+  better) and simultaneously an upper bound on what re-ranking *within the top
+  8* could achieve. Both, and neither is the ceiling.
+* **Nothing about SAC.** A retrieval control's depth says nothing about whether
+  a learned policy helps.
+* **Nothing about the 4 V6 rows a pool row cannot evaluate**, and nothing about
+  whether RL is the right optimiser.
+
+### Gates, and the sabotage round that proved they fire
+
+27 tests in `nebula/tests/test_hybrid_topk.py`, no SPICE. Per G122 every gate was
+deliberately broken, watched go red, and restored (source verified bit-identical
+by sha256 afterwards, and the experiments directory checked for orphaned locks
+and artifacts). **15 of 15 fired.** Two things the round caught that review had
+not:
+
+1. **`accepted_rank` recorded the LAST feasible candidate, not the first** — so
+   every deployment cost would have been reported too high. Found by the test,
+   fixed in the source.
+2. **Two of my own tests were unsafe under sabotage.** `test_k_below_one_is_refused`
+   called `scan_topk` without redirecting `TOPK_SCAN`, so with the guard removed
+   it wrote a real artifact into `nebula/experiments/`. That is the exact G122
+   rule ("redirect every module-owned output path, including ones correct code
+   never writes") being broken in the test written to honour it. Both tests now
+   take the full redirection, and the orphan was deleted.
+
+A third gate initially **failed to fire**: the non-cumulative `accepted_at_k`
+sabotage passed, because the test's data (one acceptance at rank 3) gives
+`[0,0,1]` under both the correct and the broken rule. The data was changed to mix
+a rank-1 and a rank-3 acceptance, which separates them (`[1,1,2]` vs `[1,0,1]`).
+Recorded because a gate that cannot distinguish the bug it names is worse than no
+gate: it reports safety it does not provide.

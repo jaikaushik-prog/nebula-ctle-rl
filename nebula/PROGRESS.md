@@ -557,6 +557,16 @@ records `pair_margin_v` and `tail_margin_v`. Re-ranking would cost zero
 simulations — but it **redefines the control** a future SAC policy is scored
 against, and that is a decision to take deliberately, not a tweak.
 
+> **CORRECTION (2026-08-22, §5h).** The second half of that paragraph is wrong
+> and was asserted without being checked. **`pair_margin_v` / `tail_margin_v` are
+> not swing.** They are DC operating-point headroom (`vds - vdsat`); the screen
+> rejects on `vout_swing_v`, a **measured 1 dB compression point** that needs a
+> swept simulation. The pool has no swing field, and separately **no nominal
+> channel separates the 1 accepted design from the 14 failures** — it has *less*
+> pair margin than 12 of them. A swing-aware re-ranking of this pool is not
+> available at zero cost. **Read §5h**, which pulls the lever that can actually
+> be measured.
+
 **And a cost caveat that is not physics (G123, row 4i).** The scan was estimated
 at ~30 s and took 250.4 s. The gap is **not** the simulator: `library_candidates`
 re-reads the whole 74 526-row pool on every call because `load_pool` has no
@@ -565,6 +575,103 @@ so no result moves; but "zero simulations" is not "zero cost", and the residual
 1.4–2.5 s/deck against the sweep's 0.42 s/deck average stays **unexplained**.
 
 ---
+
+## 5h. THE SWING LEVER WAS A FALSE LEAD — depth is the one that can be measured. Entry 32, NOT YET RUN
+
+§5f named a lever and §5g recommended it: rank the library on **swing headroom**
+as well as target match, for free, because "the pool already carries
+`pair_margin_v` / `tail_margin_v`". **That premise was checked before anything was
+built on it, and it is false.** Three independent reasons, each measured:
+
+1. **The pool has no swing field.** `pair_margin_v` and `tail_margin_v` are DC
+   operating-point headroom, `vds - vdsat`. What the screen actually rejects on is
+   `vout_swing_v` — the **measured 1 dB compression point**, produced by a swept
+   simulation (`sky130_runner.measured_swing_pp_v`) which deliberately refuses to
+   fall back to a computed `4*I*RL`. They are different physical quantities and
+   only the first is in the pool. "Swing-aware ranking at zero simulations" is not
+   a thing this pool can support.
+2. **No nominal channel separates the outcomes.** Joining all 16 scan rows back
+   to their pool rows (on `u`, because `design_id` does not join across the
+   boundary — **G124**), every one of `pair_margin_v`, `tail_margin_v`,
+   `g_dc_db`, `peaking_db`, `nyq_boost_db`, `inoise_vrms`, `power_w`
+   **overlaps** between the 1 accepted design and the 14 unscorable ones. The
+   accepted design has **less** pair margin than 12 of the 14 (695 mV against up
+   to 1190 mV) and **more** power than 13 of the 14. Pool rows are nominal
+   (`tt/1.00/27C`); the failure is a **corner** phenomenon. A nominal predictor
+   of a corner failure is not merely unfitted here, it is unfittable from this
+   pool.
+3. **n = 1 in the positive class.** A ranking rule fitted to one success cannot
+   be validated. There is nothing to test it against.
+
+### The lever that IS available, and why it needs no model
+
+Two further zero-simulation diagnostics reframed the problem. The k=1 scan's real
+defect is not that its criterion is blind to swing — it is that **it looked at
+one candidate**:
+
+* the library holds **2066–17478 in-tolerance candidates per request** (median
+  4986, **115 261** across the 16), so the scan sampled roughly 1 in 5000;
+* a request's **top 8 are genuinely different designs**, not near-duplicates:
+  nominal power spans **3.3x–11.9x** (median 5.4x), `pair_margin_v` spans
+  252–1174 mV, the designs sit up to **0.98 apart in the normalised [0,1] design
+  box** (median max|du| 0.85), and all 8 are distinct rows in every request;
+* **depth is nearly free in target match** — `dev` across ranks 1–8 stays within
+  **0.003–0.080**, under 8 % of tolerance. The 8th candidate is not a worse
+  answer to the request than the 1st.
+
+So the question that needs no model: **how many candidates must it try before one
+survives the corners?** `exp_hybrid.scan_topk` scores the top **k = 8** on the
+same 4-corner screen and records the **rank of the first feasible one**. 512
+decks, ~12 min, against 13 718 for the plain search. One run yields the whole
+hit-rate-vs-k curve for k=1..8, so k=2 and k=4 are not separate experiments — and
+its **k=1 column re-measures entry 31's 1-of-16 instead of assuming it**.
+
+**It is informative in both directions, which is the point.** A high hit rate
+means the library does hold corner-robust designs, the k=1 ranking was simply
+blind to them, and the run yields ~128 labelled candidates — the first dataset a
+ranking could actually be **fitted and validated** on (entry 31 had one positive).
+A low one means the library does not hold corner-robust designs at these targets
+at all, which kills the retrieval line cheaply and tells the SAC stage its
+proposer must **generate** rather than retrieve. That is a result about the
+deliverable, not a null.
+
+### One incidental finding worth noticing
+
+Some in-tolerance candidates have **strongly negative DC gain** — down to
+**−14.9 dB** at 10 dB @ 1.387 GHz. Peaking is a *ratio*, so a heavily attenuating
+stage can match both requested axes exactly. It is a plausible mechanism for the
+swing failures, and it means **"in tolerance" is a weaker statement than it
+sounds**.
+
+### The bet, with its downside stated first
+
+Pre-registered as `PREDICTIONS.md` entry 32 with five scored predictions, a cost
+table, and a pre-committed three-branch decision rule. It discriminates two named
+hypotheses: **H-independent** (the top 8 are 8 real tries at p≈1/16, so
+`A ≈ 6.5` of 16) against **H-correlated** (`A ≈ 1–2`). Central estimate **A = 6**,
+predicted range **3 ≤ A ≤ 10**.
+
+**The downside is real and was written before the run.** A deployed k=8 proposer
+pays `8 × 4 = 32` decks on every **miss**, not 4. So if depth does not help,
+**k=8 is strictly worse than k=1** — a 2.4 % saving against k=1's 5.78 %. This is
+a bet that can lose, which is what makes running it worth 12 minutes.
+
+`exp_coverage.library_candidates` is **not modified** — `choose_start` seeds the
+fallback search from it, so re-ranking it in place would change the search too and
+break comparability with the 13 718-deck baseline every published coverage number
+was measured against. `library_candidates_k` **wraps** it (pinned by source
+inspection), and `scan_topk` writes a **third** artifact,
+`hybrid_topk_scan.json`, because writing into `hybrid_proposal_scan.json` would
+overwrite the result entry 31 quotes — G113's exact shape.
+
+**Status: built, 27 gates green, 15 of 15 sabotages fired, pre-registered, NOT
+YET RUN.** The ~90-minute full sweep remains unrun and needs the owner's say-so in
+every branch. Two gotchas came out of the gate work: **G124** (`design_id` does
+not join across artifact boundaries — bit-identical sizing, different ids, and the
+failure mode is a silent *empty* join that reads as a real finding) and **G125** (a
+sabotage that passes and a gate that cannot distinguish its own bug are the same
+thing — one of these gates was worthless while looking thorough, because its test
+data gave the same answer under the correct and the broken rule).
 
 ## 6. Next steps, in order
 
@@ -580,8 +687,10 @@ so no result moves; but "zero simulations" is not "zero cost", and the residual
 | **4e** | **SAC brief stage 0 -- `experiments/exp_hybrid.py`.** Propose a design, score it on the live 4-corner screen, deliver if feasible, else call `exp_coverage.solve_request` **unchanged**. Proposer = zero-simulation library lookup = the **control** for a future SAC policy. Measures the **amortisation curve** (decks per request): a **cost** claim, not a coverage claim | 0 sims to build | **DONE 2026-08-22 (session 26).** 28 tests, no SPICE; 4 new gates watched red; pre-registered as **entry 31** |
 | **4f** | **Run the 64-deck proposals-only scan** (`--proposals`, ~30 s). Entry 31 predicts **0 or 1 of 16** accepted at 75 %, dominant rejection bucket **unscorable not infeasible** (G107) | 64 sims, ~30 s | **DONE 2026-08-22 (session 26b).** 64 decks, 250.4 s. **1 accepted / 1 infeasible / 14 unscorable.** Entry 31 scored **5 of 5**; all 14 unscorable name output-swing compression |
 | **4g** | **The ~90-minute full hybrid sweep -- THE OWNER'S CALL.** Entry 31 pre-commits the rule: run it if **>= 3** proposals are accepted; **do not** run it if **<= 1**. The search is *budget-bound* (both prior sweeps cost **exactly 13 718 decks**), so at zero acceptances the hybrid costs **64 decks MORE** than the plain search and its coverage number is predicted unchanged at 7/16 +-1 | ~14 000 sims, ~1.6 h | **RULE SAYS DO NOT RUN** -- 4f returned `n_accepted = 1`, which is `<= 1`. Recommendation is to skip it; **still the owner's decision**, not taken unilaterally |
-| **4h** | **The lever 4f identified: make the proposer swing-aware.** `library_candidates`' `dev` ranks on the worse of the two requested axes over its tolerance and **swing headroom appears nowhere in it**, yet 14 of 16 proposals died on swing. The pool already carries `pair_margin_v` / `tail_margin_v`, so re-ranking costs **zero** simulations | 0 sims to build, 64 to re-measure | **open -- needs a human decision first**, because it **redefines the control** the future SAC policy is measured against |
-| **4i** | **Cache `spec_pool.load_pool` (G123).** It is called once per `library_candidates` invocation with no cache, so the 74 526-row pool is re-parsed per request: **89-161 s of the scan's 250.4 s**. An `lru_cache` is the whole fix. Also **unexplained**: the residual 1.4-2.5 s/deck vs the coverage sweep's 0.42 s/deck average | ~0 sims | open, low priority -- affects **no** result (every claim is in decks, not seconds), only wall-clock estimates |
+| **4h** | ~~**The lever 4f identified: make the proposer swing-aware.**~~ **WITHDRAWN 2026-08-22 — the premise was false.** The pool has no swing field (`pair_margin_v` / `tail_margin_v` are DC `vds - vdsat`; the screen rejects on a *measured* 1 dB compression point), **no** nominal channel separates the 1 accepted design from the 14 failures, and n=1 in the positive class makes any fitted rule unfalsifiable. See §5h and `PREDICTIONS.md` entry 32's correction | — | **withdrawn, superseded by 4j** |
+| **4i** | **Cache `spec_pool.load_pool` (G123).** It is called once per `library_candidates` invocation with no cache, so the 74 526-row pool is re-parsed per request: **89-161 s of the scan's 250.4 s**. An `lru_cache` is the whole fix. Also **unexplained**: the residual 1.4-2.5 s/deck vs the coverage sweep's 0.42 s/deck average | ~0 sims | open, low priority -- affects **no** result (every claim is in decks, not seconds), only wall-clock estimates. **Deliberately not done in 26c**: `load_pool` returns a mutable object shared by every caller, so memoising it changes aliasing, not just speed |
+| **4j** | **Measure how DEEP the library must be searched (`exp_hybrid.scan_topk`, entry 32).** Score the top **k=8** candidates per request on the same 4-corner screen, record the rank of the first feasible one. Replaces 4h: it **measures** instead of predicting, needs no model, and one run yields the whole hit-rate-vs-k curve for k=1..8 -- whose k=1 column re-measures entry 31's 1-of-16 | **512 decks, ~12 min** (vs 13 718 for the plain search) | **built, tested (27 gates, 15/15 sabotages fired), pre-registered as entry 32 -- NOT YET RUN** |
+| **4k** | **Fit a ranking on the labels 4j produces.** Entry 31 gave 16 labelled candidates with **1** positive, which is unfittable. A k=8 scan gives ~128 labelled (design, pass/fail-at-corners) pairs. Only worth starting if 4j returns `A >= 5` -- the pre-committed branch | 0 sims to fit, 64-512 to re-measure | **blocked on 4j's number**, and then on the owner |
 | **5** | **Corner-aware RL vs random / CMA-ES / library lookup.** Pre-registered as entry 25 (with a disclosed rule-3 violation: written after launch, before any artifact existed) | ~2.5 h | **RUNNING** |
 | **6** | **Re-run the coverage sweep on `V6_SPECS`** (§5b). Owner: *"polishing numbers is much needed for honesty."* **Publish both the old and the corrected coverage number** | ~2.5 h | **committed, do not drop** |
 | 7 | 2-D tuning bank (`Cs` axis) + the reading-(B) criterion | ~1 100 sims, ~8 min | built, not run |

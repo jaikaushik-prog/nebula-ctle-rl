@@ -8,6 +8,58 @@ else in the 22s brief stands.
 
 **26 days to the 15 Sept deadline. Demo 25 Sept at BITS Goa.**
 
+> **2026-08-22 (session 26c) — READ THIS FIRST: the lever the block below
+> recommends does not exist, and a different one is built, tested and
+> pre-registered but NOT YET RUN.**
+>
+> Session 26b's closing recommendation (row 4h, repeated in the blockquote below)
+> was *"rank the library on swing headroom too — the pool already carries
+> `pair_margin_v` / `tail_margin_v`, so it costs zero simulations."* **That was
+> asserted without being checked, and it is false.** `pair_margin_v` /
+> `tail_margin_v` are DC operating-point headroom (`vds - vdsat`); the screen
+> rejects on `vout_swing_v`, a **measured 1 dB compression point** that needs a
+> swept simulation. **The pool has no swing field.** Separately, **no** nominal
+> channel separates the 1 accepted design from the 14 failures — it has *less*
+> pair margin than 12 of them and *more* power than 13 of them — and with n=1 in
+> the positive class no ranking rule could be validated anyway. **Row 4h is
+> withdrawn.**
+>
+> **What replaced it, and why it needs no model.** The k=1 scan's real defect was
+> not its criterion — it was that **it looked at one candidate**. The library
+> holds **2066–17478 in-tolerance candidates per request** (median 4986), a
+> request's **top 8 are genuinely different designs** (nominal power spans
+> 3.3x–11.9x, up to **0.98 apart** in the normalised [0,1] box, all 8 distinct),
+> and **depth is nearly free in target match** (`dev` across ranks 1–8 stays
+> under **8 %** of tolerance). So: `exp_hybrid.scan_topk` scores the top **k=8**
+> on the same 4-corner screen and records the **rank of the first feasible one**.
+> **512 decks, ~12 min** against 13 718 for the plain search. One run gives the
+> whole hit-rate-vs-k curve for k=1..8, and its **k=1 column re-measures entry
+> 31's 1-of-16 rather than assuming it**.
+>
+> **Informative either way** — a high hit rate means the library does hold
+> corner-robust designs and yields ~128 labelled candidates (the first dataset a
+> ranking could be *fitted* on; entry 31 had one positive); a low one kills the
+> retrieval line cheaply and says the SAC proposer must **generate**, not
+> retrieve. **The downside is stated in advance: a deployed k=8 proposer pays 32
+> decks per MISS, so if depth does not help, k=8 is strictly WORSE than k=1**
+> (2.4 % saving vs 5.78 %).
+>
+> Pre-registered as **`PREDICTIONS.md` entry 32** — central estimate **A = 6** of
+> 16, predicted range **3 ≤ A ≤ 10**, three-branch decision rule pre-committed.
+> **27 gates in `nebula/tests/test_hybrid_topk.py`, 15 of 15 sabotages fired.**
+> `exp_coverage.library_candidates` is **not modified** (`choose_start` seeds the
+> search from it), and `scan_topk` writes a **third** artifact so it cannot
+> overwrite entry 31's (G113).
+>
+> **To run it:** `python -m nebula.experiments.exp_hybrid --topk 8`. The
+> ~90-minute **full sweep still needs the owner's say-so** in every branch.
+> New gotchas **G124** (`design_id` does not join across artifact boundaries —
+> bit-identical sizing, different ids; the failure mode is a silent *empty* join
+> that reads as a real finding) and **G125** (a sabotage that passes and a gate
+> that cannot distinguish its own bug are the same thing — one of these gates was
+> worthless while looking thorough). Read `PROGRESS.md` **§5h**, then entry 32.
+> **Tests: 1861 passed, 11 deselected.**
+
 > **2026-08-22 (session 26b) — stage 0 is built, committed, pre-registered AND
 > measured. `PREDICTIONS.md` entry 31 scored 5 of 5, and the answer is that the
 > free proposal is almost never good enough.** The SAC track began after the owner
@@ -41,6 +93,9 @@ else in the 22s brief stands.
 > "zero simulation" lookup re-reads the whole 74 526-row pool *per call*
 > (`load_pool` has no cache), which is 89–161 s of that 250.4 s. No result
 > depends on G123 — every claim is in decks, not seconds.
+>
+> **↑ Row 4h in that last paragraph is WITHDRAWN — see the 26c block above. The
+> pool has no swing field.** Everything else here stands.
 
 > **2026-08-22 — the search-ranking fix is committed AND its sweep has run.**
 > `nebula/experiments/search_score.py` fixed a plateau that made four coverage

@@ -4436,6 +4436,35 @@ Plus: git init, .gitignore, 28 tests, Wilson-bound BER reporting.
   evidence about SPICE throughput without subtracting the proposer, and **(2)**
   the residual 1.4-2.5 s/deck still exceeds the coverage sweep's 0.42 s/deck
   average and is **unexplained** -- do not assume the subtraction closes.
+- **G124 -- (nebula) `design_id` DOES NOT JOIN AN EXPERIMENT ROW TO ITS POOL ROW.
+  Two records with bit-identical sizing get different ids, because
+  `rl/contract.py:534` keys on `(sizing, geometry_tag)` and the two writers pass
+  different second arguments.** Found 2026-08-22 joining
+  `hybrid_proposal_scan.json` back to `spec_pool`: **all 16 rows mismatched on
+  `design_id` while matching on `u` to within 1e-9.** The pool logs were written
+  through the path that supplies a tag (e.g.
+  `rs[res_high_po:w8l8.125m1]cs[cap_mim_m3_1:w48.77l48.77m1]rl[res_high_po:w10l7.635m1]`)
+  and `exp_hybrid` calls `design_id(sizing)` with none, so
+  `95fd9735cfef6856 != 8663529ef1d0c640` for the same transistor widths. **Join
+  on `u`, not on `design_id`, when crossing artifact boundaries** -- and note the
+  failure mode is a silent *empty* join: the first version of the diagnostic
+  reported "all 16 designs NOT IN POOL" and looked like a real finding about
+  coverage rather than a key mismatch. This will matter more later than it does
+  now: grouped train/test splits for SAC need a key that survives the boundary.
+  Not fixed (changing either writer's id changes ids in committed artifacts).
+- **G125 -- (nebula, testing discipline) A SABOTAGE THAT PASSES AND A GATE THAT
+  CANNOT DISTINGUISH THE BUG IT NAMES ARE THE SAME THING. Check that the test's
+  DATA separates the correct rule from the broken one, not just that the test is
+  green.** Found 2026-08-22 in the entry-32 sabotage round. The gate on
+  `scan_topk`'s cumulative `accepted_at_k` curve was tested with one acceptance
+  at rank 3, which yields `[0, 0, 1]` under the correct cumulative rule **and**
+  under the broken histogram rule (`== j+1` instead of `<= j+1`) -- so the
+  sabotage ran green and the gate was worthless while looking thorough. Mixing a
+  rank-1 with a rank-3 acceptance separates them (`[1,1,2]` vs `[1,0,1]`). This
+  is the companion to G122: G122 says a sabotage round must not be able to spend
+  money; G125 says it must be able to **fail**. The round is only evidence for
+  the gates whose sabotage actually went red -- so run it and read every line,
+  because 14 of 15 firing looks like success in a summary.
 
 ## 10. Environment
 
@@ -10371,3 +10400,90 @@ result depends on it (every Q is in decks, not seconds), and the residual
 1.4-2.5 s/deck against the sweep's 0.42 s/deck average is left **unexplained**.
 **Tests: 1834 passed, 11 deselected, 0 failed**, unchanged -- this session
 changed no code, only documentation and one added artifact.
+
+### 2026-08-22 -- session 26c: the swing lever was a false lead. Depth is the one that can be measured.
+
+**Why this session exists.** Session 26b's entry-31 OUTCOME closed by naming a
+"lever identified but NOT pulled": rank the library on swing headroom as well as
+on target match, at zero simulations, because "the pool already carries the
+information that would fix this (`pair_margin_v`, `tail_margin_v`)". The owner
+chose that option. **Before building it, the premise was checked. It is false**,
+and the correction is written into `PREDICTIONS.md` entry 32 rather than back
+into entry 31, which stays as recorded.
+
+**The three reasons the swing-aware ranking is not available:**
+
+1. **The pool has no swing field.** `pair_margin_v` / `tail_margin_v` are DC
+   operating-point headroom (`vds - vdsat`). The screen rejects on
+   `vout_swing_v`, the **measured 1 dB compression point** from a swept
+   simulation (`sky130_runner.measured_swing_pp_v`), which explicitly refuses to
+   fall back to a computed `4*I*RL`. Different quantities; the pool holds only
+   the first.
+2. **No nominal channel separates the outcomes.** All 16 scan rows joined back
+   to their pool rows (on `u` -- see G124): `pair_margin_v`, `tail_margin_v`,
+   `g_dc_db`, `peaking_db`, `nyq_boost_db`, `inoise_vrms`, `power_w` **all
+   overlap** between the 1 accepted and the 14 unscorable. The accepted design
+   has *less* pair margin than 12 of the 14 and *more* power than 13 of the 14.
+   Pool rows are nominal; the failure is a corner phenomenon.
+3. **n = 1 in the positive class.** A rule fitted to one success cannot be
+   validated.
+
+**What was built instead, and why it is the honest version of the same
+question.** Two further zero-simulation diagnostics found that the library holds
+**2066-17478 in-tolerance candidates per request** (median 4986, 115 261 total)
+and that a request's **top 8 are genuinely different designs** -- nominal power
+spans 3.3x-11.9x, they sit up to **0.98 apart in the normalised [0,1] box**, all
+8 distinct -- while `dev` across ranks 1-8 stays under **8 % of tolerance**. So
+depth costs almost nothing in target match and buys real diversity. The k=1 scan
+tried **one** of ~5000 valid candidates. `exp_hybrid.scan_topk` now scores the
+top **k=8** on the same 4-corner screen and records the **rank of the first
+feasible** one: 512 decks, ~12 min, against 13 718 for the plain search.
+
+It measures instead of predicting, and it is informative both ways. A high hit
+rate means the library does hold corner-robust designs, bounds what a better
+ranking could achieve, and yields ~128 labelled candidates -- the first dataset a
+ranking could actually be fitted on. A low one means retrieval is dead at these
+targets and the SAC proposer must **generate** rather than retrieve, which is a
+result about the deliverable rather than a null.
+
+**Wrap, do not replace, applied literally.** `exp_coverage.library_candidates` is
+**not modified** -- `choose_start` seeds the fallback search from it, so
+re-ranking it in place would silently change the search and break comparability
+with the 13 718-deck baseline. `library_candidates_k` calls it (pinned by source
+inspection). The k=1 control (`library_proposer`, entry 31's artifact) is
+untouched, and `scan_topk` writes a **third** file, `hybrid_topk_scan.json`,
+because writing into `hybrid_proposal_scan.json` would overwrite the result entry
+31 quotes -- G113's exact shape.
+
+**Pre-registered as `PREDICTIONS.md` entry 32, NOT YET RUN.** Five scored
+predictions plus a cost table, discriminating two named hypotheses:
+H-independent (8 real tries at p~1/16 -> `A ~ 6.5`) against H-correlated
+(`A ~ 1-2`). Central estimate **A = 6**, predicted range **3 <= A <= 10**. The
+downside is stated in advance: a deployed k=8 proposer pays 32 decks on every
+**miss**, so **if depth does not help, k=8 is strictly worse than k=1** (2.4 %
+saving vs 5.78 %). Decision rule pre-committed in three branches; the ~90-minute
+full sweep stays unrun in all of them without the owner's say-so.
+
+**Gates: 27 new tests in `nebula/tests/test_hybrid_topk.py`, no SPICE, 0.25 s.**
+Per G122 all 15 sabotages were applied, watched, and reverted, with the source
+verified bit-identical by sha256 and the experiments directory checked for
+orphans. The round earned its cost three times over:
+
+* it caught **`accepted_rank` recording the LAST feasible candidate, not the
+  first**, which would have reported every deployment cost too high;
+* it caught **two of my own tests being unsafe under sabotage** -- with the `k>=1`
+  guard removed, `test_k_below_one_is_refused` ran the real `scan_topk` and wrote
+  a real artifact into `nebula/experiments/`, which is the G122 rule being broken
+  by the test written to honour it. Orphan deleted, both tests now redirected;
+* one sabotage initially **passed** -- the cumulative-curve gate could not tell
+  `<= j+1` from `== j+1` with its original data. Now **G125**.
+
+**Gotchas added:** G124 (`design_id` does not join across artifact boundaries --
+bit-identical sizing, different ids, because one writer passes `geometry_tag` and
+the other does not; the failure mode is a silent empty join that reads as a real
+finding) and G125 (a sabotage that passes and a gate that cannot distinguish its
+own bug are the same thing -- check the test's *data* discriminates, and read
+every line of the round, because 14 of 15 firing looks like success in a summary).
+
+**Tests: 1834 passed before -> 1861 passed, 11 deselected, 0 failed after**
+(253.7 s), the 27 new gates being the difference.
