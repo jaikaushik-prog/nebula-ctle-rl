@@ -440,6 +440,10 @@ constraint rather than the search.
 
 ## 5f. STAGE 0 OF THE SAC BRIEF — the wrapper is built and pre-registered, NOT measured
 
+> **Read §5g next: it HAS since been measured.** This section is the record of
+> what was built and predicted *before* any number existed, kept unedited so the
+> pre-registration stays readable in its original form. The result is in §5g.
+
 After entry 30 scored 2 of 5, the owner stopped the coverage/unclip line and said
 to start the SAC track. `NEXT_AGENT_SAC.md` §4 orders **stage 0 first, before any
 learning code**: a wrapper that asks a *proposer* for a design, scores it on the
@@ -511,6 +515,57 @@ correct code never writes, because the sabotage is exactly when it writes them.
 
 ---
 
+## 5g. THE SCAN RESULT — 5 of 5 confirmed, and the free proposal dies on SWING
+
+**Measured 2026-08-22 (session 26b).** `--proposals`: 16 requests, 16 proposals,
+**64 decks**, 250.4 s, exit 0. Artifact `hybrid_proposal_scan.json` (tracked).
+Full scoring in `PREDICTIONS.md` entry 31's OUTCOME; nothing above its OUTCOME
+heading was edited.
+
+**1 accepted / 1 measured-but-infeasible / 14 unscorable.** Entry 31 went **5 of
+5** on the cheap mode: acceptance in the predicted 0–1 band; unscorable the
+dominant bucket by 14 to 1; the swing mechanism named by **14 of 14** rows
+(unanimous, where a bare majority was predicted); the plumbing exact at 16
+proposals and 64 decks; and the saving exactly at its pre-registered ceiling of
+**793 decks = 5.78 %**. Q6/Q7 concern the full sweep and are unmeasured.
+
+**The finding, in plain terms: the library gives designs that hit the requested
+peak and cannot swing hard enough to carry the signal at the corners.** Every one
+of the 14 failures is the same condition — needed output swing **343.5–2179.8
+mVpp** against available **112.2–1225.4 mVpp**. Thirteen of the 14 failed at
+**4 of 4** screen points, so the single smoke data point that motivated the
+prediction (2 of 4) was the *mildest* case, not a typical one.
+
+**Why §5f's "all 16 are clean at nominal" and this are both true.** The screen
+has **no nominal point** — its four points are PVT extremes — so nominal
+cleanliness was never re-measured here, and the distance between the two is the
+result. Related and easy to misread: the delivered values in the table are the
+**worst corner**, not nominal, which is why one row shows a 0.72-octave frequency
+error against a nominal match of ~0.012 octaves. That is corner drift, not a
+lookup bug.
+
+**The pre-committed rule fires against running the sweep.** `n_accepted = 1` is
+`<= 1`, so the 90 minutes would buy a confirmation of arithmetic already known.
+Applied as written rather than renegotiated after seeing the number — the same
+discipline §5e used. **The owner decides.** Nothing was touched to make
+acceptance look better (§8 rule: the tolerances, screen, `V6_SPECS`, box,
+`reward_v1.py`, `SEARCH_TAIL_W`, `SEARCH_ROW_CAP` are all as they were).
+
+**The lever, named but not pulled (row 4h).** The library ranks on target match
+alone; swing headroom is nowhere in its criterion, though the pool already
+records `pair_margin_v` and `tail_margin_v`. Re-ranking would cost zero
+simulations — but it **redefines the control** a future SAC policy is scored
+against, and that is a decision to take deliberately, not a tweak.
+
+**And a cost caveat that is not physics (G123, row 4i).** The scan was estimated
+at ~30 s and took 250.4 s. The gap is **not** the simulator: `library_candidates`
+re-reads the whole 74 526-row pool on every call because `load_pool` has no
+cache, which is **89–161 s** of the total. Every claim in entry 31 is in *decks*,
+so no result moves; but "zero simulations" is not "zero cost", and the residual
+1.4–2.5 s/deck against the sweep's 0.42 s/deck average stays **unexplained**.
+
+---
+
 ## 6. Next steps, in order
 
 | # | Task | Cost | Status |
@@ -523,8 +578,10 @@ correct code never writes, because the sabotage is exactly when it writes them.
 | **4c** | **Reachability, not scoring** -- the branch entry 30 pre-committed to. Either the 2-D tuning bank (item 7) or raising `budget_design_evals` above 200. **Do NOT tune `SEARCH_TAIL_W`/`SEARCH_ROW_CAP`, `reward_v1.py`, the tolerances or `baselines.py`** to buy coverage | TBD | **owner's say-so required before starting** |
 | **4d** | **Explain the unmeasurable eyes.** `n_unscorable` rose **74 -> 133** over the 135-point grid, and both 45-corner regressions are lost eyes rather than spec violations (G120). Decide whether the 45/45 cliff or the search is the binding constraint | ~0 sims to start (artifacts exist) | open, not spun as a finding |
 | **4e** | **SAC brief stage 0 -- `experiments/exp_hybrid.py`.** Propose a design, score it on the live 4-corner screen, deliver if feasible, else call `exp_coverage.solve_request` **unchanged**. Proposer = zero-simulation library lookup = the **control** for a future SAC policy. Measures the **amortisation curve** (decks per request): a **cost** claim, not a coverage claim | 0 sims to build | **DONE 2026-08-22 (session 26).** 28 tests, no SPICE; 4 new gates watched red; pre-registered as **entry 31** |
-| **4f** | **Run the 64-deck proposals-only scan** (`--proposals`, ~30 s). Entry 31 predicts **0 or 1 of 16** accepted at 75 %, dominant rejection bucket **unscorable not infeasible** (G107) | 64 sims, ~30 s | **NEXT** |
-| **4g** | **The ~90-minute full hybrid sweep -- THE OWNER'S CALL.** Entry 31 pre-commits the rule: run it if **>= 3** proposals are accepted; **do not** run it if **<= 1**. The search is *budget-bound* (both prior sweeps cost **exactly 13 718 decks**), so at zero acceptances the hybrid costs **64 decks MORE** than the plain search and its coverage number is predicted unchanged at 7/16 +-1 | ~14 000 sims, ~1.6 h | **BLOCKED on the owner, pending 4f** |
+| **4f** | **Run the 64-deck proposals-only scan** (`--proposals`, ~30 s). Entry 31 predicts **0 or 1 of 16** accepted at 75 %, dominant rejection bucket **unscorable not infeasible** (G107) | 64 sims, ~30 s | **DONE 2026-08-22 (session 26b).** 64 decks, 250.4 s. **1 accepted / 1 infeasible / 14 unscorable.** Entry 31 scored **5 of 5**; all 14 unscorable name output-swing compression |
+| **4g** | **The ~90-minute full hybrid sweep -- THE OWNER'S CALL.** Entry 31 pre-commits the rule: run it if **>= 3** proposals are accepted; **do not** run it if **<= 1**. The search is *budget-bound* (both prior sweeps cost **exactly 13 718 decks**), so at zero acceptances the hybrid costs **64 decks MORE** than the plain search and its coverage number is predicted unchanged at 7/16 +-1 | ~14 000 sims, ~1.6 h | **RULE SAYS DO NOT RUN** -- 4f returned `n_accepted = 1`, which is `<= 1`. Recommendation is to skip it; **still the owner's decision**, not taken unilaterally |
+| **4h** | **The lever 4f identified: make the proposer swing-aware.** `library_candidates`' `dev` ranks on the worse of the two requested axes over its tolerance and **swing headroom appears nowhere in it**, yet 14 of 16 proposals died on swing. The pool already carries `pair_margin_v` / `tail_margin_v`, so re-ranking costs **zero** simulations | 0 sims to build, 64 to re-measure | **open -- needs a human decision first**, because it **redefines the control** the future SAC policy is measured against |
+| **4i** | **Cache `spec_pool.load_pool` (G123).** It is called once per `library_candidates` invocation with no cache, so the 74 526-row pool is re-parsed per request: **89-161 s of the scan's 250.4 s**. An `lru_cache` is the whole fix. Also **unexplained**: the residual 1.4-2.5 s/deck vs the coverage sweep's 0.42 s/deck average | ~0 sims | open, low priority -- affects **no** result (every claim is in decks, not seconds), only wall-clock estimates |
 | **5** | **Corner-aware RL vs random / CMA-ES / library lookup.** Pre-registered as entry 25 (with a disclosed rule-3 violation: written after launch, before any artifact existed) | ~2.5 h | **RUNNING** |
 | **6** | **Re-run the coverage sweep on `V6_SPECS`** (§5b). Owner: *"polishing numbers is much needed for honesty."* **Publish both the old and the corrected coverage number** | ~2.5 h | **committed, do not drop** |
 | 7 | 2-D tuning bank (`Cs` axis) + the reading-(B) criterion | ~1 100 sims, ~8 min | built, not run |

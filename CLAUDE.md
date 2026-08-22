@@ -22,16 +22,18 @@ guessable. Start with these, in order:
 
 0. `nebula/CONTINUE_HERE.md` — **the entry point (2026-08-19).** Where the
    project stands, what is decided, what is OPEN, what to do next.
-   **As of 2026-08-22 (session 26): the SAC track has started.
-   `NEXT_AGENT_SAC.md` stage 0 — `nebula/experiments/exp_hybrid.py`, the
-   "propose, else fall back to the search" wrapper — is committed with 28 tests
-   and pre-registered as `PREDICTIONS.md` entry 31, but NOT yet measured. Next:
-   run the 64-deck scan (`--proposals`, ~30 s), then ASK THE OWNER before
-   spending the ~90-minute full sweep. Read `nebula/PROGRESS.md` §5f, entry 31
-   and G122 first. The prior line stopped here: entry 30's sweep RAN, scored
+   **As of 2026-08-22 (session 26b): the SAC track has started and stage 0 is
+   MEASURED. `nebula/experiments/exp_hybrid.py` — the "propose, else fall back to
+   the search" wrapper — is committed with 28 tests, pre-registered as
+   `PREDICTIONS.md` entry 31, and its 64-deck scan has RUN: entry 31 scored
+   5 of 5, and only 1 of 16 free proposals was accepted (1 infeasible,
+   14 unscorable, all 14 on output-swing compression). Entry 31's pre-committed
+   rule therefore fires AGAINST the ~90-minute full sweep — do NOT run it without
+   the owner's say-so. Read `nebula/PROGRESS.md` §5g, entry 31's OUTCOME, and
+   G122-G123 first. The prior line stopped here: entry 30's sweep RAN, scored
    2 of 5, and mandated coverage went 8/16 -> 7/16 (`PROGRESS.md` §5e;
    `nebula/SESSION_25_HANDOFF.md` has the reasoning behind that fix).**
-1. `HANDOFF.md` — state, session log, gotchas **G1–G122**
+1. `HANDOFF.md` — state, session log, gotchas **G1–G123**
 2. `CLAUDEwa.md` — the Nebula contract
 3. `nebula/G0_RESULTS.md` — toolchain findings + the cost model
 4. `nebula/NRZ_RETARGET_AUDIT.md` — the 24 PAM-4 assumptions, 3 fixed

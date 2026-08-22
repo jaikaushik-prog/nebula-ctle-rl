@@ -5306,3 +5306,100 @@ lever.
   passed all 13 on the screen; a proposal rejected here may have been rejected on
   a row the pool never showed us.
 
+### OUTCOME — the scan ran 2026-08-22. **5 of 5 confirmed. The free proposal is almost never good enough, and the reason is swing, not target match.**
+
+`python -m nebula.experiments.exp_hybrid --proposals`, exit 0, artifact
+`nebula/experiments/hybrid_proposal_scan.json` (tracked, G49 as amended: this
+section quotes numbers from it). 16 requests, **16 proposals made, 64 decks**,
+250.4 s. The full sweep (Q6/Q7) was **NOT** run.
+
+| | prediction | measured | |
+|---|---|---|---|
+| **Q1** | 0 or 1 of 16 accepted | **1 of 16** | **CONFIRMED** |
+| **Q2** | `n_unscorable` > `n_infeasible` | **14 > 1** | **CONFIRMED** |
+| **Q3** | majority of unscorable rows name the swing | **14 of 14** | **CONFIRMED** |
+| **Q4** | 16 proposals, 64 decks exactly | **16, 64** | **CONFIRMED** |
+| **Q5** | saving ≤ 793 decks (≤ 5.8 %) | **793 decks, 5.78 %** | **CONFIRMED** |
+| **Q6** | 45-corner coverage 7/16 ± 1 | not run | conditional, unmeasured |
+| **Q7** | decks within ±10 % of the formula | not run | conditional, unmeasured |
+
+Full split: **1 accepted / 1 measured-but-infeasible / 14 unscorable.** Q5's
+arithmetic, checked against item 7 rather than asserted: `64 + 15 × 857.375 =
+12 925` against the plain search's `13 718`, a saving of **793 decks = 5.78 %** —
+exactly the pre-registered ceiling, because `n_accepted` landed at the top of
+Q1's band.
+
+**Q3 came in unanimous, not merely a majority**, and every one of the 14 names
+the same physical condition: the output swing the signal needs exceeds the swing
+the stage can actually deliver linearly. Needed **343.5 to 2179.8 mVpp** against
+available **112.2 to 1225.4 mVpp**. `margin = 1.0`, so the printed limit and
+`vout_swing_v` are the same number by construction
+(`link/calibration.py:149`) — that is not a duplicated field.
+
+**The mechanism is worse than item 5 suggested, not milder.** Item 5's smoke run
+(request 5, 2 of 4 points unscorable) turned out to be the **mildest of the 14**:
+the other 13 were unscorable at **4 of 4** points. The one real-SPICE data point
+available before the run understated the effect.
+
+**Why items 3 and 4 did not transfer, measured rather than guessed.** Two
+reasons, both structural:
+
+1. **The screen contains no nominal point.** It is
+   `sf/1.05/0C/33fF`, `ff/1.05/0C/33fF`, `fs/0.95/125C/33fF`,
+   `ss/0.95/125C/33fF` — four extremes. Items 3 and 4 established that the
+   library's answer is near-exact *and clean on 9 specs at nominal*; the scan
+   never re-measured nominal, so nothing here contradicts them. The gap between
+   them is the result.
+2. **The reported `*_got` values are the WORST corner, not nominal**
+   (`exp_hybrid.py:477`). This matters for reading the table: request 16 asked
+   10.0 dB @ 2.253 GHz and the row shows 8.49 dB @ 3.715 GHz, which is 0.72
+   octaves of error against a nominal `dev` of ~0.012 octaves. That is corner
+   drift, **not** a broken lookup, and it is the only measured-but-infeasible
+   row (`worst_spec = S3_f_peak_match` at `fs/0.95/125C`).
+
+The single acceptance (request 10, 8.0 dB @ 1.627 GHz) passed all 13 rows at all
+4 points with `reward +14.1863`, while losing **1.22 dB** of peaking at
+`fs/0.95/125C` — inside `S3_peaking_match`, and `S3_peaking_match` was still its
+binding row. So even the success is close to its limit on the axis the library
+ranks on.
+
+**The wall clock was wrong by ~8x, and it is not SPICE.** Item 1 said "about
+30 s"; the scan took **250.4 s**. Cause measured, not assumed:
+`exp_coverage.library_candidates` calls `spec_pool.load_pool()` on **every**
+invocation and `load_pool` has **no cache**, so the 74 526-row pool is
+decompressed and parsed **16 times**. Timed here at 5.5 s and 10.1 s on two
+consecutive calls, i.e. **89–161 s of the 250 s is pool I/O**. The residual is
+89–161 s for 64 decks = 1.4–2.5 s/deck against the coverage sweep's 0.42 s/deck
+average; that residual is **not fully attributed** and is left open rather than
+explained. Recorded as **G123**. This is an engineering defect, not a physics
+finding, and it touches **no** number in Q1–Q5 — all of which are counts of
+decks and requests, not seconds. But it does mean the "zero simulations"
+proposer is **not zero cost**: ~10 s of I/O per request against ~5.6 s of SPICE
+to score what it returns.
+
+**The pre-committed decision rule, applied as written.** `n_accepted = 1`, which
+is `≤ 1`, so: **do not run the 90-minute sweep.** It would spend 90 minutes
+confirming item 7's arithmetic, and Q6 predicts its coverage number is unchanged
+at 7/16 ± 1. The rule was fixed before the number was seen and is applied without
+renegotiation. **The owner decides, with this scan in front of them.**
+
+**Prohibitions honoured.** Acceptance is low and nothing was done about it: the
+tolerances, the screen points, `V6_SPECS`, the box, `reward_v1.py`,
+`SEARCH_TAIL_W` and `SEARCH_ROW_CAP` are all **untouched**. A proposal that is
+unscorable because the stage is compressing is a physical fact about that design.
+
+**The lever this identifies, stated but NOT pulled.** The library ranks candidates
+on target match alone — its `dev` is the worse of the two requested axes divided
+by its tolerance (`exp_coverage.py:301`), and **swing headroom appears nowhere in
+it**. The pool already carries the information that would fix this
+(`pair_margin_v`, `tail_margin_v` are pool-evaluable, and item 4 shows
+`saturation`/`tail_saturation` passing at nominal for all 16), so a swing-aware
+ranking would cost **zero** simulations. It is not done here because it would
+**redefine the control** mid-experiment, and what the control is is a decision,
+not an implementation detail.
+
+**What this still does not establish.** Everything in the section above this one
+stands unchanged — no compliance number (the scan verifies nothing at 45 or 135
+points), nothing about SAC, nothing about the 4 V6 rows a pool row cannot
+evaluate, and nothing about whether RL should be the optimiser.
+

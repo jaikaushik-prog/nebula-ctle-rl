@@ -4418,6 +4418,25 @@ Plus: git init, .gitignore, 28 tests, Wilson-bound BER reporting.
   sabotage run, check for orphaned run locks and artifacts before committing --
   `git status --short` plus `ls nebula/experiments/.*.runlock.json`.
 
+- **G123 -- (nebula) THE "ZERO SIMULATION" LIBRARY LOOKUP IS NOT ZERO COST:
+  `exp_coverage.library_candidates` calls `spec_pool.load_pool()` on EVERY
+  invocation and `load_pool` has NO CACHE, so the 74 526-row pool is
+  decompressed and parsed once per call.** Measured 2026-08-22 during the
+  `--proposals` scan (`PREDICTIONS.md` entry 31 OUTCOME): the scan was estimated
+  at "about 30 s" from its 64 SPICE decks and took **250.4 s**. Two consecutive
+  `load_pool()` calls timed **5.5 s** and **10.1 s**, so **89-161 s of the 250 s
+  was pool I/O, not simulation** -- roughly 10 s of I/O per request against
+  ~5.6 s of SPICE to score what the call returned. The lookup is genuinely free
+  in *simulations*, which is the unit every amortisation claim is stated in, so
+  no result was wrong; but any wall-clock estimate that counts only decks will be
+  off by most of an order of magnitude, and an "8x slower than expected" run is
+  exactly the shape that gets misread as a simulator problem. Fix when it matters
+  is an `lru_cache` on `load_pool` (not done -- it was not in session 26's
+  scope). Two consequences worth keeping: **(1)** do not quote wall clock as
+  evidence about SPICE throughput without subtracting the proposer, and **(2)**
+  the residual 1.4-2.5 s/deck still exceeds the coverage sweep's 0.42 s/deck
+  average and is **unexplained** -- do not assume the subtraction closes.
+
 ## 10. Environment
 
 - Windows 11, PowerShell 5.1 (+ Git Bash available), Python 3.13.14,
@@ -10305,3 +10324,50 @@ to confirm arithmetic if 1 or fewer are.
 **Tests: 1826 -> 1834 passed, 11 deselected, 0 failed** (411.1 s). The +8 is
 exactly the new scan-mode tests; 1826 was the tree's honest baseline (CLAUDE.md's
 1806 was measured before `test_hybrid.py`'s first 20 tests existed).
+
+### 2026-08-22 -- session 26b: the scan ran. 5 of 5 confirmed, and the free proposal is almost never good enough
+
+`python -m nebula.experiments.exp_hybrid --proposals` after the stage 0 commit
+(`8e6b53d`). 16 requests, 16 proposals, **64 decks**, 250.4 s, exit 0. Artifact
+`nebula/experiments/hybrid_proposal_scan.json`, tracked. Entry 31's OUTCOME
+carries the full scoring; nothing above its OUTCOME heading was edited.
+
+**1 accepted / 1 measured-but-infeasible / 14 unscorable**, and entry 31 scored
+**5 of 5** on everything the cheap mode could measure (Q1 acceptance in the 0-1
+band; Q2 unscorable dominant 14 > 1; Q3 the swing mechanism named by **14 of
+14**, unanimous rather than the predicted majority; Q4 the plumbing exact at 16
+and 64; Q5 the saving at **793 decks = 5.78 %**, exactly the pre-registered
+ceiling). Q6/Q7 are conditional on the full sweep and remain unmeasured.
+
+**The finding, in one sentence: the library's answers are right on the axis it
+ranks on and cannot deliver the output swing at the corners.** All 14 unscorable
+rows name the same condition -- needed swing **343.5-2179.8 mVpp** against
+available **112.2-1225.4 mVpp**. Thirteen of the 14 were unscorable at **4 of 4**
+screen points, which makes the single pre-run smoke data point (request 5, 2 of
+4) the *mildest* of them, not a representative one. Two structural reasons the
+nominal cleanliness did not transfer, both measured: the screen contains **no
+nominal point** (all four are PVT extremes), and the reported `*_got` values are
+the **worst corner**, not nominal -- so request 16's 0.72-octave frequency error
+against a ~0.012-octave nominal `dev` is corner drift, not a broken lookup.
+
+**Decision rule applied as written, not renegotiated.** `n_accepted = 1`, which
+is `<= 1`, so the recommendation is **do not spend the 90 minutes**: the sweep
+would confirm arithmetic already known from the budget-bound cost model, and Q6
+predicts its coverage number unchanged at 7/16 +/- 1. **Still the owner's call.**
+Acceptance is low and **nothing was done to raise it** -- tolerances, screen
+points, `V6_SPECS`, the box, `reward_v1.py`, `SEARCH_TAIL_W`, `SEARCH_ROW_CAP`
+all untouched.
+
+**The lever identified but NOT pulled:** the library's `dev` ranks on the worse
+of the two requested axes over its tolerance and **swing headroom appears nowhere
+in it**, while the pool already carries `pair_margin_v` / `tail_margin_v`. A
+swing-aware ranking would cost **zero** simulations -- but it would **redefine
+the control** mid-experiment, which is a decision, not an implementation detail.
+
+**Gotchas added:** G123 (one) -- the "zero simulation" lookup re-reads the whole
+74 526-row pool per call because `load_pool` has no cache, which is 89-161 s of
+the scan's 250.4 s and the entire reason the "~30 s" estimate was off ~8x. No
+result depends on it (every Q is in decks, not seconds), and the residual
+1.4-2.5 s/deck against the sweep's 0.42 s/deck average is left **unexplained**.
+**Tests: 1834 passed, 11 deselected, 0 failed**, unchanged -- this session
+changed no code, only documentation and one added artifact.
