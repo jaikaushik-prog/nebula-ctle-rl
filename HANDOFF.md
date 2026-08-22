@@ -1381,6 +1381,22 @@ signaling, ADC-based DSP receiver, 28 nm CMOS reference parameters).
 │   │                       1.5 MB: every (action, sizing, geometry, raw result,
 │   │                       validated result, reward) with a design_id — free
 │   │                       training data for task 8's surrogate.
+│   ├── experiments/exp_hybrid.py  NEW (2026-08-22, session 26). Stage 0 of
+│   │                       NEXT_AGENT_SAC.md §4: propose a design, score it on
+│   │                       the live 4-corner screen, deliver it if feasible,
+│   │                       else CALL exp_coverage.solve_request unchanged. The
+│   │                       proposer is the zero-simulation library lookup — the
+│   │                       CONTROL a future SAC policy must beat. Measures the
+│   │                       amortisation curve (decks per request), which is a
+│   │                       COST claim, not a coverage claim. Own artifacts and
+│   │                       own run locks (`hybrid`, `hybrid_proposal_scan`)
+│   │                       because a completed run once overwrote another
+│   │                       (G113). `--proposals` is the 64-deck / ~30 s scan
+│   │                       that runs no search and verifies nothing.
+│   │                       NOTE: this tree lags for the session 23-25 files —
+│   │                       exp_coverage.py, adaptive_screen.py, search_score.py
+│   │                       and runlock.py are documented in §9 and §12 but are
+│   │                       NOT yet listed here.
 │   └── tests/              228 tests, <1 s. Run: python -m pytest nebula/tests -q
 ├── tests/                  pytest suite — 92 tests, ~1.5 min. THE safety net.
 │   │                       Run from REPO ROOT: python -m pytest tests -q
@@ -1930,6 +1946,38 @@ Plus: git init, .gitignore, 28 tests, Wilson-bound BER reporting.
    (`nebula/NRZ_RETARGET_AUDIT.md`); bounds re-derived; robust geometry
    confirmed; corner-yield swept (13.49% -> 8.10%). Blocking next actions,
    in priority order:
+   - **>>> THE ACTIVE LINE IS `NEXT_AGENT_SAC.md`, AND STAGE 0 IS BUILT BUT NOT
+     MEASURED (session 26). <<<** The owner stopped the coverage/unclip line
+     after entry 30 scored 2 of 5 and said to start the SAC track. The brief
+     orders stage 0 first, before any learning code: `experiments/exp_hybrid.py`
+     (propose, else fall back to `exp_coverage.solve_request` unchanged), which
+     is committed with 28 tests and **pre-registered as `PREDICTIONS.md` entry
+     31**. Next actions, in order:
+     1. **Run the 64-deck proposals-only scan** (`--proposals`, ~30 s). Entry 31
+        predicts **0 or 1 of 16** accepted at 75 %, with the dominant rejection
+        bucket being **unscorable, not infeasible** (G107).
+     2. **THE 90-MINUTE FULL SWEEP IS THE OWNER'S CALL**, and entry 31
+        pre-commits the rule: run it if **>= 3** proposals are accepted; **do
+        not** run it if **<= 1**, because the search is *budget-bound* (both
+        prior coverage sweeps cost **exactly 13 718 decks**) so the outcome is
+        arithmetic already known -- and at zero acceptances the hybrid costs
+        **64 decks MORE** than the plain search.
+     3. **If acceptance is low, the lever is the proposer's selection
+        criterion**, not the bar. `library_candidates` ranks on target match and
+        says **nothing** about corner robustness, yet all 16 requests already
+        have a near-exact nominal match that passes all 9 pool-evaluable specs.
+        **Do NOT** raise acceptance by touching tolerances, the screen, the specs
+        or `reward_v1.py` (G111), and do not touch `SEARCH_TAIL_W` /
+        `SEARCH_ROW_CAP` (entry 30's pre-committed branch).
+     4. **Stage 1** is `nebula/rl/sac.py`, new and alongside `ppo.py` (do not
+        edit `ppo.py`). **Stage 2 is BLOCKED** pending the competition mentor's
+        answer on whether the rubric requires RL to be the optimiser
+        (`NEXT_AGENT_SAC.md` §8), unreceived as of 2026-08-22.
+     5. **Two different "16 held-out requests" exist**: the `exp_coverage` 4x4
+        grid verified at 45 corners (what this hybrid uses) versus
+        `exp_corner_rl`'s 16 random `spec_dist` targets on the 4-point screen.
+        `NEXT_AGENT_SAC.md` §1 conflates them. Any comparison to "7 of 16" must
+        use the `exp_coverage` grid.
    - **>>> GRID SEARCH IS BUILT (session 22h) AND TWO DECISIONS FOLLOW FROM
      IT. <<<** `method_grid` closes the gap that made G3 unscoreable; the
      sweep that scores it is pre-registered as `PREDICTIONS.md` entry 14 and
@@ -4344,6 +4392,31 @@ Plus: git init, .gitignore, 28 tests, Wilson-bound BER reporting.
   (`PREDICTIONS.md` entry 30 predicted this exact failure mode in its own Q4
   "Against" clause and still scored the number wrong -- it is recorded as a
   miss).
+
+- **G122 -- (nebula) A SABOTAGE TEST MUST NOT BE ABLE TO SPEND MONEY. When you
+  deliberately break a gate to watch it go red, the broken code runs with your
+  test's monkeypatches -- and whatever you did NOT patch executes for real.**
+  Measured 2026-08-22 while proving the `--proposals` CLI gate in
+  `nebula/tests/test_hybrid.py`. The sabotage routed `--proposals` to the full
+  sweep instead of the cheap scan. Two tests covered that gate; one patched
+  `H.run` with a counter, the other patched only `scan_proposals`. The second one
+  therefore called the **real** `run()`, which took the `hybrid` run lock,
+  launched live ngspice, and **hung the unit suite** (killed at 120 s, leaving an
+  orphaned `.hybrid.runlock.json` and a contaminated `hybrid_results.json`
+  written at 200 design evaluations). A test file whose docstring promised "no
+  SPICE anywhere" started a 90-minute sweep.
+  A second instance, same exercise: sabotaging the artifact-separation gate made
+  `scan_proposals` write `RESULTS`, and the one scan test that had not redirected
+  `H.RESULTS` (because *correct* code never writes it) dropped a real
+  `hybrid_results.json` into `nebula/experiments/` -- G113's shape, produced by a
+  test.
+  **Rules, both now enforced in `test_hybrid.py`:** (1) patch the expensive path
+  with something that **raises**, not something that counts -- a counter still
+  lets the real call happen if you patched the wrong name; (2) redirect every
+  output path the module owns, **including the ones correct code never writes**,
+  because the sabotage is precisely the case where it writes them; (3) after any
+  sabotage run, check for orphaned run locks and artifacts before committing --
+  `git status --short` plus `ls nebula/experiments/.*.runlock.json`.
 
 ## 10. Environment
 
@@ -10135,3 +10208,100 @@ rather than the search is now the binding constraint.
 **Tests: 1806 passed, 11 deselected, 0 failed** (287.9 s), run after the sweep
 overwrote `coverage_results.json` -- confirming no test depends on that
 artifact's contents.
+
+---
+
+### 2026-08-22 (session 26) -- nebula: stage 0 of the SAC brief. Propose first, fall back to the search. Pre-registered, NOT yet measured.
+
+**What this is.** `NEXT_AGENT_SAC.md` §4 orders one thing built before any SAC
+code exists: a wrapper that asks a *proposer* for a design, scores it on the live
+4-corner screen, **delivers it if feasible and otherwise runs today's CMA-ES
+search unchanged**. That is `nebula/experiments/exp_hybrid.py`, added here with
+`nebula/tests/test_hybrid.py` (28 tests, no SPICE, 0.19 s). The proposer today is
+the **library lookup at zero simulations** -- the **control** a future SAC policy
+must beat. The claim being instrumented is the **amortisation curve**
+(simulations per request falling as the proposer improves). It is a **cost**
+claim; **no coverage improvement is claimed anywhere in this session.**
+
+**The four design decisions that make the claim checkable.** (1) The fallback is
+a literal call to `exp_coverage.solve_request` with `exp_coverage`'s own seed
+formula `C.BASE_SEED + i` -- one CMA-ES path in this project, and a test bans
+`method_cmaes` / `CmaConfig` / `BudgetExhausted` from the source so nobody
+reimplements it. (2) The safety property is **"no worse search", not "identical
+trajectory"**: a fallback request is bit-identical *given the same archive*, and
+an accepted proposal changes what enters the archive -- written into the
+docstring rather than overclaimed. (3) The proposal is scored on
+`screen.points`, **not** on `EDGE4_MANDATED` as the brief's step 2 literally
+says, because the fallback is graded on the live screen and a smaller set would
+give the proposal an easier bar (G32); deliberate, documented, pinned by a test.
+(4) `n_sims` is the **sum of both paths** and the 135-point verification is
+**never** added to it -- three cost lines in the report, never one.
+
+**What was finished this session.** The `--proposals` scan mode was defined but
+**unreachable from the command line**; it is now wired (`--proposals`, routed to
+`scan_proposals` + `_report_scan`) and has the 8 tests it previously had zero of:
+it writes `PROPOSAL_SCAN` and never `RESULTS`, it calls no search, it holds its
+own `hybrid_proposal_scan` run lock, and it keeps **accepted / infeasible /
+unscorable** as three separate counters (G107 -- "cannot be scored" is not
+"fails"). All four new gates were deliberately sabotaged, watched go red, and
+restored.
+
+**The sabotage exercise found a defect in the tests themselves, now G122.** With
+`--proposals` mis-routed to the sweep, one test had patched only
+`scan_proposals`, so it called the **real** `run()` -- live ngspice, the `hybrid`
+run lock taken, the unit suite hung and killed at 120 s, an orphaned
+`.hybrid.runlock.json` and a contaminated `hybrid_results.json` left behind. A
+second sabotage made the scan write `RESULTS`, and the one test that had not
+redirected `H.RESULTS` (correct code never writes it) dropped a real results file
+into `nebula/experiments/`. Both are fixed: the expensive path is now patched
+with something that **raises**, and every module-owned output path is redirected
+even where correct code never touches it. The orphaned lock and both artifacts
+were removed.
+
+**Deleted before committing:** `hybrid_results.json` and `hybrid_run.jsonl` were
+one-request smoke runs (`budget_design_evals = 3`, `n_requests = 1`) and would
+have read as a real coverage result to anyone opening them -- G113's shape. The
+real sweep regenerates them if it is authorised.
+
+**Pre-registered as `PREDICTIONS.md` entry 31, before any measurement.** Seven
+predictions with bands and falsifiers. The zero-simulation facts it rests on,
+established this session: the request grid is 4x4 = **16 requests** on a 4-point
+screen, so the scan is **exactly 64 decks**; `spec_pool.POOL_LOGS` is **named,
+not globbed**, and contains no coverage-sweep log, so the control **cannot be
+memorising the test set**; **all 16** requests already have a library candidate
+within both tolerances (worst `dev` = 0.039 of tolerance) that passes **all 9
+pool-evaluable specs at nominal**; and yet the one real-SPICE data point --
+request 5, nominally clean -- scored **-15.5 with 2 of 4 corners unscorable**
+because output swing hit 2179.8 mVpp against a 520.5 mVpp linear limit. So the
+headline prediction is **0 or 1 of 16 proposals accepted** at 75 %, with the
+dominant rejection bucket being **unscorable, not infeasible** at 65 %.
+
+**Two facts worth the owner's attention, flagged rather than acted on.**
+(1) **The search is budget-bound, not convergence-bound**: the pre-fix and
+post-fix coverage sweeps cost **exactly 13 718 decks each** (200 evaluations per
+request, essentially always spent), so amortisation is entirely about *skipping*
+requests, never about converging faster -- and if **zero** proposals are
+accepted the hybrid costs **64 decks MORE** than the plain search. That negative
+outcome is registered in entry 31 (Q5) in advance rather than rationalised after.
+(2) **The library proposer cannot outrank the search's own seeding**:
+`choose_start` already probes the top `N_LIBRARY_SEEDS = 4` library candidates,
+and the proposal is `k=1` -- a subset. It can only ever *short-circuit*, never
+discover.
+
+**Also flagged, and previously undocumented anywhere but `SESSION_26_HANDOFF.md`:
+two different "16 held-out requests" exist and are not the same set.**
+`exp_coverage` and this hybrid use the **4x4 grid verified at 45 corners**;
+`exp_corner_rl` uses **16 random `spec_dist` targets scored on the 4-point screen
+only**. `NEXT_AGENT_SAC.md` §1's table conflates them. Any comparison against
+"7 of 16" must be against the `exp_coverage` grid.
+
+**Not run, and deliberately so.** No measurement of any kind was taken this
+session beyond the pre-existing smoke run. The 64-deck scan (~30 s) runs after
+this commit; the **~90-minute full sweep is the owner's decision**, and entry 31
+pre-commits the rule: run it if 3 or more proposals are accepted, do not run it
+to confirm arithmetic if 1 or fewer are.
+
+**Gotchas added:** G122 (one).
+**Tests: 1826 -> 1834 passed, 11 deselected, 0 failed** (411.1 s). The +8 is
+exactly the new scan-mode tests; 1826 was the tree's honest baseline (CLAUDE.md's
+1806 was measured before `test_hybrid.py`'s first 20 tests existed).

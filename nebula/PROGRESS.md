@@ -438,6 +438,79 @@ constraint rather than the search.
 
 ---
 
+## 5f. STAGE 0 OF THE SAC BRIEF — the wrapper is built and pre-registered, NOT measured
+
+After entry 30 scored 2 of 5, the owner stopped the coverage/unclip line and said
+to start the SAC track. `NEXT_AGENT_SAC.md` §4 orders **stage 0 first, before any
+learning code**: a wrapper that asks a *proposer* for a design, scores it on the
+live 4-corner screen, **delivers it if feasible and otherwise runs today's CMA-ES
+search unchanged**. That is `experiments/exp_hybrid.py` (session 26).
+
+**What it is for.** The deliverable's claim is *"fewer search spaces, lowest
+design time"*. The honest form of that is **not** "RL beats CMA-ES" — it is an
+**amortisation curve**: simulations per request falling as the proposer improves.
+With the library lookup as proposer this file produces the **control**; a future
+SAC policy produces the treatment against the same grid, screen, verifier and
+schema. **It is a cost claim. No coverage improvement is claimed.**
+
+**Four decisions that make the claim checkable rather than hopeful.**
+1. **Call, don't copy.** The fallback is a literal `exp_coverage.solve_request`
+   call with `exp_coverage`'s own seed formula. A test bans `method_cmaes`,
+   `CmaConfig` and `BudgetExhausted` from the source so nobody reimplements the
+   search — one CMA-ES path, one place it can be wrong.
+2. **The safety property, stated precisely.** Not "coverage cannot get worse" but
+   **"no worse search"**: a fallback request is bit-identical *given the same
+   archive*, and an accepted proposal changes what enters the archive. Written
+   into the docstring rather than discovered later.
+3. **The proposal is scored on the LIVE screen**, not on `EDGE4_MANDATED` as the
+   brief literally says, so it cannot get an easier bar than the fallback it is
+   compared against (G32). Deliberate, documented, pinned by a test.
+4. **`n_sims` is the SUM of both paths**, and the 135-point verification is never
+   added to it. Three cost lines in the report, never one.
+
+**Two facts established before any measurement, both bounding what stage 0 can
+possibly show.**
+- **The search is budget-bound, not convergence-bound.** The pre-fix and post-fix
+  coverage sweeps cost **exactly 13 718 decks each** (200 evaluations per
+  request, essentially always spent). So amortisation is entirely about
+  *skipping* requests, never about converging faster, and the total is
+  arithmetic: `64 + (16 - n_accepted) x 857`. **At zero acceptances the hybrid
+  costs 64 decks MORE than the plain search.**
+- **The library proposer cannot outrank the search's own seeding.**
+  `choose_start` already probes the top `N_LIBRARY_SEEDS = 4` library candidates,
+  and the proposal is `k=1` — a subset. It can only ever **short-circuit**, never
+  discover.
+
+**The signal that makes the cheap scan worth running first.** All 16 requests
+already have a library candidate within both tolerances (worst `dev` = 0.039 of
+tolerance) that passes **all 9 pool-evaluable specs at nominal** — and yet the one
+real-SPICE data point, request 5 (6.0 dB @ 1.387 GHz, nominally clean), scored
+**-15.5 with 2 of 4 screen corners unscorable**: output swing 2179.8 mVpp against
+a 520.5 mVpp linear limit. The stage compresses, so the AC/pole-zero eye model
+stops applying and the eye **cannot be computed**. That is *"cannot be measured"*,
+not *"fails a spec"* (G107), and it is why the 64-deck scan runs before the
+90-minute sweep.
+
+**Pre-registered as `PREDICTIONS.md` entry 31**, seven predictions with bands and
+falsifiers: **0 or 1 of 16** accepted (75 %); dominant rejection bucket
+**unscorable > infeasible** (65 %); swing compression named in the majority of
+unscorable reasons (70 %); plumbing exactly 16 proposals / 64 decks (90 %); the
+negative-saving consequence (85 % given the first); and conditionally, coverage
+unchanged at **7/16 +-1** (70 %) with total decks within 10 % of the arithmetic
+(70 %).
+
+**Also learned, the hard way (G122).** Proving the new gates meant sabotaging
+them. With `--proposals` mis-routed to the sweep, one test had patched only
+`scan_proposals`, so it called the **real** `run()` — live ngspice, the run lock
+taken, the unit suite hung and killed at 120 s. A second sabotage made the scan
+write `RESULTS`, and the one test that had not redirected it (correct code never
+writes it) dropped a real results file into `experiments/`. **A sabotage test must
+not be able to spend money:** patch the expensive path with something that
+*raises*, and redirect every output path the module owns — including the ones
+correct code never writes, because the sabotage is exactly when it writes them.
+
+---
+
 ## 6. Next steps, in order
 
 | # | Task | Cost | Status |
@@ -447,8 +520,11 @@ constraint rather than the search.
 | 3 | `rl/reward_v1.py` — `S3_peaking_match` + `V5_SPECS` (D6) | — | **DONE**, 12 tests, 3 gates watched red |
 | 4 | `experiments/exp_coverage.py` — the 16-request coverage sweep | ~10 000 sims, ~1.5 h | **DONE.** Artifact `coverage_results_AFTER_seeding_fix.json`: 16 requests, 9 screen / **8 pvt45** / 0 full135, 13 718 sims, 5737.3 s (95.6 min) |
 | **4b** | **Re-run the sweep with `rank_unclipped=True`** (§5d). Pre-registered as **entry 30**, committed ahead of the run | ~14 000 sims, ~1.6 h | **DONE 2026-08-22.** 13 718 sims, 96.6 min. **Entry 30 scored 2 of 5; coverage 8/16 -> 7/16 (§5e).** Mechanism confirmed, headline a miss |
-| **4c** | **Reachability, not scoring** -- the branch entry 30 pre-committed to. Either the 2-D tuning bank (item 7) or raising `budget_design_evals` above 200. **Do NOT tune `SEARCH_TAIL_W`/`SEARCH_ROW_CAP`, `reward_v1.py`, the tolerances or `baselines.py`** to buy coverage | TBD | **NEXT** |
+| **4c** | **Reachability, not scoring** -- the branch entry 30 pre-committed to. Either the 2-D tuning bank (item 7) or raising `budget_design_evals` above 200. **Do NOT tune `SEARCH_TAIL_W`/`SEARCH_ROW_CAP`, `reward_v1.py`, the tolerances or `baselines.py`** to buy coverage | TBD | **owner's say-so required before starting** |
 | **4d** | **Explain the unmeasurable eyes.** `n_unscorable` rose **74 -> 133** over the 135-point grid, and both 45-corner regressions are lost eyes rather than spec violations (G120). Decide whether the 45/45 cliff or the search is the binding constraint | ~0 sims to start (artifacts exist) | open, not spun as a finding |
+| **4e** | **SAC brief stage 0 -- `experiments/exp_hybrid.py`.** Propose a design, score it on the live 4-corner screen, deliver if feasible, else call `exp_coverage.solve_request` **unchanged**. Proposer = zero-simulation library lookup = the **control** for a future SAC policy. Measures the **amortisation curve** (decks per request): a **cost** claim, not a coverage claim | 0 sims to build | **DONE 2026-08-22 (session 26).** 28 tests, no SPICE; 4 new gates watched red; pre-registered as **entry 31** |
+| **4f** | **Run the 64-deck proposals-only scan** (`--proposals`, ~30 s). Entry 31 predicts **0 or 1 of 16** accepted at 75 %, dominant rejection bucket **unscorable not infeasible** (G107) | 64 sims, ~30 s | **NEXT** |
+| **4g** | **The ~90-minute full hybrid sweep -- THE OWNER'S CALL.** Entry 31 pre-commits the rule: run it if **>= 3** proposals are accepted; **do not** run it if **<= 1**. The search is *budget-bound* (both prior sweeps cost **exactly 13 718 decks**), so at zero acceptances the hybrid costs **64 decks MORE** than the plain search and its coverage number is predicted unchanged at 7/16 +-1 | ~14 000 sims, ~1.6 h | **BLOCKED on the owner, pending 4f** |
 | **5** | **Corner-aware RL vs random / CMA-ES / library lookup.** Pre-registered as entry 25 (with a disclosed rule-3 violation: written after launch, before any artifact existed) | ~2.5 h | **RUNNING** |
 | **6** | **Re-run the coverage sweep on `V6_SPECS`** (§5b). Owner: *"polishing numbers is much needed for honesty."* **Publish both the old and the corrected coverage number** | ~2.5 h | **committed, do not drop** |
 | 7 | 2-D tuning bank (`Cs` axis) + the reading-(B) criterion | ~1 100 sims, ~8 min | built, not run |

@@ -22,12 +22,16 @@ guessable. Start with these, in order:
 
 0. `nebula/CONTINUE_HERE.md` — **the entry point (2026-08-19).** Where the
    project stands, what is decided, what is OPEN, what to do next.
-   **As of 2026-08-22: the unclipped-search-score fix is committed and its
-   sweep has RUN — `PREDICTIONS.md` entry 30 scored 2 of 5 and mandated
-   coverage went 8/16 -> 7/16. Read entry 30's OUTCOME and
-   `nebula/PROGRESS.md` §5e before drawing conclusions;
-   `nebula/SESSION_25_HANDOFF.md` has the reasoning behind the fix itself.**
-1. `HANDOFF.md` — state, session log, gotchas **G1–G121**
+   **As of 2026-08-22 (session 26): the SAC track has started.
+   `NEXT_AGENT_SAC.md` stage 0 — `nebula/experiments/exp_hybrid.py`, the
+   "propose, else fall back to the search" wrapper — is committed with 28 tests
+   and pre-registered as `PREDICTIONS.md` entry 31, but NOT yet measured. Next:
+   run the 64-deck scan (`--proposals`, ~30 s), then ASK THE OWNER before
+   spending the ~90-minute full sweep. Read `nebula/PROGRESS.md` §5f, entry 31
+   and G122 first. The prior line stopped here: entry 30's sweep RAN, scored
+   2 of 5, and mandated coverage went 8/16 -> 7/16 (`PROGRESS.md` §5e;
+   `nebula/SESSION_25_HANDOFF.md` has the reasoning behind that fix).**
+1. `HANDOFF.md` — state, session log, gotchas **G1–G122**
 2. `CLAUDEwa.md` — the Nebula contract
 3. `nebula/G0_RESULTS.md` — toolchain findings + the cost model
 4. `nebula/NRZ_RETARGET_AUDIT.md` — the 24 PAM-4 assumptions, 3 fixed
@@ -44,9 +48,9 @@ zero**.
    §8 next steps, §9 gotchas). A change without a handoff update is
    incomplete.
 2. **Run the test suite before and after changes** (from repo root):
-   `python -m pytest tests nebula/tests -q -m "not slow"` — **1806 passed,
-   11 deselected, ~5 min** (4m44s and 5m19s on two runs, measured 2026-08-22 on
-   system Python 3.13.14).
+   `python -m pytest tests nebula/tests -q -m "not slow"` — **1834 passed,
+   11 deselected, ~6 min** (411 s, measured 2026-08-22 on system Python 3.13.14;
+   it was 1806 before `nebula/tests/test_hybrid.py` added 28).
    Report the count before and after. Never commit with failures. Add tests for
    anything you fix or build.
    - Use the **system** interpreter, not the conda env `nebula` — that env has

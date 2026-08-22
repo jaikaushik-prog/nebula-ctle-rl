@@ -5140,3 +5140,169 @@ restating *above* a future outcome heading, by the owner, before that run.
 unmeasurable, and whether the 45/45 cliff (four requests now sit at 40, 43, 44
 and 44 of 45) is the binding constraint rather than the search. Neither was
 predicted and neither is claimed.
+
+---
+
+## 31. Session 26 — **how often is the free proposal already good enough?**
+
+**Written 2026-08-22, BEFORE the proposals-only scan runs and BEFORE any hybrid
+sweep is authorised.** Registered in the same commit as
+`nebula/experiments/exp_hybrid.py` and `nebula/tests/test_hybrid.py`, which is
+stage 0 of `NEXT_AGENT_SAC.md` §4. Nothing below has been measured on SPICE
+except where item 5 says so explicitly.
+
+### What is being measured, and what it is NOT
+
+`exp_hybrid.py` answers one request by the cheapest route that works: ask a
+*proposer* for a design, score it on the live 4-corner screen (4 decks), deliver
+it if it is feasible, otherwise hand the request to today's CMA-ES search
+unchanged. The proposer today is the **library lookup — zero simulations** — and
+it is the **control** a future SAC policy has to beat.
+
+The claim stage 0 measures is the **amortisation curve**: simulations-per-request
+falling as the proposer improves. It is a **cost** claim. It is **not** "RL beats
+CMA-ES", and this entry registers no coverage improvement of any kind.
+
+The cheap mode being predicted here (`--proposals`) scores all 16 proposals and
+stops: **no search, no verification.** It therefore cannot produce a compliance
+number (D8/G109) and does not write `hybrid_results.json`.
+
+### The facts established BEFORE the run (all zero-simulation)
+
+1. **The grid and the cost are fixed by arithmetic.** 4 peakings
+   (`4, 6, 8, 10 dB`) × 4 frequencies (`1.387, 1.627, 1.921, 2.253 GHz`) = **16
+   requests**; the screen is `EDGE4_MANDATED` = **4 points**. The scan is
+   therefore **exactly 64 decks**, about 30 s.
+2. **The library pool cannot be memorising the test set.** `spec_pool.POOL_LOGS`
+   is **named, not globbed**: `baselines_run_interp_grid.jsonl.gz` and
+   `budget_ladder_run.jsonl.gz`, **74 526** distinct designs. Neither is a
+   coverage-sweep log, so no design the coverage sweep found for these 16
+   requests is in the pool. The control is a genuine control.
+3. **Target match is NOT the binding constraint.** For every one of the 16
+   requests the best library candidate lands within both tolerances on both
+   requested axes — worst case `dev = 0.039` of tolerance (request 13,
+   10 dB @ 1.387 GHz), best `dev = 0.003`, i.e. peaking errors of
+   **−0.06 to +0.01 dB** and f_peak errors under **0.01 octave**. The pool
+   already contains a near-exact nominal answer to every request.
+4. **And those candidates are clean on every spec the pool can evaluate.** All 16
+   pass all **9** pool-evaluable specs at nominal (`S3_f_peak_band`,
+   `S3_f_peak_match`, `S3_peaking`, `S3_peaking_match`, `S3_nyq_boost`,
+   `S5_noise`, `S6_power`, `saturation`, `tail_saturation`). Four V6 rows are
+   **not** computable from a pool row and are therefore untested here:
+   `S8_eye_h`, `S8_eye_w`, `S7_area`, `S4_hd3_nyq`.
+5. **The one real-SPICE data point contradicts items 3 and 4, and that is the
+   whole reason this scan exists.** A one-request smoke run of request 5
+   (6.0 dB @ 1.387 GHz — `dev = 0.008`, nominally clean) scored `screen_reward`
+   **−15.5** with `ok=False`, `worst_spec=None` and **2 of the 4 screen points
+   unscorable**: *output swing 2179.8 mVpp exceeds the linear limit 520.5 mVpp*.
+   The stage was compressing, so the AC/pole-zero eye model does not describe it
+   and the eye **cannot be computed** — this is "cannot be measured", not "fails
+   a spec" (G107).
+6. **The proposer cannot outrank the search's own seeding.** `choose_start`
+   already probes the top `N_LIBRARY_SEEDS = 4` library candidates as seeds, and
+   the proposal is `library_candidates(..., k=1)` — a subset. So the proposer can
+   only ever **short-circuit**: deliver at 4 decks a design the search would have
+   spent its budget refining. It cannot find anything the fallback would miss.
+7. **The search's cost is budget-bound, not convergence-bound.** The pre-fix and
+   post-fix coverage sweeps cost **exactly 13 718 decks each** (200 design
+   evaluations per request, essentially always spent): 857.4 decks per request.
+   So the amortisation is entirely about **skipping** requests, never about
+   converging faster, and the hybrid's total is predictable arithmetic:
+   `total ≈ 64 + (16 − n_accepted) × 857`.
+8. **The baseline to compare against** is the post-fix `coverage_results.json`:
+   16 requests, **11 solved on screen**, **7 of 16 at the mandated 45 corners**,
+   0 of 16 at 135 points, 13 718 decks, 5796 s = 96.6 min.
+
+### Predictions
+
+**Q1 — how many of the 16 free proposals are feasible on the 4-corner screen?**
+**Prediction: 0 or 1.** Confidence **75 %**. Consistent band **0–2**.
+*For:* the library ranks candidates by target match **only** — nothing in its
+selection criterion mentions PVT robustness, and the screen's 4 points are
+extremes (`sf/1.05/0C`, `ff/1.05/0C`, `fs/0.95/125C`, `ss/0.95/125C`). The one
+design actually tried this way was unscorable at 2 of 4 (item 5). The search
+needs ~857 decks to find a screen-feasible design for the 11 requests it can
+solve at all, which is weak evidence that such designs are not dense.
+*Against:* items 3 and 4 — the nominal answer is near-exact and clean on 9 specs,
+so if the nominal→corner gap happens to be small, several could pass.
+**Falsifier: n_accepted ≥ 3.**
+
+**Q2 — of the proposals that are rejected, is the dominant bucket UNSCORABLE or
+INFEASIBLE?** **Prediction: `n_unscorable` > `n_infeasible`.** Confidence
+**65 %**.
+*For:* item 5's mechanism is generic, not incidental — peaking is bought with
+transconductance against a light load, which raises output swing, and swing is
+what breaks the linear model at the 1.05 V / 0 C corners. Entry 30 left
+`n_unscorable` rising **74 → 133** unexplained; this predicts the same mechanism
+is behind both.
+*Against:* item 4 shows `saturation` and `tail_saturation` passing at nominal for
+all 16, so the compression is entirely a corner effect and may not dominate.
+**Falsifier: `n_infeasible` ≥ `n_unscorable`.**
+
+**Q3 — will the named mechanism be output-swing compression?** **Prediction: a
+majority of unscorable rows' `reason` names the output swing exceeding the linear
+limit**, rather than a different unscorable cause. Confidence **70 %**.
+*Falsifier:* fewer than half the unscorable rows name the swing / linear-limit
+condition (or `n_unscorable = 0`, in which case Q3 is void, not passed).
+
+**Q4 — plumbing, stated so a silent degradation cannot pass as a result.**
+**Prediction: `n_proposals_made` = 16 and `total_sims` = 64, exactly.**
+Confidence **90 %**. This is a check, not a discovery: item 3 confirms
+`library_candidates` returns non-empty for all 16, so a lower
+`n_proposals_made` would mean the control had silently degraded into the
+**null** proposer and measured nothing.
+*Falsifier:* either number differs.
+
+**Q5 — the honest cost consequence, registered before it can be rationalised.**
+**Prediction: if `n_accepted` = 0, the hybrid costs ~64 decks MORE than the plain
+search, not less** — a *negative* saving — and at `n_accepted` ≤ 1 the saving is
+at most `857 − 64 = 793` decks, i.e. **≤ 5.8 %** of 13 718. Confidence **85 %**
+conditional on Q1 holding.
+*For:* item 7's arithmetic.
+*Falsifier:* `n_accepted` ≥ 3, which would be a > 15 % saving.
+
+**Q6 — CONDITIONAL, only if the owner authorises the ~90-minute full sweep.**
+**Prediction: mandated 45-corner coverage lands at 7/16 ± 1**, i.e.
+statistically unchanged from item 8. Confidence **70 %**.
+*For:* item 6 — the proposal is a subset of what `choose_start` already probes,
+so the fallback sees the same or a better start; the only mechanism that can move
+coverage is the archive, which is measured before it is preferred.
+*Falsifier:* coverage outside 6–8 of 16.
+
+**Q7 — CONDITIONAL, same authorisation.** **Prediction: total decks within
+±10 % of `13 718 + 64 − 857 × n_accepted`.** Confidence **70 %**.
+*Falsifier:* outside that band.
+
+### What would make me stop, decided now rather than after seeing the number
+
+**The decision rule for the 90-minute sweep, pre-committed:**
+- **`n_accepted` ≥ 3** — the library proposer is doing real work; the full sweep
+  is worth its 90 minutes, because Q6/Q7 then have something to measure.
+- **`n_accepted` ≤ 1** — the sweep would spend 90 minutes confirming arithmetic
+  already known from item 7, and its coverage number is predicted unchanged. **Do
+  not run it to have run it.** The lever is the proposer's *selection criterion*
+  (it ranks on target match and ignores corner robustness entirely), or Stage 1.
+- Either way the **owner decides**, with this scan in front of them.
+
+**Pre-committed prohibitions.** If acceptance is low, **do not** raise it by
+touching the tolerances (G111), the screen points, `V6_SPECS`, the box, or
+`reward_v1.py`. A proposal that is unscorable because the stage is compressing is
+a *physical* fact about that design; making the bar softer would convert it into
+a fake acceptance. **Do not** touch `SEARCH_TAIL_W` / `SEARCH_ROW_CAP` — entry
+30's pre-committed branch already named reachability, not scoring, as the next
+lever.
+
+### What this does NOT establish
+
+- **Nothing about SAC.** No learning code exists yet. This measures the control.
+- **No compliance number.** The scan verifies nothing at 45 corners or 135
+  points; a 4-corner screen pass is **not** a 45-corner pass, and item 8 shows
+  the size of that gap — the coverage sweep solved **11** on the screen and only
+  **7** at 45 corners, so screen-pass overstates compliance by 4 of 16.
+- **Nothing about whether RL should be the optimiser.** That is the question
+  `NEXT_AGENT_SAC.md` §8 blocks Stage 2 on pending the competition mentor's
+  answer, unreceived as of 2026-08-22.
+- **Nothing about the 4 unevaluated V6 rows** (item 4). A proposal accepted here
+  passed all 13 on the screen; a proposal rejected here may have been rejected on
+  a row the pool never showed us.
+

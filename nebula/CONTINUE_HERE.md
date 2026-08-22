@@ -8,6 +8,25 @@ else in the 22s brief stands.
 
 **26 days to the 15 Sept deadline. Demo 25 Sept at BITS Goa.**
 
+> **2026-08-22 (session 26) — the SAC track has started, and stage 0 is built,
+> committed and pre-registered but NOT yet measured.** The owner stopped the
+> coverage/unclip line after entry 30 scored 2 of 5 and said to begin
+> `NEXT_AGENT_SAC.md`. Its §4 orders **stage 0 before any learning code**:
+> `nebula/experiments/exp_hybrid.py` — propose a design, score it on the live
+> 4-corner screen, deliver it if feasible, **else run today's CMA-ES search
+> unchanged**. The proposer is the zero-simulation **library lookup**, which is
+> the **control** a future SAC policy must beat. 28 tests, no SPICE.
+> **Pre-registered as `PREDICTIONS.md` entry 31.** What to do next, in order:
+> **(1)** run the 64-deck / ~30 s scan `python -m nebula.experiments.exp_hybrid
+> --proposals`; **(2)** show the owner and **ask before spending the ~90-minute
+> full sweep** — entry 31 pre-commits the rule: run it if **>= 3** of 16
+> proposals are accepted, **do not** if **<= 1**. Read `PROGRESS.md` **§5f**,
+> entry 31, and **G122** first. Two things bound what stage 0 can show: the
+> search is **budget-bound** (both prior sweeps cost *exactly* 13 718 decks), so
+> at zero acceptances the hybrid costs **64 decks MORE** than the plain search;
+> and the library proposal is a subset of what `choose_start` already probes, so
+> it can only **short-circuit**, never discover.
+
 > **2026-08-22 — the search-ranking fix is committed AND its sweep has run.**
 > `nebula/experiments/search_score.py` fixed a plateau that made four coverage
 > requests unrankable, and it worked: all four runaway peaks came home from
@@ -27,11 +46,11 @@ decided, what is open, and exactly what to do next.
 
 | # | File | Why | Time |
 |---|---|---|---|
-| 0 | **`nebula/SESSION_25_HANDOFF.md`** | **read FIRST — the reasoning behind the search-score fix (committed 2026-08-22); its §6 items 1-3 are done, items 4-5 (the sweep and the decision rule) are open** | 10 min |
+| 0 | **`nebula/SESSION_26_HANDOFF.md`** then **`nebula/SESSION_25_HANDOFF.md`** | **read FIRST — 26 is the state of the uncommitted-then-committed stage 0 work; 25 is the reasoning behind the search-score fix** | 15 min |
 | 1 | **this file**, §§1–9 | the situation and the direction | 20 min |
 | 2 | `CLAUDEwa.md` §§1–3, §7, §8 | the contract, the spec table, the gates, the standing rules | 20 min |
-| 3 | `HANDOFF.md` §9 gotchas **G100–G121** | the twenty-two traps found in the last six sessions | 30 min |
-| 4 | `nebula/PREDICTIONS.md` entries **18–23** | how this project makes claims; **22 and 23 are session 22u's retraction and re-run** | 40 min |
+| 3 | `HANDOFF.md` §9 gotchas **G100–G122** | the twenty-three traps found in the last seven sessions | 30 min |
+| 4 | `nebula/PREDICTIONS.md` entries **18–23**, then **30–31** | how this project makes claims; **22 and 23 are session 22u's retraction and re-run**; **31 is stage 0, pre-registered and not yet scored** | 45 min |
 | 5 | `nebula/CHANNEL_MODEL.md` §§6, 8 + the DFE table | **four measured results that are NOT in the report** — see §6.3 | 20 min |
 | 6 | `nebula/BASELINES.md` §§13, 14 | the benchmark and the budget ladder | 20 min |
 
