@@ -5915,3 +5915,90 @@ applied to this one.**
 * **Nothing here belongs in the report.** The number that discharges D9's
   condition is `exp_hybrid`'s **accept rate against 6 of 16**, and it has not
   been measured.
+
+---
+
+## 35. Session 27 — **does SAC survive the SPICE transfer that erased PPO?**
+
+**Written 2026-08-26 BEFORE `exp_sac_finetune.py` exists** — verifiable from git
+history.
+
+### The failure this is designed against
+
+G114 is the sharpest negative this project has. A PPO policy trained for
+200 000 analytic steps (`log_std -3.022 .. -0.719`, sigma 0.199) was fine-tuned
+for 3 000 SPICE steps and came back at **`log_std -0.097 .. +0.063`, sigma
+0.988 — its initialisation.** Feasibility went 1/16 -> 0/16 and episodes got
+*shorter*. **3 000 steps erased 200 000.**
+
+G114 names three uncontrolled changes and its own instruction is *"change them
+one at a time and measure":*
+
+1. **fresh optimiser at full learning rate** — `ppo.train` built a new Adam per
+   call, so a converged policy took initial-scale updates;
+2. **the reward scale changed** — analytic scored 5 rows, SPICE scored 9, so the
+   value function transferred wrong and the advantages were large and
+   misdirected;
+3. **the episode dynamics changed** — the analytic env REVERTS a bad edit, the
+   SPICE env TERMINATES on one.
+
+### All three are controlled, and that is the experiment
+
+| lever | how it is held fixed |
+|---|---|
+| optimiser | `sac.train(agent=...)` **keeps the agent and its three optimisers**; `lr_finetune` lowers the rate rather than resetting it |
+| **reward scale** | **the SPICE env is scored on `V6A_SPECS` — the SAME 5 rows the analytic env scores.** Not V6D. This removes the confound entirely rather than measuring it |
+| episode dynamics | `episode_dynamics.RevertOnInvalidEnv(revert_on_invalid=True, keep_going_on_success=True)` makes the SPICE env behave as the analytic one does |
+
+**So exactly one thing changes between the two legs: the design equations are
+replaced by ngspice.** That is the only variable, and it is the one worth
+measuring.
+
+### Predictions
+
+**Q1 — THE G114 TEST. The policy SURVIVES: `log_std_mean` after fine-tuning
+stays below -1.0**, i.e. it does not return toward its 0.0 initialisation.
+Confidence: **0.7.**
+*For:* all three of G114's levers are held. *Against:* the analytic model is off
+by a full octave at the p99, so SPICE rewards will disagree sharply with what
+the critic learned, and large TD errors are exactly what moved PPO.
+*Falsifier:* `log_std_mean > -1.0`.
+
+**Q2 — `alpha` stays low**, below 0.30 (it ended the gate at 0.0715).
+Confidence: **0.65.** *Falsifier:* above 0.30.
+
+**Q3 — SPICE-measured mean episode return does not DROP after fine-tuning**,
+i.e. `after >= before - 5.0` on the same 16 held-out targets.
+Confidence: **0.6.** Deliberately a "does not get worse" test, not an
+improvement test: 1 500 SPICE steps against 50 000 analytic ones is a
+correction, not a training run. *Falsifier:* a drop of more than 5.0.
+
+**Q4 — the critic's loss, NORMALISED, does not grow.** `q_loss_last /
+var(return)` at the end is no more than **2x** the same ratio at the start.
+This is the test entry 34's OUTCOME said had to be **registered before the next
+run rather than applied to the last one**: raw `q_loss` rose 7.26 -> 17.92 in
+the gate while returns grew ~58 units, and "below its own first decile" is a
+poor test for a non-stationary target. Confidence: **0.5.**
+*Falsifier:* ratio grows more than 2x.
+
+**Q5 — wall clock 80-120 min.** 50 000 analytic steps measured at 21 steps/s
+(~40 min), 1 500 SPICE steps at ~1.26 s/step (~31 min), two 16-target SPICE
+evaluations at ~32 decks each (~11 min each). Confidence: 0.7.
+
+### The decision rule, before the result
+
+* **Q1 and Q3 both hit** -> the transfer works and G114 is *solved, not merely
+  avoided*. Proceed to stage 3: SAC as `exp_hybrid`'s proposer, measured on
+  **accept rate against the non-RL baseline of 6 of 16** (entry 32), which is
+  what D9's condition actually requires.
+* **Q1 hits, Q3 misses** -> the policy survives but does not transfer usefully.
+  Report it; do **not** start tuning. The next lever is more SPICE steps, and
+  that is a budget decision for the owner, not a hyper-parameter hunt.
+* **Q1 misses** -> **fine-tuning erases SAC as it erased PPO, with all three of
+  G114's levers held.** That is a strong and publishable negative: it says the
+  sim-to-real gap on this problem is not an optimiser-state artifact. Report it,
+  and use the **analytic-only** policy as the stage-3 proposer instead, since a
+  policy that cannot be fine-tuned can still be measured as a proposer.
+
+**No branch here reopens any claim about coverage.** D9's condition is
+discharged only by accept rate, and that is stage 3.
