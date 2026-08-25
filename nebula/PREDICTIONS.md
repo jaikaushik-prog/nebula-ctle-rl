@@ -5763,3 +5763,78 @@ that is arithmetically fine and answers a different question than the one asked.
   44.4 % of mined transitions are useful HER samples — `mine_pool_transitions`
   reports `n_dropped_no_her_target` per run, and a smoke run of 2000
   transitions dropped **712** for want of a legal relabelled target.
+
+---
+
+## 34. Session 27 — **does SAC learn at all? The stage-1 gate**
+
+**Written 2026-08-26 BEFORE `exp_sac_gate.py` exists** — verifiable from git
+history, and stated because entries 25 and 26 both broke this rule and say so.
+
+### What is being tested, and what is NOT
+
+`rl/sac.py` is committed, has 55 passing tests, and **has never been run.**
+`NEXT_AGENT_SAC.md` §4 stage 1 sets one gate before anything expensive:
+
+> *"`log_std` (or SAC's entropy coefficient) must move. If it does not, stop —
+> the problem is not the algorithm, and say so."*
+
+This is that gate and **nothing more**. It runs on `rl/analytic_env.py` —
+**zero SPICE** — and asks only whether the learner's own parameters move. It
+does **not** measure coverage, does not compare against CMA-ES or the library,
+and produces **no number that belongs in the report**.
+
+### Why the gate is the entropy coefficient, and why that is not arbitrary
+
+PPO's failure here was diagnosed by watching `log_std`, not the score: 1200
+SPICE steps left it at **-0.05 .. +0.053** (sigma ~1.000, i.e. its
+initialisation), while 200 000 analytic steps moved it to **-3.022 .. -0.719**
+(sigma 0.199). The score was negative in both states and showed nothing.
+SAC's `alpha` is the same instrument: automatic entropy tuning drives it toward
+whatever the target entropy (-dim(A) = -7) requires, so **a flat `alpha` after
+a large step budget means no learning signal is reaching the policy**, whatever
+the reward is doing.
+
+### Predictions
+
+**Q1 — `alpha` moves by at least 2x from its initial value** over 50 000
+analytic steps. Confidence: **0.8.**
+*Basis:* automatic entropy tuning has a direct gradient and does not depend on
+the reward being learnable; it responds to the policy's own entropy against a
+fixed target. *Falsifier:* final `alpha` within 2x of initial.
+
+**Q2 — `log_std_mean` moves away from its initialisation**, i.e. the policy
+becomes more or less deterministic rather than staying where it started.
+Confidence: **0.75.** *Falsifier:* `|log_std_last - log_std_first| < 0.1`.
+
+**Q3 — the critic loss falls and then stays bounded** rather than diverging.
+Confidence: **0.6, and this is the one I am least sure of.** Off-policy critics
+on a maximin reward with an invalid floor at `-(N+3)` have a large value range,
+and the analytic env's revert-on-invalid means the critic sees repeated
+identical states. *Falsifier:* final `q_loss` above its own first-decile value,
+or non-finite.
+
+**Q4 — episodes run the full horizon of 8**, as `analytic_env` measured for
+PPO. Confidence: **0.9.** This is an env property, not a SAC one; it is here so
+that a failure of the env shows up as an env failure rather than being blamed
+on the learner. *Falsifier:* mean episode length below 7.5.
+
+**Q5 — wall clock under 15 minutes for 50 000 steps.** Confidence: 0.6.
+*Basis:* PPO measured ~11 ms/step on this env, but SAC does a gradient step per
+env step against PPO's batched updates, and its network is (256,256) against
+PPO's (64,64). I expect SAC to be **slower per step**, and I am recording that
+expectation rather than being surprised by it. *Falsifier:* outside 15 min.
+
+### The decision rule, before the result
+
+* **Q1 and Q2 both hit** -> SAC learns; stage 1 proceeds to a measured
+  comparison against the 35.6 % bar from entry 32.
+* **Q1 or Q2 fails** -> **stop the SAC track.** The brief's own instruction:
+  *"the problem is not the algorithm, and say so."* Report it as a measured
+  negative alongside PPO's, and the RL contribution claim stays dropped.
+* **Q3 fails but Q1 and Q2 hit** -> the learner moves but the critic is
+  unstable; that is a *diagnosable* problem (reward scale, terminal handling)
+  and is worth exactly one bounded attempt, not an open-ended hunt.
+
+**No result here reopens any claim about coverage or about beating CMA-ES.**
+Those need `exp_hybrid` with a SAC proposer, which is stage 3.
