@@ -5680,3 +5680,86 @@ over-reading:
 entry 31's (`EDGE4_MANDATED`, 4 points, 32.63 fF), same 13-row `spec_set`.
 `exp_coverage.library_candidates` unmodified; entry 31's artifact unmodified;
 no tolerance, spec, box or reward change in this session.
+
+---
+
+## 33. Session 26d — **the pool's transition graph. A MEASUREMENT RECORD, not a pre-registration**
+
+### WHAT THIS ENTRY IS, AND THE PROCESS DEFECT IT CLOSES
+
+**This is not a pre-registration and must not be read as one.** Every number
+below was already measured when this entry was written, so there is nothing here
+that a prediction could have been wrong about.
+
+It exists because **`rl/replay.py` cited "PREDICTIONS.md entry 33" while the
+file stopped at entry 32.** The measurements were real and reproducible — I
+re-derived all six independently below — but a module citing a pre-registration
+that was never written is precisely the defect this file exists to prevent, one
+level up: it *implies* a discipline that was not followed. Recorded as the
+process defect it is, rather than back-filled as though it had been registered
+in advance.
+
+**Nothing predictive is claimed. This is a measurement of a static artifact**
+(`spec_pool.load_pool()`), so it is reproducible on demand rather than being a
+run whose outcome could have gone differently.
+
+### The claim being recorded
+
+`rl/env.py`'s dynamics are exactly
+
+    u' = clip(u + clip(a, -1, 1) * MAX_STEP, 0, 1)
+
+so **any two pool designs within `MAX_STEP` in every coordinate are one legal
+action apart**, and that action is recoverable with no approximation:
+
+    a = (u_j - u_i) / MAX_STEP          in [-1, 1] by construction
+
+Both endpoints carry a real SKY130 measurement block, so both observations and
+the reward are real. That converts a pile of stored *designs* into a library of
+minable *transitions* — which is the entire reason an off-policy learner can use
+data PPO cannot (`NEXT_AGENT_SAC.md` trap 1).
+
+### The measurement, and its independent re-derivation
+
+Measured 2026-08-22 and **re-verified 2026-08-23 through a different code path**
+— `sklearn.neighbors.NearestNeighbors(metric="chebyshev", radius=MAX_STEP)`
+rather than `replay.mine_pool_transitions`'s batched k-NN — so the two share no
+implementation:
+
+| quantity | value | re-derived |
+|---|---|---|
+| pool designs | **74 526** | identical |
+| **DIRECTED adjacent edges** | **34 789 444** | identical |
+| undirected pairs | 17 394 722 | identical |
+| designs with >= 1 neighbour | 74 256 (**99.64 %**) | identical |
+| neighbours per design | median **15**, mean **466.8**, max **2963** | identical |
+| legal HER targets (inside S3's box) | **33 071 (44.4 %)** | identical |
+
+Both runs complete in ~30 s. **`MAX_STEP = 0.15`**; the counts are a function of
+it and move if it moves.
+
+### The one place this is easy to get wrong, by a factor of two
+
+**`i -> j` and `j -> i` are DIFFERENT transitions** — different action, different
+endpoint, different reward — so the directed count is the one that bounds what
+can be mined. `replay.py`'s own docstring records that an earlier draft quoted
+the undirected **17 394 722** and called it directed. Halving the size of your
+training corpus by a naming slip is exactly the shape of G105 and G115: a number
+that is arithmetically fine and answers a different question than the one asked.
+
+### What this does NOT establish
+
+* **Not that mining them helps.** 34.8 million minable transitions is a
+  measurement of the *pool*, not evidence that SAC learns anything from them.
+  The gate for that is the entropy coefficient moving (`rl/sac.py`), and it has
+  **not been run**.
+* **Not that the transitions are on-distribution.** They are geometric
+  neighbours among designs produced by earlier searches, not trajectories any
+  policy actually walked. Whether a critic trained on them transfers is
+  unmeasured.
+* **Not a coverage number.** Mandated 45-corner coverage stands at **7 of 16**
+  (entry 30's outcome) and nothing here moves it.
+* The 44.4 % HER figure counts designs inside S3's box. It does **not** mean
+  44.4 % of mined transitions are useful HER samples — `mine_pool_transitions`
+  reports `n_dropped_no_her_target` per run, and a smoke run of 2000
+  transitions dropped **712** for want of a legal relabelled target.
