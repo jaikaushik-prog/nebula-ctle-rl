@@ -5838,3 +5838,80 @@ expectation rather than being surprised by it. *Falsifier:* outside 15 min.
 
 **No result here reopens any claim about coverage or about beating CMA-ES.**
 Those need `exp_hybrid` with a SAC proposer, which is stage 3.
+
+### OUTCOME — run 2026-08-26, 50 000 analytic steps, 0 SPICE calls, 40.5 min (21 steps/s)
+
+    alpha          0.99970  ->  0.07147     moved 14.0x
+    log_std_mean  -0.00712  -> -1.77878     sigma 0.993 -> 0.169
+    q_loss         first-decile 7.257  ->  last 17.919   (finite throughout)
+    episodes       mean length 8.0 of horizon 8, 0 reverted of 56 251 evals
+
+**VERDICT: PASS. Three hits, two misses, and both misses were on the two
+predictions entry 34 flagged as least confident.** `_verdict()` applied the
+decision rule mechanically and printed: *"the learner moves. Stage 1 may
+proceed."*
+
+| | prediction | outcome |
+|---|---|---|
+| Q1 | `alpha` moves >= 2x (0.8) | **HIT** — moved **14.0x** |
+| Q2 | `log_std` moves >= 0.1 (0.75) | **HIT** — moved **1.772**, sigma 0.993 -> 0.169 |
+| Q3 | critic loss falls and stays bounded (0.6) | **MISS** — 7.257 -> 17.919. Finite, not divergent, but it ROSE |
+| Q4 | episodes run the full horizon (0.9) | **HIT** — 8.00 of 8, and **0 of 56 251 evals reverted** |
+| Q5 | under 15 min (0.6) | **MISS** — 40.5 min, as the smoke run had already indicated |
+
+### The contrast that makes this a result rather than a number
+
+    PPO,  1 200 SPICE steps    log_std -0.05 .. +0.053   sigma ~1.000   NEVER TRAINED
+    SAC, 50 000 analytic steps log_std        -1.77878   sigma  0.169   TRAINED
+
+**SAC's entropy coefficient fell 14-fold and its policy went from near-random
+to near-deterministic.** PPO's equivalent parameter did not leave its
+initialisation. The instrument that diagnosed PPO's failure is the same one
+reporting SAC's success, which is why it was chosen as the gate.
+
+Episode return rose **-22.4 -> +35.9**, by quarter: **+20.3, +35.6, +32.3,
++34.3**. It climbs steeply then **plateaus** — the last quarter is +2.5 over the
+third, i.e. flat within noise. **50 000 steps is enough for this env; more would
+mostly buy time.**
+
+### Q5 was predicted to miss, and the budget was NOT changed to rescue it
+
+Entry 34 recorded the expectation that SAC would be **slower per step than
+PPO** — one gradient update per env step against PPO's batched updates, and a
+(256, 256) network against (64, 64). The smoke run measured 21 steps/s before
+the gate started, so the 40.5 min was known in advance. **Lowering the budget to
+make Q5 hit would have been tuning the experiment to fit its own prediction**,
+and is recorded here as the thing that was deliberately not done.
+
+### Q3, honestly, including a defect in the criterion I wrote
+
+`q_loss` rose from 7.257 to 17.919. It is **finite and bounded**, not diverging.
+
+**The criterion I registered may have been the wrong test, and I am recording
+that without using it to explain the miss away.** Episode return grew from
+**-22.4 to +35.9** over the same run — a ~58-unit expansion of the value range
+the critic has to represent. A critic loss rising 2.5x while the returns it
+predicts grow ~3x is at least as consistent with *a healthy critic tracking a
+larger range* as with instability. **"Final loss below its own first decile" is
+a sensible test for a stationary target and a poor one for a policy that is
+still improving.**
+
+It stays a **MISS**: the criterion was registered, it failed, and rewriting the
+test after seeing the result is exactly what this file exists to prevent. Entry
+34's branch for this case ("worth exactly one bounded attempt, not an
+open-ended hunt") is discharged by the observation above rather than by a hunt —
+**and the one thing that would settle it is a normalised check (critic loss
+against return variance), which should be REGISTERED BEFORE the next run, not
+applied to this one.**
+
+### What this does NOT establish
+
+* **Not that SAC helps.** This is the analytic env — the design equations, not
+  SPICE — and it measures only that the learner's parameters move. Coverage,
+  accept rate and the 35.6 % bar are all untouched.
+* **Not that the policy is any good.** A return of +35.9 is scored against
+  `V6A_SPECS`, 5 of the 13 competition rows, on a model with a p99 error of a
+  full octave.
+* **Nothing here belongs in the report.** The number that discharges D9's
+  condition is `exp_hybrid`'s **accept rate against 6 of 16**, and it has not
+  been measured.
