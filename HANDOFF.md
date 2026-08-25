@@ -10574,3 +10574,61 @@ Nothing in `common/params.py`, `rl/`, the specs, the box, the tolerances, the
 screen or `reward_v1.py` was touched. `exp_coverage.library_candidates` unmodified.
 Entry 31's artifact unmodified. Tests unchanged at **1861 passed, 11 deselected**
 (no code change in this half of the session -- run, score, record).
+
+### 2026-08-26 -- session 27: the SAC track is committed, and a citation that pointed at nothing is closed
+
+**Committed `7c2127b`.** Three modules had been written in session 26 and left
+**untracked**: `rl/sac.py` (536 lines), `rl/replay.py` (546), and
+`rl/episode_dynamics.py` (241), with 55 tests. This session verified them and
+committed them. No new experiment was run.
+
+**What was verified rather than assumed, before committing:**
+
+* **Every SAC hyperparameter matches the provenance its docstring claims** --
+  `gamma 0.99`, `tau 0.005`, `lr 3e-4`, `batch 256`, `gradient_steps 1`,
+  `learning_starts 100`, `hidden (256, 256)`, all SAC-paper or SB3 defaults.
+  Nothing tuned, which is `ppo.py` §6's rule applied to its successor.
+* **`rl/ppo.py`, `rl/env.py`, `rl/contract.py` and `common/params.py` are
+  untouched** -- rule 7, wrap rather than replace. `episode_dynamics.py` is the
+  wrapper that finally lets G114's "change them one at a time" be executed:
+  `revert_on_invalid` and `keep_going_on_success` are separate flags.
+* **Full suite: 1915 passed, 12 deselected, 4m50s.**
+
+**THE PROCESS DEFECT, AND IT IS THE REASON THIS ENTRY EXISTS.**
+`rl/replay.py` cited *"`nebula/PREDICTIONS.md` entry 33"* while `PREDICTIONS.md`
+stopped at **entry 32**. A module citing a pre-registration that was never
+written *implies a discipline that was not followed*, which in this repository is
+worse than an uncited number -- it is the shape of the failure `PREDICTIONS.md`
+exists to make impossible.
+
+The measurements themselves were sound. **All six were re-derived through a
+different code path** (`sklearn.neighbors` Chebyshev radius query rather than
+`replay.mine_pool_transitions`'s batched k-NN, sharing no implementation) and
+every one matched exactly:
+
+    pool designs                      74 526
+    DIRECTED adjacent edges       34 789 444   <- one per minable transition
+    undirected pairs              17 394 722   <- half; NOT the count
+    designs with >= 1 neighbour       74 256   (99.64 %)
+    neighbours per design      median 15, mean 466.8, max 2963
+    legal HER targets                 33 071   (44.4 %)
+
+Both runs ~30 s. The counts are a function of `MAX_STEP = 0.15` and move if it
+moves.
+
+**Entry 33 is therefore written as a MEASUREMENT RECORD and says so in its first
+line**, rather than being back-filled as though it had been registered in
+advance. It also records what the number does *not* establish: 34.8 M minable
+transitions is a property of the **pool**, not evidence that SAC learns anything
+from them. **`sac.py` has not been run.** Its gate is the entropy coefficient
+moving, exactly as `log_std` was PPO's.
+
+**The bar SAC has to clear is no longer zero.** Entry 32 measured the non-RL
+top-k proposer at **35.6 % fewer decks** than the 13 718-deck search (`k = 5`
+optimal, `DEFAULT_TOPK` left at 8 because retuning on the run that measured it
+would be tuning). Any RL claim is measured against 35.6 %, not against nothing.
+
+**Unchanged and still open:** mandated 45-corner coverage stands at **7 of 16**
+(entry 30's outcome); the ~90-minute full sweep still needs the owner's say-so;
+and whether the rubric requires RL to *be* the optimiser is still the question
+to the competition mentor that gates Stage 2/3 of `NEXT_AGENT_SAC.md`.
