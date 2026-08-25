@@ -324,10 +324,18 @@ one of these.** Check your work against them before running anything expensive.
 
 ## 8. Open decisions — human only
 
-1. **Does the rubric require RL to be the optimiser?** A question to the
-   competition mentor was drafted on 2026-08-21. **The answer determines whether
-   stage 2/3 above is essential or optional.** Do not start stage 2 before it
-   arrives.
+1. ~~**Does the rubric require RL to be the optimiser?**~~ **ANSWERED
+   2026-08-26 — stages 1-3 are UNBLOCKED.** The competition mentor approved this
+   architecture *conditionally*: the SAC + CMA-ES hybrid is acceptable **if the
+   SAC contributes as RL**.
+   **Read the condition as the deliverable, not as a formality.** It does not
+   approve a hybrid in which the policy is decoration and CMA-ES does the work
+   — which is precisely what today's numbers describe. The measurement that
+   discharges it is `exp_hybrid`'s **accept rate**: how often the policy's
+   proposal passes the 4-corner screen, against the **non-RL baseline of 6 of 16
+   accepted and 35.6 % fewer decks** (`PREDICTIONS.md` entry 32). A SAC proposer
+   that does not beat that has **not** contributed as RL, and reporting that is
+   the honest outcome rather than a failure to be papered over.
 2. **Which design ships**, if more than one is compliant.
 3. **Whether to report the 135-point load-swept grid as compliance or as
    characterisation.** The slide mandates 45 PVT corners; the load axis is this
