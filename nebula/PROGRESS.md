@@ -63,6 +63,7 @@ human in the loop. Deliverables that already exist and run:
 | **D6** | **Make `target_peaking_db` LIVE.** A judge asking for 11 dB must not be handed 6.4 dB with a PASS beside it | `V5_SPECS` + `S3_peaking_match`. **V1–V4 bit-identical**, pinned by test, so no `BASELINES.md` §7f re-run |
 | **D7** | **The deliverable is the FRAMEWORK, not one design.** Measure *spec coverage* — for every request a judge might type, does the framework return a PVT-compliant circuit? | `exp_coverage.py` is now the centrepiece. The single-design searches are demoted to one cell of its grid |
 | **D8** | **Search on the MANDATED 45-corner grid; report the 135-point load sweep separately** | The slide mandates PVT (5 process × VDD±5% × 0–125 °C = 45) and says nothing about load. See §5 |
+| **D9** | **The competition mentor approved the SAC + CMA-ES hybrid — CONDITIONALLY** (2026-08-26): the approach is fine enough **if the SAC contributes as RL** | **Unblocks `NEXT_AGENT_SAC.md` stages 1–3**, which its §8 item 1 had gated on exactly this answer. **The condition is the deliverable, not a formality** — it does not approve a hybrid in which the policy is decoration and CMA-ES does the work, which is what today's numbers describe. Discharged by `exp_hybrid`'s **accept rate** against the non-RL baseline of **6 of 16 accepted / 35.6 % fewer decks** (entry 32). A SAC proposer that does not beat that has **not** contributed as RL, and reporting that is the honest outcome |
 
 ---
 
