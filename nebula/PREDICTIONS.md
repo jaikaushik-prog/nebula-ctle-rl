@@ -6111,3 +6111,184 @@ would be a G113-shaped artifact that looks entirely normal.
 **Which checkpoint stage 3 proposes from is itself a measurement, not a
 preference: the fine-tuned one won on the body of the distribution and lost on
 the tail.** Pre-register that before running it.
+
+---
+
+## 36. Session 28 — **does SAC contribute AS RL? Accept rate against the non-RL 6 of 16**
+
+**Written 2026-08-26 BEFORE `exp_sac_propose.py` exists** — verifiable from git
+history, as entry 35 was.
+
+### Why this one is different from 34 and 35
+
+Entries 34 and 35 measured the **learner**: `alpha` moved, `log_std` moved, the
+policy survived the SPICE transfer. Neither is a claim about the deliverable,
+and both score **5 of 13 rows**. **This entry measures the deliverable.** D9 —
+the mentor's approval of the SAC + CMA-ES hybrid — is conditional on *"the SAC
+contributing as RL"*, and the only number that discharges it is **accept rate
+on the same 16 coverage-grid requests, against the non-RL baseline**.
+
+### The baseline, read from the artifact rather than from memory
+
+`hybrid_topk_scan.json` (entry 32, `source = "library"`, `k = 8`):
+
+    accepted_at_k        [1, 4, 5, 5, 6, 6, 6, 6]      A = 6 at k >= 5
+    accepted ranks       2, 5, 2, 1, 2, 3   on request indices 2, 4, 7, 9, 11, 14
+    candidates scored    128:  7 feasible, 5 infeasible, 116 UNSCORABLE
+    decks                512 measured, 380 deployed        (at k=5: 320 / 260)
+
+**`k = 5` is the registered comparison point** — entry 32 measured it as the
+optimum (same `A` as k=8 for 120 fewer decks), so every arm below runs at k=5
+and the baseline to beat is **6 of 16**.
+
+### The fact that should be stated BEFORE the run, not discovered after it
+
+**115 of the 121 non-feasible library candidates — 95.0 % — name `output
+swing ... exceeds the limit`.** The acceptance bar is dominated by the measured
+1 dB compression point.
+
+**`V6A_SPECS`, the reward SAC was trained on, does not contain it.** The policy
+optimises two frequency rows, two peaking rows and the Nyquist boost. It has
+never been shown output swing, noise, power, saturation, area or HD3. So the
+policy is being scored, here, on a bar it was never trained to clear — and
+worse, the direction it *was* trained in (more peaking, more gain) is plausibly
+the direction that drives a stage into compression.
+
+**This is registered as the reason to expect a negative, in advance, so that a
+negative cannot later be explained away as bad luck and a positive cannot be
+claimed as more than it is.**
+
+### The five arms, all at k = 5, all scored identically
+
+Every arm produces 5 candidates per request, ranked best-first, and every
+candidate is scored by `exp_hybrid`'s existing `evaluate_at_points` on
+`AdaptiveScreen(EDGE4_MANDATED)` against `V6_SPECS`. **One scoring path, one
+screen, one accept rule** (`ev.feasible`), which is CLAUDEwa §8 rule 9.
+
+| arm | proposer | starts from |
+|---|---|---|
+| **0 — control** | library top-k (entry 32's, unchanged) | — |
+| **1 — R-analytic** | `sac_policy_analytic.pt` | 5 random starts |
+| **2 — R-finetuned** | `sac_policy_finetuned.pt` | 5 random starts |
+| **3 — S-analytic** | `sac_policy_analytic.pt` | the library's top 5, one rollout each |
+| **4 — S-finetuned** | `sac_policy_finetuned.pt` | the library's top 5, one rollout each |
+
+**Arms 1-2 ask "can the policy GENERATE"; arms 3-4 ask "can the policy IMPROVE
+what retrieval already found".** Those are different questions and the second
+is the one D9's wording actually reaches, because the shipped hybrid retrieves
+first. Both are measured because either alone is misreadable.
+
+`5 x 16 x 4 = 320 decks` per arm, **1 600 decks total.** No wall-clock
+prediction is registered: **G126** says wall clocks on this machine are not
+comparable across runs, so cost is registered in decks.
+
+### The four design decisions, registered before the code exists
+
+1. **The proposal is the best design ALONG the rollout, by analytic reward —
+   not the last one.** The policy visits 8 designs per episode and the analytic
+   model scores all of them for zero simulations, so taking the final `u` would
+   throw away information the proposer already has for free. The final-`u`
+   design is recorded too, as a secondary column; **only best-of-trajectory
+   counts**, and that is fixed here rather than chosen after seeing both.
+2. **The k candidates are k rollouts, ranked by analytic reward**, best first —
+   the policy's own opinion, zero SPICE, the structural analogue of the
+   library's ranking. Rollouts are deterministic (`actor.act(deterministic=
+   True)`); the diversity comes from the start points, not from sampling.
+3. **A seeded start the analytic model cannot fit is DECLINED, not faked.**
+   `AnalyticCtleEnv.reset(u0=...)` raises by design on such a start. The arm
+   then proposes the library candidate **unchanged** and the row is flagged
+   `policy_declined`. That keeps "the policy could not act here" separate from
+   "the policy acted and failed" — **G107**, and a decline must never be
+   silently scored as an RL success.
+4. **The new arms MUST NOT write `hybrid_topk_scan.json`.** `scan_topk` writes
+   `TOPK_SCAN` unconditionally at line 738, so calling it with a SAC source
+   would **destroy the committed artifact every published 6-of-16 and 35.6 %
+   number cites** — G113's exact shape, found by reading the code before the
+   run rather than by a figure disagreeing with the prose afterwards. The fix
+   is additive: an optional `out` path, defaulting to `TOPK_SCAN` **only** for
+   `source == "library"` and refusing to overwrite it otherwise, plus a test
+   that watches the refusal go red. `exp_coverage.py`, the search, the screen
+   and the scoring are untouched; the SAC source is **registered into**
+   `CANDIDATE_SOURCES`, not substituted for it (standing rule 6: wrap, do not
+   replace).
+
+### Predictions
+
+**Q1 — the control reproduces EXACTLY.** Arm 0 at k=5 returns `accepted_at_k =
+[1, 4, 5, 5, 6]` with the same six accepted ranks on the same six request
+indices. Confidence: **0.85.** *Falsifier:* any of the 16 per-request
+`accepted_rank` values differs. **If this misses, nothing else in the run is
+interpretable** — it means the harness, the screen or the pool moved under a
+result that is already published.
+
+**Q2 — free generation is weak.** Neither random-start arm (1, 2) accepts more
+than **2 of 16**. Confidence: **0.7.** *For:* the bar is 95 % output-swing
+compression and the reward has no swing row. *Against:* the policy does control
+gain, and lower gain is the direction that relieves compression, so it could
+stumble into the right region while optimising something else.
+*Falsifier:* either arm accepts **>= 3**.
+
+**Q3 — THE D9 TEST. Neither library-seeded arm beats the non-RL baseline**,
+i.e. arms 3 and 4 both accept **<= 6 of 16**. Confidence: **0.65.**
+*For:* the policy's edits are guided by a reward blind to the spec that does
+95 % of the rejecting, so its most likely effect on a corner-feasible library
+design is to walk it off the feasible island. *Against:* 116 of 128 library
+candidates were unscorable, so there is a great deal of headroom and even a
+weakly-informed edit has room to help.
+*Falsifier:* either arm accepts **>= 7**. **That falsification is the result
+this project wants**, and it is registered at 0.35 rather than talked up.
+
+**Q4 — the mechanism is the one named above.** Among non-feasible candidates
+from arms 1-2, **at least 50 % name output swing** in `reason`. Confidence:
+**0.8** (the library baseline is 95.0 %). *Falsifier:* below 50 % — which would
+mean SAC proposals fail for a *different* reason than library proposals do, and
+that would be more interesting than the accept rate.
+
+**Q5 — the checkpoint choice is not decisive.** Within each start mode,
+`|A_finetuned - A_analytic| <= 1`. Confidence: **0.6.** This is the open
+question entry 35's OUTCOME left: the fine-tuned policy won the body of the
+distribution and lost the tail, and accept rate is a tail-sensitive
+instrument. *Falsifier:* a gap of **>= 2** either way — in which case the
+tail/body trade is decisive and stage 3 has an answer about which checkpoint
+ships.
+
+**Q6 — the accounting is arithmetic and must land on it.** Every arm reports
+exactly **320** measured decks; arm 0 reports exactly **260** deployed.
+Confidence: **0.9.** *Falsifier:* any deviation. This is a harness gate, not a
+claim about the policy: a mismatch means the deck counting is wrong, and this
+project has already been caught understating a cost 6x by collapsing
+`measured` into `deployed`.
+
+### The decision rule, before the result
+
+* **Q3 falsified (a seeded arm >= 7 of 16)** -> **the policy adds acceptances
+  on top of retrieval, measured on the deliverable's own metric.** That is what
+  D9's condition asks for. Report it with the paired per-request ranks, then
+  ask the owner about the ~90-minute full hybrid sweep — entry 31's
+  pre-committed `A >= 3` rule is satisfied either way, but the sweep is still
+  the owner's call and not an agent's.
+* **Q3 holds, Q2 falsified (a random-start arm >= 3 of 16)** -> the policy can
+  generate without retrieval but does not beat it. Report as partial. **Do not
+  tune.** The identified lever is the reward's blindness to output swing, and
+  changing the reward set is a **human decision** (standing rule 6) that costs
+  either a swing predictor or SPICE-scored training.
+* **Q2 and Q3 both hold** -> **SAC does not contribute as a proposer at the bar
+  D9 names.** Say that to the mentor plainly rather than presenting a hybrid as
+  RL-driven when `method_cmaes` does the work — anyone reading `exp_coverage.py`
+  finds that in ninety seconds. Three options follow, **all owner decisions**:
+  (a) retrain on a reward containing the spec that actually rejects proposals;
+  (b) move SAC inside the search as a refiner and measure **decks-to-feasible**
+  instead of accept rate, which is a different and possibly fairer instrument;
+  (c) ship retrieval + CMA-ES honestly, with the RL arm reported as a measured
+  negative — which, given entries 34 and 35, is a genuine finding and not an
+  absence of one.
+
+### What no outcome of this entry may claim
+
+* **Not coverage.** Accept rate is a proposal metric on the **4-corner** screen.
+  Mandated **45-corner** coverage stays **7 of 16** unless a sweep runs, and
+  this entry runs none.
+* **Not compliance.** The shipped design's 11 of 11 rows at 45 of 45 corners is
+  untouched by anything here.
+* **Not a cost claim beyond the arms measured.** The 35.6 % deck saving belongs
+  to entry 32's library proposer. An RL arm inherits none of it.
