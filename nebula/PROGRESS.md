@@ -713,6 +713,79 @@ say: `A = 6` is not "6 of 16 requests meet spec" — it is "6 of 16 got a usable
 starting design for free". Mandated-corner coverage is still **7/16** (entry 30)
 and this run does not move it.
 
+## 5i. THE TRANSFER HELD. Entry 35 RAN: **SAC survived the SPICE fine-tune that erased PPO**
+
+**2026-08-26 (session 28), `experiments/exp_sac_finetune.py`, 53.1 min,
+artifact `sac_finetune_results.json`.**
+
+G114 is this project's sharpest negative: 3 000 SPICE steps returned a PPO
+policy trained for 200 000 analytic steps to its initialisation, taking
+feasibility 1/16 -> 0/16 with it. G114's own instruction was *"change them one
+at a time and measure"*. This experiment **held all three levers** -- the agent
+**and its three optimisers** were kept (`lr_finetune = 3e-5` lowers the rate
+instead of resetting it), the SPICE env was scored on **`V6A_SPECS`, the same
+five rows the analytic env scores**, and `RevertOnInvalidEnv` made a bad edit
+revert rather than terminate. **So exactly one thing changed between the legs:
+the design equations were replaced by ngspice.**
+
+    log_std_mean   analytic -1.7788  ->  after fine-tune -2.0902   sigma 0.169 -> 0.124
+    alpha          analytic  0.0715  ->  after fine-tune  0.0747
+    SPICE return   BEFORE  -24.101   ->  AFTER  -19.012   (+5.089, on 465 decks vs 470)
+    episodes       8.00 of 8 BEFORE and AFTER
+    PPO, contrast: log_std -3.022..-0.719 -> -0.097..+0.063  (erased to init)
+
+**Entry 35 scored 3 of 5 and `_verdict()` printed the Q1-and-Q3 branch in code:
+proceed to stage 3.** Q1 (survives), Q2 (`alpha` low) and Q3 (return does not
+drop) hit -- Q3 in the opposite direction to its tolerance, the return *rose*.
+Q4, the normalised critic test entry 34 demanded be registered *before* this
+run, **missed at 2.393x against a 2.0x bar**. Q5 missed **fast**: 53.1 min
+against 80-120, which produced **G126** -- leg A ran the same 50 000 steps as
+entry 34 in **23.1 min against 40.5**, unexplained, so wall clocks in this
+project are not comparable across runs and every cost claim stays in **decks**.
+
+### The professor-ready version
+
+**In plain language: the thing that killed the previous learning agent did not
+kill this one.** Training an agent on fast approximate equations and then
+letting it continue on the real circuit simulator used to wipe out everything
+it had learned -- it came back as random as the day it started. With three
+specific differences between the two training phases removed, the same move
+made the new agent **more** decisive rather than less, and its scores on 16
+unseen design requests **improved on 13 of them** (median +8.0; sign test
+n = 16, two-sided **p = 0.021**).
+
+**Two honest caveats, both in the artifact.** First, **the spread of outcomes
+more than doubled** (return variance 210.7 -> 497.0): one request improved
+enough to score positive for the first time, and two got sharply worse, one of
+them hitting the floor. The typical case got better and the bad cases got
+worse. Second, **the agent is still not good in absolute terms** -- mean score
+-19.0, with only **1 of 16** requests scoring positive. It improved; it is not
+solved.
+
+### What this does NOT say
+
+* **Which lever mattered.** All three were held together, on purpose: the
+  question was whether the transfer is possible at all, not which of G114's
+  three changes owns the failure. Attributing it needs three more runs.
+* **Anything about compliance or coverage.** Both legs score **5 of 13 rows**
+  on a model with a p99 error of a full octave. Mandated 45-corner coverage is
+  untouched at **7 of 16**; the shipped design is still 11 of 11 at 45 of 45;
+  the deck saving is still entry 32's **35.6 %**.
+* **That D9's condition is met.** It is discharged **only** by `exp_hybrid`
+  accept rate against **6 of 16**, and that is stage 3, unmeasured.
+
+### The next decision, and why it is a measurement
+
+Stage 3 must pre-register **which checkpoint proposes**. The fine-tuned policy
+won on the *body* of the distribution and lost on the *tail*, and accept rate
+is a tail-sensitive instrument -- a proposal that fails the corner screen buys
+nothing regardless of how close it was. Both checkpoints exist and were opened
+and verified to contain real weights (10 tensors each) before being relied on,
+because `torch.save` in that file writes `state_dict: None` for an agent that
+has none -- G113's shape exactly. **They are `.gitignore`d** (`*.pt`, 3.2 MB
+each) and therefore exist only on this machine -- a fresh clone must re-run the
+53-minute experiment before stage 3 can propose from either of them.
+
 ## 6. Next steps, in order
 
 | # | Task | Cost | Status |
@@ -731,6 +804,9 @@ and this run does not move it.
 | **4i** | **Cache `spec_pool.load_pool` (G123).** It is called once per `library_candidates` invocation with no cache, so the 74 526-row pool is re-parsed per request: **89-161 s of the scan's 250.4 s**. An `lru_cache` is the whole fix. Also **unexplained**: the residual 1.4-2.5 s/deck vs the coverage sweep's 0.42 s/deck average | ~0 sims | open, low priority -- affects **no** result (every claim is in decks, not seconds), only wall-clock estimates. **Deliberately not done in 26c**: `load_pool` returns a mutable object shared by every caller, so memoising it changes aliasing, not just speed |
 | **4j** | **Measure how DEEP the library must be searched (`exp_hybrid.scan_topk`, entry 32).** Score the top **k=8** candidates per request on the same 4-corner screen, record the rank of the first feasible one. Replaces 4h: it **measures** instead of predicting, needs no model, and one run yields the whole hit-rate-vs-k curve for k=1..8 -- whose k=1 column re-measures entry 31's 1-of-16 | **512 decks, 315 s measured** (vs 13 718 for the plain search) | **DONE 2026-08-22. 6 of 6 predictions HOLD. `accepted_at_k=[1,4,5,5,6,6,6,6]`: A=6 of 16, and k=5 is the optimum at 35.6 % fewer sims. See §5h** |
 | **4k** | **Fit a ranking on the labels 4j produces.** Entry 31 gave 16 labelled candidates with **1** positive, which is unfittable. A k=8 scan gives ~128 labelled (design, pass/fail-at-corners) pairs. Only worth starting if 4j returns `A >= 5` -- the pre-committed branch | 0 sims to fit, 64-512 to re-measure | **UNBLOCKED: 4j returned A=6 >= 5.** 128 labels, **7** positives. Must predict output-swing compression (99.1 % of failures), a label that exists **only** in `hybrid_topk_scan.json` and never in the pool -- so held-out validation, not a re-fit on the same rows |
+| **4l** | **SAC stage 1 -- does the learner move at all?** `rl/sac.py` + `exp_sac_gate.py`, gated on the entropy coefficient, the same instrument that diagnosed PPO. Pre-registered as **entry 34** | 50 000 analytic steps, 0 SPICE, 40.5 min | **DONE 2026-08-26.** `alpha` **14x**, `log_std` -0.007 -> **-1.779**. **Scored 3 of 5**; both misses were the two least-confident predictions |
+| **4m** | **SAC stage 2 -- does the policy SURVIVE the SPICE transfer that erased PPO (G114)?** `exp_sac_finetune.py`, all three G114 levers held, one variable changed. Pre-registered as **entry 35** | 50 000 analytic + 1 500 SPICE steps + 2x16 SPICE evals, **53.1 min, 935 decks** | **DONE 2026-08-26 (session 28). YES.** `log_std` -1.7788 -> **-2.0902**, return -24.101 -> **-19.012**. **Scored 3 of 5.** See section 5i |
+| **4n** | **SAC stage 3 -- the number that discharges D9.** SAC as `exp_hybrid`'s proposer, scored on **accept rate against the non-RL baseline of 6 of 16** (entry 32). **Pre-register first, including WHICH checkpoint proposes** -- fine-tuned won the body, lost the tail | ~512 decks for a k-scan, TBD | **NEXT.** Unblocked by 4m; this is the deliverable, everything before it was preparation |
 | **5** | **Corner-aware RL vs random / CMA-ES / library lookup.** Pre-registered as entry 25 (with a disclosed rule-3 violation: written after launch, before any artifact existed) | ~2.5 h | **RUNNING** |
 | **6** | **Re-run the coverage sweep on `V6_SPECS`** (§5b). Owner: *"polishing numbers is much needed for honesty."* **Publish both the old and the corrected coverage number** | ~2.5 h | **committed, do not drop** |
 | 7 | 2-D tuning bank (`Cs` axis) + the reading-(B) criterion | ~1 100 sims, ~8 min | built, not run |

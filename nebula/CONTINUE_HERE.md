@@ -8,6 +8,33 @@ else in the 22s brief stands.
 
 **24 days to the 15 Sept deadline. Demo 25 Sept at BITS Goa.**
 
+> **2026-08-26 (session 28) — READ THIS FIRST, IT SUPERSEDES EVERY BLOCK BELOW
+> ON THE RL TRACK. `nebula/SESSION_27_HANDOFF.md`'s "immediate job" IS DONE:
+> `exp_sac_finetune.py` RAN at full budget (53.1 min) and entry 35 scored 3 of
+> 5. The policy SURVIVED the SPICE transfer that erased PPO.**
+>
+> `log_std` **-1.7788 -> -2.0902** (sigma 0.169 -> 0.124) and `alpha` flat at
+> 0.075, where PPO came back at its initialisation (`-0.097..+0.063`). SPICE
+> mean return over the 16 held-out targets went **-24.101 -> -19.012 on 465
+> decks against 470** — 13 of 16 improved, paired median +8.0, sign test
+> n = 16 two-sided **p = 0.021** — **but return variance more than doubled,
+> 210.7 -> 497.0.** The body moved up; the tail got heavier. Absolute return is
+> still **-19.0** with only **1 of 16** targets positive: it improved, it is
+> not good. `_verdict()` printed the committed Q1-and-Q3 branch: **G114 is
+> solved, not merely avoided — proceed to stage 3.**
+>
+> **Stage 3 is the only thing that discharges D9:** SAC as `exp_hybrid`'s
+> proposer, measured on **accept rate against the non-RL baseline of 6 of 16**
+> (entry 32, 35.6 % fewer decks). **Pre-register it before running it, and
+> pre-register WHICH checkpoint proposes** — `sac_policy_analytic.pt` or
+> `sac_policy_finetuned.pt` — because the fine-tuned one won the body and lost
+> the tail, and accept rate is tail-sensitive. **Nothing from `exp_sac_gate` or
+> `exp_sac_finetune` may be quoted as compliance or coverage: both score 5 of
+> 13 rows.** Read `PROGRESS.md` §5i, then entry 35's OUTCOME, then G126.
+> Mandated 45-corner coverage is unchanged at **7 of 16**; the ~90-minute full
+> sweep still needs the owner's say-so; **20 days to 15 Sept, and the report
+> does not exist.**
+
 > **2026-08-22 (session 26c) — READ THIS FIRST: the lever the block below
 > recommends does not exist. The one that replaced it RAN, and the answer is
 > that the free proposal is good enough 6 times in 16, not 1 — the old number

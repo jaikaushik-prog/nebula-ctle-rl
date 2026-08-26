@@ -1,5 +1,20 @@
 # SESSION_27_HANDOFF.md — pick up here
 
+> **STATUS 2026-08-26 (session 28): §3's "YOUR IMMEDIATE JOB" IS DONE. DO NOT
+> RE-RUN IT.** `exp_sac_finetune.py` ran at full budget in **53.1 min** and
+> entry 35 scored **3 of 5**: `log_std` **-1.7788 -> -2.0902**, `alpha` flat at
+> 0.075, SPICE mean return **-24.101 -> -19.012** on 465 decks against 470.
+> **Q1, Q2, Q3 HIT; Q4 (normalised critic, 2.393x vs a 2.0x bar) and Q5 (53.1
+> min, under the 80-120 band) MISSED.** `_verdict()` printed §7's first branch:
+> **the transfer works, G114 is solved not avoided, proceed to stage 3.**
+> Artifacts: `experiments/sac_finetune_results.json`,
+> `sac_finetune_run.jsonl`, `sac_policy_analytic.pt`,
+> `sac_policy_finetuned.pt` (both verified to hold real weights). The rest of
+> this file — §4's four design decisions, §6's quotable/unquotable lists, §8's
+> standing rules, §9's five failure shapes — **still stands and is still the
+> best short brief in the repo.** Current entry point: `PROGRESS.md` §5i and
+> `CONTINUE_HERE.md`'s session-28 block.
+
 **Written 2026-08-26, end of session 27, for a fresh chat.** The previous chat
 hit its context limit mid-experiment. This file is written *now*, while the
 state is exact, so you can continue **without re-deriving anything and without

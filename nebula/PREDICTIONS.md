@@ -6002,3 +6002,112 @@ evaluations at ~32 decks each (~11 min each). Confidence: 0.7.
 
 **No branch here reopens any claim about coverage.** D9's condition is
 discharged only by accept rate, and that is stage 3.
+
+### OUTCOME — run 2026-08-26, 50 000 analytic + 1 500 SPICE steps, 53.1 min
+
+    log_std_mean   analytic -1.7788  ->  after fine-tune -2.0902   sigma 0.169 -> 0.124
+    alpha          analytic  0.0715  ->  after fine-tune  0.0747
+    SPICE mean return    BEFORE -24.101  ->  AFTER -19.012   delta +5.089
+    SPICE median return  BEFORE -17.377  ->  AFTER  -8.700
+    episodes       8.00 of 8 BEFORE and AFTER;  decks 470 -> 465
+    q_loss         17.919 -> 101.175 raw (5.65x);  normalised 0.0851 -> 0.2036 (2.39x)
+
+**VERDICT: PASS. Three hits, two misses.** `_verdict()` applied the registered
+decision rule mechanically and printed the Q1-and-Q3 branch: *"the transfer
+works and G114 is SOLVED, not merely avoided. Proceed to stage 3."*
+
+| | prediction | outcome |
+|---|---|---|
+| Q1 | `log_std_mean` stays below -1.0 (0.7) | **HIT** — **-2.0902**, i.e. it moved *further* from initialisation, not back toward it |
+| Q2 | `alpha` stays below 0.30 (0.65) | **HIT** — 0.0715 -> **0.0747**, flat |
+| Q3 | SPICE return `after >= before - 5.0` (0.6) | **HIT** — it *rose* **+5.089**, the opposite sign to the tolerance |
+| Q4 | normalised critic ratio grows at most 2x (0.5) | **MISS** — **2.393x** |
+| Q5 | wall clock 80-120 min (0.7) | **MISS** — **53.1 min**, under the band, not over |
+
+### The contrast that makes this a result rather than a number
+
+    PPO,  200 000 analytic + 3 000 SPICE   log_std -3.022..-0.719  ->  -0.097..+0.063   ERASED to init
+    SAC,   50 000 analytic + 1 500 SPICE   log_std        -1.7788  ->          -2.0902  SURVIVED, sharpened
+
+**With G114's three levers held — optimiser kept, reward scale identical,
+episode dynamics made to revert rather than terminate — the SPICE leg did not
+erase the policy. It made it more deterministic** (sigma 0.169 -> 0.124) and
+`alpha` did not re-inflate. PPO's collapse was therefore **not** an inevitable
+property of the sim-to-real gap on this problem; at least one of the three
+uncontrolled changes was load-bearing. **This experiment cannot say which one**
+— all three were held together, deliberately, because the question was whether
+the transfer is possible at all, not which lever owns the failure.
+
+### Q3 hit, and the paired numbers say more than the mean does
+
+The mean improved by +5.089 on **465 decks against 470** — so the gain was not
+bought with more simulation. Paired, per target:
+
+* **13 of 16 improved, 3 worsened**, paired median **+8.009**
+  (sign test, **n = 16, two-sided p = 0.021**).
+* Median return improved far more than the mean: **-17.377 -> -8.700**.
+* **But the variance more than doubled: 210.7 -> 497.0 (2.36x).** Two targets
+  lost ~30 units (-29.72 -> -62.44 and -35.19 -> **-64.00**, the floor), while
+  one crossed into positive return for the first time (-13.56 -> **+16.20**).
+
+**Fine-tuning moved the body of the distribution up and made the tail heavier.**
+That is a real caveat and it is recorded here rather than left in the artifact:
+a proposer scored on accept rate cares about the tail.
+
+### Q4 missed, on the test entry 34 specifically asked to be registered first
+
+Entry 34's outcome argued that raw `q_loss` is a poor criterion for a
+non-stationary target and said the settling test — **critic loss against return
+variance — must be REGISTERED BEFORE the next run, not applied to the last
+one.** It was. **It missed: 0.0851 -> 0.2036, 2.393x against a 2.0x bar.**
+
+Normalising did most of the work it was supposed to do — raw `q_loss` grew
+**5.65x** and the normalised ratio grew **2.39x** — and it still missed. Two
+things are worth saying without either of them being used to rewrite the
+verdict: the ratio's numerator and denominator come from **different domains**
+(an analytic-trained critic's loss over SPICE return variance), and the SPICE
+leg is 1 401 updates against the analytic leg's 49 901, so its `q_loss_last` is
+a much noisier endpoint. **The criterion was registered, it failed, and it stays
+a MISS.** If a better-posed critic test is wanted, it gets registered before the
+next run, like this one was.
+
+### Q5 missed in the unusual direction, and one number is unexplained
+
+53.1 min against a predicted 80-120. Two components were over-estimated:
+
+* Each 16-target SPICE evaluation cost **470 decks / 2.1 min**, against a
+  predicted ~11 min. The smoke run's "420 decks / ~2.6 min" was the better guide
+  and entry 35's arithmetic did not use it.
+* Leg B ran 1 500 SPICE steps in 25.9 min = **1.04 s/step** against 1.26.
+
+**And one is not explained: leg A ran 50 000 analytic steps in 23.1 min here
+against entry 34's 40.5 min for the identical configuration** — same steps, same
+seed, same env, same interpreter. 36 steps/s against 21. Nothing in this run
+accounts for that, machine state is the obvious suspect, and it is recorded as
+an **open observation, not a finding.** It also means the two runs' wall-clock
+numbers must not be compared with each other in the report.
+
+### What this does NOT establish
+
+* **Not that the policy is good.** Mean SPICE return is **-19.0**, still deeply
+  negative, and only **1 of 16** held-out targets scores positive. It improved;
+  it is not solved.
+* **Not compliance and not coverage.** Both legs score **5 of 13 rows**
+  (`V6A_SPECS`) on a model whose p99 error is a full octave. Nothing here
+  touches 7/16, 11-of-11-at-45-corners, or the 35.6 % figure.
+* **Not D9's condition.** That is discharged **only** by `exp_hybrid` accept
+  rate against the non-RL baseline of **6 of 16**, and that is stage 3.
+
+### The branch, and it is the committed one
+
+**Q1 and Q3 both hit -> stage 3.** SAC becomes `exp_hybrid`'s proposer and is
+measured on **accept rate against 6 of 16 (entry 32)**. Both checkpoints were
+verified to contain real weights before being relied on — `state_dict` with 10
+tensors in each of `sac_policy_analytic.pt` (50 000 steps, 0 SPICE calls) and
+`sac_policy_finetuned.pt` (1 500 steps, 6 000 SPICE calls) — because
+`torch.save` in this file writes `None` if the agent has no `state_dict`, which
+would be a G113-shaped artifact that looks entirely normal.
+
+**Which checkpoint stage 3 proposes from is itself a measurement, not a
+preference: the fine-tuned one won on the body of the distribution and lost on
+the tail.** Pre-register that before running it.

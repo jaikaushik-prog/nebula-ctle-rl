@@ -1567,12 +1567,14 @@ Plus: git init, .gitignore, 28 tests, Wilson-bound BER reporting.
 
 ## 6. Key numbers & validated behavior (current state)
 
-- Tests: **1448 passing** (session 21) —
+- Tests: **1915 passing, 12 deselected** (session 27-28) —
   `python -m pytest tests nebula/tests -q -m "not slow"`.
   (Was 65 + 267 = 332 at the start of session 9; 430 at the end of it; 444
   after 10b; 528 after 11; 618 after 12b; 679 after 13; 1007 after 16; 1246
   after 17; 1292 after 18; **1314** with session 19a's uncommitted trim tests;
-  **1389** after session 20; **1448** after session 21 closed G2.) **11** further tests are marked `slow` and
+  **1389** after session 20; **1448** after session 21 closed G2; **1806**,
+  then **1834** with `nebula/tests/test_hybrid.py`, then **1861** with
+  `test_hybrid_topk.py` in session 26; **1915** from session 27 on.) **12** further tests are marked `slow` and
   deselected by default — they re-derive golden values from the FULL SKY130
   library (~30 s each). Run them after a PDK update. **Note `CLAUDE.md` is
   STALE on this**: it says 407 tests and 2 deselected. **Runtime is machine-load dependent** — the same suite has
@@ -1915,6 +1917,18 @@ Plus: git init, .gitignore, 28 tests, Wilson-bound BER reporting.
   S4, S7 and S8 are not in the reward — for stated reasons, and in S8's case
   because the link layer is a mock end to end and a training run structurally
   cannot reach it.
+- **(nebula) The SAC transfer result (entry 35) is scored on 5 of 13 rows and
+  says nothing about compliance.** Both legs score `V6A_SPECS` -- the two
+  frequency rows, the two peaking rows and the Nyquist boost -- because those
+  are what `prescreen.predict_response` can predict. Noise, power, saturation,
+  area, HD3 and the eye are **not** in that reward. It establishes that the
+  policy **survives** the SPICE transfer that erased PPO (`log_std` -1.7788 ->
+  -2.0902 with G114's three levers held) and that SPICE return improved on 13
+  of 16 held-out targets; it establishes **nothing** about 7-of-16 coverage,
+  about the 11-of-11-at-45-corners design, or about the 35.6 % deck saving.
+  Absolute return is still **-19.0** and only **1 of 16** targets scores
+  positive -- the policy improved, it is not good. The number that discharges
+  D9 is `exp_hybrid` accept rate against 6 of 16, and it is unmeasured.
 - **(nebula) The gm/I_D design-space map is TT-only, one seed, one load, and
   ITS TWO ARMS DO NOT SAMPLE THE SAME SET.** (Session 20,
   `nebula/GMID_MAP.md` §6.) The table carries three more corners; the
@@ -1946,8 +1960,39 @@ Plus: git init, .gitignore, 28 tests, Wilson-bound BER reporting.
    (`nebula/NRZ_RETARGET_AUDIT.md`); bounds re-derived; robust geometry
    confirmed; corner-yield swept (13.49% -> 8.10%). Blocking next actions,
    in priority order:
-   - **>>> THE ACTIVE LINE IS `NEXT_AGENT_SAC.md`, AND STAGE 0 IS BUILT BUT NOT
-     MEASURED (session 26). <<<** The owner stopped the coverage/unclip line
+   - **>>> AS OF 2026-08-26 (session 28) THE ACTIVE LINE IS STAGE 3 OF
+     `NEXT_AGENT_SAC.md`: SAC AS `exp_hybrid`'s PROPOSER, SCORED ON ACCEPT RATE
+     AGAINST 6 OF 16. <<<** Stages 0-2 are all MEASURED. Stage 0: entry 31 then
+     entry 32 (**1 of 16 -> 6 of 16 accepted, 35.6 % fewer decks**; depth, not
+     the library, was the lever). Stage 1: entry 34 (the learner moves --
+     `alpha` 14x, `log_std` -0.007 -> -1.779). Stage 2: **entry 35 -- the policy
+     SURVIVES the SPICE transfer that erased PPO** (`log_std` -1.7788 ->
+     -2.0902, `alpha` flat at 0.075, SPICE mean return -24.101 -> -19.012 on
+     **465 decks against 470**), with all three of G114's levers held. Next
+     actions, in order:
+     1. **Pre-register stage 3 in `PREDICTIONS.md` BEFORE running it**, and
+        include **which checkpoint proposes**. Entry 35 measured the fine-tuned
+        policy better on the *body* of the distribution (13 of 16 improved,
+        paired median +8.0, sign test n = 16 two-sided **p = 0.021**) and
+        **worse on the tail** (return variance 210.7 -> 497.0, one target fell
+        to the -64.0 floor). Accept rate is a tail-sensitive instrument, so
+        this is a measurement, not a preference. Both checkpoints exist and
+        were verified to hold real weights (10 tensors each):
+        `experiments/sac_policy_analytic.pt` (50 000 steps, 0 SPICE calls),
+        `experiments/sac_policy_finetuned.pt` (1 500 steps, 6 000 SPICE calls).
+     2. **The number is accept rate against 6 of 16 / 35.6 % fewer decks**
+        (entry 32). **Nothing from `exp_sac_gate` or `exp_sac_finetune` may be
+        quoted as a compliance or coverage number** -- both score 5 of 13 rows.
+     3. **D9 is discharged by that number and nothing else.** The mentor
+        approved the hybrid *if the SAC contributes as RL*; a hybrid in which
+        CMA-ES does the work does not meet the condition.
+     4. Still open and still the owner's: the **~90-minute full coverage
+        sweep** (mandated coverage 7 of 16), **which design ships**, and
+        **the report does not exist** -- 20 days to 15 Sept as of 2026-08-26.
+   - *(the session-26 list immediately below is retained as history. Its items
+     1-2 are DONE -- entries 31 and 32 -- and its item 4's "Stage 2 is BLOCKED"
+     was unblocked by mentor decision D9 on 2026-08-26.)*
+   - **>>> (HISTORY, session 26) STAGE 0 IS BUILT BUT NOT MEASURED. <<<** The owner stopped the coverage/unclip line
      after entry 30 scored 2 of 5 and said to start the SAC track. The brief
      orders stage 0 first, before any learning code: `experiments/exp_hybrid.py`
      (propose, else fall back to `exp_coverage.solve_request` unchanged), which
@@ -4465,6 +4510,23 @@ Plus: git init, .gitignore, 28 tests, Wilson-bound BER reporting.
   money; G125 says it must be able to **fail**. The round is only evidence for
   the gates whose sabotage actually went red -- so run it and read every line,
   because 14 of 15 firing looks like success in a summary.
+
+- **G126 -- (nebula, measurement discipline) WALL-CLOCK THROUGHPUT ON THIS
+  MACHINE VARIES ~1.7x BETWEEN RUNS OF AN IDENTICAL CONFIGURATION. Never
+  compare seconds-per-step across runs, and never quote a speed-up that is not
+  a count.** Measured 2026-08-26: entry 34 ran 50 000 analytic SAC steps in
+  **40.5 min (21 steps/s)**; entry 35's leg A ran **the same 50 000 steps, same
+  seed, same env, same interpreter, in 23.1 min (36 steps/s)**. Nothing in
+  either run accounts for the difference; machine state is the suspect and it
+  is recorded as an open observation, not a finding. The trap is that the two
+  numbers are both real, both artifact-backed, and subtracting them
+  manufactures a 1.7x "improvement" that no change produced. **The project's
+  cost claims are already stated as SIMULATION COUNTS for this reason** (entry
+  32's 35.6 % is decks, not minutes) -- keep it that way. It also means a
+  wall-clock prediction like entry 35's Q5 is measuring the machine as much as
+  the experiment; Q5 missed at 53.1 min against an 80-120 band, in the fast
+  direction. Same root as the note in section 6 that a slow suite is
+  contention, not a hang.
 
 ## 10. Environment
 
@@ -10679,3 +10741,72 @@ decisions inside the experiment, what the smoke runs already established, the
 numbers that may and may not be quoted, and the branch to follow after the run.
 
 Suite unchanged at **1915 passed, 12 deselected**.
+
+### 2026-08-26 -- session 28: entry 35 RAN. **The policy survived the transfer that erased PPO.**
+
+**`exp_sac_finetune.py` ran at full budget, unattended, 53.1 min.** It is the
+experiment G114 asked for: all three of G114's levers held (agent **and its
+three optimisers** kept with `lr_finetune = 3e-5`; the SPICE env scored on
+**`V6A_SPECS`, the same five rows as the analytic env**; `RevertOnInvalidEnv`
+so a bad edit reverts rather than terminating), so **exactly one thing changed
+between the legs -- the design equations were replaced by ngspice.**
+
+    log_std_mean   analytic -1.7788  ->  after fine-tune -2.0902   sigma 0.169 -> 0.124
+    alpha          analytic  0.0715  ->  after fine-tune  0.0747
+    SPICE return   BEFORE  -24.101   ->  AFTER  -19.012    (+5.089, on 465 decks vs 470)
+    episodes       8.00 of 8 BEFORE and AFTER
+    PPO, for contrast:  log_std -3.022..-0.719  ->  -0.097..+0.063  (its init)
+
+**Scored 3 of 5 against the pre-registered entry 35; `_verdict()` applied the
+decision rule in code and printed the Q1-and-Q3 branch: proceed to stage 3.**
+Q1 (policy survives), Q2 (`alpha` stays low) and Q3 (return does not drop) all
+HIT -- Q3 in the opposite direction to its own tolerance, the return *rose*.
+
+**Q4 and Q5 MISSED and both are recorded as misses.** Q4 was the normalised
+critic test that entry 34's outcome demanded be **registered before this run
+rather than applied to the last one**: it was, and it failed at **2.393x**
+against a 2.0x bar (raw `q_loss` grew 5.65x, so normalising did most of its
+job and still missed). Q5 missed **in the fast direction** -- 53.1 min against
+an 80-120 band -- and produced **G126**: leg A ran the same 50 000 steps as
+entry 34 in **23.1 min against 40.5**, same seed, same env, same interpreter,
+unexplained. Wall clocks in this project are not comparable across runs; cost
+claims stay as **simulation counts**.
+
+**What it does and does not say.** It says PPO's collapse was **not** an
+inevitable property of the sim-to-real gap here -- at least one of G114's three
+uncontrolled changes was load-bearing. It **cannot say which one**: all three
+were held together, deliberately, because the question was whether the transfer
+is possible at all. Paired, **13 of 16 targets improved** (median +8.0, sign
+test n = 16, two-sided **p = 0.021**) **but return variance more than doubled,
+210.7 -> 497.0**, with one target falling to the -64.0 floor and one crossing
+into positive return for the first time. **The body moved up and the tail got
+heavier** -- which matters, because accept rate is tail-sensitive. Absolute
+return is still **-19.0** and only **1 of 16** targets scores positive: the
+policy improved, it is not good. **Nothing here is a compliance or coverage
+number** -- both legs score 5 of 13 rows.
+
+**Both checkpoints were opened and verified to contain real weights** (10
+tensors each) before being relied on -- and note they are **`.gitignore`d**
+(`.gitignore:130 *.pt`, 3.2 MB each), so they exist **only on this machine**:
+a fresh clone cannot run stage 3 without re-running the 53-minute experiment, because this file's `torch.save` writes
+`state_dict: None` if the agent has none -- a G113-shaped artifact that looks
+entirely normal on disk.
+
+**Next is stage 3, and it is what discharges D9**: SAC as `exp_hybrid`'s
+proposer, measured on **accept rate against the non-RL baseline of 6 of 16**
+(entry 32). **Pre-register it first**, including which checkpoint proposes --
+the fine-tuned policy won on the body and lost on the tail, so that choice is a
+measurement, not a preference.
+
+**Also noted, not fixed:** `exp_sac_finetune._report()` prints em-dashes, which
+is a rule-11 / cp1252 violation -- it would raise `UnicodeEncodeError` *after*
+the artifact is written, so `--analyse` needs `PYTHONIOENCODING=utf-8` until it
+is made ASCII. The run was launched with that set. It was left alone during the
+run because editing a pre-registered experiment between registration and its
+execution is exactly what `PREDICTIONS.md` exists to prevent.
+
+**Docs updated in this commit:** `PREDICTIONS.md` entry 35 OUTCOME,
+`PROGRESS.md` section 5i, `HANDOFF.md` sections 6/7/8/9 (**G126**)/12,
+`SESSION_27_HANDOFF.md` status banner.
+
+**Gotchas added:** G126 (one).
