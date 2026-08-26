@@ -6945,3 +6945,116 @@ G128 happened in the first place.
   their own bug. **8 red, 2 caught-and-repaired, 24 tests.**
 * Training took **43.1 min** for the same 50 000 steps that took 40.5 (entry 34)
   and 23.1 (entry 35). **G126.** Cost claims stay in decks.
+
+---
+
+## 39. Session 28 — **is the ideal 1-tap DFE load-bearing? The eye with it removed**
+
+**Written 2026-08-26 BEFORE `link/dfe_ablation.py` and `exp_dfe_ablation.py`
+exist.** Authorised by the owner on 2026-08-26 after the question *"should we
+size the DFE as well?"*.
+
+### The question, and why it is not "should we size a DFE"
+
+The competition spec names the receiver as **"1-Stage CTLE w/ source
+degeneration (variable Rs, Cs) + 1-Tap DFE"**, and the eye rows -- **> 0.4 UI
+and > 100 mV** -- are measured *after* the DFE. This project models the DFE as
+an **ideal tap that cancels the first post-cursor exactly**
+(`cursors.py`: `dfe_tap = taps[1] / h0`, and `residual_abs_v` deliberately
+excludes `h1`). It is flagged `NON_SILICON_PARAMS` and is not sized at
+transistor level.
+
+That is a fair thing for a judge to challenge, and the challenge has a cheap,
+decisive answer that **sizing a DFE would not provide**: measure how much of the
+eye the ideal tap is actually holding up. Two facts already on disk say it may
+be very little:
+
+    the tap cancels          h1/h0 = 0.070 median, 0.185 max   (108 samples)
+    the eye clears its floor by  +268 mV MINIMUM on a 100 mV spec   (3.7x)
+                                 +0.44 UI  MINIMUM on a 0.4 UI spec (2.1x)
+
+**If the design still passes with the DFE deleted entirely, the report gets a
+stronger sentence than any amount of DFE sizing would buy**, and the assumption
+stops being a soft spot.
+
+### What is computed, and the one thing that makes it trustworthy
+
+`link/dfe_ablation.py` recomputes the eye from **the same pulse response the
+bridge already builds** (`pulse_response(cfg.channel, cfg.tx, ctle)`, public,
+zero SPICE beyond the one device run per point) under four tap policies:
+
+    ideal        residual = pre + post                    the CURRENT behaviour
+    none         residual = pre + |h1| + post             the DFE deleted
+    misadapted   residual = pre + eps*|h1| + post         eps = 0.20 left uncancelled
+    quantised    residual = pre + |h1 - q(h1)| + post     q = 4-bit uniform on [-0.5, 0.5]
+
+Height and width both come from `cursors_from_pulse` at each sampling phase --
+**the same function `eye_opening_vs_phase` uses** -- with only the DFE term
+changed, so no eye is recomputed by a second definition (CLAUDEwa.md section 8
+rule 9, and this repo's third named failure mode).
+
+**The control is the whole experiment's licence:** the `ideal` policy must
+reproduce the shipped verification's eye numbers. If my re-derivation does not
+agree with the committed artifact, the ablation is measuring my arithmetic
+rather than the DFE.
+
+### Predictions
+
+**Q1 — THE CONTROL. The `ideal` policy reproduces the committed eye height at
+every point to within 1e-9 V.** Confidence: **0.9.** *Falsifier:* any point
+differing by more than 1e-9. **If this misses, nothing else here is
+interpretable.**
+
+**Q2 — THE DFE IS NOT LOAD-BEARING FOR THE VERTICAL EYE. With the DFE deleted,
+`S8_eye_h` still passes (> 100 mV) at all 45 mandated corners.** Confidence:
+**0.8.** *For:* the tap cancels a median 7 % post-cursor and the eye clears its
+floor by 268 mV at the worst of 135 points. *Against:* the post-cursor reaches
+18.5 % in some designs, and removing it costs `2|h1|`, which at the worst
+corner could be a larger share of a smaller opening. *Falsifier:* any mandated
+corner below 100 mV.
+
+**Q3 — the same for the WIDTH. `S8_eye_w` still passes (> 0.4 UI) at all 45
+mandated corners with the DFE deleted.** Confidence: **0.6.** Lower than Q2
+because width is the contiguous span of *open* phases, and phases away from the
+optimum have less margin to spend. *Falsifier:* any mandated corner below
+0.4 UI.
+
+**Q4 — the cost is small in proportion.** Median eye-height loss from deleting
+the DFE is **<= 25 %** of the ideal opening. Confidence: **0.7.**
+*Falsifier:* above 25 %.
+
+**Q5 — a realistic tap is indistinguishable from an ideal one.** With a **4-bit
+quantised** tap, both eye rows pass at all 45 mandated corners. Confidence:
+**0.85.** *Falsifier:* any mandated corner failing either row.
+
+No wall-clock prediction (**G126**). One device run per point; the four policies
+share it.
+
+### The decision rule, before the result
+
+* **Q2 and Q3 both hit** -> **the report states, with the number attached, that
+  the CTLE meets the eye specification with the 1-tap DFE removed entirely.**
+  The ideal-DFE model stops being an assumption and becomes a bounded one, and
+  **transistor-level DFE sizing stays out of scope** -- it would consume weeks
+  on a block that is demonstrably not holding the eye up.
+* **Q2 hits, Q3 misses** -> the vertical spec is safe without the DFE and the
+  *width* depends on it. Report exactly that, quote the width both ways, and
+  keep sizing out of scope: a width that needs the tap is an argument for
+  modelling the tap honestly, not for building one.
+* **Q2 misses** -> **the ideal-DFE assumption IS load-bearing.** The report must
+  say so plainly, the eye rows must be quoted with the assumption attached, and
+  whether to size or derate becomes a real decision for the owner rather than a
+  scope question. **Do not adjust the tap model to recover the number.**
+* **Q5 misses in any branch** -> quantisation matters, and the report says the
+  eye numbers assume a tap finer than 4 bits.
+
+### What no outcome may claim
+
+* **This changes no measured spec.** It is a re-derivation of the eye under
+  different DFE assumptions from the same simulations; the shipped design's
+  committed verification is untouched.
+* **It is not a DFE design and does not become one.** No number here describes a
+  circuit that could be laid out.
+* The eye width remains a **zero-height, noiseless** upper bound in every
+  policy, exactly as `eye_opening_vs_phase` documents. Removing the DFE does not
+  make it a BER contour.
