@@ -6446,3 +6446,137 @@ as **owner decisions, not an agent's**:
 **No option is started without the owner choosing it**, and none of them is a
 reason to touch tolerances, the screen, `reward_v1.py`, `SEARCH_TAIL_W` or
 `SEARCH_ROW_CAP` (G111, and entry 30's pre-committed branch).
+
+---
+
+## 37. Session 28 — **is output swing predictable without SPICE? The surrogate that would make a swing-aware reward cheap**
+
+**Written 2026-08-26 BEFORE `exp_swing_surrogate.py` exists**, and before any
+model has been fitted. The data was inventoried first (2 228 rows, below); no
+fit, split or metric has been run.
+
+### Why this is worth an entry
+
+Entry 36 measured *why* SAC fails as a proposer, and the diagnosis is not a
+guess: **SAC's failing designs score HIGHER on its training reward (median
++6.555) than the library designs that actually pass the screen (+6.530).** The
+reward cannot tell a winner from a loser, because the quantity that does 95 %
+of the rejecting — the measured 1 dB output-swing compression point — is not in
+it and cannot be, since `prescreen.predict_response` is a small-signal
+frequency-response fit and compression is a large-signal effect.
+
+There are exactly two ways to put it in: **SPICE-scored training** (1.26 s/step
+against 0.0009, so 50 000 steps goes from ~23 min to ~17 h) or **a surrogate
+that predicts `vout_swing_v` from the design vector for free**. This entry
+measures whether the second is available. **It is a go/no-go, not an
+improvement attempt.**
+
+### The data, inventoried before any bar was set
+
+`vout_swing_v` is recorded in the rejection reason string wherever a design
+compressed, across every sweep this project has run:
+
+    coverage_run.jsonl                     942
+    coverage_run_AFTER_unclip_fix.jsonl    942
+    coverage_run_BEFORE_seeding_fix.jsonl  767
+    hybrid_topk_scan.json (entry 32)       115
+    joint_search_run.jsonl                 108
+    the four stage-3 SAC arms              245
+    library k=5 control                     70
+    ------------------------------------------
+    2 228 UNIQUE designs after dedup on `u`
+
+    measured limit, mVpp:  min 35 | p10 240 | median 668 | p90 1201 | max 2147
+
+**The sample is CENSORED, and that is the central threat to this experiment.**
+A design's limit is recorded **only when its own required swing exceeded it** —
+i.e. only for designs that compressed. Designs with comfortable headroom are
+absent by construction. The censoring threshold is not a constant (required
+swing varies with each design's gain, which is why limits up to 2 147 mV do
+appear), but the sample is still biased toward the low-headroom region —
+**precisely the opposite of the region a policy should be steered toward.**
+Q2 and Q4 below exist to expose that rather than to hide it.
+
+### What will be fitted, fixed here so it cannot be chosen after the fact
+
+* **Features:** the seven physical parameters from `sizing_from_u(...).params`
+  (`w_in, l_in, i_bias, rs, cs, rl, vcm_in`), plus `log10` of the three that
+  span decades (`i_bias, rs, rl`) and the product `i_bias * rl`. No target
+  leakage: nothing derived from a measurement.
+* **Primary model:** `HistGradientBoostingRegressor` (sklearn defaults,
+  `random_state=230826`). **Secondary, reported alongside:** ridge on the same
+  features, as the interpretable baseline. **The primary is named now**, so a
+  model cannot be promoted after seeing which one won.
+* **Target:** `vout_swing_v` in volts.
+* **Dedup:** rows are keyed on `u` rounded to 9 dp, so the same design scored at
+  several corners or in several sweeps contributes once. Without this, the same
+  design lands in train and test and every number below is inflated.
+
+### The two splits, and only one of them matters
+
+* **Split A — random 70/30.** The optimistic reading. Reported for context.
+* **Split B — TRANSFER: train on every non-SAC design, test on the 245 designs
+  the SAC policies generated.** This is the actual use case: predicting swing
+  for designs a *policy invents*, which sit in a different region of the box
+  than anything retrieval or CMA-ES produced (measured in entry 36: `i_bias`
+  0.27-0.44 against the library's 0.46, `rl` 0.45-0.56 against 0.70).
+  **A surrogate that passes A and fails B is useless for training a policy**,
+  and would look fine to anyone who only ran A.
+
+### Predictions
+
+**Q1 — Split A works.** Held-out **median absolute relative error <= 15 %**.
+Confidence: **0.7.** *Falsifier:* above 15 %.
+
+**Q2 — THE ONE THAT MATTERS. Split B (transfer to policy-generated designs):
+median absolute relative error <= 25 %.** Confidence: **0.45.** *For:* 2 228
+points on a smooth physical function of seven parameters. *Against:* the SAC
+designs are out-of-distribution in exactly the two features that should drive
+swing, and the training sample is censored. *Falsifier:* above 25 %.
+
+**Q3 — the ORDERING survives transfer.** Spearman rho **>= 0.80** on Split B.
+Confidence: **0.5.** A reward needs to rank designs correctly more than it needs
+absolute volts, so this is the more forgiving form of Q2 — and if Q3 holds while
+Q2 misses, a *rank-shaped* reward term is still on the table.
+*Falsifier:* below 0.80.
+
+**Q4 — decision utility.** On the candidates that carry a screen verdict
+(entry 32 + stage 3, feasible vs failed-on-swing), the predicted limit separates
+them with **AUC >= 0.75**. Confidence: **0.4.** *Against:* the feasible class is
+tiny (~17) and, being uncensored, is the class the training data structurally
+under-represents. *Falsifier:* below 0.75. **Q4 is the closest thing here to
+"would this actually steer a policy", and it is the prediction I am least
+confident of.**
+
+**No wall-clock prediction** (G126). This fit is seconds, and no SPICE runs.
+
+### The decision rule, before the result
+
+* **Q2 and Q3 both hit** -> the surrogate is accurate enough to train on. The
+  next step is a reward containing a swing row, which is a **reward-set change
+  and therefore the owner's decision** (standing rule 6), but a cheap one:
+  minutes of analytic training rather than ~17 h of SPICE-scored training.
+  **The surrogate would predict; it would never replace the measured value in
+  scoring** — `link/calibration.py` keeps refusing to score a compressing stage,
+  and no deliverable number may come from this model.
+* **Q3 hits, Q2 misses** -> ordering survives but volts do not. Report a
+  **rank-shaped** reward term as the option, do not fit further, and do not
+  quote the model's volts anywhere.
+* **Q2 misses and Q3 misses** -> **NO. A swing-aware reward is not available
+  cheaply**, and the honest statement is that it needs SPICE-scored training or
+  new labelled data in the uncensored region (designs that did NOT compress,
+  which no artifact currently records). **Do not fit a third model to rescue
+  it** — that is the unbounded-correction failure G110 names.
+* **Q4 misses in any branch** -> say so next to whatever Q2/Q3 did. A surrogate
+  that predicts volts well but cannot separate pass from fail is not a training
+  signal, and Q4 is the only prediction here that tests that directly.
+
+### What no outcome of this entry may claim
+
+* **Nothing about compliance, coverage or accept rate.** No SPICE runs; mandated
+  coverage stays **7 of 16** and stage 3's **1 of 16** stands.
+* **Nothing about whether a swing-aware policy would beat 6 of 16.** That is
+  unmeasured either way, and a passing surrogate makes the experiment
+  affordable, not the result likely.
+* **No number from this model may enter a deliverable**, exactly as
+  `analytic_env`'s docstring forbids for the response model it wraps.
