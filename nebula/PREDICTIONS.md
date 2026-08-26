@@ -6680,3 +6680,150 @@ change (a key that includes a counter, so no row can collapse), the module was
 checked to still import, and the gate then failed for the right reason:
 `assert 5 == 1`. **G125 says a sabotage must be able to fail; this adds that it
 must fail for the reason claimed.**
+
+---
+
+## 38. Session 28 — **the swing-aware reward. Does fixing what the policy can SEE fix what it PRODUCES?**
+
+**Written 2026-08-26 BEFORE `rl/swing_env.py` and `exp_sac_swing.py` exist**,
+and before anything is retrained. Authorised by the owner on 2026-08-26 as
+`PROGRESS.md` row **4p** — a reward-set change is on the do-not-touch-without-a-
+human list (standing rule 6), and this is that decision, recorded.
+
+### The chain this closes, and the one number it is measured against
+
+* Entry 36: SAC as a proposer scores **1 of 16** against the non-RL library's
+  **6 of 16**, and its failing designs score *higher* on its own training reward
+  (+6.555) than the library designs that pass (+6.530). **The reward cannot see
+  the thing that rejects designs.**
+* Entry 37: that thing — the measured 1 dB compression point — **is predictable
+  from the design vector to 4.7 % with no SPICE** (transfer split, rho 0.993).
+* **Entry 38 is the only question left: put it in the reward, retrain, and does
+  the accept rate move?** The bar is unchanged and it is **6 of 16**.
+
+### What is being changed, stated narrowly
+
+**A wrapper env, not a new row inside `reward_v1.py`.** `rl/swing_env.py` will
+wrap `AnalyticCtleEnv` and add a shortfall penalty on top of the `V6A_SPECS`
+reward it already returns. Reason, and it is the whole reason: **a surrogate
+number must not be able to leak into a scoring path that produces a
+deliverable.** A new row inside `reward_v1.py` is visible to the screen, to
+`exp_coverage`, and to the compliance matrix; a wrapper is visible only to
+training. This is the same precedent as `corner_env`, `analytic_env`,
+`episode_dynamics` and `SpecConditionedCornerEnv` — wrap, do not replace.
+
+**The penalty, fixed here so it cannot be tuned afterwards:**
+
+    predicted_limit_v  = surrogate(u)                      entry 37's model
+    shortfall          = max(0, (TARGET - predicted) / TARGET)   in [0, 1]
+    reward             = V6A_reward - SWING_W * shortfall
+
+    TARGET   = 1.00 V     SWING_W = 6.0
+
+* **`TARGET = 1.00 V` is derived, not chosen.** Across **3 374** recorded
+  compressions in this repo the *required* output swing has median **988 mV**
+  (p25 706, p75 1339). The target is the median demand, rounded. **21.4 %** of
+  the 2 228 harvested designs already clear it, so the row is demanding and
+  **not vacuous**.
+* **`SWING_W = 6.0` is one hyper-parameter and it is registered, not tuned.** A
+  good V6A shape score is ~ +6.5, so a design with *zero* headroom loses
+  approximately its whole shape score, and one at half the target loses half.
+  **If entry 38 misses, the weight is NOT to be re-rolled** — that is the
+  unbounded-correction failure G110 names, and any second value is a new
+  pre-registration.
+* **The observation is UNCHANGED at 18 dimensions.** The policy is not told its
+  predicted swing; `u` is already in the observation, so the information is
+  reachable. This keeps the checkpoint contract identical to entries 34-36, so
+  the only difference between the old policy and the new one is the reward.
+
+**Training: 50 000 analytic steps, same seed, same `SACConfig` as entries 34
+and 35. One variable changes.** No SPICE fine-tune: entry 36 measured the
+fine-tuned checkpoint as the *worse* proposer (0 of 16 against the analytic-only
+policy's 2), so the analytic-only checkpoint is what gets measured. That is a
+decision taken from a measurement, and it is taken here rather than after.
+
+### The arms, and the cost
+
+    0  library      the control, k=5, unchanged             320 decks
+    1  swing random  swing-aware policy, 5 random starts     320 decks
+    2  swing seeded  swing-aware policy, library top-5       320 decks
+                                                       total 960 decks
+
+Same screen, same `evaluate_at_points`, same `V6_SPECS`, same accept rule as
+entries 32 and 36 — so the numbers are comparable row for row. **The control is
+re-run rather than cited**: it has reproduced twice and costs 4 minutes, and it
+is the only thing standing between "the policy improved" and "the instrument
+moved".
+
+### Predictions
+
+**Q1 — the control reproduces a third time.** `accepted_at_k = [1, 4, 5, 5, 6]`
+with the same six ranks on the same six requests. Confidence: **0.9.**
+*Falsifier:* any per-request rank differs. **If this misses nothing else in the
+run is interpretable.**
+
+**Q2 — THE MECHANISM. The swing-aware policy produces designs with genuinely
+more headroom**: the **median MEASURED `vout_swing_v`** over its non-feasible
+proposals is **>= 700 mV**, against entry 36's blind policy at **483-542 mV**.
+Confidence: **0.7.** *For:* entry 37 measured the surrogate at 4.7 % error on
+exactly these designs, so the signal the policy is climbing is close to the
+truth. *Against:* the surrogate is fitted on a censored sample and the policy
+will push into the high-headroom region the sample under-represents — the one
+place it was registered as least trustworthy. *Falsifier:* below 700 mV.
+
+**Q3 — THE D9 BAR. A swing-aware arm accepts >= 7 of 16**, beating the non-RL
+library. Confidence: **0.3.** *For:* the blind policy lost on one nameable
+quantity and that quantity is now in the reward. *Against:* removing the
+dominant failure mode exposes whatever is behind it, headroom trades against
+the frequency-shape rows the reward already scored, and the library's 6 comes
+from 74 526 designs the policy cannot enumerate. *Falsifier:* both arms <= 6.
+**Registered at 0.3, and a hit is the result that discharges D9.**
+
+**Q4 — it beats its own blind predecessor.** The best swing-aware arm accepts
+**>= 3 of 16**, against entry 36's best SAC arm at 2 (random) and 1 (seeded).
+Confidence: **0.55.** *Falsifier:* both arms <= 2. **This is the modest,
+honest version of Q3** — it asks whether the diagnosis was right, not whether
+RL wins.
+
+**Q5 — the failure mode SHIFTS.** Among non-feasible swing-aware candidates,
+the fraction naming output swing falls **below 50 %**, from entry 36's 74-92 %.
+Confidence: **0.6.** *Falsifier:* 50 % or above — which would mean the reward
+term did not change what gets built, and would put Q2's mechanism in doubt even
+if Q2's median passed.
+
+**Q6 — the accounting.** Each arm reports exactly **320** measured decks and the
+control **260** deployed. Confidence: **0.9.** A harness gate, not a claim.
+
+No wall-clock prediction (**G126**).
+
+### The decision rule, before the result
+
+* **Q3 hits** -> **RL beats retrieval on the deliverable's own metric and D9's
+  condition is met.** Report it with the paired per-request ranks and take it to
+  the mentor. The full ~90-minute sweep becomes worth asking the owner about; it
+  stays the owner's call.
+* **Q3 misses, Q4 hits** -> **the diagnosis was right and the fix is real but
+  insufficient.** Report the improvement honestly against both baselines (its
+  blind predecessor AND the library). **Do not re-roll `SWING_W`.** The next
+  lever is the owner's: more training, a second surrogate for the shape rows,
+  or stopping here.
+* **Q2 hits, Q4 misses** -> the reward moved the designs in the intended
+  direction and it **did not convert into acceptances.** That is a clean
+  negative about the approach rather than about the surrogate, and it is worth
+  reporting as such: it would say the corner screen rejects policy-generated
+  designs for reasons that do not reduce to any single quantity.
+* **Q2 misses** -> the penalty did not change what the policy builds. Check the
+  wiring before concluding anything — a term that is computed and discarded is
+  this repo's most common silent failure — and if the wiring is sound, report it
+  and stop. **`SWING_W` is not to be re-rolled without a new entry.**
+
+### What no outcome may claim
+
+* **No coverage or compliance number moves.** No 45-corner verification runs
+  here. Coverage stays **7 of 16**; the shipped design stays 11 of 11 at 45 of
+  45.
+* **No surrogate number reaches a deliverable.** The wrapper touches training
+  only; `link/calibration.py` still refuses to score a compressing stage, and
+  the screen still measures swing rather than predicting it.
+* **A win here is a PROPOSER win**, measured on the 4-corner screen at k=5 —
+  not a claim that RL designed a compliant circuit end to end.
