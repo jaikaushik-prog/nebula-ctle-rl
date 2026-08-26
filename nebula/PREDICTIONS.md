@@ -7300,3 +7300,160 @@ plain search's **13 718 / 7 = 1 960**. **34 % cheaper per compliant design.**
 is a compliance measurement made once per delivered design, not part of the
 search budget. Adding them would inflate both sides equally and is left to the
 reader rather than done silently.
+
+---
+
+## 41. Session 28 — **SAC trained on the acceptance criterion itself. 25 000 SPICE steps.**
+
+**Written 2026-08-26 BEFORE the run starts**, with `rl/screen_env.py` and
+`experiments/exp_sac_screen.py` committed and smoke-tested at 6 steps. The owner
+authorised the cost explicitly: *"I don't mind training completely once but the
+thing should at least work."*
+
+### The observation this entry is built on, and it is the owner's
+
+Every RL experiment so far was shaped by a decision to make training **cheap**,
+and each cheap choice created a mismatch that cost a later experiment to
+diagnose:
+
+    entry 34/35   trained on an ANALYTIC model        -> a sim-to-real gap to survive
+    entry 36      that model predicts 5 of 13 rows    -> blind to the quantity doing
+                                                         95 % of the rejecting
+    entry 37/38   blindness fixed, and it WORKED      -> failures moved to rows the
+                                                         policy WAS trained on
+    entry 41      ...because it is trained at NOMINAL and scored at CORNERS
+
+**Five experiments spent discovering the consequences of one cost decision.**
+This run removes the last mismatch by paying for it.
+
+### What changes, and why it is the last mismatch
+
+`ScreenEnv.step()` scores through **`evaluate_at_points(EDGE4_MANDATED,
+V6_SPECS)`** -- the same function, the same four corners, the same 13 spec rows
+that decide whether a proposal is accepted. **The training signal IS the
+metric.** There is no transfer left to survive, no unpredicted channel, and no
+nominal-vs-corner gap. `CLAUDEwa.md` states the rule this satisfies: *"score on
+worst corner from the start."*
+
+**Entry 40 is what makes the screen worth maximising:** 5 of its 6 accepted
+proposals passed **45 of 45** mandated corners, so a design that clears the
+4-corner screen usually clears compliance. That was measured yesterday, not
+assumed here.
+
+Three supports the evidence asked for:
+
+* **Warm starts from library designs** -- entry 36 measured the policy
+  destroying five of the six designs retrieval found, and those states are
+  exactly where restraint has to be learned.
+* **Starts filtered by entry 37's swing surrogate** (predicted headroom
+  >= 0.9 V). `evaluate_at_points` grades an unscorable design as
+  `invalid_reward + n_scorable/4` -- a **four-level staircase** -- and entry 32
+  measured 116 of 128 library candidates unscorable. Without the filter the
+  policy starts on flat ground. **The smoke's first warm start was feasible at
+  all four corners.**
+* **`MAX_STEP = 0.05`, not 0.15.** Repairing a working design needs fine
+  control; the smoke measured 9 of 20 random steps needing a revert at 0.15.
+
+### What was deliberately NOT done, and why
+
+**The replay buffer is not seeded from the pool**, though `replay.seed_from_pool`
+exists and would supply thousands of real SPICE transitions for free. The pool
+carries no eye, area or HD3 measurement, so it cannot score 4 of `V6_SPECS`' 13
+rows. Seeded transitions would describe a **different reward** from the env's --
+G114's second lever -- and `replay.py`'s own docstring says that failure "does
+not raise; it gives the critic two incompatible descriptions of the same state,
+which is how the PPO policy was erased." **Rejected on purpose.**
+
+### The budget, and it is measured not guessed
+
+**7.18 s/step, 0.970 s/deck**, measured on 20 steps. 25 000 steps =
+**100 000 decks, ~50 hours.** Training is chunked at 500 steps with a checkpoint
+and a progress row after each, so a crash costs one chunk rather than the run.
+`learning_starts` applies **only to the first chunk** -- a continuation that
+re-ran it would inject 100 uniform-random actions every chunk, 5 000 wasted
+SPICE steps across this run.
+
+### The metric that matters, and it is new
+
+Entry 40 changed what RL should be asked to do. Retrieval already answers **8 of
+16** requests at 45 corners for ~10 decks each; RL adds nothing there. The value
+is in the **8 it does not answer**, which cost ~1 085 decks each through CMA-ES
+and still failed:
+
+    index   request                45-corner result after ~1085 decks of CMA-ES
+      0     4.0 dB @ 1.387 GHz            32 / 45
+      3     4.0 dB @ 2.253 GHz            11 / 45
+      5     6.0 dB @ 1.627 GHz            44 / 45   <- one corner short
+      8     8.0 dB @ 1.387 GHz            35 / 45
+     12    10.0 dB @ 1.387 GHz             0 / 45
+     13    10.0 dB @ 1.627 GHz            17 / 45
+     14    10.0 dB @ 1.921 GHz            44 / 45   <- one corner short
+     15    10.0 dB @ 2.253 GHz            37 / 45
+
+**A 16-step warm-started rollout costs 64 decks.** So the question is whether
+RL can close a request that CMA-ES could not, at **64 decks against 1 085**.
+
+### Predictions
+
+**Q1 — THE LEARNING GATE, the instrument that caught PPO.** `alpha` moves at
+least **2x** from its initialisation and `log_std_mean` moves at least **0.5**.
+Confidence: **0.75.** *Falsifier:* either fails to move. **If this misses,
+check the wiring before reading anything else** -- it would mean SAC did not
+train at all on the real objective.
+
+**Q2 — it learns to keep designs alive.** The count of screen-**feasible** steps
+in the final five chunks is at least **2x** the count in the first five.
+Confidence: **0.6.** *For:* warm starts put it on feasible designs, so "do not
+break this" is a short lesson. *Against:* the reward is dominated by the worst
+of four corners, which is a harsh teacher. *Falsifier:* below 2x.
+
+**Q3 — THE POINT. On the 8 requests neither retrieval nor CMA-ES solved, a
+warm-started 16-step rollout produces a design that passes all 45 mandated
+corners for at least ONE of them.** Confidence: **0.35.**
+*For:* two of the eight are a single corner short, and the policy is now trained
+on exactly the criterion that judges them. *Against:* CMA-ES spent ~1 085 decks
+on each of these and failed; some may be unsatisfiable anywhere in the box
+(index 12 scored **0 of 45**). *Falsifier:* 0 of 8. **A hit is the strongest
+result this project could produce: RL solving what the classical optimiser could
+not, at 6 % of its cost.**
+
+**Q4 — continuity with entries 36 and 38.** Accept rate on the standard 16
+requests, k=5 rollouts, is at least **3 of 16** (entry 36's best SAC arm was 2,
+entry 38's was 1; the library is 6). Confidence: **0.45.**
+*Falsifier:* 2 or fewer.
+
+**Q5 — the mechanism.** Mean scorable corners of the policy's proposals is at
+least **3.5 of 4**, against entry 38's 2.84 and the library's 0.30.
+Confidence: **0.6.** *Falsifier:* below 3.5. This separates "the policy builds
+measurable circuits" from "the policy builds good circuits", which entries 36
+and 38 showed are different things.
+
+No wall-clock prediction (**G126**); the budget is stated in decks.
+
+### The decision rule, before the result
+
+* **Q3 hits** -> **RL solves a request CMA-ES could not, at 64 decks against
+  1 085.** That is D9's condition, the rubric's own criterion, and the
+  submission's headline. Report with the per-request 45-corner verification
+  attached, then take it to the mentor.
+* **Q3 misses, Q4 hits** -> RL is finally competitive as a proposer (3+ of 16
+  against a blind 1-2) but adds no coverage retrieval lacked. Report both
+  numbers; do not present it as solving anything new.
+* **Q1 and Q2 hit, Q3 and Q4 miss** -> **the authoritative negative.** The
+  policy demonstrably learns on the true objective and still loses to a library
+  lookup. Every mismatch anyone has named -- analytic-vs-SPICE, reward
+  blindness, nominal-vs-corner, cold starts, coarse steps -- has been removed
+  and measured. That is a publishable result about RL on this problem, and the
+  report says so plainly.
+* **Q1 misses** -> the run measured nothing. Find the defect; **do not retrain
+  with different hyper-parameters** and call it a result (G110).
+
+### What no outcome may claim
+
+* **Not a coverage number** unless the 45-corner verifier ran on the delivered
+  design -- the same `verify_request` every coverage figure in this project
+  used.
+* **Not a comparison to entry 40's 8 of 16**, which counts requests answered by
+  a whole pipeline. This entry counts what one policy converts.
+* **Nothing about the 135-point load grid**, which is 0 of 16 for every design
+  this project has ever produced.

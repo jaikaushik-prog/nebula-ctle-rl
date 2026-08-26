@@ -64,7 +64,11 @@ from nebula.rl.contract import N_ACTIONS, build_observation
 #: was chosen when a step cost nothing to simulate. Here a step costs 4 decks
 #: and the policy is being asked to REPAIR a retrieved design, which needs room.
 HORIZON: int = 16
-MAX_STEP: float = 0.15
+#: **0.05, not the analytic env's 0.15.** A policy warm-started on a design that
+#: already passes four corners is being asked to REPAIR it, and 0.15 per step
+#: over 16 steps can cross the whole box. The smoke run measured 9 of 20 random
+#: steps needing a revert at 0.15. Registered in entry 41; not a knob to revisit.
+MAX_STEP: float = 0.05
 
 
 class ScreenEnv:
