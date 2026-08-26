@@ -11163,3 +11163,31 @@ after the repair.
 **No measured spec changed.** This is a re-derivation from the same simulations:
 the committed verification is untouched, coverage is still 7 of 16, and no DFE
 was designed.
+
+### 2026-08-26 -- session 28 (continued): the hybrid sweep RAN. **Coverage 7 -> 8 of 16 for 25 % fewer simulations.**
+
+`exp_hybrid --run --topk-deliver 5`, the sweep the top-k wiring was built for.
+Pre-registered as entry 40; **scored 5 of 5**.
+
+    proposals accepted                 6 / 16    at ranks 2, 5, 2, 1, 2, 3
+    MANDATED 45-corner PVT coverage    8 / 16    (entry 30's plain search: 7/16)
+    135-point load grid                0 / 16
+    decks   303 proposal + 9970 search = 10 273  against the plain search's 13 718
+
+**The registered risk did not materialise, and that is the finding.** Entry 40
+expected coverage to FALL -- an accepted proposal replaces what the search would
+have found, and a 4-corner screen is not a 45-corner verification -- so Q1 was
+registered at 0.55. **It rose. Five of the six short-circuited requests pass all
+45 mandated corners; the sixth passes 44 of 45.** The 4-deck screen is a good
+enough filter for 45-corner compliance on retrieved designs.
+
+**Q3 reproduced entry 32 exactly**: the same six request indices at the same six
+ranks. **Cost per delivered compliant design: 1 284 decks against 1 960, 34 %
+cheaper.** The amortisation curve -- 868 870 8 874 20 1083 1085 10 1085 5 1085
+10 1085 1085 15 1085 -- is the deliverable's own claim in one artifact.
+
+**Reported with it, not after it:** the 135-point load grid is **0 of 16** (this
+project's stricter axis, not the competition's 45-corner requirement); 8 of 16 is
+50 % with a **95 % CI of [25 %, 75 %]** because 16 requests is a 4x4 grid, not a
+sample; and **this is not an RL result** -- library lookup proposes, CMA-ES falls
+back, and entry 36's 1 of 16 for SAC stands.

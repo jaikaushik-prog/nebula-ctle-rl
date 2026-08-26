@@ -1087,6 +1087,51 @@ the swapped convention stayed green. A skewed pulse now separates them, with a
 test asserting the test data itself can tell them apart. **G125, twice in one
 session, on the two most load-bearing gates written.**
 
+## 5n. THE HYBRID SWEEP: **coverage 7 -> 8 of 16 for 25 % fewer simulations**
+
+**2026-08-26 (session 28), `exp_hybrid --run --topk-deliver 5`, 16 requests,
+10 273 decks, 74.8 min, artifact `hybrid_results.json`.** Pre-registered as
+entry 40. **Scored 5 of 5.**
+
+    proposals accepted                 6 / 16    at ranks 2, 5, 2, 1, 2, 3
+    MANDATED 45-corner PVT coverage    8 / 16    (entry 30's plain search: 7/16)
+    135-point load grid                0 / 16    this project's extra axis
+    decks   303 proposal + 9970 search = 10 273  against 13 718
+
+### The headline, and it is the competition's own criterion
+
+**The framework now answers 8 of 16 spec requests at full 45-corner PVT
+compliance using 25 % fewer simulations than before** -- and per delivered
+compliant design, **1 284 decks against 1 960: 34 % cheaper.**
+
+    decks per request, in order
+    868  870  8  874  20  1083  1085  10  1085  5  1085  10  1085  1085  15  1085
+
+Six requests were answered for **5 to 20 simulations**; ten cost **868 to
+1 085**. That split is the amortisation claim, in one artifact.
+
+### The registered risk did not materialise, and that IS the result
+
+Entry 40 expected coverage to FALL: an accepted proposal replaces whatever the
+search would have found, the screen is 4 corners and compliance is 45, so a
+cheap accept can cost a request. Q1 was registered at **0.55** for that reason.
+**Coverage went up instead** -- 5 of the 6 short-circuited requests pass all 45
+mandated corners, the sixth passes 44 of 45. **The 4-deck screen is a good
+enough filter for 45-corner compliance on retrieved designs.** Not knowable in
+advance; measured now.
+
+### What must travel with the number
+
+* **The 135-point column is 0 of 16.** That grid sweeps the load lighter and
+  heavier than the design point and nothing survives all of it. It is **this
+  project's stricter axis, not the competition's requirement** (45 mandated PVT
+  corners). Quoting 8/16 without it would be quoting the easier of two numbers
+  we hold.
+* **8 of 16 = 50 %, 95 % CI [25 %, 75 %].** Sixteen requests is a 4x4 grid, not
+  a sample. The **cost** figures are counts and carry no such uncertainty.
+* **This is not an RL result.** Library lookup proposes; CMA-ES falls back.
+  Entry 36's 1 of 16 for SAC stands.
+
 ## 6. Next steps, in order
 
 | # | Task | Cost | Status |

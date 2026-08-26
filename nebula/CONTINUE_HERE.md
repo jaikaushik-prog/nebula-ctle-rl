@@ -8,6 +8,22 @@ else in the 22s brief stands.
 
 **24 days to the 15 Sept deadline. Demo 25 Sept at BITS Goa.**
 
+> **2026-08-26 (session 28, LATEST). THE HYBRID SWEEP RAN: coverage 7 -> 8 of
+> 16 for 25 % fewer simulations.** Entry 40, 5 of 5.
+>
+>     proposals accepted              6 / 16   at ranks 2, 5, 2, 1, 2, 3
+>     MANDATED 45-corner coverage     8 / 16   (was 7/16, entry 30)
+>     135-point load grid             0 / 16   this project's extra axis
+>     decks  303 + 9970 = 10 273      against the plain search's 13 718
+>
+> **Coverage was predicted to FALL and rose instead** -- 5 of the 6
+> short-circuited requests pass all 45 mandated corners, the sixth 44 of 45, so
+> the 4-deck screen filters well enough for 45-corner compliance. **1 284 decks
+> per delivered compliant design against 1 960: 34 % cheaper.** Quote the
+> 135-point 0/16 and the CI [25 %, 75 %] alongside, and remember **this is not
+> an RL result** -- library lookup proposes, CMA-ES falls back. Read
+> `PROGRESS.md` section 5n.
+
 > **2026-08-26 (session 28, LATEST). THE DFE QUESTION IS ANSWERED: the ideal
 > 1-tap DFE is NOT load-bearing.** Entry 39, 5 of 5. The CTLE meets **both** eye
 > rows at all 45 mandated corners **and** all 135 points **with the DFE removed

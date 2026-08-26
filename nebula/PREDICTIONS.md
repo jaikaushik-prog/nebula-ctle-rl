@@ -7235,3 +7235,68 @@ No wall-clock prediction (**G126**).
   until then.
 * **A coverage number from this sweep replaces entry 30's 7 of 16 only if Q1's
   own verifier ran** -- 45 mandated corners, `verify_request`, unchanged.
+
+### OUTCOME — run 2026-08-26, 16 requests, 10 273 decks, 74.8 min
+
+    proposals accepted                 6 / 16    at ranks 2, 5, 2, 1, 2, 3
+    MANDATED 45-corner PVT coverage    8 / 16    <- the competition's requirement
+    solved on the 4-corner screen     12 / 16
+    135-point load grid                0 / 16    <- this project's extra axis
+    decks   303 proposal + 9970 search = 10 273  against the plain search's 13 718
+
+**VERDICT: 5 of 5.** Coverage went **UP** — 7 of 16 (entry 30) to **8 of 16** —
+while simulations fell **25.1 %**.
+
+| | prediction | outcome |
+|---|---|---|
+| Q1 | coverage >= 7 of 16 (0.55) | **HIT — 8 of 16**, one better than the plain search |
+| Q2 | total decks <= 10 300 (0.7) | **HIT — 10 273**, 27 decks inside the registered bar |
+| Q3 | the same six requests, entry 32's set (0.7) | **HIT — indices 2, 4, 7, 9, 11, 14 at ranks 2, 5, 2, 1, 2, 3, identical** |
+| Q4 | >= 3 of the 6 proposals hold at 45/45 (0.5) | **HIT — 5 of 6** pass 45/45; the sixth is 44/45 |
+| Q5 | the accounting adds up (0.85) | **HIT — 303 + 9 970 = 10 273** |
+
+### The risk this entry registered did not materialise, and that is the finding
+
+Entry 40 was written expecting trouble: *"an accepted proposal REPLACES what the
+search would have found... coverage can go DOWN"*, and Q1 was registered at only
+**0.55** for that reason. **It went up instead.** Five of the six short-circuited
+requests deliver designs that pass **all 45 mandated PVT corners**, and the
+sixth misses one corner.
+
+So the 4-corner screen, which costs 4 decks, is a **good enough filter** for
+45-corner compliance on retrieved designs — 5 of 6, with the sixth at 44/45.
+That was not knowable in advance; it is now measured.
+
+### The amortisation curve, which is the deliverable's own claim
+
+    decks per request, in request order
+    868  870  8  874  20  1083  1085  10  1085  5  1085  10  1085  1085  15  1085
+
+**Six requests answered for 5 to 20 decks each; ten cost 868 to 1 085.** That
+two-order-of-magnitude split IS the amortisation story the competition asks for
+("fewer search spaces, lowest design time"), and it is now one artifact rather
+than an argument.
+
+Cost per delivered 45-corner design: **10 273 / 8 = 1 284 decks**, against the
+plain search's **13 718 / 7 = 1 960**. **34 % cheaper per compliant design.**
+
+### What must be said with these numbers
+
+* **The 135-point column is 0 of 16, and it is reported.** That grid sweeps the
+  load lighter and heavier than the design point; nothing survives all of it.
+  It is **this project's own stricter axis, not the competition's requirement**,
+  which is the 45 mandated PVT corners. Quoting 8/16 without this column would
+  be quoting the easier of two numbers we hold.
+* **Coverage 8 of 16 = 50 %, 95 % CI [25 %, 75 %].** Sixteen requests is a 4x4
+  grid, not a sample, and the interval is wide. The *cost* numbers are counts
+  and carry no such uncertainty.
+* **This is not an RL result.** The proposer is a zero-simulation library
+  lookup and the fallback is CMA-ES. Entry 36's **1 of 16** for SAC stands.
+
+### The verification cost, kept separate on purpose
+
+**2 160 verification points** (135 x 16) are **not** in the 10 273. That matches
+`exp_coverage.verify_request`, which does not charge them either: verification
+is a compliance measurement made once per delivered design, not part of the
+search budget. Adding them would inflate both sides equally and is left to the
+reader rather than done silently.
