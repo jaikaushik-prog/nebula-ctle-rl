@@ -6580,3 +6580,103 @@ confident of.**
   affordable, not the result likely.
 * **No number from this model may enter a deliverable**, exactly as
   `analytic_env`'s docstring forbids for the response model it wraps.
+
+### OUTCOME — run 2026-08-26, 2 228 labelled designs, no SPICE
+
+    split                          model   n_te  med rel  p90 rel  med mV     rho
+    A_random                       gbr      669     6.4%    27.3%    38.5   0.949
+    B_transfer_to_policy_designs   gbr      245     4.7%    12.5%    19.5   0.993
+    A_random                       ridge    669    20.4%    74.4%   130.5   0.832
+    B_transfer_to_policy_designs   ridge    245    36.0%   100.0%   166.4   0.948
+
+    Q4 separation: AUC 0.794 on 18 screen-feasible vs 430 swing-failed
+
+**VERDICT: GO. 4 of 4.** `_verdict()` printed the Q2-and-Q3 branch: *"the
+surrogate transfers to policy-generated designs on BOTH error and ordering. A
+swing-aware reward is affordable -- minutes of analytic training instead of
+~17 h of SPICE-scored training."*
+
+| | prediction | outcome |
+|---|---|---|
+| Q1 | random split median relative error <= 15 % (0.7) | **HIT** — 6.4 % |
+| Q2 | **transfer** <= 25 % (0.45) | **HIT** — **4.7 %**, ~19.5 mV on a ~500 mV quantity |
+| Q3 | transfer Spearman >= 0.80 (0.5) | **HIT** — **0.993** |
+| Q4 | AUC >= 0.75 (0.4) | **HIT at the point estimate, 0.794 — but see below** |
+
+### The result was checked for the thing that would have made it fake
+
+**Split B scoring BETTER than split A is backwards** — a transfer test should be
+harder than a random one — so the obvious explanation was checked before the
+number was believed: that the policy's designs merely sit next to training
+examples.
+
+* **Nearest-neighbour distance in `u` space, test -> train:** SAC designs
+  **0.235** median; random-split test designs **0.223**. The policy's designs
+  are **further** from their training data, not closer. No proximity leak.
+* **Split by arm family:** designs *edited from library seeds* **4.7 %**;
+  designs *invented from random starts*, with no library ancestry at all,
+  **4.7 %**. Identical. The transfer result is not inherited from retrieval.
+
+Split A is harder for a benign reason: it trains on 30 % less data and its test
+set includes the widest-range designs (up to 2 147 mV, against the SAC subset's
+1 311 mV). **That is the explanation the evidence supports, and it was arrived
+at by trying to break the result rather than by accepting it.**
+
+### Why the textbook shortcut fails and this does not
+
+Permutation importance on the transfer set:
+
+    i_bias*rl     1.771 +- 0.052       <- everything
+    vcm_in        0.048 +- 0.022
+    rs            0.023 +- 0.003
+    i_bias        0.015, rl 0.007
+
+**The physics is current x load resistance, exactly as expected -- and the
+mapping is NONLINEAR.** That is why `4*I*R_L` overpredicts by **3.4x** (median)
+and why ridge on the same features still sits at **36 %** transfer error, while
+the tree reaches 4.7 %. `link/calibration.py`'s refusal to fall back to a
+computed `4*I*R_L` was right, and this does not overturn it: **the surrogate
+predicts, and the measurement still decides.**
+
+### Q4 is a QUALIFIED hit and must be quoted as one
+
+AUC **0.794**, bootstrap 95 % CI **[0.722, 0.854]** over 2 000 resamples. **The
+lower bound is BELOW the 0.75 bar**, because the feasible class has **18**
+members. The direction is clear -- median predicted limit **975 mV** for designs
+that passed the screen against **506 mV** for swing failures -- but this is not
+a settled number and must not be quoted as one. Entry 37 registered Q4 at 0.4
+confidence for exactly this reason, and the CI is reported because a bare
+"AUC 0.794 HIT" would be the cleanly-formatted overstatement this file exists to
+prevent.
+
+### The censoring caveat stands, unrelieved by the result
+
+A design's limit is recorded **only where it compressed**. Designs with
+comfortable headroom are absent by construction -- **the region a swing-aware
+policy would be steered toward.** Strong transfer is evidence the function
+generalises across the box; it is **not** evidence that it holds in a region no
+artifact has ever sampled. If a swing-aware reward is ever trained, the first
+thing to check is whether the policy parks in the high-predicted-swing region
+and whether SPICE agrees there.
+
+### What this does and does not unlock
+
+* **Does:** a swing-aware reward is now a **minutes-of-training** option instead
+  of a ~17-hour one. That is the whole purpose of this entry.
+* **Does NOT:** say a retrained SAC would beat 6 of 16. Unmeasured, needs its
+  own pre-registration, and entry 36's 1-of-16 stands unchanged.
+* **Does NOT:** produce any deliverable number. The artifact is stamped
+  `is_surrogate: true`, and `link/calibration.py` goes on refusing to score a
+  compressing stage.
+* **The reward-set change itself remains the OWNER's decision** (standing
+  rule 6). Nothing has been retrained.
+
+### One note on this entry's own sabotage round
+
+Seven gates were broken and all seven went red -- but **the first version of the
+dedup sabotage went red because it broke the SYNTAX**, not because the gate
+fired, which is worthless evidence. It was redone as a syntactically valid
+change (a key that includes a counter, so no row can collapse), the module was
+checked to still import, and the gate then failed for the right reason:
+`assert 5 == 1`. **G125 says a sabotage must be able to fail; this adds that it
+must fail for the reason claimed.**

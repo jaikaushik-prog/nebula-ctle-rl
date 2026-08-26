@@ -1,0 +1,95 @@
+{
+ "task": "is output swing predictable without SPICE?",
+ "is_surrogate": true,
+ "seed": 230826,
+ "n_rows": 2228,
+ "n_sac_rows": 245,
+ "per_file": {
+  "coverage_run.jsonl": 942,
+  "coverage_run_AFTER_unclip_fix.jsonl": 942,
+  "coverage_run_BEFORE_seeding_fix.jsonl": 767,
+  "joint_search_run.jsonl": 108,
+  "joint_search_run.jsonl.gz": 70,
+  "hybrid_topk_scan": 230,
+  "topk_scan_library_k5": 70,
+  "topk_scan_sac_random_analytic": 58,
+  "topk_scan_sac_random_finetuned": 47,
+  "topk_scan_sac_seeded_analytic": 73,
+  "topk_scan_sac_seeded_finetuned": 67
+ },
+ "features": [
+  "w_in",
+  "l_in",
+  "i_bias",
+  "rs",
+  "cs",
+  "rl",
+  "vcm_in",
+  "log10_i_bias",
+  "log10_rs",
+  "log10_rl",
+  "i_bias*rl"
+ ],
+ "limit_mv": {
+  "min": 34.8,
+  "median": 668.0500000000001,
+  "max": 2147.0
+ },
+ "splits": {
+  "A_random": {
+   "gbr": {
+    "n": 669,
+    "median_rel_err": 0.06362060298461478,
+    "mean_rel_err": 0.11040011228924017,
+    "p90_rel_err": 0.2730895026417201,
+    "median_abs_err_mv": 38.525073169435764,
+    "spearman": 0.9488100819406884,
+    "n_train": 1559
+   },
+   "ridge": {
+    "n": 669,
+    "median_rel_err": 0.20419164776632,
+    "mean_rel_err": 0.39183191233293724,
+    "p90_rel_err": 0.7443874661477534,
+    "median_abs_err_mv": 130.5142972432809,
+    "spearman": 0.8322315209855911,
+    "n_train": 1559
+   }
+  },
+  "B_transfer_to_policy_designs": {
+   "gbr": {
+    "n": 245,
+    "median_rel_err": 0.04687732443670559,
+    "mean_rel_err": 0.08038488683369602,
+    "p90_rel_err": 0.12533269184877727,
+    "median_abs_err_mv": 19.50605520949711,
+    "spearman": 0.9929366999881283,
+    "n_train": 1983
+   },
+   "ridge": {
+    "n": 245,
+    "median_rel_err": 0.3601572214911091,
+    "mean_rel_err": 0.8027511522380423,
+    "p90_rel_err": 1.0004232576217273,
+    "median_abs_err_mv": 166.39564349847186,
+    "spearman": 0.9483137146422689,
+    "n_train": 1983
+   }
+  }
+ },
+ "q4": {
+  "n": 448,
+  "n_feasible": 18,
+  "n_swing_failed": 430,
+  "auc": 0.7937984496124031,
+  "note": "trained on the non-SAC split, so the feasible class is unseen AND uncensored -- the hardest and the only honest form of this test"
+ },
+ "wall_s": 16.588549852371216,
+ "verdict": {
+  "Q1_random_split": true,
+  "Q2_transfer_error": true,
+  "Q3_transfer_ordering": true,
+  "Q4_decision_utility": true,
+  "call": "GO: the surrogate transfers to policy-generated designs on BOTH error and ordering. A swing-aware reward is affordable -- minutes of analytic training instead of ~17 h of SPICE-scored training. It is still a REWARD-SET CHANGE and therefore the OWNER's decision (standing rule 6), and the model would predict only: link/calibration.py goes on refusing to score a compressing stage, and no deliverable number comes from here."
+ }
+}

@@ -10966,3 +10966,66 @@ the code, and `git diff` does not show it when the file under test is untracked.
 Hit for real this session: a 2-minute tool timeout killed the runner between
 patch and restore and left `except ZeroDivisionError:` in `exp_sac_propose.py`.
 A grep found it; git did not. **G128** -- an artifact's identity is `(source, k)`, and a guard keyed on half of it does not protect it.
+
+### 2026-08-26 -- session 28 (continued): the swing surrogate PASSES. **A swing-aware reward is now minutes, not ~17 hours.**
+
+**The go/no-go that follows directly from stage 3's diagnosis.** Entry 36 showed
+SAC's failing designs score *higher* on its training reward (+6.555) than the
+library designs that actually pass (+6.530) -- the reward cannot separate a
+winner from a loser, because the quantity doing 95 % of the rejecting (the
+measured 1 dB output-swing compression point) is not in it and **cannot** be:
+`prescreen.predict_response` is a small-signal fit, compression is large-signal.
+
+Two ways to put it in: **SPICE-scored training (~17 h for 50 000 steps)** or a
+**surrogate**. `experiments/exp_swing_surrogate.py` measures which is available.
+Pre-registered as **entry 37** before the file existed. **Scored 4 of 4.**
+
+    split                          model   n_te  med rel  p90 rel  med mV     rho
+    A_random                       gbr      669     6.4%    27.3%    38.5   0.949
+    B_transfer_to_policy_designs   gbr      245     4.7%    12.5%    19.5   0.993
+    ridge, same features           ridge    245    36.0%   100.0%   166.4   0.948
+    Q4: AUC 0.794, bootstrap 95 % CI [0.722, 0.854], 18 feasible vs 430 swing-failed
+
+**2 228 unique labelled designs** were harvested from every sweep this project
+has run -- `vout_swing_v` is recorded in the rejection reason wherever a design
+compressed -- deduplicated on `u` to 9 dp, 35..2147 mVpp.
+
+**The result was attacked before it was believed.** Split B beating split A is
+backwards for a transfer test, so: nearest-neighbour distance test->train is
+**0.235** for the policy's designs against **0.223** for random-split designs
+(they are *further* from training data, not closer), and by arm family, designs
+edited from library seeds score **4.7 %** while designs invented from random
+starts with no library ancestry score **4.7 %** -- identical. Split A is harder
+because it trains on 30 % less data over a wider range (2 147 vs 1 311 mV).
+
+**The mechanism is nameable.** Permutation importance: `i_bias*rl` **1.771**,
+everything else <= 0.05. The physics is current x load resistance as expected --
+and **nonlinear**, which is why `4*I*R_L` overpredicts **3.4x** and ridge stays
+at 36 % transfer error while the tree reaches 4.7 %. `link/calibration.py`'s
+refusal to compute that fallback was right and is untouched: **the surrogate
+predicts, the measurement decides.**
+
+**Two caveats travel with the number.** (1) **Q4 is a QUALIFIED hit** -- the CI's
+lower bound **0.722 is below the 0.75 bar**, because only **18** designs in the
+whole project have ever passed the screen; direction is clear (median predicted
+limit 975 mV for passes vs 506 mV for swing failures), the number is not
+settled. (2) **The training sample is CENSORED and the result does not relieve
+it** -- a limit is recorded only where the design compressed, so the
+high-headroom region, exactly where a swing-aware policy would be steered, is
+absent by construction.
+
+**What it unlocks:** row **4p** -- a swing-aware reward and a retrained policy,
+re-measured on accept rate against the same 6-of-16 bar. **NOT STARTED: a
+reward-set change is the owner's decision** (standing rule 6). It does **not**
+say a retrained SAC would beat 6 of 16; entry 36's **1 of 16** stands, and no
+number here may enter a deliverable (`is_surrogate: true` is stamped on the
+artifact).
+
+**18 new tests; all 7 sabotages went red** -- including the named trap (training
+on the *required* swing rather than the *limit*: both numbers are millivolts in
+the same sentence). **One correction worth recording: the first dedup sabotage
+went red because it broke the SYNTAX, not because the gate fired.** It was
+redone as a syntactically valid change, the module checked to still import, and
+the gate then failed for the right reason (`assert 5 == 1`). **G125 says a
+sabotage must be able to fail; this session adds that it must fail for the
+reason claimed.**

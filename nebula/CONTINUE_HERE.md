@@ -8,6 +8,22 @@ else in the 22s brief stands.
 
 **24 days to the 15 Sept deadline. Demo 25 Sept at BITS Goa.**
 
+> **2026-08-26 (session 28, LATEST). THE SWING SURROGATE PASSES -- entry 37,
+> 4 of 4.** Output swing is predictable from the design vector with **no
+> SPICE**: **4.7 % median error, rho 0.993** on the transfer split (trained on
+> non-SAC designs, tested on the 245 the policies invented), 2 228 labelled
+> designs harvested from every sweep. **So the fix stage 3 identified is now
+> minutes of training instead of ~17 h**, and it is row **4p**: a swing-aware
+> reward, retrain, re-measure accept rate against the same 6-of-16 bar.
+> **NOT STARTED -- a reward-set change is the owner's decision** (standing
+> rule 6). Two caveats that travel with it: **Q4 is a qualified hit** (AUC
+> 0.794, CI [0.722, 0.854], only 18 designs have ever passed the screen), and
+> **the training data is CENSORED** -- limits are recorded only where a design
+> compressed, so the high-headroom region a policy would be steered toward is
+> absent by construction. The surrogate **predicts**; `link/calibration.py`
+> still **decides**, and `is_surrogate: true` is stamped on the artifact.
+> Read `PROGRESS.md` section 5k, then entry 37's OUTCOME.
+
 > **2026-08-26 (session 28, LATER -- THIS SUPERSEDES THE SESSION-28 BLOCK
 > BELOW). STAGE 3 RAN AND THE ANSWER IS NO: SAC as a proposer scores 1 of 16
 > against the non-RL library's 6 of 16.** Entry 36, 5 arms at k=5, 1 600 decks,

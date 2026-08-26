@@ -885,6 +885,75 @@ amortisation claim here in either direction.
 tolerances, the screen, `reward_v1.py`, `SEARCH_TAIL_W` or `SEARCH_ROW_CAP`
 (G111, entry 30's pre-committed branch).
 
+## 5k. THE SWING SURROGATE PASSES: **output swing is predictable to ~5 % with no SPICE**
+
+**2026-08-26 (session 28), `experiments/exp_swing_surrogate.py`, 2 228 labelled
+designs, no simulations, artifact `swing_surrogate_results.json`.**
+Pre-registered as entry 37 before the file existed; **scored 4 of 4.**
+
+    split                          model   n_te  med rel  p90 rel  med mV     rho
+    A_random                       gbr      669     6.4%    27.3%    38.5   0.949
+    B_transfer_to_policy_designs   gbr      245     4.7%    12.5%    19.5   0.993
+    A_random                       ridge    669    20.4%    74.4%   130.5   0.832
+    B_transfer_to_policy_designs   ridge    245    36.0%   100.0%   166.4   0.948
+
+    Q4 separation: AUC 0.794, bootstrap 95 % CI [0.722, 0.854], on 18 feasible
+                   vs 430 swing-failed
+
+### Why this matters, in one line
+
+Section 5j measured that SAC fails as a proposer because **the quantity doing
+95 % of the rejecting is not in its reward and cannot be** -- output swing is a
+large-signal compression point and the analytic model is a small-signal fit.
+That left two ways to fix it: **~17 hours** of SPICE-scored training, or a
+surrogate. **The surrogate works**, so it is now **minutes**.
+
+### The professor-ready version
+
+**From the design numbers alone, with no simulation, we can predict where the
+circuit starts distorting to within about 5 % -- roughly 20 mV on a 500 mV
+quantity.** The relationship turns out to be almost entirely *bias current x
+load resistance* (permutation importance 1.77 against 0.05 for everything else),
+which is what a textbook would say -- **but the mapping is nonlinear**, which is
+why the textbook formula `4*I*R_L` overpredicts by **3.4x** and why a linear
+model still sits at 36 % error. The tree learns the bend.
+
+### The result was attacked before it was believed
+
+Split B (transfer) scoring **better** than split A (random) is backwards, so the
+obvious cheat was checked:
+
+* nearest-neighbour distance test->train: SAC designs **0.235**, random-split
+  designs **0.223** -- the policy's designs are **further** from training data;
+* by arm family: designs edited from library seeds **4.7 %**, designs invented
+  from random starts with no library ancestry **4.7 %** -- identical.
+
+Split A is harder for a benign reason: 30 % less training data and a wider test
+range (up to 2 147 mV vs 1 311 mV).
+
+### Two caveats that travel with the number
+
+1. **Q4 is a qualified hit.** The CI's lower bound (0.722) is **below** the 0.75
+   bar, because only **18** designs in the whole project passed the screen. The
+   direction is clear (median predicted limit 975 mV for passes vs 506 mV for
+   swing failures); the number is not settled.
+2. **The training data is CENSORED and the result does not relieve it.** A
+   limit is recorded only where the design compressed, so the high-headroom
+   region -- exactly where a swing-aware policy would be steered -- is absent by
+   construction. If such a policy is ever trained, the first check is whether it
+   parks in the high-predicted-swing region and whether SPICE agrees there.
+
+### What it unlocks, and what it does not
+
+* **Unlocks:** a swing-aware reward at minutes of training instead of ~17 h.
+* **Does not:** say a retrained SAC would beat 6 of 16. Unmeasured; needs its
+  own pre-registration; **section 5j's 1 of 16 stands**.
+* **Does not:** produce any deliverable number. `is_surrogate: true` is stamped
+  on the artifact and `link/calibration.py` goes on refusing to score a
+  compressing stage. **The surrogate predicts; the measurement decides.**
+* **The reward-set change is the OWNER's decision** (standing rule 6). Nothing
+  has been retrained.
+
 ## 6. Next steps, in order
 
 | # | Task | Cost | Status |
@@ -906,6 +975,8 @@ tolerances, the screen, `reward_v1.py`, `SEARCH_TAIL_W` or `SEARCH_ROW_CAP`
 | **4l** | **SAC stage 1 -- does the learner move at all?** `rl/sac.py` + `exp_sac_gate.py`, gated on the entropy coefficient, the same instrument that diagnosed PPO. Pre-registered as **entry 34** | 50 000 analytic steps, 0 SPICE, 40.5 min | **DONE 2026-08-26.** `alpha` **14x**, `log_std` -0.007 -> **-1.779**. **Scored 3 of 5**; both misses were the two least-confident predictions |
 | **4m** | **SAC stage 2 -- does the policy SURVIVE the SPICE transfer that erased PPO (G114)?** `exp_sac_finetune.py`, all three G114 levers held, one variable changed. Pre-registered as **entry 35** | 50 000 analytic + 1 500 SPICE steps + 2x16 SPICE evals, **53.1 min, 935 decks** | **DONE 2026-08-26 (session 28). YES.** `log_std` -1.7788 -> **-2.0902**, return -24.101 -> **-19.012**. **Scored 3 of 5.** See section 5i |
 | **4n** | **SAC stage 3 -- the number that discharges D9.** SAC as `exp_hybrid`'s proposer, scored on **accept rate against the non-RL baseline of 6 of 16** (entry 32), 5 arms x k=5 | **1 600 decks, 17.9 min measured** | **DONE 2026-08-26 (session 28). THE ANSWER IS NO: 6 of 16 -> 1 of 16.** Entry 36 scored **5 of 6**; the control reproduced entry 32 exactly. D9's condition is **NOT met by SAC as a proposer**. See section 5j |
+| **4o** | **The swing surrogate (entry 37).** Fit `vout_swing_v` from the design vector on 2 228 labelled designs harvested from every sweep; validate on a TRANSFER split (train non-SAC, test the 245 designs the policies invented) | 0 sims, seconds | **DONE 2026-08-26. GO, 4 of 4: 4.7 % median error on transfer, rho 0.993.** A swing-aware reward is now minutes of training, not ~17 h. See section 5k |
+| **4p** | **A swing-aware reward, and a retrained policy measured on accept rate.** The option 4o unlocks: add a swing row predicted by the surrogate, retrain, re-run the stage-3 arms against the same 6-of-16 bar | ~1 h train + 320 decks/arm | **OWNER'S DECISION -- NOT STARTED.** A reward-set change is on the do-not-touch-without-a-human list (standing rule 6), and the surrogate may steer training only: it never replaces a measurement in scoring |
 | **5** | **Corner-aware RL vs random / CMA-ES / library lookup.** Pre-registered as entry 25 (with a disclosed rule-3 violation: written after launch, before any artifact existed) | ~2.5 h | **RUNNING** |
 | **6** | **Re-run the coverage sweep on `V6_SPECS`** (§5b). Owner: *"polishing numbers is much needed for honesty."* **Publish both the old and the corrected coverage number** | ~2.5 h | **committed, do not drop** |
 | 7 | 2-D tuning bank (`Cs` axis) + the reading-(B) criterion | ~1 100 sims, ~8 min | built, not run |
