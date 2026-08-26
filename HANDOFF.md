@@ -10632,3 +10632,50 @@ would be tuning). Any RL claim is measured against 35.6 %, not against nothing.
 (entry 30's outcome); the ~90-minute full sweep still needs the owner's say-so;
 and whether the rubric requires RL to *be* the optimiser is still the question
 to the competition mentor that gates Stage 2/3 of `NEXT_AGENT_SAC.md`.
+
+### 2026-08-26 -- session 27 (continued): the gate PASSED, the transfer experiment is written and NOT run
+
+**Mentor decision D9, and it unblocked the track.** The SAC + CMA-ES hybrid was
+approved **conditionally**: *fine enough if the SAC contributes as RL*. That
+closed `NEXT_AGENT_SAC.md` §8 item 1 and unblocked stages 1-3. **The condition
+is the deliverable, not a formality** -- it does not approve a hybrid in which
+the policy is decoration and CMA-ES does the work, which is what every number
+in this repo currently describes. It is discharged by `exp_hybrid`'s **accept
+rate against the non-RL baseline of 6 of 16 / 35.6 % fewer decks** (entry 32).
+
+**`sac.py` ran for the first time. The stage-1 gate PASSED** (entry 34):
+
+    alpha         0.99970 -> 0.07147    moved 14.0x
+    log_std_mean -0.00712 -> -1.77878   sigma 0.993 -> 0.169
+    episodes      8.00 of 8, 0 reverted of 56 251 evals
+    50 000 analytic steps, 0 SPICE, 40.5 min
+
+Against PPO, whose `log_std` never left `-0.05..+0.053` after 1200 SPICE steps.
+**The instrument that diagnosed PPO's failure is the one reporting SAC's
+success.** Return rose -22.4 -> +35.9 and **plateaued** by the third quarter, so
+50 000 steps is enough for that env. Scored 3 of 5; both misses were the two
+predictions entry 34 flagged as least confident, and one of them (Q3, critic
+loss) came with a recorded defect in *my own criterion* -- kept as a miss,
+because rewriting a test after seeing the result is what `PREDICTIONS.md`
+exists to prevent.
+
+**`experiments/exp_sac_finetune.py` is written, committed and NOT RUN at full
+budget.** It answers G114 by holding all three of its levers and changing
+exactly one thing -- the design equations are replaced by ngspice. Registered
+as entry 35, with a three-branch decision rule applied in code.
+
+Two API errors were caught by 300-step smoke runs rather than a 90-minute one
+(G112's lesson): `agent.act()` does not exist (`agent.actor.act` does), and a
+fine-tune leg below `learning_starts = 100` makes `gate_report()` correctly
+**raise** rather than report a gate for a run that measured nothing. The smoke
+also confirmed **lever 3 works: episodes ran 8.00 of 8 on the SPICE env** with
+`RevertOnInvalidEnv`, where the bare env gave PPO 1-3 of 8. Smoke artifacts were
+**deleted** -- a 300-step checkpoint named `sac_policy_analytic.pt` is
+indistinguishable from the real 50 000-step one, which is G113's shape.
+
+**Handoff written: `nebula/SESSION_27_HANDOFF.md`.** The previous chat hit its
+context limit mid-experiment; that file carries the exact state, the four design
+decisions inside the experiment, what the smoke runs already established, the
+numbers that may and may not be quoted, and the branch to follow after the run.
+
+Suite unchanged at **1915 passed, 12 deselected**.
