@@ -1026,6 +1026,67 @@ headroom with shape accuracy, and the corner screen charges for shape accuracy.
    blind reward (entry 34 measured the plateau); nobody has measured it for this
    one.
 
+## 5m. THE DFE IS NOT LOAD-BEARING: **the eye passes with it removed entirely**
+
+**2026-08-26 (session 28), `link/dfe_ablation.py` + `experiments/exp_dfe_ablation.py`,
+135 points, 0.8 min, artifact `dfe_ablation_results.json`.** Pre-registered as
+entry 39 after the owner asked *"should we size the DFE as well?"*. **Scored 5 of 5.**
+
+    policy        min eye_h    min eye_w    mandated 45    all 135
+    ideal          382.4 mV     0.8594 UI      45/45       135/135
+    none           358.5 mV     0.7344 UI      45/45       135/135
+    misadapted     377.6 mV     0.8438 UI      45/45       135/135
+    quantised      372.5 mV     0.8594 UI      45/45       135/135
+    floors: eye_h > 100 mV, eye_w > 0.4 UI
+
+### The answer to "should we size the DFE"
+
+**No, and now for a measured reason rather than a scheduling one.**
+
+The competition spec names the receiver as *"1-Stage CTLE + 1-Tap DFE"* and
+measures the eye AFTER the DFE, which this project models as an ideal tap. So
+the fair question is what that assumption is worth. It is worth **2.9 % of the
+eye** (median; 9.8 % worst): the tap cancels a median **1.9 %** of the cursor on
+this design, and deleting it entirely leaves **358.5 mV against a 100 mV floor
+-- 3.6x -- at all 45 mandated corners, and 332.6 mV (3.3x) at all 135 points.**
+
+**A 4-bit quantised tap and a 20 %-misadapted tap are also indistinguishable
+from ideal** (372.5 and 377.6 mV against 382.4), so the eye numbers do not
+depend on tap resolution or adaptation quality either.
+
+**Sizing a summer, a slicer, a feedback DAC and a clock would consume weeks to
+make rigorous a block holding up ~3 % of a 3.6x margin** -- and would put a
+half-verified mixed-signal block into a submission whose CTLE story is already
+complete.
+
+### The sentence the report gets
+
+> The CTLE meets both eye specifications at all 45 mandated PVT corners -- and
+> at all 135 verification points -- **with the 1-tap DFE removed entirely.**
+
+**What must still be said with it:** the receiver is specified as CTLE + 1-tap
+DFE, this project designs the CTLE and models the DFE as an ideal tap, and the
+eye width is a zero-height noiseless upper bound in every policy. Deleting a tap
+in software is not a claim that a real link should have no DFE -- it is the
+narrower and sufficient claim that **the compliance result does not rest on the
+DFE being ideal.**
+
+### Q1 caught a real defect, and that is why the rest is trustworthy
+
+The first version read eye height **at the best sampling phase**; the bridge
+reads it **at the cursor** (`argmax` of the pulse response) and takes only the
+*width* from the phase sweep. The two disagreed by **7.0 mV on a 456 mV eye --
+1.5 %**, comfortably inside what an eyeball would accept. The control failed,
+the defect was found, the fix made the control **exact (0.000e+00 over 135
+points)**. Q1 was registered at 0.9 as a formality and was the most valuable
+prediction in the entry.
+
+**The sabotage round then found the gate for that same defect was WORTHLESS**:
+the synthetic pulses were symmetric, so their best phase *was* the cursor and
+the swapped convention stayed green. A skewed pulse now separates them, with a
+test asserting the test data itself can tell them apart. **G125, twice in one
+session, on the two most load-bearing gates written.**
+
 ## 6. Next steps, in order
 
 | # | Task | Cost | Status |

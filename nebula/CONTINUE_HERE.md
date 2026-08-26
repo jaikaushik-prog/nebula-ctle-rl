@@ -8,6 +8,15 @@ else in the 22s brief stands.
 
 **24 days to the 15 Sept deadline. Demo 25 Sept at BITS Goa.**
 
+> **2026-08-26 (session 28, LATEST). THE DFE QUESTION IS ANSWERED: the ideal
+> 1-tap DFE is NOT load-bearing.** Entry 39, 5 of 5. The CTLE meets **both** eye
+> rows at all 45 mandated corners **and** all 135 points **with the DFE removed
+> entirely** -- 358.5 mV against a 100 mV floor (3.6x). Deleting the tap costs
+> **2.9 %** of the eye; a 4-bit or 20 %-misadapted tap is indistinguishable from
+> ideal. **Transistor-level DFE sizing stays OUT of scope for a measured
+> reason.** The report says the narrower true thing: the compliance result does
+> not rest on the DFE being ideal. Read `PROGRESS.md` section 5m.
+
 > **2026-08-26 (session 28, LATEST -- SUPERSEDES EVERY BLOCK BELOW). THE
 > SWING-AWARE REWARD RAN. The fix worked and it did not pay: 0-1 of 16 against
 > the non-RL library's 6.** Entry 38, 4 of 6.

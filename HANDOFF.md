@@ -11096,3 +11096,50 @@ assumed it was fine" is how G128 happened.
 Training took **43.1 min** for the same 50 000 steps that took 40.5 (entry 34)
 and 23.1 (entry 35): **G126** again, and the reason cost claims here stay in
 decks.
+
+### 2026-08-26 -- session 28 (continued): **the ideal 1-tap DFE is not load-bearing. The eye passes with it removed.**
+
+The owner asked *"should we size the DFE as well?"*. Entry 39 answers it with a
+measurement instead of a scheduling argument. `link/dfe_ablation.py` re-derives
+the eye of the SHIPPED design at the same 135 verification points under four tap
+policies, from the SAME pulse response, through the SAME `cursors_from_pulse`
+the real eye uses. **Scored 5 of 5.**
+
+    policy        min eye_h    min eye_w    mandated 45    all 135
+    ideal          382.4 mV     0.8594 UI      45/45       135/135
+    none           358.5 mV     0.7344 UI      45/45       135/135
+    misadapted     377.6 mV     0.8438 UI      45/45       135/135
+    quantised      372.5 mV     0.8594 UI      45/45       135/135
+    floors: eye_h > 100 mV, eye_w > 0.4 UI;  tap h1/h0 median +0.0187, max +0.0689
+
+**The CTLE meets both eye rows at all 45 mandated corners and all 135 points
+with the 1-tap DFE REMOVED ENTIRELY** -- 358.5 mV against a 100 mV floor (3.6x),
+332.6 mV (3.3x) across all loads. Deleting the tap costs **2.9 % of the eye**
+(median; 9.8 % worst). A 4-bit quantised tap and a 20 %-misadapted tap are
+indistinguishable from ideal. **Transistor-level DFE sizing stays OUT of scope,
+and now for a measured reason.**
+
+**What the report must still say:** the receiver is specified as CTLE + 1-tap
+DFE; this project designs the CTLE and models the DFE as an ideal tap; the eye
+width is a zero-height noiseless upper bound in every policy. Deleting a tap in
+software is not a claim that a real link needs no DFE -- it is the narrower and
+sufficient claim that **the compliance result does not rest on the DFE being
+ideal.**
+
+**Q1 caught a real defect and that is the only reason the rest is trustworthy.**
+The first version read eye height at the BEST SAMPLING PHASE; the bridge reads
+it AT THE CURSOR (`argmax` of the pulse response) and takes only the width from
+the sweep. They disagreed by **7.0 mV on a 456 mV eye (1.5 %)** -- inside what
+an eyeball accepts, enough to fail an exact control. Fixed; the control is now
+**0.000e+00 over 135 points**.
+
+**And the sabotage round found the gate for that very defect was worthless**:
+the synthetic pulses were symmetric, so best phase == cursor and the swapped
+convention stayed green. A skewed pulse now separates them, plus a test that
+asserts the test data CAN tell them apart. **G125 twice in one session, both
+times on the most load-bearing gate in the file.** 25 tests; 7 sabotages red
+after the repair.
+
+**No measured spec changed.** This is a re-derivation from the same simulations:
+the committed verification is untouched, coverage is still 7 of 16, and no DFE
+was designed.

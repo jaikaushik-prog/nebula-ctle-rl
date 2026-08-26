@@ -7058,3 +7058,76 @@ share it.
 * The eye width remains a **zero-height, noiseless** upper bound in every
   policy, exactly as `eye_opening_vs_phase` documents. Removing the DFE does not
   make it a BER contour.
+
+### OUTCOME — run 2026-08-26, design `c507a3ba6f58b9a6`, 135 points, 0.8 min, no new specs measured
+
+    policy        min eye_h    min eye_w    mandated 45    all 135
+    ideal          382.4 mV     0.8594 UI      45/45       135/135
+    none           358.5 mV     0.7344 UI      45/45       135/135
+    misadapted     377.6 mV     0.8438 UI      45/45       135/135
+    quantised      372.5 mV     0.8594 UI      45/45       135/135
+
+    floors: eye_h > 100 mV, eye_w > 0.4 UI
+    tap:    h1/h0 = -0.0203 min, +0.0187 median, +0.0689 max
+    height loss from deleting the DFE: 2.9 % median, 9.8 % WORST
+
+**VERDICT: 5 of 5.** `_verdict()` printed the Q2-and-Q3 branch: *"the CTLE meets
+BOTH eye rows at all 45 mandated corners with the 1-tap DFE REMOVED ENTIRELY."*
+
+| | prediction | outcome |
+|---|---|---|
+| Q1 | the `ideal` policy reproduces the committed eye to 1e-9 (0.9) | **HIT** — **0.000e+00** over all 135 points, on height and width |
+| Q2 | `S8_eye_h` passes at all 45 mandated corners with the DFE deleted (0.8) | **HIT** — min **358.5 mV** against a 100 mV floor |
+| Q3 | `S8_eye_w` passes at all 45 with the DFE deleted (0.6) | **HIT** — min **0.7344 UI** against a 0.4 UI floor |
+| Q4 | median height loss <= 25 % (0.7) | **HIT** — **2.9 %** median, 9.8 % worst |
+| Q5 | a 4-bit tap passes all 45 (0.85) | **HIT** — and at all 135 |
+
+### The sentence this buys, and it is now quotable
+
+> **The CTLE meets both eye specifications at all 45 mandated PVT corners — and
+> at all 135 verification points — with the 1-tap DFE removed entirely.** The
+> worst-case vertical eye without any DFE is **358.5 mV against a 100 mV floor
+> (3.6x)**, and the worst across all 135 points is **332.6 mV (3.3x)**. The
+> ideal-DFE model is a *bounded* assumption, not a crutch.
+
+**A 4-bit quantised tap and a 20 %-misadapted tap are both indistinguishable
+from ideal at this design's margins** (372.5 and 377.6 mV against 382.4). So the
+eye numbers do not depend on tap resolution or adaptation quality either.
+
+### Q1 caught a real defect, which is the only reason the rest is trustworthy
+
+The first version of `eye_under_policy` reported eye height **at the best
+sampling phase**; the bridge reports it **at the cursor** — `argmax` of the
+pulse response, phase offset 0 — while taking only the *width* from the phase
+sweep. The two conventions disagreed by **7.0 mV on a 456 mV eye: 1.5 %.**
+
+That is precisely the failure this project keeps naming — **a wrong value that
+formats cleanly.** It was well inside anything an eyeball would question, it
+would have shifted every policy's numbers by a similar amount, and the
+conclusion would probably have survived it. **The control failed, the defect was
+found, and the fix made the control exact.** Q1 was registered at 0.9 as a
+formality and turned out to be the most valuable prediction in the entry.
+
+### What this settles about the DFE question
+
+**Transistor-level DFE sizing stays out of scope, and now for a measured reason
+rather than a scheduling one.** The tap is cancelling a **median 1.9 %** of the
+cursor on this design (max 6.9 %) — far below the 7 % median seen across the
+wider design population — and deleting it costs **2.9 %** of the eye. Sizing a
+summer, a slicer, a feedback DAC and a clock would consume weeks to make
+rigorous a block that is demonstrably holding up ~3 % of a 3.6x margin.
+
+**What the report must still say, unchanged:** the receiver is specified as
+CTLE + 1-tap DFE; this project **designs the CTLE** and models the DFE as an
+ideal tap; the eye width remains a **zero-height, noiseless upper bound** in
+every policy, exactly as `eye_opening_vs_phase` documents. **Deleting the DFE in
+software is not the same as a receiver that has no DFE** — the channel and TX
+are unchanged, and a real link would still want the tap for margin. What is
+established is narrower and sufficient: **the compliance claim does not rest on
+the DFE being ideal.**
+
+### What no outcome here changed
+
+No measured spec moved. This is a re-derivation of the eye under different DFE
+assumptions **from the same simulations**; the shipped design's committed
+verification is untouched, coverage is still 7 of 16, and no DFE was designed.
