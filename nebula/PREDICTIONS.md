@@ -6827,3 +6827,121 @@ No wall-clock prediction (**G126**).
   the screen still measures swing rather than predicting it.
 * **A win here is a PROPOSER win**, measured on the 4-corner screen at k=5 —
   not a claim that RL designed a compliant circuit end to end.
+
+### OUTCOME — run 2026-08-26, 50 000 analytic steps + 960 decks, 52.1 min
+
+    arm               A/16       accepted_at_k   decks   swing%   med measured swing
+    library              6     [1, 4, 5, 5, 6]     320      96%        595 mV
+    swing_random         0     [0, 0, 0, 0, 0]     320      28%       1154 mV
+    swing_seeded         1     [0, 0, 0, 1, 1]     320      35%       1162 mV
+
+    training: log_std -1.6961, alpha 0.1422, mean shortfall 0.105 (from ~0.78 untrained)
+
+**VERDICT: the "Q2 hits, Q4 misses" branch, and it was pre-registered as a
+clean negative. Scored 4 of 6.** `_verdict()` printed: *"the reward moved the
+designs in the intended direction -- they genuinely have more headroom -- and it
+did NOT convert into acceptances. That is a clean negative about the APPROACH,
+not about the surrogate."*
+
+| | prediction | outcome |
+|---|---|---|
+| Q1 | the control reproduces a third time (0.9) | **HIT** — `[1,4,5,5,6]`, same six ranks |
+| Q2 | median measured swing >= 700 mV (0.7) | **HIT, decisively** — **1154 / 1162 mV**, against the blind policy's 483-542 and the library's 595 |
+| Q3 | a swing-aware arm accepts >= 7 of 16 (0.3) | **MISS** — 0 and 1 |
+| Q4 | it beats its blind predecessor, >= 3 (0.55) | **MISS** — 0 and 1, against entry 36's 2 and 1 |
+| Q5 | swing falls below 50 % of failures (0.6) | **HIT** — **28 % / 35 %**, from 74-92 % |
+| Q6 | 320 decks per arm, 260 deployed for the control (0.9) | **HIT** — exactly |
+
+### The intervention worked. It just did not pay.
+
+**Every mechanism prediction hit, and hit hard.** The penalty was not ignored:
+training mean shortfall fell to **0.105**, i.e. the policy learned to build
+designs whose predicted headroom sits at ~0.9 V against a 1.0 V target. And the
+surrogate was not fooling itself -- **SPICE measured 1154 and 1162 mV**, nearly
+**double the library's 595 mV** and more than double the blind policy's 483-542.
+The surrogate steered accurately and slightly conservatively (predicted ~0.9 V,
+measured ~1.15 V).
+
+**And the designs became MEASURABLE, which is the biggest single change in the
+run:**
+
+    mean corners scorable, of 4      library 0.30   ->   swing-aware 2.36 / 2.84
+
+The library's candidates are so compressed that **90 % of the time SPICE cannot
+score them at all**. The swing-aware policy's designs simulate cleanly and get
+judged. **That is a real engineering improvement and it produced zero extra
+acceptances.**
+
+### Where the rejections went, which is the actual finding
+
+    reason for rejection        library   swing_random   swing_seeded
+    output swing compression       70          22             28
+    unscorable, other               1          21              4
+    INFEASIBLE on a spec            2          37             47
+      of which S3_peaking_match     1          20             20
+               S3_f_peak_match      1          13             19
+
+**Fixing the blind spot exposed the next constraint.** The failure moved from
+"the measurement is void" to "the response misses the requested peaking and
+peak frequency at corners" -- and those are rows the reward **already scored**.
+Entry 38 registered this as Q3's leading counter-argument before the run:
+*"removing the dominant failure mode exposes whatever is behind it, and headroom
+trades against the frequency-shape rows the reward already scored."* **That is
+what the data says happened.** More bias current and a bigger load buy headroom
+and move the poles; the policy paid for swing with shape accuracy, and the
+corner screen charges for shape accuracy.
+
+### What this settles
+
+* **A single missing quantity was not the whole story.** Entry 36's diagnosis
+  was right about *what rejects designs* -- and correcting it, cleanly and
+  measurably, did not move accept rate. **The corner screen rejects
+  policy-generated designs for reasons that do not reduce to one quantity.**
+* **D9's condition is still not met.** Best swing-aware arm **1 of 16** against
+  the non-RL library's **6 of 16**. Entry 36's conclusion stands unchanged, now
+  with one more thing ruled out rather than assumed.
+* **The surrogate is vindicated as an instrument, not as a fix.** Entry 37's
+  4.7 % transfer error held up in deployment: predicted ~0.9 V, measured
+  ~1.15 V, on designs from a policy that did not exist when it was fitted.
+* **`SWING_W` is NOT re-rolled.** Entry 38 registered that in advance (G110),
+  and the branch that fired says report and stop. Any second weight is a new
+  pre-registration, and the evidence above argues it would not help: the binding
+  constraint is no longer swing.
+
+### What it does not settle
+
+* Whether a reward that scores **both** headroom and shape *at corners* would
+  do better. Nothing here measured that, and it is a bigger change than a
+  penalty term -- the analytic model predicts a nominal response, not a corner
+  spread.
+* Whether the policy is short of training. 50 000 steps was enough for the blind
+  reward (entry 34 measured the return plateauing by the third quarter); nobody
+  has measured the plateau for this reward.
+
+**Both are owner decisions and neither is started.**
+
+### One artifact note, verified rather than assumed
+
+Entry 38's library control wrote **the same filename as entry 36's**
+(`topk_scan_library_k5.json`) -- the shape G128 was written about. The two were
+compared before this was committed: **every substantive field is identical**
+(`accepted_at_k`, all 16 per-request ranks, the three candidate buckets, both
+deck counts), and only `run_pid`, `run_started_unix` and `wall_clock_s` differ.
+**Nothing was lost, and the collision is itself a third bit-identical
+reproduction of the control.** The filename is keyed on `(source, k)` and both
+runs are the same `(library, 5)` measurement, so this is a benign overwrite --
+but it was checked, because "the file changed and I assumed it was fine" is how
+G128 happened in the first place.
+
+### Housekeeping, recorded because it is part of the evidence
+
+* **The sabotage round found TWO of this entry's own gates worthless** (G125's
+  shape, and exactly why the round exists): one counted surrogate *calls* and so
+  stayed green when the penalty was computed for a **fixed design** rather than
+  the one just built; the other let a **tie** with the library (6 of 16) count
+  as beating it, which would have declared D9 met at the wrong number. Both were
+  repaired -- the stub now records what it was asked about and the fake env's
+  `u` moves; a boundary case at exactly 6 was added -- and both then failed on
+  their own bug. **8 red, 2 caught-and-repaired, 24 tests.**
+* Training took **43.1 min** for the same 50 000 steps that took 40.5 (entry 34)
+  and 23.1 (entry 35). **G126.** Cost claims stay in decks.

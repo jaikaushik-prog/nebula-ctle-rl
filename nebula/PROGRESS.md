@@ -954,6 +954,78 @@ range (up to 2 147 mV vs 1 311 mV).
 * **The reward-set change is the OWNER's decision** (standing rule 6). Nothing
   has been retrained.
 
+## 5l. THE SWING-AWARE REWARD: **the fix worked and it did not pay. 0-1 of 16.**
+
+**2026-08-26 (session 28), `experiments/exp_sac_swing.py` + `rl/swing_env.py`,
+50 000 analytic steps + 960 decks, 52.1 min, artifact `sac_swing_results.json`.**
+Pre-registered as entry 38; authorised by the owner as row 4p. **Scored 4 of 6.**
+
+    arm               A/16       accepted_at_k   decks   swing%   med measured swing
+    library              6     [1, 4, 5, 5, 6]     320      96%        595 mV
+    swing_random         0     [0, 0, 0, 0, 0]     320      28%       1154 mV
+    swing_seeded         1     [0, 0, 0, 1, 1]     320      35%       1162 mV
+
+### The professor-ready version
+
+**We found what was blinding the agent, we fixed it, the fix demonstrably
+worked, and the score did not move.**
+
+Section 5j showed the agent was being judged on a quantity it had never been
+shown -- output swing, which caused 95 % of all rejections. Section 5k showed
+that quantity could be predicted with no simulation. This section put the
+prediction into the agent's reward and retrained.
+
+**The intervention did exactly what it was meant to.** The agent learned to
+build designs with nearly **double the headroom** of the library's designs
+(1 154 mV measured against 595 mV), and swing failures fell from 96 % to
+**28 %**. Most striking: the library's candidates are so compressed that **SPICE
+cannot score them at all 90 % of the time**, while the new agent's designs
+simulate cleanly and get properly judged -- mean scorable corners rose from
+**0.30 of 4 to 2.36-2.84 of 4**.
+
+**And it produced no extra acceptances: 0 and 1 of 16, against the library's 6.**
+
+### Where the rejections went, which is the real finding
+
+    reason for rejection        library   swing_random   swing_seeded
+    output swing compression       70          22             28
+    unscorable, other               1          21              4
+    INFEASIBLE on a spec            2          37             47
+      of which S3_peaking_match     1          20             20
+               S3_f_peak_match      1          13             19
+
+**Fixing the blind spot exposed the next constraint.** Failures moved from "the
+measurement is void" to "the response misses the requested peaking and peak
+frequency at corners" -- rows the reward **already** scored. More bias current
+and a bigger load buy headroom **and move the poles**: the agent paid for
+headroom with shape accuracy, and the corner screen charges for shape accuracy.
+
+**Entry 38 registered this as the leading counter-argument BEFORE the run.**
+
+### What it settles
+
+* **A single missing quantity was not the whole story.** The diagnosis in 5j was
+  right about what rejects designs; correcting it did not move accept rate.
+  **The corner screen rejects policy-generated designs for reasons that do not
+  reduce to one quantity.**
+* **D9's condition is still not met** -- 1 of 16 against 6 of 16 -- now with one
+  more explanation ruled out rather than assumed.
+* **The surrogate is vindicated as an instrument, not as a fix:** entry 37's
+  4.7 % transfer error held in deployment (predicted ~0.9 V, measured ~1.15 V)
+  on designs from a policy that did not exist when it was fitted.
+* **`SWING_W` is NOT re-rolled** (G110, registered in advance). The binding
+  constraint is no longer swing, so a second weight would be tuning the wrong
+  knob.
+
+### What it does not settle, and both are the owner's
+
+1. Whether a reward scoring **headroom and shape together at corners** would do
+   better. That is a bigger change than a penalty term -- the analytic model
+   predicts a nominal response, not a corner spread.
+2. Whether the policy is short of training. 50 000 steps was enough for the
+   blind reward (entry 34 measured the plateau); nobody has measured it for this
+   one.
+
 ## 6. Next steps, in order
 
 | # | Task | Cost | Status |
@@ -976,7 +1048,8 @@ range (up to 2 147 mV vs 1 311 mV).
 | **4m** | **SAC stage 2 -- does the policy SURVIVE the SPICE transfer that erased PPO (G114)?** `exp_sac_finetune.py`, all three G114 levers held, one variable changed. Pre-registered as **entry 35** | 50 000 analytic + 1 500 SPICE steps + 2x16 SPICE evals, **53.1 min, 935 decks** | **DONE 2026-08-26 (session 28). YES.** `log_std` -1.7788 -> **-2.0902**, return -24.101 -> **-19.012**. **Scored 3 of 5.** See section 5i |
 | **4n** | **SAC stage 3 -- the number that discharges D9.** SAC as `exp_hybrid`'s proposer, scored on **accept rate against the non-RL baseline of 6 of 16** (entry 32), 5 arms x k=5 | **1 600 decks, 17.9 min measured** | **DONE 2026-08-26 (session 28). THE ANSWER IS NO: 6 of 16 -> 1 of 16.** Entry 36 scored **5 of 6**; the control reproduced entry 32 exactly. D9's condition is **NOT met by SAC as a proposer**. See section 5j |
 | **4o** | **The swing surrogate (entry 37).** Fit `vout_swing_v` from the design vector on 2 228 labelled designs harvested from every sweep; validate on a TRANSFER split (train non-SAC, test the 245 designs the policies invented) | 0 sims, seconds | **DONE 2026-08-26. GO, 4 of 4: 4.7 % median error on transfer, rho 0.993.** A swing-aware reward is now minutes of training, not ~17 h. See section 5k |
-| **4p** | **A swing-aware reward, and a retrained policy measured on accept rate.** The option 4o unlocks: add a swing row predicted by the surrogate, retrain, re-run the stage-3 arms against the same 6-of-16 bar | ~1 h train + 320 decks/arm | **OWNER'S DECISION -- NOT STARTED.** A reward-set change is on the do-not-touch-without-a-human list (standing rule 6), and the surrogate may steer training only: it never replaces a measurement in scoring |
+| **4q** | **The two things entry 38 did NOT settle.** (a) a reward scoring headroom AND shape together AT CORNERS -- a bigger change than a penalty term, since the analytic model predicts a nominal response, not a corner spread; (b) whether 50 000 steps is enough for this reward (entry 34 measured the plateau for the blind one; nobody has for this one) | TBD | **OWNER'S DECISION -- NOT STARTED.** Neither is a reason to re-roll `SWING_W` (G110): the binding constraint is no longer swing |
+| **4p** | **A swing-aware reward, and a retrained policy measured on accept rate.** Predicted-headroom shortfall penalty via a WRAPPER env (no surrogate number can reach the screen), retrain 50 000 steps, re-run the arms against the same 6-of-16 bar | 50 000 steps + 960 decks, 52.1 min measured | **DONE 2026-08-26. THE FIX WORKED AND IT DID NOT PAY: 0-1 of 16.** Entry 38 scored 4 of 6 -- headroom nearly doubled (1154 mV vs the library's 595), swing failures 96 % -> 28 %, scorable corners 0.30 -> 2.84 of 4, and accept rate did NOT move. Failures shifted to S3_peaking_match / S3_f_peak_match. See section 5l |
 | **5** | **Corner-aware RL vs random / CMA-ES / library lookup.** Pre-registered as entry 25 (with a disclosed rule-3 violation: written after launch, before any artifact existed) | ~2.5 h | **RUNNING** |
 | **6** | **Re-run the coverage sweep on `V6_SPECS`** (§5b). Owner: *"polishing numbers is much needed for honesty."* **Publish both the old and the corrected coverage number** | ~2.5 h | **committed, do not drop** |
 | 7 | 2-D tuning bank (`Cs` axis) + the reading-(B) criterion | ~1 100 sims, ~8 min | built, not run |

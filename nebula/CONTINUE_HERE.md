@@ -8,6 +8,29 @@ else in the 22s brief stands.
 
 **24 days to the 15 Sept deadline. Demo 25 Sept at BITS Goa.**
 
+> **2026-08-26 (session 28, LATEST -- SUPERSEDES EVERY BLOCK BELOW). THE
+> SWING-AWARE REWARD RAN. The fix worked and it did not pay: 0-1 of 16 against
+> the non-RL library's 6.** Entry 38, 4 of 6.
+>
+>     library (control)   6 of 16   [1,4,5,5,6]   med measured swing  595 mV
+>     swing_random        0 of 16                                    1154 mV
+>     swing_seeded        1 of 16                                    1162 mV
+>
+> **Every mechanism prediction hit.** Headroom nearly doubled, swing failures
+> fell **96 % -> 28 %**, and the designs became *measurable* -- scorable corners
+> **0.30 -> 2.84 of 4**, where the library's candidates are so compressed SPICE
+> cannot score them 90 % of the time. **Accept rate did not move.** Failures
+> shifted to **`S3_peaking_match` / `S3_f_peak_match`**: more bias current and a
+> bigger load buy headroom *and move the poles*, so the policy paid for headroom
+> with shape accuracy, and the corner screen charges for shape accuracy.
+> **Fixing the blind spot exposed the next constraint** -- a single missing
+> quantity was not the whole story, and **D9's condition remains unmet**.
+> **`SWING_W` is NOT to be re-rolled** (G110, registered in advance): the
+> binding constraint is no longer swing. What is left is row **4q** and it is
+> **the owner's**: a reward scoring headroom AND shape *at corners*, or more
+> training steps. Read `PROGRESS.md` section 5l, then entry 38's OUTCOME.
+> **Coverage (7 of 16) and compliance (11 of 11 at 45 of 45) are untouched.**
+
 > **2026-08-26 (session 28, LATEST). THE SWING SURROGATE PASSES -- entry 37,
 > 4 of 4.** Output swing is predictable from the design vector with **no
 > SPICE**: **4.7 % median error, rho 0.993** on the transfer split (trained on

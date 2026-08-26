@@ -1,0 +1,217 @@
+{
+ "task": "entry 38: does a swing-aware reward move accept rate?",
+ "run_pid": 18984,
+ "run_started_unix": 1787727565.4357674,
+ "run_host": "JAI",
+ "k": 5,
+ "seed": 230826,
+ "analytic_steps": 50000,
+ "training": {
+  "n_updates": 49901,
+  "alpha_first": 0.9997000694274902,
+  "alpha_last": 0.14218364655971527,
+  "alpha_min": 0.07759080082178116,
+  "alpha_max": 0.9997000694274902,
+  "log_std_first": -0.007119070738554001,
+  "log_std_last": -1.6961082220077515,
+  "log_std_min": -1.9707002639770508,
+  "log_std_max": -0.007119070738554001,
+  "sigma_last": 0.1833958730241152,
+  "seconds": 2584.4914259910583,
+  "surrogate": {
+   "n_rows": 2228,
+   "is_surrogate": true
+  },
+  "env_report": {
+   "is_analytic": true,
+   "n_evals": 56251,
+   "n_unpredictable": 0,
+   "n_reverted": 0,
+   "specs": [
+    "S3_f_peak_band",
+    "S3_f_peak_match",
+    "S3_peaking",
+    "S3_peaking_match",
+    "S3_nyq_boost"
+   ],
+   "horizon": 8,
+   "note": "analytic pre-training only; no number from this env is reportable, every policy trained here is fine-tuned and measured on SPICE",
+   "swing_target_v": 1.0,
+   "swing_weight": 6.0,
+   "swing_steps": 50000,
+   "swing_penalised": 15488,
+   "swing_mean_shortfall": 0.10519898241570283,
+   "is_surrogate": true
+  },
+  "swing_target_v": 1.0,
+  "swing_weight": 6.0
+ },
+ "baseline": {
+  "n_accepted": 6,
+  "accepted_at_k": [
+   1,
+   4,
+   5,
+   5,
+   6
+  ],
+  "source": "entry 32/36, library at k=5"
+ },
+ "blind_policy": {
+  "best_random": 2,
+  "best_seeded": 1,
+  "source": "entry 36"
+ },
+ "arms": [
+  {
+   "arm": "library",
+   "accepted_at_k": [
+    1,
+    4,
+    5,
+    5,
+    6
+   ],
+   "n_accepted": 6,
+   "accepted_ranks": [
+    null,
+    null,
+    2,
+    null,
+    5,
+    null,
+    null,
+    2,
+    null,
+    1,
+    null,
+    2,
+    null,
+    null,
+    3,
+    null
+   ],
+   "n_cand_feasible": 7,
+   "n_cand_infeasible": 2,
+   "n_cand_unscorable": 71,
+   "n_sims_measured": 320,
+   "n_sims_deployed": 260,
+   "swing_named": 70,
+   "non_feasible": 73,
+   "swing_fraction": 0.958904109589041,
+   "n_declined": 0,
+   "artifact": "C:\\Users\\DELL\\Desktop\\serdes-dsp-framework-main\\nebula\\experiments\\topk_scan_library_k5.json",
+   "wall_clock_s": 203.4994659423828,
+   "measured_limit_mv": {
+    "n": 70,
+    "median": 595.3,
+    "p25": 366.4,
+    "p75": 996.025
+   }
+  },
+  {
+   "arm": "swing_random",
+   "accepted_at_k": [
+    0,
+    0,
+    0,
+    0,
+    0
+   ],
+   "n_accepted": 0,
+   "accepted_ranks": [
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null
+   ],
+   "n_cand_feasible": 0,
+   "n_cand_infeasible": 37,
+   "n_cand_unscorable": 43,
+   "n_sims_measured": 320,
+   "n_sims_deployed": 320,
+   "swing_named": 22,
+   "non_feasible": 80,
+   "swing_fraction": 0.275,
+   "n_declined": 0,
+   "artifact": "C:\\Users\\DELL\\Desktop\\serdes-dsp-framework-main\\nebula\\experiments\\topk_scan_swing_random_k5.json",
+   "wall_clock_s": 119.93891501426697,
+   "measured_limit_mv": {
+    "n": 22,
+    "median": 1153.5,
+    "p25": 997.725,
+    "p75": 1369.85
+   }
+  },
+  {
+   "arm": "swing_seeded",
+   "accepted_at_k": [
+    0,
+    0,
+    0,
+    1,
+    1
+   ],
+   "n_accepted": 1,
+   "accepted_ranks": [
+    null,
+    4,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null
+   ],
+   "n_cand_feasible": 1,
+   "n_cand_infeasible": 47,
+   "n_cand_unscorable": 32,
+   "n_sims_measured": 320,
+   "n_sims_deployed": 316,
+   "swing_named": 28,
+   "non_feasible": 79,
+   "swing_fraction": 0.35443037974683544,
+   "n_declined": 0,
+   "artifact": "C:\\Users\\DELL\\Desktop\\serdes-dsp-framework-main\\nebula\\experiments\\topk_scan_swing_seeded_k5.json",
+   "wall_clock_s": 198.42524886131287,
+   "measured_limit_mv": {
+    "n": 28,
+    "median": 1162.4,
+    "p25": 1050.0,
+    "p75": 1313.25
+   }
+  }
+ ],
+ "wall_s": 3127.752115249634,
+ "verdict": {
+  "Q1_control_reproduced": true,
+  "Q2_headroom_moved": true,
+  "Q3_beats_the_library": false,
+  "Q4_beats_its_blind_predecessor": false,
+  "Q5_failure_mode_shifted": true,
+  "Q6_accounting": true,
+  "best_swing_arm": 1,
+  "median_measured_swing_mv": 1157.95,
+  "call": "Q2 hit, Q4 missed: the reward moved the designs in the intended direction -- they genuinely have more headroom -- and it did NOT convert into acceptances. That is a clean negative about the APPROACH, not about the surrogate: the screen rejects policy-generated designs for reasons that do not reduce to one quantity. Report it and stop."
+ }
+}

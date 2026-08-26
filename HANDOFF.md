@@ -11029,3 +11029,70 @@ redone as a syntactically valid change, the module checked to still import, and
 the gate then failed for the right reason (`assert 5 == 1`). **G125 says a
 sabotage must be able to fail; this session adds that it must fail for the
 reason claimed.**
+
+### 2026-08-26 -- session 28 (continued): the swing-aware reward. **The fix worked and it did not pay: 0-1 of 16.**
+
+**Row 4p, authorised by the owner, executed and measured.** `rl/swing_env.py` (a
+WRAPPER, so no surrogate number can reach the screen, `exp_coverage` or the
+compliance matrix) adds `- SWING_W * shortfall` against a **1.00 V** target
+derived from the median required swing across 3 374 recorded compressions.
+50 000 analytic steps, same seed, same `SACConfig`, same 18-dim observation as
+entries 34-36 -- **the reward is the only difference.** Pre-registered as entry
+38; **scored 4 of 6.**
+
+    arm               A/16       accepted_at_k   decks   swing%   med measured swing
+    library              6     [1, 4, 5, 5, 6]     320      96%        595 mV
+    swing_random         0     [0, 0, 0, 0, 0]     320      28%       1154 mV
+    swing_seeded         1     [0, 0, 0, 1, 1]     320      35%       1162 mV
+    training: log_std -1.6961, alpha 0.1422, mean shortfall 0.105 (from ~0.78 untrained)
+
+**Every mechanism prediction hit and the payoff prediction missed.** The penalty
+was not ignored (mean shortfall 0.105), the surrogate was not fooling itself
+(**SPICE measured 1154/1162 mV against a predicted ~0.9 V**, nearly double the
+library's 595 and the blind policy's 483-542), swing failures fell **96 % ->
+28 %**, and the designs became **measurable**: mean scorable corners
+**0.30 -> 2.36/2.84 of 4**, where the library's candidates are so compressed
+that SPICE cannot score them 90 % of the time. **Accept rate did not move.**
+
+**Where the rejections went is the finding.** Failures shifted from "the
+measurement is void" to **infeasible on `S3_peaking_match` (20) and
+`S3_f_peak_match` (13-19)** -- rows the reward already scored. More bias current
+and a bigger load buy headroom **and move the poles**; the policy paid for
+headroom with shape accuracy and the corner screen charges for shape accuracy.
+**Entry 38 registered this as Q3's leading counter-argument before the run.**
+
+**What it settles:** a single missing quantity was not the whole story. The 5j
+diagnosis was right about *what rejects designs*, and correcting it cleanly did
+not move accept rate -- **the screen rejects policy-generated designs for
+reasons that do not reduce to one quantity.** D9's condition remains unmet, now
+with one explanation ruled out rather than assumed. Entry 37's surrogate is
+**vindicated as an instrument, not as a fix**.
+
+**`SWING_W` is NOT re-rolled** -- registered in advance (G110), and the evidence
+says the binding constraint is no longer swing. Two things entry 38 did not
+settle are row **4q** and **both are the owner's**: a reward scoring headroom
+AND shape *at corners* (a bigger change -- the analytic model predicts a nominal
+response, not a corner spread), and whether 50 000 steps is enough for this
+reward (entry 34 measured the plateau for the blind one; nobody has for this
+one).
+
+**24 new tests. The sabotage round found TWO of this entry's own gates
+worthless**, which is precisely why the round exists (G125): one counted
+surrogate *calls*, so it stayed green when the penalty was computed for a
+**fixed design** instead of the one just built; the other let a **tie** with the
+library (6 of 16) count as beating it, which would have declared D9 met at the
+wrong number. Both repaired -- the stub now records what it was asked about, the
+fake env's `u` moves, and a boundary case at exactly 6 was added -- and both
+then failed on their own bug. **8 red, 2 caught-and-repaired.**
+
+**Artifact note:** entry 38's library control wrote the same filename as entry
+36's (`topk_scan_library_k5.json`, keyed on `(source, k)` -- both are the same
+`(library, 5)` measurement). The two were compared before committing: **every
+substantive field is identical** and only pid, timestamp and wall clock differ,
+so nothing was lost and the collision is a third bit-identical reproduction of
+the control. Checked rather than assumed, because "the file changed and I
+assumed it was fine" is how G128 happened.
+
+Training took **43.1 min** for the same 50 000 steps that took 40.5 (entry 34)
+and 23.1 (entry 35): **G126** again, and the reason cost claims here stay in
+decks.

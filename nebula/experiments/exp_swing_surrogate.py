@@ -227,6 +227,30 @@ def _verdict_rows(root: Path) -> list:
     return out
 
 
+def load_surrogate(seed: int = SEED, root: Optional[Path] = None):
+    """The model `rl/swing_env.py` trains through. **Fitted on ALL rows.**
+
+    Entry 37 validated on a transfer split -- train non-SAC, test the 245
+    designs a policy invented -- and that is what justifies using the model at
+    all (4.7 % median error, rho 0.993). **Deployment then fits on everything**,
+    because holding data out of a model you have already validated buys nothing
+    and the extra 245 rows are the ones closest to what a policy proposes.
+
+    The validation split and this fit are deliberately different functions, so
+    nobody can report a training fit's numbers as if they were held-out ones.
+    """
+    root = Path(root) if root is not None else HERE
+    rows = harvest(root)["rows"]
+    if len(rows) < 100:
+        raise RuntimeError(
+            f"only {len(rows)} labelled designs -- refusing to train a policy "
+            f"through a surrogate fitted on noise (entry 37 used 2 228)")
+    X = np.array([features(r["u"]) for r in rows])
+    y = np.array([r["limit_v"] for r in rows])
+    return _fit(X, y, "gbr", seed=seed), {"n_rows": len(rows),
+                                          "is_surrogate": True}
+
+
 def run(seed: int = SEED, root: Optional[Path] = None) -> dict:
     root = Path(root) if root is not None else HERE
     t0 = time.time()

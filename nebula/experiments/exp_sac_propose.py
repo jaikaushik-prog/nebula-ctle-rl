@@ -176,11 +176,21 @@ class _Rollouts:
     """
 
     def __init__(self, agent, mode: str, seed: int = SEED,
-                 library_fn: Optional[Callable] = None):
+                 library_fn: Optional[Callable] = None,
+                 env_factory: Optional[Callable] = None):
+        """`env_factory(target, seed) -> env` overrides the plain analytic env.
+
+        **Added for entry 38, and the reason matters:** a swing-aware policy
+        ranks its own rollouts by the reward it was TRAINED on, not by the one
+        its blind predecessor used. Ranking a swing-aware policy's candidates
+        on `V6A` alone would hand the screen the candidate the policy itself
+        considers worst on headroom -- measuring a proposer nobody built.
+        """
         if mode not in ("random", "seeded"):
             raise ValueError(f"mode must be 'random' or 'seeded', got {mode!r}")
         self.agent, self.mode, self.seed = agent, mode, int(seed)
         self._library_fn = library_fn
+        self._env_factory = env_factory
         self._memo: dict = {}
         #: Per-request diagnostics, keyed by `(f_peak_hz, peaking_db)`.
         self.notes: dict = {}
@@ -220,7 +230,9 @@ class _Rollouts:
 
         scored, declined = [], 0
         for i, u0 in enumerate(starts):
-            env = AnalyticCtleEnv([target], seed=self.seed + 1000 * i)
+            env = (self._env_factory(target, self.seed + 1000 * i)
+                   if self._env_factory is not None
+                   else AnalyticCtleEnv([target], seed=self.seed + 1000 * i))
             try:
                 u, r, step = rollout(self.agent, env, u0=u0)
             except ValueError:
