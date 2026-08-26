@@ -233,6 +233,14 @@ class HybridResult:
     proposal_worst_spec: Optional[str] = None
     proposal_reason: Optional[str] = None
     proposal_design_id: Optional[str] = None
+    #: Which rank was delivered, 1-based, or None if none was. **Only ever the
+    #: FIRST feasible rank**: a later pass must not overwrite an earlier one or
+    #: every deployment cost is reported too high (the guard `scan_topk`
+    #: learned in entry 32).
+    proposal_rank: Optional[int] = None
+    #: How many candidates the source offered. 0 or 1 on the single-proposer
+    #: path, so the control's rows are unchanged.
+    n_candidates: int = 0
     #: 135 when the delivered design was verified, else 0. **Never added to
     #: `n_sims`** — see the module docstring.
     n_verify_points: int = 0
@@ -247,6 +255,8 @@ def propose_then_search(peaking_db: float, f_peak_hz: float,
                         archive: Optional[Sequence[Sequence[float]]] = None,
                         index: int = 0,
                         proposer_name: str = "library",
+                        candidates: Optional[Callable] = None,
+                        k: int = 1,
                         ) -> tuple[HybridResult, Optional[object], Optional[object]]:
     """Answer one request by proposal if possible, by search if not.
 
@@ -256,9 +266,20 @@ def propose_then_search(peaking_db: float, f_peak_hz: float,
     """
     t0 = time.time()
 
-    u0 = None
+    cands: list = []
     try:
-        u0 = proposer(float(f_peak_hz), float(peaking_db))
+        if candidates is not None:
+            # **The top-k path.** `scan_topk` measured the acceptance curve;
+            # this is the same library read the same way, but DELIVERING rather
+            # than only scoring, so the sweep can finally spend what entry 32
+            # priced (6 of 16 for 260 deployed decks at k=5).
+            cands = [np.asarray(c, dtype=float)
+                     for c in candidates(float(f_peak_hz), float(peaking_db),
+                                         int(k))]
+        else:
+            u1 = proposer(float(f_peak_hz), float(peaking_db))
+            if u1 is not None:
+                cands = [np.asarray(u1, dtype=float)]
     except Exception as exc:                                    # noqa: BLE001
         # **A proposer that raises must not lose the request.** The whole point
         # of the fallback is that the expensive path is always available; a
@@ -270,35 +291,57 @@ def propose_then_search(peaking_db: float, f_peak_hz: float,
 
     prop_ev = None
     n_prop = 0
-    if u0 is not None:
-        prop_ev = evaluate_at_points(u0, screen.points,
-                                     target_f_peak_hz=float(f_peak_hz),
-                                     target_peaking_db=float(peaking_db),
-                                     specs=R.V6_SPECS)
-        n_prop = int(prop_ev.n_sims)
+    rank_accepted: Optional[int] = None
+    for rank, u0 in enumerate(cands, start=1):
+        ev = evaluate_at_points(u0, screen.points,
+                                target_f_peak_hz=float(f_peak_hz),
+                                target_peaking_db=float(peaking_db),
+                                specs=R.V6_SPECS)
+        # **Every candidate scored is charged**, not only the one delivered.
+        n_prop += int(ev.n_sims)
+        # Keep the best record seen: a feasible one always wins, otherwise the
+        # closest by the score the search itself steers on. Without this the
+        # row would describe the LAST candidate rather than the best attempt.
+        if prop_ev is None or (ev.feasible and not prop_ev.feasible) or (
+                not prop_ev.feasible and not ev.feasible
+                and SS.score_design_eval(ev, R.V6_SPECS)
+                > SS.score_design_eval(prop_ev, R.V6_SPECS)):
+            prop_ev = ev
         if log is not None:
             log.write(json.dumps({
                 "event": "proposal", "index": index,
-                "proposer": proposer_name,
+                "proposer": proposer_name, "rank": rank,
+                "n_candidates": len(cands),
                 "target_peaking_db": float(peaking_db),
                 "target_f_peak_hz": float(f_peak_hz),
-                "u": list(prop_ev.u), "n_sims": n_prop,
-                "ok": prop_ev.ok, "reward": prop_ev.reward,
+                "u": list(ev.u), "n_sims": int(ev.n_sims),
+                "n_sims_cumulative": n_prop,
+                "ok": ev.ok, "reward": ev.reward,
                 # The same rank score the search steers on, computed the same
                 # way, so the two paths' numbers are in one scale (rule 9).
-                "search_score": SS.score_design_eval(prop_ev, R.V6_SPECS),
-                "feasible": prop_ev.feasible,
-                "worst_point": prop_ev.worst_point,
-                "worst_spec": prop_ev.worst_spec,
-                "peaking_db": prop_ev.peaking_db,
-                "f_peak_hz": prop_ev.f_peak_hz,
-                "reason": prop_ev.reason}) + "\n")
+                "search_score": SS.score_design_eval(ev, R.V6_SPECS),
+                "feasible": ev.feasible,
+                "worst_point": ev.worst_point,
+                "worst_spec": ev.worst_spec,
+                "peaking_db": ev.peaking_db,
+                "f_peak_hz": ev.f_peak_hz,
+                "reason": ev.reason}) + "\n")
             log.flush()
+        if ev.feasible:
+            # **Stop at the FIRST feasible rank.** A deployed proposer pays for
+            # the candidates up to and including the one it delivers, and no
+            # more; scoring on past it would inflate every cost this sweep
+            # reports.
+            prop_ev = ev
+            rank_accepted = rank
+            break
 
     common = dict(
         index=int(index), peaking_db=float(peaking_db),
         f_peak_hz=float(f_peak_hz), proposer=proposer_name,
-        proposal_made=u0 is not None,
+        proposal_made=bool(cands),
+        n_candidates=len(cands),
+        proposal_rank=rank_accepted,
         n_sims_proposal=n_prop)
     if prop_ev is not None:
         common.update(
@@ -316,7 +359,8 @@ def propose_then_search(peaking_db: float, f_peak_hz: float,
     if prop_ev is not None and prop_ev.feasible:
         res = C.RequestResult(
             peaking_db=float(peaking_db), f_peak_hz=float(f_peak_hz),
-            solved_on_screen=True, n_sims=n_prop, n_design_evals=1,
+            solved_on_screen=True, n_sims=n_prop,
+            n_design_evals=int(rank_accepted or 1),
             wall_s=time.time() - t0)
         res.u = list(prop_ev.u)
         res.design_id = common["proposal_design_id"]
@@ -351,25 +395,61 @@ def propose_then_search(peaking_db: float, f_peak_hz: float,
 # ─────────────────────────────────────────────────────────────────────────────
 
 
-def run(budget: int = C.BUDGET_DESIGN_EVALS,
-        peakings: Sequence[float] = C.PEAKING_REQUESTS,
-        freqs: Sequence[float] = C.FREQ_REQUESTS,
-        verify: bool = True, proposer: str = "library") -> dict:
-    from nebula.experiments.runlock import hold
+def check_topk_source(proposer: str, topk: int) -> None:
+    """Refuse a top-k sweep whose source cannot offer candidates.
 
+    **Extracted so a test can exercise it WITHOUT calling `run`** (G122: a
+    gate's test must not be able to spend money). The first version of this
+    check lived inside `run` and trusted the NAME -- `none` is in
+    `CANDIDATE_SOURCES` because it is the ablation -- so a smoke test of the
+    guard started a real 90-minute sweep. Twice: once by hand, once inside the
+    sabotage round that was proving the guard worked. **G129.**
+
+    Asks the source for a candidate rather than trusting its name.
+    """
     if proposer not in PROPOSERS:
         raise ValueError(f"unknown proposer {proposer!r}; "
                          f"have {sorted(PROPOSERS)}")
+    if int(topk) <= 1:
+        return
+    src = CANDIDATE_SOURCES.get(proposer)
+    if src is None or not list(src(C.FREQ_REQUESTS[0], C.PEAKING_REQUESTS[0],
+                                   int(topk))):
+        raise ValueError(
+            f"proposer {proposer!r} offers no candidates, so topk={topk} "
+            f"would spend a full sweep reporting a top-k cost for a run that "
+            f"proposes nothing. Sources with candidates: "
+            f"{sorted(k for k in CANDIDATE_SOURCES if k != 'none')}")
+
+
+def run(budget: int = C.BUDGET_DESIGN_EVALS,
+        peakings: Sequence[float] = C.PEAKING_REQUESTS,
+        freqs: Sequence[float] = C.FREQ_REQUESTS,
+        verify: bool = True, proposer: str = "library",
+        topk: int = 1) -> dict:
+    """`topk > 1` DELIVERS from the top-k candidate list (entry 40).
+
+    **`topk = 1` is the committed control and stays the default.** Entry 31
+    pre-committed that the ~90-minute sweep may not run at k=1's 1-of-16
+    acceptance; entry 32 measured 6 of 16 at k=5, and this parameter is what
+    lets the sweep spend that. The candidate source is `CANDIDATE_SOURCES`, the
+    same one `scan_topk` measures through, so the sweep and the measurement
+    cannot disagree about what "the top k" means.
+    """
+    from nebula.experiments.runlock import hold
+
+    check_topk_source(proposer, int(topk))
     with hold("hybrid", meta={"budget_design_evals": budget,
-                              "proposer": proposer}):
-        return _run(budget, peakings, freqs, verify, proposer)
+                              "proposer": proposer, "topk": int(topk)}):
+        return _run(budget, peakings, freqs, verify, proposer, int(topk))
 
 
-def _run(budget, peakings, freqs, verify, proposer_name) -> dict:
+def _run(budget, peakings, freqs, verify, proposer_name, topk: int = 1) -> dict:
     from nebula.experiments.runlock import stamp
 
     t0 = time.time()
     fn = PROPOSERS[proposer_name]
+    src = CANDIDATE_SOURCES.get(proposer_name) if int(topk) > 1 else None
     screen = AdaptiveScreen(EDGE4_MANDATED)
     out_rows: list[HybridResult] = []
     archive: list = []
@@ -382,7 +462,7 @@ def _run(budget, peakings, freqs, verify, proposer_name) -> dict:
     with RUN_LOG.open("w", encoding="utf-8") as fh:
         fh.write(json.dumps({
             "event": "start", "budget_design_evals": budget,
-            "proposer": proposer_name,
+            "proposer": proposer_name, "topk": int(topk),
             "spec_set": list(R.V6_SPECS), "n_requests": len(requests),
             "peaking_requests": list(peakings), "freq_requests": list(freqs),
             "screen": [p.label for p in screen.points]}) + "\n")
@@ -395,7 +475,7 @@ def _run(budget, peakings, freqs, verify, proposer_name) -> dict:
                 # **`exp_coverage`'s seed formula, character for character.** A
                 # fallback request must get the search it would have got.
                 seed=C.BASE_SEED + i, log=fh, archive=archive, index=i,
-                proposer_name=proposer_name)
+                proposer_name=proposer_name, candidates=src, k=int(topk))
             if hyb.proposal_accepted:
                 print(f"      PROPOSAL ACCEPTED at {hyb.n_sims_proposal} decks"
                       f"  reward {hyb.proposal_reward:+.4f}", flush=True)
@@ -916,6 +996,9 @@ def _report(d: dict) -> None:
 def main(argv: Optional[Sequence[str]] = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--run", action="store_true")
+    ap.add_argument("--topk-deliver", type=int, default=1, metavar="K",
+                    help="the SWEEP delivers from the top K candidates "
+                         "(entry 40). K=1 is the committed control.")
     ap.add_argument("--analyse", action="store_true")
     ap.add_argument("--budget", type=int, default=C.BUDGET_DESIGN_EVALS)
     ap.add_argument("--proposer", default="library", choices=sorted(PROPOSERS))
@@ -940,7 +1023,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     a = ap.parse_args(argv)
     if a.run:
         _report(run(budget=a.budget, verify=not a.no_verify,
-                    proposer=a.proposer))
+                    proposer=a.proposer, topk=a.topk_deliver))
     elif a.analyse:
         if not RESULTS.exists():
             raise SystemExit(f"{RESULTS.name} missing: run --run first")

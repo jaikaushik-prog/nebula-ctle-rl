@@ -4587,6 +4587,26 @@ Plus: git init, .gitignore, 28 tests, Wilson-bound BER reporting.
   k: it is that a guard written against one failure mode should be sabotaged
   with the NEXT caller in mind, not only the one that motivated it.**
 
+- **G129 -- (nebula, testing discipline) NEVER CALL AN EXPENSIVE ENTRY POINT TO
+  TEST ITS GUARD. Extract the check into a pure function and test THAT.** Hit
+  twice in ten minutes on 2026-08-26 while wiring entry 40's top-k proposer.
+  The guard refusing `topk > 1` for a source with no candidates lived *inside*
+  `exp_hybrid.run`, so the obvious way to check it was
+  `H.run(topk=5, proposer="none")` -- and `none` is IN `CANDIDATE_SOURCES`
+  because it is the ablation, so the guard did not fire and **a real ~90-minute
+  sweep started**. It was killed, the guard was fixed to ask the source for a
+  candidate instead of trusting its name, and then **the sabotage round proving
+  the guard worked started the sweep a second time** -- with the guard removed,
+  the test called `run` and there was nothing left to stop it. Both runs left a
+  stale `.hybrid.runlock.json` and a partial `hybrid_run.jsonl` that would have
+  blocked the next real sweep (**G127** again: the second kill also left the
+  sabotage applied). Fixed three ways: the check is now
+  `exp_hybrid.check_topk_source(proposer, topk)`, a **pure function** the tests
+  call directly; `run` calls it **before taking the lock**, pinned by a test; and
+  the guard interrogates the source rather than its name. **This is G122's
+  sharpest form: a sabotage must not be able to spend money -- and neither must
+  the test it sabotages.**
+
 ## 10. Environment
 
 - Windows 11, PowerShell 5.1 (+ Git Bash available), Python 3.13.14,

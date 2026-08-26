@@ -493,3 +493,109 @@ def test_no_flag_still_runs_NOTHING(monkeypatch):
                         lambda **k: pytest.fail("spent money"))
     monkeypatch.setattr(H, "run", lambda **k: pytest.fail("spent money"))
     assert H.main([]) == 0
+
+
+# ---------------------------------------------------------------------------
+# entry 40: the top-k proposer DELIVERS, not only scores
+# ---------------------------------------------------------------------------
+
+def test_the_sweep_refuses_topk_with_a_source_that_offers_nothing():
+    """**Written after starting a real 90-minute sweep by accident, twice.**
+
+    The first version of this guard trusted the NAME: `none` is in
+    `CANDIDATE_SOURCES` because it is the ablation, so `topk=5,
+    proposer="none"` sailed past it and began a full sweep that would have paid
+    top-k bookkeeping to propose nothing. The second time was inside the
+    SABOTAGE ROUND proving this very guard worked -- with the guard removed,
+    the test called `run` and the sweep started again.
+
+    **So the check is now a pure function and this test never calls `run`.**
+    G122: a gate's test must not be able to spend money. G129."""
+    with pytest.raises(ValueError, match="offers no candidates"):
+        H.check_topk_source("none", 5)
+
+
+def test_the_sweep_refuses_an_unknown_proposer_before_spending_anything():
+    with pytest.raises(ValueError, match="unknown proposer"):
+        H.check_topk_source("nope", 5)
+
+
+def test_the_guard_permits_the_configurations_that_should_run():
+    H.check_topk_source("library", 5)
+    H.check_topk_source("library", 1)
+    H.check_topk_source("none", 1)      # k=1 ablation stays legal
+
+
+def test_run_calls_the_guard_before_taking_the_lock(monkeypatch):
+    """The guard is worthless if the lock is taken first: a refused run would
+    still leave a lock file behind, which is what the killed sweeps did."""
+    order: list = []
+    monkeypatch.setattr(H, "check_topk_source",
+                        lambda p, k: order.append("guard"))
+    import contextlib
+
+    @contextlib.contextmanager
+    def _hold(name, meta=None):
+        order.append("lock")
+        raise AssertionError("must not reach the lock in this test")
+        yield
+
+    monkeypatch.setattr("nebula.experiments.runlock.hold", _hold)
+    monkeypatch.setattr(H, "_run", lambda *a, **k: order.append("run") or {})
+    with pytest.raises(AssertionError):
+        H.run(topk=5)
+    assert order[0] == "guard"
+
+
+def test_topk_1_is_the_committed_control_and_is_the_default():
+    import inspect
+    assert inspect.signature(H.run).parameters["topk"].default == 1
+
+
+def test_propose_then_search_walks_the_ranks_and_stops_at_the_first_feasible(
+        monkeypatch, tmp_path):
+    """Deck accounting: every candidate scored is charged, and scoring stops at
+    the first feasible rank -- past it and every deployment cost is too high."""
+    evals = [_Ev(feasible=False), _Ev(feasible=False), _Ev(feasible=True),
+             _Ev(feasible=False)]
+    _patch(monkeypatch, tmp_path, evals)
+    hyb, res, ev = H.propose_then_search(
+        6.0, 1.9e9, H.AdaptiveScreen(H.EDGE4_MANDATED),
+        candidates=lambda f, p, k: [np.asarray(U7)] * k, k=4)
+    assert hyb.proposal_accepted is True
+    assert hyb.proposal_rank == 3, "the FIRST feasible rank"
+    assert hyb.n_candidates == 4
+    assert hyb.n_sims_proposal == 3 * 4, "three candidates scored, four decks each"
+    assert hyb.n_sims == 3 * 4 and hyb.n_sims_search == 0
+
+
+def test_a_topk_proposal_that_never_becomes_feasible_falls_back_and_pays_both(
+        monkeypatch, tmp_path):
+    calls = _patch(monkeypatch, tmp_path, [_Ev(feasible=False)] * 3)
+    seen = {}
+
+    def _solve(pk, f, screen, budget=None, seed=None, log=None, archive=None):
+        seen["called"] = True
+        r = C.RequestResult(peaking_db=pk, f_peak_hz=f, solved_on_screen=False,
+                            n_sims=100, n_design_evals=10, wall_s=0.0)
+        r.u = list(U7)
+        return r, None
+
+    monkeypatch.setattr(H.C, "solve_request", _solve)
+    hyb, res, _ = H.propose_then_search(
+        6.0, 1.9e9, H.AdaptiveScreen(H.EDGE4_MANDATED),
+        candidates=lambda f, p, k: [np.asarray(U7)] * k, k=3)
+    assert seen.get("called"), "the fallback must still run"
+    assert hyb.proposal_accepted is False and hyb.proposal_rank is None
+    assert hyb.n_sims_proposal == 12 and hyb.n_sims_search == 100
+    assert hyb.n_sims == 112, "the cost is BOTH paths"
+
+
+def test_the_single_proposer_path_is_unchanged_by_the_topk_wiring(
+        monkeypatch, tmp_path):
+    """Entry 31's committed control must not drift."""
+    _patch(monkeypatch, tmp_path, [_Ev(feasible=True)])
+    hyb, _, _ = H.propose_then_search(
+        6.0, 1.9e9, H.AdaptiveScreen(H.EDGE4_MANDATED))
+    assert hyb.n_candidates == 1 and hyb.proposal_rank == 1
+    assert hyb.n_sims_proposal == 4

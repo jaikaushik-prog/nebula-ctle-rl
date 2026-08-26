@@ -7131,3 +7131,107 @@ the DFE being ideal.**
 No measured spec moved. This is a re-derivation of the eye under different DFE
 assumptions **from the same simulations**; the shipped design's committed
 verification is untouched, coverage is still 7 of 16, and no DFE was designed.
+
+---
+
+## 40. Session 28 — **the hybrid sweep, with the top-k proposer actually wired in**
+
+**Written 2026-08-26 BEFORE the top-k proposer is wired into
+`propose_then_search`**, and before the sweep runs. Authorised by the owner on
+2026-08-26 ("then the coverage sweep").
+
+### Why this sweep is not the one entry 31 told us not to run
+
+Entry 31 pre-committed a rule: **run the ~90-minute hybrid sweep if `>= 3`
+proposals are accepted; do not run it if `<= 1`.** At k=1 the proposer accepted
+**1 of 16**, so that configuration is still forbidden, and this entry does not
+run it.
+
+What changed is entry 32: at **k=5** the same library accepts **6 of 16** for
+**260 deployed decks**. But that number was measured by `scan_topk`, which is a
+*measurement* path -- it scores candidates and never delivers a design or falls
+back to the search. **`propose_then_search`, the path the sweep actually runs,
+still calls the k=1 proposer.** So the sweep as it stands would run the
+configuration entry 31 forbids, and the wiring comes first.
+
+**The wiring is additive:** `propose_then_search` gains an optional candidate
+source and a `k`, tries candidates in rank order paying `len(screen)` decks
+each, delivers the first feasible one, and otherwise falls back to
+`exp_coverage.solve_request` **unchanged**. The existing single-proposer path is
+untouched, so entry 31's committed control cannot drift.
+
+### The three baselines this is measured against
+
+    coverage at 45 mandated corners     7 of 16      entry 30, the plain search
+    plain-search cost                   13 718 decks BOTH prior sweeps, exactly
+    proposal acceptance at k=5          6 of 16      entry 32, 260 deployed decks
+
+**The plain search is budget-bound** -- both prior sweeps cost *exactly* 13 718
+decks -- so the cost arithmetic is largely known in advance and the interesting
+number is coverage, not decks.
+
+### The risk this sweep actually carries, stated before it runs
+
+**An accepted proposal REPLACES what the search would have found.** The screen
+is 4 corners; compliance is 45. A proposal that passes the screen and then fails
+at 45 corners costs a request that the search might have solved. So **coverage
+can go DOWN**, and the honest framing of this experiment is not "cost falls" --
+it is *"does cost fall without coverage falling?"*
+
+### Predictions
+
+**Q1 — coverage does not get worse. `>= 7 of 16` at 45 mandated corners.**
+Confidence: **0.55.** *For:* the fallback is the same search with the same
+budget and seed. *Against:* the screen is 4 corners and compliance is 45; six
+requests now short-circuit on a 4-corner pass, and entry 30 measured that the
+45/45 cliff is the binding constraint (four requests sat at 40, 43, 44, 44).
+*Falsifier:* 6 or fewer.
+
+**Q2 — the cost falls by at least a quarter. Total decks `<= 10 300`** (25 %
+below 13 718). Confidence: **0.7.** Arithmetic: a proposal-answered request
+costs ~20 decks against the search's ~857 average, so six of them save ~36 %
+if the other ten cost what they always did. *Falsifier:* above 10 300.
+
+**Q3 — the same six requests are answered by proposal** as entry 32 identified
+(indices 2, 4, 7, 9, 11, 14). Confidence: **0.7.** The ranking and the screen
+are deterministic; the one thing that can differ is the archive
+`choose_start` re-probes, and that only affects fallback requests.
+*Falsifier:* a different set.
+
+**Q4 — the proposals hold up at 45 corners: at least 3 of the 6
+proposal-answered requests pass 45/45.** Confidence: **0.5.** This is Q1's
+mechanism and the number that decides whether short-circuiting on a 4-corner
+screen is sound. *Falsifier:* 2 or fewer.
+
+**Q5 — the accounting.** `n_sims` equals proposal decks plus search decks for
+every request, and the ten fallback requests cost what the plain search costs.
+Confidence: **0.85.** A harness gate: `exp_coverage`'s neighbour was caught
+understating its cost 6x by counting only the path that won.
+
+No wall-clock prediction (**G126**).
+
+### The decision rule, before the result
+
+* **Q1 and Q2 both hit** -> **the headline is "the same coverage for a quarter
+  fewer simulations", and it is the rubric's own criterion** ("fewer search
+  spaces, lowest design time"). Report coverage and decks together, never decks
+  alone.
+* **Q2 hits, Q1 misses** -> **the short-circuit is trading compliance for cost.**
+  Report both numbers plainly and do NOT quote the saving on its own. The fix
+  would be to raise the acceptance bar -- deliver a proposal only if it passes
+  more than the 4-corner screen -- which is a design change and needs its own
+  entry, not a patch to this one.
+* **Q1 hits, Q2 misses** -> the wiring did not save what the arithmetic says it
+  should. Check the deck accounting before believing anything else.
+* **In every branch:** the delivered designs are verified by
+  `exp_coverage.verify_request`, the same verifier and the same 45/135 split as
+  every coverage number this project has published, so the artifacts stay
+  comparable row for row.
+
+### What no outcome may claim
+
+* **This is not an RL result.** The proposer is a zero-simulation library
+  lookup. Entry 41 is where RL is measured, and entry 36's **1 of 16** stands
+  until then.
+* **A coverage number from this sweep replaces entry 30's 7 of 16 only if Q1's
+  own verifier ran** -- 45 mandated corners, `verify_request`, unchanged.
