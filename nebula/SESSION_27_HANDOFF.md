@@ -13,7 +13,7 @@
 > this file — §4's four design decisions, §6's quotable/unquotable lists, §8's
 > standing rules, §9's five failure shapes — **still stands and is still the
 > best short brief in the repo.** Current entry point: `PROGRESS.md` §5i and
-> `CONTINUE_HERE.md`'s session-28 block.
+> `CONTINUE_HERE.md`'s session-28 block. **Section 11's "then stage 3 -- accept rate against 6 of 16 -- is the only number that discharges the mentor's condition" is now ANSWERED: stage 3 ran (entry 36) and scored 1 of 16 against 6. D9's condition is NOT met by SAC as a proposer.**
 
 **Written 2026-08-26, end of session 27, for a fresh chat.** The previous chat
 hit its context limit mid-experiment. This file is written *now*, while the

@@ -6292,3 +6292,157 @@ project has already been caught understating a cost 6x by collapsing
   untouched by anything here.
 * **Not a cost claim beyond the arms measured.** The 35.6 % deck saving belongs
   to entry 32's library proposer. An RL arm inherits none of it.
+
+### OUTCOME — run 2026-08-26, 5 arms at k=5, 1 600 decks, 17.9 min
+
+    arm                     A/16       accepted_at_k   decks  deployed  swing%
+    library  (control)         6     [1, 4, 5, 5, 6]     320       260     96%
+    sac_random_analytic        2     [1, 2, 2, 2, 2]     320       292     74%
+    sac_random_finetuned       0     [0, 0, 0, 0, 0]     320       320     59%
+    sac_seeded_analytic        1     [1, 1, 1, 1, 1]     320       304     92%
+    sac_seeded_finetuned       1     [0, 0, 0, 0, 1]     320       320     85%
+
+**VERDICT: the registered negative. Scored 5 of 6.** `_verdict()` applied entry
+36's rule mechanically: *"Q2 and Q3 both held: best seeded 1, best random 2,
+against the non-RL 6 of 16. **SAC DOES NOT CONTRIBUTE AS A PROPOSER at the bar
+D9 names.** Say so plainly rather than presenting the hybrid as RL-driven."*
+
+| | prediction | outcome |
+|---|---|---|
+| Q1 | the control reproduces exactly (0.85) | **HIT** — `[1,4,5,5,6]` and all 16 per-request ranks identical to entry 32 |
+| Q2 | neither random arm accepts > 2 (0.7) | **HIT** — 2 and 0 |
+| Q3 | neither seeded arm beats 6 (0.65) | **HIT** — 1 and 1. **This is the D9 test, and it held** |
+| Q4 | >= 50 % of random-arm failures name swing (0.8) | **HIT** — 74 % and 59 % |
+| Q5 | checkpoint choice is not decisive (0.6) | **MISS** — the random-start gap is **2** (analytic 2, fine-tuned 0) |
+| Q6 | 320 measured per arm, 260 deployed for the control (0.9) | **HIT** — exactly |
+
+### Q1 first, because everything else depends on it
+
+The control returned **the same six accepted ranks on the same six request
+indices** as entry 32 measured four days earlier: ranks 2, 5, 2, 1, 2, 3 on
+requests 2, 4, 7, 9, 11, 14. The screen, the pool, the scorer and the accept
+rule all still read what they read then. **Every RL number below is therefore a
+measurement of the policy and not of a moved instrument.**
+
+### The finding, stated the way it will have to be stated to the mentor
+
+**The policy is not merely no better than retrieval — it is much worse, and it
+destroys what retrieval hands it.** Started on the library's top 5 designs, the
+seeded arms kept **1 of the 6 acceptances the library found by itself**:
+
+    library      accepted requests   2, 4, 7, 9, 11, 14
+    S-analytic   accepted request    7                    (5 of 6 LOST)
+    S-finetuned  accepted request    0                    (all 6 LOST, 1 GAINED)
+
+This is exactly the mechanism entry 36 registered as the reason to expect a
+negative: *"its most likely effect on a corner-feasible library design is to
+walk it off the feasible island."* It did.
+
+**One honest exception, and it is n = 1.** `S-finetuned` accepted **request 0,
+which the library could not answer at any of its 5 ranks** — the policy edited a
+failing retrieved design into a feasible one, at rank 5. That is a real instance
+of RL adding something retrieval could not. It is one instance against six
+losses and **no claim is built on it**; it is recorded because leaving it out
+would make the negative cleaner than the data.
+
+### Q5 missed, and the miss is the most useful thing in the run
+
+Entry 36 predicted the checkpoint choice would not matter. **It matters, in the
+free-generation arms, and it points the other way from entry 35's headline:**
+
+    random starts:   analytic-only  A = 2      fine-tuned  A = 0
+    seeded starts:   analytic-only  A = 1      fine-tuned  A = 1
+
+**Fine-tuning on SPICE improved mean SPICE return (entry 35: -24.1 -> -19.0) and
+made the policy a WORSE proposer.** Entry 35's OUTCOME recorded that the gain
+was in the body of the distribution while the tail got heavier, and entry 36
+registered in advance that accept rate is a tail-sensitive instrument. **That
+chain was registered before this run and it is what the data did.**
+
+The failure breakdown names the mechanism precisely. Counting non-feasible
+candidates by why they died:
+
+    arm                   swing   pole-zero fit FAILED   other unscorable   infeasible
+    sac_random_analytic      58            14                      1               5
+    sac_random_finetuned     47            29                      1               3
+
+**The fine-tuned policy produces roughly twice as many designs whose response
+cannot even be FITTED** (29 against 14) — it is not being rejected by a spec, it
+is producing circuits the measurement chain cannot describe. That is why its
+swing fraction (59 %) is the lowest in the run: it fails earlier, in a worse
+way. Q4 still hits on both arms, and the library's own 96 % remains the
+reference.
+
+### The cost claim goes the wrong way too
+
+    library      260 deployed decks for 6 acceptances
+    S-analytic   304                    for 1
+    S-finetuned  320                    for 1
+    R-finetuned  320                    for 0
+
+A proposer that accepts less **early-exits less**, so it pays for more of its
+own candidate list. **The RL arms cost more decks and delivered fewer designs.**
+There is no amortisation claim available here in either direction.
+
+### What this settles, and what it does not
+
+* **D9's condition is NOT met by SAC as a proposer.** The mentor approved the
+  hybrid *"if the SAC contributes as RL"*. Measured on the deliverable's own
+  metric, on the same requests, screen and scorer as the non-RL control, it
+  contributes **negatively**: 6 -> 1.
+* **It does not say SAC failed to learn.** Entries 34 and 35 stand: the learner
+  moves, and the policy survives the SPICE transfer that erased PPO. What this
+  says is that **learning to maximise a 5-row analytic reward does not produce
+  designs that survive a 4-corner screen dominated by a 6th quantity the reward
+  cannot see.** That is a statement about the reward, not about SAC.
+* **It changes no coverage or compliance number.** Mandated 45-corner coverage
+  is still **7 of 16**; the shipped design is still 11 of 11 rows at 45 of 45
+  corners; entry 32's **35.6 %** deck saving is still the non-RL proposer's.
+
+### One thing went wrong DURING the run, and it is recorded here rather than fixed quietly
+
+**The guard this experiment shipped to prevent G113 leaked, and the leak was
+this experiment's own control arm.** `topk_scan_path` reserved
+`hybrid_topk_scan.json` for `source == "library"`. Stage 3 runs the library
+control at **k=5**, which matched, so the run **overwrote entry 32's committed
+k=8 artifact** with a k=5 one -- `accepted_at_k` of length 5 instead of 8, 80
+candidates instead of 128, `n_cand_unscorable` 116 -> 71. Every field was
+internally consistent and nothing raised; **`git status` showing a tracked file
+as modified was the only thing that caught it.**
+
+Fixed: the k=5 control was preserved as `topk_scan_library_k5.json`, the k=8
+baseline restored with `git checkout`, the reservation re-keyed on
+**`(source, k)`**, every arm now names its artifact explicitly as a second
+independent guard, and the test fixture redirects `HERE` so a k-keyed default
+cannot escape into the repo from a test. Four tests added, both new sabotages
+watched red. Now **G128**.
+
+**No number in this OUTCOME changed** -- the control's `[1,4,5,5,6]` and its six
+ranks come from `sac_propose_results.json` and the preserved file, both written
+by the run itself. The entry-32 figures quoted above (128 candidates, 116
+unscorable, 115 of 121 naming swing) are from the restored k=8 baseline.
+
+### The branch, and it is the committed one
+
+Entry 36's third branch fires: **report it plainly rather than presenting the
+hybrid as RL-driven.** Three options follow, and entry 36 registered all three
+as **owner decisions, not an agent's**:
+
+1. **Retrain on a reward that contains the spec that actually rejects
+   proposals.** Output swing is not in `V6A_SPECS` and cannot be, because it is
+   a measured 1 dB compression point rather than anything the analytic model
+   can predict. Buying it costs either SPICE-scored training (~1.26 s/step
+   against 0.0009, i.e. 50 000 steps goes from 23 minutes to ~17 hours) or a
+   fitted swing surrogate, which today has ~128 labelled points and no pool
+   field to fit on.
+2. **Move SAC inside the search as a refiner** and measure **decks-to-feasible**
+   instead of accept rate. The policy's edits were measured here in the hardest
+   possible framing — one shot, no feedback from the screen. Inside a loop that
+   can reject an edit, the same policy is a different instrument.
+3. **Ship retrieval + CMA-ES honestly**, with the RL arm reported as a measured
+   negative. Given entries 34, 35 and 36 this is a documented result with a
+   named mechanism, which is a finding rather than an absence of one.
+
+**No option is started without the owner choosing it**, and none of them is a
+reason to touch tolerances, the screen, `reward_v1.py`, `SEARCH_TAIL_W` or
+`SEARCH_ROW_CAP` (G111, and entry 30's pre-committed branch).

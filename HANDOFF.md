@@ -1567,14 +1567,14 @@ Plus: git init, .gitignore, 28 tests, Wilson-bound BER reporting.
 
 ## 6. Key numbers & validated behavior (current state)
 
-- Tests: **1915 passing, 12 deselected** (session 27-28) —
+- Tests: **1942 passing, 12 deselected** (session 28) —
   `python -m pytest tests nebula/tests -q -m "not slow"`.
   (Was 65 + 267 = 332 at the start of session 9; 430 at the end of it; 444
   after 10b; 528 after 11; 618 after 12b; 679 after 13; 1007 after 16; 1246
   after 17; 1292 after 18; **1314** with session 19a's uncommitted trim tests;
   **1389** after session 20; **1448** after session 21 closed G2; **1806**,
   then **1834** with `nebula/tests/test_hybrid.py`, then **1861** with
-  `test_hybrid_topk.py` in session 26; **1915** from session 27 on.) **12** further tests are marked `slow` and
+  `test_hybrid_topk.py` in session 26; **1915** from session 27; **1942** after session 28's `test_sac_propose.py` added 27.) **12** further tests are marked `slow` and
   deselected by default — they re-derive golden values from the FULL SKY130
   library (~30 s each). Run them after a PDK update. **Note `CLAUDE.md` is
   STALE on this**: it says 407 tests and 2 deselected. **Runtime is machine-load dependent** — the same suite has
@@ -1960,9 +1960,25 @@ Plus: git init, .gitignore, 28 tests, Wilson-bound BER reporting.
    (`nebula/NRZ_RETARGET_AUDIT.md`); bounds re-derived; robust geometry
    confirmed; corner-yield swept (13.49% -> 8.10%). Blocking next actions,
    in priority order:
-   - **>>> AS OF 2026-08-26 (session 28) THE ACTIVE LINE IS STAGE 3 OF
-     `NEXT_AGENT_SAC.md`: SAC AS `exp_hybrid`'s PROPOSER, SCORED ON ACCEPT RATE
-     AGAINST 6 OF 16. <<<** Stages 0-2 are all MEASURED. Stage 0: entry 31 then
+   - **>>> AS OF 2026-08-26 (session 28, later) STAGE 3 IS MEASURED AND THE
+     ANSWER IS NO. THE ACTIVE LINE IS AN OWNER DECISION, NOT AN EXPERIMENT.
+     <<<** Entry 36 ran: SAC as `exp_hybrid`'s proposer scored **1 of 16**
+     against the non-RL library's **6 of 16**, and the library control
+     reproduced entry 32 exactly. **D9's condition is NOT met by SAC as a
+     proposer** (`PROGRESS.md` section 5j). The three options -- retrain on a
+     reward containing output swing, move SAC inside the search as a refiner
+     and measure decks-to-feasible, or ship retrieval + CMA-ES with the RL arm
+     reported as a measured negative -- are **all the owner's call**, and none
+     of them permits touching tolerances, the screen, `reward_v1.py`,
+     `SEARCH_TAIL_W` or `SEARCH_ROW_CAP` (G111). Still open and still the
+     owner's: the **~90-minute full coverage sweep** (coverage 7 of 16),
+     **which design ships**, and **the report, which does not exist** -- 20
+     days to 15 Sept as of 2026-08-26.
+   - *(the block below was the active line earlier the same day, before entry
+     36 ran; kept because its stage 0-2 summary is still accurate.)*
+   - **>>> (SUPERSEDED, session 28 earlier) STAGE 3 OF `NEXT_AGENT_SAC.md`:
+     SAC AS `exp_hybrid`'s PROPOSER, SCORED ON ACCEPT RATE AGAINST 6 OF 16.
+     <<<** Stages 0-2 are all MEASURED. Stage 0: entry 31 then
      entry 32 (**1 of 16 -> 6 of 16 accepted, 35.6 % fewer decks**; depth, not
      the library, was the lever). Stage 1: entry 34 (the learner moves --
      `alpha` 14x, `log_std` -0.007 -> -1.779). Stage 2: **entry 35 -- the policy
@@ -4527,6 +4543,49 @@ Plus: git init, .gitignore, 28 tests, Wilson-bound BER reporting.
   the experiment; Q5 missed at 53.1 min against an 80-120 band, in the fast
   direction. Same root as the note in section 6 that a slow suite is
   contention, not a hang.
+
+- **G127 -- (nebula, testing discipline) AN INTERRUPTED SABOTAGE ROUND LEAVES
+  THE SABOTAGE IN THE CODE, AND `git diff` DOES NOT SHOW IT WHEN THE FILE UNDER
+  TEST IS UNTRACKED. Grep for the markers after every round; never let a
+  timeout be the thing that decides when a round ended.** Hit 2026-08-26
+  building stage 3. The runner patches one guard, runs one test, and restores
+  the file in a `finally` -- which is correct until the *process* is killed. Ten
+  cases x ~15 s of pytest start-up exceeded a 2-minute tool timeout, the runner
+  was killed between patch and restore, and `except ValueError:` in
+  `exp_sac_propose.py` stayed `except ZeroDivisionError:` -- the exact bug the
+  round was proving the gate could catch. **`git diff` was clean**, because the
+  file was new and untracked, so the usual check said everything was fine. A
+  grep for the sabotage strings found it in one line. Two fixes, both cheap:
+  run the round in the background rather than under a timeout, and **grep for
+  every sabotage marker afterwards** (`if False`, `if True:`, the swapped
+  exception types) instead of trusting `git status`. This is G122's companion
+  from the other side: G122 says a sabotage must not be able to spend money,
+  G125 says it must be able to fail, and G127 says **it must not be able to
+  survive the round.**
+
+- **G128 -- (nebula, artifacts) AN ARTIFACT'S IDENTITY IS `(source, k)`, NOT
+  `source`. A guard keyed on one half of what identifies a file does not
+  protect it -- and the run the guard was WRITTEN for walked straight through
+  the other half.** 2026-08-26, stage 3. `scan_topk` used to write
+  `hybrid_topk_scan.json` unconditionally, which would have let an RL arm
+  destroy entry 32's baseline (G113's shape). The fix added `topk_scan_path`,
+  which reserved that filename for `source == "library"` -- correct as far as it
+  went, sabotage-tested, ten cases red. **Then stage 3 ran its library CONTROL
+  at k=5, matched `source == "library"`, and overwrote the committed k=8
+  measurement with a k=5 one:** `accepted_at_k` of length 5 instead of 8, 80
+  candidates instead of 128, `n_cand_unscorable` 116 -> 71. Every field was
+  internally consistent and nothing failed. **The only thing that noticed was
+  `git status` showing a tracked artifact as modified** -- which is why a
+  committed artifact is worth more than an ignored one, and why the diff is
+  worth reading before the commit rather than after. Fixed by keying the
+  reservation on `(source, k)` (`topk_scan_library_k<k>.json` for any other k),
+  by having every stage-3 arm name its artifact explicitly as a second
+  independent guard, and by redirecting `H.HERE` in the test fixture so a
+  k-keyed default can never escape into the real experiments directory from a
+  test. The k=5 control was preserved as `topk_scan_library_k5.json` and the
+  k=8 baseline restored with `git checkout`. **The general lesson is not about
+  k: it is that a guard written against one failure mode should be sabotaged
+  with the NEXT caller in mind, not only the one that motivated it.**
 
 ## 10. Environment
 
@@ -10810,3 +10869,100 @@ execution is exactly what `PREDICTIONS.md` exists to prevent.
 `SESSION_27_HANDOFF.md` status banner.
 
 **Gotchas added:** G126 (one).
+
+### 2026-08-26 -- session 28 (continued): stage 3 RAN. **SAC does not contribute as a proposer: 6 of 16 -> 1 of 16.**
+
+**The number D9 asked for is measured, and it is a negative that was
+pre-registered as one.** `experiments/exp_sac_propose.py`, 5 arms at k=5,
+**1 600 decks, 17.9 min**, pre-registered as `PREDICTIONS.md` **entry 36**
+(committed before the file existed), which scored **5 of 6**.
+
+    arm                     A/16       accepted_at_k   decks  deployed  swing%
+    library  (control)         6     [1, 4, 5, 5, 6]     320       260     96%
+    sac_random_analytic        2     [1, 2, 2, 2, 2]     320       292     74%
+    sac_random_finetuned       0     [0, 0, 0, 0, 0]     320       320     59%
+    sac_seeded_analytic        1     [1, 1, 1, 1, 1]     320       304     92%
+    sac_seeded_finetuned       1     [0, 0, 0, 0, 1]     320       320     85%
+
+**Q1 first, because everything depends on it: the control reproduced entry 32
+EXACTLY** -- the same six accepted ranks (2, 5, 2, 1, 2, 3) on the same six
+requests (2, 4, 7, 9, 11, 14). The instrument had not moved, so every RL number
+is a measurement of the policy.
+
+**Started on the library's own top-5 designs, the policy kept 1 of the 6
+acceptances retrieval found by itself.** That is the mechanism entry 36
+registered in advance: the reward contains no output-swing row, 95 % of all
+rejections are output-swing compression, so the policy's most likely effect on a
+corner-feasible design is to walk it off the feasible island. It did. **One
+honest exception, n = 1:** `S-finetuned` solved request 0, which the library
+could not answer at any rank -- recorded because omitting it would make the
+negative tidier than the data.
+
+**Q5 missed, and the miss is the most useful thing in the run.** Checkpoint
+choice IS decisive for free generation -- analytic-only **A = 2**, fine-tuned
+**A = 0** -- so **the SPICE fine-tune that entry 35 measured as an improvement
+made the policy a worse proposer.** Entry 35 recorded the gain as body-of-the-
+distribution with a heavier tail; entry 36 registered accept rate as
+tail-sensitive. **The chain was written down before the run and the data
+followed it.** The mechanism is nameable: the fine-tuned policy produces
+**roughly twice as many designs whose response cannot even be FITTED** (29
+against 14 pole-zero failures), which is why its swing fraction is the lowest in
+the run -- it fails earlier and worse.
+
+**The cost claim goes the wrong way too.** A proposer that accepts less
+early-exits less: library **260** deployed decks for 6 acceptances, RL arms
+**292-320** for 0-1. More decks, fewer designs.
+
+**What it does NOT say.** Not that SAC failed to learn -- entries 34 and 35
+stand. It says that maximising a 5-row analytic reward does not produce designs
+that survive a 4-corner screen dominated by a 6th quantity the reward cannot
+see. **That is a statement about the reward, not about SAC.** No coverage or
+compliance number moves: mandated 45-corner coverage is still **7 of 16**, the
+shipped design is still 11 of 11 rows at 45 of 45 corners, and **35.6 %** is
+still the non-RL proposer's.
+
+**Three options follow and all three are the OWNER's**, per entry 36's committed
+branch: (1) retrain on a reward containing output swing -- which cannot come
+from the analytic model and costs either SPICE-scored training (~23 min ->
+~17 h for 50 000 steps) or a surrogate fitted on ~128 labelled points; (2) move
+SAC inside the search as a refiner and measure **decks-to-feasible** instead of
+accept rate; (3) ship retrieval + CMA-ES honestly with the RL arm reported as a
+measured negative with a named mechanism. **None is started without the owner
+choosing it**, and none is a reason to touch tolerances, the screen,
+`reward_v1.py`, `SEARCH_TAIL_W` or `SEARCH_ROW_CAP` (G111).
+
+**Code, and what guards it.** `exp_sac_propose.py` is new; `exp_hybrid.scan_topk`
+gained an **additive** `out=` path through the new `topk_scan_path`, which
+**refuses** to let a non-library source write `hybrid_topk_scan.json` --
+`scan_topk` wrote it unconditionally, so an RL arm would have destroyed the
+artifact every published 6-of-16 and 35.6 % number cites (G113's shape, caught
+by reading the code before the run). `rl/analytic_env.py` gained a read-only
+`u` property so a rollout can name the design it visited without slicing it back
+out of the observation. **27 new tests, and all 10 sabotages went red** --
+including the original bug: `scan_topk` writing the baseline unconditionally.
+
+**Suite 1915 -> 1942 passed, 12 deselected.** Smoke artifacts from the 8-deck
+integration smoke were **deleted** before the real run (G113): a 1-request
+`topk_scan_sac_random_analytic.json` is indistinguishable from the 16-request
+one.
+
+**AND THE GUARD I BUILT FOR G113 LEAKED, IN THE RUN IT WAS BUILT FOR (G128).**
+`topk_scan_path` reserved `hybrid_topk_scan.json` for `source == "library"` --
+and stage 3's library CONTROL runs at **k=5**, matched that, and overwrote entry
+32's committed **k=8** artifact with a k=5 one: `accepted_at_k` length 5 instead
+of 8, 80 candidates instead of 128, unscorable 116 -> 71, every field internally
+consistent, nothing raised. **`git status` was the only thing that caught it**,
+which is the argument for committing artifacts rather than ignoring them. The
+k=5 control was preserved as `topk_scan_library_k5.json`, the k=8 baseline
+restored from git, the reservation re-keyed on **`(source, k)`**, every arm now
+names its artifact explicitly as a second guard, and the test fixture now
+redirects `H.HERE` so a k-keyed default cannot escape into the repo from a test.
+**None of the reported numbers changed** -- the control's `[1,4,5,5,6]` and its
+six ranks come from `sac_propose_results.json` and the preserved file. 4 new
+tests, both new sabotages watched red.
+
+**Gotchas added:** G127 -- an interrupted sabotage round leaves the sabotage in
+the code, and `git diff` does not show it when the file under test is untracked.
+Hit for real this session: a 2-minute tool timeout killed the runner between
+patch and restore and left `except ZeroDivisionError:` in `exp_sac_propose.py`.
+A grep found it; git did not. **G128** -- an artifact's identity is `(source, k)`, and a guard keyed on half of it does not protect it.

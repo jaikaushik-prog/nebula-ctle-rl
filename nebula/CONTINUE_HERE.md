@@ -8,6 +8,34 @@ else in the 22s brief stands.
 
 **24 days to the 15 Sept deadline. Demo 25 Sept at BITS Goa.**
 
+> **2026-08-26 (session 28, LATER -- THIS SUPERSEDES THE SESSION-28 BLOCK
+> BELOW). STAGE 3 RAN AND THE ANSWER IS NO: SAC as a proposer scores 1 of 16
+> against the non-RL library's 6 of 16.** Entry 36, 5 arms at k=5, 1 600 decks,
+> 17.9 min, scored **5 of 6**.
+>
+>     library (control)      6 of 16   [1,4,5,5,6]   <- reproduced entry 32 EXACTLY
+>     sac_random_analytic    2 of 16
+>     sac_random_finetuned   0 of 16
+>     sac_seeded_analytic    1 of 16
+>     sac_seeded_finetuned   1 of 16
+>
+> Started on the library's own top-5 designs, the policy **kept 1 of the 6
+> acceptances retrieval found by itself**. The mechanism was registered in
+> advance: **95 % of all rejections are output-swing compression, and the
+> reward the policy was trained on has no swing row.** One honest exception,
+> n = 1: `S-finetuned` solved request 0, which the library could not answer at
+> any rank. **Q5 missed and it is the most useful miss in the run** -- the SPICE
+> fine-tune entry 35 measured as an improvement made the policy a WORSE
+> proposer (analytic-only 2, fine-tuned 0), producing twice as many designs
+> whose response cannot even be fitted. **D9's condition is NOT met by SAC as a
+> proposer.** The three options -- retrain on a reward containing swing, move
+> SAC inside the search as a refiner and measure decks-to-feasible, or ship
+> retrieval + CMA-ES with the RL arm reported as a measured negative -- are
+> **all the owner's decision**, and none permits touching tolerances, the
+> screen or `reward_v1.py` (G111). Read `PROGRESS.md` section 5j, then entry
+> 36's OUTCOME, then G127. **Nothing about coverage (7 of 16), compliance
+> (11 of 11 at 45 of 45) or the 35.6 % deck saving changed.**
+
 > **2026-08-26 (session 28) — READ THIS FIRST, IT SUPERSEDES EVERY BLOCK BELOW
 > ON THE RL TRACK. `nebula/SESSION_27_HANDOFF.md`'s "immediate job" IS DONE:
 > `exp_sac_finetune.py` RAN at full budget (53.1 min) and entry 35 scored 3 of

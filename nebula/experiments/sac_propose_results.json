@@ -1,0 +1,251 @@
+{
+ "task": "stage 3: does SAC contribute as RL? accept rate",
+ "run_pid": 14448,
+ "run_started_unix": 1787721462.9949758,
+ "run_host": "JAI",
+ "k": 5,
+ "seed": 230826,
+ "baseline": {
+  "accepted_at_k": [
+   1,
+   4,
+   5,
+   5,
+   6
+  ],
+  "n_accepted": 6,
+  "n_sims_deployed": 260,
+  "source": "entry 32, hybrid_topk_scan.json"
+ },
+ "checkpoints": {
+  "analytic": {
+   "stage": "analytic",
+   "steps": 50000,
+   "spice_calls": 0
+  },
+  "finetuned": {
+   "stage": "finetuned",
+   "steps": 1500,
+   "spice_calls": 6000
+  }
+ },
+ "arms": [
+  {
+   "arm": "library",
+   "accepted_at_k": [
+    1,
+    4,
+    5,
+    5,
+    6
+   ],
+   "n_accepted": 6,
+   "accepted_ranks": [
+    null,
+    null,
+    2,
+    null,
+    5,
+    null,
+    null,
+    2,
+    null,
+    1,
+    null,
+    2,
+    null,
+    null,
+    3,
+    null
+   ],
+   "n_cand_feasible": 7,
+   "n_cand_infeasible": 2,
+   "n_cand_unscorable": 71,
+   "n_sims_measured": 320,
+   "n_sims_deployed": 260,
+   "swing_named": 70,
+   "non_feasible": 73,
+   "swing_fraction": 0.958904109589041,
+   "n_declined": 0,
+   "artifact": "C:\\Users\\DELL\\Desktop\\serdes-dsp-framework-main\\nebula\\experiments\\topk_scan_library_k5.json",
+   "wall_clock_s": 243.9446268081665,
+   "artifact_note": "written to hybrid_topk_scan.json by the run and MOVED here afterwards: the k=5 control had overwritten entry 32's k=8 baseline, which was restored from git. See G128."
+  },
+  {
+   "arm": "sac_random_analytic",
+   "accepted_at_k": [
+    1,
+    2,
+    2,
+    2,
+    2
+   ],
+   "n_accepted": 2,
+   "accepted_ranks": [
+    null,
+    null,
+    null,
+    null,
+    2,
+    null,
+    null,
+    1,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null
+   ],
+   "n_cand_feasible": 2,
+   "n_cand_infeasible": 5,
+   "n_cand_unscorable": 73,
+   "n_sims_measured": 320,
+   "n_sims_deployed": 292,
+   "swing_named": 58,
+   "non_feasible": 78,
+   "swing_fraction": 0.7435897435897436,
+   "n_declined": 0,
+   "artifact": "C:\\Users\\DELL\\Desktop\\serdes-dsp-framework-main\\nebula\\experiments\\topk_scan_sac_random_analytic.json",
+   "wall_clock_s": 165.3937668800354
+  },
+  {
+   "arm": "sac_random_finetuned",
+   "accepted_at_k": [
+    0,
+    0,
+    0,
+    0,
+    0
+   ],
+   "n_accepted": 0,
+   "accepted_ranks": [
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null
+   ],
+   "n_cand_feasible": 0,
+   "n_cand_infeasible": 3,
+   "n_cand_unscorable": 77,
+   "n_sims_measured": 320,
+   "n_sims_deployed": 320,
+   "swing_named": 47,
+   "non_feasible": 80,
+   "swing_fraction": 0.5875,
+   "n_declined": 0,
+   "artifact": "C:\\Users\\DELL\\Desktop\\serdes-dsp-framework-main\\nebula\\experiments\\topk_scan_sac_random_finetuned.json",
+   "wall_clock_s": 165.20832777023315
+  },
+  {
+   "arm": "sac_seeded_analytic",
+   "accepted_at_k": [
+    1,
+    1,
+    1,
+    1,
+    1
+   ],
+   "n_accepted": 1,
+   "accepted_ranks": [
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    1,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null
+   ],
+   "n_cand_feasible": 1,
+   "n_cand_infeasible": 1,
+   "n_cand_unscorable": 78,
+   "n_sims_measured": 320,
+   "n_sims_deployed": 304,
+   "swing_named": 73,
+   "non_feasible": 79,
+   "swing_fraction": 0.9240506329113924,
+   "n_declined": 0,
+   "artifact": "C:\\Users\\DELL\\Desktop\\serdes-dsp-framework-main\\nebula\\experiments\\topk_scan_sac_seeded_analytic.json",
+   "wall_clock_s": 293.194717168808
+  },
+  {
+   "arm": "sac_seeded_finetuned",
+   "accepted_at_k": [
+    0,
+    0,
+    0,
+    0,
+    1
+   ],
+   "n_accepted": 1,
+   "accepted_ranks": [
+    5,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null
+   ],
+   "n_cand_feasible": 1,
+   "n_cand_infeasible": 4,
+   "n_cand_unscorable": 75,
+   "n_sims_measured": 320,
+   "n_sims_deployed": 320,
+   "swing_named": 67,
+   "non_feasible": 79,
+   "swing_fraction": 0.8481012658227848,
+   "n_declined": 0,
+   "artifact": "C:\\Users\\DELL\\Desktop\\serdes-dsp-framework-main\\nebula\\experiments\\topk_scan_sac_seeded_finetuned.json",
+   "wall_clock_s": 204.59307432174683
+  }
+ ],
+ "wall_s": 1074.6805300712585,
+ "verdict": {
+  "Q1_control_reproduced": true,
+  "Q2_random_weak": true,
+  "Q3_seeded_not_above_baseline": true,
+  "Q4_swing_dominates": true,
+  "Q5_checkpoint_not_decisive": false,
+  "Q6_accounting": true,
+  "best_seeded": 1,
+  "best_random": 2,
+  "checkpoint_gaps": {
+   "random": 2,
+   "seeded": 0
+  },
+  "call": "Q2 and Q3 both held: best seeded 1, best random 2, against the non-RL 6 of 16. SAC DOES NOT CONTRIBUTE AS A PROPOSER at the bar D9 names. Say so plainly rather than presenting the hybrid as RL-driven. The three options -- retrain on a reward containing the spec that actually rejects proposals; move SAC inside the search and measure decks-to-feasible; or ship retrieval + CMA-ES with the RL arm reported as a measured negative -- are ALL owner decisions."
+ }
+}

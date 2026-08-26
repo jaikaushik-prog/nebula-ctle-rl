@@ -115,7 +115,10 @@ PROPOSAL_SCAN = HERE / "hybrid_proposal_scan.json"
 #: **A third file, for the same reason again (G113).** The top-K scan is a
 #: different measurement of a different proposer; writing it into
 #: `PROPOSAL_SCAN` would silently overwrite the k=1 result that entry 31's
-#: OUTCOME quotes, which is G113's exact shape. `scan_topk` writes only this.
+#: OUTCOME quotes, which is G113's exact shape. **Reserved for
+#: `source == "library"`**: any other source writes
+#: `topk_scan_<source>.json`, and `topk_scan_path` RAISES rather than
+#: letting an RL arm overwrite the baseline it is measured against.
 TOPK_SCAN = HERE / "hybrid_topk_scan.json"
 
 #: A proposer is `(f_peak_hz, peaking_db) -> u | None`. `None` means "no
@@ -551,10 +554,69 @@ def scan_proposals(peakings: Sequence[float] = C.PEAKING_REQUESTS,
     return out
 
 
+def topk_scan_path(source: str, out: Optional[Path] = None,
+                   k: Optional[int] = None) -> Path:
+    """Where a top-k scan is allowed to write. **`TOPK_SCAN` is reserved.**
+
+    **The artifact's identity is `(source, k)`, not `source`** -- and that was
+    learned the hard way, in the run this guard was written for. The first
+    version keyed on `source` alone, so stage 3's library CONTROL at `k = 5`
+    walked straight through it and overwrote entry 32's `k = 8` measurement
+    with a smaller one that looks exactly as legitimate: `accepted_at_k` of
+    length 5 instead of 8, 80 candidates instead of 128, 116 unscorable
+    becoming 71. Nothing failed; `git status` was the only thing that noticed.
+    **G128.**
+
+    `hybrid_topk_scan.json` is the artifact entry 32's `A = 6 of 16` and the
+    35.6 % deck saving are quoted from. `scan_topk` used to write it
+    unconditionally, so running the same function with a DIFFERENT candidate
+    source would have destroyed the published baseline while reporting success
+    -- G113's exact shape, and invisible until a figure disagreed with the
+    prose. This function is the guard, and it is deliberately separate so a
+    test can watch it refuse.
+
+    * `source == "library"` **at `k == DEFAULT_TOPK`** keeps the historical
+      path, so entry 32's artifact is still overwritten by a re-run of the run
+      that made it -- the one case where overwriting is correct. `k=None` means
+      "the caller did not say", and is treated as the default k.
+    * the library at any other `k` defaults to `topk_scan_library_k<k>.json`.
+    * any other source defaults to `topk_scan_<source>.json`.
+    * an explicit `out` is honoured **unless** it resolves to `TOPK_SCAN` for
+      anything but that one (source, k), which raises rather than being
+      silently redirected: a caller that asked for the wrong file has a bug,
+      and quietly fixing it hides the bug (G30 -- a failure that reports
+      success is worse than one that stops).
+    """
+    baseline = (source == "library" and (k is None or int(k) == DEFAULT_TOPK))
+    if out is not None:
+        dest = Path(out)
+    elif baseline:
+        dest = TOPK_SCAN
+    elif source == "library":
+        dest = HERE / f"topk_scan_library_k{int(k)}.json"
+    else:
+        dest = HERE / f"topk_scan_{source}.json"
+    if not baseline and dest.resolve() == TOPK_SCAN.resolve():
+        raise ValueError(
+            f"source {source!r} at k={k} may not write {TOPK_SCAN.name} -- that "
+            f"file is entry 32's committed library baseline at k={DEFAULT_TOPK} "
+            f"(A = 6 of 16, 35.6 % fewer decks) and overwriting it would "
+            f"destroy the number every RL arm is measured against. Only "
+            f"`source='library', k={DEFAULT_TOPK}` may write it. Pass a "
+            f"different `out`, or omit it to get the default for this "
+            f"(source, k).")
+    return dest
+
+
 def scan_topk(peakings: Sequence[float] = C.PEAKING_REQUESTS,
               freqs: Sequence[float] = C.FREQ_REQUESTS,
-              source: str = "library", k: int = DEFAULT_TOPK) -> dict:
-    """Score the top `k` library candidates per request. **`16*k*4` decks.**
+              source: str = "library", k: int = DEFAULT_TOPK,
+              out: Optional[Path] = None) -> dict:
+    """Score the top `k` candidates per request. **`16*k*4` decks.**
+
+    `out` says where the artifact goes and defaults through
+    `topk_scan_path`, which **refuses** to let a non-library source overwrite
+    entry 32's committed baseline.
 
     WHY THIS EXISTS, AND WHY IT IS NOT THE THING IT REPLACES
     ---------------------------------------------------------
@@ -626,6 +688,10 @@ def scan_topk(peakings: Sequence[float] = C.PEAKING_REQUESTS,
     screen = AdaptiveScreen(EDGE4_MANDATED)
     requests = [(pk, f) for pk in peakings for f in freqs]
     rows: list[dict] = []
+    # **Resolved BEFORE any deck is spent.** A scan that discovers where it may
+    # write only after 320 simulations has already paid for an artifact it
+    # cannot keep.
+    dest = topk_scan_path(source, out, k=k)
 
     with hold("hybrid_topk_scan", meta={"source": source, "k": k}):
         t0 = time.time()
@@ -712,7 +778,7 @@ def scan_topk(peakings: Sequence[float] = C.PEAKING_REQUESTS,
                          and r["accepted_rank"] <= j + 1)
                      for j in range(k)]
     scored = [c for r in rows for c in r["candidates"] if "error" not in c]
-    out = {
+    out_d = {
         "task": "hybrid stage 0: how DEEP into the library must the proposer "
                 "look before a candidate survives the corners?",
         **stamp(),
@@ -736,8 +802,9 @@ def scan_topk(peakings: Sequence[float] = C.PEAKING_REQUESTS,
         "wall_clock_s": time.time() - t0,
         "requests": rows,
     }
-    TOPK_SCAN.write_text(json.dumps(out, indent=1), encoding="utf-8")
-    return out
+    dest.write_text(json.dumps(out_d, indent=1), encoding="utf-8")
+    out_d["artifact"] = str(dest)
+    return out_d
 
 
 def _report_scan(d: dict) -> None:

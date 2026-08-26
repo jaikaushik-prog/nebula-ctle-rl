@@ -786,6 +786,105 @@ has none -- G113's shape exactly. **They are `.gitignore`d** (`*.pt`, 3.2 MB
 each) and therefore exist only on this machine -- a fresh clone must re-run the
 53-minute experiment before stage 3 can propose from either of them.
 
+## 5j. STAGE 3 RAN: **SAC does not contribute as a proposer. 6 of 16 -> 1 of 16.**
+
+**2026-08-26 (session 28), `experiments/exp_sac_propose.py`, 5 arms at k=5,
+1 600 decks, 17.9 min, artifact `sac_propose_results.json`.**
+
+This is the number mentor decision **D9** asked for — accept rate on the 16
+coverage-grid requests, against the non-RL library proposer — and it is a
+**negative, pre-registered as such** (entry 36, committed before the code
+existed).
+
+    arm                     A/16       accepted_at_k   decks  deployed  swing%
+    library  (control)         6     [1, 4, 5, 5, 6]     320       260     96%
+    sac_random_analytic        2     [1, 2, 2, 2, 2]     320       292     74%
+    sac_random_finetuned       0     [0, 0, 0, 0, 0]     320       320     59%
+    sac_seeded_analytic        1     [1, 1, 1, 1, 1]     320       304     92%
+    sac_seeded_finetuned       1     [0, 0, 0, 0, 1]     320       320     85%
+
+**Entry 36 scored 5 of 6.** The control reproduced entry 32 exactly — same six
+accepted ranks on the same six requests — so every RL number is a measurement
+of the policy, not of a moved instrument.
+
+### The professor-ready version
+
+**In plain language: we gave the trained agent the same job the simple
+look-it-up method does, and it did that job much worse.** Handed the six
+requests the library already answers, the agent broke five of them. Left to
+design from scratch it answered two of sixteen, against the library's six.
+
+**Why, and it is not mysterious.** 95 % of all rejections in this project are
+*output swing* — the circuit distorts once the signal gets large. The agent was
+never trained on output swing: its reward contains two frequency rows, two
+peaking rows and the Nyquist boost, and nothing else. It optimised what it could
+see and walked the designs straight into the thing it could not. **We wrote that
+prediction down before running** (entry 36), precisely so the result could not
+be explained away afterwards.
+
+**One honest exception, n = 1.** The fine-tuned agent solved request 0, which
+the library could not answer at any of its five ranks. One gain against six
+losses; no claim is built on it, and it is recorded because leaving it out would
+make the negative tidier than the data.
+
+### The most useful thing in the run is the prediction that MISSED
+
+Entry 36 predicted the choice of checkpoint would not matter. It does:
+
+    random starts:   analytic-only  A = 2      fine-tuned  A = 0
+    seeded starts:   analytic-only  A = 1      fine-tuned  A = 1
+
+**The SPICE fine-tune that entry 35 measured as an improvement made the policy a
+worse proposer.** Entry 35 recorded that its gain was in the *body* of the
+distribution while the *tail* got heavier; entry 36 registered, in advance, that
+accept rate is a tail-sensitive instrument. **The chain was written down before
+the run and the data followed it.**
+
+The mechanism is nameable. Counting why non-feasible candidates died:
+
+    arm                   swing   pole-zero fit FAILED   other unscorable   infeasible
+    sac_random_analytic      58            14                      1               5
+    sac_random_finetuned     47            29                      1               3
+
+**The fine-tuned policy produces roughly twice as many designs whose response
+cannot even be fitted** — it is not being rejected by a spec, it is producing
+circuits the measurement chain cannot describe.
+
+### The cost claim goes the wrong way too
+
+A proposer that accepts less early-exits less, so it pays for more of its own
+candidate list: the library spent **260** deployed decks for 6 acceptances, the
+RL arms **292-320** for 0-1. **More decks, fewer designs.** There is no
+amortisation claim here in either direction.
+
+### What this settles, and what it does not
+
+* **D9's condition is not met by SAC as a proposer.** Measured on the
+  deliverable's own metric it contributes negatively, 6 -> 1.
+* **It does not say SAC failed to learn.** Entries 34 and 35 stand. What it says
+  is that maximising a 5-row analytic reward does not produce designs that
+  survive a 4-corner screen dominated by a 6th quantity the reward cannot see.
+  **That is a statement about the reward, not about SAC.**
+* **No coverage or compliance number moves.** Mandated 45-corner coverage stays
+  **7 of 16**, the shipped design stays 11 of 11 rows at 45 of 45 corners, and
+  the **35.6 %** deck saving stays the non-RL proposer's.
+
+### The three options, and all three are the owner's call
+
+1. **Retrain on a reward containing output swing.** It cannot come from the
+   analytic model — it is a measured 1 dB compression point. Cost: SPICE-scored
+   training (50 000 steps goes from ~23 min to ~17 h) or a fitted surrogate,
+   which today has ~128 labelled points and no pool field to fit on.
+2. **Move SAC inside the search as a refiner** and measure **decks-to-feasible**
+   instead of accept rate. This run tested the policy in the hardest framing —
+   one shot, no feedback from the screen.
+3. **Ship retrieval + CMA-ES honestly**, with the RL arm reported as a measured
+   negative with a named mechanism.
+
+**None is started without the owner choosing it**, and none is a reason to touch
+tolerances, the screen, `reward_v1.py`, `SEARCH_TAIL_W` or `SEARCH_ROW_CAP`
+(G111, entry 30's pre-committed branch).
+
 ## 6. Next steps, in order
 
 | # | Task | Cost | Status |
@@ -806,7 +905,7 @@ each) and therefore exist only on this machine -- a fresh clone must re-run the
 | **4k** | **Fit a ranking on the labels 4j produces.** Entry 31 gave 16 labelled candidates with **1** positive, which is unfittable. A k=8 scan gives ~128 labelled (design, pass/fail-at-corners) pairs. Only worth starting if 4j returns `A >= 5` -- the pre-committed branch | 0 sims to fit, 64-512 to re-measure | **UNBLOCKED: 4j returned A=6 >= 5.** 128 labels, **7** positives. Must predict output-swing compression (99.1 % of failures), a label that exists **only** in `hybrid_topk_scan.json` and never in the pool -- so held-out validation, not a re-fit on the same rows |
 | **4l** | **SAC stage 1 -- does the learner move at all?** `rl/sac.py` + `exp_sac_gate.py`, gated on the entropy coefficient, the same instrument that diagnosed PPO. Pre-registered as **entry 34** | 50 000 analytic steps, 0 SPICE, 40.5 min | **DONE 2026-08-26.** `alpha` **14x**, `log_std` -0.007 -> **-1.779**. **Scored 3 of 5**; both misses were the two least-confident predictions |
 | **4m** | **SAC stage 2 -- does the policy SURVIVE the SPICE transfer that erased PPO (G114)?** `exp_sac_finetune.py`, all three G114 levers held, one variable changed. Pre-registered as **entry 35** | 50 000 analytic + 1 500 SPICE steps + 2x16 SPICE evals, **53.1 min, 935 decks** | **DONE 2026-08-26 (session 28). YES.** `log_std` -1.7788 -> **-2.0902**, return -24.101 -> **-19.012**. **Scored 3 of 5.** See section 5i |
-| **4n** | **SAC stage 3 -- the number that discharges D9.** SAC as `exp_hybrid`'s proposer, scored on **accept rate against the non-RL baseline of 6 of 16** (entry 32). **Pre-register first, including WHICH checkpoint proposes** -- fine-tuned won the body, lost the tail | ~512 decks for a k-scan, TBD | **NEXT.** Unblocked by 4m; this is the deliverable, everything before it was preparation |
+| **4n** | **SAC stage 3 -- the number that discharges D9.** SAC as `exp_hybrid`'s proposer, scored on **accept rate against the non-RL baseline of 6 of 16** (entry 32), 5 arms x k=5 | **1 600 decks, 17.9 min measured** | **DONE 2026-08-26 (session 28). THE ANSWER IS NO: 6 of 16 -> 1 of 16.** Entry 36 scored **5 of 6**; the control reproduced entry 32 exactly. D9's condition is **NOT met by SAC as a proposer**. See section 5j |
 | **5** | **Corner-aware RL vs random / CMA-ES / library lookup.** Pre-registered as entry 25 (with a disclosed rule-3 violation: written after launch, before any artifact existed) | ~2.5 h | **RUNNING** |
 | **6** | **Re-run the coverage sweep on `V6_SPECS`** (§5b). Owner: *"polishing numbers is much needed for honesty."* **Publish both the old and the corrected coverage number** | ~2.5 h | **committed, do not drop** |
 | 7 | 2-D tuning bank (`Cs` axis) + the reading-(B) criterion | ~1 100 sims, ~8 min | built, not run |

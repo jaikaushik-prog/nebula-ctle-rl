@@ -105,6 +105,11 @@ def _patch(monkeypatch, tmp_path, evals, n_cands: int = 3):
         H.CANDIDATE_SOURCES, "library",
         lambda f, p, k: [np.asarray(U7, dtype=float)] * min(k, n_cands))
     monkeypatch.setattr(H, "TOPK_SCAN", tmp_path / "topk.json")
+    # **`HERE` too.** Since G128 the destination is keyed on `(source, k)`, so a
+    # scan at a non-default k derives its own filename from `HERE` -- and an
+    # un-redirected `HERE` would write that file into the real experiments
+    # directory from inside a test.
+    monkeypatch.setattr(H, "HERE", tmp_path)
     monkeypatch.setattr(H, "PROPOSAL_SCAN",
                         tmp_path / "scan_SHOULD_NOT_EXIST.json")
     monkeypatch.setattr(H, "RESULTS", tmp_path / "results_SHOULD_NOT_EXIST.json")
@@ -132,13 +137,25 @@ def test_the_three_modes_write_three_DIFFERENT_files():
 
 
 def test_the_scan_writes_TOPK_SCAN_and_nothing_else(monkeypatch, tmp_path):
-    out, _ = _one(monkeypatch, tmp_path, [_Ev()] * 3)
+    """**At the DEFAULT k**, which since G128 is half of what identifies the
+    baseline artifact: `(source, k)`, not `source`."""
+    out, _ = _one(monkeypatch, tmp_path, [_Ev()] * 8, k=H.DEFAULT_TOPK)
     assert (tmp_path / "topk.json").exists()
     assert not (tmp_path / "scan_SHOULD_NOT_EXIST.json").exists()
     assert not (tmp_path / "results_SHOULD_NOT_EXIST.json").exists()
     assert not (tmp_path / "log_SHOULD_NOT_EXIST.jsonl").exists()
     on_disk = json.loads((tmp_path / "topk.json").read_text(encoding="utf-8"))
-    assert on_disk["k"] == out["k"] == 3
+    assert on_disk["k"] == out["k"] == H.DEFAULT_TOPK
+
+
+def test_the_library_at_a_NON_default_k_does_not_touch_the_baseline(
+        monkeypatch, tmp_path):
+    """G128. Stage 3's control runs the library at k=5; before this rule it
+    overwrote entry 32's k=8 artifact with a k=5 one that looked legitimate."""
+    out, _ = _one(monkeypatch, tmp_path, [_Ev()] * 3, k=3)
+    assert not (tmp_path / "topk.json").exists()
+    assert (tmp_path / "topk_scan_library_k3.json").exists()
+    assert out["artifact"] == str(tmp_path / "topk_scan_library_k3.json")
 
 
 def test_the_scan_holds_its_OWN_lock_name(monkeypatch, tmp_path):

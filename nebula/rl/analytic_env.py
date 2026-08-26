@@ -226,6 +226,18 @@ class AnalyticCtleEnv:
                                  self._target.f_peak_hz, self._step,
                                  self.horizon)
 
+    @property
+    def u(self) -> np.ndarray:
+        """The design the env is CURRENTLY at, as a copy.
+
+        Additive and read-only. A rollout that wants the best design it visited
+        needs the design, and `step` returns an observation; slicing `u` back
+        out of the observation would couple a caller to the observation layout
+        and fail silently the day that layout changes. Returning a copy stops a
+        caller mutating the env's state by accident.
+        """
+        return self._u.copy()
+
     # -- the MDP --------------------------------------------------------------
 
     def reset(self, u0=None):
