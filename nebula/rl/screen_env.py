@@ -70,6 +70,14 @@ HORIZON: int = 16
 #: steps needing a revert at 0.15. Registered in entry 41; not a knob to revisit.
 MAX_STEP: float = 0.05
 
+#: How many starts `reset` may try before accepting an unscorable one.
+#: **Measured, not guessed:** at 16 tries, 2 of 8 resets spent the full
+#: 64 decks and started unscorable anyway -- ~25 000 wasted decks over a
+#: 25 000-step run. If four surrogate-filtered candidates are all unscorable a
+#: fifth rarely rescues it, and the policy can still climb the `n_scorable`
+#: staircase from where it lands.
+MAX_RESET_TRIES: int = 4
+
 
 class ScreenEnv:
     """The 4-corner screen as an RL environment. **Every step costs 4 decks.**
@@ -115,6 +123,16 @@ class ScreenEnv:
         self.min_start_swing_v = float(min_start_swing_v)
         self._surrogate = None
         self.n_starts_filtered = 0
+        # **G123: `load_pool` is UNCACHED and re-parses 74 526 rows per call.**
+        # `library_candidates` calls it on every reset, and with a 16-step
+        # horizon that is ~1 560 re-parses over a 25 000-step run -- measured at
+        # ~20 s each in the smoke, i.e. roughly 17 % of the entire run spent
+        # re-reading one file. The targets are a fixed set of 64, so this memo
+        # saturates after one pass. **Copies are handed out**: `load_pool`
+        # returns a mutable object shared by every caller, and G123 records that
+        # memoising it in place changes aliasing rather than only speed.
+        self._lib_memo: dict = {}
+        self.n_pool_reads = 0
 
         self.observation_dim = 7 + 8 + 2 + 1
         self.action_dim = N_ACTIONS
@@ -188,9 +206,15 @@ class ScreenEnv:
         """
         from nebula.experiments import exp_coverage as C
 
-        cands = C.library_candidates(float(self._target.f_peak_hz),
-                                     float(self._target.peaking_db),
-                                     k=self.library_k)
+        key = (round(float(self._target.f_peak_hz), 6),
+               round(float(self._target.peaking_db), 6), self.library_k)
+        if key not in self._lib_memo:
+            self.n_pool_reads += 1
+            self._lib_memo[key] = [np.asarray(u, dtype=float) for u in
+                                   C.library_candidates(float(self._target.f_peak_hz),
+                                                        float(self._target.peaking_db),
+                                                        k=self.library_k)]
+        cands = [np.array(u, copy=True) for u in self._lib_memo[key]]
         if not cands:
             return None
         if self.surrogate_filter:
@@ -224,7 +248,7 @@ class ScreenEnv:
     def reset(self, u0=None):
         self._target = self.targets[int(self.rng.integers(len(self.targets)))]
         self._step = 0
-        for _ in range(16):
+        for _ in range(MAX_RESET_TRIES):
             if u0 is not None:
                 self._u = np.asarray(u0, dtype=float).copy()
             elif self.start_from_library:
@@ -289,6 +313,7 @@ class ScreenEnv:
                 "n_feasible_steps": self.n_feasible_steps,
                 "n_warm_starts": self.n_warm_starts,
                 "n_starts_filtered": self.n_starts_filtered,
+                "n_pool_reads": self.n_pool_reads,
                 "min_start_swing_v": self.min_start_swing_v,
                 "specs": list(self.specs), "horizon": self.horizon,
                 "points": [p.label for p in self.points],
