@@ -1,0 +1,70 @@
+{
+ "task": "run-to-run consistency (proposal 002 criterion 4)",
+ "source_log": "budget_ladder_run.jsonl.gz",
+ "problem": "P1",
+ "role": "measured",
+ "budgets": [
+  2400
+ ],
+ "n_boot": 20000,
+ "boot_seed": 7,
+ "arms": {
+  "cmaes": {
+   "method": "cmaes",
+   "prescreen": false,
+   "n": 10,
+   "mean": 8.99990209277988,
+   "sd": 7.138021001048352e-05,
+   "cv_pct": 0.0007931220726028551,
+   "min": 8.999780666817044,
+   "max": 8.999984323354159
+  },
+  "ppo": {
+   "method": "ppo",
+   "prescreen": false,
+   "n": 10,
+   "mean": 8.99059891176255,
+   "sd": 0.007446331681992032,
+   "cv_pct": 0.08282353328263674,
+   "min": 8.97494136465584,
+   "max": 8.997085532343213
+  },
+  "uniform": {
+   "method": "uniform",
+   "prescreen": false,
+   "n": 20,
+   "mean": 8.991256906230827,
+   "sd": 0.01036847431964783,
+   "cv_pct": 0.11531729576609706,
+   "min": 8.951988134778837,
+   "max": 8.999951391391608
+  }
+ },
+ "comparisons": [
+  {
+   "a": "uniform",
+   "b": "cmaes",
+   "sd_a": 0.01036847431964783,
+   "sd_b": 7.138021001048352e-05,
+   "ratio": 145.2569881501473,
+   "ci95": [
+    41.25499827806488,
+    283.34971089517614
+   ],
+   "distinguishable": true
+  },
+  {
+   "a": "ppo",
+   "b": "cmaes",
+   "sd_a": 0.007446331681992032,
+   "sd_b": 7.138021001048352e-05,
+   "ratio": 104.31927394019154,
+   "ci95": [
+    23.85500011874349,
+    176.71122284826296
+   ],
+   "distinguishable": true
+  }
+ ],
+ "screen_effect_on_spread": {}
+}

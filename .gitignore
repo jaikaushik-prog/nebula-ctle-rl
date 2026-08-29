@@ -115,6 +115,12 @@ s3_yield_results.json
 cl_sensitivity_results.json
 analytic_screen_results.json
 
+# Run locks (experiments/runlock.py). Ephemeral machine-local state: a pid and a
+# start time, meaningful only on the box that wrote it. `runlock.py` and its
+# tests ARE tracked; the lock files it drops are not. A committed lock would also
+# arrive on another checkout looking like a live run and refuse to start one.
+*.runlock.json
+
 # ngspice scratch. run_point() works in a TemporaryDirectory, but interactive
 # sessions in nebula/device/spice/ leave these behind.
 *.raw

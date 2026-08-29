@@ -1,0 +1,48 @@
+{
+ "task": "run-to-run consistency (proposal 002 criterion 4)",
+ "source_log": "baselines_run_interp.jsonl.gz",
+ "problem": "P3",
+ "role": "measured",
+ "budgets": [
+  150
+ ],
+ "n_boot": 20000,
+ "boot_seed": 7,
+ "arms": {
+  "cmaes": {
+   "method": "cmaes",
+   "prescreen": false,
+   "n": 10,
+   "mean": -1.2480866164759754,
+   "sd": 2.4363008592175093,
+   "cv_pct": 195.20286709719764,
+   "min": -8.1080897154717,
+   "max": -0.04375744569906059
+  },
+  "uniform": {
+   "method": "uniform",
+   "prescreen": false,
+   "n": 20,
+   "mean": 0.5012501105695129,
+   "sd": 2.5845044053843464,
+   "cv_pct": 515.6117377107151,
+   "min": -0.8975003266714345,
+   "max": 8.034191378101218
+  }
+ },
+ "comparisons": [
+  {
+   "a": "uniform",
+   "b": "cmaes",
+   "sd_a": 2.5845044053843464,
+   "sd_b": 2.4363008592175093,
+   "ratio": 1.0608313811515204,
+   "ci95": [
+    0.08594395590114845,
+    10.751321232306298
+   ],
+   "distinguishable": false
+  }
+ ],
+ "screen_effect_on_spread": {}
+}

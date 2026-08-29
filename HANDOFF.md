@@ -11191,3 +11191,284 @@ project's stricter axis, not the competition's 45-corner requirement); 8 of 16 i
 50 % with a **95 % CI of [25 %, 75 %]** because 16 requests is a 4x4 grid, not a
 sample; and **this is not an RL result** -- library lookup proposes, CMA-ES falls
 back, and entry 36's 1 of 16 for SAC stands.
+
+### 2026-08-29 -- session 29: the three external proposals are EVALUATED. Docs only; no code, no simulation.
+
+The owner supplied `nebula/001-frl-ad-gmid-sequential.md`,
+`nebula/002-designer-adoption-criteria (1).md`, `nebula/003-bag-autockt-align-magical.md`
+and `nebula/EVAL_PROTOCOL.md` and asked for feasibility against the competition,
+compatibility with the project as it stands, and the implications of adopting each.
+Three eval files written, one per proposal, named per the protocol:
+
+    nebula/001-frl-ad-gmid-sequential.eval.md
+    nebula/002-designer-adoption-criteria.eval.md
+    nebula/003-bag-autockt-align-magical.eval.md
+
+**Protocol deviation, declared in each file.** `EVAL_PROTOCOL.md` Stage 1 requires a
+sealed first pass -- a view formed before seeing any note on how the idea fits our
+direction. All four documents arrived in one message, including 002 section 3. These
+are therefore Stage 1+2 combined passes. The skipped bias control is named in the
+files rather than pretended.
+
+**The single most decisive finding: proposal 001's flagship mechanism has already
+been evaluated in this repo, on this PDK, and the result was negative.**
+`GMID_MAP.md` measured the gm/I_D reparameterisation -- stated mechanism falsified
+(G44 share 38.07 % device coords vs 37.74 % design coords, unchanged), residual
+benefit 1.16x on simulations per valid design, analytic peak predictor unusable as a
+filter (TN = 0), and a PDK finding that attacks the paper's own premise: at fixed
+`nf`, I_D/W varies 1.56x across the `w_in` box because W/nf sweeps the model bins, so
+scaling current linearly in W -- the textbook gm/I_D move -- is a **56 % width
+error** on SKY130. Adopting it anyway would invalidate every baseline
+(`BASELINES.md` section 7f). Verdict SKIP, and report it as a measured negative --
+which is already `CONTINUE_HERE.md` section 6.3 row 10.
+
+**Verdict summary.** Of eleven separable pieces across the three briefs, **one**
+warrants a prototype and **five** are report work with zero blast radius:
+
+| Piece | Verdict |
+|---|---|
+| 001 2.1 gm/I_D reparameterisation | SKIP -- already measured negative here |
+| 001 2.2 sequential feasible problems | SKIP for 15 Sept -- residue is section 6.2 item 8, zero sims |
+| 001 2.3 adaptive action space | SKIP -- speeds convergence to a measured null |
+| **001 2.4 unobserved environment variation** | **PROTOTYPE -- owner decision** |
+| 002 layout objection | DO -- quote `CL_RANGE.md` section 4 |
+| 002 similarity boundary | DO -- write it as an explicit deliverable |
+| 002 consistency criterion | DO -- run-to-run variance from existing logs |
+| 003 AutoCkt | ADOPT as positioning -- reading time, not build time |
+| 003 ALIGN | SKIP for 15 Sept; name as future work |
+| 003 BAG / BAG2 | SKIP -- generator-based, needs a human, opposite of the brief |
+| 003 MAGICAL | SKIP -- layout, does not reach this project |
+
+**The one prototype-worthy piece, and why it is not what G42 killed.** 001's
+mechanism 2.4 injects a varying quantity into the simulator and withholds it from the
+observation. Here that quantity is `cl`, which `rl/contract.py` section 2 pins at
+`cl_mid` = 32.63 fF while compliance is scored over 135 points = 45 corners x 3 loads
+across a 5.72x load range -- and **the 135-point load grid is 0 of 16** (entry 40).
+The policy has never been trained on the axis it is scored on.
+**G42 / `CL_SENSITIVITY.md` measured that letting the search CHOOSE `cl` lowers the
+S3 yield (13.54 % -> 8.73 %, disjoint CIs); that is an agent buying S3 by declaring a
+load nobody will build.** Domain randomisation is the opposite: `cl` drawn per
+episode, never observed, so the policy cannot select for it and must pay for load
+sensitivity. **G42 forecloses the first and says nothing about the second, and
+conflating them would wrongly close this off.** Blast radius is the smallest of
+anything in the briefs -- environment only, `reward_v1.py` untouched (G111),
+ACTION_SPACE untouched, so section 7f does not fire. It is still a training-config
+change and therefore rule 6: **the owner decides.** The counterargument is registered
+in the eval and it is strong: entries 36 and 38 are 0 for 2 on "fix the named blind
+spot and the accept rate moves", and entry 38's lesson was that fixing swing merely
+exposed shape-at-corners.
+
+**Two answers already in the repo and quoted nowhere.** (1) The layout-parasitics
+objection, which is the strongest one a designer judge can raise: `CL_RANGE.md`
+section 4 parses `sky130_fd_pr__cap_vpp_01p8x01p8_m1m2_noshield` at run time for
+m1 = 0.0984 fF/um and m2 = 0.1191 fF/um, and measures routing at 14-18 % of the load
+range -- doubling the whole allowance moves `cl_hi` by a fifth of an octave against a
+2.52-octave range. (2) The AutoCkt positioning: `exp_hybrid` is structurally AutoCkt's
+warm start with retrieval substituted for the learned trajectory, and we have measured
+both arms -- library 6 of 16 at 35.6 % fewer decks (entry 32) and 34 % cheaper per
+delivered compliant design (entry 40), against SAC's 1 of 16 (entry 36). The
+reportable sentence is that the retrieval warm start delivers AutoCkt's claimed
+benefit and the learned one does not, with the 1-D spec manifold named as the cause.
+
+**No code changed and no simulation ran**, so the test suite was not re-run; the last
+measured state stands at 1861 passed, 11 deselected. Nothing in `CONTINUE_HERE.md`
+section 2's gate table, the coverage number (8 of 16) or the compliance number
+(11 of 11 at 45 of 45) is touched by this session.
+
+### 2026-08-29 -- session 29 (continued): proposal 004 evaluated, and **entry 41's run is DEAD at 9 500 of 25 000 steps**.
+
+`nebula/004-basso-rl-layout-thesis.eval.md` written (Basso PhD thesis, RL
+floorplanning and routing, Infineon/ANAGEN). Evaluated on the two questions the brief
+scopes it to -- which RL formulation techniques transfer, and whether it changes the
+layout-scope answer -- **not** as a sizing method, per its own scope warning.
+
+**THE OPERATIONAL FINDING, which outranks the eval.** Checking which environment
+these techniques would touch surfaced this:
+
+    experiments/.sac_screen.runlock.json   pid 18744 -- NOT RUNNING (stale lock)
+    progress                               9 500 of 25 000 steps
+    elapsed                                307.6 min (5.1 h), 45 436 decks
+
+**Entry 41 stopped at 38 % and the lock was left behind.** It is resumable by design
+(500-step chunks, checkpoint per chunk, `learning_starts` scoped to the first chunk
+only). At the **measured ~1.94 s/step** -- far better than the 7.18 s/step the entry
+budgeted, because the two budget leaks were fixed before the run -- the remaining
+15 500 steps are **~8.4 h**, not the ~50 h originally costed.
+
+Two **mid-run readings**, explicitly NOT scored predictions (entry 41 scores its Q's
+on the completed run):
+
+* **Q1's thresholds are already cleared.** `alpha` **0.9997 -> 0.1863** (5.4x against
+  a 2x gate); `log_std` **-0.0028 -> -1.5486** (1.55 against a 0.5 gate). On the
+  instrument that caught PPO, SAC is training on the true corner-screen objective.
+* **Q2 is flat.** Screen-feasible steps, first five chunks **78**, most recent five
+  **75** = **0.96x** against a 2x gate. Per-chunk 7-31 with no trend, while sigma
+  falls monotonically 0.70 -> 0.21. Converging, but not on *feasible*.
+
+**Eval verdicts -- three of the four techniques are already implemented here.**
+
+| Piece | Verdict |
+|---|---|
+| 2.1 action masking | **SKIP** -- exists as a soft screen; the mask row costs 15.75 % false rejection; G72 forbids it on the graded band |
+| 2.2 beam at inference | **ALREADY BUILT** (`scan_topk`, k=5, 35.6 %); adopt the convergence as a report line |
+| 2.3 pretrained reward predictor as encoder | **SKIP for 15 Sept** -- would confound entry 41 |
+| 2.4 dense partial reward | **SKIP** -- potential-based shaping preserves the plateau it is hoped to fix |
+| section 3 scalarisation convergence | **DO** -- one paragraph, zero risk |
+| section 4 presentation template | **DO** -- third pointer at the missing designer-hours row |
+| layout content | **SKIP** -- ANAGEN is Infineon-internal; cite Basso, keep ALIGN as the named future-work tool |
+
+**Why masking does not transfer, in one line:** Basso masks on non-overlap over a
+32x32 grid, where invalidity is an **exact geometric fact with zero error**. Ours
+would mask on a predictor whose `f_peak` MdAPE is **4.93 % at design conditions and
+15.85 % at benchmark conditions**, false rejection **0.39 % -> 3.88 %**. Masking with
+an exact oracle is free; masking with an errorful predictor deletes good designs from
+reachability permanently -- and `BASELINES.md` section 5 already printed that row:
+**zero widening = 85.2 % free rejection but 15.75 % FALSE rejection.** The chosen
+0.40/2.0 row **is** the decision not to mask, pinned by
+`test_margins_follow_the_stated_rule`.
+**Second reason, independent:** G72's HEADROOM_ONLY band is deliberately **graded**
+because `tail_saturation` binds on 2.6-13.3 % of the box and a flat floor gives a
+fresh policy no direction out (design 432: -10.0 -> -8.746, strictly ordered at
+1/10/50/100/300/1000 mV). **Masking that band regresses to the floor G72 removed.**
+The safe form of the idea -- filtering the *reset distribution* with entry 37's swing
+surrogate -- is **already live in entry 41** (1 811 of 1 859 warm starts filtered).
+The registered counterargument: a **state-conditional per-step** mask is a different
+object from a one-shot candidate filter and has **not** been measured here; what
+settles it for 15 Sept is that building one means touching `screen_env.py` mid-run.
+
+**2.4 has a reason beyond cost.** Basso's per-step reward is the negative *increase*
+in proxy metrics -- a difference of potentials, i.e. potential-based in form, and
+**potential-based shaping is policy-invariant: it changes learning speed, not the
+optimum.** G102's defect is that the objective itself is flat (8.4x tail-current
+spread within 0.001 of best). **Shaping that preserves the optimum preserves the
+plateau.** G102's own named fix is an *added term*, and its zero-simulation form is
+already `CONTINUE_HERE.md` section 6.2 item 8.
+
+**Two free report wins, both zero blast radius.** (1) Both fRL-AD and Basso name
+**weighted-sum scalarisation** as their known weak point; we use **maximin** instead
+and have measured its own cost (G102). Claim only that -- a different choice with a
+quantified cost, **not** that we avoided the limitation. (2) The thesis's headline
+shape -- time-to-produce vs a manual baseline on real cases -- is the **third
+independent pointer** at `CONTINUE_HERE.md` section 6.3 row 10, the SKY130
+re-measurement of `g1_handdesign.cir` as a benchmark row with designer-hours attached.
+
+**A pattern worth recording: the 1-D spec manifold now gates TWO external ideas.**
+001's sequential target-walking and 004's inference-time objective re-weighting both
+require `target_peaking_db` to be live, and it is accepted by `reward_v1.margins` and
+deliberately ignored (`CONTINUE_HERE.md` section 5 OPEN item 5). That open decision is
+no longer just an awkward fact about our own results.
+
+**No code changed and no simulation ran this session**; suite unchanged at 1861
+passed, 11 deselected. Coverage (8 of 16) and compliance (11 of 11 at 45 of 45) are
+untouched.
+
+### 2026-08-29 -- session 29 (continued): entry 41 RESUMED, and consistency is measured for the first time.
+
+**Entry 41 is running again.** It was found dead at 9 500 of 25 000 steps with a
+stale lock (see the previous entry). Resumed with
+`python -m nebula.experiments.exp_sac_screen --run --resume`:
+
+    pid 5832   resumed_at 9500   total_steps 25000
+    checkpoint sac_policy_screen.pt carried 9 500 steps
+    learning_starts correctly 0 on continuation (verified before launching)
+
+**A launch trap worth recording.** The first attempt used `nohup ... &` inside
+the Bash tool; the wrapper reported "completed, exit 0" within seconds and the
+log was empty, which reads exactly like a failed launch. It had **not** failed --
+the process was still importing torch. A second launch was then fired and
+**`runlock` correctly refused it**, naming the live pid. **The runlock did its
+job**: without it two SAC runs would have shared one ngspice (G70, ~4.8x) and
+raced to overwrite the same artifact, which is the 2026-08-21 failure. Lesson:
+**an immediate exit-0 from a backgrounded launcher is not evidence the run died
+-- check the lock and the pid, not the wrapper's exit code.**
+
+**A reading trap in the resumed log, and it will bite whoever scores entry 41.**
+On resume `env.report()` is a **fresh** env, so `n_decks`, `n_feasible_steps`,
+`n_warm_starts` and `n_starts_filtered` **restart at 0** in the appended rows
+while `steps` continues from 9 500. Two consequences:
+* **total decks = 45 436 + the resumed segment's count**, not the final row's;
+* **Q2 is "final five chunks vs first five chunks"**, and a naive cumulative-delta
+  read across the whole file hits a **negative delta at the seam**. The pre-resume
+  rows must supply the "first five".
+Same family as G124 -- a silent counter discontinuity that reads as a real finding.
+
+**Mid-run readings at the 9 500-step mark** (NOT scored predictions; entry 41
+scores on the completed run): **Q1's gates are already cleared** -- `alpha`
+0.9997 -> 0.1863 (5.4x against a 2x gate), `log_std` -0.0028 -> -1.5486 (1.55
+against 0.5). **Q2 is flat** -- feasible steps 78 in the first five chunks against
+75 in the most recent five, **0.96x** against a 2x gate, while sigma falls
+monotonically 0.70 -> 0.21.
+
+---
+
+**NEW MEASUREMENT: `VARIANCE.md` -- run-to-run consistency, zero simulations.**
+Built while entry 41 trains, from `baselines_run_interp.jsonl.gz`. This answers
+proposal 002's fourth adoption criterion and closes a `CONTINUE_HERE.md` section 5
+OPEN question ("whether our variance-across-repeats is measurable at all").
+
+    experiments/exp_variance.py          the analysis
+    variance_results_{baselines,ladder}_{P1,P3}.json
+    tests/test_variance.py               10 tests, NO SPICE (safe beside a run)
+    python -m nebula.experiments.exp_variance --run
+
+**P1, 150 simulations: every arm lands within 1.2 % of the same mean, and their
+run-to-run spread differs by 22x.**
+
+    cmaes+screen   sd 0.0051      <- most consistent
+    ppo+screen     sd 0.0584
+    uniform        sd 0.1110      <- least consistent
+
+    uniform     vs cmaes           6.78x  [ 4.29, 10.54]
+    ppo+screen  vs cmaes+screen   11.51x  [ 4.31, 24.73]
+    ppo+screen  vs uniform+screen  1.39x  [ 0.48,  3.73]  <- NOT distinguishable
+
+**This is the axis fRL-AD claims as its contribution** (variance reduction, not a
+better mean). On it, our RL arm is **4-11.5x more variable than CMA-ES and
+statistically indistinguishable from screened random search** -- extending the
+existing "indistinguishable from random" finding from the **mean** to the
+**spread**. At 2 400 simulations CMA-ES becomes effectively deterministic
+(sd 0.0001) and the gap **widens** (145x vs uniform). On P3 nothing is consistent
+(CV 195 % / 516 %, ratio CI [0.09, 10.75]) and **no consistency claim is made
+there**. The pre-screen is also a consistency device: 2.6-3.5x tighter for the
+three sampling methods, but only **1.12x** for PPO.
+
+**A correction earned while building it, now pinned by a test.** The first version
+grouped by `(method, prescreen)` and **not** `problem`, reporting `uniform`'s sd as
+**4.6186 instead of 0.1110 -- a 42x inflation** -- because P1 saturates near +8.95
+while P3 runs negative. It did not raise and the derived bootstrap intervals were
+internally consistent (one read `742.85x [584.28, 1489.04]`). Same family as G105
+and G108. `load_summaries(problem="")` now **raises**, and
+`test_pooling_problems_inflates_the_spread` keeps the trap reproducible.
+**A second one, caught within a minute:** a single fixed `variance_results.json`
+let a `--problem P3` run silently overwrite the P1 result -- the clobbering G113
+and `runlock.py` exist to stop. Artifacts are now named per (log, problem).
+
+---
+
+**TWO REPORT DOCUMENTS, both report-ready, both zero blast radius.**
+
+* **`SCOPE_BOUNDARY.md`** -- the similarity boundary proposal 002 section 1.2 argues
+  a tool must state: one topology, one PDK, the 7-D box, the 5.72x load range, the
+  channel family, 45 corners x 3 loads, and the uncomfortable row that **the spec
+  target axis is effectively 1-D**. Also states the layout boundary *with the part
+  we DID bound*: `CL_RANGE.md` section 4's PDK-parsed routing allowance
+  (m1 0.0984 / m2 0.1191 fF/um, 14-18 % of the load range, doubling it moves
+  `cl_hi` by a fifth of an octave against 2.52), carried **inside** the verified
+  range rather than applied as a post-hoc correction -- with both declared
+  weaknesses (0.14 um metal width declared not measured; wire length stated, no
+  layout) travelling with it.
+* **`POSITIONING.md`** -- what this work is positioned against. AutoCkt is the real
+  comparator (`exp_hybrid` is its warm start with retrieval substituted for the
+  learned trajectory), and both arms are measured: **retrieval 6 of 16 at 35.6 %
+  fewer decks, SAC 1 of 16**. Plus gm/ID as a measured negative with the **56 %
+  width error from SKY130 bin-sweeping** as the finding that outlives it, and the
+  scalarisation paragraph -- two independent groups name weighted-sum as their
+  weakness, we use maximin, **claim only the different choice with its measured
+  cost (G102), never that we avoided the limitation**.
+
+**Tests: `nebula/tests/test_variance.py` 10 passed** (run alone; it invokes no
+ngspice, so G70 does not apply). **The full suite has NOT been run** -- doing so
+alongside entry 41 is exactly what G70 forbids. Run
+`python -m pytest tests nebula/tests -q -m "not slow"` after training finishes;
+expected 1871 (1861 + 10). Coverage (8 of 16) and compliance (11 of 11 at 45 of
+45) are untouched by this session.
