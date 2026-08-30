@@ -1,0 +1,92 @@
+{
+ "task": "entry 41 Q1/Q2, scored from the progress log",
+ "source": "sac_screen_progress.jsonl",
+ "n_rows": 50,
+ "n_segments": 3,
+ "segment_step_ranges": [
+  [
+   500,
+   9500
+  ],
+  [
+   10000,
+   10000
+  ],
+  [
+   10500,
+   25000
+  ]
+ ],
+ "final_steps": 25000,
+ "complete": true,
+ "total_decks_summed": 119552,
+ "final_row_decks_DO_NOT_USE": 71736,
+ "Q1": {
+  "alpha_init": 0.9997000694274902,
+  "alpha_final": 0.5862118005752563,
+  "alpha_factor": 1.705356440191878,
+  "alpha_gate": 2.0,
+  "alpha_pass": false,
+  "log_std_init": -0.002774640452116728,
+  "log_std_final": -1.3947707414627075,
+  "log_std_move": 1.3919961010105908,
+  "log_std_gate": 0.5,
+  "log_std_pass": true,
+  "pass": false,
+  "best_alpha_seen": 0.18631678819656372,
+  "best_alpha_at_step": 9500,
+  "best_alpha_factor": 5.365593079958041
+ },
+ "Q2": {
+  "first_window": [
+   [
+    500,
+    16
+   ],
+   [
+    1000,
+    19
+   ],
+   [
+    1500,
+    21
+   ],
+   [
+    2000,
+    10
+   ],
+   [
+    2500,
+    12
+   ]
+  ],
+  "last_window": [
+   [
+    23000,
+    12
+   ],
+   [
+    23500,
+    13
+   ],
+   [
+    24000,
+    5
+   ],
+   [
+    24500,
+    12
+   ],
+   [
+    25000,
+    13
+   ]
+  ],
+  "feasible_first": 78,
+  "feasible_last": 55,
+  "ratio": 0.7051282051282052,
+  "gate": 2.0,
+  "pass": false,
+  "premise_note": "seeded starts make early chunks feasible-rich; see module docstring"
+ }
+}

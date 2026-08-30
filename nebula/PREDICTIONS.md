@@ -7457,3 +7457,266 @@ No wall-clock prediction (**G126**); the budget is stated in decks.
   a whole pipeline. This entry counts what one policy converts.
 * **Nothing about the 135-point load grid**, which is 0 of 16 for every design
   this project has ever produced.
+
+### OUTCOME (run 2026-08-29/30, 25 000 SPICE steps = 71 736 decks; Q3 636 decks; Q4/Q5 640 decks)
+
+**SCORE: 0 of 5.** Artifacts: `sac_screen_progress.jsonl` (the complete
+training record -- `sac_screen_results.json` holds only the last of three
+segments, see `score_entry41.py`), `entry41_q1q2_score.json`,
+`sac_q3_results.json`, `sac_propose_screen_results.json`,
+`topk_scan_screen_random.json`, `topk_scan_screen_seeded.json`. Nothing above
+this heading was edited.
+
+| | prediction | falsifier | result | verdict |
+|---|---|---|---|---|
+| **Q1** | `alpha` moves >= 2x AND `log_std_mean` moves >= 0.5 | either fails | `alpha` **1.705x**, `log_std` **1.392** | **MISS** (alpha clause) |
+| **Q2** | feasible steps in last 5 chunks >= 2x the first 5 | below 2x | **0.705x** (55 against 78) | **MISS** |
+| **Q3** | >= 1 of the 8 CMA-ES-unsolved requests passes 45 of 45 | 0 of 8 | **0 of 8**, and **0 screen-feasible designs in 136 evaluated** | **MISS** |
+| **Q4** | accept rate >= 3 of 16 | <= 2 | **0 of 16** (random) and **0 of 16** (seeded) | **MISS** |
+| **Q5** | mean scorable corners >= 3.5 of 4 | below 3.5 | **2.64** (random), **2.39** (seeded) | **MISS** |
+
+**Q1 is a miss as written and is scored as one, but the two clauses disagree
+and the disagreement matters.** `log_std` moved **1.392** against a 0.5 gate --
+sigma 0.997 -> 0.248, the clearest learning signal any policy in this project
+has produced. `alpha` fell to **0.1863 at step 9 500 (a 5.37x move)** and then
+climbed back to 0.5862 by step 25 000. So the entropy coefficient did not fail
+to move; it moved and **reversed**, which is the automatic-tuning controller
+re-opening exploration after the policy's return stopped improving. The
+registered rule for a Q1 miss is *"the run measured nothing. Find the defect."*
+**Entry 42 is that search.** The run did measure something -- it is Q1's alpha
+clause that was the wrong instrument on a seeded env, not the run that was
+empty.
+
+**Q2's premise was wrong and `score_entry41.py` said so before the number was
+read** (its module docstring, committed with the scorer): warm starts begin on
+library designs that are already feasible, so early chunks are feasible-rich
+because the policy has not yet learned to move. The count falls as it explores.
+**Scored as written and counted as a miss** -- reinterpreting a pre-registered
+metric after seeing it is what this file exists to prevent.
+
+**Q3, and the shape of it is the finding.** Zero screen-feasible designs across
+8 requests x 17 evaluated designs. **Three of the eight requests (0, 5, 12) had
+all 16 moves reverted** and recorded `best_reward_seen` of exactly **-16.0**,
+the invalid floor: all four `reset()` tries were unscorable, so those episodes
+began outside the measurable region and `ScreenEnv.step`'s revert then held
+them there for the whole horizon.
+
+**Q4/Q5, and this is where the mechanism is visible.** The policy did **not**
+fail the way entries 36 and 38 failed. Its designs are far more *measurable*
+than the library's (2.64 of 4 scorable against 0.30) and yet **none of them is
+right**:
+
+    arm              cand   4/4 scorable   feasible   worst row of the scorable ones
+    library k=5        80         9            7      -- (7 feasible, 2 near misses)
+    screen_random      80        52            0      S3_f_peak_match, 52 of 52
+    screen_seeded      80        43            0      S3_f_peak_match 35, S3_peaking 4,
+                                                      S3_peaking_match 3, S3_f_peak_band 1
+
+**All 52 fully-scorable `screen_random` candidates deliver a peak at 19.95 GHz**
+-- the top of the `ac dec 50` sweep, G44's fictitious peak -- a median
+**3.377 octaves** from the request against a 0.30-octave tolerance, 52 of 52
+outside it. The seeded arm starts on library designs near 2 GHz and **moves
+them UP** to 3-4 GHz, median error **0.944 octaves**. The library's own scorable
+candidates sit at a median **0.061 octaves**.
+
+**The policy is not failing to optimise. It is optimising something else, and
+entry 42 measures what.** Nothing here is a coverage or compliance number:
+mandated 45-corner coverage remains **8 of 16** (entry 40) and the delivered
+design's compliance is untouched.
+
+---
+
+## 42. Session 29 -- **why does RL produce nothing? Four hypotheses, and the one the reward makes inevitable**
+
+**Written 2026-08-30 BEFORE any simulation in this entry is run.** Verifiable
+from git history: the commit carrying this entry carries no result and no
+experiment module for it.
+
+The owner's brief lists four hypotheses in priority order -- (1) deployment
+deadlock, (2) `target_peaking_db` ignored so the manifold is 1-D, (3) reward
+sparsity, (4) HER. **Two of them are answered by evidence already on disk and
+are DISCLOSED below rather than predicted. A fifth mechanism, which none of the
+four names, is what the disclosed evidence points at.** This entry pre-registers
+the SPICE experiment that separates them.
+
+### DISCLOSURE -- eight things measured BEFORE this entry was written
+
+**Required; the precedent is entries 19 and 30. This is not a blind
+pre-registration.** All eight are re-scores of committed artifacts or
+evaluations of a formula. **No simulation was run for any of them.**
+
+1. **The reward bands.** `len(V6_SPECS) = 13`, so `invalid_reward(13) = -16.0`,
+   the infeasible band is `[-13, 0)` and the feasible band starts at `+14.0`.
+   A design that is **measurable at all four screen points and misses two rows
+   completely** scores **-2.000**. A design that is **unmeasurable at all four**
+   scores **-16.000**. **The gap is 14.000, and the entire spec landscape the
+   policy is supposed to climb spans 13.** Becoming measurable is worth more
+   than every specification in the problem put together.
+2. **Where the policy went.** Re-scored from `topk_scan_screen_random.json`:
+   52 of 80 candidates are scorable at 4 of 4 points, **all 52 name
+   `S3_f_peak_match` as the worst row**, and **all 52 deliver a peak at
+   19.95 GHz** -- median error **3.377 octaves** against a 0.30-octave
+   tolerance, **52 of 52 outside**. Their rewards run **-2.000 to -4.458**;
+   the 26 unscorable ones sit at **-16.000**.
+3. **Which direction the policy moves a good design.** `topk_scan_screen_
+   seeded.json`: warm-started on library candidates near 2 GHz, the policy
+   delivers 3-4 GHz, median error **0.944 octaves**. The library's own scorable
+   candidates sit at **0.061**. **It moves designs away from the request, and
+   toward measurability.**
+4. **The reward is EXACTLY FLAT over three quarters of the journey back.**
+   Evaluating `reward_v1.reward` on `V6D_SPECS` with every non-frequency row
+   held at a passing value and `f_peak` walked from 19.95 GHz to a
+   `8 dB @ 1.921 GHz` request: the reward is **-2.00000 to machine precision
+   over 2.496 of the 3.376 octaves -- 73.9 % of the path**, because
+   `S3_f_peak_match` and `S3_f_peak_band` are both clipped at 1.0 shortfall the
+   whole way. The first non-zero derivative appears at **3.354 GHz**, 0.80
+   octaves from target. **This is G116, in the RL reward, unfixed.**
+   `experiments/search_score.py` fixed exactly this plateau for CMA-ES in
+   session 25; `ScreenEnv` scores `evaluate_at_points`' `reward_v1` number,
+   which is the clipped one, and the wrapper was never wired to it.
+5. **Hypothesis 2 is already discharged, and it is not the binding
+   constraint.** `S3_peaking_match` (tolerance 1.5 dB) has been a member of
+   `V5_SPECS`, `V5D_SPECS`, `V6_SPECS`, `V6D_SPECS` and `V6V_SPECS` since G111
+   in session 23, and `ScreenEnv._evaluate` passes `target_peaking_db` into
+   `evaluate_at_points` on every step. **Entry 41 trained on a genuinely 2-D
+   spec manifold.** `CONTINUE_HERE.md` sec 5 OPEN item 5 predates that fix and
+   is stale. Measured consequence: **0 of the 52** scorable `screen_random`
+   candidates and **3 of 80** `screen_seeded` candidates name
+   `S3_peaking_match` as their worst row. The row the policy cannot hit is the
+   **frequency** request, not the peaking request.
+6. **The revert caps reachability, and the cap does not depend on the policy.**
+   `ScreenEnv.step` restores `u` when an edit is unscorable, so `u` never
+   accumulates. **The set of designs an episode can ever reach from an
+   unscorable start is the ball of radius `MAX_STEP * sqrt(7) = 0.1323`
+   (0.05 per coordinate) around that start, for all 16 steps.** Entry 41's Q3
+   hit this on 3 of 8 requests.
+7. **The deterministic policy does NOT repeat one action, and stochastic
+   sampling makes the search NARROWER.** Feeding the checkpoint the observation
+   sequence a fully-reverted episode produces (measurement channels pinned at
+   the `OBS_SCALES` centres, only the step-fraction channel moving): the 17
+   deterministic proposals span **0.085-0.122** of the box, against a
+   one-step maximum of 0.1323. Seventeen stochastic samples at a fixed
+   observation span **0.018-0.028** -- **0.2 to 0.3x the deterministic
+   spread**, because sigma is 0.248 in pre-tanh space and the tanh compresses
+   it. **The brief's hypothesis 1 names a real trap and the remedy it proposes
+   points the wrong way.**
+8. **The policy has not collapsed.** Over 400 random observations, mean `|a|`
+   is 0.579 with only 10.6 % of coordinates past 0.95; varying only `u` moves
+   the action by up to 2.82 (0.141 of the box), varying only the peaking
+   request by up to 1.02 (0.051), varying only the frequency request across the
+   whole S3 window by 0.40 (**0.020**). It is state-dependent and
+   spec-conditioned, and **it is least sensitive to the axis it fails on.**
+
+**What is therefore NOT pre-registered:** that the plateau exists, that the
+-16 floor dominates, that the manifold is 2-D, or that entry 41's proposals sit
+at 19.95 GHz. All four are established.
+
+**What IS pre-registered:** whether the deployment remedies in the brief's
+hypothesis 1 change any outcome in live SPICE, and whether the barrier between
+the policy's optimum and an accepted design is a *reward* plateau (crossable in
+principle, invisible to a gradient) or an *unscorability* moat (not crossable
+at all under `ScreenEnv`'s revert).
+
+### The experiment
+
+**Arm A -- deployment (the brief's hypothesis 1), on entry 41's own 8 hard
+requests, `sac_policy_screen.pt`, horizon 16.** Four rollout policies, every
+one of them a change to *deployment only*: no reward, tolerance, screen or spec
+set is touched, and `ScreenEnv` is subclassed, never edited (rule 7,
+`corner_env.py`'s precedent).
+
+    A1  det        deterministic + revert     -- reproduces entry 41's Q3       ~640 decks
+    A2  sto        stochastic + revert        -- the brief's remedy             ~640 decks
+    A3  best4      4 independent stochastic rollouts, revert, best kept        ~2 560 decks
+    A4  norevert   deterministic, the edit KEPT even when unscorable            ~640 decks
+
+**Arm B -- the barrier, 6 transects x 9 interior points = 216 decks.** For each
+of the 6 requests where the library found a screen-feasible design, the straight
+line in `u` from the best `screen_random` proposal (reward -2.08 to -3.53, all
+at 19.95 GHz) to that library design (reward +14.06 to +14.35), scored on the
+same `evaluate_at_points(EDGE4_MANDATED, V6_SPECS)`.
+
+**Total budget ~4 700 decks.** Stated in decks, not minutes (G126).
+
+### Predictions
+
+**Q1 -- stochastic sampling does not help, and does not even change the
+dynamics.** A2 produces **0** screen-feasible designs across the 8 requests,
+and its total reverted-step count is within **+-25 %** of A1's **48**.
+Confidence **0.8.** *For:* disclosure 7 -- sampling narrows the proposal spread
+here rather than widening it; and disclosure 6 -- the reachable set is capped
+by the revert regardless of how the action is drawn. *Against:* the probe in
+disclosure 7 used a synthetic all-centres observation; live observations may sit
+where the policy is less saturated. **Falsifier:** any screen-feasible design,
+or a revert count outside 36-60.
+
+**Q2 -- restarts do not rescue it either.** A3 solves **0 of 8** at 45 mandated
+corners. Confidence **0.8.** A secondary and much more sensitive read, scored
+separately: **A3 produces at least one screen-feasible design.** Confidence
+**0.3.** *For the negative:* four extra starts are four more draws from the same
+library pool the k=5 scan already drew five from and got zero feasible on these
+eight. *Against:* restart diversity is the only lever in arm A that genuinely
+enlarges the reachable set. **Falsifier for the headline:** any request
+compliant at 45 of 45.
+
+**Q3 -- THE LOAD-BEARING ONE. Removing the revert does not rescue the policy,
+and it moves the peak the WRONG WAY.** Across A4's 8 requests the **median
+delivered `f_peak` is above 4 GHz**. Confidence **0.7.** *For:* disclosure 4 --
+an unblocked walk has an exactly flat reward over 74 % of the route home, and
+disclosure 1 -- the -16 floor still pays up to +14 for leaving the target
+region, so the only gradient the policy can feel points away from the request.
+*Against:* a policy trained under revert dynamics is off-distribution the moment
+the edit is kept, so A4 may simply random-walk, and a random walk from a library
+start has no particular reason to end above 4 GHz. **Falsifier:** median at or
+below 4 GHz.
+
+**Q4 -- the barrier is a REWARD plateau, not an unscorability moat.** Define,
+per transect, the *informative fraction* = the share of the 8 consecutive
+intervals between the 9 interior points whose reward changes by more than 0.05.
+**The median informative fraction across the 6 transects is at most 0.5** --
+at least half of the straight-line path from the policy's optimum to an accepted
+design carries no usable signal. Confidence **0.6.** *For:* disclosure 4 makes
+both frequency rows saturate for most of a 3.4-octave move. *Against:* a
+straight line in `u` is not a straight line in `f_peak`, and the transect also
+crosses `peaking`, `power` and swing, any of which can break the tie the
+frequency rows cannot. **Falsifier:** median above 0.5.
+*Recorded alongside, not predicted:* how many of the 54 interior points are
+unscorable. A high count means the barrier is BOTH, which is worse than either.
+
+**Q5 -- the control reproduces.** A1 reproduces entry 41's Q3 exactly: **0 of 8
+solved, 3 requests with 16 of 16 reverted, 48 reverts in total, 636 decks.**
+Confidence **0.85.** *Against:* `ScreenEnv` reads the library through
+`exp_coverage.library_candidates`, and G124 records that ids do not join across
+artifact boundaries -- if the pool has changed, the starts have changed.
+**Falsifier:** any per-request `n_reverted` differing from entry 41's
+`[16, 0, 16, 0, 16, 0, 0, 0]`.
+
+### The decision rule, before the result
+
+* **Any arm produces a design compliant at 45 of 45 mandated corners** -> that
+  is D9's condition and the submission's headline. Verify with
+  `exp_g4_verify.verify_full`, report the per-request matrix, stop and take it
+  to the owner.
+* **Q1, Q2 and Q3 all miss (no arm helps) and Q4 hits** -> **the brief's
+  hypothesis 1 is falsified as a remedy and the mechanism is the reward's
+  geometry.** The report says so, with disclosure 4's flat 73.9 % and this
+  entry's transects as the evidence, and the next step is a REWARD change --
+  which is the owner's under standing rule 6 and is proposed, not taken.
+* **Q3 hits but A4 finds feasible designs anyway** -> the revert is the binding
+  constraint and the fix is an env change, not a reward change. Cheaper, and it
+  would reverse the priority above.
+* **Q5 misses** -> the harness is not measuring entry 41's policy. Fix that
+  before reading anything else (G112's family).
+
+### What no outcome of this entry may claim
+
+* **Not a coverage number.** Mandated 45-corner coverage is **8 of 16**
+  (entry 40) and nothing here moves it unless `verify_full` runs and passes.
+* **Not a compliance number.** Accept rate and screen feasibility are proposal
+  metrics on 4 points.
+* **Nothing about the 135-point load grid**, which is 0 of 16 for every design
+  this project has produced (G109's compliance/characterisation split).
+* **Nothing about hypotheses 3 and 4** (reward sparsity, HER). Neither is
+  tested here. Disclosure 4 is a reason to think the sparsity in hypothesis 3
+  is a *symptom* of the plateau rather than an independent cause, but this
+  entry does not measure that.

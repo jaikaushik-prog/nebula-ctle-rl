@@ -467,14 +467,156 @@ def _report(d: dict) -> None:
     print("  not coverage (still 7 of 16 at 45 corners) and not compliance.")
 
 
+# --------------------------------------------------------------------------
+# scoring an ARBITRARY checkpoint (entry 41's Q4/Q5), added session 29
+# --------------------------------------------------------------------------
+#
+# **Additive. Entry 36's `run()`, `ARMS`, `RESULTS` and `_verdict()` are
+# untouched**, because entry 36 is published and re-running it must keep
+# producing what it produced. This path exists so entry 41's
+# `sac_policy_screen.pt` -- a policy trained on `ScreenEnv`, i.e. on the
+# acceptance criterion itself -- can be measured on the SAME accept rule,
+# through the SAME `scan_topk`, against the SAME baseline (rule 9).
+#
+# Three deliberate choices, each one a trap this repo has already paid for:
+#
+# 1. **The library control is NOT re-run by default.** Entry 36 already
+#    reproduced entry 32's `[1,4,5,5,6]` exactly, and re-running it at k=5
+#    would write `topk_scan_library_k5.json` -- entry 36's control artifact.
+#    That is G128's exact shape. `--with-control` re-runs it into a
+#    label-scoped path instead.
+# 2. **Distinct results file and distinct scan artifacts**, keyed on the
+#    label, so nothing this writes can collide with entry 36's (G113).
+# 3. **`_verdict()` is NOT applied.** It encodes entry 36's five-arm decision
+#    rule; this run has three arms and its predictions live in entry 41. A
+#    verdict function silently fed the wrong arm set is worse than none.
+
+SCREEN_CKPT = HERE / "sac_policy_screen.pt"
+
+
+def mean_scorable_corners(scan: dict) -> Optional[float]:
+    """Mean `n_scorable` over every candidate a scan measured. Entry 41's Q5.
+
+    `n_scorable` is how many of the 4 screen points `link/calibration.py` could
+    score at all -- G107's distinction: **"cannot be scored" is not "fails."**
+    Entry 38 quoted this as 0.30 for the library and 2.84 for the swing-aware
+    policy, computed ad hoc; this is the one definition, so entry 41's number
+    and entry 38's mean the same thing.
+
+    Candidates that errored before measurement are excluded, not counted zero:
+    a rollout that never produced a deck has no opinion about scorability.
+    """
+    vals = [c["n_scorable"] for r in scan.get("requests", [])
+            for c in r.get("candidates", [])
+            if "error" not in c and c.get("n_scorable") is not None]
+    return (sum(vals) / len(vals)) if vals else None
+
+
+def ckpt_results_path(label: str) -> Path:
+    """Where `run_ckpt` may write. Never entry 36's `RESULTS`."""
+    if not label or not label.replace("_", "").isalnum():
+        raise ValueError(f"label {label!r} must be alphanumeric/underscore")
+    p = HERE / f"sac_propose_{label}_results.json"
+    if p == RESULTS:                                        # pragma: no cover
+        raise ValueError("refusing to overwrite entry 36's artifact")
+    return p
+
+
+def run_ckpt(ckpt: Path = SCREEN_CKPT, label: str = "screen", k: int = K,
+             seed: int = SEED, with_control: bool = False) -> dict:
+    """Accept rate for ONE arbitrary checkpoint, random and seeded starts.
+
+    Returns the same per-arm summaries `run()` builds, so the two are directly
+    comparable, plus entry 32's baseline quoted as a constant.
+    """
+    from nebula.experiments import exp_hybrid as H
+    from nebula.experiments.runlock import stamp
+
+    ckpt = Path(ckpt)
+    t0 = time.time()
+    agent, meta = load_agent(ckpt)
+    print(f"loaded {ckpt.name}: {meta}", flush=True)
+
+    arms = [(f"{label}_random", "random"), (f"{label}_seeded", "seeded")]
+    sources = {n: _Rollouts(agent, mode, seed=seed) for n, mode in arms}
+    H.CANDIDATE_SOURCES.update(sources)
+
+    out: dict = {"task": f"accept rate for checkpoint {ckpt.name}",
+                 **stamp(), "k": int(k), "seed": int(seed), "label": label,
+                 "checkpoint": {"path": ckpt.name, **meta},
+                 "baseline": {"accepted_at_k": list(BASELINE_ACCEPTED_AT_K),
+                              "n_accepted": BASELINE_A,
+                              "n_sims_deployed": BASELINE_DEPLOYED_DECKS,
+                              "source": "entry 32, hybrid_topk_scan.json",
+                              "rerun_here": bool(with_control)},
+                 "arms": []}
+
+    todo = list(arms)
+    if with_control:
+        todo.insert(0, ("library", ""))
+
+    for name, _mode in todo:
+        print(f"\n=== arm {name}, k={k}, {16 * k * 4} decks ===", flush=True)
+        dest = (HERE / f"topk_scan_library_k{int(k)}_{label}.json"
+                if name == "library" else HERE / f"topk_scan_{name}.json")
+        scan = H.scan_topk(source=name, k=int(k), out=dest)
+        notes = sources[name].notes if name in sources else {}
+        # `_arm_summary` is entry 36's published shape and is NOT modified;
+        # Q5's number is layered on top of it here.
+        summary = dict(_arm_summary(name, scan, notes))
+        summary["mean_scorable_corners"] = mean_scorable_corners(scan)
+        out["arms"].append(summary)
+        a = out["arms"][-1]
+        print(f"  {name}: A = {a['n_accepted']} of 16, "
+              f"accepted_at_k {a['accepted_at_k']}, "
+              f"{a['n_sims_measured']} decks measured, "
+              f"scorable {a['mean_scorable_corners']}", flush=True)
+
+    out["wall_s"] = time.time() - t0
+    dest = ckpt_results_path(label)
+    dest.write_text(json.dumps(out, indent=1), encoding="utf-8")
+    print(f"\nwrote {dest.name}", flush=True)
+    return out
+
+
+def _report_ckpt(d: dict) -> None:
+    print()
+    print(f"CHECKPOINT {d['checkpoint']['path']}  "
+          f"(stage {d['checkpoint'].get('stage')}, "
+          f"{d['checkpoint'].get('steps')} steps)   k = {d['k']}")
+    print(f"  baseline (entry 32, library k=5): A = {d['baseline']['n_accepted']}"
+          f" of 16   {d['baseline']['accepted_at_k']}")
+    print()
+    print(f"  {'arm':24} {'A':>3}  {'accepted_at_k':22} {'scorable/4':>11}")
+    for a in d["arms"]:
+        sc = a.get("mean_scorable_corners")
+        print(f"  {a['arm']:24} {a['n_accepted']:3d}  "
+              f"{str(a['accepted_at_k']):22} "
+              f"{('%.2f' % sc) if sc is not None else '--':>11}")
+    print()
+    print("  Accept rate is a PROPOSAL metric on the 4-corner screen. It is")
+    print("  NOT coverage and NOT compliance.")
+
+
 def main(argv: Optional[Sequence[str]] = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--run", action="store_true")
     ap.add_argument("--analyse", action="store_true")
     ap.add_argument("--k", type=int, default=K)
     ap.add_argument("--seed", type=int, default=SEED)
+    ap.add_argument("--ckpt", type=str, default=None,
+                    help="score ONE arbitrary checkpoint (entry 41's Q4/Q5) "
+                         "instead of entry 36's five arms")
+    ap.add_argument("--label", type=str, default="screen",
+                    help="names the arms and the artifacts for --ckpt")
+    ap.add_argument("--with-control", action="store_true",
+                    help="also re-run the library control, into a "
+                         "label-scoped artifact (entry 36's is never touched)")
     a = ap.parse_args(argv)
-    if a.run:
+    if a.ckpt:
+        _report_ckpt(run_ckpt(ckpt=Path(a.ckpt), label=a.label, k=a.k,
+                              seed=a.seed, with_control=a.with_control))
+    elif a.run:
         _report(run(k=a.k, seed=a.seed))
     elif a.analyse:
         if not RESULTS.exists():

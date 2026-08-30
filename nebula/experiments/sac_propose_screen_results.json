@@ -1,0 +1,113 @@
+{
+ "task": "accept rate for checkpoint sac_policy_screen.pt",
+ "run_pid": 9376,
+ "run_started_unix": 1788058110.8572192,
+ "run_host": "JAI",
+ "k": 5,
+ "seed": 230826,
+ "label": "screen",
+ "checkpoint": {
+  "path": "sac_policy_screen.pt",
+  "stage": "screen",
+  "steps": 25000,
+  "spice_calls": 71736
+ },
+ "baseline": {
+  "accepted_at_k": [
+   1,
+   4,
+   5,
+   5,
+   6
+  ],
+  "n_accepted": 6,
+  "n_sims_deployed": 260,
+  "source": "entry 32, hybrid_topk_scan.json",
+  "rerun_here": false
+ },
+ "arms": [
+  {
+   "arm": "screen_random",
+   "accepted_at_k": [
+    0,
+    0,
+    0,
+    0,
+    0
+   ],
+   "n_accepted": 0,
+   "accepted_ranks": [
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null
+   ],
+   "n_cand_feasible": 0,
+   "n_cand_infeasible": 52,
+   "n_cand_unscorable": 28,
+   "n_sims_measured": 320,
+   "n_sims_deployed": 320,
+   "swing_named": 28,
+   "non_feasible": 80,
+   "swing_fraction": 0.35,
+   "n_declined": 0,
+   "artifact": "C:\\Users\\DELL\\Desktop\\serdes-dsp-framework-main\\nebula\\experiments\\topk_scan_screen_random.json",
+   "wall_clock_s": 157.9424204826355,
+   "mean_scorable_corners": 2.6375
+  },
+  {
+   "arm": "screen_seeded",
+   "accepted_at_k": [
+    0,
+    0,
+    0,
+    0,
+    0
+   ],
+   "n_accepted": 0,
+   "accepted_ranks": [
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null
+   ],
+   "n_cand_feasible": 0,
+   "n_cand_infeasible": 43,
+   "n_cand_unscorable": 37,
+   "n_sims_measured": 320,
+   "n_sims_deployed": 320,
+   "swing_named": 33,
+   "non_feasible": 80,
+   "swing_fraction": 0.4125,
+   "n_declined": 0,
+   "artifact": "C:\\Users\\DELL\\Desktop\\serdes-dsp-framework-main\\nebula\\experiments\\topk_scan_screen_seeded.json",
+   "wall_clock_s": 285.1618745326996,
+   "mean_scorable_corners": 2.3875
+  }
+ ],
+ "wall_s": 446.12236523628235
+}

@@ -11472,3 +11472,84 @@ alongside entry 41 is exactly what G70 forbids. Run
 `python -m pytest tests nebula/tests -q -m "not slow"` after training finishes;
 expected 1871 (1861 + 10). Coverage (8 of 16) and compliance (11 of 11 at 45 of
 45) are untouched by this session.
+
+---
+
+### 2026-08-30 -- session 30: entry 41 SCORED (0 of 5), and entry 42 pre-registered. **The RL null has a mechanism, and it is not the one anyone named.**
+
+**Nothing in this entry is a coverage or compliance number.** Mandated 45-corner
+coverage stays **8 of 16** (entry 40); the delivered design's compliance is
+untouched.
+
+**Entry 41's OUTCOME is now written** into `PREDICTIONS.md` from the artifacts
+that were already on disk: **0 of 5**, and the shape of the miss is the finding.
+`log_std` moved **1.392** (gate 0.5) -- the clearest learning signal any policy
+in this project has produced -- while `alpha` fell to **0.1863 at step 9 500**
+(a 5.37x move) and climbed back to 0.5862 by 25 000, so Q1's 2x-at-the-end
+clause missed on a policy that plainly learned. Q3 found **0 screen-feasible
+designs in 136 evaluations**, with **3 of 8 requests reverting all 16 moves**.
+
+**Eight zero-SPICE diagnostics, all re-scores of committed artifacts, are
+disclosed in entry 42 and they answer two of the owner's four hypotheses
+without spending a deck:**
+
+1. **Hypothesis 2 is already discharged.** `target_peaking_db` is **live**:
+   `S3_peaking_match` (tol 1.5 dB) has been in `V5/V5D/V6/V6D/V6V` since G111,
+   and `ScreenEnv._evaluate` passes the target through on every step. Entry 41
+   trained on a genuinely **2-D** manifold. `CONTINUE_HERE.md` sec 5 OPEN item 5
+   predates that fix and is **stale**. And peaking is not the failing axis:
+   **0 of 52** scorable `screen_random` candidates name `S3_peaking_match` as
+   their worst row.
+2. **Hypothesis 1 names a real trap and proposes the wrong remedy.** The revert
+   caps the reachable set of a whole episode at **one `MAX_STEP`**
+   (`0.05` per coordinate, `0.1323` in the box) from an unscorable start --
+   independently of the policy. But the deterministic policy does **not** repeat
+   one action: its 17 proposals span **0.085-0.122** of the box, because the
+   step-fraction channel moves. **Stochastic samples span 0.018-0.028 -- 0.2 to
+   0.3x as wide**, since sigma is 0.248 pre-tanh and the tanh compresses it.
+3. **What the policy actually does.** **All 52** of its fully-scorable proposals
+   peak at **19.95 GHz** -- the top of the `ac dec 50` sweep, G44's fictitious
+   peak -- a median **3.377 octaves** from the request against a 0.30-octave
+   tolerance. Warm-started on a library design near 2 GHz it moves it **UP** to
+   3-4 GHz. **It is not failing to optimise; it is optimising something else.**
+4. **And the reward says to.** `invalid_reward(13) = -16.0`, the infeasible band
+   is `[-13, 0)`, so **becoming measurable is worth up to +14 while the entire
+   13-row spec landscape spans 13.** A wideband attenuator at the sweep edge
+   scores **-2.000**; an on-target design that compresses scores **-16.000**.
+5. **Then the way home is flat.** Walking `f_peak` from 19.95 GHz to a
+   `8 dB @ 1.921 GHz` request with every other row held passing, the reward is
+   **-2.00000 to machine precision over 2.496 of the 3.376 octaves -- 73.9 %**,
+   because both frequency rows sit clipped at 1.0 shortfall the whole way.
+   **This is G116, in the RL reward, unfixed.** `experiments/search_score.py`
+   cured exactly this plateau for CMA-ES in session 25 (entry 30 Q3: all four
+   runaway peaks came home from 8-12 GHz to ~2 GHz) and **was never wired to
+   the RL environment.**
+
+**Entry 42 is pre-registered and committed with no result.** Two arms, ~4 700
+decks. Arm A tests hypothesis 1 in live SPICE with four **deployment-only**
+rollout policies (deterministic / stochastic / best-of-4 restarts / the revert
+removed), `ScreenEnv` **subclassed, never edited** (rule 7). Arm B walks the
+straight line in `u` from the policy's converged proposal to the library design
+the screen accepts, on the 6 requests that have both, to measure whether the
+barrier between them is a **reward plateau** or an **unscorability moat** --
+different diagnoses, different fixes, so measured rather than assumed.
+
+**New on disk:** `experiments/exp_rl_diagnose.py`,
+`tests/test_rl_diagnose.py` (49 tests), `PREDICTIONS.md` entries 41 OUTCOME
+and 42.
+
+**Sabotage round, 12 cases, 12 RED** (rule 4) -- putting the revert back in
+`_no_revert_step`, counting points instead of intervals in Q4's statistic, a
+non-strict threshold, substituting the -16 floor for an unscorable transect
+point, first-instead-of-last in Q3's statistic, `min` for `max` in
+`best_feasible`, skipping instead of raising on a missing transect counterpart
+(G115), scoring the transect endpoints, non-strict Q3 and pattern-blind Q5 in
+the scorer, always returning the no-revert env, and widening Q1's band after
+the fact (G110). The first case did not apply on the first attempt (a wrong
+anchor) and was **re-run rather than counted** -- G125: the round is only
+evidence for the gates whose sabotage actually went red. File restored
+byte-identical, no leftover markers (G127).
+
+**Tests: 2049 passed, 12 deselected before; 2098 passed, 12 deselected after**
+(283 s, system Python 3.13.14). The suite was run **before** the experiment,
+never alongside it (G70).

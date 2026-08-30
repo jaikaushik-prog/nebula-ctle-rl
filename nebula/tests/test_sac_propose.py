@@ -432,3 +432,89 @@ def test_the_thresholds_are_entry_36s_and_are_not_silently_retunable():
     assert P.BASELINE_ACCEPTED_AT_K == (1, 4, 5, 5, 6)
     assert P.BASELINE_DEPLOYED_DECKS == 260
     assert P.K == 5
+
+
+# ---------------------------------------------------------------------------
+# session 29: scoring an ARBITRARY checkpoint (entry 41's Q4/Q5).
+# These gate the ADDITIVE path only -- entry 36's run()/ARMS/RESULTS must be
+# provably untouched, because entry 36 is published.
+# ---------------------------------------------------------------------------
+
+def test_entry36_arms_and_results_are_unchanged():
+    """The five-arm set and its artifact are entry 36's published identity."""
+    assert P.ARMS == (
+        ("library", "", ""),
+        ("sac_random_analytic", "analytic", "random"),
+        ("sac_random_finetuned", "finetuned", "random"),
+        ("sac_seeded_analytic", "analytic", "seeded"),
+        ("sac_seeded_finetuned", "finetuned", "seeded"),
+    )
+    assert P.RESULTS.name == "sac_propose_results.json"
+
+
+def test_ckpt_results_path_never_collides_with_entry36():
+    for label in ("screen", "screen2", "entry41"):
+        assert P.ckpt_results_path(label) != P.RESULTS
+        assert P.ckpt_results_path(label).name.startswith("sac_propose_")
+
+
+def test_ckpt_results_path_rejects_a_bad_label():
+    for bad in ("", "has space", "dots.here", "slash/es"):
+        with pytest.raises(ValueError):
+            P.ckpt_results_path(bad)
+
+
+def test_ckpt_label_scopes_the_artifact_so_entry36_control_survives():
+    """G128: entry 36's control artifact is `topk_scan_library_k5.json`.
+
+    The --with-control path must never write that name.
+    """
+    k, label = 5, "screen"
+    forbidden = f"topk_scan_library_k{k}.json"
+    scoped = f"topk_scan_library_k{k}_{label}.json"
+    assert scoped != forbidden
+
+
+def test_mean_scorable_corners_ignores_errored_candidates():
+    scan = {"requests": [
+        {"candidates": [{"n_scorable": 4}, {"n_scorable": 2},
+                        {"error": "boom"}, {"n_scorable": None}]},
+        {"candidates": [{"n_scorable": 0}]},
+    ]}
+    # (4 + 2 + 0) / 3 -- the errored and the None are excluded, not zeroed.
+    assert P.mean_scorable_corners(scan) == pytest.approx(2.0)
+
+
+def test_mean_scorable_corners_is_none_when_nothing_measured():
+    assert P.mean_scorable_corners({"requests": []}) is None
+    assert P.mean_scorable_corners(
+        {"requests": [{"candidates": [{"error": "x"}]}]}) is None
+
+
+def test_ckpt_cli_does_not_trigger_entry36_run(monkeypatch):
+    """`--ckpt` must route to run_ckpt, never to entry 36's run()."""
+    called = {}
+
+    def _fake_run36(**kw):
+        called["run36"] = kw
+        return {}
+
+    def _fake_run_ckpt(**kw):
+        called["runckpt"] = kw
+        return {"checkpoint": {"path": "x", "stage": "screen", "steps": 1},
+                "k": 5, "arms": [],
+                "baseline": {"n_accepted": 6, "accepted_at_k": [1, 4, 5, 5, 6]}}
+
+    monkeypatch.setattr(P, "run", _fake_run36)
+    monkeypatch.setattr(P, "run_ckpt", _fake_run_ckpt)
+    P.main(["--ckpt", "some.pt", "--label", "screen"])
+    assert "runckpt" in called and "run36" not in called
+    assert called["runckpt"]["label"] == "screen"
+
+
+def test_load_agent_rejects_a_weightless_checkpoint(tmp_path):
+    torch = pytest.importorskip("torch")
+    p = tmp_path / "empty.pt"
+    torch.save({"state_dict": None, "steps": 0}, p)
+    with pytest.raises(ValueError, match="no state_dict"):
+        P.load_agent(p)

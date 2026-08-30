@@ -1,0 +1,118 @@
+{
+ "task": "entry 41 Q3: can RL solve what CMA-ES could not?",
+ "run_pid": 20996,
+ "run_started_unix": 1788064895.424077,
+ "run_host": "JAI",
+ "checkpoint": {
+  "path": "sac_policy_screen.pt",
+  "stage": "screen",
+  "steps": 25000,
+  "spice_calls": 71736
+ },
+ "horizon": 16,
+ "seed": 230826,
+ "rollout_env": "ScreenEnv (4 SPICE decks per step)",
+ "requests": [
+  {
+   "index": 0,
+   "peaking_db": 4.0,
+   "f_peak_hz": 1386961840.0848064,
+   "cma_es_pvt45": 32,
+   "n_feasible": 0,
+   "n_decks": 80,
+   "n_reverted": 16,
+   "warm_start_feasible": false,
+   "verified": null,
+   "best_reward_seen": -16.0
+  },
+  {
+   "index": 3,
+   "peaking_db": 4.0,
+   "f_peak_hz": 2253126156.5270753,
+   "cma_es_pvt45": 11,
+   "n_feasible": 0,
+   "n_decks": 80,
+   "n_reverted": 0,
+   "warm_start_feasible": false,
+   "verified": null,
+   "best_reward_seen": -0.5906387419287764
+  },
+  {
+   "index": 5,
+   "peaking_db": 6.0,
+   "f_peak_hz": 1626677319.302417,
+   "cma_es_pvt45": 44,
+   "n_feasible": 0,
+   "n_decks": 80,
+   "n_reverted": 16,
+   "warm_start_feasible": false,
+   "verified": null,
+   "best_reward_seen": -16.0
+  },
+  {
+   "index": 8,
+   "peaking_db": 8.0,
+   "f_peak_hz": 1386961840.0848064,
+   "cma_es_pvt45": 35,
+   "n_feasible": 0,
+   "n_decks": 76,
+   "n_reverted": 0,
+   "warm_start_feasible": false,
+   "verified": null,
+   "best_reward_seen": -0.5416461715675497
+  },
+  {
+   "index": 12,
+   "peaking_db": 10.0,
+   "f_peak_hz": 1386961840.0848064,
+   "cma_es_pvt45": 0,
+   "n_feasible": 0,
+   "n_decks": 80,
+   "n_reverted": 16,
+   "warm_start_feasible": false,
+   "verified": null,
+   "best_reward_seen": -16.0
+  },
+  {
+   "index": 13,
+   "peaking_db": 10.0,
+   "f_peak_hz": 1626677319.302417,
+   "cma_es_pvt45": 17,
+   "n_feasible": 0,
+   "n_decks": 80,
+   "n_reverted": 0,
+   "warm_start_feasible": false,
+   "verified": null,
+   "best_reward_seen": -1.0
+  },
+  {
+   "index": 14,
+   "peaking_db": 10.0,
+   "f_peak_hz": 1921093976.6100154,
+   "cma_es_pvt45": 44,
+   "n_feasible": 0,
+   "n_decks": 80,
+   "n_reverted": 0,
+   "warm_start_feasible": false,
+   "verified": null,
+   "best_reward_seen": -0.236490989816159
+  },
+  {
+   "index": 15,
+   "peaking_db": 10.0,
+   "f_peak_hz": 2253126156.5270753,
+   "cma_es_pvt45": 37,
+   "n_feasible": 0,
+   "n_decks": 80,
+   "n_reverted": 0,
+   "warm_start_feasible": false,
+   "verified": null,
+   "best_reward_seen": -1.1686200000000002
+  }
+ ],
+ "n_solved": 0,
+ "solved_indices": [],
+ "total_decks": 636,
+ "Q3_pass": false,
+ "wall_s": 361.709760427475
+}
