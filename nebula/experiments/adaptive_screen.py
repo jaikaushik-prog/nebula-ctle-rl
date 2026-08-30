@@ -260,7 +260,8 @@ def evaluate_at_points(u: Sequence[float],
                        target_peaking_db: Optional[float] = TARGET_PEAKING_DB,
                        specs: Sequence[str] = R.V5_SPECS,
                        ac_only: bool = False,
-                       ac_peak_interp: bool = True) -> DesignEval:
+                       ac_peak_interp: bool = True,
+                       validity_gate: bool = False) -> DesignEval:
     """Score one sizing at an explicit list of (corner, load) pairs.
 
     **The score is the WORST point**, which is CLAUDEwa.md §12's first named
@@ -287,7 +288,8 @@ def evaluate_at_points(u: Sequence[float],
     from nebula.link.bridge import device_result_from_point, evaluate_link
     from nebula.link.config import LinkConfig
     from nebula.rl.contract import f_peak_octaves, sizing_from_u
-    from nebula.rl.evaluator import annotate_interpolated_peak, build_point, scored_meas
+    from nebula.rl.evaluator import (Verdict, annotate_interpolated_peak,
+                                     build_point, scored_meas, validate)
 
     u = tuple(float(x) for x in np.clip(np.asarray(u, dtype=float), 0.0, 1.0))
     pts = list(points)
@@ -354,6 +356,43 @@ def evaluate_at_points(u: Sequence[float],
                 sp.label, True, f_peak_oct=float(m_ac["f_peak_oct"]),
                 peaking_db=float(m_ac["peaking_db"])))
             continue
+
+        if validity_gate:
+            # **THE G44 VALIDITY GATE, IMPORTED AND NOT RESTATED** (rule 9).
+            # `rl/evaluator.validate` is this project's one definition of
+            # "is this measurement trustworthy". `design.py`, `baselines.py`
+            # and `rl/env.py` have always reached it; this function never did,
+            # so a response still RISING at 20 GHz -- `meas ac MAX` returns the
+            # range edge and `peaking_db` is fictitious (G44) -- was scored as
+            # a merely-bad CTLE at about -2 instead of an invalid one at -16.
+            #
+            # **Measured before this was added** (`PREDICTIONS.md` entry 43,
+            # 138 decks): no accepted design and neither published compliance
+            # design moves, because `S3_f_peak_band` already rejects 19.95 GHz
+            # by 6-8 tolerances. What moves is the TRAINING SIGNAL: 58.8 % of
+            # entry 41's SAC proposals and 44.4 % of a straight line between
+            # two real CTLEs live in that mis-labelled region, and that is
+            # where the policy converged.
+            #
+            # **Only `INVALID` rejects.** `HEADROOM_ONLY` means the `.op` is
+            # trustworthy and the device is out of saturation, which this
+            # function already scores through its own `saturation` /
+            # `tail_saturation` rows -- routing it here would count one failure
+            # twice and erase the gradient over the low-peaking region
+            # (`evaluator.validate`'s own docstring says why).
+            #
+            # **Default OFF.** Every published accept rate, coverage sweep and
+            # compliance table was produced without it, and CMA-ES is
+            # path-dependent (G121), so flipping the default would stop
+            # committed runs reproducing for zero change in any verdict.
+            # Callers that want it say so, and the call site shows it.
+            verdict, why = validate(pt, point)
+            if verdict is Verdict.INVALID:
+                first_bad = first_bad or f"validity gate: {why}"
+                bad_point = bad_point or sp.label
+                results.append(PointResult(sp.label, False,
+                                           reason=f"validity gate: {why}"))
+                continue
 
         dev = device_result_from_point(pt)
         if not dev.ok:

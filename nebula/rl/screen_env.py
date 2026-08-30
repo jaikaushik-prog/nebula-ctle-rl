@@ -97,7 +97,8 @@ class ScreenEnv:
                  start_from_library: bool = True,
                  library_k: int = 16, points=None,
                  surrogate_filter: bool = True,
-                 min_start_swing_v: float = 0.9):
+                 min_start_swing_v: float = 0.9,
+                 validity_gate: bool = False):
         from nebula.experiments.adaptive_screen import EDGE4_MANDATED
 
         if not targets:
@@ -121,6 +122,16 @@ class ScreenEnv:
         # reward -- the reward stays the screen's own (rule 9).
         self.surrogate_filter = bool(surrogate_filter)
         self.min_start_swing_v = float(min_start_swing_v)
+        # **G130. Default OFF so entry 41 reproduces bit-for-bit.**
+        # `evaluate_at_points` has never applied `rl/evaluator.validate`, so a
+        # response still rising at 20 GHz -- a fictitious peak (G44) -- scores
+        # as a merely-bad CTLE at about -2 rather than an invalid one at -16.
+        # Entry 41's policy converged there: ALL 52 of its fully-scorable
+        # proposals report a peak at 19.95 GHz, a median 3.377 octaves from
+        # the request. Turning this on removes that attractor, and turning it
+        # on is a change to the training signal, so it is opt-in and visible
+        # at the call site rather than a silent default flip.
+        self.validity_gate = bool(validity_gate)
         self._surrogate = None
         self.n_starts_filtered = 0
         # **G123: `load_pool` is UNCACHED and re-parses 74 526 rows per call.**
@@ -163,7 +174,7 @@ class ScreenEnv:
             np.asarray(u, dtype=float), self.points,
             target_f_peak_hz=float(self._target.f_peak_hz),
             target_peaking_db=float(self._target.peaking_db),
-            specs=self.specs)
+            specs=self.specs, validity_gate=self.validity_gate)
         self.n_evals += 1
         self.n_decks += int(ev.n_sims)
         if not ev.ok:
@@ -315,6 +326,7 @@ class ScreenEnv:
                 "n_starts_filtered": self.n_starts_filtered,
                 "n_pool_reads": self.n_pool_reads,
                 "min_start_swing_v": self.min_start_swing_v,
+                "validity_gate": self.validity_gate,
                 "specs": list(self.specs), "horizon": self.horizon,
                 "points": [p.label for p in self.points],
                 "note": ("scored through evaluate_at_points on the mandated "

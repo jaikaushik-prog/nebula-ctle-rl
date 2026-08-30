@@ -11775,3 +11775,61 @@ contaminated -- and is worth making only to remove the -2 attractor. It re-bases
 `screen_reward` on every path through `evaluate_at_points`, and CMA-ES is
 path-dependent (G121), so published sweeps would not reproduce exactly
 afterwards. Standing rule 6: proposed, not taken.
+
+---
+
+### 2026-08-30 -- session 30 (continued): STEP 1 of the RL rescue -- the G44 validity gate is wired into the screen, default OFF.
+
+**No result number moves. This is a change to what the RL policy can SEE.**
+
+`adaptive_screen.evaluate_at_points` now takes `validity_gate: bool = False`
+and calls **`rl/evaluator.validate`** -- imported, never restated (rule 9). The
+same flag is on `ScreenEnv`, also defaulting **False**.
+
+**Why default OFF.** Entry 43 measured the blast radius on results at **zero**
+(0 of 12 accepted designs, 0 of 2 compliance designs), but the flag changes
+`screen_reward` on every ungated path and CMA-ES is **path-dependent (G121)**,
+so flipping the default would stop committed sweeps reproducing for no change
+in any verdict. Entry 41 trained 25 000 steps through `ScreenEnv`; its default
+stays False so that run reproduces bit-for-bit. The new training run passes
+`validity_gate=True` **explicitly**, so the change is visible at the call site.
+
+**Only `INVALID` rejects.** `HEADROOM_ONLY` passes through: it means the `.op`
+is trustworthy and the device is out of saturation, which the screen already
+scores through its own `saturation` / `tail_saturation` rows. Rejecting it here
+would count one failure twice and erase the gradient over the low-peaking
+region where a fresh policy starts -- `evaluator.validate`'s own docstring says
+so.
+
+**The red-gate test is against SPICE, not a mock** (8 decks, marked `slow`). A
+real `u` from `topk_scan_screen_random.json` -- one of entry 41's proposals
+reporting a peak at **19.95 GHz** that the ungated screen scored at 4 of 4
+points:
+
+    gate OFF   ok=True    scored as a merely-bad design   (today's behaviour)
+    gate ON    ok=False   reward at the -16 invalid floor, reason names G44
+
+**That is the attractor removed, demonstrated on the design that created it.**
+
+**Sabotage round: 9 of 9 RED**, and getting there was the useful part. Two cases
+came back GREEN first time. One was a badly-aimed sabotage (it left `first_bad`
+in place). **The other was a genuinely decorative gate (G117):** the test could
+not distinguish *"unscorable because the gate rejected it"* from *"unscorable
+because the fake could not be processed downstream"* -- both give
+`n_scorable == 0`, so deleting the guard stayed green. Fixed by patching
+`link.bridge.device_result_from_point` to **RAISE**: if the gate short-circuits
+nothing downstream runs, and if the guard is gone the raiser fires (G122 --
+patch the path you must not reach with something that raises, not a counter).
+Both files restored byte-identical, no leftover markers (G127).
+
+**New on disk:** `nebula/tests/test_validity_gate.py` (9 tests, 1 `slow`).
+
+**Tests: 2139 passed / 12 deselected before; 2148 passed / 13 deselected after**
+(317 s). Coverage (8 of 16) and compliance are untouched.
+
+**Next (step 2):** harvest the **241 140** design vectors logged across the run
+logs -- 3.2x what the 74 526-row pool holds -- and **hindsight-relabel** them
+(every design is a demonstration for the spec it actually achieved). **Filtered
+through this gate**, because relabelling without it would teach a policy that a
+19.95 GHz sweep-edge design is a valid answer, which is the exact pathology that
+broke SAC.
