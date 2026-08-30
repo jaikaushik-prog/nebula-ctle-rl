@@ -528,12 +528,30 @@ not stand is the eleven-row claim.
    over already-simulated designs serves 32 of 32 held-out targets and that
    **50 random designs serve 100 % of them**. See §6.2 item 5 for the one
    experiment that could still produce an affirmative result.
-5. **Should `target_peaking_db` become live?** It is accepted by
-   `reward_v1.margins` and **deliberately ignored**, so one design scores
-   identically against targets of 3, 5, 7.5, 10 and 12 dB. **The spec manifold
-   is effectively 1-D**, which is why a lookup table is the optimal policy.
-   Making it live would make the problem genuinely 2-D — and would move every
-   published reward number (a §7f re-run event).
+5. ~~**Should `target_peaking_db` become live?**~~ **CLOSED, and it was
+   already done. Struck rather than deleted (rule 10).** This item was written
+   before G111 and is **stale**: `S3_peaking_match` (tolerance 1.5 dB) has been
+   a member of `V5_SPECS`, `V5D_SPECS`, `V6_SPECS`, `V6D_SPECS` and
+   `V6V_SPECS` since session 23, and `ScreenEnv._evaluate` passes
+   `target_peaking_db` into `evaluate_at_points` on every step. **Entry 41
+   trained on a genuinely 2-D manifold**, so "the manifold is 1-D, which is why
+   a lookup table is optimal" can no longer be offered as the explanation of
+   the RL null. Measured 2026-08-30 (`PREDICTIONS.md` entry 42, disclosure 5):
+   **0 of 52** fully-scorable `screen_random` candidates and **3 of 80**
+   `screen_seeded` candidates name `S3_peaking_match` as their worst row. **The
+   row the policy cannot hit is the FREQUENCY request** — `S3_f_peak_match`,
+   52 of 52.
+
+   **What replaced it as the live question** is the reward's *geometry*, not
+   its dimensionality: `invalid_reward(13) = -16` against a 13-row landscape
+   that spans 13, so becoming measurable outranks becoming correct; and
+   `adaptive_screen.evaluate_at_points` carries no G44 validity gate (G130), so
+   a design with no interior AC peak is scored as merely-bad at about **-2**
+   rather than invalid. **All 52 of entry 41's fully-scorable proposals live
+   there, at a median 3.377 octaves from the request.** Whether to close that
+   gap is a reward-set change and therefore still the owner's (standing
+   rule 6) — see entry 43's closing paragraph for what it would and would not
+   cost.
 
 ---
 

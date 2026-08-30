@@ -1,0 +1,50 @@
+{
+ "task": "entry 42 re-verification with the repaired verify45",
+ "run_pid": 19704,
+ "run_started_unix": 1788071130.7183542,
+ "run_host": "JAI",
+ "n_designs": 1,
+ "designs": [
+  {
+   "arm": "best4",
+   "index": 14,
+   "peaking_db": 10.0,
+   "f_peak_hz": 1921093976.6100154,
+   "cma_es_pvt45": 44,
+   "u": [
+    0.29900387179274857,
+    0.3422027423089685,
+    0.6332271722664657,
+    0.7514171074437466,
+    0.7512621661156792,
+    0.6810738820669064,
+    0.3677258948558578
+   ],
+   "verified_by_broken_instrument": {
+    "n_pvt45_pass": 0,
+    "n_pvt45_total": 135,
+    "compliant": false
+   },
+   "verified_repaired": {
+    "n_pvt45_pass": 44,
+    "n_pvt45_total": 45,
+    "compliant": false,
+    "n_full135_pass": 63,
+    "n_full135_total": 135,
+    "compliant_135": false,
+    "n_unscorable_45": 1,
+    "failing_rows_45": [
+     "EYE_UNMEASURABLE"
+    ],
+    "scored_against": {
+     "peaking_db": 10.0,
+     "f_peak_hz": 1921093976.6100154
+    },
+    "legacy_11row_45_pass_DO_NOT_QUOTE": 45
+   }
+  }
+ ],
+ "n_compliant_45": 0,
+ "n_compliant_135": 0,
+ "wall_s": 37.8823401927948
+}

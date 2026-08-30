@@ -145,7 +145,52 @@ def rollout(agent, req: dict, seed: int = SEED, horizon: int = HORIZON) -> dict:
 
 
 def verify45(u: Sequence[float], req: dict) -> dict:
-    """All 45 mandated corners, through the project's one verifier."""
+    """The 45 MANDATED corners, at the design load, **scored against THIS
+    request**, through exactly the path every coverage number in this project
+    used (`exp_coverage.verify_request`).
+
+    **REPAIRED 2026-08-30, session 30, after THREE defects, all silent.**
+    The first version read
+
+        mand  = [p for p in pts if p.get("mandated", True)]
+        npass = sum(1 for p in mand if p.get("pass"))
+
+    against `verify_full`, and every line of it was wrong:
+
+    1. **`mandated` does not exist** on `FullPointResult`, so the filter kept
+       all **135** load-swept points and reported them in a field named
+       `n_pvt45_total` -- merging G109's compliance grid (45 mandated corners
+       at the design load) with this project's own characterisation axis.
+    2. **`pass` does not exist** -- the field is `feasible` -- so `npass` was
+       **always 0** and `compliant` **always False, for every input.** A
+       verifier that could not report a pass, in a project whose live question
+       is whether RL ever produces one.
+    3. **The worst one, and it survived the first repair.** `verify_full`
+       scores `FULL_SPECS` -- **11 rows, against `LEGACY_TARGET`
+       (7.5 dB @ 1.7678 GHz)** -- and carries **none** of the three
+       request-dependent rows (`S3_f_peak_band`, `S3_f_peak_match`,
+       `S3_peaking_match`). `req` was used only to decorate a `source` string.
+       So the function answered *"does this design meet the eleven slide rows
+       against a fixed legacy target"* while its name, its fields and its
+       caller all said *"does it deliver what the user asked for at 45
+       corners"*. Measured cost, on entry 42's one screen-feasible design
+       (10.0 dB @ 1.921 GHz, delivering 10.685 dB @ 2.041 GHz): this function
+       reported **45 of 45, compliant**, and the correct scoring reports
+       **44 of 45**. Against `LEGACY_TARGET` the peaking error is 3.185 dB --
+       twice its 1.5 dB tolerance -- and the row that would have caught it is
+       simply not in `FULL_SPECS`.
+
+    The repair is to route through **`exp_coverage._rescore`**, the one
+    definition of "score a `verify_full` result against a request on
+    `V6V_SPECS`" (CLAUDEwa.md section 8 rule 9). That function is what G115 was
+    written for and it raises rather than filtering. Nothing is restated here.
+
+    Returns the mandated-45 verdict and the 135-point characterisation in
+    **separate fields** (G109), plus the request-agnostic 11-row reading the
+    broken version was actually producing, labelled as such so the two can
+    never again be confused.
+    """
+    from nebula.experiments.exp_coverage import _rescore
     from nebula.experiments.exp_g4_verify import Candidate, verify_full
 
     cand = Candidate(design_id="q3", u=tuple(float(x) for x in u), role="q3",
@@ -154,10 +199,45 @@ def verify45(u: Sequence[float], req: dict) -> dict:
                      claimed_reward=0.0, claimed_worst_point=None)
     out = verify_full(cand, ac_peak_interp=True)
     pts = out.get("points") or []
-    mand = [p for p in pts if p.get("mandated", True)]
-    npass = sum(1 for p in mand if p.get("pass"))
-    return {"n_pvt45_pass": npass, "n_pvt45_total": len(mand),
-            "compliant": bool(mand and npass == len(mand))}
+    if not pts:
+        raise ValueError("verify_full returned no points; a verification that "
+                         "measured nothing must not report a verdict")
+
+    # The request IS used. That sentence is the whole repair.
+    rescored = _rescore(pts, float(req["f_peak_hz"]), float(req["peaking_db"]))
+
+    loads = sorted({round(float(p["cl_f"]), 20) for p in pts})
+    if len(loads) != 3:
+        raise ValueError(
+            f"verify_full returned {len(loads)} distinct loads, not the 3 "
+            f"`PROMOTION_LOADS` the design load is the median of (G109)")
+    design_load = loads[len(loads) // 2]          # verify_request's own rule
+    m45 = [r for r in rescored
+           if abs(float(r["cl_f"]) - design_load) < 1e-20]
+    if len(m45) != 45:
+        raise ValueError(
+            f"the design load selects {len(m45)} of {len(rescored)} verified "
+            f"points, not the 45 corners the competition slide mandates. "
+            f"The grid moved.")
+
+    npass = sum(1 for r in m45 if r["feasible"])
+    n135 = sum(1 for r in rescored if r["feasible"])
+    failing: set = set()
+    for r in m45:
+        failing.update(r["failed"])
+    # The request-agnostic 11-row reading, kept ONLY so a reader can see what
+    # the broken version was measuring. It is never the compliance number.
+    n11 = sum(1 for p in pts
+              if abs(float(p["cl_f"]) - design_load) < 1e-20 and p["feasible"])
+    return {"n_pvt45_pass": npass, "n_pvt45_total": len(m45),
+            "compliant": bool(npass == len(m45)),
+            "n_full135_pass": n135, "n_full135_total": len(rescored),
+            "compliant_135": bool(n135 == len(rescored)),
+            "n_unscorable_45": sum(1 for r in m45 if r.get("unscorable")),
+            "failing_rows_45": sorted(failing),
+            "scored_against": {"peaking_db": float(req["peaking_db"]),
+                               "f_peak_hz": float(req["f_peak_hz"])},
+            "legacy_11row_45_pass_DO_NOT_QUOTE": n11}
 
 
 def run(ckpt: Path = CKPT, seed: int = SEED, horizon: int = HORIZON) -> dict:

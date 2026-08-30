@@ -4607,6 +4607,117 @@ Plus: git init, .gitignore, 28 tests, Wilson-bound BER reporting.
   sharpest form: a sabotage must not be able to spend money -- and neither must
   the test it sabotages.**
 
+- **G130 -- (nebula) THIS REPOSITORY HAS TWO DEFINITIONS OF "VALID", AND THE
+  RL ENVIRONMENT IS ON THE SIDE WITHOUT ONE. The policy found the gap in
+  25 000 steps.** `rl/evaluator.validate` implements G44 twice over --
+  `Sky130Point.peak_is_sweep_edge` (a response still rising at 20 GHz, so
+  `meas ac MAX` returned the range edge and `peaking_db` is fictitious) and
+  `F_PEAK_HZ_LIMITS = (1e7, 1.8e10)`. **`experiments/adaptive_screen.
+  evaluate_at_points` does not import it**, and neither does
+  **`exp_g4_verify.verify_full`**. So the deliverable (`design.py`), the whole
+  benchmark (`baselines.py`) and the PPO track (`rl/env.py`) reject a
+  sweep-edge measurement, while **every 4-corner accept rate and every 45- and
+  135-point compliance number in this project was produced without that
+  check.**
+  **What it cost, and what it did not.** Measured 2026-08-30 across all ten
+  scan artifacts (`exp_g44_audit.py`, 138 decks): **848 candidates, 19
+  accepted, 0 accepted outside the limits**; re-simulating the 12 unique
+  accepted designs and applying `validate` itself gives **0 of 12
+  gate-rejected**, and the two published compliance designs are **0 of 45
+  invalid, 0 of 45 sweep-edge**. **No published result moves.** The reason is
+  that `S3_f_peak_band` (tolerance 0.5 octaves) has been in `V6_SPECS` since
+  G111: a peak at 19.95 GHz is 6 to 8 tolerances outside the window, so a
+  sweep-edge design can never be *accepted* -- only **mis-labelled**, scored as
+  a merely-bad design at about **-2** instead of an invalid one at **-16**.
+  **And that mis-labelling is the entire RL failure.** 58.8 % of entry 41's
+  `screen_random` candidates and 44.4 % of a straight line between two real
+  CTLE designs report a sweep-edge peak, all scoring inside a **1.364-wide
+  band**, and **all 52 of the policy's fully-scorable proposals live there**.
+  Becoming measurable is worth up to **+14** against a 13-row landscape that
+  spans 13, so the reward pays more for leaving the CTLE family than for
+  hitting the spec.
+  **The general form: a validity gate that is imported by some scoring paths
+  and not others is not a gate, it is a coin flip decided by which function the
+  caller reached.** Grep for the gate's importers before trusting any verdict,
+  and ask whether the path that produced a number is one of them. Here the two
+  ungated paths are precisely the two the RL loop and the compliance table run
+  through.
+  Recorded as measured-harmless-to-results and load-bearing-for-training;
+  `PREDICTIONS.md` entry 43 is the measurement, and the repair is the owner's
+  under standing rule 6 because it re-bases `screen_reward` on every path that
+  scores through `evaluate_at_points` and CMA-ES is path-dependent (G121).
+
+- **G131 -- (nebula) A VERIFIER THAT COULD NOT REPORT A PASS. Three defects in
+  eight lines, all of them a `dict.get` default or an argument that was never
+  wired, and the first two repairs did not find the third.**
+  `exp_sac_q3.verify45` -- the function entry 41's Q3 and entry 42's arm A use
+  to decide *"compliant at 45 mandated corners"* -- read:
+
+      mand  = [p for p in pts if p.get("mandated", True)]
+      npass = sum(1 for p in mand if p.get("pass"))
+
+  against `FullPointResult`, which has **neither field**:
+  1. `mandated` does not exist, so the filter kept **all 135** load-swept
+     points and reported the count in a field named `n_pvt45_total` -- merging
+     G109's compliance grid with this project's own characterisation axis;
+  2. `pass` does not exist (the field is `feasible`), so `npass` was **always
+     0** and `compliant` **always False, for every input**;
+  3. **the one that survived the first repair:** `verify_full` scores
+     `FULL_SPECS` -- **11 rows against `LEGACY_TARGET` (7.5 dB @ 1.7678 GHz)**
+     -- and carries **none** of the three request-dependent rows
+     (`S3_f_peak_band`, `S3_f_peak_match`, `S3_peaking_match`). The `req`
+     argument was used **only to build a `source` string.** So the function
+     answered *"does this meet the eleven slide rows against a fixed legacy
+     target"* while its name, its field names and its caller all said *"does it
+     deliver what the user asked for"*.
+  **Measured cost, and it went both ways in one session.** Defect 2 made the
+  verifier report `compliant=False` for everything, which in a project whose
+  live question is *"does RL ever produce a compliant design"* is **a negative
+  manufactured by its own instrument**. Repairing 1 and 2 then produced
+  **"45 of 45, compliant"** on entry 42's one screen-feasible design -- a
+  headline -- which defect 3 made false: scored against its own request the
+  same design is **44 of 45**, and against `LEGACY_TARGET` its peaking error is
+  **3.185 dB** against a 1.5 dB tolerance, on a row that is not in the set.
+  **The tell was a contradiction between two artifacts on the same `u`.** Entry
+  40 recorded 44/45 and 63/135 for that design; the repaired-but-still-wrong
+  function said 45/45 and 111/135. Joining on `u` rather than `design_id`
+  (G124) is what made the contradiction visible at all.
+  **Three rules, and the third is the new one.** (a) Assert the field, never
+  `.get` it -- a key that is absent is a contract violation, not a `False`.
+  (b) A filter that keeps MORE than it claims is the same defect as G115's
+  filter that kept less. (c) **When a function takes a `request`, assert that
+  the request reaches the scoring. An argument used only in a log string is not
+  wired, and nothing about the call site shows it.**
+  Fixed by routing through `exp_coverage._rescore`, the one definition of
+  "score a `verify_full` result against a request on `V6V_SPECS`" (rule 9). The
+  repair is cross-validated: it now reproduces entry 40's 44/45 and 63/135 **bit
+  for bit** through an independent code path.
+  `nebula/tests/test_verify45_grid.py` (16 tests; the sabotage that restores the
+  original two lines fails 6 of them).
+
+- **G132 -- (nebula) A ROLLOUT'S WARM START IS NOT A PROPOSAL, and a
+  best-of-visited selector that includes step 0 reports RETRIEVAL as RL.**
+  `exp_rl_diagnose.best_feasible` scanned every design an episode visited,
+  including `visited[0]` -- the library candidate `reset()` started from. On
+  entry 42's `best4` arm it duly returned a screen-feasible design for request
+  14 whose `u` is **bit-identical (distance 0.000000)** to library rank 3, i.e.
+  the design entry 40 had already accepted for that request without any policy
+  involved.
+  **Entry 36 had already solved this and the knowledge did not travel.**
+  `exp_sac_propose._Rollouts` excludes the seeded start deliberately, and says
+  why in its module docstring: *"allowing the policy to propose it unchanged
+  would make those arms >= library by construction and the measurement would
+  report retrieval's result as RL's."* A second harness written two sessions
+  later reintroduced exactly that.
+  **The general form: when an episode is SEEDED, the seed is part of the
+  baseline, not part of the output.** Any statistic over "designs visited" must
+  say whether step 0 is in it, and for a proposer metric it must not be.
+  The near-miss is the lesson: the design was also being scored by a verifier
+  with G131's third defect, so for several minutes the session held a "45 of 45
+  compliant design produced by RL" that was neither produced by RL nor 45 of 45.
+  **Two independent defects pointing the same way is how a headline gets
+  published.**
+
 ## 10. Environment
 
 - Windows 11, PowerShell 5.1 (+ Git Bash available), Python 3.13.14,
@@ -11553,3 +11664,114 @@ byte-identical, no leftover markers (G127).
 **Tests: 2049 passed, 12 deselected before; 2098 passed, 12 deselected after**
 (283 s, system Python 3.13.14). The suite was run **before** the experiment,
 never alongside it (G70).
+
+---
+
+### 2026-08-30 -- session 30 (continued): entry 42 RAN (4 of 5), the baseline is AUDITED and CLEAN, and three of this session's own numbers were retracted.
+
+**Coverage and compliance are untouched: mandated 45-corner coverage stays
+8 of 16 (entry 40), and both published compliance designs now additionally pass
+the G44 validity gate at 45 of 45 corners.**
+
+**ENTRY 42 -- the brief's hypothesis 1 is falsified as a remedy. 4 652 decks.**
+
+    arm         feas  compl  revert  kept  scorable   med f_peak   decks
+    det            0      0      48     0    82/136    19.95 GHz     636
+    sto            0      0      48     0    82/136    18.94 GHz     636
+    best4          2      0     324     0   193/544    15.79 GHz    2528
+    norevert       0      0       0    38    92/136    19.95 GHz     636
+
+* **Q1 CONFIRMED.** Stochastic sampling is not merely no better -- it is
+  **identical** on both counted quantities, 0 feasible and **48 reverts against
+  48**, same three requests reverting all 16 moves. Registered in advance from a
+  zero-SPICE probe: stochastic proposals span 0.018-0.028 of the box against
+  deterministic's 0.085-0.122, because sigma is 0.248 pre-tanh and the tanh
+  compresses it. **Sampling narrows the search here.**
+* **Q3 CONFIRMED, and stronger than predicted.** With the revert removed the
+  policy takes **zero reverts**, keeps every edit for 16 steps, and still
+  delivers a median peak of **19.95 GHz**. **The deadlock is not what puts the
+  policy at the sweep edge.**
+* **Request 8 is the cleanest refutation:** 63 of 68 evaluations scorable, **3
+  reverts**, entirely unblocked -- and 0 feasible, delivering 6.01 GHz against a
+  1.387 GHz request.
+* **Q4 FALSIFIED.** No moat (**0 of 54** interior points unscorable) and no
+  plateau (median informative fraction **0.9375** against a predicted <= 0.5).
+  What the transects show instead, unregistered and reported as observation:
+  **24 of 54 interior points (44.4 %) report a sweep-edge peak**, the reading
+  **flips on 14 of 60 intervals**, all 24 score inside a **1.364-wide band**,
+  and the feasibility bonus is a **+14 step** invisible from outside.
+* **Q5 CONFIRMED bit-exactly:** reverts `[16,0,16,0,16,0,0,0]`, 636 decks.
+
+**ENTRY 43 -- the owner's blocking question, answered. `exp_g44_audit.py`,
+138 decks.** `adaptive_screen.evaluate_at_points` does not import
+`evaluator.validate`, and **neither does `exp_g4_verify.verify_full`** -- so
+every accept rate AND every compliance number was produced without a G44 gate,
+while the deliverable and the benchmark have one. **Measured blast radius: zero.**
+
+    848 candidates, 19 accepted, 0 accepted outside F_PEAK_HZ_LIMITS   (zero SPICE)
+    12 unique ACCEPTED designs re-simulated, validate applied:  0 of 12 rejected
+      of which entry 32's baseline                              7 of 7 clean
+    57cba07581cd2603  delivered G4 design   invalid 0/45  sweep_edge 0/45
+    c507a3ba6f58b9a6  joint winner          invalid 0/45  sweep_edge 0/45
+
+**The library's 6 of 16 is uncontaminated and 11-of-11-at-45-of-45 survives**,
+because `S3_f_peak_band` (0.5 oct) has rejected 19.95 GHz by 6-8 tolerances
+since G111. The gate's blast radius on *results* is nil and on the *training
+signal* is total: the mis-labelling scores a non-CTLE at **-2** where an
+on-target compressing design scores **-16**. New gotcha **G130**.
+
+**THREE RETRACTIONS, all against this session's own work, all disclosed in
+full rather than quietly fixed.**
+
+1. **`exp_sac_q3.verify45` had THREE defects** and the first two repairs did not
+   find the third (**G131**). `mandated` and `pass` do not exist on
+   `FullPointResult`, so it scored 135 points as "45" and `compliant` was
+   **always False for every input** -- a negative manufactured by its own
+   instrument. Repairing that produced a **"45 of 45 compliant"** headline,
+   which was also false: `verify_full` scores 11 rows against **`LEGACY_TARGET`
+   (7.5 dB @ 1.7678 GHz)** and carries none of the three request rows, so `req`
+   was decorating a string. Scored against its own request the design is
+   **44 of 45**. Now routed through `exp_coverage._rescore` and cross-validated:
+   it reproduces entry 40's **44/45 and 63/135 bit for bit** through an
+   independent path.
+2. **The one screen-feasible "RL" design was the warm start** (**G132**).
+   `best_feasible` included `visited[0]`, so it returned a library candidate at
+   **distance 0.000000** -- the design entry 40 already had at rank 3. Entry 36's
+   `_Rollouts` excludes the seeded start deliberately and that knowledge did not
+   travel two sessions.
+3. **Two independent defects pointed the same way** and for several minutes this
+   session held a "45 of 45 compliant design produced by RL" that was neither
+   produced by RL nor 45 of 45. **That is how a headline gets published**, and
+   it was caught only by a contradiction between two artifacts on the same `u`,
+   joined on `u` and not `design_id` (G124).
+
+**Hypothesis 2 is discharged and `CONTINUE_HERE.md` sec 5 OPEN item 5 is
+STALE.** `S3_peaking_match` (tol 1.5 dB) has been live in V5/V5D/V6/V6D/V6V
+since G111, and `ScreenEnv` passes `target_peaking_db` every step: entry 41
+trained on a genuinely 2-D manifold. **0 of 52** scorable `screen_random`
+candidates name it as the worst row. The row the policy cannot hit is the
+**frequency** request.
+
+**New on disk:** `experiments/exp_rl_diagnose.py`, `experiments/exp_g44_audit.py`,
+`tests/test_rl_diagnose.py` (49), `tests/test_g44_audit.py` (25),
+`tests/test_verify45_grid.py` (16), `PREDICTIONS.md` entries 42 OUTCOME and 43,
+`HANDOFF.md` gotchas **G130-G132**, artifacts `rl_diagnose_results.json`,
+`rl_diagnose_reverify.json`, `g44_audit_results.json`.
+
+**Sabotage rounds, all restored byte-identical with no leftover markers
+(G127):** `exp_rl_diagnose` 12 of 12 red (one re-run after a bad anchor rather
+than counted, G125); `exp_g44_audit` 13 of 13 red (one was GREEN first time --
+a decorative gate whose data could not separate the rule from its absence,
+G117 -- and a distinguishing test was added and the case re-run);
+`verify45` 7 of 7 red, including the original bug restored, which fails 6 of 11.
+
+**Tests: 2049 passed, 12 deselected at the start of the session; 2139 passed,
+12 deselected after** (377 s, system Python 3.13.14). The suite was never run
+alongside an experiment (G70).
+
+**What is NOT done, and is the owner's:** the gate repair itself. It is **not**
+required to make the RL comparison valid -- entry 43 proves the bar was never
+contaminated -- and is worth making only to remove the -2 attractor. It re-bases
+`screen_reward` on every path through `evaluate_at_points`, and CMA-ES is
+path-dependent (G121), so published sweeps would not reproduce exactly
+afterwards. Standing rule 6: proposed, not taken.

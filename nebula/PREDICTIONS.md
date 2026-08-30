@@ -7720,3 +7720,182 @@ artifact boundaries -- if the pool has changed, the starts have changed.
   tested here. Disclosure 4 is a reason to think the sparsity in hypothesis 3
   is a *symptom* of the plateau rather than an independent cause, but this
   entry does not measure that.
+
+### OUTCOME (run 2026-08-30; arm A 4 436 decks, arm B 216 decks, 4 652 total)
+
+**SCORE: 4 of 5.** Q4 is falsified and the falsification is the useful part.
+Artifacts: `rl_diagnose_results.json`, `rl_diagnose_reverify.json`. Nothing
+above this heading was edited.
+
+| | prediction | falsifier | result | verdict |
+|---|---|---|---|---|
+| **Q1** | A2 makes 0 feasible designs AND reverts in 36-60 | either fails | **0 feasible, 48 reverts** | **CONFIRMED** |
+| **Q2** | A3 solves 0 of 8 at 45 mandated corners | any compliant | **0 of 8** | **CONFIRMED** |
+| **Q2b** | *secondary:* A3 produces >= 1 screen-feasible design | none | **2** | **HIT** (registered at 0.3) |
+| **Q3** | A4's median delivered `f_peak` above 4 GHz | at or below | **19.95 GHz** | **CONFIRMED** |
+| **Q4** | median informative fraction <= 0.5 | above | **0.9375** | **FALSIFIED** |
+| **Q5** | A1 reproduces entry 41's Q3 exactly | any difference | **exact** | **CONFIRMED** |
+
+    arm         feas  compl  revert  kept  scorable   med f_peak   decks
+    det            0      0      48     0    82/136    19.95 GHz     636
+    sto            0      0      48     0    82/136    18.94 GHz     636
+    best4          2      0     324     0   193/544    15.79 GHz    2528
+    norevert       0      0       0    38    92/136    19.95 GHz     636
+
+**Q1 -- stochastic sampling changes nothing, exactly as disclosure 7 said it
+would not.** A2 is not merely no better than A1; it is **identical on both
+counted quantities** -- 0 feasible designs and **48 reverts against 48**, with
+the same three requests (0, 5, 12) reverting all 16 moves. The brief's
+hypothesis 1 named a real trap and the remedy it proposed is inert, because the
+revert caps the reachable set regardless of how the action is drawn.
+
+**Q3 is the load-bearing result and it is stronger than the prediction.** With
+the revert removed the policy has **zero reverts** -- it is free to move for all
+16 steps, keeps every edit, and visits 92 of 136 measurable designs -- and its
+**median delivered peak is 19.95 GHz, the top of the AC sweep.** Unblocking the
+walk does not send it home; it lets it reach the useless region faster. **The
+deadlock is not what puts the policy at the sweep edge. The reward is.**
+
+**Q4 -- FALSIFIED, and the barrier is neither of the two things this entry
+proposed.** On the straight line from the policy's converged proposal to a
+design the screen accepts: **0 of 54 interior points are unscorable** (no moat)
+and the median informative fraction is **0.9375**, not the <= 0.5 predicted (no
+plateau). The path is walkable and it carries signal. What the transects show
+instead was not registered and is therefore reported as an observation, not a
+hit:
+
+* **24 of 54 interior points (44.4 %) report a peak at the sweep edge**, and
+  the reading **flips on 14 of 60 adjacent intervals** -- `f_peak` is
+  *discontinuous* in the design vector, because a response with no interior
+  maximum makes `meas ac MAX` return the range edge (G44);
+* **all 24 of those score inside a 1.364-wide band** (-3.364 to -2.000),
+  because both frequency rows sit clipped at 1.0 shortfall -- so a design
+  3.4 octaves off and one 0.9 octaves off are the same number;
+* and the prize is a **step discontinuity**: on 5 of 6 transects the last
+  infeasible sample is -0.18 to -1.06 and the next thing is **+14**, the
+  feasibility bonus, invisible from outside.
+
+**Q2's secondary hit is real and must not be quoted as an RL result.** The two
+screen-feasible designs came from `best4`, and the one that was verified is
+**bit-identical (distance 0.000000) to a library candidate** -- it is the
+episode's own warm start at step 0, which `best_feasible` failed to exclude.
+Entry 36's `_Rollouts` excludes the seeded start for exactly this reason and
+this harness lost that. **Recorded as a defect in this entry's harness, not as a
+result** (G132). Scored against its own request it is **44 of 45** -- the number
+entry 40 already had for that design.
+
+### THREE CORRECTIONS THIS RUN FORCED, all against this session's own work
+
+**1. `exp_sac_q3.verify45` had three defects and briefly reported a false
+compliant design.** It is repaired and the repair is cross-validated: on entry
+40's design `a43222800818fd88` it now returns **44 of 45 mandated and 63 of
+135**, reproducing entry 40's independently-produced numbers **bit for bit**
+through a different code path. See G131.
+
+**2. The 45/45 this session reported for request 14 is WITHDRAWN.** It was
+`verify_full`'s 11-row, `LEGACY_TARGET`-scored reading wearing the label of a
+13-row request-scored one. Left here struck rather than deleted (rule 10): the
+retraction is the evidence that the instrument is now right.
+
+**3. Q4's own statistic was well-defined and the hypothesis behind it was
+wrong.** `informative_fraction` measured what it was defined to measure. The
+error was in the model of the landscape, not the instrument -- which is the
+distinction entry 30's outcome insisted on, applied here against myself.
+
+### What this entry establishes
+
+* **The brief's hypothesis 1 is falsified as a remedy.** Stochastic sampling is
+  inert (Q1), restarts do not produce a compliant design (Q2), and removing the
+  revert entirely makes the delivered peak *worse* (Q3). The deadlock is real --
+  3 of 8 requests, and 4 independent restarts on those three still gave **0
+  scorable of 68 with 64 of 64 steps reverted** -- but it is a consequence of
+  the start distribution, not the cause of the null.
+* **Request 8 is the cleanest single refutation.** 63 of 68 evaluations
+  scorable, **3 reverts**, the policy entirely unblocked for 68 designs -- and
+  still 0 feasible, delivering 6.01 GHz against a 1.387 GHz request.
+* **The mechanism is the reward's geometry, and the transects locate it more
+  precisely than this entry predicted:** not a moat, not a plateau along a
+  path, but a **large measurable region of designs with no interior peak, all
+  scoring the same clipped ~-2, reachable from anywhere, and worth up to 14
+  more than an on-target design that compresses.**
+
+### What this entry does NOT establish
+
+* **Nothing about coverage or compliance.** Mandated 45-corner coverage remains
+  **8 of 16** (entry 40) and no design here changes it.
+* **Not that the reward change would work.** That is untested and is the
+  owner's decision under standing rule 6.
+* **Nothing about hypotheses 3 and 4** (sparsity, HER).
+
+---
+
+## 43. Session 30 -- **the missing validity gate: what would move if the screen could see G44?**
+
+**A MEASUREMENT RECORD, not a pre-registration.** No prediction is claimed. The
+question was posed by the owner as blocking: *"if that path has no G44 gate,
+then the library control's 6 of 16 was scored without it too... Do not retrain
+anything until this number exists."*
+
+### The defect
+
+`rl/evaluator.validate` is this project's validity gate and implements G44 two
+ways -- `Sky130Point.peak_is_sweep_edge` (the mechanism) and
+`F_PEAK_HZ_LIMITS = (1e7, 1.8e10)` (the symptom).
+**`experiments/adaptive_screen.evaluate_at_points` does not import it**, and
+neither does **`exp_g4_verify.verify_full`**. So:
+
+    GATED    design.py (the deliverable) - baselines.py (the whole benchmark)
+             exp_attribution - exp_gmid_validation - rl/env.py - rl/corner_env.py
+             rl_smoke.py
+    UNGATED  adaptive_screen.evaluate_at_points  -> EVERY 4-corner accept rate
+                                                    (entries 31, 32, 36, 38, 40,
+                                                    41, 42) and the coverage
+                                                    sweep's screen
+             exp_g4_verify.verify_full           -> EVERY 45- and 135-point
+                                                    compliance number
+             exp_joint_search - exp_linear_pareto - exp_hd3_amplitude
+             exp_tunable_trade - exp_sweep_cost - exp_dfe_ablation
+
+### The measurement (`exp_g44_audit.py`, 138 decks)
+
+Pass 1, **zero SPICE**, over all ten scan artifacts: **848 candidates, 19
+accepted, 0 accepted outside `F_PEAK_HZ_LIMITS`.** Declared a lower bound in
+the artifact, because no scan records `g_top_db` and the `peak_is_sweep_edge`
+half cannot be answered from a file.
+
+Pass 2, **SPICE**, the 12 unique accepted designs at their 4 screen points, with
+`evaluator.validate` **imported and applied**:
+
+    accepted designs gate-rejected      0 of 12      (invalid 0/4, sweep_edge 0/4, every one)
+      of which entry 32's baseline       7 of 7 clean
+
+Pass 3, **SPICE**, the two published compliance designs at all 45 mandated
+corners:
+
+    57cba07581cd2603  the delivered G4 design   invalid 0/45   sweep_edge 0/45
+    c507a3ba6f58b9a6  the joint winner          invalid 0/45   sweep_edge 0/45
+
+### The answer
+
+**The baseline does not move. The library's 6 of 16 is uncontaminated, and both
+published compliance designs pass the validity gate at every mandated corner.**
+
+**Why, mechanically:** `S3_f_peak_band` (tolerance 0.5 octaves, the window's own
+half-width) has been in `V6_SPECS` and `V6V_SPECS` since **G111** in session 23.
+A peak at 19.95 GHz is **+3.0 to +3.9 octaves** outside the window -- 6 to 8
+tolerances -- so a sweep-edge design cannot be *accepted* or reported
+*compliant*. It can only be **mis-labelled**: scored as a merely-bad design at
+about -2 instead of as an invalid one at -16.
+
+**So the gate's blast radius on RESULTS is zero and its blast radius on the
+TRAINING SIGNAL is the whole problem.** 58.8 % of entry 41's `screen_random`
+candidates and 44.4 % of arm B's transect interior sit in that mis-labelled
+region, and it is where the policy converged.
+
+**What this licenses:** the gate repair is **not** required to make the RL
+comparison valid -- the bar was never contaminated. It is worth making for a
+different, narrower reason: it would remove the -2 attractor. That is a change
+to the training landscape, it re-bases `screen_reward` on every path that scores
+through `evaluate_at_points`, and CMA-ES is path-dependent (G121), so published
+sweeps would not reproduce exactly afterwards. **It is the owner's decision and
+is proposed, not taken.**
