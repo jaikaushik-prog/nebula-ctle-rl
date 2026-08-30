@@ -7899,3 +7899,200 @@ to the training landscape, it re-bases `screen_reward` on every path that scores
 through `evaluate_at_points`, and CMA-ES is path-dependent (G121), so published
 sweeps would not reproduce exactly afterwards. **It is the owner's decision and
 is proposed, not taken.**
+
+---
+
+## 44. Session 30 -- **the learned generator, and the fibre it cannot see into**
+
+### PART A -- steps 2-4, a MEASUREMENT RECORD. No prediction is claimed.
+
+Steps 1-4 of the owner's RL rescue were built and run before this entry existed.
+They are recorded here, with their corrections, because three of them were
+scored against expectations I stated aloud and two of those were wrong.
+
+**Step 2 -- hindsight relabelling. Zero SPICE.** Every design ever simulated is
+a demonstration for the spec it *achieved*, so 13 run logs were relabelled:
+
+    239 132  design vectors logged
+    124 480  pass the validity gate as recorded by `evaluator.validate`
+     41 790  recorded SWEEP-EDGE rejects, EXCLUDED  (17.5 % of everything)
+     51 538  gate-valid AND inside the requestable spec box
+     38 236  UNIQUE demonstrations               <- the training set
+    100/100  spec-box cells occupied, min 52 / median 182 per cell
+
+**The gate had to come first and this is the number that proves it:** 41 790
+rows are the fictitious-peak family (G44/G130). Relabelling without the gate
+would have taught a policy that *"to achieve 4 dB at 19.95 GHz, output this"*
+is a valid answer -- the exact pathology that broke SAC.
+
+**CORRECTION 1.** I projected the harvest would add **+56 %** over the pool's
+in-box designs. It adds **+16 %**: the pool's 33 071 are entirely contained in
+the harvest (overlap 33 071) and it contributes 5 165 new. The +56 % compared
+pre-dedup rows against already-deduped pool rows. **The harvest's value is not
+volume -- it is the 41 790 exclusions and the 100 % box coverage.**
+
+**Step 3 -- the architecture was chosen by a measurement, not a preference.**
+Before any model was written, the fibre structure was measured on 400 cells:
+
+    demonstrations within +-0.25 dB and +-0.02 oct   median 252
+    max pairwise distance among them                 median 1.638
+    typical spread (fibre radius)                            0.516
+    box diagonal                                             2.646
+    cells whose extremes exceed 0.5 apart                    100 %
+
+**`spec -> design` is one-to-many.** The 2-D spec pins one or two of seven
+dimensions; the rest is a ~5-D *fibre* of designs that all answer the request.
+A plain regressor learns the fibre's centroid, which is on no mode.
+
+So a mixture density network (8 components, matching `DEFAULT_TOPK`) was
+trained as the proposal, and a plain MLP **as a control whose job is to fail**:
+
+    arm    val loss   nearest real design k=1     k=5     k=8   ratio
+    mlp      0.0429                     0.232   0.232   0.232    0.45
+    mdn     -9.0191                     0.118   0.019   0.018    0.23
+
+**The control's three columns are byte-identical** -- it is deterministic, so
+k candidates are one design k times, 4k decks to ask one question. The mixture
+lands 0.019 from a real demonstration at k=5.
+
+**CORRECTION 2.** I predicted the regressor would collapse to the centroid
+(ratio ~1). It reached **0.45**. Clearly worse than the mixture and with zero
+diversity, but **not the full collapse claimed.**
+
+**CORRECTION 3.** I described the fibre as spanning **62 % of the design
+space**. That is max-pairwise over the box diagonal -- the most dramatic
+statistic available. The *typical* spread is the fibre radius, **19 %** of the
+diagonal. Still large; the framing was flattering.
+
+**Step 4 -- the accept rate, and it is BELOW the bar.** 320 decks, the same
+`scan_topk`, screen and `V6_SPECS` every other arm is scored by:
+
+    arm         A of 16   accepted_at_k    feasible  infeasible  unscorable  4/4 scorable
+    library         6      [1,4,5,5,6]         7          2          71           9
+    BC (mdn)        2      [0,0,0,0,2]         2          3          75           5
+
+**CORRECTION 4, and it is the one that matters.** I called this *"worse than
+the table it was meant to replace."* **Not established.** Fisher exact on 2/80
+vs 7/80 gives **p = 0.167**, and the 95 % intervals (0.3-8.7 % vs 3.6-17.2 %)
+overlap. The honest statement is **numerically lower, statistically
+indistinguishable at this n.** The MLP control arm did not run (the process was
+killed); its artifact is absent and it is not reported.
+
+### PART B -- WHY, and this is the finding
+
+A zero-SPICE diagnostic on the seven designs the library got accepted:
+
+    the library's 7 feasible designs, present in BC's 38 236 training set   7 of 7
+    demonstrations in each of those designs' own fibre                   28 - 146
+    distance from BC's nearest proposal to that winner               0.376 - 0.639
+    the fibre's own radius                                                   0.516
+
+**BC had every right answer in its training data and did not pick them -- and
+nothing asked it to.** Maximum-likelihood cloning models the *density* of the
+fibre. Corner-feasibility is a property of a small minority of fibre members
+and **nothing in the demonstrations marks which**. The winner is an ordinary
+point in the density. Missing it is the model working correctly.
+
+**VERIFIED FROM SOURCE, not inferred:** `exp_coverage.library_candidates` ranks
+on
+
+    dev = max(|f_oct - tgt_oct| / TOL["S3_f_peak_match"],
+              |pk  - tgt_pk|    / TOL["S3_peaking_match"])
+
+-- distance from target in exactly the two axes that **define** the fibre. Among
+designs of near-identical achieved spec that quantity is near-identical and
+`argsort` breaks the tie by pool order. **Retrieval cannot discriminate within
+a fibre.** It reaches 6 of 16 by returning REAL pool designs and hitting the
+fibre's base rate, not by ranking well.
+
+**So the remaining problem is one sentence:**
+
+> The spec picks the fibre. Cloning learns the fibre. Only a minority of the
+> fibre is corner-robust and nothing in the demonstrations says which --
+> selecting *within* the fibre is what a corner-aware reward is for.
+
+**NOT MEASURED, and I claimed it as a number earlier:** what fraction of a
+fibre is corner-feasible. Only the ~5 members the library sampled per request
+were ever simulated at corners; the other 27-145 were not. The earlier
+statement *"1 in 28 to 1 in 146"* was **unfounded and is withdrawn.**
+
+### PART C -- pre-registration. **Written BEFORE the reranker exists.**
+
+The owner chose plan B: a learned corner-feasibility ranker over the
+generator's fibre samples. **The decisive test costs ZERO SPICE**, because the
+true feasibility of all 80 BC candidates and all 80 library candidates is
+already on disk -- if reranking cannot usefully reorder candidates that have
+already been measured, it cannot help live.
+
+**Declared inputs, measured before this entry:**
+
+1. **The label set, deduplicated: 7 622 unique corner-screened designs, 342
+   screen-feasible (4.5 %).** An earlier count of *"11 713 screened / 490
+   feasible"* was **row** counts, and `coverage_run.jsonl` and
+   `coverage_run_AFTER_unclip_fix.jsonl` hold the **identical 3 200 designs**.
+   Corrected before use.
+2. **Only 16 distinct spec targets exist in that data, and they are the SAME 16
+   the accept rate is measured on.** A random split leaks. The protocol is
+   therefore **leave-one-request-out**: train on 15, score the held-out one,
+   16 times.
+3. **The labels come from CMA-ES trajectories; the generator samples a
+   different distribution.** Entry 37 named this ("the training data is
+   CENSORED"). The transfer test is explicit: train with **no BC design**, test
+   on the 80 BC candidates.
+
+**Q1 -- corner-feasibility is predictable at all.** Leave-one-request-out AUC
+over the 7 622 designs is at least **0.70**. Confidence **0.55.** *For:* 342
+positives is 18x entry 37's 18, and the screen's failures are dominated by
+swing compression, which entry 37 showed IS predictable (4.7 % median error).
+*Against:* that surrogate predicted a continuous physical quantity; this is a
+13-row conjunction at 4 corners. **Falsifier: below 0.70.**
+
+**Q2 -- it TRANSFERS to the generator's distribution.** AUC on the 80 BC
+candidates, from a model trained with no BC design, is at least **0.65**.
+Confidence **0.4.** *Against:* covariate shift is exactly what entry 37 warned
+of, and only 2 of the 80 are positive, so the estimate is noisy by
+construction. **Falsifier: below 0.65.**
+
+**Q3 -- reranking is worth something in deployment.** Applied to the BC scan's
+own five candidates per request, the ranker moves at least one of the two
+acceptances to **rank <= 2** (both currently sit at rank 5). Confidence
+**0.45.** **Falsifier: neither moves.**
+
+**Q4 -- THE ONE THAT DECIDES THE DIAGNOSIS. The ranker beats the library's own
+`dev` criterion at ordering the SAME candidates.** On the pooled 160 scored
+candidates (80 library + 80 BC), the ranker's AUC exceeds `-dev`'s.
+Confidence **0.6.** *For:* `dev` is provably near-constant within a fibre, so
+it should be near-chance at this task. *Against:* across the 16 requests the
+candidates are not all in one fibre, so `dev` carries real between-request
+signal and is not the straw man it is within a fibre. **Falsifier: the ranker
+does not exceed it.**
+**If Q4 misses, the fibre-selection diagnosis is wrong. Say so, stop, and do
+not proceed to SAC on the strength of it.**
+
+**Q5 -- snapping to a real design helps.** Replacing each BC proposal with the
+nearest pool design raises the per-candidate feasible count above **2 of 80**.
+Confidence **0.5.** *For:* the library's advantage may be entirely that its
+points are real. *Against:* it makes the arm a learned retrieval and n is tiny.
+**Falsifier: 2 or fewer.** **Zero SPICE** -- the snapped designs are pool
+members whose corner labels are already known for those that were screened;
+any that were not are reported as unknown, never as a pass.
+
+### The decision rule, before the result
+
+* **Q1 and Q4 both hit** -> the mechanism is confirmed and reranking is the
+  right lever. Proceed to measure a live accept rate, then to SAC.
+* **Q1 hits, Q4 misses** -> corner-feasibility is predictable but the fibre
+  story is not why retrieval wins. **Stop and re-diagnose.**
+* **Q1 misses** -> corner-feasibility is not learnable from what exists.
+  Reranking is dead, and so is the cheap route to selecting within the fibre.
+  Report it and take the SAC decision to the owner on its own merits.
+
+### What no outcome here may claim
+
+* **Not coverage** (8 of 16, entry 40) and **not compliance**. This is a
+  proposal metric on 4 corners.
+* **Not an RL result.** Behaviour cloning and a supervised ranker are not
+  reinforcement learning. The RL claim rests on the SAC stage that follows, and
+  the report must say so in those words.
+* **Nothing about the 135-point load grid**, which is 0 of 16 for every design
+  this project has produced.

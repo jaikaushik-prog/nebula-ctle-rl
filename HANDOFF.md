@@ -11833,3 +11833,95 @@ logs -- 3.2x what the 74 526-row pool holds -- and **hindsight-relabel** them
 through this gate**, because relabelling without it would teach a policy that a
 19.95 GHz sweep-edge design is a valid answer, which is the exact pathology that
 broke SAC.
+
+---
+
+### 2026-08-30 -- session 30 (continued): steps 2-4 of the RL rescue RAN. **A learned generator exists and scores 2 of 16. Four corrections against my own claims.**
+
+**Coverage (8 of 16) and compliance are untouched. Nothing here is an RL result
+-- behaviour cloning is supervised imitation, and the report must say so.**
+
+**Step 2, hindsight relabelling, ZERO SPICE.** Every design ever simulated is a
+demonstration for the spec it *achieved*. 13 run logs relabelled:
+**239 132 rows -> 38 236 unique demonstrations**, spanning **100 of 100** cells
+of the requestable spec box (min 52 per cell). **41 790 sweep-edge rows
+excluded** -- 17.5 % of everything logged, and the reason the gate had to come
+first: relabelling without it teaches a policy that a 19.95 GHz fictitious peak
+is a valid answer.
+
+**Step 3, and the architecture was chosen by measurement.** `spec -> design` is
+one-to-many: within +-0.25 dB and +-0.02 oct there are a median of **252**
+demonstrations whose extremes are **1.638** apart, fibre radius **0.516**, box
+diagonal 2.646. So a mixture density network (8 components) was trained as the
+proposal and a plain MLP **as a control whose job is to fail**:
+
+    arm    val loss   nearest real design k=1     k=5     k=8   ratio
+    mlp      0.0429                     0.232   0.232   0.232    0.45
+    mdn     -9.0191                     0.118   0.019   0.018    0.23
+
+The control's three columns are **byte-identical** -- deterministic, so k
+candidates are one design k times.
+
+**Step 4, the accept rate, and it is BELOW the bar.** 320 decks, same
+`scan_topk`, same screen, same `V6_SPECS`:
+
+    library     A = 6 of 16   [1,4,5,5,6]   7 feasible / 9 fully scorable of 80
+    BC (mdn)    A = 2 of 16   [0,0,0,0,2]   2 feasible / 5 fully scorable of 80
+
+**PART B -- WHY, and it is the finding.** Zero SPICE, on the library's seven
+accepted designs: **all 7 are in BC's training set**; each sits in a fibre of
+28-146 demonstrations; BC's nearest proposal is **0.376-0.639** away against a
+fibre radius of 0.516. **BC had every right answer and nothing asked it to pick
+them.** Max-likelihood cloning models the fibre's DENSITY; corner-robustness is
+a property of a minority of members and the demonstrations do not mark which.
+
+**Verified from source, not inferred:** `library_candidates` ranks on
+`max(|df_oct|/TOL, |dpk|/TOL)` -- distance from target in exactly the two axes
+that DEFINE the fibre. **Retrieval provably cannot discriminate within one**; it
+reaches 6 of 16 by returning REAL pool designs at the fibre's base rate.
+
+**FOUR CORRECTIONS AGAINST MY OWN CLAIMS, all made before they reached a plan:**
+
+1. The harvest adds **+16 %** over the pool, not the **+56 %** I projected -- I
+   compared pre-dedup rows against deduped ones.
+2. The regressor reached ratio **0.45**, not the full centroid collapse (~1) I
+   predicted.
+3. The fibre spans **19 %** of the box by typical spread; my "62 %" was
+   max-pairwise, the most dramatic statistic available.
+4. **"BC is worse than the library" is NOT established** -- Fisher exact on
+   2/80 vs 7/80 gives **p = 0.167** with overlapping intervals. Numerically
+   lower, statistically indistinguishable.
+
+And two more caught while pre-registering step 5: the corner-label set is
+**7 622 unique designs / 342 positives**, not the "11 713 / 490" I first
+counted (`coverage_run.jsonl` and `coverage_run_AFTER_unclip_fix.jsonl` hold the
+**identical 3 200 designs**); and the earlier *"1 in 28 to 1 in 146 of a fibre
+is corner-feasible"* was **never measured and is withdrawn** -- only the ~5
+members the library sampled per request were ever screened.
+
+**PART C -- entry 44 pre-registers the reranker (plan B) with Q1-Q5 and a
+falsifier, committed before the code exists.** Two protocol traps are handled in
+advance: the label data holds **only 16 distinct spec targets, the same 16 the
+accept rate is measured on**, so the split is **leave-one-request-out**; and the
+labels come from CMA-ES trajectories while the generator samples a different
+distribution, so the transfer test trains with **no BC design**. **Q4 is the
+one that decides the diagnosis** -- if a learned ranker cannot beat the
+library's own `dev` at ordering the same candidates, the fibre-selection story
+is wrong and the registered instruction is to stop rather than proceed to SAC.
+
+**New on disk:** `experiments/exp_harvest.py`, `experiments/exp_bc.py`,
+`experiments/exp_bc_propose.py`, `tests/test_harvest.py` (36),
+`tests/test_bc.py` (29), artifacts `harvest_results.json`,
+`demonstrations.npz`, `bc_results.json`, `bc_policy.pt`, `bc_policy_mlp.pt`,
+`topk_scan_bc_mdn.json`, `PREDICTIONS.md` entry 44.
+
+**Sabotage: `exp_harvest` 12 of 12 RED**, including the one that matters
+("sweep-edge rows admitted"). Restored byte-identical, no leftover markers.
+
+**Tests: 2148 passed / 13 deselected before; 2213 passed / 13 deselected
+after** (350 s).
+
+**Known incomplete:** the MLP control arm of step 4 did not run -- the process
+was killed with the session after the MDN arm's artifact was written. Its
+number is absent and is **not** reported. Two stale run locks from that kill
+were removed after confirming pid 20216 was dead.

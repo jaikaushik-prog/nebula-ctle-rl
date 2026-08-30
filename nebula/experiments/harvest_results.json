@@ -1,0 +1,264 @@
+{
+ "task": "hindsight-relabelled demonstrations harvested from run logs",
+ "per_log": [
+  {
+   "log": "baselines_run_interp_grid.jsonl.gz",
+   "gated": true,
+   "n_rows": 50597,
+   "n_gate_valid": 18300,
+   "n_in_box": 7296
+  },
+  {
+   "log": "baselines_run_interp.jsonl.gz",
+   "gated": true,
+   "n_rows": 38886,
+   "n_gate_valid": 14680,
+   "n_in_box": 6080
+  },
+  {
+   "log": "baselines_run_lattice.jsonl.gz",
+   "gated": true,
+   "n_rows": 38841,
+   "n_gate_valid": 14705,
+   "n_in_box": 6003
+  },
+  {
+   "log": "budget_ladder_run.jsonl.gz",
+   "gated": true,
+   "n_rows": 96000,
+   "n_gate_valid": 66871,
+   "n_in_box": 29083
+  },
+  {
+   "log": "rl_smoke_run_v0.jsonl",
+   "gated": true,
+   "n_rows": 765,
+   "n_gate_valid": 0,
+   "n_in_box": 0
+  },
+  {
+   "log": "rl_smoke_run_v1.jsonl",
+   "gated": true,
+   "n_rows": 276,
+   "n_gate_valid": 229,
+   "n_in_box": 27
+  },
+  {
+   "log": "corner_rl_run.jsonl",
+   "gated": true,
+   "n_rows": 64,
+   "n_gate_valid": 64,
+   "n_in_box": 64
+  },
+  {
+   "log": "coverage_run.jsonl",
+   "gated": false,
+   "n_rows": 3216,
+   "n_gate_valid": 2109,
+   "n_in_box": 756
+  },
+  {
+   "log": "coverage_run_AFTER_unclip_fix.jsonl",
+   "gated": false,
+   "n_rows": 3216,
+   "n_gate_valid": 2109,
+   "n_in_box": 756
+  },
+  {
+   "log": "coverage_run_BEFORE_seeding_fix.jsonl",
+   "gated": false,
+   "n_rows": 3216,
+   "n_gate_valid": 2199,
+   "n_in_box": 571
+  },
+  {
+   "log": "hybrid_run.jsonl",
+   "gated": false,
+   "n_rows": 2065,
+   "n_gate_valid": 1360,
+   "n_in_box": 484
+  },
+  {
+   "log": "joint_search_run.jsonl",
+   "gated": false,
+   "n_rows": 400,
+   "n_gate_valid": 265,
+   "n_in_box": 2
+  },
+  {
+   "log": "linear_pareto_run.jsonl",
+   "gated": false,
+   "n_rows": 1590,
+   "n_gate_valid": 1589,
+   "n_in_box": 416
+  }
+ ],
+ "drop_reasons": {
+  "outside the requestable spec box": 72942,
+  "no achieved spec": 54686,
+  "sweep_edge (G44): the peak is fictitious": 41790,
+  "out of saturation (headroom-only)": 12912,
+  "not ok": 4072,
+  "wrong action dimension (9, not 7) -- an older contract": 765,
+  "ngspice failure": 427
+ },
+ "n_rows_total": 239132,
+ "n_gate_valid": 124480,
+ "n_in_box": 51538,
+ "n_unique_demonstrations": 38236,
+ "n_from_ungated_logs": 1819,
+ "spec_box": {
+  "peaking_db": [
+   3.0,
+   12.0
+  ],
+  "f_peak_hz": [
+   1250000000.0,
+   2500000000.0
+  ]
+ },
+ "achieved_peaking_db": {
+  "min": 3.0002155410615376,
+  "max": 11.998207,
+  "median": 7.023584129319204
+ },
+ "achieved_f_peak_ghz": {
+  "min": 1.2501543428198796,
+  "max": 2.499765913013729,
+  "median": 1.7742178211682111
+ },
+ "run_pid": 18988,
+ "run_started_unix": 1788087107.5112984,
+ "run_host": "JAI",
+ "coverage": {
+  "n_cells": 100,
+  "n_occupied": 100,
+  "fraction": 1.0,
+  "min_count": 52,
+  "max_count": 2839,
+  "median_count": 182.0,
+  "counts": [
+   [
+    152,
+    133,
+    150,
+    176,
+    223,
+    185,
+    233,
+    202,
+    204,
+    192
+   ],
+   [
+    146,
+    133,
+    210,
+    207,
+    316,
+    321,
+    337,
+    233,
+    158,
+    184
+   ],
+   [
+    165,
+    159,
+    238,
+    303,
+    699,
+    854,
+    470,
+    267,
+    185,
+    162
+   ],
+   [
+    152,
+    144,
+    246,
+    452,
+    2669,
+    2839,
+    751,
+    241,
+    207,
+    175
+   ],
+   [
+    147,
+    150,
+    247,
+    529,
+    2755,
+    2637,
+    504,
+    245,
+    243,
+    176
+   ],
+   [
+    123,
+    141,
+    212,
+    471,
+    2535,
+    2381,
+    504,
+    208,
+    202,
+    158
+   ],
+   [
+    102,
+    97,
+    205,
+    469,
+    1319,
+    1613,
+    340,
+    197,
+    162,
+    112
+   ],
+   [
+    82,
+    92,
+    128,
+    179,
+    295,
+    297,
+    232,
+    139,
+    148,
+    142
+   ],
+   [
+    82,
+    65,
+    89,
+    104,
+    164,
+    180,
+    127,
+    80,
+    113,
+    89
+   ],
+   [
+    64,
+    52,
+    77,
+    75,
+    91,
+    87,
+    84,
+    83,
+    77,
+    62
+   ]
+  ]
+ },
+ "wall_s": 11.262656211853027
+}
