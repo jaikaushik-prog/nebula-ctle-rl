@@ -8096,3 +8096,100 @@ any that were not are reported as unknown, never as a pass.
   the report must say so in those words.
 * **Nothing about the 135-point load grid**, which is 0 of 16 for every design
   this project has produced.
+
+---
+
+## 45. Session 30 -- **reward-weighted regression: offline RL on 7 622 corner labels, for zero new SPICE**
+
+**Written 2026-08-30 BEFORE the module exists.** Verifiable from git: the commit
+carrying this entry carries no `exp_rwr.py` and no result.
+
+### The idea, and why it is RL rather than more cloning
+
+Behaviour cloning (entry 44) trained on 38 236 demonstrations **weighted
+equally**, learned the fibre's density, and scored 2 of 16. The diagnostic said
+it had all 7 of the library's winners in its training set and no reason to
+prefer them.
+
+**Reward-weighted regression is the same fit with the weights changed.** Every
+design gets a weight derived from the reward it actually earned, so the 342
+corner-feasible designs dominate the gradient and the 7 280 that failed are
+pushed down. That is the policy-improvement step of RWR/AWR -- **offline
+reinforcement learning from a fixed dataset**, not imitation. It is also the
+thing `rl/sac.py` was chosen for ("OFF-POLICY and can therefore learn from
+simulations it did not run") and that entry 41 explicitly declined to do.
+
+**Cost: minutes of CPU and zero new simulations to train.** 320 decks to score.
+
+### Declared inputs, measured before this entry
+
+1. **7 622 unique (design, target) pairs with real 4-corner outcomes, 342
+   feasible (4.5 %).** Deduplicated; `coverage_run.jsonl` is excluded because it
+   holds the identical 3 200 designs as the AFTER-unclip log.
+2. **Those labels cover only 16 distinct spec targets -- the SAME 16 the accept
+   rate is measured on.** So the protocol is **leave-one-request-out**: for each
+   request, train with that request's labels removed, then propose for it.
+   Sixteen policies. Anything less is leakage.
+3. **Entry 44's Q1 measured that corner-feasibility IS predictable across
+   held-out requests** -- pooled out-of-fold AUC **0.891** -- which is the
+   evidence that the good region is smooth enough for a policy to generalise
+   into. Without that this entry would not be worth running.
+4. **The weighting is DERIVED, not chosen.** Corner-feasible designs are
+   upweighted by the inverse of their frequency in the labelled set
+   (7 622 / 342 = 22.3), the same rule `class_weight` balanced applies and the
+   same one entry 44's ranker used. **No temperature and no lambda is tuned**;
+   standing rule 6 forbids it and a tuned knob would make the result
+   unreportable.
+5. **BC's own numbers, as the control:** A = 2 of 16, `accepted_at_k`
+   [0,0,0,0,2], 2 feasible of 80 candidates, 5 of 80 fully scorable.
+
+### Predictions
+
+**Q1 -- the proposals MOVE toward the known-good region. Zero SPICE.** On
+held-out requests, the RWR policy's k=5 proposals are closer to that request's
+corner-feasible designs than BC's are, on median, by at least **20 %**.
+Confidence **0.6.** *For:* that is mechanically what upweighting does.
+*Against:* the good designs are removed from training for their own request, so
+the policy must generalise from the other 15. **Falsifier: less than 20 %
+closer, or further away.**
+
+**Q2 -- THE NUMBER. Accept rate is at least 4 of 16.** BC is 2, the library 6.
+Confidence **0.35.** *For:* entry 44's 0.891 out-of-fold AUC says the signal
+exists and transfers (0.724). *Against:* 342 positives over 15 training
+requests is thin, and my predictions in this session already include two misses
+and a falsified kill switch. **Falsifier: 3 or fewer.**
+
+**Q3 -- the per-candidate rate beats BC's 2 of 80.** Confidence **0.5.** A
+weaker and better-powered read than Q2, because it counts 80 candidates rather
+than 16 requests. **Falsifier: 2 or fewer feasible of 80.**
+
+**Q4 -- it does NOT beat retrieval's 6 of 16.** Confidence **0.65**, and it is
+registered as a prediction rather than a hope so that a hit cannot later be
+described as an unexpected triumph. **Falsifier: 7 or more.**
+
+**Q5 -- the mechanism, and it is the one that would explain a miss.** Fewer
+than **50 %** of the RWR policy's non-feasible candidates fail on
+`S3_f_peak_match` or `S3_peaking_match`. Confidence **0.5.** If the failures
+stay on the request-match rows, the policy has bought corner-robustness by
+missing the spec, which is entry 38's trade reappearing. **Falsifier: 50 % or
+more.**
+
+### The decision rule, before the result
+
+* **Q2 hits (4 or more of 16)** -> offline RL improved a learned policy on real
+  corner data. Report it, then take the online fine-tune to the owner.
+* **Q2 misses, Q3 hits** -> the direction is right and the request-level metric
+  is too coarse at n = 16. Report both; do not claim the headline.
+* **Q1 misses** -> the weighting did not move the policy at all. That is a
+  wiring failure, not a result: find it before reading anything else.
+* **Q1 hits and Q3 misses** -> the policy moved toward the good designs and it
+  did not help. **That is the strongest negative available on this line**, and
+  it means corner-robustness is not learnable from 342 examples. Stop the RL
+  rescue and write it up.
+
+### What no outcome may claim
+
+* **Not coverage** (8 of 16, entry 40) and **not compliance**.
+* **Not that the 135-point load grid moved**; it is 0 of 16 for everything.
+* **Not an online-RL result.** This is offline policy improvement from a fixed
+  dataset. The report must use those words.

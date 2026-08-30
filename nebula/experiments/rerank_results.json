@@ -1,0 +1,317 @@
+{
+ "task": "step 5B: is corner-robustness predictable without simulation?",
+ "run_pid": 13532,
+ "run_started_unix": 1788089950.0840216,
+ "run_host": "JAI",
+ "seed": 230830,
+ "n_pairs": 7622,
+ "n_feasible": 342,
+ "Q1": {
+  "folds": [
+   {
+    "group": "10.000@1386961840",
+    "n_test": 524,
+    "n_pos_test": 0,
+    "auc": null
+   },
+   {
+    "group": "10.000@1626677319",
+    "n_test": 542,
+    "n_pos_test": 0,
+    "auc": null
+   },
+   {
+    "group": "10.000@1921093977",
+    "n_test": 403,
+    "n_pos_test": 1,
+    "auc": 1.0
+   },
+   {
+    "group": "10.000@2253126157",
+    "n_test": 524,
+    "n_pos_test": 2,
+    "auc": 0.7739463601532568
+   },
+   {
+    "group": "4.000@1386961840",
+    "n_test": 405,
+    "n_pos_test": 7,
+    "auc": 0.5725053840631731
+   },
+   {
+    "group": "4.000@1626677319",
+    "n_test": 405,
+    "n_pos_test": 38,
+    "auc": 0.8476265595869783
+   },
+   {
+    "group": "4.000@1921093977",
+    "n_test": 402,
+    "n_pos_test": 10,
+    "auc": 0.8917091836734694
+   },
+   {
+    "group": "4.000@2253126157",
+    "n_test": 405,
+    "n_pos_test": 0,
+    "auc": null
+   },
+   {
+    "group": "6.000@1386961840",
+    "n_test": 405,
+    "n_pos_test": 16,
+    "auc": 0.6723168380462725
+   },
+   {
+    "group": "6.000@1626677319",
+    "n_test": 587,
+    "n_pos_test": 48,
+    "auc": 0.8104901051329624
+   },
+   {
+    "group": "6.000@1921093977",
+    "n_test": 605,
+    "n_pos_test": 120,
+    "auc": 0.8837285223367698
+   },
+   {
+    "group": "6.000@2253126157",
+    "n_test": 402,
+    "n_pos_test": 24,
+    "auc": 0.8565917107583775
+   },
+   {
+    "group": "8.000@1386961840",
+    "n_test": 605,
+    "n_pos_test": 14,
+    "auc": 0.8262025622431713
+   },
+   {
+    "group": "8.000@1626677319",
+    "n_test": 401,
+    "n_pos_test": 4,
+    "auc": 0.9603274559193955
+   },
+   {
+    "group": "8.000@1921093977",
+    "n_test": 605,
+    "n_pos_test": 57,
+    "auc": 0.8319247022666154
+   },
+   {
+    "group": "8.000@2253126157",
+    "n_test": 402,
+    "n_pos_test": 1,
+    "auc": 0.9376558603491272
+   }
+  ],
+  "n_folds": 16,
+  "n_folds_scored": 13,
+  "mean_fold_auc": 0.8357711726561207,
+  "median_fold_auc": 0.8476265595869783,
+  "pooled_oof_auc": 0.8907501124606387,
+  "n": 7622,
+  "n_pos": 342
+ },
+ "n_train_transfer": 7622,
+ "n_excluded_as_bc": 0,
+ "Q2": {
+  "n": 80,
+  "n_pos": 2,
+  "transfer_auc": 0.7243589743589745
+ },
+ "Q3": {
+  "per_request": [
+   {
+    "index": 0,
+    "n_candidates": 5,
+    "n_feasible": 0,
+    "rank_before": [],
+    "rank_after": [],
+    "best_before": null,
+    "best_after": null
+   },
+   {
+    "index": 1,
+    "n_candidates": 5,
+    "n_feasible": 0,
+    "rank_before": [],
+    "rank_after": [],
+    "best_before": null,
+    "best_after": null
+   },
+   {
+    "index": 2,
+    "n_candidates": 5,
+    "n_feasible": 0,
+    "rank_before": [],
+    "rank_after": [],
+    "best_before": null,
+    "best_after": null
+   },
+   {
+    "index": 3,
+    "n_candidates": 5,
+    "n_feasible": 0,
+    "rank_before": [],
+    "rank_after": [],
+    "best_before": null,
+    "best_after": null
+   },
+   {
+    "index": 4,
+    "n_candidates": 5,
+    "n_feasible": 0,
+    "rank_before": [],
+    "rank_after": [],
+    "best_before": null,
+    "best_after": null
+   },
+   {
+    "index": 5,
+    "n_candidates": 5,
+    "n_feasible": 0,
+    "rank_before": [],
+    "rank_after": [],
+    "best_before": null,
+    "best_after": null
+   },
+   {
+    "index": 6,
+    "n_candidates": 5,
+    "n_feasible": 0,
+    "rank_before": [],
+    "rank_after": [],
+    "best_before": null,
+    "best_after": null
+   },
+   {
+    "index": 7,
+    "n_candidates": 5,
+    "n_feasible": 1,
+    "rank_before": [
+     5
+    ],
+    "rank_after": [
+     3
+    ],
+    "best_before": 5,
+    "best_after": 3
+   },
+   {
+    "index": 8,
+    "n_candidates": 5,
+    "n_feasible": 0,
+    "rank_before": [],
+    "rank_after": [],
+    "best_before": null,
+    "best_after": null
+   },
+   {
+    "index": 9,
+    "n_candidates": 5,
+    "n_feasible": 0,
+    "rank_before": [],
+    "rank_after": [],
+    "best_before": null,
+    "best_after": null
+   },
+   {
+    "index": 10,
+    "n_candidates": 5,
+    "n_feasible": 0,
+    "rank_before": [],
+    "rank_after": [],
+    "best_before": null,
+    "best_after": null
+   },
+   {
+    "index": 11,
+    "n_candidates": 5,
+    "n_feasible": 1,
+    "rank_before": [
+     5
+    ],
+    "rank_after": [
+     4
+    ],
+    "best_before": 5,
+    "best_after": 4
+   },
+   {
+    "index": 12,
+    "n_candidates": 5,
+    "n_feasible": 0,
+    "rank_before": [],
+    "rank_after": [],
+    "best_before": null,
+    "best_after": null
+   },
+   {
+    "index": 13,
+    "n_candidates": 5,
+    "n_feasible": 0,
+    "rank_before": [],
+    "rank_after": [],
+    "best_before": null,
+    "best_after": null
+   },
+   {
+    "index": 14,
+    "n_candidates": 5,
+    "n_feasible": 0,
+    "rank_before": [],
+    "rank_after": [],
+    "best_before": null,
+    "best_after": null
+   },
+   {
+    "index": 15,
+    "n_candidates": 5,
+    "n_feasible": 0,
+    "rank_before": [],
+    "rank_after": [],
+    "best_before": null,
+    "best_after": null
+   }
+  ],
+  "n_with_feasible": 2,
+  "n_improved": 2,
+  "n_reaching_rank_target": 0,
+  "rank_target": 2
+ },
+ "Q4": {
+  "n_pooled": 160,
+  "n_pos": 9,
+  "n_train": 7557,
+  "model_auc": 0.8513612950699044,
+  "model_auc_on_measurable": 0.5777777777777777,
+  "dev_auc_on_measurable": 0.8,
+  "n_measurable": 14,
+  "note": "`dev` needs an ACHIEVED spec, so it can only be scored on candidates the screen could measure. The model is scored on the same subset for the comparison to be fair, and on all pooled candidates separately."
+ },
+ "wall_s": 33.675349712371826,
+ "score": {
+  "Q1": {
+   "pooled_oof_auc": 0.8907501124606387,
+   "threshold": 0.7,
+   "pass": true
+  },
+  "Q2": {
+   "transfer_auc": 0.7243589743589745,
+   "threshold": 0.65,
+   "pass": true
+  },
+  "Q3": {
+   "n_reaching_rank_target": 0,
+   "pass": false
+  },
+  "Q4": {
+   "model_auc": 0.5777777777777777,
+   "dev_auc": 0.8,
+   "pass": false
+  },
+  "n_pass": 2,
+  "n_scored": 4
+ }
+}
