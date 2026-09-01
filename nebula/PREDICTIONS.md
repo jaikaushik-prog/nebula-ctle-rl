@@ -11047,3 +11047,106 @@ instrumented sweep (~70 min), not arithmetic.**
   candidate" are now measured and neither is a free win.** The screen's version
   saves 2.1 % of a sweep; the search's version saves 25 % but perturbs the
   objective the search descends.
+
+#### CORRECTION to entry 61's outcome, added 2026-09-02 before entry 63 runs
+
+The outcome above reports `A` going **6 -> 8** and does not say that the change
+is a **trade**. Decomposed:
+
+    GAINED  idx  3   4.0 dB @ 2.253 GHz   (rank 17 -> 4)
+    GAINED  idx  5   6.0 dB @ 1.627 GHz   (rank 17 -> 4)
+    GAINED  idx  6   6.0 dB @ 1.921 GHz   (rank 26 -> 1)
+    GAINED  idx 10   8.0 dB @ 1.921 GHz   (rank 19 -> 2)
+    LOST    idx  4   6.0 dB @ 1.387 GHz   (rank  5 -> 11)
+    LOST    idx 14  10.0 dB @ 1.921 GHz   (rank  3 -> 7)
+
+**+4, -2, net +2.** The swing ordering is **not uniformly better than `dev`** --
+it gives up two requests that `dev` found inside k=5. Reporting only the net was
+an omission; a reader deciding whether to deploy needs the trade, because the
+two lost requests then fall through to the ~1 085-deck search instead of being
+answered by a 20-deck proposal. **The net-positive claim stands; the "strictly
+better" reading it invites does not.**
+
+---
+
+## 63. Session 33 -- **row 4w: do entry 61's newly accepted proposals survive the 45 mandated corners? The upside is bounded at +2 and the bound was computed first.**
+
+**Written 2026-09-02 BEFORE any verification deck runs.**
+
+### Why this is owed
+
+Entry 61 moved screen acceptance from 6 to 8 at `k = 5` by re-ranking the
+library on predicted output swing. **Screen acceptance is not compliance.** The
+screen is 4 corners; the competition mandates 45. Entry 53 measured the screen's
+filter quality **degrading with retrieval depth** -- 83 % of shallow acceptances
+passed 45 corners against 50 % of deep ones -- and entry 61's new acceptances
+sit at ranks 4, 5 and 7. **No coverage claim may be made until this runs.**
+
+### The bound, computed before registering
+
+Cross-referencing the four gained requests against entry 56's sweep:
+
+    idx  3   4.0 dB @ 2.253 GHz   entry 56: 11/45   <- movable
+    idx  5   6.0 dB @ 1.627 GHz   entry 56: 44/45   <- movable, ONE corner away
+    idx  6   6.0 dB @ 1.921 GHz   entry 56: 45/45   <- already solved, CONTROL
+    idx 10   8.0 dB @ 1.921 GHz   entry 56: 45/45   <- already solved, CONTROL
+
+**Only requests 3 and 5 can move coverage, so the upside is at most +2**, from
+9 of 16 to 11. Requests 6 and 10 are the control: they are already solvable, so
+a proposal that passes the screen and then fails 45 corners there indicts the
+**re-ranking**, not the request.
+
+**The two LOST requests are not verified here.** Both (4 and 14) fall through to
+the unchanged search, which solved 4 at 45/45 and 14 at 44/45 in entry 56, so
+the re-rank costs decks there rather than coverage -- but that is an argument,
+not a measurement, and it is labelled as one.
+
+### The experiment
+
+Take the first swing-ranked feasible candidate for each of the four gained
+requests and verify it at the **45 mandated corners** through
+`exp_deep_verify.verify_one` -- the same verifier entries 53 and 55 used.
+**540 decks, ~5 min.** Nothing is tuned; candidates are read from
+`hybrid_topk_scan_k40.json` exactly as ranked.
+
+### Predictions
+
+**Q1 -- THE HEADLINE. Coverage lands at 9 or 10 of 16.** Confidence **0.6.**
+*For:* request 5 is a single corner short in entry 56, and its new proposal is a
+different design that the swing ranker preferred. *Against:* request 3 sits at
+11/45, and entry 53 measured deep acceptances converting at only 50 %.
+**Falsifier: 8 or below, or 11.**
+
+**Q2 -- THE CONTROL, AND IT OUTRANKS THE HEADLINE. Requests 6 and 10 pass
+45/45 from their swing-ranked proposals.** Confidence **0.7.** Both are already
+45/45 by other means, so a failure here means the swing ranking selected a
+*worse* design that the 4-corner screen could not distinguish -- which would
+undercut entry 61 rather than extend it. **Falsifier: either below 45/45.**
+
+**Q3 -- REQUEST 5 IS THE LIKELIER MOVER.** If exactly one of {3, 5} reaches
+45/45, it is request 5. Confidence **0.75.** *Mechanism:* it is one corner away
+against request 3's thirty-four. **Falsifier: request 3 passes and 5 does not.**
+*Registered as a conditional whose antecedent is checked first, because entries
+46 and 53 both recorded conditionals that could not be scored.*
+
+**Q4 -- FAILURES ARE UNSCORABLE, NOT SPEC VIOLATIONS.** Any 45-corner failure
+here is dominated by unmeasurable eyes rather than a negative `failing_rows`
+margin, continuing G120/G107 and entry 53's Q4. Confidence **0.65.**
+**Falsifier: a majority of failing points carry a real spec violation.**
+
+### The decision rule, before the result
+
+* **Q2 fails** -> the re-ranking picks designs the screen cannot distinguish and
+  the 45 corners can. Entry 61 must be reported as screen-only and **not**
+  deployed. This outranks Q1.
+* **Q1 >= 10 with Q2 holding** -> the delivered path reaches 10 of 16 and the
+  re-rank is worth wiring behind `AUTO_K`.
+* **Q1 = 9 with Q2 holding** -> the re-rank buys screen acceptance and no
+  coverage. Report it as a **deck saving on the proposal stage only**, net of
+  the two lost requests, and do not claim coverage.
+
+### What no outcome may claim
+
+* **Not that the swing ranking is strictly better than `dev`** -- it is +4/-2,
+  and the two lost requests are not verified here.
+* **Not a 135-point claim.** The load grid stays 0 of 16.
