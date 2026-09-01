@@ -211,7 +211,8 @@ def _load_policy(obs_dim: int, act_dim: int, seed: int):
     return net, c
 
 
-def refine_one(net, target, seed: int, actor=None) -> RefineResult:
+def refine_one(net, target, seed: int, actor=None, restarts: int = 1,
+               max_steps: Optional[int] = None) -> RefineResult:
     """Library start -> policy refinement -> paired comparison. **One request.**
 
     Both endpoints are scored through `exp_corner_rl._score`, the same shared
@@ -286,18 +287,40 @@ def refine_one(net, target, seed: int, actor=None) -> RefineResult:
     # Created only when a control arm needs it, so the policy path consumes no
     # random numbers and stays bit-identical to entries 28 and 46 (Q1).
     rng = None if actor is None else np.random.default_rng(seed)
-    while not done:
-        if actor is None:
-            with torch.no_grad():
-                o = torch.as_tensor(obs, dtype=torch.float32).unsqueeze(0)
-                a = net.distribution(o).mean.squeeze(0).numpy()
-        else:
-            a = np.asarray(actor(obs, rng), dtype=float)
-        obs, r, term, trunc, _ = env.step(a)
-        n_steps += 1
-        if r > best_r:
-            best_r, best_u = r, np.array(env.env._u, dtype=float)
-        done = bool(term or trunc)
+
+    # **Entry 48's restart seam. The start is measured ONCE, not once per
+    # restart.** `env.reset(u0)` re-evaluates the start point -- ~4 decks --
+    # and every restart returns to the *same* start, whose evaluation is
+    # deterministic. Paying for it R times would spend half a 30-deck budget
+    # re-learning an identical fact and would starve the arm it is meant to
+    # test. The episode state is exactly `(_u, _step)` and the observation is a
+    # function of those plus the start's measurements, so restoring them and
+    # replaying `obs0` puts the environment in a bit-identical state for free.
+    #
+    # Assignment goes to `.base` explicitly: the wrappers delegate reads via
+    # `__getattr__`, which does NOT intercept writes, so `env.env._u = ...`
+    # would silently create a shadowing attribute and leave the real one alone.
+    obs0, u0 = obs, np.asarray(lib["u"], dtype=float).copy()
+    for attempt in range(max(1, int(restarts))):
+        if attempt:
+            env.env.base._u = u0.copy()
+            env.env.base._step = 0
+            obs = obs0
+        steps_here, done = 0, False
+        while not done:
+            if actor is None:
+                with torch.no_grad():
+                    o = torch.as_tensor(obs, dtype=torch.float32).unsqueeze(0)
+                    a = net.distribution(o).mean.squeeze(0).numpy()
+            else:
+                a = np.asarray(actor(obs, rng), dtype=float)
+            obs, r, term, trunc, _ = env.step(a)
+            n_steps += 1
+            steps_here += 1
+            if r > best_r:
+                best_r, best_u = r, np.array(env.env._u, dtype=float)
+            done = bool(term or trunc) or (max_steps is not None
+                                           and steps_here >= int(max_steps))
     used = _budget_calls(env.env) - base
 
     pol_ev = _score(best_u, target)

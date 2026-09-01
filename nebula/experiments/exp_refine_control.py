@@ -105,6 +105,29 @@ def random_actor(obs, rng):
     return rng.uniform(-1.0, 1.0, size=N_ACTIONS)
 
 
+def sampled_actor(net):
+    """Entry 48 arm D/E. **Use the distribution the policy actually learned.**
+
+    `refine_one`'s default takes `distribution(o).mean` and discards `log_std`
+    entirely. That checkpoint's `log_std` shrank from 0.0 to **-3.02 on `rs`
+    and -2.94 on `cs`** -- the two knobs that set the `Rs x Cs` peak -- so the
+    policy learned both a direction AND a confidence, and only the direction
+    was ever read.
+
+    Sampling explores narrowly where the policy is sure and widely where it is
+    not. That is the behaviour the best-of-visited selector pays for, and it
+    was trained in and then thrown away at evaluation.
+    """
+    import torch
+
+    def _act(obs, rng):
+        with torch.no_grad():
+            o = torch.as_tensor(obs, dtype=torch.float32).unsqueeze(0)
+            return net.distribution(o).sample().squeeze(0).numpy()
+
+    return _act
+
+
 def retrieval_deeper(target, budget_decks: int, seed: int) -> dict:
     """Arm C. Spend the same decks reading the library DEEPER instead.
 
