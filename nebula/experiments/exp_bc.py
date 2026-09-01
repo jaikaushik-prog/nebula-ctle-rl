@@ -166,8 +166,9 @@ def _build(kind: str, n_components: int = N_COMPONENTS):
             layers += [nn.Linear(last, N_ACTIONS)]
             self.net = nn.Sequential(*layers)
 
-        def loss(self, x, u):
-            return ((torch.sigmoid(self.net(x)) - u) ** 2).mean()
+        def loss(self, x, u, reduce: bool = True):
+            per = ((torch.sigmoid(self.net(x)) - u) ** 2).mean(-1)
+            return per.mean() if reduce else per
 
         @torch.no_grad()
         def sample(self, x, k: int = 1, generator=None):
@@ -196,7 +197,7 @@ def _build(kind: str, n_components: int = N_COMPONENTS):
             log_std = h[..., K + K * A:].view(*h.shape[:-1], K, A)
             return logit, mu, torch.clamp(log_std, LOG_STD_MIN, LOG_STD_MAX)
 
-        def loss(self, x, u):
+        def loss(self, x, u, reduce: bool = True):
             """Negative log-likelihood of a logit-normal mixture.
 
             `u` is modelled in LOGIT space so the support is exactly the open
@@ -214,7 +215,12 @@ def _build(kind: str, n_components: int = N_COMPONENTS):
             comp = (-0.5 * (((y - mu) / log_std.exp()) ** 2)
                     - log_std - 0.5 * math.log(2 * math.pi)).sum(-1)
             lse = torch.logsumexp(torch.log_softmax(logit, -1) + comp, dim=-1)
-            return -(lse + log_det).mean()
+            per = -(lse + log_det)
+            # `reduce=False` returns the PER-SAMPLE negative log-likelihood, so
+            # `exp_rwr` can take a WEIGHTED mean. Reward-weighted regression is
+            # this fit with those weights changed and nothing else, and keeping
+            # the change to one argument is what makes the comparison honest.
+            return per.mean() if reduce else per
 
         @torch.no_grad()
         def sample(self, x, k: int = 1, generator=None):

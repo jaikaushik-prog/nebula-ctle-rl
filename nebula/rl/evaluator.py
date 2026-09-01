@@ -534,11 +534,16 @@ def evaluate(
     n_spice = 0
     pt = run_point(point, corner=corner, temp_c=temp_c, swing=False,
                    ac_peak_interp=ac_peak_interp)
-    n_spice += 1
+    # **`pt.n_decks`, not 1** (row 4u). The G54 retry runs a second deck inside
+    # `run_point`, and counting one call per call under-billed it -- entry 56
+    # reproduced entry 40's `mean_sims_per_request` to every digit while
+    # spending ~30 decks more. The transient re-run below has always been
+    # charged explicitly; this makes the two consistent.
+    n_spice += pt.n_decks
     if not pt.ok and _TRANSIENT.search(pt.fail_reason or ""):
         pt = run_point(point, corner=corner, temp_c=temp_c, swing=False,
                        ac_peak_interp=ac_peak_interp)
-        n_spice += 1
+        n_spice += pt.n_decks
     dt = time.perf_counter() - t0
     budget.charge(n_spice, dt)
 
@@ -875,7 +880,7 @@ def cross_check_sample(sizing: Sizing, budget: SpiceBudget,
     point, _ = build_point(sizing)
     t0 = time.perf_counter()
     pt = run_point(point, swing=False, keep_text=True)
-    budget.charge(1, time.perf_counter() - t0)
+    budget.charge(pt.n_decks, time.perf_counter() - t0)
     if not pt.ok:
         return CrossCheck(ev.design_id or "?", False,
                           f"cross-check re-run failed: {pt.fail_reason}", math.nan)

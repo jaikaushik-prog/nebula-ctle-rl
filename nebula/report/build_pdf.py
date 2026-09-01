@@ -366,7 +366,7 @@ def build() -> Path:
           "FAILS at the operating point -- section 9"],
          ["S5 noise", "< 1.5 mV rms, 10 MHz - 5 GHz", "scored"],
          ["S6 power", "< 15 mW", "scored"],
-         ["S7 area", "< 0.05 mm2", "verified, free"],
+         ["S7 area", "< 0.05 mm2", "verified free -- LOWER BOUND, section 9"],
          ["S8 eye", "> 0.4 UI and > 100 mV", "blocked -- see section 9"],
          ["S9 PVT", "TT/SS/FF/SF/FS x VDD +-5% x 0-125 C", "verified, 135 points"]],
         [34, 74, 62])
@@ -478,9 +478,17 @@ def build() -> Path:
                 "-17.4 dBc", "FAILS by 12.6 dB"],
                ["S5 input noise", "< 1.5 mV rms", "0.2117 mV rms", "7.1x"],
                ["S6 power", "< 15 mW", "2.1616 mW", "6.9x"],
-               ["S7 area", "< 0.05 mm2", "0.002150 mm2", "23x"]],
+               ["S7 area", "< 0.05 mm2", "0.002150 mm2 (lower bound)", "23x"]],
               [42, 40, 45, 43],
               flags=["good"] * 4 + ["warn"] + ["good"] * 3)
+    pdf.body(
+        "**The S7 number is a lower bound and the margin should be read as "
+        "one.** `link/bridge.py::_area_mm2_of` sums the DRAWN PASSIVE devices "
+        "only: no head enclosure, no routing, no guard ring (PASSIVES.md "
+        "section 4.5 budgets those separately) and no MOSFET area, which "
+        "PASSIVES.md measured as the smaller term with the passives "
+        "dominating. At 23x inside a limit, none of those omissions is close "
+        "to binding -- but the honest statement is 'at least 23x', not '23x'.")
     pdf.figure("f9_response.png",
                "Figure 2. The delivered design's measured AC response from "
                "ngspice. The peak sits inside S3's window and the stage is "
@@ -594,6 +602,74 @@ def build() -> Path:
         "were also all at unscreened corners. **The recommendation is a fifth "
         "and sixth screen corner, and it now has a number behind it rather "
         "than a preference.**")
+
+    # ── the DFE, ablated. PREDICTIONS.md entry 39. ───────────────────────
+    pdf.h2("The 1-tap DFE: what the ideal-tap assumption is actually worth")
+    try:
+        _dfe = _load("dfe_ablation_results.json")
+        _pol = ("ideal", "none", "misadapted", "quantised")
+        _lbl = {"ideal": "ideal tap (what this report models)",
+                "none": "NO DFE AT ALL",
+                "misadapted": f"misadapted by {_dfe['misadapt_eps']:.0%}",
+                "quantised": f"{_dfe['quant_bits']}-bit quantised tap"}
+        _hf, _wf = _dfe["eye_h_floor_v"], _dfe["eye_w_floor_ui"]
+        _mand = [r for r in _dfe["rows"]
+                 if abs(r["cl_f"] - _dfe["design_load_f"]) < 1e-18]
+        # The minima are over the MANDATED 45, matching every published
+        # figure for this experiment; the all-135 minimum is a SEPARATE
+        # column rather than the same column measured differently (G32).
+        _rows = []
+        _none_h45 = None
+        for p in _pol:
+            _h45 = min(r["policies"][p]["eye_h_v"] for r in _mand)
+            _w45 = min(r["policies"][p]["eye_w_ui"] for r in _mand)
+            _h135 = min(r["policies"][p]["eye_h_v"] for r in _dfe["rows"])
+            if p == "none":
+                _none_h45 = _h45
+            _n45 = sum(1 for r in _mand
+                       if r["policies"][p]["eye_h_v"] > _hf
+                       and r["policies"][p]["eye_w_ui"] > _wf)
+            _n135 = sum(1 for r in _dfe["rows"]
+                        if r["policies"][p]["eye_h_v"] > _hf
+                        and r["policies"][p]["eye_w_ui"] > _wf)
+            _rows.append([_lbl[p], f"{_h45 * 1e3:.1f} mV", f"{_w45:.4f} UI",
+                          f"{_h135 * 1e3:.1f} mV",
+                          f"{_n45}/{len(_mand)}",
+                          f"{_n135}/{len(_dfe['rows'])}"])
+        pdf.body(
+            "S2 specifies the receiver as **CTLE + 1-tap DFE**, and the eye is "
+            "measured after the DFE, which this project models as an ideal "
+            "tap. A reviewer is entitled to ask what that assumption is "
+            "carrying. We measured it by deleting the tap and degrading it, "
+            f"across all {len(_dfe['rows'])} verification points "
+            "(pre-registered as entry 39, scored 5 of 5).")
+        pdf.table(
+            ["DFE policy", "min height (45)", "min width (45)",
+             "min height (135)", "45", "135"],
+            _rows, [54, 30, 28, 30, 14, 14],
+            flags=["good"] * len(_rows))
+        pdf.callout(
+            "**The CTLE meets both eye specifications at all 45 mandated PVT "
+            "corners -- and at all 135 verification points -- with the 1-tap "
+            "DFE removed entirely.** Deleting it costs "
+            f"{_dfe['verdict']['median_height_loss_frac']:.1%} of the eye "
+            f"(median), leaving {_none_h45 * 1e3:.1f} mV against "
+            f"a {_hf * 1e3:.0f} mV floor -- {_none_h45 / _hf:.1f}x. A 4-bit "
+            "and a 20%-misadapted tap are "
+            "indistinguishable from ideal, so the eye numbers do not depend "
+            "on tap resolution or adaptation quality either.", GOOD)
+        pdf.body(
+            "**What must travel with that, and it is the narrower claim.** The "
+            "receiver is specified as CTLE plus a 1-tap DFE; this project "
+            "designs the CTLE and models the DFE as an ideal tap, and the eye "
+            "width is a zero-height noiseless upper bound under every policy. "
+            "Deleting a tap in software is not a claim that a real link should "
+            "have no DFE. It is the narrower and sufficient claim that **the "
+            "compliance result does not rest on the DFE being ideal** -- which "
+            "is why transistor-level DFE sizing is out of scope for a measured "
+            "reason rather than a scheduling one.")
+    except FileNotFoundError as _e:
+        pdf.body(f"[DFE ablation not available: {_e}]")
 
     pdf.h1("Tunability, and what the control actually trades")
     pdf.body(
@@ -820,6 +896,75 @@ def build() -> Path:
         "lookup. We report that rather than the flattering comparison. Where a "
         "library provably cannot help is corners -- it holds nominal "
         "measurements only -- and that is where the remaining value is.", WARN)
+
+    # ── the intercept, measured. PREDICTIONS.md entry 51. ────────────────
+    pdf.h2("What the library costs, which the saving above does not charge for")
+    try:
+        _ps = _load("pool_size_results.json")
+        _hy = _load("hybrid_results.json")
+        _pl = _load("coverage_results_AFTER_unclip_fix.json")
+        _hr = _hy["total_sims"] / _hy["n_requests"]
+        _pr = _pl["total_sims"] / _pl["n_requests"]
+        _pool = _ps["n_pool"]
+        _cross = _pool / (_pr - _hr)
+        pdf.body(
+            "**The 'two spec requests' figure above, and every deck saving in "
+            "this report, is a MARGINAL cost.** It prices the query and "
+            f"charges nothing for the library the query reads. That library is "
+            f"{_pool:,} de-duplicated designs, accumulated as a by-product of "
+            "this project's own benchmark runs. For an operator who already "
+            f"holds it, the hybrid answers a request in {_hr:,.0f} SPICE decks "
+            f"against the plain search's {_pr:,.0f}. For one who must build it "
+            "first, the correct question is the break-even, and it is not "
+            "flattering.")
+        pdf.table(
+            ["library charged at", "break-even"],
+            [["0 (by-product -- what the savings above assume)",
+              "0 requests"],
+             [f"{_pool:,} decks (the library we actually hold)",
+              f"{_cross:,.0f} requests"]],
+            [96, 74])
+        pdf.figure("f5_amortisation.png",
+                   "Figure 9b. Cumulative simulations against requests "
+                   "answered. Slopes are measured over 16 requests and "
+                   "extrapolated beyond; the dashed line charges the library "
+                   "to the operator building it.")
+        _ns = _ps["analysis"]["n_star"]
+        pdf.body(
+            "**We looked for a cheaper library and did not find one.** "
+            "Pre-registered as entry 51, we measured the match quality of the "
+            "top five retrieved candidates against pool size, over 200 random "
+            "subsamples at each of eight sizes. It is a **power law with no "
+            "knee anywhere**: the deviation from the requested specification "
+            "roughly halves for every 3x in library size, monotonically, on "
+            f"every one of the 16 requests. The smallest library matching the "
+            f"full one's match quality is {_ns:,} designs -- so there is no "
+            "small library to quote, and the entry's pre-committed rule was "
+            "to report the question as open rather than estimate it. Two of "
+            "its five predictions missed, both of them the ones that would "
+            "have been convenient.")
+        pdf.callout(
+            "Read together with the corner result, this says something "
+            "sharper than either half alone: a bigger library buys MATCH "
+            "QUALITY, and match quality does not buy CORNER FEASIBILITY -- the "
+            "requested-match deviation does not separate the six solved "
+            "requests from the ten unsolved (p = 0.87). So the power law is "
+            "not evidence that a larger library would raise coverage above "
+            "8 of 16. Nothing measured here says it would.", WARN)
+        pdf.body(
+            "**One thing this does not price, stated because it is the "
+            "obvious next move rather than a defence.** The library was "
+            "accumulated by random, LHS and CMA-ES benchmark arms, so "
+            "subsampling it uniformly is the right model for the library we "
+            "have and the wrong one for a library somebody sets out to build. "
+            "A pool sampled deliberately across the two specification axes "
+            "would plausibly reach the same match quality for far fewer "
+            "designs. That is unmeasured, and it costs simulations rather "
+            "than re-analysis.")
+    except FileNotFoundError as _e:
+        pdf.body(
+            f"[pool-size measurement not available: {_e}. Run "
+            f"`python -m nebula.experiments.exp_pool_size`.]")
 
     # ── 8. method ────────────────────────────────────────────────────────
     pdf.h1("How this project avoids fooling itself")

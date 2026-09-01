@@ -177,3 +177,53 @@ def test_the_flag_is_settable_so_a_retried_point_can_be_identified():
     pt = SR.Sky130Point(ok=False, fail_reason=G54)
     pt.nan_retry_used = True
     assert pt.nan_retry_used is True
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Row 4u — the retry's second deck must be BILLED
+# ─────────────────────────────────────────────────────────────────────────────
+
+def test_a_point_that_did_not_retry_costs_one_deck():
+    assert SR.Sky130Point(ok=True).n_decks == 1
+
+
+def test_a_retried_point_costs_two_decks():
+    # Row 4u: the retry is a recursive call inside run_point, so a caller
+    # counting one call per call under-bills it. Entry 56 reproduced entry 40's
+    # mean_sims_per_request to every digit while spending ~30 decks more.
+    pt = SR.Sky130Point(ok=True)
+    pt.nan_retry_used = True
+    assert pt.n_decks == 2
+
+
+def test_n_decks_is_derived_and_cannot_drift_from_the_flag():
+    pt = SR.Sky130Point(ok=True)
+    for flag, want in ((False, 1), (True, 2), (False, 1)):
+        pt.nan_retry_used = flag
+        assert pt.n_decks == want
+
+
+def test_the_evaluator_charges_the_retry(monkeypatch):
+    """`evaluate` must bill 2 when the point it got was retried."""
+    from nebula.rl import evaluator as EV
+
+    retried = SR.Sky130Point(ok=False, fail_reason="nope")
+    retried.nan_retry_used = True
+    monkeypatch.setattr(EV, "run_point", lambda *a, **k: retried)
+    budget = EV.SpiceBudget()
+    from nebula.rl.contract import sizing_from_u
+    EV.evaluate(sizing_from_u([0.5] * 7, cl_f=32.6e-15), budget)
+    # 2 for the first call; the transient re-run does not fire on "nope".
+    assert budget.calls == 2
+
+
+def test_the_evaluator_charges_one_when_there_was_no_retry(monkeypatch):
+    from nebula.rl import evaluator as EV
+
+    monkeypatch.setattr(EV, "run_point",
+                        lambda *a, **k: SR.Sky130Point(ok=False,
+                                                       fail_reason="nope"))
+    budget = EV.SpiceBudget()
+    from nebula.rl.contract import sizing_from_u
+    EV.evaluate(sizing_from_u([0.5] * 7, cl_f=32.6e-15), budget)
+    assert budget.calls == 1

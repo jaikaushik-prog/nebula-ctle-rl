@@ -29,7 +29,7 @@ automation claim credible rather than overreaching.
 | **Load** | 13.64–78.04 fF (**5.72x**, 2.52 octaves), per-edge provenance | `CL_RANGE.md` §5 |
 | **Channel** | `IL_dB(f) = A√f + B·f`, 21-member family. **Loss at DC is exactly 0 by construction.** | `CHANNEL_MODEL.md` |
 | **Corners** | 45 mandated = 5 process (TT/SS/FF/SF/FS) × 3 VDD (±5 %) × 3 temp (0/27/125 °C); × 3 loads = **135 points** | S9; `S9_YIELD.md` |
-| **Spec target** | Peaking 3–12 dB, peak in 1.25–2.5 GHz — but see §3: the target axis is **effectively 1-D** | S3; `CONTINUE_HERE.md` §5 OPEN item 5 |
+| **Spec target** | Peaking 3–12 dB, peak in 1.25–2.5 GHz. **2-D on the delivered path** (`V6_SPECS`, which `design.py --method auto` and `exp_coverage` score); **1-D on `V1_SPECS`**, which every published benchmark number was measured on — see §3 | S3; `CONTINUE_HERE.md` §5 OPEN item 5 |
 | **Layout** | **Not covered.** Schematic-level only; see §2 | — |
 
 **Outside any of these, the tool makes no claim.** A different topology needs a

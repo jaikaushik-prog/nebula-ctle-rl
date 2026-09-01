@@ -1,0 +1,647 @@
+{
+ "task": "entry 59 decomposition",
+ "n_decks": 80,
+ "wall_s": 14.448516130447388,
+ "rows": [
+  {
+   "index": 0,
+   "rank": 1,
+   "target_pk": 4.0,
+   "target_f": 1386961840.0848064,
+   "tt_ok": false,
+   "tt_reason": "out of saturation (tail -117.1 mV of vds - vdsat). The `.op` is trustworthy and is graded on headroom; the AC spec set is dropped because a device in triode is not the circuit that was asked for"
+  },
+  {
+   "index": 0,
+   "rank": 2,
+   "target_pk": 4.0,
+   "target_f": 1386961840.0848064,
+   "tt_ok": false,
+   "tt_reason": "out of saturation (tail -103.4 mV of vds - vdsat). The `.op` is trustworthy and is graded on headroom; the AC spec set is dropped because a device in triode is not the circuit that was asked for"
+  },
+  {
+   "index": 0,
+   "rank": 3,
+   "target_pk": 4.0,
+   "target_f": 1386961840.0848064,
+   "tt_ok": false,
+   "tt_reason": "out of saturation (tail -101.4 mV of vds - vdsat). The `.op` is trustworthy and is graded on headroom; the AC spec set is dropped because a device in triode is not the circuit that was asked for"
+  },
+  {
+   "index": 0,
+   "rank": 4,
+   "target_pk": 4.0,
+   "target_f": 1386961840.0848064,
+   "tt_ok": false,
+   "tt_reason": "out of saturation (tail -101.3 mV of vds - vdsat). The `.op` is trustworthy and is graded on headroom; the AC spec set is dropped because a device in triode is not the circuit that was asked for"
+  },
+  {
+   "index": 0,
+   "rank": 5,
+   "target_pk": 4.0,
+   "target_f": 1386961840.0848064,
+   "tt_ok": false,
+   "tt_reason": "out of saturation (tail -99.2 mV of vds - vdsat). The `.op` is trustworthy and is graded on headroom; the AC spec set is dropped because a device in triode is not the circuit that was asked for"
+  },
+  {
+   "index": 1,
+   "rank": 1,
+   "target_pk": 4.0,
+   "target_f": 1626677319.302417,
+   "tt_ok": false,
+   "tt_reason": "out of saturation (tail -117.3 mV of vds - vdsat). The `.op` is trustworthy and is graded on headroom; the AC spec set is dropped because a device in triode is not the circuit that was asked for"
+  },
+  {
+   "index": 1,
+   "rank": 2,
+   "target_pk": 4.0,
+   "target_f": 1626677319.302417,
+   "tt_ok": false,
+   "tt_reason": "out of saturation (tail -117.0 mV of vds - vdsat). The `.op` is trustworthy and is graded on headroom; the AC spec set is dropped because a device in triode is not the circuit that was asked for"
+  },
+  {
+   "index": 1,
+   "rank": 3,
+   "target_pk": 4.0,
+   "target_f": 1626677319.302417,
+   "tt_ok": false,
+   "tt_reason": "out of saturation (tail -116.5 mV of vds - vdsat). The `.op` is trustworthy and is graded on headroom; the AC spec set is dropped because a device in triode is not the circuit that was asked for"
+  },
+  {
+   "index": 1,
+   "rank": 4,
+   "target_pk": 4.0,
+   "target_f": 1626677319.302417,
+   "tt_ok": false,
+   "tt_reason": "out of saturation (tail -102.4 mV of vds - vdsat). The `.op` is trustworthy and is graded on headroom; the AC spec set is dropped because a device in triode is not the circuit that was asked for"
+  },
+  {
+   "index": 1,
+   "rank": 5,
+   "target_pk": 4.0,
+   "target_f": 1626677319.302417,
+   "tt_ok": false,
+   "tt_reason": "out of saturation (tail -100.8 mV of vds - vdsat). The `.op` is trustworthy and is graded on headroom; the AC spec set is dropped because a device in triode is not the circuit that was asked for"
+  },
+  {
+   "index": 2,
+   "rank": 1,
+   "target_pk": 4.0,
+   "target_f": 1921093976.6100154,
+   "tt_ok": false,
+   "tt_reason": "out of saturation (tail -117.4 mV of vds - vdsat). The `.op` is trustworthy and is graded on headroom; the AC spec set is dropped because a device in triode is not the circuit that was asked for"
+  },
+  {
+   "index": 2,
+   "rank": 2,
+   "target_pk": 4.0,
+   "target_f": 1921093976.6100154,
+   "tt_ok": false,
+   "tt_reason": "out of saturation (tail -117.1 mV of vds - vdsat). The `.op` is trustworthy and is graded on headroom; the AC spec set is dropped because a device in triode is not the circuit that was asked for"
+  },
+  {
+   "index": 2,
+   "rank": 3,
+   "target_pk": 4.0,
+   "target_f": 1921093976.6100154,
+   "tt_ok": false,
+   "tt_reason": "out of saturation (tail -116.8 mV of vds - vdsat). The `.op` is trustworthy and is graded on headroom; the AC spec set is dropped because a device in triode is not the circuit that was asked for"
+  },
+  {
+   "index": 2,
+   "rank": 4,
+   "target_pk": 4.0,
+   "target_f": 1921093976.6100154,
+   "tt_ok": false,
+   "tt_reason": "out of saturation (tail -116.5 mV of vds - vdsat). The `.op` is trustworthy and is graded on headroom; the AC spec set is dropped because a device in triode is not the circuit that was asked for"
+  },
+  {
+   "index": 2,
+   "rank": 5,
+   "target_pk": 4.0,
+   "target_f": 1921093976.6100154,
+   "tt_ok": false,
+   "tt_reason": "out of saturation (tail -103.0 mV of vds - vdsat). The `.op` is trustworthy and is graded on headroom; the AC spec set is dropped because a device in triode is not the circuit that was asked for"
+  },
+  {
+   "index": 3,
+   "rank": 1,
+   "target_pk": 4.0,
+   "target_f": 2253126156.5270753,
+   "tt_ok": false,
+   "tt_reason": "out of saturation (tail -117.4 mV of vds - vdsat). The `.op` is trustworthy and is graded on headroom; the AC spec set is dropped because a device in triode is not the circuit that was asked for"
+  },
+  {
+   "index": 3,
+   "rank": 2,
+   "target_pk": 4.0,
+   "target_f": 2253126156.5270753,
+   "tt_ok": false,
+   "tt_reason": "out of saturation (tail -117.2 mV of vds - vdsat). The `.op` is trustworthy and is graded on headroom; the AC spec set is dropped because a device in triode is not the circuit that was asked for"
+  },
+  {
+   "index": 3,
+   "rank": 3,
+   "target_pk": 4.0,
+   "target_f": 2253126156.5270753,
+   "tt_ok": false,
+   "tt_reason": "out of saturation (tail -117.0 mV of vds - vdsat). The `.op` is trustworthy and is graded on headroom; the AC spec set is dropped because a device in triode is not the circuit that was asked for"
+  },
+  {
+   "index": 3,
+   "rank": 4,
+   "target_pk": 4.0,
+   "target_f": 2253126156.5270753,
+   "tt_ok": false,
+   "tt_reason": "out of saturation (tail -116.8 mV of vds - vdsat). The `.op` is trustworthy and is graded on headroom; the AC spec set is dropped because a device in triode is not the circuit that was asked for"
+  },
+  {
+   "index": 3,
+   "rank": 5,
+   "target_pk": 4.0,
+   "target_f": 2253126156.5270753,
+   "tt_ok": false,
+   "tt_reason": "out of saturation (tail -116.4 mV of vds - vdsat). The `.op` is trustworthy and is graded on headroom; the AC spec set is dropped because a device in triode is not the circuit that was asked for"
+  },
+  {
+   "index": 4,
+   "rank": 1,
+   "target_pk": 6.0,
+   "target_f": 1386961840.0848064,
+   "tt_ok": false,
+   "tt_reason": "out of saturation (tail -117.3 mV of vds - vdsat). The `.op` is trustworthy and is graded on headroom; the AC spec set is dropped because a device in triode is not the circuit that was asked for"
+  },
+  {
+   "index": 4,
+   "rank": 2,
+   "target_pk": 6.0,
+   "target_f": 1386961840.0848064,
+   "tt_ok": false,
+   "tt_reason": "out of saturation (tail -116.6 mV of vds - vdsat). The `.op` is trustworthy and is graded on headroom; the AC spec set is dropped because a device in triode is not the circuit that was asked for"
+  },
+  {
+   "index": 4,
+   "rank": 3,
+   "target_pk": 6.0,
+   "target_f": 1386961840.0848064,
+   "tt_ok": false,
+   "tt_reason": "out of saturation (tail -101.8 mV of vds - vdsat). The `.op` is trustworthy and is graded on headroom; the AC spec set is dropped because a device in triode is not the circuit that was asked for"
+  },
+  {
+   "index": 4,
+   "rank": 4,
+   "target_pk": 6.0,
+   "target_f": 1386961840.0848064,
+   "tt_ok": false,
+   "tt_reason": "out of saturation (tail -100.5 mV of vds - vdsat). The `.op` is trustworthy and is graded on headroom; the AC spec set is dropped because a device in triode is not the circuit that was asked for"
+  },
+  {
+   "index": 4,
+   "rank": 5,
+   "target_pk": 6.0,
+   "target_f": 1386961840.0848064,
+   "tt_ok": false,
+   "tt_reason": "out of saturation (tail -101.0 mV of vds - vdsat). The `.op` is trustworthy and is graded on headroom; the AC spec set is dropped because a device in triode is not the circuit that was asked for"
+  },
+  {
+   "index": 5,
+   "rank": 1,
+   "target_pk": 6.0,
+   "target_f": 1626677319.302417,
+   "tt_ok": false,
+   "tt_reason": "out of saturation (tail -117.1 mV of vds - vdsat). The `.op` is trustworthy and is graded on headroom; the AC spec set is dropped because a device in triode is not the circuit that was asked for"
+  },
+  {
+   "index": 5,
+   "rank": 2,
+   "target_pk": 6.0,
+   "target_f": 1626677319.302417,
+   "tt_ok": false,
+   "tt_reason": "out of saturation (tail -116.6 mV of vds - vdsat). The `.op` is trustworthy and is graded on headroom; the AC spec set is dropped because a device in triode is not the circuit that was asked for"
+  },
+  {
+   "index": 5,
+   "rank": 3,
+   "target_pk": 6.0,
+   "target_f": 1626677319.302417,
+   "tt_ok": false,
+   "tt_reason": "out of saturation (tail -103.6 mV of vds - vdsat). The `.op` is trustworthy and is graded on headroom; the AC spec set is dropped because a device in triode is not the circuit that was asked for"
+  },
+  {
+   "index": 5,
+   "rank": 4,
+   "target_pk": 6.0,
+   "target_f": 1626677319.302417,
+   "tt_ok": false,
+   "tt_reason": "out of saturation (tail -101.4 mV of vds - vdsat). The `.op` is trustworthy and is graded on headroom; the AC spec set is dropped because a device in triode is not the circuit that was asked for"
+  },
+  {
+   "index": 5,
+   "rank": 5,
+   "target_pk": 6.0,
+   "target_f": 1626677319.302417,
+   "tt_ok": false,
+   "tt_reason": "out of saturation (tail -99.4 mV of vds - vdsat). The `.op` is trustworthy and is graded on headroom; the AC spec set is dropped because a device in triode is not the circuit that was asked for"
+  },
+  {
+   "index": 6,
+   "rank": 1,
+   "target_pk": 6.0,
+   "target_f": 1921093976.6100154,
+   "tt_ok": false,
+   "tt_reason": "out of saturation (tail -117.3 mV of vds - vdsat). The `.op` is trustworthy and is graded on headroom; the AC spec set is dropped because a device in triode is not the circuit that was asked for"
+  },
+  {
+   "index": 6,
+   "rank": 2,
+   "target_pk": 6.0,
+   "target_f": 1921093976.6100154,
+   "tt_ok": false,
+   "tt_reason": "out of saturation (tail -117.0 mV of vds - vdsat). The `.op` is trustworthy and is graded on headroom; the AC spec set is dropped because a device in triode is not the circuit that was asked for"
+  },
+  {
+   "index": 6,
+   "rank": 3,
+   "target_pk": 6.0,
+   "target_f": 1921093976.6100154,
+   "tt_ok": false,
+   "tt_reason": "out of saturation (tail -116.5 mV of vds - vdsat). The `.op` is trustworthy and is graded on headroom; the AC spec set is dropped because a device in triode is not the circuit that was asked for"
+  },
+  {
+   "index": 6,
+   "rank": 4,
+   "target_pk": 6.0,
+   "target_f": 1921093976.6100154,
+   "tt_ok": false,
+   "tt_reason": "out of saturation (tail -102.5 mV of vds - vdsat). The `.op` is trustworthy and is graded on headroom; the AC spec set is dropped because a device in triode is not the circuit that was asked for"
+  },
+  {
+   "index": 6,
+   "rank": 5,
+   "target_pk": 6.0,
+   "target_f": 1921093976.6100154,
+   "tt_ok": false,
+   "tt_reason": "out of saturation (tail -100.9 mV of vds - vdsat). The `.op` is trustworthy and is graded on headroom; the AC spec set is dropped because a device in triode is not the circuit that was asked for"
+  },
+  {
+   "index": 7,
+   "rank": 1,
+   "target_pk": 6.0,
+   "target_f": 2253126156.5270753,
+   "tt_ok": false,
+   "tt_reason": "out of saturation (tail -117.4 mV of vds - vdsat). The `.op` is trustworthy and is graded on headroom; the AC spec set is dropped because a device in triode is not the circuit that was asked for"
+  },
+  {
+   "index": 7,
+   "rank": 2,
+   "target_pk": 6.0,
+   "target_f": 2253126156.5270753,
+   "tt_ok": false,
+   "tt_reason": "out of saturation (tail -117.1 mV of vds - vdsat). The `.op` is trustworthy and is graded on headroom; the AC spec set is dropped because a device in triode is not the circuit that was asked for"
+  },
+  {
+   "index": 7,
+   "rank": 3,
+   "target_pk": 6.0,
+   "target_f": 2253126156.5270753,
+   "tt_ok": false,
+   "tt_reason": "out of saturation (tail -116.9 mV of vds - vdsat). The `.op` is trustworthy and is graded on headroom; the AC spec set is dropped because a device in triode is not the circuit that was asked for"
+  },
+  {
+   "index": 7,
+   "rank": 4,
+   "target_pk": 6.0,
+   "target_f": 2253126156.5270753,
+   "tt_ok": false,
+   "tt_reason": "out of saturation (tail -116.5 mV of vds - vdsat). The `.op` is trustworthy and is graded on headroom; the AC spec set is dropped because a device in triode is not the circuit that was asked for"
+  },
+  {
+   "index": 7,
+   "rank": 5,
+   "target_pk": 6.0,
+   "target_f": 2253126156.5270753,
+   "tt_ok": false,
+   "tt_reason": "out of saturation (tail -103.1 mV of vds - vdsat). The `.op` is trustworthy and is graded on headroom; the AC spec set is dropped because a device in triode is not the circuit that was asked for"
+  },
+  {
+   "index": 8,
+   "rank": 1,
+   "target_pk": 8.0,
+   "target_f": 1386961840.0848064,
+   "tt_ok": false,
+   "tt_reason": "out of saturation (tail -117.1 mV of vds - vdsat). The `.op` is trustworthy and is graded on headroom; the AC spec set is dropped because a device in triode is not the circuit that was asked for"
+  },
+  {
+   "index": 8,
+   "rank": 2,
+   "target_pk": 8.0,
+   "target_f": 1386961840.0848064,
+   "tt_ok": false,
+   "tt_reason": "out of saturation (tail -100.8 mV of vds - vdsat). The `.op` is trustworthy and is graded on headroom; the AC spec set is dropped because a device in triode is not the circuit that was asked for"
+  },
+  {
+   "index": 8,
+   "rank": 3,
+   "target_pk": 8.0,
+   "target_f": 1386961840.0848064,
+   "tt_ok": false,
+   "tt_reason": "out of saturation (tail -99.2 mV of vds - vdsat). The `.op` is trustworthy and is graded on headroom; the AC spec set is dropped because a device in triode is not the circuit that was asked for"
+  },
+  {
+   "index": 8,
+   "rank": 4,
+   "target_pk": 8.0,
+   "target_f": 1386961840.0848064,
+   "tt_ok": false,
+   "tt_reason": "out of saturation (tail -100.6 mV of vds - vdsat). The `.op` is trustworthy and is graded on headroom; the AC spec set is dropped because a device in triode is not the circuit that was asked for"
+  },
+  {
+   "index": 8,
+   "rank": 5,
+   "target_pk": 8.0,
+   "target_f": 1386961840.0848064,
+   "tt_ok": false,
+   "tt_reason": "out of saturation (tail -80.8 mV of vds - vdsat). The `.op` is trustworthy and is graded on headroom; the AC spec set is dropped because a device in triode is not the circuit that was asked for"
+  },
+  {
+   "index": 9,
+   "rank": 1,
+   "target_pk": 8.0,
+   "target_f": 1626677319.302417,
+   "tt_ok": false,
+   "tt_reason": "out of saturation (tail -117.0 mV of vds - vdsat). The `.op` is trustworthy and is graded on headroom; the AC spec set is dropped because a device in triode is not the circuit that was asked for"
+  },
+  {
+   "index": 9,
+   "rank": 2,
+   "target_pk": 8.0,
+   "target_f": 1626677319.302417,
+   "tt_ok": false,
+   "tt_reason": "out of saturation (tail -103.0 mV of vds - vdsat). The `.op` is trustworthy and is graded on headroom; the AC spec set is dropped because a device in triode is not the circuit that was asked for"
+  },
+  {
+   "index": 9,
+   "rank": 3,
+   "target_pk": 8.0,
+   "target_f": 1626677319.302417,
+   "tt_ok": false,
+   "tt_reason": "out of saturation (tail -100.6 mV of vds - vdsat). The `.op` is trustworthy and is graded on headroom; the AC spec set is dropped because a device in triode is not the circuit that was asked for"
+  },
+  {
+   "index": 9,
+   "rank": 4,
+   "target_pk": 8.0,
+   "target_f": 1626677319.302417,
+   "tt_ok": false,
+   "tt_reason": "out of saturation (tail -98.7 mV of vds - vdsat). The `.op` is trustworthy and is graded on headroom; the AC spec set is dropped because a device in triode is not the circuit that was asked for"
+  },
+  {
+   "index": 9,
+   "rank": 5,
+   "target_pk": 8.0,
+   "target_f": 1626677319.302417,
+   "tt_ok": false,
+   "tt_reason": "out of saturation (tail -100.5 mV of vds - vdsat). The `.op` is trustworthy and is graded on headroom; the AC spec set is dropped because a device in triode is not the circuit that was asked for"
+  },
+  {
+   "index": 10,
+   "rank": 1,
+   "target_pk": 8.0,
+   "target_f": 1921093976.6100154,
+   "tt_ok": false,
+   "tt_reason": "out of saturation (tail -116.9 mV of vds - vdsat). The `.op` is trustworthy and is graded on headroom; the AC spec set is dropped because a device in triode is not the circuit that was asked for"
+  },
+  {
+   "index": 10,
+   "rank": 2,
+   "target_pk": 8.0,
+   "target_f": 1921093976.6100154,
+   "tt_ok": false,
+   "tt_reason": "out of saturation (tail -102.2 mV of vds - vdsat). The `.op` is trustworthy and is graded on headroom; the AC spec set is dropped because a device in triode is not the circuit that was asked for"
+  },
+  {
+   "index": 10,
+   "rank": 3,
+   "target_pk": 8.0,
+   "target_f": 1921093976.6100154,
+   "tt_ok": false,
+   "tt_reason": "out of saturation (tail -100.5 mV of vds - vdsat). The `.op` is trustworthy and is graded on headroom; the AC spec set is dropped because a device in triode is not the circuit that was asked for"
+  },
+  {
+   "index": 10,
+   "rank": 4,
+   "target_pk": 8.0,
+   "target_f": 1921093976.6100154,
+   "tt_ok": false,
+   "tt_reason": "out of saturation (tail -100.5 mV of vds - vdsat). The `.op` is trustworthy and is graded on headroom; the AC spec set is dropped because a device in triode is not the circuit that was asked for"
+  },
+  {
+   "index": 10,
+   "rank": 5,
+   "target_pk": 8.0,
+   "target_f": 1921093976.6100154,
+   "tt_ok": false,
+   "tt_reason": "out of saturation (tail -98.3 mV of vds - vdsat). The `.op` is trustworthy and is graded on headroom; the AC spec set is dropped because a device in triode is not the circuit that was asked for"
+  },
+  {
+   "index": 11,
+   "rank": 1,
+   "target_pk": 8.0,
+   "target_f": 2253126156.5270753,
+   "tt_ok": false,
+   "tt_reason": "out of saturation (tail -116.8 mV of vds - vdsat). The `.op` is trustworthy and is graded on headroom; the AC spec set is dropped because a device in triode is not the circuit that was asked for"
+  },
+  {
+   "index": 11,
+   "rank": 2,
+   "target_pk": 8.0,
+   "target_f": 2253126156.5270753,
+   "tt_ok": false,
+   "tt_reason": "out of saturation (tail -103.1 mV of vds - vdsat). The `.op` is trustworthy and is graded on headroom; the AC spec set is dropped because a device in triode is not the circuit that was asked for"
+  },
+  {
+   "index": 11,
+   "rank": 3,
+   "target_pk": 8.0,
+   "target_f": 2253126156.5270753,
+   "tt_ok": false,
+   "tt_reason": "out of saturation (tail -102.1 mV of vds - vdsat). The `.op` is trustworthy and is graded on headroom; the AC spec set is dropped because a device in triode is not the circuit that was asked for"
+  },
+  {
+   "index": 11,
+   "rank": 4,
+   "target_pk": 8.0,
+   "target_f": 2253126156.5270753,
+   "tt_ok": false,
+   "tt_reason": "out of saturation (tail -101.7 mV of vds - vdsat). The `.op` is trustworthy and is graded on headroom; the AC spec set is dropped because a device in triode is not the circuit that was asked for"
+  },
+  {
+   "index": 11,
+   "rank": 5,
+   "target_pk": 8.0,
+   "target_f": 2253126156.5270753,
+   "tt_ok": false,
+   "tt_reason": "out of saturation (tail -99.4 mV of vds - vdsat). The `.op` is trustworthy and is graded on headroom; the AC spec set is dropped because a device in triode is not the circuit that was asked for"
+  },
+  {
+   "index": 12,
+   "rank": 1,
+   "target_pk": 10.0,
+   "target_f": 1386961840.0848064,
+   "tt_ok": false,
+   "tt_reason": "out of saturation (tail -101.9 mV of vds - vdsat). The `.op` is trustworthy and is graded on headroom; the AC spec set is dropped because a device in triode is not the circuit that was asked for"
+  },
+  {
+   "index": 12,
+   "rank": 2,
+   "target_pk": 10.0,
+   "target_f": 1386961840.0848064,
+   "tt_ok": false,
+   "tt_reason": "out of saturation (tail -102.1 mV of vds - vdsat). The `.op` is trustworthy and is graded on headroom; the AC spec set is dropped because a device in triode is not the circuit that was asked for"
+  },
+  {
+   "index": 12,
+   "rank": 3,
+   "target_pk": 10.0,
+   "target_f": 1386961840.0848064,
+   "tt_ok": false,
+   "tt_reason": "out of saturation (tail -89.2 mV of vds - vdsat). The `.op` is trustworthy and is graded on headroom; the AC spec set is dropped because a device in triode is not the circuit that was asked for"
+  },
+  {
+   "index": 12,
+   "rank": 4,
+   "target_pk": 10.0,
+   "target_f": 1386961840.0848064,
+   "tt_ok": false,
+   "tt_reason": "out of saturation (tail -73.0 mV of vds - vdsat). The `.op` is trustworthy and is graded on headroom; the AC spec set is dropped because a device in triode is not the circuit that was asked for"
+  },
+  {
+   "index": 12,
+   "rank": 5,
+   "target_pk": 10.0,
+   "target_f": 1386961840.0848064,
+   "tt_ok": false,
+   "tt_reason": "out of saturation (input pair -14.0 mV, tail -78.2 mV of vds - vdsat). The `.op` is trustworthy and is graded on headroom; the AC spec set is dropped because a device in triode is not the circuit that was asked for"
+  },
+  {
+   "index": 13,
+   "rank": 1,
+   "target_pk": 10.0,
+   "target_f": 1626677319.302417,
+   "tt_ok": false,
+   "tt_reason": "out of saturation (tail -101.5 mV of vds - vdsat). The `.op` is trustworthy and is graded on headroom; the AC spec set is dropped because a device in triode is not the circuit that was asked for"
+  },
+  {
+   "index": 13,
+   "rank": 2,
+   "target_pk": 10.0,
+   "target_f": 1626677319.302417,
+   "tt_ok": false,
+   "tt_reason": "out of saturation (tail -100.0 mV of vds - vdsat). The `.op` is trustworthy and is graded on headroom; the AC spec set is dropped because a device in triode is not the circuit that was asked for"
+  },
+  {
+   "index": 13,
+   "rank": 3,
+   "target_pk": 10.0,
+   "target_f": 1626677319.302417,
+   "tt_ok": false,
+   "tt_reason": "out of saturation (tail -84.1 mV of vds - vdsat). The `.op` is trustworthy and is graded on headroom; the AC spec set is dropped because a device in triode is not the circuit that was asked for"
+  },
+  {
+   "index": 13,
+   "rank": 4,
+   "target_pk": 10.0,
+   "target_f": 1626677319.302417,
+   "tt_ok": false,
+   "tt_reason": "out of saturation (input pair -97.5 mV, tail -90.0 mV of vds - vdsat). The `.op` is trustworthy and is graded on headroom; the AC spec set is dropped because a device in triode is not the circuit that was asked for"
+  },
+  {
+   "index": 13,
+   "rank": 5,
+   "target_pk": 10.0,
+   "target_f": 1626677319.302417,
+   "tt_ok": false,
+   "tt_reason": "out of saturation (tail -72.5 mV of vds - vdsat). The `.op` is trustworthy and is graded on headroom; the AC spec set is dropped because a device in triode is not the circuit that was asked for"
+  },
+  {
+   "index": 14,
+   "rank": 1,
+   "target_pk": 10.0,
+   "target_f": 1921093976.6100154,
+   "tt_ok": false,
+   "tt_reason": "out of saturation (tail -101.2 mV of vds - vdsat). The `.op` is trustworthy and is graded on headroom; the AC spec set is dropped because a device in triode is not the circuit that was asked for"
+  },
+  {
+   "index": 14,
+   "rank": 2,
+   "target_pk": 10.0,
+   "target_f": 1921093976.6100154,
+   "tt_ok": false,
+   "tt_reason": "out of saturation (tail -99.1 mV of vds - vdsat). The `.op` is trustworthy and is graded on headroom; the AC spec set is dropped because a device in triode is not the circuit that was asked for"
+  },
+  {
+   "index": 14,
+   "rank": 3,
+   "target_pk": 10.0,
+   "target_f": 1921093976.6100154,
+   "tt_ok": false,
+   "tt_reason": "out of saturation (input pair -54.9 mV, tail -94.0 mV of vds - vdsat). The `.op` is trustworthy and is graded on headroom; the AC spec set is dropped because a device in triode is not the circuit that was asked for"
+  },
+  {
+   "index": 14,
+   "rank": 4,
+   "target_pk": 10.0,
+   "target_f": 1921093976.6100154,
+   "tt_ok": false,
+   "tt_reason": "out of saturation (tail -81.3 mV of vds - vdsat). The `.op` is trustworthy and is graded on headroom; the AC spec set is dropped because a device in triode is not the circuit that was asked for"
+  },
+  {
+   "index": 14,
+   "rank": 5,
+   "target_pk": 10.0,
+   "target_f": 1921093976.6100154,
+   "tt_ok": false,
+   "tt_reason": "out of saturation (tail -82.4 mV of vds - vdsat). The `.op` is trustworthy and is graded on headroom; the AC spec set is dropped because a device in triode is not the circuit that was asked for"
+  },
+  {
+   "index": 15,
+   "rank": 1,
+   "target_pk": 10.0,
+   "target_f": 2253126156.5270753,
+   "tt_ok": false,
+   "tt_reason": "out of saturation (tail -101.0 mV of vds - vdsat). The `.op` is trustworthy and is graded on headroom; the AC spec set is dropped because a device in triode is not the circuit that was asked for"
+  },
+  {
+   "index": 15,
+   "rank": 2,
+   "target_pk": 10.0,
+   "target_f": 2253126156.5270753,
+   "tt_ok": false,
+   "tt_reason": "out of saturation (tail -98.6 mV of vds - vdsat). The `.op` is trustworthy and is graded on headroom; the AC spec set is dropped because a device in triode is not the circuit that was asked for"
+  },
+  {
+   "index": 15,
+   "rank": 3,
+   "target_pk": 10.0,
+   "target_f": 2253126156.5270753,
+   "tt_ok": false,
+   "tt_reason": "out of saturation (tail -87.3 mV of vds - vdsat). The `.op` is trustworthy and is graded on headroom; the AC spec set is dropped because a device in triode is not the circuit that was asked for"
+  },
+  {
+   "index": 15,
+   "rank": 4,
+   "target_pk": 10.0,
+   "target_f": 2253126156.5270753,
+   "tt_ok": false,
+   "tt_reason": "out of saturation (input pair -102.6 mV, tail -90.5 mV of vds - vdsat). The `.op` is trustworthy and is graded on headroom; the AC spec set is dropped because a device in triode is not the circuit that was asked for"
+  },
+  {
+   "index": 15,
+   "rank": 5,
+   "target_pk": 10.0,
+   "target_f": 2253126156.5270753,
+   "tt_ok": false,
+   "tt_reason": "out of saturation (tail -79.7 mV of vds - vdsat). The `.op` is trustworthy and is graded on headroom; the AC spec set is dropped because a device in triode is not the circuit that was asked for"
+  }
+ ]
+}

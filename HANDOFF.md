@@ -12871,3 +12871,56 @@ are `nebula/tests/test_invert_response.py`. One of them failed first and the
 TEST was wrong, not the code: it asked for 6 dB at a `k` whose ceiling is
 1.10 dB, and `m_for_peaking` correctly refused. Fixed to aim at half of each
 `k`'s own ceiling.
+
+---
+
+### 2026-09-02 — session 33 (rows 4u, entries 59–60). **The analytic proposer fails twice, for OPPOSITE reasons, and the binding constraint is now isolated.**
+
+**Row 4u — retry decks are billed.** `Sky130Point.n_decks` (2 when the G54
+retry fired, derived from `nan_retry_used` so the two cannot drift), and
+`rl/evaluator` charges it at both sites. The evaluator already charged its
+*transient* re-run explicitly; this makes the G54 retry follow the same rule
+instead of being the one invocation nobody paid for. 5 new gates.
+
+**Entry 59 — entry 58's stated cause was WRONG.** Entry 58 concluded the
+inversion was "aimed at the wrong corner". Measured: **all 80 candidates are
+out of saturation at NOMINAL**, tail 100–117 mV into triode. `predict_response`
+is a transfer function with no operating point in it, and the inversion
+inherited that blindness. Entry 58's `worst_spec` evidence was a **survivorship
+artefact of the screen's VDD-1.05 corners**, which give ~90 mV more headroom —
+about the size of the deficit. Entry 59 was NOT SCORABLE as registered: both
+its branches presupposed a measured response at TT, and none existed.
+
+**Entry 60 — the DC filter works completely, and it was not enough.**
+`invert_response.dc_margins`, fitted on 4 000 pool designs with measured
+margins (tail corr 0.9835 / 29.6 mV; pair corr 0.9903 / 34.3 mV), filtered at
+`reward_v1`'s own 0.1 V saturation tolerance, with `vcm_in` swept rather than
+pinned and ranking on DC robustness instead of current. **Scored 2 of 4.**
+
+    out of saturation   80 of 80  ->  0 of 80      (Q1 HIT, 100 % evaluable)
+    shape failures      52.5 %    ->  0 %
+    output swing        47.5 %    ->  100 %        (Q4 HIT)
+    A = 0 of 16, twice, against retrieval's 6      (Q2, Q3 MISS)
+
+**The mechanism, which is the most useful thing here: DC headroom and output
+swing pull in OPPOSITE directions.** The linear output range scales with
+`I × RL`; the tail's headroom is eaten by that same `I/2 × RL` drop. Entry 58
+ranked on current → 8 mA → DC died. Entry 60 ranked on DC margin → 0.5 mA →
+swing died, **2.23–4.90× over the limit, none within 1.05×** (entry 54's real
+blocked corners were 1.002–1.203×). Both extremes now measured, failing for
+opposite reasons.
+
+**The registered branch says stop** and it was honoured: 0 of 16 in two
+independent attempts, not tuned a third time in the same session. Row **4v** is
+the indicated third fix — a ranking that prices both jointly, which is what
+entry 37's swing surrogate exists for, with **100 % of entry 60's failures in
+its domain**. It must be pre-registered on its own.
+
+**What is kept regardless:** the closed-form inversion (24 of 24), the design
+rule `peaking ≤ 20·log10(k)`, and the DC predictor itself — which eliminated
+its target failure completely and is useful wherever a bias point needs
+checking without SPICE.
+
+**Artifacts:** `topk_scan_analytic.json` is entry 58's (restored);
+`topk_scan_analytic_dc.json` is entry 60's; `invert_decompose.json` is entry
+59's. **Tests: 2428 before; 2433 after** (345.8 s).

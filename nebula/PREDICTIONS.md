@@ -10739,3 +10739,80 @@ is now filtered, so swing is what should be left. **Falsifier: under 50 %.**
 * **Not coverage, not compliance.**
 * **Not that the DC predictor is a measurement.** It is a fitted filter with a
   stated 30 mV error; `rl/evaluator` still decides.
+
+### OUTCOME, entry 60 (2026-09-02). **SCORED 2 OF 4. The DC fix worked COMPLETELY -- 0 saturation failures against 80 -- and 100 % of the candidates now die on output swing instead. The two constraints are in direct tension.**
+
+    16 requests, 5 candidates each, 320 decks
+    artifact: experiments/topk_scan_analytic.json (entry 58's preserved separately)
+
+    A = 0 of 16          (library baseline 6)
+
+    80 rejections:   out of saturation        0   ( was 80 of 80 at nominal )
+                     output-swing compression 80   = 100 %
+                     shape (S3_*_match)        0   ( was 52.5 % )
+
+    required swing / linear limit:  min 2.230x  med 3.408x  max 4.900x
+    within 1.05x of the line: 0 of 80
+
+| | prediction | outcome | |
+|---|---|---|---|
+| **Q1** | at least 80 % evaluable, not out of saturation | **100 %** | **HIT** |
+| **Q2** | `A >= 1` | **0** | **MISS** |
+| **Q3** | `A >= 6` | 0 | **MISS** |
+| **Q4** | swing is the dominant reason, > 50 % | **100 %** | **HIT** |
+
+### The fix did exactly what it was built to do, and it was not enough
+
+Entry 59's defect is **completely gone**: 80 of 80 candidates were out of
+saturation at nominal, and now **zero** are. Shape failures also went to zero.
+The DC predictor -- fitted on 4 000 pool designs, 30 mV median error -- filters
+correctly at a 0.1 V floor.
+
+**And every single surviving candidate is killed by output swing, 2.23x to
+4.90x over the linear limit, none within 1.05x.**
+
+### The mechanism, and it is the most useful thing in the last three entries
+
+**DC headroom and output swing pull in OPPOSITE directions in this topology.**
+
+    entry 58   ranked on current      -> i_bias 8 mA    -> DC dies (tail in triode)
+    entry 60   ranked on DC margin    -> i_bias 0.5 mA  -> SWING dies (2-5x over)
+
+The linear output range scales with `I x RL`; the tail's headroom is eaten by
+that same `I/2 x RL` drop. Maximising either one minimises the other, and this
+project has now measured **both extremes failing for opposite reasons.** Entry
+58's proxy measured linear range and DC bound; entry 60's proxy measured DC and
+swing bound.
+
+For scale: entry 54 measured request 5's real blocked corners at **1.002-1.203x**
+over the limit. These are **2.23-4.90x** -- not marginal, not a near miss.
+
+### The registered branch fires and it says stop
+
+Entry 60's rule: *"Q1 hits, Q2 misses -> the DC point was a real blocker and not
+the only one; report what replaced it and stop, because that is two consecutive
+failures for one method."* **Honoured.** The analytic proposer is **0 of 16 in
+two independent attempts** against retrieval's 6, and it is not being tuned a
+third time inside the same session.
+
+### What is established, and it is not nothing
+
+* **The inversion is correct** (24 of 24 against the model) and
+  `peaking <= 20*log10(k)` stands.
+* **The DC predictor is correct and useful**: corr 0.98-0.99, 30 mV, and it
+  eliminated its target failure completely. It is worth keeping regardless of
+  what happens to the proposer.
+* **The binding constraint is isolated to one quantity.** Shape 0 %, DC 0 %,
+  swing 100 %. No other experiment in this project has separated the three that
+  cleanly, and it converts entry 53's "92.9 % of rejections are swing" from a
+  population statistic into a controlled result.
+* **A third fix is indicated and NOT attempted here**: a ranking that prices DC
+  headroom and output swing **jointly**, which is what entry 37's measured swing
+  surrogate exists for. That is Phase 2, it now has 100 % of the failures in its
+  domain, and it must be pre-registered on its own.
+
+### What no outcome may claim
+
+* **Not that the method is retired.** It is 0 of 16 twice, with the reason
+  different each time and now isolated to one constraint.
+* **Not coverage, not compliance.**

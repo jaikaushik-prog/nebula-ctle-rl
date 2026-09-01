@@ -608,6 +608,22 @@ class Sky130Point:
     #: still-NaN corner is distinguishable from one that was never retried.
     nan_retry_used: bool = False
 
+    @property
+    def n_decks(self) -> int:
+        """ngspice invocations behind this point. **2 when the retry fired.**
+
+        Row 4u: the G54 retry is a recursive call *inside* `run_point`, so a
+        caller that counts one call per `run_point` under-bills it. Measured on
+        entry 56's sweep: `mean_sims_per_request` came back **642.0625,
+        identical to entry 40 in every digit**, despite ~30 extra decks.
+
+        Derived from `nan_retry_used` rather than stored, so the two cannot
+        drift apart. `rl/evaluator.evaluate` already charges its *transient*
+        re-run explicitly (`n_spice += 1`); this makes the G54 retry follow the
+        same rule instead of being the one invocation nobody pays for.
+        """
+        return 2 if self.nan_retry_used else 1
+
     # ---- derived: S3 ----
     @property
     def peaking_db(self) -> float:
