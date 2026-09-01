@@ -8501,3 +8501,125 @@ start** at a 27-deck budget. Any of these turns the result into a statement
 about the policy rather than about the option to decline.
 
 **Not started. Pre-registration required before any of it runs.**
+
+---
+
+## 47. Session 31 -- **the matched-budget control. Does 30 decks of RL refinement beat 30 decks spent any other way, from the same start?**
+
+**Written 2026-09-01 BEFORE `exp_refine_control.py` exists and before any arm
+has run.** Verifiable from git: the commit carrying this entry carries **no
+module and no result**.
+
+### Why entry 46 could not answer this
+
+Entry 46 compared *refining* against *doing nothing*. Entry 28's fix lets the
+policy **decline**, so it essentially never breaks a design -- and a method
+that may decline wins that comparison **by construction**. The measured 5
+crossings and 0 regressions are consistent with a good policy and equally
+consistent with *"movement plus a best-of-visited selector"*, which needs no
+policy at all.
+
+The question with a null anybody disbelieves is a **matched budget from the
+same start**.
+
+### The population, taken from entry 46 and NOT re-derived
+
+The **58 eligible requests** -- those where the library start was infeasible on
+the screen, so a crossing is possible at all. Entry 46's other 70 requests
+began feasible and can never be "improved" by construction; including them was
+**defect 1** of that entry and is not repeated. Eligibility is deterministic
+(same split, same library, same screen), so it is **read from
+`rl_refine_run_n128.jsonl` at zero simulation cost** rather than re-measured.
+
+### The three arms, all from the same start
+
+| arm | what it does |
+|---|---|
+| **A** | the RL refiner, exactly as entry 46 ran it: 8 steps, `max_step` 0.04, best-of-visited including the start |
+| **B** | **random perturbation** -- the same env, the same horizon, the same stride, the same best-of-visited selector, with actions drawn uniformly instead of from the policy |
+| **C** | **deeper retrieval** -- library ranks 2, 3, 4... scored on the same screen until the budget is spent |
+
+**B is the arm that matters.** It differs from A in exactly one thing: where the
+action comes from. If A does not beat B, then what entry 46 measured was the
+*selector*, not the policy.
+
+### Declared inputs, measured before this entry
+
+1. **n = 58 eligible.** Arm A on them: **5 crossings, 30 moved up, 2 moved
+   down, 26 declined.**
+2. **Arm A's cost on the eligible subset: mean 30.2 decks/request** (median
+   37.5, min 9, max 40), **5.91 steps of an 8-step horizon** -- episodes
+   terminate early on unbuildable designs.
+3. Nothing is tuned. Same checkpoint, same stride, same horizon, same reward,
+   same screen, same `V6_SPECS`. Rules 6 and 7 both honoured.
+
+### The primary metric is the PAIRED DELTA, and the reason is arithmetic
+
+**The crossing count cannot be the primary metric at n = 58, and this is
+computed in advance rather than discovered afterwards.** McNemar's exact test
+on discordant pairs, with arm B crossing 0:
+
+    A = 5, B = 0  ->  discordant 5  ->  p = 0.0625   CANNOT reach 0.05
+    A = 5, B = 1  ->  discordant 6  ->  p = 0.2188
+    p < 0.05 requires A >= 6 crossings with B at 0.
+
+So the crossing test is **underpowered by construction at this n**, exactly as
+entry 46's Q3 was. **The primary is therefore the paired score delta**, where
+arm A moved 30 of 58 and there is real signal to test.
+
+### Predictions
+
+**Q1 -- THE CONTROL. Arm A re-run on the 58 reproduces entry 46:** 5 crossings,
+30 up, 2 down. Confidence **0.8.** *For:* same seeds, same checkpoint, and the
+n=128 run already reproduced entry 28 bit-for-bit across a reboot. *Against:*
+the eligible subset is re-entered in a different order, and per-request seeds
+must be carried over rather than re-derived -- a wiring risk, not a physics
+one. **Falsifier: any of the three counts differing. If it fires, stop.**
+
+**Q2 -- THE PRIMARY. A beats B on paired score deltas: Wilcoxon signed-rank on
+the per-request difference `delta_A - delta_B`, p < 0.05.** Confidence **0.5**,
+and it is deliberately not higher: the policy was trained on an analytic model,
+and 8 uniform steps at 0.04 in a 7-D box is a substantial local search with the
+same selector protecting it. **Falsifier: p >= 0.05.**
+
+**Q3 -- A crosses strictly more often than B.** Confidence **0.6.**
+**Falsifier: `crossings_B >= crossings_A`.**
+
+**Q4 -- the crossing test does NOT reach significance.** McNemar exact on A vs
+B, p >= 0.05. Confidence **0.85.** **This is registered because entry 46's Q3
+was not**: the arithmetic above says it needs 6 crossings with B at 0, and A
+measured 5. Registering an expected null in advance is the whole lesson of
+entry 46's correction. **Falsifier: p < 0.05.**
+
+**Q5 -- A does NOT beat C.** Deeper retrieval crosses at least as often as the
+refiner. Confidence **0.6.** *For:* entry 32 measured depth as nearly free and
+`accepted_at_k = [1,4,5,5,6,6,6,6]` -- ranks 2-7 for ~30 decks is a strong
+control. *Against:* those ranks were already the ones the k=5 proposer
+rejected. **Falsifier: `crossings_A > crossings_C`.**
+
+**Q6 -- CONFOUND CHECK. Arm B spends FEWER decks than arm A**, because a random
+walk leaves the buildable region sooner and terminates early. Confidence
+**0.55.** Registered so that a budget asymmetry cannot be found afterwards and
+explained away. **Falsifier: B's mean decks >= A's.** If B is starved, A's win
+is partly a budget win and must be reported as one.
+
+### The decision rule, before the result
+
+* **Q2 hits** -> **RL refinement beats a matched budget of random movement from
+  the same start.** That is the first genuine RL contribution measured in this
+  project. Report it with the cost, the effect size and "on top of retrieval".
+* **Q2 misses, Q3 hits** -> direction only, underpowered. Report both; claim
+  nothing.
+* **Q2 and Q3 both miss** -> **what entry 46 measured was the selector, not the
+  policy.** That closes RL for this submission far more decisively than entry
+  46 did, and it is the strongest negative this project can produce.
+* **Q5 misses (A beats C)** -> unexpected. Deeper retrieval is the cheaper
+  baseline; re-check the wiring before believing it.
+
+### What no outcome may claim
+
+* **Not that RL beats retrieval.** Retrieval supplies the start in every arm.
+* **Not coverage** (8 of 16) and **not compliance** (11 of 11 at 45 of 45).
+* **Not a corner claim.** Four screen points, not the mandated 45.
+* **Not a generalisation beyond the eligible subset**, which is by construction
+  the harder half of the request distribution.
