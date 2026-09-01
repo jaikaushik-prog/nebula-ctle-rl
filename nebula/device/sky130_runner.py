@@ -72,7 +72,7 @@ import re
 import shutil
 import subprocess
 import tempfile
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace as _dc_replace
 from pathlib import Path
 from typing import Optional, Sequence
 
@@ -599,6 +599,14 @@ class Sky130Point:
     #: the published numbers, which is only guaranteed if it is the same
     #: string.
     netlist: Optional[str] = field(default=None, repr=False)
+
+    #: True when this point is the result of the G54 NaN retry (see
+    #: `NAN_RETRY_BYPASS_F`). **Recorded rather than silent**: the retry
+    #: changes a real circuit element, and a reader comparing two points has to
+    #: be able to see which one was simulated with a raised bias bypass. It is
+    #: set on the retried point whether the retry SUCCEEDED or failed, so a
+    #: still-NaN corner is distinguishable from one that was never retried.
+    nan_retry_used: bool = False
 
     # ---- derived: S3 ----
     @property
@@ -1500,6 +1508,50 @@ def hd3_from_waveform(t: np.ndarray, vd: np.ndarray,
     }
 
 
+#: Bias-node bypass the G54 retry raises to, farads. **30 pF, and it is the
+#: SMALLEST value measured to clear the singularity**, not a swept one:
+#: `PREDICTIONS.md` entry 54 measured 30 p / 100 p / 1 n bit-identical on every
+#: field, so the smallest keeps the added capacitor -- and the S7 area it is
+#: still not billed for -- as small as the mechanism allows.
+#:
+#: `device/tail.py`'s `C_BYPASS_F` stays **10 pF**. That is the value every
+#: published number was measured against and it is not changed here; this is
+#: the value the retry uses on the one deck that already failed.
+NAN_RETRY_BYPASS_F: float = 30e-12
+
+#: The G54 signature, and NOTHING ELSE retries. `scan_for_silent_failures`
+#: catches nine kinds of silent failure; eight of them mean the deck is wrong
+#: and re-running it with a bigger capacitor would be superstition. This one
+#: means ngspice's integrated-noise log-slope integration evaluated `log(0)`
+#: because the mirror reference's noise is common-mode-rejected to machine
+#: zero -- a numerical singularity in the tool, not a fact about the circuit.
+_NAN_RETRY_SIGNATURE = re.compile(r"=\s*[-+]?(?:nan|inf)\b", re.I)
+
+
+def _nan_retry_point(point: SizingPoint, offender: str,
+                     bypass_f: Optional[float]) -> Optional[SizingPoint]:
+    """The same point with a raised bias bypass, or None if it must not retry.
+
+    Returns None -- meaning "report the failure as it stands" -- unless ALL of:
+    the caller left the retry enabled, the failure carries the G54 signature,
+    the point has a real tail to raise the bypass on, and that tail is not
+    already at or above the retry value (which would make the retry a
+    guaranteed-identical second deck, i.e. cost with no chance of a different
+    answer).
+    """
+    if bypass_f is None:
+        return None
+    if not _NAN_RETRY_SIGNATURE.search(offender or ""):
+        return None
+    tail = getattr(point, "tail", None)
+    if tail is None:
+        return None
+    if float(getattr(tail, "c_bypass_f", 0.0)) >= float(bypass_f):
+        return None
+    return _dc_replace(
+        point, tail=_dc_replace(tail, c_bypass_f=float(bypass_f)))
+
+
 def run_point(
     point: SizingPoint,
     corner: str = "tt",
@@ -1516,6 +1568,7 @@ def run_point(
     hd3: bool = False,
     hd3_vin_pk_v: Optional[float] = None,
     hd3_tone_hz: Optional[float] = None,
+    nan_retry_bypass_f: Optional[float] = NAN_RETRY_BYPASS_F,
 ) -> Sky130Point:
     """Simulate one sizing point. Never raises — failures come back ok=False.
 
@@ -1668,6 +1721,40 @@ def run_point(
     # §8 rule 10: the exit code is not a success signal. Grep first.
     offenders = scan_for_silent_failures(out)
     if offenders:
+        # **THE G54 RETRY, AND IT IS THE ONLY FAILURE THAT GETS ONE.** ngspice
+        # returns `inoise_total = -nan(ind)` and EXITS 0 when the mirror
+        # reference's noise is rejected to machine zero by symmetry and the
+        # integrated-noise log-slope integration evaluates log(0). It is a
+        # singularity in the tool, not a property of the circuit -- measured:
+        # 30 p / 100 p / 1 n bypass give `vn_in_vrms`, `g_dc_db` and the
+        # interpolated `f_pk` IDENTICAL TO EVERY PRINTED DIGIT wherever they
+        # all compute (G54's table; `PREDICTIONS.md` entry 54 reproduced it on
+        # a second design over 44 corners x 3 fields, zero disagreements).
+        #
+        # **This branch is unreachable for any run that computed.** A point
+        # that succeeds never enters it, so no measurement this project has
+        # ever published can change; what changes is that a corner which used
+        # to come back UNSCORABLE now comes back measured. That is the whole
+        # point -- entry 54 measured it worth mandated coverage 8 -> 9 of 16 --
+        # and it is why `nan_retry_bypass_f=None` exists: pass it to reproduce
+        # the pre-retry behaviour exactly.
+        #
+        # One retry, never two: the recursive call disables it.
+        retry = _nan_retry_point(point, offenders[0], nan_retry_bypass_f)
+        if retry is not None:
+            pt = run_point(
+                retry, corner=corner, swing=swing, vid_max=vid_max,
+                vid_step=vid_step, timeout_s=timeout_s, temp_c=temp_c,
+                noise_detail=noise_detail, keep_text=keep_text,
+                keep_netlist=keep_netlist, ac_sweep=ac_sweep,
+                ac_peak_interp=ac_peak_interp, hd3=hd3,
+                hd3_vin_pk_v=hd3_vin_pk_v, hd3_tone_hz=hd3_tone_hz,
+                nan_retry_bypass_f=None)
+            # Stamped whether it worked or not: a corner that is STILL NaN at
+            # 30 pF is a different fact from one that was never retried, and
+            # G54 records that ~0.4 % of runs stay NaN at extreme widths.
+            pt.nan_retry_used = True
+            return pt
         return Sky130Point(ok=False, corner=corner, point=point, runtime_s=runtime,
                            fail_reason=f"ngspice silent failure: {offenders[0][:160]}")
 

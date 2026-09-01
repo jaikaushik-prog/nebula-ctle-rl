@@ -36,12 +36,12 @@ human in the loop. Deliverables that already exist and run:
 
 | | state |
 |---|---|
-| Test suite | **2357 passed**, 13 deselected, ~5.8 min (348 s), measured 2026-09-01 (session 33); one timing-flaky test, **G136** (`python -m pytest tests nebula/tests -q -m "not slow"`). The **system** interpreter, not the conda env — that env has no `torch`, and `ngspice_con.exe` is found by absolute path anyway (G69) |
+| Test suite | **2377 passed**, 13 deselected, 254 s, measured 2026-09-01 (session 33); one timing-flaky test, **G136** (`python -m pytest tests nebula/tests -q -m "not slow"`). The **system** interpreter, not the conda env — that env has no `torch`, and `ngspice_con.exe` is found by absolute path anyway (G69) |
 | Gates G0–G2 | passed |
 | G3 (RL beats random + grid) | **fails one clause** — RL is indistinguishable from random at every budget |
 | G4 (corner-robust design) | met on `V1_SPECS` (7 rows); **not** on the 11 competition rows |
 | Eleven-row compliance | **no design meets all 11 rows at all 135 points.** Two designs miss on opposite sides of one row |
-| **Mandated 45-corner coverage** | **9 of 16** (entry 54, 2026-09-01; was 8 since entry 40). The 135-point load grid stays **0 of 16** |
+| **Mandated 45-corner coverage** | **9 of 16 ON THE DELIVERED PATH** (entry 55; entry 54 reached it with a wrapper, entry 55 wired the retry into `run_point` and re-measured with none). Was 8 since entry 40. The 135-point load grid stays **0 of 16** |
 | Deliverable output | `design.py --out` writes `design.json`, `design.cir` **and `design_schematic.png`** — a drawn schematic rendered FROM the deck, annotated with the sized values, marked **NOT DELIVERED** when the run did not pass (session 33) |
 | Report | `nebula/report/Nebula_CTLE_Report.pdf`, rebuilt from artifacts. **Its RL chapter stops at PPO and the budget ladder** — entries 34-54 have not reached it |
 
@@ -1352,6 +1352,68 @@ fabrication and omitting it would hide a mandated part of S2.
 
 ---
 
+## 5r. THE RETRY IS IN THE SHIPPED TOOL: **9 of 16 with no wrapper**
+
+**2026-09-01 (session 33), `device/sky130_runner.py`, 315 decks, 118 s.**
+Pre-registered as entry 55. **Scored 4 of 4.**
+
+### The gap this closes
+
+Entry 54's `9 of 16` was the framework **with a test harness patched around
+it**. `design.py` shipped without that patch and still met the NaN, so the
+honest sentence was *"the framework reaches 9; the tool does not."* Now
+`run_point` carries the retry itself:
+
+    request 3   45 / 45 mandated corners, worst +14.238782573580623
+    request 5   37 / 45                   (registered null, unmoved)
+    retries fired over request 3's 45 corners   1   (tt/1.00/0C)
+    corners still failing after the retry       0
+
+**Q4 is what makes the rest mean something:** the wrapper and the built-in
+retry agree on the worst margin to **every printed digit**, so entry 54's
+invariance control -- 132 comparisons, zero differing -- carries over to the
+shipped path instead of applying only to the harness it was measured in.
+
+### How narrow it is, on purpose
+
+* It fires on the **G54 signature only** (`= nan/inf`). The other eight silent
+  failures `scan_for_silent_failures` catches mean the deck is wrong, and
+  re-running one with a bigger capacitor is superstition.
+* **One retry, never two.** The recursive call disables it.
+* It does not fire when the tail is already at or above 30 pF -- a guaranteed
+  identical second deck is cost with no chance of a different answer.
+* **The branch is unreachable for any run that computed.** No measurement this
+  project has published can change; what changes is that a corner which used to
+  come back UNSCORABLE now comes back measured.
+* `nan_retry_bypass_f=None` reproduces the pre-retry behaviour exactly, and
+  **`C_BYPASS_F` is still 10 pF**.
+* Every retried point is stamped `nan_retry_used`, whether the retry succeeded
+  or not -- a corner still NaN at 30 pF is a different fact from one never
+  retried.
+
+### The consequence that is declared and NOT measured
+
+**The retry can change what the SEARCH returns**, because a candidate that used
+to die on a NaN now gets scored, and the search ranks on scores. Measuring that
+costs a ~90-minute sweep and was not done. So **no `BASELINES.md` number may be
+re-quoted as if it had been measured with the retry on**, and entries 30, 32,
+40, 52 and 53 were all run without it. They are not invalidated -- the retry
+only ever converts a failure into a measurement -- but they are not re-measured
+either. Stated in advance so a later sweep returning different numbers is read
+as *this change*, not as noise.
+
+### The professor-ready version
+
+**Our tool used to give up at one corner because the simulator returned "not a
+number" and still reported success.** It now notices that specific failure,
+adds the bias bypass capacitor every current mirror has anyway, and re-runs
+that one simulation. We checked on all 45 corners that this changes no computed
+value to any printed digit before we trusted the corner it recovers, and it
+fires once in 45. The design now meets every specification at all 45 mandated
+PVT corners **from the shipped command**, not from a test harness.
+
+---
+
 ## 6. Next steps, in order
 
 | # | Task | Cost | Status |
@@ -1377,7 +1439,8 @@ fabrication and omitting it would hide a mandated part of S2.
 | **4q** | **The two things entry 38 did NOT settle.** (a) a reward scoring headroom AND shape together AT CORNERS -- a bigger change than a penalty term, since the analytic model predicts a nominal response, not a corner spread; (b) whether 50 000 steps is enough for this reward (entry 34 measured the plateau for the blind one; nobody has for this one) | TBD | **OWNER'S DECISION -- NOT STARTED.** Neither is a reason to re-roll `SWING_W` (G110): the binding constraint is no longer swing |
 | **4p** | **A swing-aware reward, and a retrained policy measured on accept rate.** Predicted-headroom shortfall penalty via a WRAPPER env (no surrogate number can reach the screen), retrain 50 000 steps, re-run the arms against the same 6-of-16 bar | 50 000 steps + 960 decks, 52.1 min measured | **DONE 2026-08-26. THE FIX WORKED AND IT DID NOT PAY: 0-1 of 16.** Entry 38 scored 4 of 6 -- headroom nearly doubled (1154 mV vs the library's 595), swing failures 96 % -> 28 %, scorable corners 0.30 -> 2.84 of 4, and accept rate did NOT move. Failures shifted to S3_peaking_match / S3_f_peak_match. See section 5l |
 | **4q2** | **Clear the G54 singularity and re-verify (entry 54).** Invariance control first: 45 corners at 10 pF vs 30 pF, compared with `==` | 360 decks, 211 s | **DONE 2026-09-01. 5 of 6. 132 comparisons, ZERO differing; request 3 44/45 -> 45/45; MANDATED COVERAGE 8 -> 9 of 16.** See section 5p |
-| **4r** | **Should the delivered path retry at 30 pF on a `-nan(ind)`?** The remedy is measured answer-neutral and the failure is detectable (`crosscheck.py` already pattern-matches it), so this is a bounded, honest robustness fix — **but it changes `design.py`'s behaviour, so it is the OWNER'S call** (rule 7). Not started | ~0 sims to build | **owner's decision** |
+| **4r** | **The delivered path retries at 30 pF on a `-nan(ind)`.** Authorised by the owner 2026-09-01 and pre-registered as entry 55. Fires on the G54 signature only, once, never when the tail is already >= 30 pF; `nan_retry_bypass_f=None` reproduces the old behaviour; `C_BYPASS_F` stays 10 pF | 315 decks, 118 s | **DONE 2026-09-01. 4 of 4. Request 3 is 45/45 with NO wrapper — mandated coverage 9 of 16 on the DELIVERED path. See section 5r** |
+| **4t** | **Re-run one sweep with the retry on.** Declared but unmeasured (entry 55): the retry can change what the SEARCH returns, since a candidate that used to die on a NaN now gets scored. Until then no `BASELINES.md` number may be re-quoted as if measured with it | ~90 min | open, declared |
 | **4s** | **Request 5's eight corners are the next coverage point, and they are NOT this bug.** All eight are output-swing compression at **VDD-5 %**, only **1.002-1.203x** over the measured linear limit — the closest any blocked corner has been. Whether a slightly larger `rl` or `i_bias` clears them at fixed peaking is unmeasured | TBD | open |
 | **5** | **Corner-aware RL vs random / CMA-ES / library lookup.** Pre-registered as entry 25 (with a disclosed rule-3 violation: written after launch, before any artifact existed) | ~2.5 h | **RUNNING** |
 | **6** | **Re-run the coverage sweep on `V6_SPECS`** (§5b). Owner: *"polishing numbers is much needed for honesty."* **Publish both the old and the corrected coverage number** | ~2.5 h | **committed, do not drop** |

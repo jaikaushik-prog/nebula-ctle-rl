@@ -8,6 +8,28 @@ else in the 22s brief stands.
 
 **14 days to the 15 Sept deadline (as of 2026-09-01). Demo 25 Sept at BITS Goa.**
 
+> **2026-09-01 (session 33, LATEST). THE RETRY IS IN THE SHIPPED TOOL:
+> MANDATED COVERAGE 9 OF 16 WITH NO WRAPPER.** Entry 55, **4 of 4**, 315 decks.
+>
+>     request 3   45/45 mandated corners   worst +14.238782573580623
+>     request 5   37/45                    (registered null, unmoved)
+>     retries fired over 45 corners   1   (tt/1.00/0C)   still failing   0
+>
+> Entry 54's 9 of 16 was the framework **with a harness patched around it**;
+> `design.py` shipped without it and still met the NaN. `run_point` now carries
+> the retry: **G54 signature only**, once, never when the tail is already
+> >= 30 pF, stamped `nan_retry_used` on the point, and
+> `nan_retry_bypass_f=None` reproduces the old behaviour exactly.
+> **`C_BYPASS_F` is still 10 pF.** The wrapper and the built-in agree on the
+> worst margin to **every printed digit** (Q4), which is what carries entry
+> 54's invariance control onto the shipped path.
+>
+> **DECLARED AND NOT MEASURED (row 4t): the retry can change what the SEARCH
+> returns**, because a candidate that used to die on a NaN now gets scored. No
+> sweep has been re-run, so **no `BASELINES.md` number may be re-quoted as if
+> measured with it on**. Entries 30, 32, 40, 52, 53 all predate it. Read
+> `PROGRESS.md` section 5r, then entry 55.
+
 > **2026-09-01 (session 33). THE DELIVERABLE NOW OUTPUTS A DRAWN SCHEMATIC.**
 > `design.py --out` writes `design_schematic.png` beside `design.json` and
 > `design.cir`. **It is rendered FROM the deck** -- `.param` values parsed out

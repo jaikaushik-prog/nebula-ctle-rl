@@ -4768,6 +4768,28 @@ Plus: git init, .gitignore, 28 tests, Wilson-bound BER reporting.
   assertion inside a correctness test makes the correctness test flaky; if this
   fires again, the fix is to split it, not to widen the margin.
 
+- **G137 -- (nebula) `run_point` NOW RETRIES ONCE ON THE G54 NaN, AND EVERY
+  PUBLISHED NUMBER PREDATES IT.** `nan_retry_bypass_f` defaults to
+  `NAN_RETRY_BYPASS_F` = **30 pF**: on a silent failure carrying the G54
+  signature (`= nan/inf`) **and nothing else**, the point is rebuilt with the
+  tail's bias bypass raised and re-run **once**, and the result is stamped
+  `Sky130Point.nan_retry_used` whether the retry worked or not.
+  **`device/tail.py`'s `C_BYPASS_F` is still 10 pF** -- the retry raises the
+  bypass on one deck that already failed, it does not change the default.
+  **The branch is unreachable for any run that computed**, so no published
+  measurement can change; what changes is that a corner which used to come back
+  UNSCORABLE now comes back measured (entry 55: mandated coverage 8 -> 9 of 16
+  on the DELIVERED path, one firing in 45 corners).
+  **Two things to know before you quote anything.** (1) `nan_retry_bypass_f=
+  None` reproduces the pre-retry behaviour EXACTLY, and that is how a published
+  number is reproduced. (2) **The retry can change what the SEARCH returns** --
+  a candidate that used to die on a NaN now gets scored, and the search ranks
+  on scores. No sweep has been re-run (`PROGRESS.md` §6 row 4t), so entries 30,
+  32, 40, 52 and 53 predate it and **no `BASELINES.md` number may be re-quoted
+  as if it had been measured with the retry on**. They are not invalidated --
+  the retry only ever converts a failure into a measurement -- but they are not
+  re-measured either.
+
 - **G132 -- (nebula) A ROLLOUT'S WARM START IS NOT A PROPOSAL, and a
   best-of-visited selector that includes step 0 reports RETRIEVAL as RL.**
   `exp_rl_diagnose.best_feasible` scanned every design an episode visited,
@@ -12660,3 +12682,53 @@ are `nebula/tests/test_schematic.py`. **One intervening full-suite run showed
 `test_pdk_trim.py::...[hh]` red**; it passed 6/6 alone immediately after with
 nothing changed, and the next full run was green. Its second assertion is a
 wall-clock comparison, not a value comparison — recorded as **G136**.
+
+---
+
+### 2026-09-01 — session 33 (row 4r). **The NaN retry is in the shipped tool. Mandated coverage 9 of 16 with no wrapper.**
+
+**Authorised by the owner**, pre-registered as `PREDICTIONS.md` entry 55 before
+the verification decks ran, **scored 4 of 4** (315 decks, 118 s, artifact
+`experiments/shipped_retry_results.json`).
+
+**The gap it closes.** Entry 54's `9 of 16` was the framework with a test
+harness patched around `build_point`. `design.py` shipped without that patch and
+still met the NaN, so the honest sentence was *"the framework reaches 9; the
+tool does not."* `run_point` now carries the retry itself.
+
+    request 3   45 / 45 mandated corners, worst +14.238782573580623
+    request 5   37 / 45                   (registered null, unmoved)
+    retries fired over request 3's 45 corners   1   (tt/1.00/0C)
+    corners still failing after the retry       0
+
+**Q4 is what makes the rest mean anything:** the wrapper and the built-in retry
+agree on the worst margin to **every printed digit**, so entry 54's invariance
+control (132 comparisons, zero differing) carries onto the shipped path rather
+than applying only to the harness it was measured in.
+
+**How narrow it is, deliberately** — see **G137**. G54 signature only; one
+retry, never two; no retry when the tail is already at or above 30 pF (a
+guaranteed-identical second deck is cost with no chance of a different answer);
+every retried point stamped `nan_retry_used` whether it worked or not;
+`nan_retry_bypass_f=None` reproduces the pre-retry behaviour exactly; and
+**`C_BYPASS_F` stays 10 pF**.
+
+**Declared and NOT measured (row 4t):** the retry can change what the **search**
+returns, because a candidate that used to die on a NaN now gets scored and the
+search ranks on scores. No sweep re-run, so entries 30, 32, 40, 52 and 53
+predate it and **no `BASELINES.md` number may be re-quoted as if measured with
+it on**. Stated in advance so a later sweep returning different numbers reads as
+*this change*, not as noise.
+
+**New on disk:** `nebula/tests/test_nan_retry.py` (20 gates),
+`nebula/experiments/shipped_retry_results.json`;
+`device/sky130_runner.py` gains `NAN_RETRY_BYPASS_F`, `_nan_retry_point`,
+`Sky130Point.nan_retry_used` and the `nan_retry_bypass_f` parameter.
+`PREDICTIONS.md` entry 55; `PROGRESS.md` §5r, its status row and rows 4r/4t;
+`CONTINUE_HERE.md` session-33 retry block; gotcha **G137**.
+
+**Tests: 2357 before; 2377 / 13 deselected after** (254.2 s). The 20 new gates
+are `nebula/tests/test_nan_retry.py`. The device layer changed here, so the
+whole suite is the gate that matters: every existing G54 test is string-level
+(`scan_for_silent_failures`, the evaluator's handling) and none of them runs a
+real NaN deck, so none of them was silently rerouted through the retry.

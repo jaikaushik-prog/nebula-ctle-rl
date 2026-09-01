@@ -9781,3 +9781,144 @@ the module docstring rather than only fixed.
 * **Not a coverage claim for any request other than 3.**
 * **Not free.** 30 pF is a real capacitor whose area is still not in any S7
   estimate -- G54 said so in August and it remains true.
+
+---
+
+## 55. Session 33 -- **the retry is now IN the delivered path. Does the shipped tool reach 9 of 16 without a wrapper?**
+
+**Written 2026-09-01 BEFORE the verification decks run.** The code change is
+made and its unit behaviour is measured (declared input 2); **no 45-corner run
+has happened through it.**
+
+### What this entry is for
+
+Entry 54 recovered request 3's blocking corner by **patching `build_point` in a
+wrapper**, and said in as many words that wiring it into the delivered path was
+the owner's decision. The owner authorised it. So `9 of 16` was a statement
+about the framework with a test harness around it, and `design.py` shipped
+without it -- the shipped tool still met the NaN. This entry closes that gap and
+measures it, because *"the wrapper worked so the built-in will"* is an
+assumption and this project does not publish those.
+
+### What changed, precisely
+
+`run_point` gains `nan_retry_bypass_f`, defaulting to **`NAN_RETRY_BYPASS_F`
+= 30 pF**. On a silent failure carrying the **G54 signature only**
+(`= nan/inf`), it rebuilds the point with the tail's bypass raised and re-runs
+**once**; the result is stamped `nan_retry_used`, whether or not the retry
+succeeded. **`device/tail.py`'s `C_BYPASS_F` stays 10 pF** -- the value every
+published number was measured against is untouched.
+
+**The branch is unreachable for any run that computed.** A point that succeeds
+never reaches it, so no measurement this project has published can change.
+`nan_retry_bypass_f=None` reproduces the pre-retry behaviour exactly.
+
+### Declared inputs, measured before this entry
+
+1. Entry 54: 44 corners x 3 fields at 10 pF vs 30 pF, **132 comparisons, zero
+   differing**, one corner recovered, none lost.
+2. **Three decks through the unmodified production path**, request 3's design at
+   `tt/1.00/0C`, design load:
+
+        production default      ok=True   retry_used=True   vn 0.0003477731  g_dc 2.165881
+        nan_retry_bypass_f=None ok=False  retry_used=False  (the old NaN)
+        the same design at 27 C ok=True   retry_used=False  vn 0.000373097
+
+   The recovered values are **identical to entry 54's wrapper run on every
+   printed digit**, the disable switch reproduces the old failure, and a
+   healthy corner does not retry.
+
+### Predictions
+
+**Q1 -- THE HEADLINE. Request 3 verifies 45 of 45 mandated corners through the
+plain `verify_one`, no wrapper**, so the SHIPPED tool reaches mandated coverage
+**9 of 16**. Confidence **0.9.** *For:* declared input 2 recovered the only
+blocking corner with entry 54's exact values, and entry 54 already measured that
+the recovered corner passes every scored row. *Against:* the retry runs inside
+`run_point` rather than around `build_point`, so a path that rebuilds the point
+between the two would not see it. **Falsifier: anything below 45/45.**
+
+**Q2 -- THE RETRY IS RARE, NOT ROUTINE. Exactly one of request 3's 45 corners
+reports `nan_retry_used`.** Confidence **0.8.** Registered because a retry that
+fires everywhere would mean the signature is too broad and every deck is
+quietly being simulated with a different capacitor than the one the netlist
+names. **Falsifier: 0, or more than 2.**
+
+**Q3 -- REGISTERED EXPECTED NULL. Request 5 stays at 37 of 45.** Confidence
+**0.9.** Its eight corners fail in the LINK layer with `ok=True`; a device-side
+retry cannot reach them, exactly as entry 54's Q5 registered and measured.
+**Falsifier: it moves at all.**
+
+**Q4 -- THE TWO ROUTES ARE THE SAME INTERVENTION.** The recovered corner's
+`pvt45_worst` for request 3 equals entry 54's **+14.238782573580623** exactly.
+Confidence **0.85.** *Mechanism:* the wrapper and the retry raise the same field
+on the same tail to the same value. **Falsifier: any difference.**
+
+### The consequence that is DECLARED rather than predicted
+
+**The retry can change what the SEARCH returns**, because a candidate that used
+to die on a NaN now gets scored, and the search ranks on scores. Measuring that
+costs a full ~90-minute sweep and is **not** done here. So:
+
+* **no benchmark or coverage number in `BASELINES.md` may be re-quoted as if it
+  had been measured with the retry on**, and
+* the published sweeps -- entries 30, 32, 40, 52, 53 -- were all run **without**
+  it. They are not invalidated (the retry only ever converts a failure into a
+  measurement) but they are not re-measured either.
+
+This is stated in advance so that a later sweep that returns different numbers
+is read as *this change*, not as noise.
+
+### What no outcome may claim
+
+* **Not that the eye problem is solved.** 8 of the 9 blocked corners in
+  `unscorable_diagnosis.json` are link-layer compression and are untouched.
+* **Not a coverage claim for any request other than 3.**
+* **Not that `C_BYPASS_F` should change**, and not that the 30 pF capacitor's
+  area is billed -- it still is not, in any S7 estimate.
+
+### OUTCOME, entry 55 (2026-09-01). **SCORED 4 OF 4. The SHIPPED tool reaches 9 of 16 -- `design.py` no longer needs a wrapper to clear the corner.**
+
+    315 decks, 118 s
+    artifact: experiments/shipped_retry_results.json
+
+    request 3 (target)   45 / 45 mandated corners   worst +14.238782573580623
+    request 5 (null)     37 / 45                    worst +14.336104453686795
+    retries fired over request 3's 45 corners:   1   (tt/1.00/0C, succeeded)
+    corners still failing after the retry:       0
+
+| | prediction | outcome | |
+|---|---|---|---|
+| **Q1** | 45/45 through the plain path, coverage 9 of 16 | **45/45** | **HIT** |
+| **Q2** | exactly one corner reports `nan_retry_used` | **1**, and it is `tt/1.00/0C` | **HIT** |
+| **Q3** | request 5 stays at 37/45 | **37/45** | **HIT** |
+| **Q4** | `pvt45_worst` equals entry 54's to every digit | **+14.238782573580623** | **HIT** |
+
+**Q4 is the one that makes the other three mean something.** The wrapper (entry
+54) and the built-in retry (this entry) are two different routes to the same
+intervention, and they agree to **every printed digit of the worst margin**.
+That is what licenses reading entry 54's invariance control -- 132 comparisons,
+zero differing -- as applying to the shipped path too, rather than only to the
+harness it was measured in.
+
+**Q2 is the guard that matters most in daily use.** One retry in 45 corners.
+A signature broad enough to fire routinely would mean decks are quietly being
+simulated with a capacitor the netlist does not name, and nobody would notice
+because the retry is the thing that makes them succeed.
+
+### What is now true, and what is still not
+
+* **Mandated 45-corner coverage is 9 of 16 on the delivered path.** Entry 54's
+  9 was the framework with a test harness patched around it; `design.py` shipped
+  without it and still met the NaN. That gap is closed.
+* **The 135-point load grid is unchanged at 0 of 16.** Request 3 is 45 of 135
+  points passing; its other two loads stay blocked.
+* **Request 5 is untouched** -- its eight corners are link-layer compression at
+  VDD-5 %, and a device-side retry cannot reach them. Twice registered as a
+  null, twice measured as one.
+* **`C_BYPASS_F` is still 10 pF** and the 30 pF retry capacitor's area is still
+  in no S7 estimate.
+* **The declared unmeasured consequence stands:** the retry can change what the
+  SEARCH returns, because a candidate that used to die on a NaN now gets
+  scored. No sweep has been re-run, and no `BASELINES.md` number may be
+  re-quoted as if it had been.
