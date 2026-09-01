@@ -43,12 +43,22 @@ because silently optimising a number the objective cannot see would be the
 worst kind of demo -- and so would silently claiming one it can.
 
 **2. The default method is not RL, and nobody chooses it.** `--method auto`
-escalates by itself: retrieval proposes up to five candidates, the live
-4-corner screen decides, and the full search runs only if none survives. That
-is `exp_hybrid.propose_then_search`, called rather than copied, and entry 40
-measured it over sixteen requests -- **mandated 45-corner coverage 7 -> 8 of
-16 for 25 % fewer simulations, 1 284 decks per delivered compliant design
-against 1 960**.
+escalates by itself: candidates are proposed, the live 4-corner screen decides,
+and the full search runs only if none survives. That is
+`exp_hybrid.propose_then_search`, called rather than copied.
+
+**The proposer is ANALYTIC FIRST, library after** (row 4y). The analytic
+proposer solves the passives in closed form from the requested peak and peaking
+(`experiments/invert_response.py`) and ranks candidates by a **max-min** margin
+over DC headroom and output swing -- the two constraints that pull against each
+other through `I_d * RL`. Entry 64 measured it accepting **11 of 16** against
+the library's 6; **entry 65 verified all 11 at the 45 mandated corners, with
+eight already-solved controls, none lost: coverage 9 -> 12 of 16.**
+
+The library stays behind it because the analytic proposer fails 5 of 16 -- all
+four 10 dB requests and 4 dB @ 1.387 GHz -- and on those the tool must be no
+worse than before. `propose_then_search` screens in order and stops at the first
+feasible candidate, so **the ordering is the policy**.
 
 The earlier default was `--method library`, which meant the operator picked the
 strategy. The brief says *"with zero human intervention"*, and a tool whose
@@ -182,19 +192,27 @@ def solve_auto(target: SpecTarget, budget: int, seed: int,
     """
     from nebula.experiments import exp_hybrid as H
     from nebula.experiments.adaptive_screen import EDGE4_MANDATED, AdaptiveScreen
+    from nebula.experiments.exp_invert_screen import analytic_then_library
 
+    # **Row 4y.** The candidate source is now ANALYTIC FIRST, library after.
+    # Entry 64 measured the analytic proposer accepting 11 of 16 against the
+    # library's 6, and entry 65 verified all 11 at the 45 mandated corners with
+    # eight already-solved controls, none lost. The library stays behind it
+    # because the analytic source fails 5 of 16 and the tool must not get worse
+    # on those; `propose_then_search` screens in order and stops at the first
+    # feasible candidate, so the ordering IS the policy.
     screen = AdaptiveScreen(EDGE4_MANDATED)
     hyb, res, _best = H.propose_then_search(
         target.peaking_db, target.f_peak_hz, screen,
-        candidates=H.library_candidates_k, k=int(k),
-        proposer_name="library", budget=budget, seed=seed)
+        candidates=analytic_then_library, k=int(k),
+        proposer_name="analytic+library", budget=budget, seed=seed)
     if res.u is None:
         raise RuntimeError(
             f"neither the {k}-candidate proposal nor the {budget}-evaluation "
             f"search produced an evaluable design for "
             f"{target.peaking_db:.2f} dB @ {target.f_peak_hz / 1e9:.3f} GHz. "
-            f"This is a coverage miss, not a crash: the framework answers 8 of "
-            f"16 requests at the mandated 45 corners (entry 40).")
+            f"This is a coverage miss, not a crash: the framework answers 12 "
+            f"of 16 requests at the mandated 45 corners (entry 65).")
     return {"u": [float(x) for x in res.u],
             "reward": float(res.screen_reward), "sims": int(res.n_sims),
             "n_candidates": int(hyb.n_candidates),

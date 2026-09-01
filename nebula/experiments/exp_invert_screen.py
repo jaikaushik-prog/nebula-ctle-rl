@@ -324,3 +324,44 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
+
+
+def analytic_then_library(f_peak_hz: float, peaking_db: float,
+                          k: int = K) -> list[list[float]]:
+    """**Row 4y: the delivered candidate source.** Analytic first, library after.
+
+    `propose_then_search` screens candidates in order and stops at the first
+    feasible one, so ordering is the whole design here:
+
+    * **analytic first**, because entry 64 measured it accepting **11 of 16**
+      against the library's 6, and entry 65 verified all 11 at the 45 mandated
+      corners with eight already-solved controls, none lost;
+    * **library after**, because the analytic proposer fails 5 of 16 -- all four
+      10 dB requests and 4 dB @ 1.387 GHz -- and on those the tool must be no
+      worse than it is today.
+
+    **Cost, stated because it is not free.** Up to `2k` candidates are screened
+    instead of `k`, so the worst case (both sources exhausted, then the search)
+    is `4k` extra decks -- 40 at `k=5`, against the ~1 085-deck search it is
+    trying to avoid. On the 11 requests the analytic source answers, the
+    proposal costs 8-20 decks and the search is skipped entirely.
+
+    A failure inside the analytic proposer is caught and degrades to the library
+    rather than propagating: a new proposer must not be able to break the
+    delivered path.
+    """
+    out: list[list[float]] = []
+    try:
+        out = list(analytic_candidates(float(f_peak_hz), float(peaking_db),
+                                       int(k)))
+    except Exception:                                           # noqa: BLE001
+        out = []
+    try:
+        from nebula.experiments.exp_hybrid import library_candidates_k
+
+        for u in library_candidates_k(float(f_peak_hz), float(peaking_db),
+                                      int(k)):
+            out.append([float(x) for x in np.asarray(u).ravel()])
+    except Exception:                                           # noqa: BLE001
+        pass
+    return out
