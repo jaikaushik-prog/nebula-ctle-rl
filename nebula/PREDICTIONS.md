@@ -10588,3 +10588,154 @@ nothing here changes the drive. **Falsifier: outside [37.5 %, 57.5 %].**
 * **Not a retraction of the inversion's correctness.** The round trip against
   the model is 24 of 24 and is not in question; what is in question is whether
   the model is close enough to SPICE to aim with.
+
+### OUTCOME, entry 59 (2026-09-02). **NOT SCORABLE AS REGISTERED, and that is the result: neither branch was right. All 80 candidates are DC-INVALID at nominal -- the tail is out of saturation.**
+
+    80 candidates, 80 decks, 14.4 s
+    artifact: experiments/invert_decompose.json
+
+    evaluable at TT/1.00/27 C:  0 of 80
+    every one:  "out of saturation (tail -100.5 to -117.4 mV of vds - vdsat)"
+
+| | prediction | outcome | |
+|---|---|---|---|
+| **Q1** | corner spread is the larger term | **neither term exists** -- no TT measurement to difference against | **NOT SCORABLE** |
+| **Q2** | at least half are inside 0.3 oct at TT | **0 of 80**, but not because they missed -- because none was measurable | **MISS, on a technicality that is itself the finding** |
+| **Q3** | peaking transfers better than frequency | no measured response at TT | **NOT SCORABLE** |
+| **Q4** | swing failures do not move | not re-measured at corners | **NOT RUN** |
+
+### The finding, and it corrects entry 58 rather than extending it
+
+**Entry 58's stated cause was wrong.** It said the inversion *"solves for
+TT/1.00/27 C and the screen scores four corners, so a nominal bullseye is a
+corner miss by construction"*, and named corner-aware targeting as the fix.
+Measured: the designs are **not on target at TT either, because they are not
+valid at TT at all.** The tail sits **100-117 mV into triode** on every single
+candidate.
+
+**The mechanism.** `predict_response` is a transfer function. It has **no DC
+operating point in it** -- it says nothing about whether the bias it implies
+can exist. The inversion inherited that blindness: it places a zero and two
+poles perfectly and never asks whether the tail has room to stand up. And the
+ranking made it worse rather than better: the headroom proxy
+`i_bias*(1+gm*rs/2)/gm` is increasing in current, so every candidate was pushed
+to `i_bias = 8 mA`, where `I/2 * RL` eats the very headroom the tail needs.
+
+**The proxy measured LINEAR RANGE and the constraint that bound was DC
+HEADROOM.** They are different quantities and I ranked on the wrong one.
+
+### Why the entry 58 evidence pointed the wrong way
+
+Entry 58's screen corners are at **VDD 1.05**, 5 % above nominal -- about 90 mV
+more headroom, which is the same order as the 100-117 mV deficit. So at the
+screen some candidates stood up far enough to be scored and then failed on
+shape, while at nominal none does. **The `worst_spec` distribution was a
+survivorship artefact of the screen's high-VDD corners**, and reading a cause
+off it was the error.
+
+### What this does to Phase 1
+
+* **The inversion is still correct and still unretracted** -- 24 of 24 against
+  the model, and `peaking <= 20*log10(k)` stands. What is refuted is that
+  solving the AC response is sufficient to propose a design.
+* **The indicated fix changes**: not corner-aware targeting, but an **analytic
+  DC-headroom constraint** applied before ranking -- the tail's `vds - vdsat`
+  and the pair's saturation are computable from `vcm_in`, `i_bias`, `rl` and
+  `VDD` without SPICE, and the feasibility map should be filtered by them.
+* **The 16-of-16 in-box feasibility claim now carries a caveat**: those 132-813
+  solutions per request are in-box for the PASSIVES and were never checked for
+  a valid operating point. That claim must be re-stated as *"in-box in the AC
+  parameters"* until the DC filter exists.
+
+### A registration defect, recorded as entries 46 and 53 were
+
+**Entry 59 offered two branches and the world took a third.** Both Q1 and Q2
+presupposed a measured response at TT; when none of the 80 candidates produced
+one, Q1 and Q3 became unscorable and Q2 "missed" for a reason it was not
+testing. **The lesson is the same one entry 53 recorded**: a decomposition must
+first register that the thing being decomposed exists. A validity check on the
+candidates -- one deck -- would have preceded the whole design.
+
+---
+
+## 60. Session 33 -- **the DC-headroom filter. Entry 59 named the defect; does fixing it make the analytic proposer work?**
+
+**Written 2026-09-02 BEFORE the re-run.**
+
+### What changed, and it is exactly what entry 59 indicated
+
+Entry 59 measured that **all 80** of entry 58's candidates were
+`out of saturation (tail -100 to -117 mV)` at NOMINAL. `predict_response` is a
+transfer function with no operating point in it, and the inversion inherited
+that blindness. Three changes, all analytic:
+
+1. **A calibrated DC predictor**, `invert_response.dc_margins`, fitted on
+   **4 000 pool designs with MEASURED margins**:
+
+        tail margin   corr 0.9835   median |err| 29.6 mV
+        pair margin   corr 0.9903   median |err| 34.3 mV
+
+2. **A hard filter** at `DC_MARGIN_FLOOR_V = 0.1 V` -- which is `reward_v1.TOL`'s
+   own `saturation` tolerance, not a number chosen here, and ~3x the fit error.
+3. **`vcm_in` is swept** (5 values). Entry 58 pinned it at 1.35, and `vcm_in`
+   sets the tail's `vds` directly, so pinning it pinned the very quantity that
+   killed every candidate.
+4. **The ranking changed from current to DC robustness** -- `min(pair, tail)`.
+   Entry 58 ranked on `i_bias*(1+gm*rs/2)/gm`, which is increasing in current
+   and pushed every candidate to 8 mA where `I/2*RL` ate the tail's headroom.
+   **It measured LINEAR RANGE; the constraint that bound was DC HEADROOM.**
+
+Measured before registering, at zero simulations: **all 16 requests still have
+in-box AND DC-valid solutions**, 340-2178 each, and the surviving candidates
+carry margins of **+0.67 to +0.89 V** on both rails against the 0.1 V floor.
+They are different designs -- **0.5 mA instead of 8 mA, `vcm_in` 1.60 instead
+of 1.35**.
+
+### The experiment
+
+Identical to entry 58 in every other respect: same 16 requests, same `k = 5`,
+same live 4-corner screen, same `V6_SPECS`, same `evaluate_at_points`. **320
+decks.** Entry 58's artifact is preserved; this writes its own.
+
+### Predictions
+
+**Q1 -- THE DIRECT TEST OF THE FIX. At least 80 % of candidate-corner
+evaluations are EVALUABLE** -- i.e. not rejected as out of saturation.
+Confidence **0.85.** This is the one thing the change was built to do, and the
+predictor's 30 mV error against a 0.1 V floor should leave room.
+**Falsifier: under 80 %.**
+
+**Q2 -- THE HEADLINE. `A >= 1`.** Entry 58 scored **0 of 16**; any acceptance
+at all means the method can produce a corner-feasible design. Confidence
+**0.6.** **Falsifier: `A = 0` again.**
+
+**Q3 -- THE BAR. `A >= 6`, matching the library.** Confidence **0.25**,
+deliberately low. I have now been wrong twice about this method, and fixing the
+DC point removes a blocker without saying anything about output swing, which
+entry 53 measured as **92.9 %** of all screen rejections.
+**Falsifier: `A <= 5`.**
+
+**Q4 -- WHAT REPLACES IT. Output-swing compression is the dominant rejection
+reason, over 50 %.** Confidence **0.6.** Shape is solved by construction and DC
+is now filtered, so swing is what should be left. **Falsifier: under 50 %.**
+
+**Q5 -- REGISTERED EXPECTED NULL. No coverage number.** Four corners, not 45.
+
+### The decision rule, before the result
+
+* **Q1 misses** -> the DC predictor is not accurate enough to filter with, and
+  the fit's 30 mV error is the thing to attack.
+* **Q1 hits, Q2 misses** -> the DC point was a real blocker and not the only
+  one; report what replaced it and stop, because that is two consecutive
+  failures for one method.
+* **Q3 hits** -> the analytic proposer matches retrieval **at zero library
+  cost**, which is entry 51's 346-request amortisation intercept removed.
+* **Q1 and Q2 hit, Q3 misses** -> partial success: the method produces feasible
+  designs but fewer than retrieval. Report `A` with the mechanism and let Phase
+  2 (the swing surrogate) be measured on top of it.
+
+### What no outcome may claim
+
+* **Not coverage, not compliance.**
+* **Not that the DC predictor is a measurement.** It is a fitted filter with a
+  stated 30 mV error; `rl/evaluator` still decides.

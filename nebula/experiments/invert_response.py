@@ -310,3 +310,74 @@ def invert_drawn(peaking_db: float, f_peak_hz: float,
         aim_pk = aim_pk - d_pk
         aim_f = aim_f * (2.0 ** -d_oct)
     return best
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# The DC operating point, which the transfer function does not contain.
+# ─────────────────────────────────────────────────────────────────────────────
+#
+# **Entry 59 is why this exists.** `predict_response` is a transfer function: it
+# places a zero and two poles and says nothing about whether the bias it implies
+# can physically exist. The inversion inherited that blindness, and every one of
+# entry 58's 80 candidates came back `out of saturation (tail -100 to -117 mV of
+# vds - vdsat)` -- at NOMINAL, before any corner was involved. Solving the AC
+# response is not sufficient to propose a design.
+#
+# The two constants below are **fitted on 4 000 pool designs with MEASURED
+# margins**, not assumed:
+#
+#     tail margin   corr 0.9835   median |err| 29.6 mV
+#     pair margin   corr 0.9903   median |err| 34.3 mV
+#
+# so this is a calibrated predictor with a stated error, in the same spirit as
+# `prescreen.K_ALPHA`. It is a FILTER, never a measurement: `rl/evaluator`
+# still decides.
+
+#: `vth + vdsat_tail`, fitted. The tail is sized per amp (`s9_yield.
+#: tail_for_design`), so its `vdsat` is roughly constant by construction, which
+#: is why one constant works.
+_DC_TAIL_C: float = 0.8367
+
+#: The input pair's constant, same fit.
+_DC_PAIR_C: float = -0.7664
+
+#: Nominal supply. Imported rather than restated would be better, but
+#: `common.params` is protected (rule 7) -- so it is stated here with its source.
+_VDD_NOM: float = 1.8
+
+#: Margin a candidate must clear to be proposed. **0.1 V is `reward_v1.TOL`'s
+#: own `saturation` tolerance**, not a number chosen here, and it sits ~3x the
+#: 30 mV fit error above zero.
+DC_MARGIN_FLOOR_V: float = 0.1
+
+
+def dc_margins(params: Mapping[str, float],
+               vdd: float = _VDD_NOM) -> tuple[float, float]:
+    """Predicted `(pair_margin_v, tail_margin_v)`. **No SPICE.**
+
+    `pair_margin = (VDD - i_d*rl - vcm_in) - _DC_PAIR_C`
+    `tail_margin = (vcm_in - 2*i_d/gm) - _DC_TAIL_C`
+
+    with `i_d = i_bias/2`, each side of the pair carrying half the tail current
+    (`prescreen._gm_features` states that once, and this follows it).
+
+    Median error ~30 mV against measured pool values, so a caller should demand
+    a margin well above zero -- `DC_MARGIN_FLOOR_V` is the project's own
+    saturation tolerance and is ~3x the fit error.
+    """
+    _require_metres(params)
+    gm, _ = predict_gm(params)
+    i_d = 0.5 * float(params["i_bias"])
+    vcm = float(params["vcm_in"])
+    v_out = float(vdd) - i_d * float(params["rl"])
+    vdsat_in = (2.0 * i_d / gm) if gm > 0.0 else math.inf
+    pair = (v_out - vcm) - _DC_PAIR_C
+    tail = (vcm - vdsat_in) - _DC_TAIL_C
+    return pair, tail
+
+
+def dc_ok(params: Mapping[str, float], floor: float = DC_MARGIN_FLOOR_V,
+          vdd: float = _VDD_NOM) -> bool:
+    """Is this design's operating point plausible? A filter, never a verdict."""
+    pair, tail = dc_margins(params, vdd=vdd)
+    return bool(pair >= floor and tail >= floor)

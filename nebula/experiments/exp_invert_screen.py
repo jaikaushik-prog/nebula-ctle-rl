@@ -53,6 +53,11 @@ K: int = 5
 #: a later run on a finer grid is a different experiment, not this one.
 N_W, N_L, N_I, N_RS = 5, 5, 8, 40
 
+#: `vcm_in` values swept. Entry 58 fixed this at 1.35 and every candidate came
+#: back out of saturation; `vcm_in` sets the tail's `vds` directly, so it is an
+#: axis of the problem rather than a constant.
+VCM_GRID: tuple[float, ...] = (1.1, 1.25, 1.35, 1.5, 1.6)
+
 #: Box edges the candidates must satisfy to be expressible as a `u` vector.
 BOX = {"rs": (50.0, 1000.0), "cs": (1e-13, 1e-11), "rl": (50.0, 800.0)}
 
@@ -71,7 +76,7 @@ def analytic_candidates(f_peak_hz: float, peaking_db: float,
     model by construction, so the ranking spends its only degree of freedom on
     the constraint that actually binds.
     """
-    from nebula.experiments.invert_response import invert
+    from nebula.experiments.invert_response import dc_margins, dc_ok, invert
     from nebula.experiments.prescreen import predict_gm
     from nebula.experiments.s9_yield import PROMOTION_LOADS
     from nebula.rl.contract import u_from_params
@@ -86,19 +91,36 @@ def analytic_candidates(f_peak_hz: float, peaking_db: float,
     for w in ws:
         for l in ls:
             for ib in ibs:
-                bias = {"w_in": float(w), "l_in": float(l), "nf_in": 4.0,
-                        "i_bias": float(ib), "vcm_in": 1.35}
-                gm, gmbs = predict_gm(bias)
-                if gm <= 0.0:
-                    continue
-                for rs in rss:
-                    sol = invert(float(peaking_db), float(f_peak_hz), bias, cl,
-                                 rs=float(rs))
-                    if sol is None or not _in_box(sol):
+                # **`vcm_in` is swept now, and entry 59 is why.** It sets the
+                # tail's `vds` directly, so fixing it at 1.35 fixed the very
+                # quantity that killed every entry-58 candidate.
+                for vcm in VCM_GRID:
+                    bias = {"w_in": float(w), "l_in": float(l), "nf_in": 4.0,
+                            "i_bias": float(ib), "vcm_in": float(vcm)}
+                    gm, gmbs = predict_gm(bias)
+                    if gm <= 0.0:
                         continue
-                    proxy = float(ib) * (1.0 + gm * sol.rs / 2.0) / gm
-                    found.append((proxy, {**bias, "rs": sol.rs, "cs": sol.cs,
-                                          "rl": sol.rl}))
+                    for rs in rss:
+                        sol = invert(float(peaking_db), float(f_peak_hz), bias,
+                                     cl, rs=float(rs))
+                        if sol is None or not _in_box(sol):
+                            continue
+                        params = {**bias, "rs": sol.rs, "cs": sol.cs,
+                                  "rl": sol.rl}
+                        # **THE DC FILTER (entry 59).** `predict_response` is a
+                        # transfer function with no operating point in it, and
+                        # every entry-58 candidate came back 100-117 mV into
+                        # triode. Solving the AC response is not sufficient to
+                        # propose a design.
+                        if not dc_ok(params):
+                            continue
+                        # **Rank on DC ROBUSTNESS, not current.** Entry 58's
+                        # proxy was increasing in `i_bias`, which pushed every
+                        # candidate to 8 mA where `I/2*RL` ate the headroom the
+                        # tail needed. It measured LINEAR RANGE; the constraint
+                        # that bound was DC HEADROOM. This ranks by distance
+                        # from the constraint that actually killed them.
+                        found.append((min(dc_margins(params)), params))
     found.sort(key=lambda t: -t[0])
 
     out: list[list[float]] = []
