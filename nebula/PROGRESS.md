@@ -36,7 +36,7 @@ human in the loop. Deliverables that already exist and run:
 
 | | state |
 |---|---|
-| Test suite | **2377 passed**, 13 deselected, 254 s, measured 2026-09-01 (session 33); one timing-flaky test, **G136** (`python -m pytest tests nebula/tests -q -m "not slow"`). The **system** interpreter, not the conda env — that env has no `torch`, and `ngspice_con.exe` is found by absolute path anyway (G69) |
+| Test suite | **2428 passed**, 13 deselected, 251 s, measured 2026-09-02 (session 33); one timing-flaky test, **G136** (`python -m pytest tests nebula/tests -q -m "not slow"`). The **system** interpreter, not the conda env — that env has no `torch`, and `ngspice_con.exe` is found by absolute path anyway (G69) |
 | Gates G0–G2 | passed |
 | G3 (RL beats random + grid) | **fails one clause** — RL is indistinguishable from random at every budget |
 | G4 (corner-robust design) | met on `V1_SPECS` (7 rows); **not** on the 11 competition rows |
@@ -1513,6 +1513,66 @@ searcher's exploration and kept everything it had learned about which
 direction to move. It scored identically to random -- 13 out of 58 either way.
 The agent's only real contribution had been how widely it looked, not what it
 had learned.**
+
+---
+
+## 5u. PHASE 1 -- THE PASSIVES INVERT IN CLOSED FORM, AND IT PROPOSES **0 of 16**
+
+**2026-09-02 (session 33), `invert_response.py` + `exp_invert_screen.py`,
+320 decks, 210 s.** Pre-registered as entry 58. **Scored 1 of 5.**
+
+### What was built, and it is correct
+
+`prescreen.predict_response` is a one-zero/two-pole model and it **inverts in
+closed form**. With `fp2 = m*fz` the peaking becomes scale-free -- it depends
+only on `(k, m)` -- so: pick `rs` -> `k`; solve `peaking(k,m)` for `m` by
+monotone bisection; then `fz`, `cs` and `rl` are algebra.
+
+Measured at **zero simulations**, and none of this is retracted:
+
+* round trip against the forward model: **24 of 24**, within 0.024 dB and
+  0.004 octaves (the model's own grid step is 0.0091 oct);
+* a design rule the project did not have: **`peaking <= 20*log10(k)`**, so
+  12 dB needs `k > 3.98` and hence a minimum `rs` at a given bias;
+* **all 16 requests have in-box analytic solutions**, 132-813 of an 8 000-point
+  grid, fewest exactly where the search fails.
+
+### And it does not work as a proposer
+
+    A = 0 of 16          (library baseline 6 of 16)
+
+    80 rejections:  38 swing compression     47.5 %
+                    18 S3_f_peak_match       22.5 %
+                    18 S3_peaking_match      22.5 %   -> 52.5 % SHAPE
+                     6 S3_peaking             7.5 %
+                     0 S6_power               0.0 %
+
+**The inversion solves for TT/1.00/27 C. The screen scores four corners at
++-5 % VDD and 0/125 C.** This project has already measured that `f_peak` moves
+up to **0.94 octaves** across corners against a **0.3-octave** match tolerance,
+so a nominal bullseye is a corner miss by construction. *"On-target by
+construction" was construction at the wrong corner.*
+
+The registered branch fires as written: **the fix is corner-aware targeting,
+not a better ranker** -- invert against the worst-case `(gm, k)` over the four
+screen corners rather than the typical one. That changes what `invert` is
+aimed at, not how it works.
+
+### Two things worth keeping from the miss
+
+1. **Q6 was registered before the run and missed instructively.** Every top
+   candidate did sit at `i_bias = 8 mA` = 14.4 mW as predicted, and power was
+   the worst spec **zero times** -- the designs died on shape and swing before
+   power could bind.
+2. **A units defect was caught before it reached a claim.** The first
+   feasibility map passed microns to `predict_gm`, which takes metres and takes
+   `log(l)`: `gm` came back **2.5x** wrong, `gmbs` **7x**, and *the round trip
+   still closed perfectly* because both halves used the same wrong `gm`.
+   `_require_metres` now raises, and a test asserts that self-consistency could
+   never have caught it.
+
+**Any corner-aware successor must be measured against the same 6 of 16, on this
+same screen, before it may be called an improvement.**
 
 ---
 

@@ -12821,3 +12821,53 @@ Not coverage, not compliance — four screen points.
 the full suite has not run since this module was added — entry 58 is holding
 ngspice and G70 forbids running the suite alongside an experiment. It runs
 immediately after entry 58 and the count is reported then.
+
+---
+
+### 2026-09-02 — session 33 (entry 58). **Phase 1: the passives invert in closed form. The proposer scores 0 of 16.**
+
+Pre-registered and **committed before the run** (`1ef93e5`). **Scored 1 of 5.**
+Artifacts `topk_scan_analytic.json`, `invert_feasibility.json`.
+
+**What is correct, and is not retracted** — all measured at zero simulations,
+because they are statements about the model rather than about silicon:
+
+* `prescreen.predict_response` is one-zero/two-pole and **inverts in closed
+  form**. With `fp2 = m*fz` the peaking is scale-free, depending only on
+  `(k, m)`, so the inversion is: pick `rs` → `k`; solve `peaking(k,m)` for `m`
+  by monotone bisection; then `fz`, `cs`, `rl` are algebra.
+* Round trip: **24 of 24** across the S3 box, within 0.024 dB / 0.004 oct.
+* A design rule the project lacked: **`peaking ≤ 20·log10(k)`**.
+* **All 16 requests have in-box analytic solutions**, 132–813 of 8 000.
+
+**What failed.** `A = 0 of 16` against the library's 6, with 80 rejections
+splitting **47.5 % swing / 52.5 % shape**. The inversion solves for
+**TT/1.00/27 °C**; the screen scores four corners at ±5 % VDD and 0/125 °C, and
+`f_peak` moves up to **0.94 octaves** across corners against a **0.3-octave**
+tolerance. *"On-target by construction" was construction at the wrong corner.*
+The registered branch fires: **the fix is corner-aware targeting, not a better
+ranker.**
+
+**Two things worth keeping.** (1) Q6 was registered before the run and missed
+instructively — every top candidate did sit at 8 mA = 14.4 mW as predicted, and
+power was the worst spec **zero times**, because shape and swing killed them
+first. (2) **A units defect was caught before it reached a claim**: the first
+feasibility map passed microns to `predict_gm`, which takes metres and takes
+`log(l)` — `gm` came back **2.5×** wrong, `gmbs` **7×**, and *the round trip
+still closed perfectly* because both halves used the same wrong `gm`.
+`_require_metres` raises now, and `test_invert_response.py` asserts that
+self-consistency could never have caught it.
+
+**New on disk:** `nebula/experiments/invert_response.py`,
+`nebula/experiments/exp_invert_screen.py`, `invert_feasibility.json`,
+`topk_scan_analytic.json`, `nebula/tests/test_invert_response.py` (37 gates).
+`PROGRESS.md` §5u; `CONTINUE_HERE.md` entry-58 block.
+
+**Any corner-aware successor must be measured against the same 6 of 16, on this
+same screen, before it may be called an improvement.**
+
+**Tests: 2391 before; 2428 / 13 deselected after** (250.8 s). The 37 new gates
+are `nebula/tests/test_invert_response.py`. One of them failed first and the
+TEST was wrong, not the code: it asked for 6 dB at a `k` whose ceiling is
+1.10 dB, and `m_for_peaking` correctly refused. Fixed to aim at half of each
+`k`'s own ceiling.

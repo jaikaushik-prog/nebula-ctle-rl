@@ -8,6 +8,33 @@ else in the 22s brief stands.
 
 **14 days to the 15 Sept deadline (as of 2026-09-01). Demo 25 Sept at BITS Goa.**
 
+> **2026-09-02 (session 33). PHASE 1: THE PASSIVES INVERT IN CLOSED FORM, AND
+> THE PROPOSER SCORES 0 OF 16.** Entry 58, **1 of 5**, 320 decks.
+>
+>     A = 0 of 16   (library baseline 6)
+>     80 rejections:  47.5 % swing compression
+>                     52.5 % SHAPE (S3_f_peak_match / S3_peaking_match / S3_peaking)
+>                      0.0 % power
+>
+> **The inversion is correct and is aimed at the wrong operating point.** It
+> solves for **TT/1.00/27 C**; the screen scores four corners at +-5 % VDD and
+> 0/125 C, and `f_peak` moves up to **0.94 octaves** across corners against a
+> **0.3-octave** tolerance. A nominal bullseye is a corner miss by construction.
+>
+> **NOT retracted** (all zero-simulation, statements about the model): the
+> closed-form inversion, **24 of 24** round-trip; the design rule
+> **`peaking <= 20*log10(k)`**; **all 16 requests have in-box analytic
+> solutions** (132-813 of 8 000). **Retracted:** the expectation built on them.
+>
+> **The indicated fix is corner-aware targeting** -- invert against the
+> worst-case `(gm, k)` over the four screen corners, not the typical one -- and
+> **it must be measured against the same 6 of 16 on the same screen** before it
+> may be called an improvement. Read `PROGRESS.md` section 5u.
+>
+> Also here: a units defect caught before it reached a claim (microns into
+> `predict_gm`, `gm` 2.5x wrong, and **the round trip still closed** because
+> both halves used the same wrong `gm`). `_require_metres` raises now.
+
 > **2026-09-01 (session 33). THE RL LINE CLOSES ON A MECHANISM.** Entry 57,
 > **5 of 5**, 58 requests, 12.9 min.
 >

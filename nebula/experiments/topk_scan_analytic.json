@@ -1,0 +1,1607 @@
+{
+ "task": "entry 58: analytic inversion as a proposer",
+ "k": 5,
+ "n_decks": 320,
+ "run_pid": 21824,
+ "run_started_unix": 1788287595.532924,
+ "run_host": "JAI",
+ "wall_clock_s": 210.42251539230347,
+ "requests": [
+  {
+   "index": 0,
+   "peaking_db": 4.0,
+   "f_peak_hz": 1386961840.0848064,
+   "n_candidates": 5,
+   "accepted_rank": null,
+   "candidates": [
+    {
+     "rank": 1,
+     "u": [
+      0.0,
+      1.0,
+      1.0,
+      0.6923076923076922,
+      0.6608275751349826,
+      0.9039746386841155,
+      0.5
+     ],
+     "ok": true,
+     "feasible": false,
+     "reward": -3.750837862206196,
+     "reason": null,
+     "worst_spec": "S3_peaking",
+     "linf_to_library_rank1": 0.8852936708651549
+    },
+    {
+     "rank": 2,
+     "u": [
+      0.0,
+      0.7499999999999998,
+      1.0,
+      0.5897435897435898,
+      0.6905668833356622,
+      0.9701917301915598,
+      0.5
+     ],
+     "ok": true,
+     "feasible": false,
+     "reward": -16.0,
+     "reason": "4 of 4 points unscorable; first: output swing 984.7 mVpp exceeds the linear limit 589.8 mVpp (vout_swing_v=589.8 mVpp). The stage is compressing, so the AC/pole-zero model behind every number in this DeviceResult no longer describes it \u2014 the eye cannot be computed from it. This is the same physical condition .disto reports as collapsing HD3.",
+     "worst_spec": null,
+     "linf_to_library_rank1": 0.6352936708651546
+    },
+    {
+     "rank": 3,
+     "u": [
+      0.0,
+      1.0,
+      0.8571428571428575,
+      0.717948717948718,
+      0.5929211608247669,
+      0.9962716381756923,
+      0.5
+     ],
+     "ok": true,
+     "feasible": false,
+     "reward": -15.5,
+     "reason": "2 of 4 points unscorable; first: output swing 1076.4 mVpp exceeds the linear limit 809.4 mVpp (vout_swing_v=809.4 mVpp). The stage is compressing, so the AC/pole-zero model behind every number in this DeviceResult no longer describes it \u2014 the eye cannot be computed from it. This is the same physical condition .disto reports as collapsing HD3.",
+     "worst_spec": null,
+     "linf_to_library_rank1": 0.8852936708651549
+    },
+    {
+     "rank": 4,
+     "u": [
+      0.0,
+      0.7499999999999998,
+      1.0,
+      0.564102564102564,
+      0.8260865758214874,
+      0.7620876861243042,
+      0.5
+     ],
+     "ok": true,
+     "feasible": false,
+     "reward": -3.0,
+     "reason": null,
+     "worst_spec": "S3_peaking",
+     "linf_to_library_rank1": 0.6352936708651546
+    },
+    {
+     "rank": 5,
+     "u": [
+      0.12383719530530514,
+      1.0,
+      1.0,
+      0.564102564102564,
+      0.7558562054000331,
+      0.8834948506181233,
+      0.5
+     ],
+     "ok": true,
+     "feasible": false,
+     "reward": -15.75,
+     "reason": "3 of 4 points unscorable; first: output swing 1078.7 mVpp exceeds the linear limit 575.0 mVpp (vout_swing_v=575.0 mVpp). The stage is compressing, so the AC/pole-zero model behind every number in this DeviceResult no longer describes it \u2014 the eye cannot be computed from it. This is the same physical condition .disto reports as collapsing HD3.",
+     "worst_spec": null,
+     "linf_to_library_rank1": 0.8852936708651549
+    }
+   ]
+  },
+  {
+   "index": 1,
+   "peaking_db": 4.0,
+   "f_peak_hz": 1626677319.302417,
+   "n_candidates": 5,
+   "accepted_rank": null,
+   "candidates": [
+    {
+     "rank": 1,
+     "u": [
+      0.0,
+      1.0,
+      1.0,
+      0.717948717948718,
+      0.5397298192832319,
+      0.9734075013250719,
+      0.5
+     ],
+     "ok": true,
+     "feasible": false,
+     "reward": -15.5,
+     "reason": "2 of 4 points unscorable; first: output swing 1073.6 mVpp exceeds the linear limit 850.1 mVpp (vout_swing_v=850.1 mVpp). The stage is compressing, so the AC/pole-zero model behind every number in this DeviceResult no longer describes it \u2014 the eye cannot be computed from it. This is the same physical condition .disto reports as collapsing HD3.",
+     "worst_spec": null,
+     "linf_to_library_rank1": 0.7995109745627463
+    },
+    {
+     "rank": 2,
+     "u": [
+      0.0,
+      1.0,
+      1.0,
+      0.6923076923076922,
+      0.6262091256336251,
+      0.8464746386841155,
+      0.5
+     ],
+     "ok": true,
+     "feasible": false,
+     "reward": -3.0,
+     "reason": null,
+     "worst_spec": "S3_peaking",
+     "linf_to_library_rank1": 0.7995109745627463
+    },
+    {
+     "rank": 3,
+     "u": [
+      0.0,
+      1.0,
+      1.0,
+      0.6666666666666667,
+      0.9946965025867127,
+      0.2516416488393634,
+      0.5
+     ],
+     "ok": true,
+     "feasible": false,
+     "reward": -5.0,
+     "reason": null,
+     "worst_spec": "S3_f_peak_match",
+     "linf_to_library_rank1": 0.7995109745627463
+    },
+    {
+     "rank": 4,
+     "u": [
+      0.0,
+      0.7499999999999998,
+      1.0,
+      0.5897435897435898,
+      0.6559484338343048,
+      0.9126917301915599,
+      0.5
+     ],
+     "ok": true,
+     "feasible": false,
+     "reward": -16.0,
+     "reason": "4 of 4 points unscorable; first: output swing 1099.6 mVpp exceeds the linear limit 650.8 mVpp (vout_swing_v=650.8 mVpp). The stage is compressing, so the AC/pole-zero model behind every number in this DeviceResult no longer describes it \u2014 the eye cannot be computed from it. This is the same physical condition .disto reports as collapsing HD3.",
+     "worst_spec": null,
+     "linf_to_library_rank1": 0.7995109745627463
+    },
+    {
+     "rank": 5,
+     "u": [
+      0.12383719530530514,
+      1.0,
+      1.0,
+      0.5897435897435898,
+      0.6286924836519715,
+      0.9629477879708462,
+      0.5
+     ],
+     "ok": true,
+     "feasible": false,
+     "reward": -15.5,
+     "reason": "2 of 4 points unscorable; first: output swing 872.6 mVpp exceeds the linear limit 523.5 mVpp (vout_swing_v=523.5 mVpp). The stage is compressing, so the AC/pole-zero model behind every number in this DeviceResult no longer describes it \u2014 the eye cannot be computed from it. This is the same physical condition .disto reports as collapsing HD3.",
+     "worst_spec": null,
+     "linf_to_library_rank1": 0.7995109745627463
+    }
+   ]
+  },
+  {
+   "index": 2,
+   "peaking_db": 4.0,
+   "f_peak_hz": 1921093976.6100154,
+   "n_candidates": 5,
+   "accepted_rank": null,
+   "candidates": [
+    {
+     "rank": 1,
+     "u": [
+      0.0,
+      1.0,
+      1.0,
+      0.7435897435897437,
+      0.44722505442782595,
+      0.9908616247279267,
+      0.5
+     ],
+     "ok": true,
+     "feasible": false,
+     "reward": -15.5,
+     "reason": "2 of 4 points unscorable; first: output swing 1104.5 mVpp exceeds the linear limit 748.1 mVpp (vout_swing_v=748.1 mVpp). The stage is compressing, so the AC/pole-zero model behind every number in this DeviceResult no longer describes it \u2014 the eye cannot be computed from it. This is the same physical condition .disto reports as collapsing HD3.",
+     "worst_spec": null,
+     "linf_to_library_rank1": 0.8842072636380719
+    },
+    {
+     "rank": 2,
+     "u": [
+      0.0,
+      1.0,
+      1.0,
+      0.717948717948718,
+      0.5036062198035544,
+      0.9134075013250719,
+      0.5
+     ],
+     "ok": true,
+     "feasible": false,
+     "reward": -4.355479546164528,
+     "reason": null,
+     "worst_spec": "S3_peaking",
+     "linf_to_library_rank1": 0.8842072636380719
+    },
+    {
+     "rank": 3,
+     "u": [
+      0.0,
+      1.0,
+      1.0,
+      0.6923076923076922,
+      0.5900855261539467,
+      0.7864746386841155,
+      0.5
+     ],
+     "ok": true,
+     "feasible": false,
+     "reward": -4.724688133333333,
+     "reason": null,
+     "worst_spec": "S3_f_peak_match",
+     "linf_to_library_rank1": 0.8842072636380719
+    },
+    {
+     "rank": 4,
+     "u": [
+      0.0,
+      1.0,
+      1.0,
+      0.6666666666666667,
+      0.958572903107035,
+      0.1916416488393637,
+      0.5
+     ],
+     "ok": true,
+     "feasible": false,
+     "reward": -5.0,
+     "reason": null,
+     "worst_spec": "S3_f_peak_match",
+     "linf_to_library_rank1": 0.8842072636380719
+    },
+    {
+     "rank": 5,
+     "u": [
+      0.0,
+      0.7499999999999998,
+      1.0,
+      0.6153846153846155,
+      0.5506124847760812,
+      0.9511705178485748,
+      0.5
+     ],
+     "ok": true,
+     "feasible": false,
+     "reward": -16.0,
+     "reason": "4 of 4 points unscorable; first: output swing 1063.2 mVpp exceeds the linear limit 503.1 mVpp (vout_swing_v=503.1 mVpp). The stage is compressing, so the AC/pole-zero model behind every number in this DeviceResult no longer describes it \u2014 the eye cannot be computed from it. This is the same physical condition .disto reports as collapsing HD3.",
+     "worst_spec": null,
+     "linf_to_library_rank1": 0.8842072636380719
+    }
+   ]
+  },
+  {
+   "index": 3,
+   "peaking_db": 4.0,
+   "f_peak_hz": 2253126156.5270753,
+   "n_candidates": 5,
+   "accepted_rank": null,
+   "candidates": [
+    {
+     "rank": 1,
+     "u": [
+      0.0,
+      1.0,
+      1.0,
+      0.7692307692307694,
+      0.36891037954123956,
+      0.9902664090765452,
+      0.5
+     ],
+     "ok": true,
+     "feasible": false,
+     "reward": -15.5,
+     "reason": "2 of 4 points unscorable; first: output swing 1100.2 mVpp exceeds the linear limit 746.9 mVpp (vout_swing_v=746.9 mVpp). The stage is compressing, so the AC/pole-zero model behind every number in this DeviceResult no longer describes it \u2014 the eye cannot be computed from it. This is the same physical condition .disto reports as collapsing HD3.",
+     "worst_spec": null,
+     "linf_to_library_rank1": 0.8966666666666667
+    },
+    {
+     "rank": 2,
+     "u": [
+      0.0,
+      1.0,
+      1.0,
+      0.7435897435897437,
+      0.4126066049264677,
+      0.9333616247279268,
+      0.5
+     ],
+     "ok": true,
+     "feasible": false,
+     "reward": -5.5953762000000005,
+     "reason": null,
+     "worst_spec": "S3_f_peak_match",
+     "linf_to_library_rank1": 0.8966666666666667
+    },
+    {
+     "rank": 3,
+     "u": [
+      0.0,
+      1.0,
+      1.0,
+      0.717948717948718,
+      0.4689877703021969,
+      0.8559075013250719,
+      0.5
+     ],
+     "ok": true,
+     "feasible": false,
+     "reward": -4.686622246919158,
+     "reason": null,
+     "worst_spec": "S3_peaking",
+     "linf_to_library_rank1": 0.8966666666666667
+    },
+    {
+     "rank": 4,
+     "u": [
+      0.0,
+      1.0,
+      1.0,
+      0.6923076923076922,
+      0.5554670766525893,
+      0.7289746386841155,
+      0.5
+     ],
+     "ok": true,
+     "feasible": false,
+     "reward": -4.344258927548449,
+     "reason": null,
+     "worst_spec": "S3_peaking",
+     "linf_to_library_rank1": 0.8966666666666667
+    },
+    {
+     "rank": 5,
+     "u": [
+      0.0,
+      1.0,
+      1.0,
+      0.6666666666666667,
+      0.9239544536056769,
+      0.1341416488393637,
+      0.5
+     ],
+     "ok": true,
+     "feasible": false,
+     "reward": -5.0,
+     "reason": null,
+     "worst_spec": "S3_f_peak_match",
+     "linf_to_library_rank1": 0.8966666666666667
+    }
+   ]
+  },
+  {
+   "index": 4,
+   "peaking_db": 6.0,
+   "f_peak_hz": 1386961840.0848064,
+   "n_candidates": 5,
+   "accepted_rank": null,
+   "candidates": [
+    {
+     "rank": 1,
+     "u": [
+      0.0,
+      1.0,
+      1.0,
+      0.8717948717948718,
+      0.5793839240109697,
+      0.9726538497092412,
+      0.5
+     ],
+     "ok": true,
+     "feasible": false,
+     "reward": -15.5,
+     "reason": "2 of 4 points unscorable; first: output swing 1070.2 mVpp exceeds the linear limit 845.8 mVpp (vout_swing_v=845.8 mVpp). The stage is compressing, so the AC/pole-zero model behind every number in this DeviceResult no longer describes it \u2014 the eye cannot be computed from it. This is the same physical condition .disto reports as collapsing HD3.",
+     "worst_spec": null,
+     "linf_to_library_rank1": 1.0
+    },
+    {
+     "rank": 2,
+     "u": [
+      0.0,
+      1.0,
+      1.0,
+      0.846153846153846,
+      0.8342189399839518,
+      0.5629379294011021,
+      0.5
+     ],
+     "ok": true,
+     "feasible": false,
+     "reward": -4.4356463999999995,
+     "reason": null,
+     "worst_spec": "S3_f_peak_match",
+     "linf_to_library_rank1": 1.0
+    },
+    {
+     "rank": 3,
+     "u": [
+      0.0,
+      0.7499999999999998,
+      1.0,
+      0.7435897435897437,
+      0.7349793883484932,
+      0.8447727112350537,
+      0.5
+     ],
+     "ok": true,
+     "feasible": false,
+     "reward": -3.0874603461891197,
+     "reason": null,
+     "worst_spec": "S3_peaking_match",
+     "linf_to_library_rank1": 1.0
+    },
+    {
+     "rank": 4,
+     "u": [
+      0.12383719530530514,
+      1.0,
+      1.0,
+      0.7435897435897437,
+      0.6733107446430547,
+      0.9536056735522587,
+      0.5
+     ],
+     "ok": true,
+     "feasible": false,
+     "reward": -15.5,
+     "reason": "2 of 4 points unscorable; first: output swing 865.9 mVpp exceeds the linear limit 552.7 mVpp (vout_swing_v=552.7 mVpp). The stage is compressing, so the AC/pole-zero model behind every number in this DeviceResult no longer describes it \u2014 the eye cannot be computed from it. This is the same physical condition .disto reports as collapsing HD3.",
+     "worst_spec": null,
+     "linf_to_library_rank1": 1.0
+    },
+    {
+     "rank": 5,
+     "u": [
+      0.0,
+      1.0,
+      0.8571428571428575,
+      0.8717948717948718,
+      0.6168507771020115,
+      0.9055650225171649,
+      0.5
+     ],
+     "ok": true,
+     "feasible": false,
+     "reward": -3.0,
+     "reason": null,
+     "worst_spec": "S3_peaking_match",
+     "linf_to_library_rank1": 1.0
+    }
+   ]
+  },
+  {
+   "index": 5,
+   "peaking_db": 6.0,
+   "f_peak_hz": 1626677319.302417,
+   "n_candidates": 5,
+   "accepted_rank": null,
+   "candidates": [
+    {
+     "rank": 1,
+     "u": [
+      0.0,
+      1.0,
+      1.0,
+      0.8717948717948718,
+      0.5447654745096123,
+      0.9151538497092412,
+      0.5
+     ],
+     "ok": true,
+     "feasible": false,
+     "reward": -3.0113729000000005,
+     "reason": null,
+     "worst_spec": "S3_peaking_match",
+     "linf_to_library_rank1": 0.5616600991646562
+    },
+    {
+     "rank": 2,
+     "u": [
+      0.0,
+      1.0,
+      1.0,
+      0.846153846153846,
+      0.7996004904825935,
+      0.5054379294011021,
+      0.5
+     ],
+     "ok": true,
+     "feasible": false,
+     "reward": -3.6738019336226637,
+     "reason": null,
+     "worst_spec": "S3_f_peak_match",
+     "linf_to_library_rank1": 0.5616600991646562
+    },
+    {
+     "rank": 3,
+     "u": [
+      0.0,
+      0.7499999999999998,
+      1.0,
+      0.7692307692307694,
+      0.577664274653591,
+      0.9777462868857786,
+      0.5
+     ],
+     "ok": true,
+     "feasible": false,
+     "reward": -16.0,
+     "reason": "4 of 4 points unscorable; first: output swing 941.2 mVpp exceeds the linear limit 821.1 mVpp (vout_swing_v=821.1 mVpp). The stage is compressing, so the AC/pole-zero model behind every number in this DeviceResult no longer describes it \u2014 the eye cannot be computed from it. This is the same physical condition .disto reports as collapsing HD3.",
+     "worst_spec": null,
+     "linf_to_library_rank1": 0.4806424896989159
+    },
+    {
+     "rank": 4,
+     "u": [
+      0.0,
+      0.7499999999999998,
+      1.0,
+      0.7435897435897437,
+      0.7003609388471358,
+      0.7872727112350537,
+      0.5
+     ],
+     "ok": true,
+     "feasible": false,
+     "reward": -3.0,
+     "reason": null,
+     "worst_spec": "S3_peaking_match",
+     "linf_to_library_rank1": 0.4806424896989159
+    },
+    {
+     "rank": 5,
+     "u": [
+      0.12383719530530514,
+      1.0,
+      1.0,
+      0.7435897435897437,
+      0.6386922951416965,
+      0.896105673552259,
+      0.5
+     ],
+     "ok": true,
+     "feasible": false,
+     "reward": -16.0,
+     "reason": "4 of 4 points unscorable; first: output swing 1084.0 mVpp exceeds the linear limit 520.1 mVpp (vout_swing_v=520.1 mVpp). The stage is compressing, so the AC/pole-zero model behind every number in this DeviceResult no longer describes it \u2014 the eye cannot be computed from it. This is the same physical condition .disto reports as collapsing HD3.",
+     "worst_spec": null,
+     "linf_to_library_rank1": 0.5616600991646562
+    }
+   ]
+  },
+  {
+   "index": 6,
+   "peaking_db": 6.0,
+   "f_peak_hz": 1921093976.6100154,
+   "n_candidates": 5,
+   "accepted_rank": null,
+   "candidates": [
+    {
+     "rank": 1,
+     "u": [
+      0.0,
+      1.0,
+      1.0,
+      0.8974358974358976,
+      0.4279024691561919,
+      0.976234238629241,
+      0.5
+     ],
+     "ok": true,
+     "feasible": false,
+     "reward": -15.5,
+     "reason": "2 of 4 points unscorable; first: output swing 1071.4 mVpp exceeds the linear limit 834.5 mVpp (vout_swing_v=834.5 mVpp). The stage is compressing, so the AC/pole-zero model behind every number in this DeviceResult no longer describes it \u2014 the eye cannot be computed from it. This is the same physical condition .disto reports as collapsing HD3.",
+     "worst_spec": null,
+     "linf_to_library_rank1": 0.8103809378895352
+    },
+    {
+     "rank": 2,
+     "u": [
+      0.0,
+      1.0,
+      1.0,
+      0.8717948717948718,
+      0.5086418750299347,
+      0.8551538497092411,
+      0.5
+     ],
+     "ok": true,
+     "feasible": false,
+     "reward": -3.6315426669166353,
+     "reason": null,
+     "worst_spec": "S3_peaking_match",
+     "linf_to_library_rank1": 0.8103809378895352
+    },
+    {
+     "rank": 3,
+     "u": [
+      0.0,
+      1.0,
+      1.0,
+      0.846153846153846,
+      0.7634768910029159,
+      0.44543792940110205,
+      0.5
+     ],
+     "ok": true,
+     "feasible": false,
+     "reward": -3.878314609300076,
+     "reason": null,
+     "worst_spec": "S3_f_peak_match",
+     "linf_to_library_rank1": 0.8103809378895352
+    },
+    {
+     "rank": 4,
+     "u": [
+      0.0,
+      0.7499999999999998,
+      1.0,
+      0.7692307692307694,
+      0.5415406751739135,
+      0.9177462868857788,
+      0.5
+     ],
+     "ok": true,
+     "feasible": false,
+     "reward": -16.0,
+     "reason": "4 of 4 points unscorable; first: output swing 1089.4 mVpp exceeds the linear limit 628.3 mVpp (vout_swing_v=628.3 mVpp). The stage is compressing, so the AC/pole-zero model behind every number in this DeviceResult no longer describes it \u2014 the eye cannot be computed from it. This is the same physical condition .disto reports as collapsing HD3.",
+     "worst_spec": null,
+     "linf_to_library_rank1": 0.8103809378895352
+    },
+    {
+     "rank": 5,
+     "u": [
+      0.12383719530530514,
+      1.0,
+      1.0,
+      0.7692307692307694,
+      0.5164309065867776,
+      0.9660949987215206,
+      0.5
+     ],
+     "ok": true,
+     "feasible": false,
+     "reward": -15.5,
+     "reason": "2 of 4 points unscorable; first: output swing 864.3 mVpp exceeds the linear limit 519.4 mVpp (vout_swing_v=519.4 mVpp). The stage is compressing, so the AC/pole-zero model behind every number in this DeviceResult no longer describes it \u2014 the eye cannot be computed from it. This is the same physical condition .disto reports as collapsing HD3.",
+     "worst_spec": null,
+     "linf_to_library_rank1": 0.8103809378895352
+    }
+   ]
+  },
+  {
+   "index": 7,
+   "peaking_db": 6.0,
+   "f_peak_hz": 2253126156.5270753,
+   "n_candidates": 5,
+   "accepted_rank": null,
+   "candidates": [
+    {
+     "rank": 1,
+     "u": [
+      0.0,
+      1.0,
+      1.0,
+      0.923076923076923,
+      0.34014260336141267,
+      0.9945039476765354,
+      0.5
+     ],
+     "ok": true,
+     "feasible": false,
+     "reward": -15.5,
+     "reason": "2 of 4 points unscorable; first: output swing 1105.6 mVpp exceeds the linear limit 717.8 mVpp (vout_swing_v=717.8 mVpp). The stage is compressing, so the AC/pole-zero model behind every number in this DeviceResult no longer describes it \u2014 the eye cannot be computed from it. This is the same physical condition .disto reports as collapsing HD3.",
+     "worst_spec": null,
+     "linf_to_library_rank1": 0.7303643525593758
+    },
+    {
+     "rank": 2,
+     "u": [
+      0.0,
+      1.0,
+      1.0,
+      0.8974358974358976,
+      0.39328401965483367,
+      0.918734238629241,
+      0.5
+     ],
+     "ok": true,
+     "feasible": false,
+     "reward": -5.3470831,
+     "reason": null,
+     "worst_spec": "S3_f_peak_match",
+     "linf_to_library_rank1": 0.7303643525593758
+    },
+    {
+     "rank": 3,
+     "u": [
+      0.0,
+      1.0,
+      1.0,
+      0.8717948717948718,
+      0.4740234255285765,
+      0.7976538497092411,
+      0.5
+     ],
+     "ok": true,
+     "feasible": false,
+     "reward": -5.0,
+     "reason": null,
+     "worst_spec": "S3_peaking_match",
+     "linf_to_library_rank1": 0.7303643525593758
+    },
+    {
+     "rank": 4,
+     "u": [
+      0.0,
+      1.0,
+      1.0,
+      0.846153846153846,
+      0.7288584415015578,
+      0.38793792940110206,
+      0.5
+     ],
+     "ok": true,
+     "feasible": false,
+     "reward": -4.451349333333333,
+     "reason": null,
+     "worst_spec": "S3_f_peak_match",
+     "linf_to_library_rank1": 0.7303643525593758
+    },
+    {
+     "rank": 5,
+     "u": [
+      0.0,
+      0.7499999999999998,
+      1.0,
+      0.7948717948717949,
+      0.4418528877956649,
+      0.9555330810023069,
+      0.5
+     ],
+     "ok": true,
+     "feasible": false,
+     "reward": -16.0,
+     "reason": "4 of 4 points unscorable; first: output swing 1042.7 mVpp exceeds the linear limit 504.4 mVpp (vout_swing_v=504.4 mVpp). The stage is compressing, so the AC/pole-zero model behind every number in this DeviceResult no longer describes it \u2014 the eye cannot be computed from it. This is the same physical condition .disto reports as collapsing HD3.",
+     "worst_spec": null,
+     "linf_to_library_rank1": 0.7303643525593758
+    }
+   ]
+  },
+  {
+   "index": 8,
+   "peaking_db": 8.0,
+   "f_peak_hz": 1386961840.0848064,
+   "n_candidates": 5,
+   "accepted_rank": null,
+   "candidates": [
+    {
+     "rank": 1,
+     "u": [
+      0.0,
+      1.0,
+      1.0,
+      1.0,
+      0.5917490302377939,
+      0.9132779226454363,
+      0.5
+     ],
+     "ok": true,
+     "feasible": false,
+     "reward": -3.8772718664832344,
+     "reason": null,
+     "worst_spec": "S3_peaking_match",
+     "linf_to_library_rank1": 0.8304891863394903
+    },
+    {
+     "rank": 2,
+     "u": [
+      0.0,
+      0.7499999999999998,
+      1.0,
+      0.8717948717948718,
+      0.8613757271677693,
+      0.5945372603409793,
+      0.5
+     ],
+     "ok": true,
+     "feasible": false,
+     "reward": -3.216870833453462,
+     "reason": null,
+     "worst_spec": "S3_peaking_match",
+     "linf_to_library_rank1": 0.5804891863394901
+    },
+    {
+     "rank": 3,
+     "u": [
+      0.12383719530530514,
+      1.0,
+      1.0,
+      0.8717948717948718,
+      0.6934578994996812,
+      0.8810211167015253,
+      0.5
+     ],
+     "ok": true,
+     "feasible": false,
+     "reward": -15.5,
+     "reason": "2 of 4 points unscorable; first: output swing 1054.8 mVpp exceeds the linear limit 578.5 mVpp (vout_swing_v=578.5 mVpp). The stage is compressing, so the AC/pole-zero model behind every number in this DeviceResult no longer describes it \u2014 the eye cannot be computed from it. This is the same physical condition .disto reports as collapsing HD3.",
+     "worst_spec": null,
+     "linf_to_library_rank1": 0.8304891863394903
+    },
+    {
+     "rank": 4,
+     "u": [
+      0.0,
+      1.0,
+      0.8571428571428575,
+      1.0,
+      0.6651654020967581,
+      0.7855938284667723,
+      0.5
+     ],
+     "ok": true,
+     "feasible": false,
+     "reward": -5.0,
+     "reason": null,
+     "worst_spec": "S3_f_peak_match",
+     "linf_to_library_rank1": 0.8304891863394903
+    },
+    {
+     "rank": 5,
+     "u": [
+      0.0,
+      0.49999999999999956,
+      1.0,
+      0.7692307692307694,
+      0.7903750520051546,
+      0.828470697083622,
+      0.5
+     ],
+     "ok": true,
+     "feasible": false,
+     "reward": -15.75,
+     "reason": "3 of 4 points unscorable; first: output swing 970.2 mVpp exceeds the linear limit 684.7 mVpp (vout_swing_v=684.7 mVpp). The stage is compressing, so the AC/pole-zero model behind every number in this DeviceResult no longer describes it \u2014 the eye cannot be computed from it. This is the same physical condition .disto reports as collapsing HD3.",
+     "worst_spec": null,
+     "linf_to_library_rank1": 0.4403508947707091
+    }
+   ]
+  },
+  {
+   "index": 9,
+   "peaking_db": 8.0,
+   "f_peak_hz": 1626677319.302417,
+   "n_candidates": 5,
+   "accepted_rank": null,
+   "candidates": [
+    {
+     "rank": 1,
+     "u": [
+      0.0,
+      1.0,
+      1.0,
+      1.0,
+      0.5571305807364356,
+      0.8557779226454364,
+      0.5
+     ],
+     "ok": true,
+     "feasible": false,
+     "reward": -4.135710170301755,
+     "reason": null,
+     "worst_spec": "S3_peaking_match",
+     "linf_to_library_rank1": 0.5098230448659519
+    },
+    {
+     "rank": 2,
+     "u": [
+      0.0,
+      0.7499999999999998,
+      1.0,
+      0.8974358974358976,
+      0.57216231680498,
+      0.949193943814283,
+      0.5
+     ],
+     "ok": true,
+     "feasible": false,
+     "reward": -16.0,
+     "reason": "4 of 4 points unscorable; first: output swing 1052.2 mVpp exceeds the linear limit 512.9 mVpp (vout_swing_v=512.9 mVpp). The stage is compressing, so the AC/pole-zero model behind every number in this DeviceResult no longer describes it \u2014 the eye cannot be computed from it. This is the same physical condition .disto reports as collapsing HD3.",
+     "worst_spec": null,
+     "linf_to_library_rank1": 0.5098230448659519
+    },
+    {
+     "rank": 3,
+     "u": [
+      0.0,
+      0.7499999999999998,
+      1.0,
+      0.8717948717948718,
+      0.826757277666411,
+      0.5370372603409793,
+      0.5
+     ],
+     "ok": true,
+     "feasible": false,
+     "reward": -5.0,
+     "reason": null,
+     "worst_spec": "S3_peaking_match",
+     "linf_to_library_rank1": 0.5098230448659519
+    },
+    {
+     "rank": 4,
+     "u": [
+      0.12383719530530514,
+      1.0,
+      1.0,
+      0.8717948717948718,
+      0.658839449998323,
+      0.8235211167015253,
+      0.5
+     ],
+     "ok": true,
+     "feasible": false,
+     "reward": -15.5,
+     "reason": "2 of 4 points unscorable; first: output swing 972.4 mVpp exceeds the linear limit 872.6 mVpp (vout_swing_v=872.6 mVpp). The stage is compressing, so the AC/pole-zero model behind every number in this DeviceResult no longer describes it \u2014 the eye cannot be computed from it. This is the same physical condition .disto reports as collapsing HD3.",
+     "worst_spec": null,
+     "linf_to_library_rank1": 0.38598584956064674
+    },
+    {
+     "rank": 5,
+     "u": [
+      0.0,
+      1.0,
+      0.8571428571428575,
+      1.0,
+      0.6305469525954007,
+      0.7280938284667723,
+      0.5
+     ],
+     "ok": true,
+     "feasible": false,
+     "reward": -4.631059,
+     "reason": null,
+     "worst_spec": "S3_f_peak_match",
+     "linf_to_library_rank1": 0.5098230448659519
+    }
+   ]
+  },
+  {
+   "index": 10,
+   "peaking_db": 8.0,
+   "f_peak_hz": 1921093976.6100154,
+   "n_candidates": 5,
+   "accepted_rank": null,
+   "candidates": [
+    {
+     "rank": 1,
+     "u": [
+      0.0,
+      1.0,
+      1.0,
+      1.0,
+      0.521006981256758,
+      0.7957779226454362,
+      0.5
+     ],
+     "ok": true,
+     "feasible": false,
+     "reward": -5.0,
+     "reason": null,
+     "worst_spec": "S3_peaking_match",
+     "linf_to_library_rank1": 0.6353359525675724
+    },
+    {
+     "rank": 2,
+     "u": [
+      0.0,
+      0.7499999999999998,
+      1.0,
+      0.8974358974358976,
+      0.5360387173253023,
+      0.8891939438142832,
+      0.5
+     ],
+     "ok": true,
+     "feasible": false,
+     "reward": -15.5,
+     "reason": "2 of 4 points unscorable; first: output swing 1061.7 mVpp exceeds the linear limit 766.7 mVpp (vout_swing_v=766.7 mVpp). The stage is compressing, so the AC/pole-zero model behind every number in this DeviceResult no longer describes it \u2014 the eye cannot be computed from it. This is the same physical condition .disto reports as collapsing HD3.",
+     "worst_spec": null,
+     "linf_to_library_rank1": 0.6353359525675724
+    },
+    {
+     "rank": 3,
+     "u": [
+      0.12383719530530514,
+      1.0,
+      1.0,
+      0.8974358974358976,
+      0.5023147192486003,
+      0.9530127671243661,
+      0.5
+     ],
+     "ok": true,
+     "feasible": false,
+     "reward": -15.5,
+     "reason": "2 of 4 points unscorable; first: output swing 852.6 mVpp exceeds the linear limit 549.6 mVpp (vout_swing_v=549.6 mVpp). The stage is compressing, so the AC/pole-zero model behind every number in this DeviceResult no longer describes it \u2014 the eye cannot be computed from it. This is the same physical condition .disto reports as collapsing HD3.",
+     "worst_spec": null,
+     "linf_to_library_rank1": 0.6353359525675724
+    },
+    {
+     "rank": 4,
+     "u": [
+      0.0,
+      0.7499999999999998,
+      1.0,
+      0.8717948717948718,
+      0.7906336781867335,
+      0.47703726034097926,
+      0.5
+     ],
+     "ok": true,
+     "feasible": false,
+     "reward": -5.028805809722916,
+     "reason": null,
+     "worst_spec": "S3_f_peak_match",
+     "linf_to_library_rank1": 0.6353359525675724
+    },
+    {
+     "rank": 5,
+     "u": [
+      0.12383719530530514,
+      1.0,
+      1.0,
+      0.8717948717948718,
+      0.6227158505186454,
+      0.7635211167015256,
+      0.5
+     ],
+     "ok": true,
+     "feasible": false,
+     "reward": -5.0,
+     "reason": null,
+     "worst_spec": "S3_f_peak_match",
+     "linf_to_library_rank1": 0.6353359525675724
+    }
+   ]
+  },
+  {
+   "index": 11,
+   "peaking_db": 8.0,
+   "f_peak_hz": 2253126156.5270753,
+   "n_candidates": 5,
+   "accepted_rank": null,
+   "candidates": [
+    {
+     "rank": 1,
+     "u": [
+      0.0,
+      1.0,
+      1.0,
+      1.0,
+      0.4863885317554006,
+      0.7382779226454363,
+      0.5
+     ],
+     "ok": true,
+     "feasible": false,
+     "reward": -4.979862,
+     "reason": null,
+     "worst_spec": "S3_f_peak_match",
+     "linf_to_library_rank1": 0.9717827101247247
+    },
+    {
+     "rank": 2,
+     "u": [
+      0.0,
+      0.7499999999999998,
+      1.0,
+      0.923076923076923,
+      0.4220775686594135,
+      0.9532630276397854,
+      0.5
+     ],
+     "ok": true,
+     "feasible": false,
+     "reward": -16.0,
+     "reason": "4 of 4 points unscorable; first: output swing 1048.6 mVpp exceeds the linear limit 507.8 mVpp (vout_swing_v=507.8 mVpp). The stage is compressing, so the AC/pole-zero model behind every number in this DeviceResult no longer describes it \u2014 the eye cannot be computed from it. This is the same physical condition .disto reports as collapsing HD3.",
+     "worst_spec": null,
+     "linf_to_library_rank1": 0.9055042348244378
+    },
+    {
+     "rank": 3,
+     "u": [
+      0.12383719530530514,
+      1.0,
+      1.0,
+      0.923076923076923,
+      0.4042653648353685,
+      0.990874682832155,
+      0.5
+     ],
+     "ok": true,
+     "feasible": false,
+     "reward": -15.5,
+     "reason": "2 of 4 points unscorable; first: output swing 855.6 mVpp exceeds the linear limit 465.7 mVpp (vout_swing_v=465.7 mVpp). The stage is compressing, so the AC/pole-zero model behind every number in this DeviceResult no longer describes it \u2014 the eye cannot be computed from it. This is the same physical condition .disto reports as collapsing HD3.",
+     "worst_spec": null,
+     "linf_to_library_rank1": 0.9717827101247247
+    },
+    {
+     "rank": 4,
+     "u": [
+      0.0,
+      0.7499999999999998,
+      1.0,
+      0.8974358974358976,
+      0.5014202678239441,
+      0.8316939438142833,
+      0.5
+     ],
+     "ok": true,
+     "feasible": false,
+     "reward": -3.647500530850043,
+     "reason": null,
+     "worst_spec": "S3_peaking_match",
+     "linf_to_library_rank1": 0.9055042348244378
+    },
+    {
+     "rank": 5,
+     "u": [
+      0.12383719530530514,
+      1.0,
+      1.0,
+      0.8974358974358976,
+      0.4676962697472428,
+      0.8955127671243661,
+      0.5
+     ],
+     "ok": true,
+     "feasible": false,
+     "reward": -16.0,
+     "reason": "4 of 4 points unscorable; first: output swing 1063.8 mVpp exceeds the linear limit 516.7 mVpp (vout_swing_v=516.7 mVpp). The stage is compressing, so the AC/pole-zero model behind every number in this DeviceResult no longer describes it \u2014 the eye cannot be computed from it. This is the same physical condition .disto reports as collapsing HD3.",
+     "worst_spec": null,
+     "linf_to_library_rank1": 0.9717827101247247
+    }
+   ]
+  },
+  {
+   "index": 12,
+   "peaking_db": 10.0,
+   "f_peak_hz": 1386961840.0848064,
+   "n_candidates": 5,
+   "accepted_rank": null,
+   "candidates": [
+    {
+     "rank": 1,
+     "u": [
+      0.0,
+      0.7499999999999998,
+      1.0,
+      1.0,
+      0.6762489059201187,
+      0.8654581149882866,
+      0.5
+     ],
+     "ok": true,
+     "feasible": false,
+     "reward": -15.5,
+     "reason": "2 of 4 points unscorable; first: output swing 1012.7 mVpp exceeds the linear limit 922.7 mVpp (vout_swing_v=922.7 mVpp). The stage is compressing, so the AC/pole-zero model behind every number in this DeviceResult no longer describes it \u2014 the eye cannot be computed from it. This is the same physical condition .disto reports as collapsing HD3.",
+     "worst_spec": null,
+     "linf_to_library_rank1": 0.7981838163895383
+    },
+    {
+     "rank": 2,
+     "u": [
+      0.12383719530530514,
+      1.0,
+      1.0,
+      1.0,
+      0.605619703448352,
+      0.9914312485773767,
+      0.5
+     ],
+     "ok": true,
+     "feasible": false,
+     "reward": -15.5,
+     "reason": "2 of 4 points unscorable; first: output swing 858.7 mVpp exceeds the linear limit 476.0 mVpp (vout_swing_v=476.0 mVpp). The stage is compressing, so the AC/pole-zero model behind every number in this DeviceResult no longer describes it \u2014 the eye cannot be computed from it. This is the same physical condition .disto reports as collapsing HD3.",
+     "worst_spec": null,
+     "linf_to_library_rank1": 0.7981838163895383
+    },
+    {
+     "rank": 3,
+     "u": [
+      0.0,
+      0.49999999999999956,
+      1.0,
+      0.8974358974358976,
+      0.6895926859864523,
+      0.9600416882389726,
+      0.5
+     ],
+     "ok": true,
+     "feasible": false,
+     "reward": -3.753965471581739,
+     "reason": null,
+     "worst_spec": "S3_peaking_match",
+     "linf_to_library_rank1": 0.7981838163895383
+    },
+    {
+     "rank": 4,
+     "u": [
+      0.12383719530530514,
+      0.7499999999999998,
+      1.0,
+      0.8717948717948718,
+      0.8979736534961612,
+      0.6293321884929299,
+      0.5
+     ],
+     "ok": true,
+     "feasible": false,
+     "reward": -3.570275317458769,
+     "reason": null,
+     "worst_spec": "S3_peaking_match",
+     "linf_to_library_rank1": 0.7981838163895383
+    },
+    {
+     "rank": 5,
+     "u": [
+      0.3090169943749474,
+      1.0,
+      1.0,
+      0.8717948717948718,
+      0.7480574894366903,
+      0.8857395669653919,
+      0.5
+     ],
+     "ok": true,
+     "feasible": false,
+     "reward": -15.5,
+     "reason": "2 of 4 points unscorable; first: output swing 803.4 mVpp exceeds the linear limit 483.4 mVpp (vout_swing_v=483.4 mVpp). The stage is compressing, so the AC/pole-zero model behind every number in this DeviceResult no longer describes it \u2014 the eye cannot be computed from it. This is the same physical condition .disto reports as collapsing HD3.",
+     "worst_spec": null,
+     "linf_to_library_rank1": 0.7981838163895383
+    }
+   ]
+  },
+  {
+   "index": 13,
+   "peaking_db": 10.0,
+   "f_peak_hz": 1626677319.302417,
+   "n_candidates": 5,
+   "accepted_rank": null,
+   "candidates": [
+    {
+     "rank": 1,
+     "u": [
+      0.0,
+      0.7499999999999998,
+      1.0,
+      1.0,
+      0.6416304564187604,
+      0.8079581149882866,
+      0.5
+     ],
+     "ok": true,
+     "feasible": false,
+     "reward": -3.036973275005016,
+     "reason": null,
+     "worst_spec": "S3_peaking_match",
+     "linf_to_library_rank1": 0.95
+    },
+    {
+     "rank": 2,
+     "u": [
+      0.12383719530530514,
+      1.0,
+      1.0,
+      1.0,
+      0.5710012539469946,
+      0.9339312485773767,
+      0.5
+     ],
+     "ok": true,
+     "feasible": false,
+     "reward": -16.0,
+     "reason": "4 of 4 points unscorable; first: output swing 952.3 mVpp exceeds the linear limit 645.0 mVpp (vout_swing_v=645.0 mVpp). The stage is compressing, so the AC/pole-zero model behind every number in this DeviceResult no longer describes it \u2014 the eye cannot be computed from it. This is the same physical condition .disto reports as collapsing HD3.",
+     "worst_spec": null,
+     "linf_to_library_rank1": 0.95
+    },
+    {
+     "rank": 3,
+     "u": [
+      0.0,
+      0.49999999999999956,
+      1.0,
+      0.8974358974358976,
+      0.6549742364850949,
+      0.9025416882389726,
+      0.5
+     ],
+     "ok": true,
+     "feasible": false,
+     "reward": -15.5,
+     "reason": "2 of 4 points unscorable; first: output swing 885.4 mVpp exceeds the linear limit 573.4 mVpp (vout_swing_v=573.4 mVpp). The stage is compressing, so the AC/pole-zero model behind every number in this DeviceResult no longer describes it \u2014 the eye cannot be computed from it. This is the same physical condition .disto reports as collapsing HD3.",
+     "worst_spec": null,
+     "linf_to_library_rank1": 0.95
+    },
+    {
+     "rank": 4,
+     "u": [
+      0.12383719530530514,
+      0.7499999999999998,
+      1.0,
+      0.8974358974358976,
+      0.6162410778085071,
+      0.9738036082361212,
+      0.5
+     ],
+     "ok": true,
+     "feasible": false,
+     "reward": -6.467218110275803,
+     "reason": null,
+     "worst_spec": "S3_f_peak_match",
+     "linf_to_library_rank1": 0.95
+    },
+    {
+     "rank": 5,
+     "u": [
+      0.12383719530530514,
+      0.7499999999999998,
+      1.0,
+      0.8717948717948718,
+      0.863355203994803,
+      0.5718321884929299,
+      0.5
+     ],
+     "ok": true,
+     "feasible": false,
+     "reward": -3.0,
+     "reason": null,
+     "worst_spec": "S3_peaking_match",
+     "linf_to_library_rank1": 0.95
+    }
+   ]
+  },
+  {
+   "index": 14,
+   "peaking_db": 10.0,
+   "f_peak_hz": 1921093976.6100154,
+   "n_candidates": 5,
+   "accepted_rank": null,
+   "candidates": [
+    {
+     "rank": 1,
+     "u": [
+      0.0,
+      0.7499999999999998,
+      1.0,
+      1.0,
+      0.6055068569390828,
+      0.7479581149882868,
+      0.5
+     ],
+     "ok": true,
+     "feasible": false,
+     "reward": -3.0,
+     "reason": null,
+     "worst_spec": "S3_peaking_match",
+     "linf_to_library_rank1": 0.7904620160768118
+    },
+    {
+     "rank": 2,
+     "u": [
+      0.12383719530530514,
+      1.0,
+      1.0,
+      1.0,
+      0.534877654467317,
+      0.8739312485773769,
+      0.5
+     ],
+     "ok": true,
+     "feasible": false,
+     "reward": -15.5,
+     "reason": "2 of 4 points unscorable; first: output swing 1045.2 mVpp exceeds the linear limit 617.9 mVpp (vout_swing_v=617.9 mVpp). The stage is compressing, so the AC/pole-zero model behind every number in this DeviceResult no longer describes it \u2014 the eye cannot be computed from it. This is the same physical condition .disto reports as collapsing HD3.",
+     "worst_spec": null,
+     "linf_to_library_rank1": 0.978647071112781
+    },
+    {
+     "rank": 3,
+     "u": [
+      0.0,
+      0.49999999999999956,
+      1.0,
+      0.923076923076923,
+      0.5194540729309888,
+      0.9994470104428942,
+      0.5
+     ],
+     "ok": true,
+     "feasible": false,
+     "reward": -6.5435982908740735,
+     "reason": null,
+     "worst_spec": "S3_f_peak_match",
+     "linf_to_library_rank1": 0.7904620160768118
+    },
+    {
+     "rank": 4,
+     "u": [
+      0.0,
+      0.49999999999999956,
+      1.0,
+      0.8974358974358976,
+      0.6188506370054165,
+      0.8425416882389726,
+      0.5
+     ],
+     "ok": true,
+     "feasible": false,
+     "reward": -16.0,
+     "reason": "4 of 4 points unscorable; first: output swing 952.9 mVpp exceeds the linear limit 629.8 mVpp (vout_swing_v=629.8 mVpp). The stage is compressing, so the AC/pole-zero model behind every number in this DeviceResult no longer describes it \u2014 the eye cannot be computed from it. This is the same physical condition .disto reports as collapsing HD3.",
+     "worst_spec": null,
+     "linf_to_library_rank1": 0.7904620160768118
+    },
+    {
+     "rank": 5,
+     "u": [
+      0.12383719530530514,
+      0.7499999999999998,
+      1.0,
+      0.8974358974358976,
+      0.5801174783288295,
+      0.9138036082361214,
+      0.5
+     ],
+     "ok": true,
+     "feasible": false,
+     "reward": -15.5,
+     "reason": "2 of 4 points unscorable; first: output swing 804.0 mVpp exceeds the linear limit 596.5 mVpp (vout_swing_v=596.5 mVpp). The stage is compressing, so the AC/pole-zero model behind every number in this DeviceResult no longer describes it \u2014 the eye cannot be computed from it. This is the same physical condition .disto reports as collapsing HD3.",
+     "worst_spec": null,
+     "linf_to_library_rank1": 0.7904620160768118
+    }
+   ]
+  },
+  {
+   "index": 15,
+   "peaking_db": 10.0,
+   "f_peak_hz": 2253126156.5270753,
+   "n_candidates": 5,
+   "accepted_rank": null,
+   "candidates": [
+    {
+     "rank": 1,
+     "u": [
+      0.0,
+      0.7499999999999998,
+      1.0,
+      1.0,
+      0.5708884074377245,
+      0.6904581149882869,
+      0.5
+     ],
+     "ok": true,
+     "feasible": false,
+     "reward": -3.2791141681735034,
+     "reason": null,
+     "worst_spec": "S3_peaking_match",
+     "linf_to_library_rank1": 0.3430347404400822
+    },
+    {
+     "rank": 2,
+     "u": [
+      0.12383719530530514,
+      1.0,
+      1.0,
+      1.0,
+      0.5002592049659588,
+      0.816431248577377,
+      0.5
+     ],
+     "ok": true,
+     "feasible": false,
+     "reward": -15.5,
+     "reason": "2 of 4 points unscorable; first: output swing 950.8 mVpp exceeds the linear limit 908.1 mVpp (vout_swing_v=908.1 mVpp). The stage is compressing, so the AC/pole-zero model behind every number in this DeviceResult no longer describes it \u2014 the eye cannot be computed from it. This is the same physical condition .disto reports as collapsing HD3.",
+     "worst_spec": null,
+     "linf_to_library_rank1": 0.32645812763857485
+    },
+    {
+     "rank": 3,
+     "u": [
+      0.0,
+      0.49999999999999956,
+      1.0,
+      0.923076923076923,
+      0.48483562342963127,
+      0.9419470104428942,
+      0.5
+     ],
+     "ok": true,
+     "feasible": false,
+     "reward": -15.5,
+     "reason": "2 of 4 points unscorable; first: output swing 847.2 mVpp exceeds the linear limit 569.0 mVpp (vout_swing_v=569.0 mVpp). The stage is compressing, so the AC/pole-zero model behind every number in this DeviceResult no longer describes it \u2014 the eye cannot be computed from it. This is the same physical condition .disto reports as collapsing HD3.",
+     "worst_spec": null,
+     "linf_to_library_rank1": 0.4144757920030747
+    },
+    {
+     "rank": 4,
+     "u": [
+      0.12383719530530514,
+      0.7499999999999998,
+      1.0,
+      0.923076923076923,
+      0.4676791886301251,
+      0.9775282983975918,
+      0.5
+     ],
+     "ok": true,
+     "feasible": false,
+     "reward": -6.773460022523255,
+     "reason": null,
+     "worst_spec": "S3_f_peak_match",
+     "linf_to_library_rank1": 0.45005707995777233
+    },
+    {
+     "rank": 5,
+     "u": [
+      0.0,
+      0.49999999999999956,
+      1.0,
+      0.8974358974358976,
+      0.584232187504059,
+      0.7850416882389729,
+      0.5
+     ],
+     "ok": true,
+     "feasible": false,
+     "reward": -15.25,
+     "reason": "1 of 4 points unscorable; first: output swing 924.5 mVpp exceeds the linear limit 907.5 mVpp (vout_swing_v=907.5 mVpp). The stage is compressing, so the AC/pole-zero model behind every number in this DeviceResult no longer describes it \u2014 the eye cannot be computed from it. This is the same physical condition .disto reports as collapsing HD3.",
+     "worst_spec": null,
+     "linf_to_library_rank1": 0.3430347404400822
+    }
+   ]
+  }
+ ],
+ "analysis": {
+  "A": 0,
+  "library_baseline": 6,
+  "n_rejected": 80,
+  "frac_swing": 0.475,
+  "frac_shape_match": 0.45,
+  "min_linf_to_library": 0.32645812763857485,
+  "Q1_at_least_library": false,
+  "Q2_swing_dominates": false,
+  "Q3_shape_survives": false,
+  "Q4_not_the_library": true
+ }
+}

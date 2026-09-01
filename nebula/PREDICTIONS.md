@@ -10429,3 +10429,79 @@ about `moved_up`, this is an observation and **not a result**.
 * **`SPREAD` must not now be swept.** It was derived as the control's own
   standard deviation and fixed before the run; a follow-up at 0.3 or 0.8 would
   be tuning and would retire this result rather than extend it.
+
+### OUTCOME, entry 58 (2026-09-02). **SCORED 1 OF 5. A = 0 of 16 against retrieval's 6. The inversion is exact at NOMINAL and the screen is at CORNERS, and that gap is the whole result.**
+
+    16 requests, 5 candidates each, 320 decks, 210.4 s
+    artifact: experiments/topk_scan_analytic.json
+
+    A = 0 of 16          (library baseline 6 of 16)
+    accepted_rank = None on every single request
+
+    80 rejected candidate-evaluations:
+      38  unscorable -- output-swing compression        47.5 %
+      18  S3_f_peak_match                               22.5 %
+      18  S3_peaking_match                              22.5 %
+       6  S3_peaking                                     7.5 %
+       0  S6_power                                       0.0 %
+
+| | prediction | outcome | |
+|---|---|---|---|
+| **Q1** | `A >= 6` | **0** | **MISS** |
+| **Q2** | swing is the plurality reason, > 50 % | 47.5 % | **MISS** |
+| **Q3** | shape-match under 25 % of rejections | **52.5 %** | **MISS** |
+| **Q4** | not the library in disguise | min L-inf **0.326** | **HIT** |
+| **Q6** | power is a material reason, >= 20 % | **0 %** | **MISS** |
+
+### The registered branch fires, and it names the defect exactly
+
+Entry 58's rule: *"`A <= 5` with Q3 also missing -> the nominal inversion does
+not survive corner spread, and the method needs corner-aware targeting, not a
+better ranker."*
+
+That is the finding. **52.5 % of rejections are shape** -- designs placed
+exactly on target by construction, then measured off target. The inversion is
+not wrong; it is **aimed at the wrong operating point**. It solves for the
+response at **TT / 1.00 / 27 C**, and the screen scores
+`sf/1.05/0C`, `ff/1.05/0C`, `fs/0.95/125C`, `ss/0.95/125C`. This project has
+already measured that spread: **`f_peak` moves up to 0.94 octaves across
+corners**, against a 0.3-octave match tolerance. A nominal bullseye is a corner
+miss by construction.
+
+Both halves of Q1's registered "against" case were right, and they were right
+together: the corner/nominal gap AND the swing wall, 52.5 % and 47.5 % of the
+rejections, almost exactly evenly split.
+
+### Q6 missed and the reason matters
+
+Every top-ranked candidate did sit at `i_bias = 8 mA` = 14.4 mW, as predicted.
+**Power was the worst spec exactly zero times.** The designs failed on shape and
+swing *before* power could bind. The blind spot was real and the prediction
+about its consequence was wrong -- the constraint I expected to catch them was
+never reached.
+
+### What is NOT retracted
+
+The zero-simulation results stand, because they are statements about the model
+and not about silicon:
+
+* the closed-form inversion, **24 of 24** round-trip within 0.024 dB / 0.004 oct;
+* the design rule **`peaking <= 20*log10(k)`**;
+* **all 16 requests have in-box analytic solutions** (132-813 of 8 000).
+
+What is retracted is the expectation built on them. **"On-target by
+construction" was construction at the wrong corner**, and 320 decks were the
+cheapest possible way to find that out.
+
+### What this costs and what it buys
+
+* **It does not retire the method.** It localises the fix: solve for the
+  response at the **screen corners**, not at nominal -- e.g. invert against the
+  worst-case `(gm, k)` over the four screen corners rather than the typical
+  one. That is a change to what `invert` is aimed at, not to how it works.
+* **It does not retire Phase 2 either.** Swing was 47.5 % of rejections here,
+  so the swing pre-filter still has a target; it is simply not sufficient alone,
+  which is now measured rather than assumed.
+* **The honest headline is `A = 0 of 16` against retrieval's 6**, and any future
+  corner-aware version must be measured against **that same 6**, on this same
+  screen, before it may be called an improvement.
