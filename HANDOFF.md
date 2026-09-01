@@ -12156,3 +12156,47 @@ by 381 tests for ten days. Both now read the measured figure.
 **Tests: 2213 passed / 13 deselected before; 2242 passed / 13 deselected
 after** (328.7 s). +29 across `test_rl_refine.py` (8 -> 19), `test_union.py`
 (0 -> 9) and `test_design_cli.py` (8 -> 17).
+
+### 2026-09-01 -- session 31 (continued): **two defects in entry 46's OWN registration. Both misses stand; one of them should never be pursued.**
+
+Found by re-reading the completed run, not by measuring anything new.
+
+**Defect 1 -- Q2's rate used a base where success was impossible for 70 of 128
+requests.** `improved` requires `not lib_ev.feasible`, and the library was
+already feasible on **70**. Only **58** were eligible:
+
+    registered  5/128 = 3.91%   (threshold 8/128 = 6.25%)
+    ELIGIBLE    5/58  = 8.62%   95% Wilson [3.74%, 18.64%]
+
+**Q2 REMAINS A MISS** -- it was registered as an absolute count of 8 and 5 < 8
+on any denominator. What was wrong is the rate the threshold was *justified*
+by. The n=16 figures are on the wrong base too (eligible there was 7, so
+**2/7 = 28.6 %**), and **Q6's winner's-curse conclusion survives and is cleaner
+for it: 28.6 % -> 8.62 %, still ~3x.** Future thresholds must be set on the
+eligible denominator, as a rate with a CI.
+
+**Defect 2 -- Q3 is a COUNT test wearing an effect test's clothes, and hitting
+it would mean nothing.** With zero regressions `p = 2 * 0.5**k`, so it depends
+only on the number of crossings: 5 gives 0.0625, and **10 would give 0.0020 --
+obtainable by running n=256 at identical behaviour.** The cause is structural:
+entry 28's fix lets the policy decline, so it never breaks a design, and the
+null "among movers, up and down are equally likely" is guaranteed to fall once
+enough movers accumulate. **Q3 stands as a miss and is RETIRED, not pursued.**
+Grinding n until p crosses 0.05 is a forking-paths result dressed as a
+confirmation.
+
+**Where a real effect would have to come from.** Of the 58 eligible starts the
+policy **declined 26, moved 30 up, moved 2 down -- and converted only 5**. (Of
+the 70 already-feasible it declined 63, which is correct behaviour.) The gap is
+between *moving* and *crossing*, not in the statistics: an 8-step episode at
+`max_step` 0.04 spans **0.32 box widths**, which may not reach the feasible set
+from a bad start. A longer horizon or a larger stride are **the owner's calls**
+(rule 6) and must be pre-registered, not swept.
+
+**The test that would mean something.** Entry 46 compared *refining* against
+*doing nothing*, which a refiner allowed to decline wins by construction. The
+question with a real null is **"does 27 simulations of RL refinement beat 27
+simulations spent any other way, from the same start?"** -- against deeper
+retrieval (ranks 6-12), random perturbation at the same stride, or CMA-ES at a
+27-deck budget. All three already exist in this repo. **Not started;
+pre-registration required.**

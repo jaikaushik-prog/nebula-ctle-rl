@@ -8422,3 +8422,82 @@ p = 0.50 ambiguity it replaces.
 * **Not coverage** (8 of 16, entry 40) and **not compliance** (11 of 11 rows at
   45 of 45 corners). Neither moved.
 * **Not a corner claim.** The refiner scores the 4-corner screen, not 45.
+
+### CORRECTION to entry 46's own design (2026-09-01, after the outcome). **Two defects in the registration. Q2 and Q3 both stand as MISSES; what changes is what a future threshold may be set on.**
+
+Found by re-reading the run rather than by a new measurement. **No new simulations.**
+
+#### Defect 1 -- Q2's rate is measured on a base that includes requests where success is IMPOSSIBLE
+
+`improved` is `pol_ev.feasible and not lib_ev.feasible`. **70 of the 128
+requests were already feasible from the library**, and those can never be
+counted as improved by construction. Only **58 were eligible**.
+
+    registered rate   5/128 = 3.91%     (Q2 threshold 8/128 = 6.25%)
+    ELIGIBLE rate     5/58  = 8.62%     95% Wilson [3.74%, 18.64%]
+
+**Q2 REMAINS A MISS and is not being reinterpreted into a hit:** it was
+registered as an absolute count -- *"at least 8 of 128 improve"* -- and 5 < 8
+on any denominator. What is wrong is the *rate* the threshold was justified by.
+Entry 46 argued 6.25 % was "half the n=16 point estimate of 12.5 %". Both of
+those figures are on the wrong base too: at n=16 the library was feasible on 9,
+so **7** were eligible and the eligible rate was **2/7 = 28.6 %**.
+
+**Q6's conclusion survives the correction and is cleaner on the right base:
+28.6 % -> 8.62 %, still a ~3x overestimate at n=16.** The winner's curse is
+unaffected.
+
+**Any future threshold must be set on the eligible denominator**, and stated as
+a rate with its CI rather than as a count over a mixed population.
+
+#### Defect 2 -- Q3's null is not a null anybody disbelieves, so hitting it would mean nothing
+
+With zero regressions the exact two-sided sign test is `2 * 0.5**k`, where `k`
+is the number of feasibility crossings. **It depends only on the count.** So:
+
+    5 crossings, 0 broken  ->  p = 0.0625      (measured)
+    10 crossings, 0 broken ->  p = 0.0020      (just run n = 256)
+
+**Q3 can be "hit" by running longer at identical behaviour.** That makes it a
+*count* test wearing the clothes of an *effect* test, and the reason is
+structural: entry 28's fix lets the policy **decline**, so it essentially never
+breaks a design, and the null "among designs that moved, up and down are
+equally likely" is guaranteed to be rejected once enough movers accumulate.
+
+**Q3 stands as a MISS, and it should be RETIRED rather than pursued.** Grinding
+`n` upward until `p` crosses 0.05 would be a garden-of-forking-paths result
+dressed as a confirmation, and it is exactly what this file exists to stop.
+
+#### What the eligible subset actually shows, and where a real effect would have to come from
+
+    of the 58 eligible starts:   declined 26    moved up 30    moved down 2
+    of the 70 already feasible:  declined 63    <- declining here is CORRECT
+
+**The policy moves 30 of 58 eligible designs in the right direction and
+converts only 5 of them into feasible ones.** The gap between *moving* and
+*crossing* is where any real improvement has to be found -- not in the
+statistics. An 8-step episode at `max_step` 0.04 reaches **0.32 box widths**,
+which may simply not span the distance from an infeasible start to the
+feasible set.
+
+**Both candidate levers are the OWNER'S** (standing rule 6): a longer horizon
+or a larger refinement stride is a tuning decision, and it must be
+pre-registered rather than swept.
+
+#### The test that WOULD mean something, and it is not any of the above
+
+The comparison entry 46 ran is *"refining versus doing nothing"*, and a
+refiner that may decline weakly wins that by construction. The question with a
+meaningful null is:
+
+> **Does 27 simulations of RL refinement beat 27 simulations spent any other
+> way, from the same start?**
+
+Three matched-budget control arms, all cheap and all already implemented
+elsewhere in this repo: **deeper retrieval** (score library ranks 6-12 -- entry
+32 measured depth as nearly free), **random perturbation** at the same stride
+and horizon (isolates *the policy* from *movement*), and **CMA-ES from the same
+start** at a 27-deck budget. Any of these turns the result into a statement
+about the policy rather than about the option to decline.
+
+**Not started. Pre-registration required before any of it runs.**
