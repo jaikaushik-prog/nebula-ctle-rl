@@ -8623,3 +8623,138 @@ is partly a budget win and must be reported as one.
 * **Not a corner claim.** Four screen points, not the mandated 45.
 * **Not a generalisation beyond the eligible subset**, which is by construction
   the harder half of the request distribution.
+
+---
+
+## 48. Session 31 -- **the policy outputs a DISTRIBUTION and we only ever asked for its mean. Does using what it learned fix it?**
+
+**Written 2026-09-01 BEFORE the arms exist and BEFORE entry 47 finished.**
+Verifiable from git: this entry is committed with no module and no result, and
+entry 47's artifact is not yet written.
+
+### The diagnosis, and it is a USAGE defect rather than a verdict on RL
+
+Entry 47's interim rows (30 of 58) say the trained policy crosses **3** where
+uniform random crosses **10**, at matched decks (29.7 vs 29.8). A trained
+policy losing to noise on its own task is not a result, it is a symptom, and
+the mechanism is visible in the checkpoint:
+
+    log_std  [-1.363 -1.191 -1.798 -3.022 -2.938 -2.514 -0.719]
+    sigma    [ 0.256  0.304  0.166  0.049  0.053  0.081  0.487]
+              w_in   l_in   i_bias  rs     cs     rl     vcm_in
+
+`log_std` **started at 0.0** (sigma 1.0, as wide as the whole tanh action) and
+**shrank to 0.049 on `rs` and 0.053 on `cs`** -- the two knobs that set the
+`Rs x Cs` peak. **The policy learned, and it learned exactly where the physics
+says it should.**
+
+And `refine_one` evaluates it like this:
+
+    a = net.distribution(o).mean          # the mean. sigma is DISCARDED.
+
+**So arm A walks one deterministic path: eight steps, one trajectory, zero
+spread.** Arm B takes eight random steps, and the selector -- best-of-visited,
+identical in both arms -- pays for **diversity of samples**. Random supplies
+eight diverse samples; the policy supplies one point. **The comparison was
+never about policy quality; it was about sample count.**
+
+We trained a model to output a distribution, asked it only for its single best
+guess, and then scored it with a rule that rewards looking around.
+
+### What changes, and what does not
+
+**Only how the trained policy is SAMPLED. Nothing is retrained, no reward, no
+tolerance, no stride, no screen, no checkpoint.** Rules 6 and 7 are untouched:
+`REFINE_MAX_STEP` stays 0.04, `rl_policy_pretrained.pt` stays the checkpoint,
+`V6_SPECS` stays the objective.
+
+| arm | actions | trajectories x steps | source |
+|---|---|---|---|
+| **A** | policy **mean** | 1 x 8 | entry 47, **read, not re-run** |
+| **B** | uniform random | 1 x 8 | entry 47, **read, not re-run** |
+| **D** | policy **sampled** | 1 x 8 | new -- isolates sampling ALONE |
+| **E** | policy **sampled** | **4 x 2** | new -- sampling AND diversity |
+
+**D exists to separate the two halves of the diagnosis.** If sampling alone
+fixes it, D beats B. If the fix is really about sample *diversity*, D stays
+near A and only E moves. Reporting only E would leave that ambiguous.
+
+**`R = 4` restarts of 2 steps is registered, not swept.** It is the geometric
+middle between arm A's 1 x 8 and a pure 8 x 1 sampler, and 2 steps at 0.04
+reaches 0.08 box widths per restart. **A sweep over R would be tuning** and
+would make the result unreportable (rule 6).
+
+### Declared inputs, measured before this entry
+
+1. Entry 47 arm A: **3 crossings of 30 so far**, 29.7 decks/request.
+2. Entry 47 arm B: **10 crossings of 30 so far**, 29.8 decks/request.
+3. Entry 47's Q1 control: **30 of 30 rows reproduce entry 46 exactly.**
+4. Arm A takes a mean of **5.77 steps of an 8-step horizon** -- episodes
+   terminate early on unbuildable designs, so the restart arms must be capped
+   on **decks**, not on steps.
+5. The final entry 47 numbers replace 1-3 here **before this entry is scored**;
+   the interim values are recorded so it is visible that the design was chosen
+   without seeing the end of that run.
+
+### Predictions
+
+**Q1 -- THE CONTROL. Every one of the 58 requests starts from the same library
+design as entry 47** (same `u`, componentwise). Confidence **0.9.** This costs
+nothing -- the start is recorded -- and it is the only way a difference between
+D/E and A/B could be an artefact of a different starting point rather than of
+the action source. **Falsifier: any start differing. If it fires, stop.**
+
+**Q2 -- THE DIAGNOSIS. E crosses strictly more often than A.** Confidence
+**0.7.** *For:* the mechanism above is arithmetic -- 4 independent samples
+against 1, with the same selector. *Against:* the policy's sigma on `rs`/`cs`
+is **0.049/0.053**, so even sampled it explores a very tight cloud, and 2 steps
+may not travel far enough to matter. **Falsifier: `E <= A`.**
+
+**Q3 -- THE BAR, AND THE ONE THAT DECIDES WHETHER RL CONTRIBUTES. E crosses at
+least as often as B.** Confidence **0.45**, deliberately below even. *For:* if
+diversity was the whole gap, learned bias plus diversity should beat unbiased
+diversity. *Against:* random explores the full +-0.04 per dimension while the
+sampled policy is confined to a cloud an order of magnitude narrower on the
+peak-setting knobs -- **narrowness is what the policy learned, and narrowness
+may be exactly wrong for a best-of-visited selector.**
+**Falsifier: `E < B`.**
+
+**Q4 -- SAMPLING ALONE IS NOT ENOUGH. D beats A but does not reach B.**
+Confidence **0.55.** Registered so the two halves of the fix are separable
+after the fact. **Falsifier: `D >= B`, or `D <= A`.**
+
+**Q5 -- BUDGETS STAY MATCHED. D and E each stay within 10 % of A's mean decks.**
+Confidence **0.8.** A restart re-scores an endpoint, so the arms could drift
+apart on cost; if they do, any win is partly a budget win and must be reported
+as one. **Falsifier: either arm outside +-10 %.**
+
+**Q6 -- REGISTERED EXPECTED NULL. McNemar exact on E vs B does NOT reach
+p < 0.05.** Confidence **0.7.** At n = 58 with these counts the discordant
+pairs are few, and entry 46's correction is explicit that this test needs
+about six discordant pairs on one side. Registered in advance, which is the
+whole lesson of that correction. **Falsifier: p < 0.05.**
+
+### The decision rule, before the result
+
+* **Q3 hits (E >= B)** -> **the learned policy beats uniform random at a
+  matched budget from the same start.** That is the first genuine RL
+  contribution in this project. Report it with the deck cost and the mechanism
+  -- *"the policy was being evaluated at its mean; using the distribution it
+  learned is what made it work."*
+* **Q2 hits, Q3 misses** -> **the usage defect was real and the policy still
+  does not beat noise.** Report BOTH: that evaluating at the mean understated
+  RL by a measurable amount, and that fixing it was not sufficient. This is a
+  far more useful negative than entry 47's, because it names a cause.
+* **Q2 misses** -> the diagnosis is wrong. The policy's learned direction
+  carries nothing the selector can use, and the RL line closes on a mechanism
+  rather than on a p-value.
+* **Q1 misses** -> a wiring failure. Read nothing else.
+
+### What no outcome may claim
+
+* **Not that RL beats retrieval.** Retrieval supplies the start in every arm,
+  and entry 47's arm C (deeper retrieval) is a separate and stronger baseline.
+* **Not coverage** (8 of 16) and **not compliance** (11 of 11 at 45 of 45).
+* **Not a corner claim.** Four screen points, not the mandated 45.
+* **Not a retraining result.** No policy is trained here. If a sampled policy
+  wins, what won is a checkpoint that already existed and was being read wrong.
