@@ -8193,3 +8193,138 @@ more.**
 * **Not that the 135-point load grid moved**; it is 0 of 16 for everything.
 * **Not an online-RL result.** This is offline policy improvement from a fixed
   dataset. The report must use those words.
+
+---
+
+## 46. Session 31 -- **the refiner at eight times the sample. Is 2 of 16 a null result or an underpowered one?**
+
+**Written 2026-09-01 BEFORE `--n` exists and before any n>16 artifact exists.**
+Verifiable from git: the commit carrying this entry carries the CLI flag and the
+statistics, and **no result**.
+
+### The question, and why it is not a re-run
+
+Entry 28 asked whether an RL policy improves a design that retrieval already
+found. It ran (`rl_refine_results.json`, 2026-08-21) and returned:
+
+    library start    9 of 16 feasible   median +10.0476    4.0 sims/request
+    after refining  11 of 16 feasible   median +10.0845   21.8 sims/request
+    IMPROVED 2   BROKE 0   median paired delta 0.0000   174.9 s
+
+`NEXT_AGENT_SAC.md` §39 and §309 correctly refuse to quote 11-of-16 as a win:
+**n = 16, and the exact two-sided sign test on (2 improved, 0 broken) is
+p = 0.50.** That refusal is right and is not being revisited.
+
+**But p = 0.50 at n = 16 with a 12.5 % effect is not evidence of absence.** It is
+the arithmetic of the sample size: with zero regressions, the sign test cannot
+reach p < 0.05 until **six** improvements exist, and sixteen requests cannot
+produce six at a 12.5 % rate except by luck. **The experiment was never able to
+detect its own effect.** This entry fixes the only defect that matters -- n --
+and changes nothing else.
+
+### What is NOT changed, stated because it is what makes this reportable
+
+Standing rule 6 and rule 7 both apply and both are honoured:
+
+1. **`REFINE_MAX_STEP` stays 0.04.** Not re-rolled, not swept.
+2. **The policy is the same checkpoint**, `rl_policy_pretrained.pt`,
+   200 000 analytic steps, 0 SPICE calls. Not retrained.
+3. **The reward, the tolerances, the screen and `V6_SPECS` are untouched.**
+4. **The target distribution is unchanged** -- `interpolation_split`, seed
+   230821, drawn from `spec_dist`'s uniform-in-dB / uniform-in-octaves law,
+   which is `CLAUDEwa.md` §3 verbatim rather than a choice.
+5. `n_train` **stays 64**, which is the property that keeps the test set held
+   out: `rl_policy_pretrained.pt` trained on `all_t[:64]` at this same seed
+   (`exp_rl_pretrain.N_TRAIN_TARGETS = 64`, `SEED = 23_0821`), so every one of
+   the 128 test targets is a target the policy has never seen.
+
+**Only `n_test` moves, 16 -> 128.**
+
+### The control is free, and it is the reason this design was chosen
+
+`sample_targets` draws sequentially from one `default_rng`, so the draw is
+**prefix-stable**: `interpolation_split(64, 128).test[:16]` is
+`interpolation_split(64, 16).test`, element for element. Verified before this
+entry was written, with no simulator.
+
+**So the first 16 rows of the n = 128 run ARE entry 28's experiment, re-run.**
+The replication is not an extra arm that had to be paid for; it is the first
+quarter of the run. If those 16 rows do not reproduce, nothing downstream of
+them may be read.
+
+### Declared inputs, measured before this entry
+
+1. **n = 16 outcome:** 9 -> 11 feasible, 2 improved, 0 broken, median delta
+   0.0000, 21.8125 sims/request, 174.86 s. (`rl_refine_results.json`.)
+2. **Observed improvement rate 2/16 = 12.5 %**, 95 % Wilson [3.5 %, 36.0 %].
+3. **Observed regression rate 0/16 = 0 %**, 95 % Wilson [0 %, 19.4 %]. The
+   policy is allowed to decline to edit (entry 28's one-line fix), so a low
+   regression rate is close to arithmetic and is **not** a prediction that
+   deserves credit for hitting.
+4. **Cost:** 21.8 sims/request measured, against entry 28's Q4 bar of 45.
+
+### Predictions
+
+**Q1 -- THE CONTROL. The first 16 rows reproduce entry 28 exactly:** same 2
+improved, same 0 broken, and `lib_feasible = 9`, `pol_feasible = 11` over those
+16. Confidence **0.8.** *For:* same seed, same checkpoint, same targets, and
+`refine_one` is seeded per index. *Against:* ngspice is not contractually
+deterministic and the screen is a live simulation. **Falsifier: any of
+`n_improved`, `n_broke`, `lib_feasible`, `pol_feasible` differing over the
+first 16 rows.** If this fires, stop and read nothing else.
+
+**Q2 -- THE NUMBER. At least 8 of 128 requests improve.** That is a rate of
+6.25 %, i.e. **half** the point estimate at n = 16, so it is a prediction the
+lower half of the existing Wilson interval would still satisfy. Confidence
+**0.6.** *For:* 12.5 % observed, and the mechanism -- retrieval lands in a good
+neighbourhood and an 0.32-box-width refinement stride can walk downhill in it
+-- does not depend on n. *Against:* two successes is a thin base, and the 16
+that produced them may be the easy quarter of the draw.
+**Falsifier: 7 or fewer.**
+
+**Q3 -- SIGNIFICANCE. The exact two-sided sign test on (improved, broken)
+reaches p < 0.05.** With zero regressions this needs six improvements; with a
+few regressions it needs more. Confidence **0.55**, and it is deliberately
+lower than Q2's because it is Q2 *plus* the regression count staying small.
+**Falsifier: p >= 0.05.**
+
+**Q4 -- the policy still breaks fewer than it fixes.** `n_broke < n_improved`
+over all 128. Confidence **0.8.** *For:* it declined every time at n = 16, and
+declining is always available. *Against:* eight times the exposure.
+**Falsifier: `n_broke >= n_improved`.**
+
+**Q5 -- COST. Mean simulations per request stays under 30.** Measured 21.8 at
+n = 16 and the episode length is capped, so this is close to arithmetic; it is
+registered so that a cost blow-up cannot be discovered after the fact and
+described as expected. Confidence **0.85.** **Falsifier: 30 or more.**
+
+**Q6 -- the effect is NOT bigger at scale.** The improvement rate over 128 does
+not exceed the n = 16 point estimate of 12.5 %. Confidence **0.6**, registered
+so that a hit cannot later be told as an unexpected triumph, and so that a
+**miss** is recorded as the pleasant surprise it would be.
+**Falsifier: 17 or more improvements.**
+
+### The decision rule, before the result
+
+* **Q1 misses** -> a reproducibility failure. Find it. Read nothing else, and
+  do not report any n = 128 number until it is explained.
+* **Q2 and Q3 both hit** -> **RL measurably improves a retrieved design, and the
+  claim is now powered.** Report it as the RL contribution, with the cost
+  (sims/request), the effect size and its CI, and the words *"on top of
+  retrieval"* attached -- it is not a claim that RL beats retrieval.
+* **Q2 hits, Q3 misses** -> the effect is real and the regressions ate the
+  significance. Report the paired rates and the CI; **do not** claim a result.
+* **Q2 misses** -> 2 of 16 was noise. **That closes the RL-contribution line**
+  for this submission, and it closes it with an n eight times larger than the
+  one that opened it, which is the strongest form the negative can take.
+  Report it and stop.
+
+### What no outcome may claim
+
+* **Not that RL beats retrieval.** Retrieval supplies the start point in every
+  arm. The measured quantity is the paired delta on top of it.
+* **Not coverage** (8 of 16, entry 40) and **not compliance** (11 of 11 at
+  45 of 45).
+* **Not a corner claim.** The refiner scores the 4-corner screen, not 45.
+* **Not a cost win.** Refining costs ~5x the library's 4.0 sims/request. Any
+  improvement is bought, and the price is reported beside it.

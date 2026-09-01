@@ -56,6 +56,24 @@ policy that fixes four requests and breaks four others.
 
     python -m nebula.experiments.exp_rl_refine --run
     python -m nebula.experiments.exp_rl_refine --analyse
+    python -m nebula.experiments.exp_rl_refine --run --n 128     # entry 46
+
+THE SAMPLE SIZE, AND WHY IT IS THE ONLY THING ENTRY 46 CHANGES
+----------------------------------------------------------------
+The n=16 run returned 2 improved, 0 broken -- and the exact two-sided sign test
+on that is **p = 0.50**, which `NEXT_AGENT_SAC.md` correctly refuses to quote as
+a win. But with zero regressions the sign test cannot reach p < 0.05 until
+**six** improvements exist, and sixteen requests cannot produce six at the
+observed 12.5 % rate except by luck. **The experiment could not detect its own
+effect.** `--n` fixes exactly that and nothing else: same checkpoint, same
+`REFINE_MAX_STEP`, same reward, same screen, same target law, `n_train` still
+64 so every test target stays unseen.
+
+The control is free. `sample_targets` draws sequentially from one
+`default_rng`, so the draw is prefix-stable and **the first 16 rows of any
+larger run ARE the n=16 experiment, re-run** -- scored automatically by
+`control_block` against the committed artifact. If they do not reproduce,
+nothing downstream of them may be read.
 """
 
 from __future__ import annotations
@@ -76,6 +94,26 @@ RESULTS = HERE / "rl_refine_results.json"
 RUN_LOG = HERE / "rl_refine_run.jsonl"
 POLICY = HERE / "rl_policy_pretrained.pt"
 
+#: The sample size entry 28 ran at, and the one `RESULTS` holds. A run at any
+#: other `n` writes its own artifact so this one cannot be overwritten -- it
+#: backs a published number (`NEXT_AGENT_SAC.md` §39) and an experiment that
+#: silently replaces its own control is not a control.
+N_TEST_DEFAULT: int = 16
+
+
+def results_path(n_test: int) -> Path:
+    """Where a run at this sample size writes. `n=16` keeps the historic name."""
+    if int(n_test) == N_TEST_DEFAULT:
+        return RESULTS
+    return HERE / f"rl_refine_results_n{int(n_test)}.json"
+
+
+def run_log_path(n_test: int) -> Path:
+    """Per-`n` JSONL, for the same reason `results_path` is per-`n`."""
+    if int(n_test) == N_TEST_DEFAULT:
+        return RUN_LOG
+    return HERE / f"rl_refine_run_n{int(n_test)}.jsonl"
+
 #: Refinement stride, overriding `contract.MAX_STEP`'s 0.15 **here only**.
 #: 0.04 x 8 steps = 0.32 box widths of reach. See the module docstring.
 REFINE_MAX_STEP: float = 0.04
@@ -85,6 +123,49 @@ LIBRARY_BASELINE: dict = {"n_feasible": 9, "n": 16, "median_reward": 10.0476,
                           "mean_sims": 4.0}
 
 SEED: int = 23_0821
+
+
+def sign_test_p(n_improved: int, n_broke: int) -> float:
+    """Exact two-sided sign test on the PAIRED outcomes. **Ties are dropped.**
+
+    The question "does refining help" is paired -- every request is scored
+    against the design the policy started from -- so the statistic is the
+    number of positive differences among the requests that moved at all.
+    Requests where the policy declined to edit, or edited to no effect, carry
+    no information about direction and are excluded; that is what a sign test
+    is, and it is why `n` here is `n_improved + n_broke` and not the number of
+    requests.
+
+    **This is the number entry 28's 11-of-16 was missing.** At 2 improved and
+    0 broken it returns 0.5: with zero regressions the test cannot reach 0.05
+    until six improvements exist, so sixteen requests could not have detected a
+    12.5 % effect however real it was.
+    """
+    k, m = int(n_improved), int(n_improved) + int(n_broke)
+    if m == 0:
+        return 1.0
+    from math import comb
+    # Two-sided exact binomial at p=0.5: sum the tail at least as extreme as k
+    # on BOTH sides. Symmetric, so double the smaller tail and clip at 1.
+    lo = min(k, m - k)
+    tail = sum(comb(m, i) for i in range(lo + 1)) / (2.0 ** m)
+    return float(min(1.0, 2.0 * tail))
+
+
+def wilson_ci(k: int, n: int, z: float = 1.959963984540054) -> tuple:
+    """95 % Wilson score interval for a rate. Used, never re-derived.
+
+    Wilson rather than normal-approximation because the counts here are small
+    and the rates are near zero, where the normal interval goes negative and
+    stops meaning anything.
+    """
+    if n <= 0:
+        return (0.0, 0.0)
+    p = k / n
+    d = 1.0 + z * z / n
+    c = p + z * z / (2.0 * n)
+    h = z * ((p * (1.0 - p) / n + z * z / (4.0 * n * n)) ** 0.5)
+    return (float(max(0.0, (c - h) / d)), float(min(1.0, (c + h) / d)))
 
 
 @dataclass
@@ -219,13 +300,42 @@ def refine_one(net, target, seed: int) -> RefineResult:
         pol_u=[float(x) for x in best_u], worst_spec=pol_ev.worst_spec)
 
 
-def run(seed: int = SEED, n_test: int = 16) -> dict:
+def control_block(rows: Sequence) -> Optional[dict]:
+    """Entry 46's Q1: do the first 16 rows reproduce entry 28?
+
+    `sample_targets` draws sequentially from one `default_rng`, so the target
+    draw is PREFIX-STABLE: `interpolation_split(64, 128).test[:16]` is exactly
+    `interpolation_split(64, 16).test`. The first sixteen rows of a larger run
+    are therefore entry 28's experiment re-run, at no extra cost, and this
+    function scores them against the committed artifact.
+
+    Returns `None` when there is no n=16 artifact to compare against, or when
+    the run is itself the n=16 run.
+    """
+    if len(rows) <= N_TEST_DEFAULT or not RESULTS.exists():
+        return None
+    ref = json.loads(RESULTS.read_text(encoding="utf-8"))
+    head = list(rows)[:N_TEST_DEFAULT]
+    got = {"n_improved": sum(1 for r in head if r.improved),
+           "n_broke": sum(1 for r in head if r.broke_it),
+           "lib_feasible": sum(1 for r in head if r.lib_feasible),
+           "pol_feasible": sum(1 for r in head if r.pol_feasible)}
+    want = {k: int(ref[k]) for k in got}
+    return {"reference": RESULTS.name, "expected": want, "observed": got,
+            "reproduced": got == want,
+            "differs_on": sorted(k for k in got if got[k] != want[k])}
+
+
+def run(seed: int = SEED, n_test: int = N_TEST_DEFAULT) -> dict:
     from nebula.experiments.exp_corner_rl import _screen
     from nebula.experiments.runlock import hold, stamp
     from nebula.rl.spec_dist import interpolation_split
 
     with hold("rl_refine"):
         t0 = time.time()
+        # n_train STAYS 64: `rl_policy_pretrained.pt` trained on `all_t[:64]`
+        # at this same seed (`exp_rl_pretrain.N_TRAIN_TARGETS`), so holding it
+        # fixed is what keeps every test target unseen as `n_test` grows.
         split = interpolation_split(n_train=64, n_test=n_test, seed=seed)
         points = _screen()
         net, ck = _load_policy(7 + 8 + 2 + 1, 7, seed)
@@ -234,7 +344,7 @@ def run(seed: int = SEED, n_test: int = 16) -> dict:
               flush=True)
 
         rows: list[RefineResult] = []
-        with RUN_LOG.open("w", encoding="utf-8") as fh:
+        with run_log_path(n_test).open("w", encoding="utf-8") as fh:
             fh.write(json.dumps({"event": "start", "seed": seed,
                                  "max_step": REFINE_MAX_STEP,
                                  "policy": POLICY.name,
@@ -270,7 +380,21 @@ def run(seed: int = SEED, n_test: int = 16) -> dict:
             "wall_clock_s": time.time() - t0,
             "results": [asdict(r) for r in rows],
         }
-        RESULTS.write_text(json.dumps(out, indent=1), encoding="utf-8")
+        n_imp, n_brk = out["n_improved"], out["n_broke"]
+        out["stats"] = {
+            "sign_test_p": sign_test_p(n_imp, n_brk),
+            "sign_test_n": n_imp + n_brk,
+            "improve_rate": n_imp / len(rows),
+            "improve_rate_ci95": list(wilson_ci(n_imp, len(rows))),
+            "broke_rate": n_brk / len(rows),
+            "broke_rate_ci95": list(wilson_ci(n_brk, len(rows))),
+            "basis": ("exact two-sided sign test on the PAIRED outcomes; ties "
+                      "(the policy declined, or edited to no effect) are "
+                      "dropped, so sign_test_n is improved+broke, not n"),
+        }
+        out["control_first16"] = control_block(rows)
+        results_path(n_test).write_text(json.dumps(out, indent=1),
+                                        encoding="utf-8")
         return out
 
 
@@ -289,20 +413,50 @@ def _report(d: dict) -> None:
     print(f"  requests the policy BROKE  : {d['n_broke']}")
     print(f"  median paired delta        : {d['median_delta']:+.4f}")
     print()
-    # The decision rule from PREDICTIONS entry 27, applied mechanically so the
-    # verdict cannot drift in the writing.
-    bar = d["bar"]["n_feasible"]
-    if d["pol_feasible"] > bar:
-        print(f"  Q1 HIT: {d['pol_feasible']} > {bar}. Retrieval finds the "
-              f"neighbourhood, RL refines it -- report WITH the cost.")
-    elif d["pol_feasible"] >= bar - 1:
-        print(f"  Q1 miss, Q2 hit: {d['pol_feasible']} vs the library's {bar}. "
-              f"RL neither helps nor harms on top of retrieval.")
-        print("  The contribution claim STAYS DROPPED.")
+
+    # ── statistics ────────────────────────────────────────────────────────
+    # Recomputed rather than read, so an artifact written before `stats`
+    # existed still reports correctly and the two can never disagree.
+    n = d["n"]
+    n_imp, n_brk = d["n_improved"], d["n_broke"]
+    p = sign_test_p(n_imp, n_brk)
+    lo, hi = wilson_ci(n_imp, n)
+    print(f"  improvement rate           : {n_imp}/{n} = {n_imp / n:6.2%}"
+          f"   95% CI [{lo:.2%}, {hi:.2%}]")
+    print(f"  exact two-sided sign test  : p = {p:.4f}   "
+          f"(on {n_imp + n_brk} requests that moved)")
+
+    ctrl = d.get("control_first16")
+    if ctrl:
+        tag = "REPRODUCED" if ctrl["reproduced"] else "DIFFERS"
+        print(f"  control, first 16 rows     : {tag} vs {ctrl['reference']}"
+              + ("" if ctrl["reproduced"]
+                 else f"  -- differs on {', '.join(ctrl['differs_on'])}"))
+    print()
+
+    # The decision rule from PREDICTIONS entry 46, applied mechanically so the
+    # verdict cannot drift in the writing. Entry 28's fixed bar of 9 is only
+    # meaningful at n=16; the paired comparison is what scales.
+    if ctrl and not ctrl["reproduced"]:
+        print("  Q1 MISSED -- the control did not reproduce. READ NOTHING "
+              "ELSE until that is explained (entry 46's decision rule).")
+        return
+    if n_imp >= n_brk and p < 0.05:
+        print(f"  Q2 and Q3 HIT: {n_imp} improved, {n_brk} broken, p = {p:.4f}."
+              f"  **RL measurably improves a retrieved design.** Report WITH "
+              f"the cost ({d['mean_pol_sims']:.1f} sims/request) and the words "
+              f"'on top of retrieval' -- it is not a claim that RL beats it.")
+    elif n_imp > n_brk:
+        print(f"  Q2 direction holds, Q3 MISSED: {n_imp} improved, {n_brk} "
+              f"broken, p = {p:.4f}. The effect points the right way and is "
+              f"NOT powered. Report the paired rates and the CI; claim nothing.")
     else:
-        print(f"  Q1 and Q2 both miss: {d['pol_feasible']} vs {bar}. **RL "
-              f"actively degrades a retrieved design.** Report it as the "
-              f"strongest negative available, with the degradation quantified.")
+        print(f"  Q4 MISSED: {n_imp} improved, {n_brk} broken. **Refining a "
+              f"retrieved design does not help and may hurt.** Report it as "
+              f"the strongest negative available, with the rate quantified.")
+    if n < 64:
+        print(f"  NOTE: n = {n}. With zero regressions the sign test cannot "
+              f"reach p < 0.05 below six improvements (entry 46).")
 
 
 def main(argv: Optional[Sequence[str]] = None) -> int:
@@ -310,13 +464,22 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     ap.add_argument("--run", action="store_true")
     ap.add_argument("--analyse", action="store_true")
     ap.add_argument("--seed", type=int, default=SEED)
+    ap.add_argument("--n", type=int, default=N_TEST_DEFAULT,
+                    help=f"held-out requests to refine (default "
+                         f"{N_TEST_DEFAULT}). The ONLY knob entry 46 moves: "
+                         f"n=16 could not reach p<0.05 at the observed effect "
+                         f"size. Runs at n != {N_TEST_DEFAULT} write their own "
+                         f"artifact so the n={N_TEST_DEFAULT} control survives.")
     a = ap.parse_args(argv)
+    if a.n < 1:
+        raise SystemExit(f"--n must be >= 1, got {a.n}")
     if a.run:
-        _report(run(seed=a.seed))
+        _report(run(seed=a.seed, n_test=a.n))
     elif a.analyse:
-        if not RESULTS.exists():
-            raise SystemExit(f"{RESULTS.name} missing: run --run first")
-        _report(json.loads(RESULTS.read_text(encoding="utf-8")))
+        path = results_path(a.n)
+        if not path.exists():
+            raise SystemExit(f"{path.name} missing: run --run --n {a.n} first")
+        _report(json.loads(path.read_text(encoding="utf-8")))
     else:
         ap.print_help()
     return 0

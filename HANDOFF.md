@@ -11925,3 +11925,58 @@ after** (350 s).
 was killed with the session after the MDN arm's artifact was written. Its
 number is absent and is **not** reported. Two stale run locks from that kill
 were removed after confirming pid 20216 was dead.
+
+### 2026-09-01 -- session 31: **entry 46 pre-registered.** The refiner's `p = 0.50` is a statement about `n`, not about the policy -- and `n` is a flag.
+
+**No result in this commit. That is the point** -- entry 46 is registered
+before `--n` has ever been run above 16, verifiable from this commit's diff.
+
+**The observation.** `rl_refine_results.json` (entry 28, 2026-08-21) has sat
+unread for eleven days: library start **9 of 16** feasible -> after refining
+**11 of 16**, **2 improved, 0 broken**, 21.8 sims/request, 175 s.
+`NEXT_AGENT_SAC.md` §39/§309 correctly refuse to quote 11-of-16 as a win
+because **n = 16, p = 0.50**, and that refusal stands.
+
+**What nobody had noticed is what the p-value is measuring.** With zero
+regressions the exact two-sided sign test cannot reach p < 0.05 until **six**
+improvements exist. Sixteen requests at the observed 12.5 % rate cannot be
+expected to produce six. **The experiment was never able to detect its own
+effect**, so `p = 0.50` is evidence about the sample size and not about the
+policy. That is now `test_zero_regressions_needs_SIX_improvements_to_reach_
+significance`, so the arithmetic is pinned rather than argued.
+
+**The control is free, and it is why this design was chosen.**
+`spec_dist.sample_targets` draws sequentially from one `default_rng`, so the
+target draw is **prefix-stable**: `interpolation_split(64, 128).test[:16]` is
+`interpolation_split(64, 16).test` element for element (verified, no
+simulator). **The first 16 rows of the n=128 run ARE entry 28's experiment,
+re-run** -- scored automatically by `control_block` against the committed
+artifact. Entry 46's Q1 gates every other reading on it.
+
+**Only `n_test` moves, 16 -> 128.** `REFINE_MAX_STEP` stays 0.04, the
+checkpoint stays `rl_policy_pretrained.pt`, the reward / tolerances / screen /
+`V6_SPECS` are untouched, and `n_train` **stays 64** -- which is the property
+that keeps the test set held out, since the policy trained on `all_t[:64]` at
+this same seed (`exp_rl_pretrain.N_TRAIN_TARGETS = 64`, `SEED = 23_0821`).
+Rules 6 and 7 are both honoured; nothing is tuned.
+
+**A run at n != 16 writes its own artifact** (`rl_refine_results_n128.json`),
+because `rl_refine_results.json` backs a published number and an experiment
+that overwrites its own control has no control.
+
+**The verdict branch changed, deliberately.** Entry 27's rule compared
+`pol_feasible` against a hard-coded bar of **9**, which is meaningful only at
+n=16. It is replaced by the paired direction plus the sign test, which scales.
+`test_the_verdict_is_applied_MECHANICALLY_from_the_decision_rule` was updated
+to pin the new branches and says why in its docstring.
+
+**New on disk:** `PREDICTIONS.md` entry 46 (Q1-Q6 with falsifiers and a
+decision rule); `exp_rl_refine.sign_test_p`, `wilson_ci`, `results_path`,
+`run_log_path`, `control_block`, `--n`; 12 new tests in
+`tests/test_rl_refine.py`.
+
+**Re-reading the n=16 artifact through the new instrument reproduces the
+published numbers exactly**: 2/16 = 12.50 % [3.50 %, 36.02 %], p = 0.5000,
+verdict "direction holds, NOT powered, claim nothing".
+
+**Tests: 2213 passed / 13 deselected before** (295 s, measured this session).
