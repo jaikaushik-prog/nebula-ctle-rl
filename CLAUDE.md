@@ -61,10 +61,12 @@ zero**.
    §8 next steps, §9 gotchas). A change without a handoff update is
    incomplete.
 2. **Run the test suite before and after changes** (from repo root):
-   `python -m pytest tests nebula/tests -q -m "not slow"` — **2329 passed,
-   13 deselected, ~5.8 min** (345 s, measured 2026-09-01 session 33 on system
+   `python -m pytest tests nebula/tests -q -m "not slow"` — **2357 passed,
+   13 deselected, ~5.8 min** (348 s, measured 2026-09-01 session 33 on system
    Python 3.13.14; session 32 added 18 in `test_pool_size.py` and 15 in
-   `test_deep_verify.py`, session 33 added 24 in `test_bypass_recover.py`).
+   `test_deep_verify.py`, session 33 added 24 in `test_bypass_recover.py` and
+   28 in `test_schematic.py`). **One test in the suite is timing-flaky by
+   construction — see G136 before you go hunting a regression.**
    **This line was stale by 381 tests for ten days** — it read 1861/11 from
    2026-08-22 while the suite ran 2213/13. Re-measure it when you change the
    count; a reviewer who clones the tag and finds the stated figure wrong

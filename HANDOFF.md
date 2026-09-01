@@ -4748,6 +4748,26 @@ Plus: git init, .gitignore, 28 tests, Wilson-bound BER reporting.
   antecedent), so the pattern is worth naming: **a registered sanity check has
   to be falsifiable by the good outcome as well as the bad one.**
 
+- **G136 -- (nebula) ONE TEST IN THE SUITE FAILS ON WALL-CLOCK, NOT ON
+  VALUES, AND IT WILL COST SOMEBODY AN AFTERNOON.**
+  `test_pdk_trim.py::test_trimmed_decks_are_bit_identical_to_the_pdk_decks`
+  has two halves. The first is deterministic -- every printed value from the
+  trimmed library must equal the untrimmed one exactly, which is the claim
+  G36 rests on. The second is `assert t_trim < t_ref`: *"the trim bought
+  nothing"*, comparing the **elapsed seconds** of two ngspice runs.
+  Observed 2026-09-01 (session 33): the `[hh]` case failed inside a full-suite
+  run and **passed 6 of 6 in 35 s immediately afterwards with nothing
+  changed**; the next full run was 2357/2357 green. Nothing in that session
+  touched `pdk_trim`, ngspice or the PDK.
+  **Before treating a failure here as a regression, re-run the file alone.** A
+  values failure is real and serious; a timing failure is the machine being
+  busy. They are the same red line in `-q` output, which is the trap.
+  **Two habits.** (1) When a background run is the thing you will diagnose
+  from, do not pipe it through `tail` -- session 33 lost this traceback that
+  way and had to re-run 6 minutes of suite to get it back. (2) A performance
+  assertion inside a correctness test makes the correctness test flaky; if this
+  fires again, the fix is to split it, not to widen the margin.
+
 - **G132 -- (nebula) A ROLLOUT'S WARM START IS NOT A PROPOSAL, and a
   best-of-visited selector that includes step 0 reports RETRIEVAL as RL.**
   `exp_rl_diagnose.best_feasible` scanned every design an episode visited,
@@ -12587,3 +12607,56 @@ of them **caught a real defect before the run was reported**: `_report`
 subscripted `target["before"]` on the Q1-failure path, where both arms are
 deliberately `None` because entry 54's decision rule forbids running them. The
 gate that fires on a failed control is the one gate that must not itself crash.
+
+---
+
+### 2026-09-01 — session 33 (continued). **The deliverable now outputs a drawn schematic.**
+
+`CLAUDEwa.md` §2 quotes the brief: *"outputs the final schematic and resulting
+specs"*. `design.py --out` wrote `design.cir`, which is a schematic only to a
+reader who parses SPICE. **New: `nebula/report/schematic.py`**, and
+`design.py --out` now also writes `design_schematic.png`.
+
+**It is parsed, never recomputed.** The renderer takes the netlist *string* —
+the same one written to `design.cir` — reads its `.param` values and draws
+those. Drawing the `Sizing` object's numbers instead would be **G32**, and a
+picture is the worst place for it because it is believed on sight and
+re-derived never. It also **asserts the topology it draws** (the pair, both
+loads, `Rs`/`Cs` between the two sources, both tail devices, the mirror
+reference, both load capacitors, each with connectivity): a deck that stops
+matching raises rather than emitting a confident picture of a circuit that no
+longer exists.
+
+**Two defects the gates caught before the output was ever shown:**
+
+1. **`eng()` turned `610 uA` into `61 uA`.** An unconditional `.rstrip("0")`
+   ate a significant digit — a factor of ten, on a label. Pinned in both
+   directions now.
+2. **The first end-to-end run drew a FAILED design under a panel headed
+   "Delivered design".** `--peaking 9 --f-peak 1.9e9` returns `headroom_only`
+   (input pair out of saturation) and still has a netlist, so the renderer drew
+   it happily. `draw_schematic` now takes a `warning`, and `design.py` passes
+   the verdict whenever `nominal.ok` is false: the drawing is titled **NOT
+   DELIVERED**, carries the verdict in a banner, and the panel heading changes.
+   Same class as the swing-compression trap — **a number that exists is not a
+   number that means what it looks like.**
+
+**What the drawing refuses to state.** `--verify` not run reads *"not verified
+(--verify)"*, never a corner count; a measurement the run does not carry is
+omitted, never defaulted. The **1-tap DFE is a labelled behavioural block
+drawn OUTSIDE the transistor canvas**, with entry 39's ablation beside it —
+it was never transistor-sized, so drawing it as silicon would be a fabrication
+and omitting it would hide a mandated part of S2 (this is item 4 of the review,
+delivered here).
+
+**New on disk:** `nebula/report/schematic.py`,
+`nebula/tests/test_schematic.py` (28 gates),
+`nebula/report/figures/schematic_demo.png`; `nebula/design.py` gains
+`_schematic_panel` and the `--out` hook. `PROGRESS.md` §5q and its status row;
+`CONTINUE_HERE.md` session-33 schematic block.
+
+**Tests: 2329 before; 2357 / 13 deselected after** (347.9 s). The 28 new gates
+are `nebula/tests/test_schematic.py`. **One intervening full-suite run showed
+`test_pdk_trim.py::...[hh]` red**; it passed 6/6 alone immediately after with
+nothing changed, and the next full run was green. Its second assertion is a
+wall-clock comparison, not a value comparison — recorded as **G136**.

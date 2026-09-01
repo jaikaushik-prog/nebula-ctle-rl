@@ -8,6 +8,21 @@ else in the 22s brief stands.
 
 **14 days to the 15 Sept deadline (as of 2026-09-01). Demo 25 Sept at BITS Goa.**
 
+> **2026-09-01 (session 33). THE DELIVERABLE NOW OUTPUTS A DRAWN SCHEMATIC.**
+> `design.py --out` writes `design_schematic.png` beside `design.json` and
+> `design.cir`. **It is rendered FROM the deck** -- `.param` values parsed out
+> of the same string written to `design.cir`, never recomputed (G32) -- and it
+> **asserts the topology it draws**, so a changed netlist raises instead of
+> producing a confident picture of a circuit that no longer exists.
+>
+> Two defects the 28 gates caught before anyone saw the output: `eng()` turned
+> **610 uA into 61 uA**, and the first end-to-end run drew a **failed**
+> (`headroom_only`) design under a panel headed *"Delivered design"*. A failed
+> run still has a netlist; the drawing now says **NOT DELIVERED** with the
+> verdict in a banner. The 1-tap DFE is a labelled **behavioural** block
+> outside the transistor canvas, with entry 39's ablation beside it. Read
+> `PROGRESS.md` section 5q.
+
 > **2026-09-01 (session 33, LATEST -- SUPERSEDES EVERY BLOCK BELOW ON COVERAGE).
 > MANDATED COVERAGE IS 9 OF 16. The last corner was a SIMULATOR BUG, not
 > physics.** Entry 54, 5 of 6, 450 decks, 239 s.

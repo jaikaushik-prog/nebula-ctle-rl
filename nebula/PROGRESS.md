@@ -36,12 +36,13 @@ human in the loop. Deliverables that already exist and run:
 
 | | state |
 |---|---|
-| Test suite | **2329 passed**, 13 deselected, ~5.8 min (345 s), measured 2026-09-01 (session 33) (`python -m pytest tests nebula/tests -q -m "not slow"`). The **system** interpreter, not the conda env — that env has no `torch`, and `ngspice_con.exe` is found by absolute path anyway (G69) |
+| Test suite | **2357 passed**, 13 deselected, ~5.8 min (348 s), measured 2026-09-01 (session 33); one timing-flaky test, **G136** (`python -m pytest tests nebula/tests -q -m "not slow"`). The **system** interpreter, not the conda env — that env has no `torch`, and `ngspice_con.exe` is found by absolute path anyway (G69) |
 | Gates G0–G2 | passed |
 | G3 (RL beats random + grid) | **fails one clause** — RL is indistinguishable from random at every budget |
 | G4 (corner-robust design) | met on `V1_SPECS` (7 rows); **not** on the 11 competition rows |
 | Eleven-row compliance | **no design meets all 11 rows at all 135 points.** Two designs miss on opposite sides of one row |
 | **Mandated 45-corner coverage** | **9 of 16** (entry 54, 2026-09-01; was 8 since entry 40). The 135-point load grid stays **0 of 16** |
+| Deliverable output | `design.py --out` writes `design.json`, `design.cir` **and `design_schematic.png`** — a drawn schematic rendered FROM the deck, annotated with the sized values, marked **NOT DELIVERED** when the run did not pass (session 33) |
 | Report | `nebula/report/Nebula_CTLE_Report.pdf`, rebuilt from artifacts. **Its RL chapter stops at PPO and the budget ladder** — entries 34-54 have not reached it |
 
 ### The two candidate designs
@@ -1300,6 +1301,54 @@ occupy three disjoint ranges over all 45 corners), so no outcome could have made
 it true. Against the family the physics actually groups by -- the other 14
 corners at 0 C -- the recovered value is **inside**. **A "not an outlier" check
 must name the family the physics groups by, not the family the label groups by.**
+
+---
+
+## 5q. THE SCHEMATIC THE BRIEF ASKED FOR, AND IT IS PARSED RATHER THAN REDRAWN
+
+**2026-09-01 (session 33), `report/schematic.py`, 28 tests, no new
+simulations.** `CLAUDEwa.md` §2 quotes the brief: *"outputs the final schematic
+and resulting specs"*. `design.py --out` wrote `design.cir`, which is a
+schematic only to a reader who parses SPICE. It now also writes
+**`design_schematic.png`**.
+
+### The one design rule
+
+The obvious implementation draws the `Sizing` object's numbers. **That is
+G32** -- a model card that differs between the netlist a human reads and the
+runner that produced the numbers -- and a drawing is the worst place for it,
+because a picture is believed on sight and re-derived never. So the renderer
+takes **the netlist string itself**, the same one written to `design.cir`,
+parses its `.param` values, and draws those. There is no second computation to
+disagree with.
+
+It also **asserts the topology it draws**: the pair, both loads, `Rs` and `Cs`
+between the two sources, both tail devices, the mirror reference and both load
+capacitors, each with its connectivity. A deck that stops matching **raises**
+rather than emitting a confident picture of a circuit that no longer exists.
+Six deletion tests and two re-wiring tests hold that.
+
+### Two defects the tests caught before anyone saw the output
+
+1. **`eng()` turned `610 uA` into `61 uA`** -- an unconditional
+   `.rstrip("0")` ate a significant digit. A factor of ten, on a label, in a
+   picture nobody re-derives.
+2. **The first end-to-end run drew a FAILED design under a panel headed
+   "Delivered design".** `--peaking 9 --f-peak 1.9e9` comes back
+   `headroom_only` (the input pair is out of saturation) and still has a
+   netlist, so the renderer happily drew it. It now takes a `warning`, and that
+   run produces a drawing titled **"NOT DELIVERED"** with the verdict in a
+   banner and in the panel. This is the same class as the swing-compression
+   trap: a number that exists is not a number that means what it looks like.
+
+### What the drawing states, and what it refuses to
+
+Every panel row is read off the run. **`--verify` not run reads "not verified
+(--verify)"**, never a corner count; a measurement the run does not carry is
+**omitted**, never defaulted. The **1-tap DFE is drawn as a labelled
+behavioural block, outside the transistor canvas**, with entry 39's ablation
+beside it -- it was never transistor-sized, so drawing it as silicon would be a
+fabrication and omitting it would hide a mandated part of S2.
 
 ---
 

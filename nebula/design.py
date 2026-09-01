@@ -257,6 +257,49 @@ def measure(u: Sequence[float], cl_f: float, budget: SpiceBudget,
             "worst_spec": rb.worst_spec, "design_id": ev.design_id}
 
 
+def _schematic_panel(d: dict) -> dict:
+    """The side panel on the drawing: only what this run actually measured.
+
+    Every row is read off `d`; nothing is recomputed and nothing is defaulted.
+    A row whose source is absent is **omitted**, never filled in -- a schematic
+    that states a corner count nobody ran would be the worst instance of rule 4
+    in the repository, because a picture is believed on sight.
+    """
+    panel: dict[str, str] = {"method": str(d.get("method", "?"))}
+    nom = d.get("nominal") or {}
+    # The verdict leads, because every row under it is only as meaningful as
+    # this one. `library`/`cmaes` runs that fail still produce a netlist.
+    panel["status"] = ("PASS" if nom.get("ok") and nom.get("feasible")
+                       else str(nom.get("verdict") or "no measurement"))
+    if nom.get("design_id"):
+        panel["design id"] = str(nom["design_id"])
+    panel["PDK"] = "SKY130 nfet_01v8"
+    m = nom.get("meas") or {}
+    if "peaking_db" in m:
+        panel["peaking (TT)"] = f"{float(m['peaking_db']):.2f} dB"
+    if "_f_peak_ghz" in m:
+        panel["f_peak (TT)"] = f"{float(m['_f_peak_ghz']):.3f} GHz"
+    if "_power_mw" in m:
+        panel["power (TT)"] = f"{float(m['_power_mw']):.2f} mW"
+    if "_noise_mv" in m:
+        panel["input noise"] = f"{float(m['_noise_mv']):.3f} mVrms"
+    v = d.get("verification") or {}
+    # **Stated only when --verify actually ran.** Without it this design has
+    # been measured at ONE corner, and a panel implying 45 would be a claim the
+    # run never made.
+    if "n_points" in v and "n_failed" in v:
+        n, f = int(v["n_points"]), int(v["n_failed"])
+        grid = (f" ({int(v['n_corners'])}x{int(v['n_loads'])})"
+                if "n_corners" in v and "n_loads" in v else "")
+        panel["verified points"] = f"{n - f} / {n} PASS{grid}"
+    else:
+        panel["verified points"] = "not verified (--verify)"
+    sims = d.get("simulations") or {}
+    if "total" in sims:
+        panel["simulations"] = str(sims["total"])
+    return panel
+
+
 def netlist_for(u: Sequence[float], cl_f: float) -> Optional[str]:
     """The deck that RAN, captured rather than re-rendered (rule 9, G32)."""
     sizing = sizing_from_u(np.asarray(u, dtype=float), cl_f=cl_f)
@@ -551,10 +594,37 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         from nebula.experiments.cl_range import committed_cl_range
 
         deck = netlist_for(d["search"]["u"], committed_cl_range().cl_mid_f)
+        written = [args.out / "design.json"]
         if deck:
             (args.out / "design.cir").write_text(deck, encoding="utf-8")
-        print(f"\nwrote {args.out / 'design.json'}"
-              + (f" and {args.out / 'design.cir'}" if deck else ""))
+            written.append(args.out / "design.cir")
+            # **The brief asks for a SCHEMATIC, and a SPICE deck is one only to
+            # a reader who parses SPICE.** The drawing is rendered FROM `deck`
+            # -- the same string just written to `design.cir` -- so the picture
+            # and the netlist cannot disagree (G32). A drawing failure must not
+            # cost the caller the deck and the JSON that already succeeded, so
+            # it is reported and not raised.
+            try:
+                from nebula.report.schematic import draw_schematic
+
+                nom = d.get("nominal") or {}
+                # **A failed run still has a netlist.** Drawing it silently
+                # under a panel headed "Delivered design" would hand a reader
+                # a picture of a circuit that does not meet the request.
+                warn = None
+                if not nom.get("ok", False):
+                    warn = str(nom.get("verdict") or "no valid measurement")
+                written.append(draw_schematic(
+                    deck, args.out / "design_schematic.png",
+                    subtitle=f"target {d['request']['peaking_db']:.1f} dB @ "
+                             f"{d['request']['f_peak_hz'] / 1e9:.3f} GHz"
+                             f"  -  values parsed from the netlist beside it",
+                    extra=_schematic_panel(d), warning=warn))
+            except Exception as exc:                        # noqa: BLE001
+                print(f"\nwarning: the schematic could not be drawn ({exc}). "
+                      f"design.json and design.cir are unaffected.",
+                      file=sys.stderr)
+        print("\nwrote " + ", ".join(str(w) for w in written))
     return 0
 
 
