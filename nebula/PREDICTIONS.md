@@ -10816,3 +10816,105 @@ third time inside the same session.
 * **Not that the method is retired.** It is 0 of 16 twice, with the reason
   different each time and now isolated to one constraint.
 * **Not coverage, not compliance.**
+
+---
+
+## 61. Session 33 -- **Phase 2 on the DELIVERED path: re-rank the library by predicted output swing. The counterfactual is arithmetic, so it costs nothing.**
+
+**Written 2026-09-02 BEFORE the re-ranking is computed.** The baseline and the
+ceiling below come from `hybrid_topk_scan_k40.json`, already on disk.
+
+### Why the delivered path and not the analytic proposer
+
+Entries 58 and 60 put the analytic proposer at **0 of 16 twice**, and entry 60's
+rule defers a third attempt. But **the swing wall is not specific to it**: entry
+53 measured **92.9 %** of all screen rejections as output-swing compression on
+the **library** path -- the one that actually delivers 6 of 16 and carries the
+9-of-16 coverage number. Phase 2 belongs there.
+
+### The measurement is a counterfactual, not a run
+
+`hybrid_topk_scan_k40.json` holds **40 library candidates per request with
+feasibility already measured** (640 screened candidates, entry 52). Re-ordering
+them and asking where the first feasible one lands is **exact arithmetic at zero
+decks** -- the same device entry 49 used for its ranker.
+
+### Baseline and ceiling, computed before registering
+
+    first-feasible rank under today's `dev` ordering, per request:
+      [-, -, 2, 17, 5, 17, 26, 2, -, 1, 19, 2, -, -, 3, -]
+
+      k= 1   A= 1    ~64 decks
+      k= 2   A= 4   ~124
+      k= 3   A= 5   ~172
+      k= 5   A= 6   ~260      <- today's delivered setting (AUTO_K)
+      k=40   A=10  ~1336
+
+    CEILING, a perfect ranker: A=10 at k=1, ~64 decks.
+
+**The prize is large**: 10 of 16 requests have a feasible candidate somewhere in
+their top 40, and today's ordering finds only 6 of them within k=5.
+
+### What is ranked, and why this does not sacrifice shape
+
+Every one of the 40 candidates is **already in-tolerance on the target** -- the
+library only returns in-tolerance designs (entry 32 measured 2 066-17 478 of
+them per request). So re-ordering *within* that set by predicted swing spends no
+shape accuracy; it picks among designs that all match the request.
+
+The ranker is `exp_swing_surrogate.load_surrogate()`, entry 37's model:
+**4.7 % median error, rho 0.993** on a transfer split. It predicts the swing
+LIMIT from the design vector, and higher is better. **No weight is tuned and
+nothing is blended** -- the ordering is the surrogate's prediction alone, so a
+result is attributable to it and to nothing else.
+
+### Predictions
+
+**Q1 -- THE MECHANISM, AND IT COMES FIRST. Feasible candidates have a higher
+predicted swing limit than infeasible ones**, i.e. the AUC of the surrogate's
+prediction against the measured feasible/infeasible label exceeds 0.6.
+Confidence **0.7.** If this fails, nothing downstream can work and the entry
+stops here. **Falsifier: AUC <= 0.6.**
+
+**Q2 -- THE HEADLINE. `A >= 6` at `k = 5` under the new ordering** -- the
+surrogate ranking at least matches today's delivered setting. Confidence
+**0.5.** *For:* it ranks on the quantity that causes 92.9 % of rejections.
+*Against:* `dev` is not a random ordering -- it is the best target match, and
+the two feasible candidates found at rank 1 and 2 today may be there because
+close-matching designs are also better-behaved. **Falsifier: `A <= 5`.**
+
+**Q3 -- THE COST CLAIM. The `k` needed to reach `A = 6` falls below 5.**
+Confidence **0.45.** This is the number that would matter in deployment: same
+accept rate, fewer decks. **Falsifier: `k >= 5` needed.**
+
+**Q4 -- THE IMPLEMENTATION CONTROL. `A` at `k = 40` is unchanged at 10.**
+Confidence **0.95.** Re-ordering cannot change the *set*, only the order; if
+this moves, the re-rank is dropping or duplicating candidates and every other
+number is void. **Falsifier: anything but 10.**
+
+### The decision rule, before the result
+
+* **Q1 misses** -> the surrogate carries no usable signal about feasibility on
+  this population, and Phase 2 ends as a measured negative. Report and stop.
+* **Q2 and Q3 hit** -> the delivered path gets the same accept rate for fewer
+  decks. Wire it behind `AUTO_K` only after a held-out check, because the
+  ordering is being chosen on the same 640 rows it is scored on.
+* **Q2 hits, Q3 misses** -> no cost win but no harm; not worth deploying.
+* **Q2 misses** -> `dev` ordering is better than swing ordering, which is itself
+  worth knowing: it would mean target match predicts corner feasibility better
+  than the physical quantity that causes the failures.
+
+### The declared weakness, stated first
+
+**This is an IN-SAMPLE re-ranking.** The 640 candidates were screened once and
+the ordering is scored on those same labels. Entry 50 recorded exactly this
+defect for its corner ordering and it applies here unchanged: a positive result
+is a **ceiling on what a deployed ranker could do**, not a measurement of one,
+and it needs a held-out or leave-one-request-out check before deployment. Entry
+49's ranker did that with leave-one-request-out folds; this entry does not, and
+must not be quoted as if it had.
+
+### What no outcome may claim
+
+* **Not coverage, not compliance.** Screen acceptance, 4 corners.
+* **Not a deployed saving.** In-sample, per the weakness above.
