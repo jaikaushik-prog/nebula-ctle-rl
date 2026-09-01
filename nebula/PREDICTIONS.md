@@ -9922,3 +9922,122 @@ because the retry is the thing that makes them succeed.
   SEARCH returns, because a candidate that used to die on a NaN now gets
   scored. No sweep has been re-run, and no `BASELINES.md` number may be
   re-quoted as if it had been.
+
+---
+
+## 56. Session 33 -- **row 4t: the retry can change what the SEARCH returns. Re-run the sweep that the delivered path's headline comes from.**
+
+**Written 2026-09-01 BEFORE the sweep runs.** Every base rate below is counted
+from artifacts already on disk at **zero simulations**; no run with the retry on
+has happened.
+
+### Why this is owed
+
+Entry 55 wired the G54 retry into `run_point` and **declared, without measuring,
+that it can change what the search returns** -- a candidate that used to die on
+a NaN now gets scored, and the search ranks on scores. Until that is measured,
+`BASELINES.md` and entry 40 cannot be re-quoted as if they had been run with it.
+This entry measures it on the sweep whose numbers the deliverable actually
+advertises.
+
+### The exposure, counted from `hybrid_run.jsonl` before registering
+
+**29 of 2 082 design evaluations (1.39 %) were rejected carrying the G54
+signature**, and every one of them has `feasible: false`. **All 29 are genuine
+`inoise_total = -nan(ind)`; zero are other reasons that merely contain the
+letters.** Split by how many screen points were unscorable -- only a design
+whose points ALL become scorable is rescued outright:
+
+    1 of N points unscorable   18    <- the NaN was the only blocker
+    2..5 of N unscorable       11
+
+And they are **not spread evenly** -- they cluster on the unsolved,
+high-peaking requests, which is where G54 said the singularity lives:
+
+    req  target                 entry 40 45-corner   G54 rows   single-point
+      1   4.0 dB @ 1.627 GHz        45/45  SOLVED         3          1
+      8   8.0 dB @ 1.387 GHz        35/45                 1          0
+     10   8.0 dB @ 1.921 GHz        45/45  SOLVED         1          0
+     12  10.0 dB @ 1.387 GHz         0/45                 8          5
+     13  10.0 dB @ 1.627 GHz        17/45                10          8
+     15  10.0 dB @ 2.253 GHz        37/45                 6          4
+
+**24 of the 29, and 17 of the 18 single-point ones, land on four UNSOLVED
+requests.** The proposal stage is essentially unexposed: **1 of 65** proposal
+evaluations was G54-rejected (the rest fail on swing compression, entry 32).
+
+### The run
+
+`python -m nebula.experiments.exp_hybrid --run --topk-deliver 5`, i.e. entry
+40's settings exactly (`topk=5`, `budget_design_evals=200`, the same 16
+requests, the same 4-corner screen, `V6_SPECS`). **Nothing is tuned:** the box,
+tolerances, screen, `reward_v1.py` and `AUTO_K` are untouched, and the only
+difference from entry 40 is that `run_point` now retries the G54 NaN.
+**~10 300 decks, ~75 min.**
+
+### The thing that makes exact reproduction impossible, stated first
+
+**The arms diverge after the first rescued evaluation.** CMA-ES proposes from
+the scores it has seen, so the moment one previously-unscorable design gets a
+score, every subsequent candidate on that request differs. So the G54 count will
+**not** reproduce at 29, and a request's outcome can move in **either**
+direction. Entry 30 is the precedent: a mechanism fix that was expected to raise
+coverage lowered it 8 -> 7.
+
+### Predictions
+
+**Q1 -- THE HEADLINE. `n_solved_pvt45` lands at 8 or 9 of 16.** Confidence
+**0.6.** *For:* 24 of 29 rescues land on unsolved requests, and two of them
+(15 at 37/45, 8 at 35/45) are close. *Against:* the rescued designs were
+rejected, not near-misses, and divergence can lose a solved request as easily as
+win an unsolved one. **Falsifier: 7 or below, or 10 or above.**
+
+**Q2 -- THE CONTROL, AND IT OUTRANKS THE HEADLINE. Requests 1 and 10 are still
+solved 45/45.** Confidence **0.75.** Both were solved in entry 40 *despite*
+carrying G54 rejections, so if the retry breaks either, it is not "the search
+found something different" -- it is the retry costing a request that worked.
+**Falsifier: either drops below 45/45.**
+
+**Q3 -- ANY CHANGE IS INSIDE THE EXPOSED SET. No request outside
+{1, 8, 10, 12, 13, 15} changes its 45-corner solved/unsolved state.** Confidence
+**0.55**, deliberately near even because divergence is not confined to the
+requests that had NaNs -- **it is confined to them only if the retry is the
+only difference, which is the claim.** **Falsifier: any request outside that set
+flips either way.** *This is the sharpest test in the entry: it asks whether the
+retry is a local fix or a global perturbation.*
+
+**Q4 -- COST BARELY MOVES. `mean_sims_per_request` stays within 5 % of entry
+40's 642.06.** Confidence **0.7.** The retry adds one deck per firing, ~29 on
+~10 300. *Against:* rescued designs are scored rather than abandoned, and a
+scored design can extend a search that used to give up. **Falsifier: outside
+[610, 674].**
+
+**Q5 -- PROPOSALS ARE UNAFFECTED. `n_proposals_accepted` stays at 6 of 16.**
+Confidence **0.8.** Only 1 of 65 proposal evaluations was G54-rejected.
+**Falsifier: anything but 6.**
+
+**Q6 -- REGISTERED EXPECTED NULL. `n_solved_full135` stays 0 of 16.**
+Confidence **0.9.** The load axis is blocked by link-layer compression, which a
+device-side retry cannot reach. **Falsifier: anything above 0.**
+
+### The decision rule, before the result
+
+* **Q2 fails** -> the retry costs a working request. Report that first, and row
+  4r is reopened as a question rather than a fix.
+* **Q1 >= 9 with Q2 and Q3 holding** -> the retry is a local fix that also buys
+  coverage; entry 40's numbers are superseded by this run and quoted from it.
+* **Q1 = 8** -> the retry changes nothing at the sweep level. That is the
+  **most likely useful outcome**: it means entry 40's published numbers survive
+  the change, and `BASELINES.md` can be re-quoted with a stated caveat instead
+  of being re-run.
+* **Q3 fails** -> the divergence is global, and every pre-retry sweep number in
+  the repository has to be labelled as measured on a different instrument.
+
+### What no outcome may claim
+
+* **Not that this is entries 54/55's `9 of 16`.** That number counts request 3
+  solved by a **rank-17 retrieved proposal verified at 45 corners**; this sweep
+  delivers from the top **5** and will not see rank 17. They are different
+  quantities and must not be merged.
+* **Not a `BASELINES.md` re-quote.** This is one sweep, not the benchmark.
+* **Not a 135-point claim.**
