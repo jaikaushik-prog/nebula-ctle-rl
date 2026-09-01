@@ -414,6 +414,20 @@ def report(d: dict) -> str:
         L.append(f"    worst {v['worst_reward']:.4f} at {v['worst_point']}"
                  f"  ({v['worst_spec']})"
                  f"   screened corner: {v['worst_is_a_screen_corner']}")
+    elif d["method"] == "auto":
+        # **`auto` sets `robust_search`, so without this branch it would print
+        # NOTHING about the mandated 45** -- the loudest possible silence, on
+        # the default path. Screened is not verified, and the gap is four
+        # points against forty-five.
+        n_screen = len(sr.get("screened_on", []))
+        L.append("")
+        L.append(f"  SCREENED at {n_screen} corner/load points, NOT VERIFIED "
+                 f"at the mandated 45.")
+        L.append("  The screen reproduces the full-135 worst case exactly on "
+                 "every design")
+        L.append("  ever fully verified (PROGRESS.md 4), which is evidence and "
+                 "not proof.")
+        L.append("  Add --verify for 45 corners x 3 loads = 135 points.")
     elif not d["robust_search"]:
         L.append("")
         L.append("  NOT VERIFIED AT CORNERS. Re-run with --robust --verify.")

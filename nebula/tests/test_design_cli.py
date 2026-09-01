@@ -296,8 +296,14 @@ def test_auto_is_reported_as_corner_SCREENED_but_not_corner_VERIFIED(monkeypatch
     assert "no strategy was chosen by a human" in text
     assert "accepted at rank 2 of 5" in text
     assert "screened on 4 corner/load points" in text
-    # screened is not verified
-    assert "45 corners" not in text or "--verify" in text
+    # **Screened is not verified, and the default path must SAY so.**
+    # `auto` sets `robust_search`, so the old "NOT VERIFIED AT CORNERS" branch
+    # no longer fires for it -- without its own branch the default run would
+    # print nothing at all about the mandated 45, which is the loudest
+    # possible silence in this whole report.
+    assert "NOT VERIFIED" in text
+    assert "mandated 45" in text
+    assert "--verify" in text
 
 
 def test_auto_says_when_the_PROPOSAL_FAILED_and_the_search_answered(monkeypatch):
