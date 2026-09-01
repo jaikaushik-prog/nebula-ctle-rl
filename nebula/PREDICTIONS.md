@@ -10364,3 +10364,68 @@ accounting of true simulator cost has to add them.
 * **Request 12 went 0/45 -> 41/45 without being solved.** The biggest single
   improvement in the run buys no coverage, which is the ordinary shape of this
   problem and is why coverage moves so slowly.
+
+### OUTCOME, entry 57 (2026-09-01). **SCORED 5 OF 5. Arm F ties the control EXACTLY -- 13 of 58 against 13 of 58 -- and the RL line closes on a mechanism.**
+
+    58 requests, 12.9 min, artifact refine_widened_results.json
+
+    arm                       crossed    up  down   decks
+    A  policy MEAN     1x8      5/58     30    2    30.2
+    D  policy SAMPLED  1x8     10/58     31    3    29.8
+    F  policy + B's SD 1x8     13/58     34    1    29.9
+    B  uniform random  1x8     13/58     38    1    30.1
+
+| | prediction | outcome | |
+|---|---|---|---|
+| **Q1** | all 58 start from the same library design | 58 of 58 | **HIT** |
+| **Q2** | **THE BAR.** F crosses at least as often as B (13) | **13, exactly** | **HIT** |
+| **Q3** | F crosses more often than D (10) | 13, `p = 0.549` | **HIT** |
+| **Q4** | F's decks within 10 % of A's 30.21 | 29.86, **-1.1 %** | **HIT** |
+| **Q5** | McNemar F vs B does NOT reach 0.05 | **`p = 1.0`**, 8 discordant each way | **HIT** |
+
+### The registered branch fires, and it is the informative one
+
+Entry 57's rule: *"Q2 hits, Q5 holds -> F reaches the control but is not
+separable from it. Report as **a tie at matched budget**: the policy is no
+longer behind noise, and it is not ahead of it either."* That is exactly the
+outcome, and the tie is as clean as a tie can be -- **13 against 13, with 8
+requests solved only by F and 8 solved only by B.**
+
+### What the four arms say together, which is the whole point of having built them
+
+    A   5    the mean alone            no spread at all
+    D  10    its own learned sigma     narrow spread
+    F  13    the control's sigma       full spread, learned centre
+    B  13    no policy at all          full spread, no centre
+
+**The progression A -> D -> F is entirely explained by SPREAD, and when spread
+is equalised the learned direction adds exactly zero.** The policy's whole
+measurable contribution was how widely it sampled -- a property of its
+`log_std`, not of anything it learned about the circuit.
+
+This is a **much stronger negative than entry 47's**, and the difference
+matters. Entry 47 said "the refiner loses to noise", which invites "then train
+it more". Entry 57 says **"we gave the policy the control's exploration and its
+direction was worth nothing, measured, at n = 58 with a paired design and an
+identical start."** That is a statement about what the policy learned, not
+about how long it was trained.
+
+### One detail that is not a tie
+
+B moved **38** designs up against F's **34**, while both crossed 13. So the
+random arm improves more designs slightly and the policy-centred arm improves
+fewer but crosses the same number. With `n = 58` and no registered prediction
+about `moved_up`, this is an observation and **not a result**.
+
+### What this settles, and what it does not
+
+* **The sizing-policy line is closed on a mechanism**, which was the registered
+  best case for a miss. Nothing here says more training would help; it says the
+  direction it learned carries no usable information for this selector.
+* **Not a claim against retrieval.** Entry 47 arm C -- the same decks spent
+  reading the library deeper -- crossed **18 of 58**, still more than every
+  policy arm including F.
+* **Not coverage, not compliance, not a corner claim.** Four screen points.
+* **`SPREAD` must not now be swept.** It was derived as the control's own
+  standard deviation and fixed before the run; a follow-up at 0.3 or 0.8 would
+  be tuning and would retire this result rather than extend it.

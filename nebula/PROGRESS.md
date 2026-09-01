@@ -1460,6 +1460,62 @@ caller's budget counter sees one call. **Retry decks are unbilled** -- ~30 in
 
 ---
 
+## 5t. THE RL LINE CLOSES ON A MECHANISM: **give the policy the control's spread and its direction is worth ZERO**
+
+**2026-09-01 (session 33), `exp_refine_widened.py`, 58 requests, 12.9 min.**
+Pre-registered as entry 57 and committed before the run. **Scored 5 of 5.**
+
+    arm                       crossed    up  down   decks
+    A  policy MEAN     1x8      5/58     30    2    30.2
+    D  policy SAMPLED  1x8     10/58     31    3    29.8
+    F  policy + B's SD 1x8     13/58     34    1    29.9
+    B  uniform random  1x8     13/58     38    1    30.1
+
+**13 against 13**, matched budget (-1.1 %), McNemar **p = 1.0** with 8 requests
+solved only by F and 8 only by B.
+
+### The mechanism, which is the whole point
+
+The checkpoint's `log_std` gives sigma **0.0487 on `rs`** and **0.0530 on `cs`**
+-- the two knobs that set the `Rs x Cs` peak -- against the control's
+`1/sqrt(3) = 0.5774`. **11.85x and 10.90x narrower.** The shared selector is
+best-of-visited, which pays for spread. So arm F gave the policy the control's
+spread and kept its learned centre.
+
+**The progression 5 -> 10 -> 13 -> 13 is entirely explained by spread, and once
+spread is equalised the learned direction adds exactly zero.** The policy's
+whole measurable contribution was how widely it sampled -- a property of its
+`log_std`, not of anything it learned about the circuit.
+
+### Why this negative is worth more than the earlier ones
+
+Entry 47 said *"the refiner loses to noise"*, which invites *"then train it
+longer"*. Entry 57 says **"we gave the policy the control's exploration and its
+direction was worth nothing -- measured, n = 58, paired, identical start."**
+That is a statement about what the policy learned, not about how long it
+trained, and the obvious reply does not touch it.
+
+### What it does NOT say
+
+* **Not a claim against retrieval.** Entry 47 arm C -- the same decks spent
+  reading the library deeper -- crossed **18 of 58**, more than every policy
+  arm including F.
+* **Not coverage, not compliance, not a corner claim.** Four screen points.
+* **`SPREAD` MUST NOT NOW BE SWEPT.** It was derived as the control's own
+  standard deviation and fixed before the run; a follow-up at 0.3 or 0.8 would
+  be tuning and would retire this result rather than extend it.
+
+### The professor-ready version
+
+**We suspected our reinforcement-learning agent was losing to random search
+only because it explored too timidly. So we gave it exactly the random
+searcher's exploration and kept everything it had learned about which
+direction to move. It scored identically to random -- 13 out of 58 either way.
+The agent's only real contribution had been how widely it looked, not what it
+had learned.**
+
+---
+
 ## 6. Next steps, in order
 
 | # | Task | Cost | Status |

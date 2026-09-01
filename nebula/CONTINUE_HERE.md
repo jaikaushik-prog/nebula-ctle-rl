@@ -8,6 +8,28 @@ else in the 22s brief stands.
 
 **14 days to the 15 Sept deadline (as of 2026-09-01). Demo 25 Sept at BITS Goa.**
 
+> **2026-09-01 (session 33). THE RL LINE CLOSES ON A MECHANISM.** Entry 57,
+> **5 of 5**, 58 requests, 12.9 min.
+>
+>     A  policy MEAN     1x8    5/58    30.2 decks
+>     D  policy SAMPLED  1x8   10/58    29.8
+>     F  policy + B's SD 1x8   13/58    29.9   <- the control's spread, learned centre
+>     B  uniform random  1x8   13/58    30.1
+>
+> **13 against 13**, matched budget, McNemar **p = 1.0**, 8 requests solved only
+> by F and 8 only by B. The checkpoint's sigma is **11.85x narrower than the
+> control on `rs`** and 10.90x on `cs`; the selector is best-of-visited and pays
+> for spread. **The progression 5 -> 10 -> 13 -> 13 is entirely explained by
+> spread, and once spread is equalised the learned direction adds exactly
+> zero.**
+>
+> This is the strongest form of the negative: not *"the policy loses to noise"*
+> (which invites "train it longer") but *"we gave it the control's exploration
+> and its direction was worth nothing, measured."* **`SPREAD` MUST NOT NOW BE
+> SWEPT** -- it was derived as the control's own standard deviation and fixed
+> before the run. Retrieval still beats every policy arm (entry 47 arm C, 18 of
+> 58). Read `PROGRESS.md` section 5t.
+
 > **2026-09-01 (session 33, LATEST). THE SWEEP RE-RAN WITH THE RETRY ON:
 > COVERAGE 8 -> 9 OF 16 ON THE DELIVERED PATH, and pre-retry numbers SURVIVE.**
 > Entry 56, **6 of 6**, ~10 300 decks, 67 min.

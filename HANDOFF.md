@@ -12775,3 +12775,49 @@ survive.
 
 **No code changed in this step** — the retry itself was committed and
 suite-verified in `8189110`. This is artifacts and documentation only.
+
+---
+
+### 2026-09-01 — session 33 (entry 57). **The RL line closes on a mechanism, not a p-value.**
+
+Pre-registered as entry 57 and **committed before the run** (`d48e3f2`).
+**Scored 5 of 5**, artifact `refine_widened_results.json`.
+
+    arm                       crossed    up  down   decks
+    A  policy MEAN     1x8      5/58     30    2    30.2
+    D  policy SAMPLED  1x8     10/58     31    3    29.8
+    F  policy + B's SD 1x8     13/58     34    1    29.9
+    B  uniform random  1x8     13/58     38    1    30.1
+
+**13 against 13**, matched budget (−1.1 %), McNemar **p = 1.0** with 8 requests
+solved only by F and 8 only by B.
+
+**The mechanism.** The checkpoint's sigma is **0.0487 on `rs`** and **0.0530 on
+`cs`** against the control's `1/sqrt(3) = 0.5774` — **11.85× and 10.90×
+narrower** on the two knobs that set the peak. The shared selector is
+best-of-visited, which pays for spread. Arm F gave the policy the control's
+spread and kept its learned centre. **The progression 5 → 10 → 13 → 13 is
+entirely explained by spread; once spread is equalised the learned direction
+adds exactly zero.**
+
+**Why this negative is worth more than entry 47's.** "The refiner loses to
+noise" invites "then train it longer". This says *"we gave the policy the
+control's exploration and its direction was worth nothing — measured, n = 58,
+paired, identical start"*, which is a statement about what the policy learned
+rather than how long it trained.
+
+**Guardrails.** `SPREAD` **must not now be swept** — derived as the control's
+own standard deviation and fixed before the run; a follow-up at 0.3 or 0.8
+would retire this result rather than extend it. Not a claim against retrieval:
+entry 47 arm C crossed **18 of 58**, more than every policy arm including F.
+Not coverage, not compliance — four screen points.
+
+**New on disk:** `nebula/experiments/exp_refine_widened.py`,
+`refine_widened_results.json`, `refine_widened_run.jsonl`,
+`nebula/tests/test_refine_widened.py` (14 gates, passing).
+`PROGRESS.md` §5t; `CONTINUE_HERE.md` entry-57 block.
+
+**Suite status: OWED.** `test_refine_widened.py` passes 14/14 on its own, but
+the full suite has not run since this module was added — entry 58 is holding
+ngspice and G70 forbids running the suite alongside an experiment. It runs
+immediately after entry 58 and the count is reported then.
