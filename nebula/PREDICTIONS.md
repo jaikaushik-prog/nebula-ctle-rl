@@ -10041,3 +10041,125 @@ device-side retry cannot reach. **Falsifier: anything above 0.**
   quantities and must not be merged.
 * **Not a `BASELINES.md` re-quote.** This is one sweep, not the benchmark.
 * **Not a 135-point claim.**
+
+---
+
+## 57. Session 33 -- **the last RL lever: give the policy the control's SPREAD and ask whether its learned DIRECTION is worth anything.**
+
+**Written 2026-09-01 BEFORE arm F exists and BEFORE it runs.** Every number
+below is read from committed artifacts and the committed checkpoint; **no run
+with a widened policy has happened.**
+
+### The mechanism, now measured rather than described
+
+Entries 47 and 48 established the shape of the failure and named its cause, and
+the cause is a **number in the checkpoint**:
+
+    log_std  [-1.3628 -1.1908 -1.7983 -3.0219 -2.9383 -2.5138 -0.7194]
+    sigma    [ 0.2559  0.3040  0.1656  0.0487  0.0530  0.0810  0.4871]
+              w_in    l_in    i_bias  rs      cs      rl      vcm_in
+
+Uniform on the tanh-bounded action box -- **arm B's own action distribution** --
+has standard deviation `1/sqrt(3) = 0.5774`. So per dimension the trained
+policy explores this much narrower than the control it loses to:
+
+    w_in 2.26x   l_in 1.90x   i_bias 3.49x   rs 11.85x   cs 10.90x   rl 7.13x   vcm_in 1.19x
+
+**On `rs` and `cs` -- the two knobs that set the `Rs x Cs` peak -- it is an
+order of magnitude narrower.** The selector every arm shares is
+**best-of-visited**, which pays for the spread of what was visited. So the three
+results so far are exactly what that predicts:
+
+    A  policy MEAN      1x8     5 / 58 crossings   30.21 decks   (no spread at all)
+    D  policy SAMPLED   1x8    10 / 58            29.84 decks   (its own narrow spread)
+    E  policy SAMPLED   4x2    12 / 58            35.95 decks   (+19 % budget, not matched)
+    B  uniform RANDOM   1x8    13 / 58            30.12 decks   (full spread)
+
+Every step towards more spread moved the policy up. **None of them reached the
+control**, and D -- the only budget-matched one -- stopped at 10 against 13.
+
+### The question this arm asks, and it is the last one worth asking
+
+**Does the learned DIRECTION contribute anything once the SPREAD is equalised?**
+
+Arm **F** takes the policy's mean action and adds Gaussian noise of standard
+deviation **`1/sqrt(3)`**, clipped to the same `[-1, 1]` box, `1 x 8`, one
+trajectory, the same seeds, the same start, the same selector.
+
+**The spread is DERIVED, not chosen.** It is the standard deviation of arm B's
+own action distribution -- the one number that makes "diversity" equal between
+the two arms, so the only remaining difference is where the centre of the cloud
+sits. **This is not a sweep and must not become one:** a later run at sigma
+0.2, 0.3, 0.4 would be tuning, and would make this result unreportable
+(rule 6). One value, and it is the control's.
+
+Three outcomes and all three are informative:
+
+* **F > B** -- the learned mean adds signal on top of diversity. That is the
+  first genuine RL contribution in this project.
+* **F == B** -- the policy's direction is indistinguishable from noise. The RL
+  line closes **on a mechanism** rather than on a p-value, which is a much
+  better negative than entry 47's.
+* **F < B** -- the learned direction actively points the wrong way once it is
+  no longer masked by its own timidity. Sharper still.
+
+### Declared inputs, measured before this entry
+
+1. Entries 47/48 arm counts above, from `refine_sampled_results.json`
+   (`n = 58`, seed 230821, `max_step` 0.04, policy at 200 000 steps).
+2. Entry 48's Q1 control reproduced the start on **58 of 58** requests.
+3. The checkpoint's `log_std`, read from `rl_policy_pretrained.pt` above.
+4. Entry 47 arm C -- spending the same decks reading the library **deeper** --
+   crossed **18 of 58**, beating every policy arm. **Nothing here may be
+   claimed against that.**
+
+### Predictions
+
+**Q1 -- THE CONTROL. All 58 requests start from the same library design as
+entries 47 and 48, componentwise.** Confidence **0.9.** Costs nothing; it is the
+only way a difference could be an artefact of a different start rather than of
+the action source. **Falsifier: any start differing. If it fires, stop.**
+
+**Q2 -- THE BAR, AND IT DECIDES WHETHER RL CONTRIBUTES. F crosses at least as
+often as B (13 of 58).** Confidence **0.4**, deliberately below even. *For:* the
+only registered mechanism for B's win is spread, and F now has exactly B's
+spread plus a trained centre. *Against:* three arms have now walked towards the
+control and stopped short of it, and the mean has never once demonstrated value;
+a policy trained to be confident may have a centre that is simply wrong away
+from its own narrow neighbourhood. **Falsifier: `F < 13`.**
+
+**Q3 -- WIDENING BEATS THE POLICY'S OWN SAMPLING. F crosses more often than D
+(10 of 58).** Confidence **0.7.** *Mechanism:* A -> D -> E is monotone in
+spread, and F has more spread than D on every dimension. **Falsifier:
+`F <= 10`.**
+
+**Q4 -- BUDGETS STAY MATCHED. F's mean decks are within 10 % of A's 30.21.**
+Confidence **0.85.** F is `1 x 8`, the same shape as A, B and D; only the action
+source differs. **Falsifier: outside [27.2, 33.2].**
+
+**Q5 -- REGISTERED EXPECTED NULL. McNemar exact on F vs B does NOT reach
+p < 0.05.** Confidence **0.7.** At `n = 58` with these counts the discordant
+pairs are few -- entry 48's F-vs-B analogue gave 6 against 7, `p = 1.0`.
+Registered in advance so a tie is not read as a win. **Falsifier: `p < 0.05`.**
+
+### The decision rule, before the result
+
+* **Q2 hits AND Q5 misses** -> a measured, significant RL contribution. Report
+  it with the deck cost, the mechanism and arm C alongside.
+* **Q2 hits, Q5 holds** -> F reaches the control but is not separable from it.
+  Report as **a tie at matched budget**: the policy is no longer behind noise,
+  and it is not ahead of it either.
+* **Q2 misses** -> **the RL line closes on a mechanism.** The learned direction
+  does not survive being given room to move, and the honest deliverable is
+  retrieval + CMA-ES with RL reported as a measured negative. **This is the
+  outcome the prior favours, and registering it in advance is the point.**
+* **Q1 misses** -> a wiring failure. Read nothing else.
+
+### What no outcome may claim
+
+* **Not that RL beats retrieval.** Arm C crossed 18 of 58 and supplies the start
+  in every arm.
+* **Not coverage** (9 of 16) and **not compliance** (11 of 11 at 45 of 45).
+* **Not a corner claim** -- four screen points, not the mandated 45.
+* **Not a retraining result.** No policy is trained here; the checkpoint is the
+  one entries 46-48 used, read differently.
