@@ -10505,3 +10505,86 @@ cheapest possible way to find that out.
 * **The honest headline is `A = 0 of 16` against retrieval's 6**, and any future
   corner-aware version must be measured against **that same 6**, on this same
   screen, before it may be called an improvement.
+
+---
+
+## 59. Session 33 -- **is the analytic proposer failing on CORNER SPREAD or on MODEL ERROR? Entry 58's conclusion was an inference and it has not been measured.**
+
+**Written 2026-09-02 BEFORE the decomposition runs.**
+
+### Why this exists, and it is a correction to entry 58's reading
+
+Entry 58 concluded *"the inversion solves for TT/1.00/27 C and the screen scores
+four corners, so a nominal bullseye is a corner miss by construction"*, and
+named corner-aware targeting as the fix. **That was an inference from
+`worst_spec`, not a measurement**, and there is a competing explanation the
+entry never excluded:
+
+* **corner spread** -- the design is on target at TT and drifts off at the
+  screen corners; or
+* **model error at nominal** -- the design is *already* off target at TT,
+  because `predict_response`'s own SPICE error is **4.93 % median on `f_peak`
+  with a p99 of 1.078 octaves**, and the match tolerance is **0.3 octaves**.
+
+The second needs no corners to explain the whole failure. If it dominates,
+corner-aware targeting fixes **nothing** and the indicated fix is wrong.
+`exp_invert_screen` recorded neither -- it stored the verdict and the reason,
+not the measured response -- so the artifact cannot separate them.
+
+### The experiment
+
+Take the same 16x5 analytic candidates entry 58 screened and measure each at
+**TT/1.00/27 C** as well as at the **four screen corners**, recording
+`peaking_db` and `f_peak_hz` at every point. **400 decks, ~5 min.** The
+decomposition is then arithmetic:
+
+    nominal error   = measured(TT)      - target
+    corner spread   = measured(corner)  - measured(TT)
+
+Nothing is tuned; the candidates are read from `topk_scan_analytic.json` exactly
+as generated.
+
+### Predictions
+
+**Q1 -- THE DECOMPOSITION. Corner spread is the larger term: the median
+|corner - TT| in octaves exceeds the median |TT - target|.** Confidence
+**0.45**, deliberately below even, because entry 58's inference is the thing
+under test and I have already been wrong once about this method.
+**Falsifier: nominal error is the larger median.**
+
+**Q2 -- THE ONE THAT DECIDES THE FIX. At least half of the candidates are
+INSIDE the 0.3-octave match tolerance at TT.** Confidence **0.5.** If they are,
+the inversion works where it aims and the corner is the problem, so
+corner-aware targeting is the right fix. If they are not, the model is not
+accurate enough to aim with at all. **Falsifier: fewer than half.**
+
+**Q3 -- PEAKING TRANSFERS BETTER THAN FREQUENCY.** The fraction of candidates
+inside the 1.5 dB peaking tolerance at TT exceeds the fraction inside the
+0.3-oct frequency tolerance. Confidence **0.7.** *Mechanism:* the model's
+measured error is 0.284 dB MAE on peaking against 4.93 % median on `f_peak`,
+and peaking is a ratio that the `k` fit was calibrated on directly.
+**Falsifier: frequency transfers as well or better.**
+
+**Q4 -- REGISTERED EXPECTED NULL. The swing failures do not move.** The
+fraction of candidate-corners rejected as unscorable stays within 10 points of
+entry 58's 47.5 %. Confidence **0.8.** Swing is a drive-level property and
+nothing here changes the drive. **Falsifier: outside [37.5 %, 57.5 %].**
+
+### The decision rule, before the result
+
+* **Q2 hits** -> the inversion aims well and the corner is the problem.
+  Corner-aware targeting is the right fix and entry 58's stated cause stands.
+* **Q2 misses** -> **entry 58's stated cause is WRONG and must be corrected in
+  place.** The model cannot aim inside the tolerance even at the point it
+  solves for, and no amount of corner-awareness helps; the honest conclusion is
+  that closed-form inversion of *this* model is not accurate enough to propose
+  with, and Phase 1 ends as a measured negative rather than a deferred one.
+* **Q1 and Q2 disagreeing** -> report both terms and let the larger one name the
+  work.
+
+### What no outcome may claim
+
+* **Not coverage, not compliance.** No design is delivered or verified here.
+* **Not a retraction of the inversion's correctness.** The round trip against
+  the model is 24 of 24 and is not in question; what is in question is whether
+  the model is close enough to SPICE to aim with.
