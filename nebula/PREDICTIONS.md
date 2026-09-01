@@ -10163,3 +10163,137 @@ Registered in advance so a tie is not read as a win. **Falsifier: `p < 0.05`.**
 * **Not a corner claim** -- four screen points, not the mandated 45.
 * **Not a retraining result.** No policy is trained here; the checkpoint is the
   one entries 46-48 used, read differently.
+
+---
+
+## 58. Session 33 -- **Phase 1: the passives are SOLVED, not searched. Does an on-target-by-construction proposal survive the corner screen?**
+
+**Written 2026-09-01 BEFORE any deck is spent on an analytic proposal.**
+Everything below is computed from the model and committed artifacts at **zero
+simulations**.
+
+### What was built, and the one thing it changes
+
+`prescreen.predict_response` is a one-zero/two-pole model, and it **inverts in
+closed form**. Writing `a = fz`, `b = fp1 = k*a`, `c = fp2 = m*a`:
+
+    S           = sqrt((k^2-1)(m^2-1))
+    f_peak      = a * sqrt(S - 1)
+    peaking_db  = 10*log10( S / ((1+(S-1)/k^2)(1+(S-1)/m^2)) )    <- (k, m) only
+
+`peaking_db` is **scale-free**, so: pick `rs` -> `k`; solve `peaking(k,m)` for
+`m` by monotone bisection; then `a`, `cs`, `rl` are algebra. One numerical step.
+`experiments/invert_response.py`.
+
+**Every search in this project has treated `rs`, `cs`, `rl` as three of seven
+unknowns. They are two constraints and one free parameter.**
+
+### Measured before registering, all at zero simulations
+
+1. **Round-trip against the forward model: 24 of 24.** Over the whole S3 box
+   (3-12 dB x 1.25-2.5 GHz), `invert` then `predict_response(drawn=False)`
+   returns the target to within **0.024 dB and 0.004 octaves** -- the residual
+   being the model's own 1200-point grid step (0.0091 oct).
+2. **Drawn onto real SKY130 devices, 23 of 24** land inside the live
+   tolerances (`S3_peaking_match` 1.5 dB, `S3_f_peak_match` 0.3 oct).
+3. **All 16 competition requests have in-box analytic solutions**: 132 to 813
+   of an 8 000-point (w, l, i_bias, rs) grid, `invert_feasibility.json`. The
+   count falls monotonically with peaking and rises with frequency -- **fewest
+   exactly where the search fails** (132 at 10 dB @ 1.387 GHz, which entry 40
+   solved 0 of 45).
+4. **A closed-form design rule the project did not have:**
+   `peaking <= 20*log10(k)`, so `k > 10^(P/20)` and hence a minimum `rs` at a
+   given bias. 12 dB needs `k > 3.98`.
+5. **A units defect, found and fixed before it reached a claim.** The first
+   feasibility map passed `w_in`/`l_in` in MICRONS to `predict_gm`, which takes
+   METRES and takes `log(l)`. `gm` came back **2.5x** wrong and `gmbs` **7x**,
+   and the round-trip still closed perfectly because both halves used the same
+   wrong `gm`. The map was recomputed; the conclusion held (16 of 16, counts
+   rose from 72-432 to 132-813). `_require_metres` now raises on it.
+
+### The experiment
+
+For each of the 16 requests, take the top **k = 5** analytic solutions ranked by
+an **analytic headroom proxy** `i_bias * (1 + gm*rs/2) / gm`, and score each on
+the **live 4-corner screen** (`AdaptiveScreen(EDGE4_MANDATED)`, `V6_SPECS`) via
+`evaluate_at_points` -- the same call, screen and spec set entry 32 used, so
+`A` is on the same axis as the library's **6 of 16**.
+
+**k = 5 is `AUTO_K` and entry 32's measured optimum, not a swept value.** The
+bias grid is the one already used for the feasibility map. The ranking is the
+*analytic* proxy on purpose: entry 37's swing surrogate is **Phase 2**, and
+keeping them separate is what lets the two be attributed separately.
+
+**320 decks, ~6 min.** Writes `topk_scan_analytic.json`; entry 32's baseline is
+untouched.
+
+### Predictions
+
+**Q1 -- THE HEADLINE. `A >= 6` of 16: the analytic proposer at least matches the
+library.** Confidence **0.5**, deliberately even. *For:* every candidate is
+on-target by construction, so `S3_peaking_match`/`S3_f_peak_match` -- the rows
+that killed the SAC proposer in entries 36/38 -- should pass. *Against:* the
+screen is at **corners** and the inversion targets the **nominal** response;
+92.9 % of all rejections are output-swing compression, about which being
+on-target says nothing; and the model's p99 f_peak error is **1.078 octaves**,
+a tail wider than the 0.3-oct match tolerance. **Falsifier: `A <= 5`.**
+
+**Q2 -- THE MECHANISM. Output-swing compression is the dominant rejection
+reason**, i.e. more than half of all rejected candidate-corners name it.
+Confidence **0.8.** If the inversion does its job, shape stops being the
+blocker and the swing wall is all that is left. **Falsifier: it is not the
+plurality reason.**
+
+**Q3 -- SHAPE SURVIVES TO THE CORNERS. Fewer than 25 % of rejections name
+`S3_peaking_match` or `S3_f_peak_match`.** Confidence **0.6.** This is the
+direct test of "on-target by construction", and it is separate from Q2 because
+a candidate can fail both. *Against:* corner spread moves `f_peak` by up to
+0.94 octaves on designs this project has measured. **Falsifier: 25 % or more.**
+
+**Q4 -- IT IS NOT THE LIBRARY IN DISGUISE. No analytic proposal is within 0.05
+in the normalised box of the library's rank-1 candidate for the same request.**
+Confidence **0.85.** Registered because "the analytic proposer works" would mean
+much less if it were rediscovering the same designs. **Falsifier: any request
+where they coincide.**
+
+**Q5 -- REGISTERED EXPECTED NULL. This produces NO coverage number.** Screen
+acceptance is 4 corners; compliance is 45. Entry 53 measured that the screen's
+filter quality **degrades with retrieval depth** (83 % -> 50 %), so `A` may not
+convert. Confidence **0.9** that a follow-up 45-corner verification is required
+before any coverage claim. **Falsifier: nothing here -- it is a constraint on
+what may be said, and it is registered so that it binds.**
+
+**Q6 -- THE PROXY'S OWN BLIND SPOT, REGISTERED BEFORE THE RUN. Power is a
+material rejection reason: at least 20 % of rejections name `S6_power`.**
+Confidence **0.6.** *Noticed while smoke-testing candidate generation, with no
+deck spent:* the headroom proxy `i_bias*(1+gm*rs/2)/gm` is increasing in
+current, so **all five top candidates for every request sit at the box maximum
+`i_bias = 8 mA`**. At VDD 1.8 V that is **14.4 mW against S6's 15 mW limit**,
+before the mirror's reference branch is billed. The proxy optimises the
+constraint it was built for and walks straight into a different one.
+**Falsifier: under 20 %.** *This is registered rather than discovered because
+it is exactly the shape entry 38 hit -- fixing one blind spot exposes the next
+-- and if it fires, the fix is a proxy that prices power, not a bigger box.*
+
+### The decision rule, before the result
+
+* **`A >= 9`** -> the analytic proposer beats retrieval outright. Verify the
+  accepted ones at 45 corners before any coverage claim (Q5), then it becomes
+  the default proposer and the search becomes the fallback.
+* **`6 <= A <= 8`** -> it matches retrieval **at zero library cost**, which is
+  the amortisation intercept entry 51 priced at 74 526 designs / ~128 000
+  simulations. Worth reporting on cost alone even at equal accept rate.
+* **`A <= 5` with Q2 and Q3 holding** -> the inversion works and the swing wall
+  is untouched, which is exactly what **Phase 2** is for. A miss here does not
+  retire the method; it localises the failure.
+* **`A <= 5` with Q3 also missing** -> the nominal inversion does not survive
+  corner spread, and the method needs corner-aware targeting, not a better
+  ranker.
+
+### What no outcome may claim
+
+* **Not coverage, not compliance** (Q5).
+* **Not that the model is accurate.** This inverts `predict_response`, whose
+  SPICE error is measured and has a real tail.
+* **Not a deck-saving claim against the search.** The proposal is free; the
+  screen is not, and the fallback search is unchanged.
