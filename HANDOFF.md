@@ -12962,3 +12962,44 @@ screen's filter quality degrading with depth (83 % → 50 %).
 **This is the first thing in the project to improve the deployed proposer since
 entry 40.** Tests unchanged at 2433 (350.7 s) — no code shipped, the entry is a
 counterfactual.
+
+
+---
+
+### 2026-09-02 - session 33 (entry 63, row 4w). **The control failed: the swing re-rank is screen-only and would lose a solved request.**
+
+Pre-registered with the upside bounded at +2 before the run (`0b43b68`).
+**Scored 1 of 4.** Artifact `rerank_verify_results.json`, 540 decks.
+
+    idx  swing-rank  45-corner   entry 56 (search)   verdict
+      3      4         42/45          11/45          improved, NOT solved
+      5      4         37/45          44/45          WORSE than the search
+      6      1         45/45          45/45          control HOLDS
+     10      2         39/45          45/45          ** CONTROL FAILS **
+
+**Request 10 is the proof.** Solved 45/45 by the search; the swing ranker
+promotes a different design to rank 2, the 4-corner screen accepts it, and it
+delivers 39 of 45. **Deploying the re-rank would take coverage 9 -> 8.** The
+registered rule - Q2 outranks the headline - fired as written.
+
+**The mechanism is sharper than entry 53's.** That entry found the screen's
+filter quality degrading with retrieval *depth*. This degrades whenever the
+**ranking is changed to something the screen does not score**: the screen rates
+all four designs within **0.34** (+14.03 to +14.37) while their 45-corner counts
+span **37 to 45**.
+
+**Entry 61 is corrected in two places** - a +4/-2 trade it reported only as a
+net, and now a retraction of its "first improvement to the deployed proposer"
+line. It measured **screen acceptance and only that**.
+
+**Kept:** the surrogate is a useful *predictor* (entry 37's 4.7 %; it eliminated
+its target failure in entry 60) and is **not** useful as a ranking criterion
+alone. Row **4x** is a criterion pricing swing *and* the rows the screen scores
+- unmeasured, must be pre-registered.
+
+**One encouraging number in proportion:** request 3 went **11/45 -> 42/45** on a
+~20-deck proposal against a 1 085-deck search. Not solved, one design is not a
+trend, but it is the largest single-request improvement any proposer here has
+produced.
+
+**Tests unchanged at 2433** (259.3 s) - no code shipped.

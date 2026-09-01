@@ -1621,8 +1621,53 @@ sample -- it is not fitted to these labels at all.
 degradation is exactly the risk, and no coverage claim may be made from a
 4-corner screen. That verification is row 4w and is not in entry 61.
 
-**This is the first thing in the project to improve the deployed proposer since
-entry 40.**
+**RETRACTED 2026-09-02 by entry 63 (row 4w).** Verified at the 45 mandated
+corners, the re-ranking **loses a solved request**: request 10 is 45/45 by the
+search and its swing-ranked proposal delivers **39/45**. Deploying it would take
+coverage **9 -> 8**. Entry 61 measured **screen acceptance and only that**.
+See section 5w.
+
+---
+
+## 5w. ROW 4w: **the control failed. The swing re-rank is screen-only and would LOSE a solved request.**
+
+**2026-09-02 (session 33), entry 63, 540 decks, 194 s.** Pre-registered with the
+upside bounded at +2 before the run. **Scored 1 of 4** (one question not
+scorable).
+
+    idx  swing-rank  45-corner   entry 56 (search)   verdict
+      3      4         42/45          11/45          improved, NOT solved
+      5      4         37/45          44/45          WORSE than the search
+      6      1         45/45          45/45          control HOLDS
+     10      2       **39/45**        45/45          ** CONTROL FAILS **
+
+**Request 10 is the proof.** It is solved 45/45 by the search; the swing ranker
+promotes a different design to rank 2, the 4-corner screen accepts it, and it
+delivers **39 of 45**. Deploying the re-rank would take mandated coverage from
+**9 of 16 to 8** -- it gains nothing and loses one. The registered rule fired as
+written: **Q2 outranks the headline, and Q2 failed.**
+
+### The mechanism, sharper than entry 53's version
+
+Entry 53 found the screen's filter quality degrading with retrieval **depth**.
+This is worse: **it degrades whenever the ranking is changed to something the
+screen does not score.** The screen rates all four of these designs within
+**0.34** of each other (+14.03 to +14.37) while their true 45-corner counts span
+**37 to 45**.
+
+### What Phase 2 on the delivered path actually established
+
+* the swing surrogate **does** carry signal about screen feasibility (AUC 0.6128);
+* re-ranking on it **does** raise 4-corner acceptance 6 -> 8 (+4 / -2);
+* it **does not** raise 45-corner coverage and **would lower it by one**;
+* so it must **not** be wired behind `AUTO_K`.
+
+### The one encouraging number, in proportion
+
+**Request 3 went 11/45 -> 42/45** on a ~20-deck proposal against a 1 085-deck
+search. Still not solved, and one design is not a trend -- but it is the largest
+single-request improvement any proposer in this project has produced, and it
+names where to look next (row 4x).
 
 ---
 
@@ -1653,7 +1698,8 @@ entry 40.**
 | **4q2** | **Clear the G54 singularity and re-verify (entry 54).** Invariance control first: 45 corners at 10 pF vs 30 pF, compared with `==` | 360 decks, 211 s | **DONE 2026-09-01. 5 of 6. 132 comparisons, ZERO differing; request 3 44/45 -> 45/45; MANDATED COVERAGE 8 -> 9 of 16.** See section 5p |
 | **4r** | **The delivered path retries at 30 pF on a `-nan(ind)`.** Authorised by the owner 2026-09-01 and pre-registered as entry 55. Fires on the G54 signature only, once, never when the tail is already >= 30 pF; `nan_retry_bypass_f=None` reproduces the old behaviour; `C_BYPASS_F` stays 10 pF | 315 decks, 118 s | **DONE 2026-09-01. 4 of 4. Request 3 is 45/45 with NO wrapper — mandated coverage 9 of 16 on the DELIVERED path. See section 5r** |
 | **4t** | **Re-run one sweep with the retry on.** Declared but unmeasured (entry 55) | ~10 300 decks, 67 min | **DONE 2026-09-01. 6 of 6. Coverage 8 -> 9 of 16 on the DELIVERED path; 14 of 16 requests reproduced IDENTICALLY. `BASELINES.md` is NOT invalidated — pre-retry numbers may be quoted with the retry named. See section 5s** |
-| **4w** | **Verify entry 61's newly accepted candidates at 45 corners.** Re-ranking took screen acceptance 6 -> 8 at k=5, but entry 53 measured the screen's filter quality degrading with depth (83 % -> 50 %) and the new acceptances sit at ranks 4, 5 and 7. **No coverage claim until this runs.** ~135 decks per candidate | ~400 decks | open, blocking deployment |
+| **4w** | **Verify entry 61's newly accepted candidates at 45 corners.** | 540 decks, 194 s | **DONE 2026-09-02. THE CONTROL FAILED.** Request 10 is 45/45 by the search and its re-ranked proposal gives **39/45**; deploying would take coverage 9 -> 8. Entry 61 is **screen-only and must NOT be deployed**. See section 5w |
+| **4x** | **A criterion that prices swing AND the rows the screen scores.** Entry 63 showed a swing-only ranking picks designs the 4-corner screen cannot distinguish from good ones (it rates all four within 0.34 while their 45-corner counts span 37-45). Unmeasured; must be pre-registered | TBD | open |
 | **4v** | **Phase 2: price DC headroom and output swing JOINTLY.** Entries 58 and 60 are 0 of 16 twice for OPPOSITE reasons -- ranking on current killed the DC point, ranking on DC margin killed the swing (2.23-4.90x over the limit). The two pull in opposite directions, and entry 37's measured swing surrogate (4.7 % error, zero SPICE) is the tool for a joint criterion. **100 % of entry 60's failures are in its domain.** Must be pre-registered on its own | ~320 decks | open, indicated |
 | **4u** | **Retry decks are UNBILLED.** The retry is a recursive call inside `run_point`, so the caller's budget counter sees one call: `mean_sims_per_request` came back 642.0625, identical to entry 40 in every digit, despite ~30 extra decks. 0.3 % here and it changes no claim, but **every deck count in this repository excludes retry decks** | ~0 | open, stated |
 | **4s** | **Request 5's eight corners are the next coverage point, and they are NOT this bug.** All eight are output-swing compression at **VDD-5 %**, only **1.002-1.203x** over the measured linear limit — the closest any blocked corner has been. Whether a slightly larger `rl` or `i_bias` clears them at fixed peaking is unmeasured | TBD | open |

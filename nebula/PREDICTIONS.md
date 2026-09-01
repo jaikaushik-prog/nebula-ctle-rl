@@ -11150,3 +11150,65 @@ margin, continuing G120/G107 and entry 53's Q4. Confidence **0.65.**
 * **Not that the swing ranking is strictly better than `dev`** -- it is +4/-2,
   and the two lost requests are not verified here.
 * **Not a 135-point claim.** The load grid stays 0 of 16.
+
+### OUTCOME, entry 63 (2026-09-02). **THE CONTROL FAILED. The re-ranking picks designs the 4-corner screen cannot distinguish and the 45 corners can, and it would LOSE a solved request. DO NOT DEPLOY.**
+
+    4 designs, 540 decks, 193.7 s
+    artifact: experiments/rerank_verify_results.json
+
+    idx  swing-rank  45-corner   entry 56 (search)   verdict
+      3      4         42/45          11/45          improved, NOT solved
+      5      4         37/45          44/45          WORSE than the search
+      6      1         45/45          45/45          control HOLDS
+     10      2       **39/45**        45/45          ** CONTROL FAILS **
+
+| | prediction | outcome | |
+|---|---|---|---|
+| **Q1** | coverage lands at 9 or 10 | **8** -- no gain, and request 10 LOST | **MISS** |
+| **Q2** | requests 6 and 10 both pass 45/45 | 6 holds, **10 gives 39/45** | **MISS** |
+| **Q3** | request 5 is the likelier mover if exactly one moves | **neither moved** -- antecedent false | **NOT SCORABLE** |
+| **Q4** | failures are unscorable, not spec violations | all four worsts POSITIVE (+14.03 to +14.37) | **HIT** |
+
+### The registered rule fires, and it is the one that outranks the headline
+
+Entry 63's rule: *"**Q2 fails** -> the re-ranking picks designs the screen
+cannot distinguish and the 45 corners can. Entry 61 must be reported as
+screen-only and **not** deployed. This outranks Q1."*
+
+**Request 10 is the proof.** It is solved 45/45 by the search. The swing ranker
+promotes a different design to rank 2, the 4-corner screen accepts it, and it
+delivers **39 of 45**. Deploying the re-rank would therefore take mandated
+coverage from **9 of 16 to 8** -- it gains nothing and loses one.
+
+This is entry 53's mechanism striking a second time, and more sharply: **the
+4-corner screen's filter quality is not a property of retrieval depth alone --
+it degrades whenever the ranking is changed to something the screen does not
+score.** The screen rates all four of these designs within 0.34 of each other
+(+14.03 to +14.37) while their true 45-corner counts span **37 to 45**.
+
+### What entry 61 actually measured, restated
+
+**Screen acceptance, and only that.** `A` 6 -> 8 is real and reproducible, and
+it does not survive contact with the mandated grid. Combined with the +4/-2
+correction already appended to entry 61, the honest summary of Phase 2 on the
+delivered path is:
+
+* the swing surrogate **does** carry signal about screen feasibility (AUC 0.6128);
+* re-ranking on it **does** raise 4-corner acceptance 6 -> 8;
+* it **does not** raise 45-corner coverage, and **would lower it by one**;
+* so it must not be wired behind `AUTO_K`.
+
+### The one genuinely encouraging number, kept in proportion
+
+**Request 3 went 11/45 -> 42/45** on a proposal costing ~20 decks, against a
+1 085-deck search. It is still not solved, and one design is not a trend, but it
+is the largest single-request improvement any proposer has produced in this
+project and it names where to look next.
+
+### What this costs the project, stated plainly
+
+Phase 2 on the delivered path is **not deployable as measured**. The surrogate
+remains useful as a *predictor* (entry 37's 4.7 %, and it eliminated its target
+failure in entry 60), and it is **not** useful as the ranking criterion on its
+own. A criterion that priced swing **and** the shape rows the screen actually
+scores might do better; that is unmeasured and must be pre-registered.
