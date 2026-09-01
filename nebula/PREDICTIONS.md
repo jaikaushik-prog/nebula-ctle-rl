@@ -11298,3 +11298,87 @@ about coverage.
   claim.
 * **Q3 hits** -> verify at 45 corners **with the control** before anything else
   is said.
+
+### OUTCOME, entry 64 (2026-09-02). **SCORED 5 OF 5. A = 11 of 16 against retrieval's 6, from a criterion registered at 0.15 confidence.**
+
+    16 requests, 320 decks
+    A = 11 of 16   accepted at ranks 2-5
+    47 rejections:  saturation 0   swing 6 (12.8 %)   shape 41 (87.2 %)
+    unsolved: idx 0, 12, 13, 14, 15 -- all four 10 dB requests plus 4 dB @ 1.387 GHz
+
+| | prediction | outcome | |
+|---|---|---|---|
+| **Q1** | no saturation rejections | **0 of 47** | **HIT** |
+| **Q2** | `A >= 1` | **11** | **HIT** |
+| **Q3** | `A >= 6` (registered at **0.15**) | **11** | **HIT** |
+| **Q4** | swing rejections below 100 % | **12.8 %** | **HIT** |
+| **Q5** | no coverage claim made | honoured | **HELD** |
+
+**The diagnosis was right and the fix was the shape of the criterion, not the
+proxy.** Entry 58 ranked on something increasing in `I_d*RL` and landed at
+2.278 V; entry 60 ranked on something decreasing in it and landed at 0.160 V;
+the max-min criterion lands at **0.23-0.35 V** with all three margins positive
+at once, and screen acceptance goes **0 -> 11**.
+
+**What is NOT claimed:** coverage. Entry 63 measured a re-ranking that raised
+4-corner acceptance and **lost a 45-corner-solved request**, and Q5 was
+registered to stop exactly that mistake being repeated here. Entry 65 verifies.
+
+---
+
+## 65. Session 33 -- **row 4w again: do entry 64's 11 acceptances survive 45 corners? Eight of them are CONTROLS.**
+
+**Written 2026-09-02 BEFORE any verification deck runs.**
+
+### The bound and the control set, computed first
+
+Entry 56's sweep solves **9 of 16**: `{1, 2, 4, 6, 7, 9, 10, 11, 13}`.
+Entry 64 accepts **11**: `{1,...,11}`. Cross-referenced:
+
+    MOVABLE  (accepted, not yet solved)   idx  3 (11/45),  5 (44/45),  8 (35/45)
+    CONTROLS (accepted, already solved)   idx  1, 2, 4, 6, 7, 9, 10, 11
+
+**So the upside is bounded at +3, coverage 9 -> 12**, and there are **eight
+controls** -- far more than entry 63's two, which is what makes this test
+strong.
+
+### Why the controls matter more than the headline
+
+Entry 63's re-ranking raised screen acceptance 6 -> 8 and, verified, **lost
+request 10** (45/45 by search, 39/45 from the proposal). The screen rated four
+designs within **0.34** while their 45-corner counts spanned **37-45**. If that
+happens here on any of the eight controls, entry 64's `A = 11` is screen-only
+and must not be deployed, exactly as entry 61's was not.
+
+### Predictions
+
+**Q1 -- THE CONTROL, AND IT OUTRANKS THE HEADLINE. All eight controls pass
+45/45 from their analytic proposals.** Confidence **0.4**, deliberately below
+even: entry 63 lost one of two controls, and these proposals are a *different
+family of designs* from anything previously verified. **Falsifier: any control
+below 45/45.**
+
+**Q2 -- THE HEADLINE. Coverage lands at 10, 11 or 12 of 16.** Confidence
+**0.45.** *For:* request 5 is one corner short today and 8 is ten short.
+*Against:* request 3 is thirty-four short, and screen acceptance has twice now
+failed to convert. **Falsifier: 9 or below (no gain), or a loss.**
+
+**Q3 -- REQUEST 5 IS THE LIKELIEST MOVER**, being one corner from compliance.
+Confidence **0.7.** Scored only if at least one of {3, 5, 8} moves; the
+antecedent is checked and reported either way, per entries 46/53/63.
+
+**Q4 -- FAILURES ARE UNSCORABLE, NOT SPEC VIOLATIONS**, continuing G120/G107.
+Confidence **0.6.**
+
+### The decision rule, before the result
+
+* **Q1 fails on any control** -> screen-only, do not deploy, and the analytic
+  proposer is reported as a **screen-acceptance result with a measured
+  conversion failure** -- the same verdict entry 61 received.
+* **Q1 holds and Q2 >= 10** -> the first coverage improvement from a proposer in
+  this project. Verify the number, then wire it behind `AUTO_K`.
+* **Q1 holds, Q2 = 9** -> the proposals are as good as the search but no better;
+  report as a **deck saving** (a ~20-deck proposal replacing a ~1 085-deck
+  search on 8 requests) and not as coverage.
+
+**Cost: 11 designs x 135 points = 1 485 decks, ~12 min.**
