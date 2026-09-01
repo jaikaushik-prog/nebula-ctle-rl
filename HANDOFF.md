@@ -12200,3 +12200,81 @@ simulations spent any other way, from the same start?"** -- against deeper
 retrieval (ranks 6-12), random perturbation at the same stride, or CMA-ES at a
 27-deck budget. All three already exist in this repo. **Not started;
 pre-registration required.**
+
+### 2026-09-01 -- session 31 (continued): **entries 47, 48 and 49 RAN. The RL usage defect was real and worth 2x; the RL line still loses; and a supervised ranker plus an early-exit screen are worth 86 % of the simulation bill.**
+
+**ENTRY 47 -- the matched-budget control. 4 of 6.** 58 eligible requests,
+budgets matched to 0.3 %:
+
+    A  RL refiner          5 /58   30.2 decks
+    B  random, same budget 13 /58  30.1 decks
+    C  deeper retrieval    18 /58  30.6 decks
+    Q1 control 58/58 identical to entry 46; aggregate matches.
+
+Q2 and Q3 both missed and the registered branch fires: **what entry 46 measured
+was the SELECTOR, not the policy.** The Wilcoxon leans *towards random*
+(29 vs 19). **Arm C is the unregistered finding**: reading the library deeper
+fixes 18 against the refiner's 5 -- the library holds the answers and
+**finding** them is the binding problem, which is what entries 49-50 pursue.
+
+**ENTRY 48 -- the diagnosis. 4 of 6, and the defect was REAL.**
+
+    A  policy MEAN     1x8    5 /58   30.2 decks
+    D  policy SAMPLED  1x8   10 /58   29.8 decks   <- MATCHED budget
+    E  policy SAMPLED  4x2   12 /58   35.9 decks   <- +19 %, NOT matched (Q5 miss)
+    B  uniform random  1x8   13 /58   30.1 decks
+
+**The headline is D, not E.** `refine_one` read `distribution(o).mean` and
+discarded `log_std`, which had shrunk from 0.0 to **-3.02 on `rs`, -2.94 on
+`cs`**. Taking the mean walks ONE path; the best-of-visited selector pays for
+**diversity**. **Reading the policy's own distribution DOUBLES it, 5 -> 10, at
+slightly LESS budget.** Q2 hit at McNemar p = 0.0391.
+
+**And it still does not clear the bar.** D 10 vs random 13; E vs B is
+**p = 1.0000**, so the fixed policy is now **indistinguishable from uniform
+random** where entry 47 had it significantly worse. The residual gap has a
+stated mechanism: the policy learned to be **narrow and confident** and the
+pipeline pays for **breadth** -- a **training-objective mismatch**, not a
+tuning failure.
+
+**ENTRY 49 -- the ranker. 4 of 5, and Q3 (confidence 0.2) HIT.** Zero
+simulations; the counterfactual is arithmetic over labels already paid for.
+
+    today       k=5, 65 candidates   coverage 6/16
+    reranked    k=5, 59 candidates   coverage 6/16   (ceiling is 56 = 13.8 %)
+    reranked    k=2, 29 candidates   coverage 6/16   -55.4 %
+
+Request 4 moved rank **5 -> 2**, request 14 **3 -> 1**; the solved set is
+**identical**. Q4 missed benignly (request 9 slipped 1 -> 2, still inside k=2).
+**Attacks it survived:** leakage (all 16 target groups exist in the pool, so the
+LORO fold really removes them; zero candidates appear under a different
+target); the ceiling is stated so 55.4 % cannot be read as reordering alone.
+**The 8-seed sweep is WEAK evidence and is labelled so** --
+`HistGradientBoostingClassifier` is deterministic here, so the seed changes
+nothing. **Not an RL result**: a supervised ranker over a replay buffer is
+retrieval done better.
+
+**ENTRY 50 -- a MEASUREMENT RECORD, no predictions, nothing scoreable.** Of 121
+rejected candidates, **115 (95 %) are rejected by one corner**,
+`sf/1.05/0C/33fF` -- and the screen spends **4 of 4 decks every time**, never
+stopping early. Stopping at the first failure would cost 155 decks instead of
+512 (**70 %**), and composed with entry 49: **260 -> 35 decks, 86 %**.
+**Three reasons it is not yet a result:** the corner order is chosen from the
+same data (in-sample, needs a held-out check); a PASS still costs four corners
+so the saving shrinks as acceptance rises; and short-circuiting **changes what
+the screen returns** -- `exp_coverage` ranks infeasible candidates on the
+worst-of-four score, which would need re-checking.
+
+**Why this is where RL belonged, and why it earns little.** *"Which candidate
+next, at which corner, when to stop"* is a real sequential decision under
+budget -- the one role never tried. The same measurement explains why it would
+not pay: **when one action is correct 95 % of the time, the greedy fixed rule
+captures nearly all the value.** A finding about the problem, not the method.
+
+**New on disk:** `experiments/exp_rerank_cost.py`,
+`experiments/rerank_cost_results.json`, `experiments/refine_control_results.json`,
+`experiments/refine_control_run.jsonl`, `experiments/refine_sampled_results.json`,
+`experiments/refine_sampled_run.jsonl`, `PREDICTIONS.md` outcomes for 47-49 and
+entry 50.
+
+**Tests: 2258 passed / 13 deselected before; 2272 / 13 after** (251.8 s).

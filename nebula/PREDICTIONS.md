@@ -8871,3 +8871,165 @@ void. **Falsifier: any change on those 10.**
 * **Not an RL result.** This is a supervised ranker over a replay buffer. If it
   works, it works as *retrieval done better*, which is what has been winning
   all along.
+
+### OUTCOME, entry 47 (2026-09-01). **SCORED 4 OF 6. The policy loses to noise, and both lose to reading the library deeper.**
+
+    58 eligible requests, 41.3 min, budgets matched to 0.3%
+    arm                        crossed   up  down  decl   decks
+    A  RL refiner                5 /58    30    2    26    30.2
+    B  random, same budget      13 /58    38    1    19    30.1
+    C  deeper retrieval         18 /58    47    0    11    30.6
+
+| | prediction | outcome | |
+|---|---|---|---|
+| **Q1** | arm A reproduces entry 46 row for row | **58/58 identical**, aggregate 5 vs 5 | **HIT** |
+| **Q2** | A beats B on paired deltas, p < 0.05 | p = 0.0719, **A better on 19, B on 29** | **MISS** |
+| **Q3** | A crosses more often than B | 5 vs 13 | **MISS** |
+| **Q4** | the crossing test does NOT reach 0.05 | p = 0.0574 | **HIT** |
+| **Q5** | A does not beat C | 5 vs 18 | **HIT** |
+| **Q6** | B spends fewer decks than A | 30.1 vs 30.2 | **HIT** |
+
+**The registered Q2/Q3 branch fires: what entry 46 measured was the SELECTOR,
+not the policy.** Best-of-visited plus movement is the whole effect, and it
+needs no trained policy. Note the direction of Q2 -- the Wilcoxon does not
+merely fail to favour the policy, it **leans towards random** (29 vs 19).
+
+**Arm C is the result nobody registered a prediction about.** Spending the same
+decks reading the library *deeper* fixes **18 of 58** against the refiner's 5.
+The library holds the answers; **finding** them is the binding problem, not
+editing them. That observation is what entries 49 and 50 are about.
+
+---
+
+### OUTCOME, entry 48 (2026-09-01). **SCORED 4 OF 6. The usage defect was REAL: reading the distribution instead of the mean DOUBLES the policy, at no extra cost.**
+
+    58 requests, 33.6 min
+    arm                              crossed   up  down   decks
+    A  policy MEAN        1 x 8        5 /58    30    2    30.2
+    D  policy SAMPLED     1 x 8       10 /58    31    3    29.8   <- matched budget
+    E  policy SAMPLED     4 x 2       12 /58    32    1    35.9   <- +19%, NOT matched
+    B  uniform random     1 x 8       13 /58    38    1    30.1
+
+| | prediction | outcome | |
+|---|---|---|---|
+| **Q1** | starts identical to entry 47 | 58/58 | **HIT** |
+| **Q2** | E crosses more than A | **12 vs 5, McNemar p = 0.0391** | **HIT** |
+| **Q3** | E crosses at least as often as B | **12 vs 13** | **MISS** |
+| **Q4** | D lands between A and B | 10, between 5 and 13 | **HIT** |
+| **Q5** | budgets within 10 % of A | D -1.2 % OK, **E +19.0 % OUT** | **MISS** |
+| **Q6** | McNemar E vs B does not reach 0.05 | p = 1.0000 | **HIT** |
+
+**THE HEADLINE IS D, NOT E.** E crossed more but spent **19 % more decks**
+(Q5), so part of its edge is budget. **D is budget-matched -- 29.8 decks
+against A's 30.2, slightly LESS -- and it doubled the crossings, 5 -> 10.**
+
+    Reading the policy's own learned distribution instead of its mean
+    DOUBLES its effectiveness and costs nothing.
+
+**Why the mean was so bad, stated as mechanism.** `log_std` shrank from 0.0 to
+**-3.02 on `rs` and -2.94 on `cs`**, so the policy learned a direction *and* a
+confidence. Taking the mean walks **one** deterministic path; the shared
+best-of-visited selector pays for **diversity of samples**. Sampling restores
+the diversity the policy was trained to express.
+
+**And it is still not a win.** D is 10 against random's 13, and E vs B is
+**p = 1.0000** -- the fixed policy is now **statistically indistinguishable
+from uniform random**, where entry 47 had it *significantly worse*. That is a
+real improvement in a real defect and it does not clear the bar.
+
+**The honest mechanism for the residual gap:** the policy learned to be
+**narrow and confident** (sigma 0.049 on the peak-setting knob), and this
+pipeline pays for **breadth**. That is a **training-objective mismatch**, not a
+tuning failure -- the policy is good at the thing it was trained for and the
+delivery mechanism rewards something else.
+
+---
+
+### OUTCOME, entry 49 (2026-09-01). **SCORED 4 OF 5, and Q3 -- registered at confidence 0.2 -- HIT.**
+
+    16 requests, 128 already-labelled candidates, ZERO simulations
+    Q1 pooled out-of-fold AUC          0.8973                       HIT
+    candidates screened at k=5:
+      today (search_score order)         65   coverage 6/16
+      reranked                           59   coverage 6/16   -9.2%
+      perfect-ranker ceiling             56   (13.8 % max)
+    Q3 shrink k to 2:                    29   coverage 6/16   -55.4%   HIT
+    Q4 no scramble        1 of 4 easy acceptances worsened            MISS
+    Q5 sanity             10 no-feasible requests cost k both ways    HIT
+
+**Both hard cases moved, which is the whole experiment:** request 4 from rank
+**5 -> 2**, request 14 from rank **3 -> 1**. Every request solvable at k=5 is
+now solvable at **k=2**, and the solved set is **identical**:
+`{2, 4, 7, 9, 11, 14}`.
+
+**The Q4 miss is benign and was checked rather than excused:** request 9 slipped
+rank **1 -> 2** and stayed inside k=2, so it costs one extra screen and changes
+no outcome.
+
+**Three attacks the result survived.**
+1. **Leakage.** 65 of the 128 candidates are in the training pool under their
+   own target, and **all 16 target groups exist in the pool**, so the
+   leave-one-request-out fold genuinely removes them. **Zero** candidates
+   appear under a *different* target, so there is no sideways leak either.
+2. **Seed.** Identical on 8 seeds -- **and that is weak evidence, not strong**:
+   `HistGradientBoostingClassifier` is deterministic on this data, so the seed
+   changes nothing. The real safeguard is the fold design, not the seed sweep.
+3. **The ceiling.** Reordering at fixed k is worth **at most 13.8 %**; the
+   55.4 % comes from *shrinking k*, and the report must say so.
+
+**It is NOT an RL result.** A supervised ranker over a replay buffer is
+retrieval done better, which is what has been winning all along.
+
+---
+
+## 50. Session 31 -- **the screen pays for four corners and one of them decides 95 % of the answers. A MEASUREMENT RECORD, not a pre-registration.**
+
+**Written after the fact and labelled as such** (the form entry 33 established).
+No predictions were registered, so **nothing here may be scored**; it is an
+observation over `hybrid_topk_scan.json`, which was already on disk.
+
+### The observation
+
+    128 candidates screened, 7 feasible, 121 rejected
+    which corner rejected them:
+      sf/1.05/0C/33fF      115   (95 %)
+      fs/0.95/125C/33fF      6   ( 5 %)
+      the other two          0
+    decks spent per candidate: 4 of 4, EVERY time -- the screen never stops early
+
+**One corner decides 95 % of all rejections, and the screen evaluates all four
+regardless.** On a candidate already dead after the first corner, three further
+simulations are spent confirming it.
+
+### What stopping early would be worth
+
+    screening those 128 candidates
+      today, always four corners      512 decks
+      stop at the first FAILURE       155 decks     70 % less
+
+    composed with entry 49, over the 16 requests
+      today                  k=5, 65 candidates    260 decks
+      + reranked             k=2, 29 candidates    116 decks   -55 %
+      + stop on first failure                       35 decks   -86 %
+
+### Three reasons this is not yet a result
+
+1. **The corner ORDER is chosen from the same data it is scored on.** The 70 %
+   is **in-sample** and needs a held-out check before it is quoted anywhere.
+2. **A PASS still costs all four corners** by definition, so the saving falls
+   as the acceptance rate rises. At 7 of 128 it is near its maximum.
+3. **It changes what the screen means.** Today every candidate carries a
+   worst-of-four score; short-circuiting yields only "failed, at this corner".
+   Any consumer of the screen's *score* -- the search's ranking among
+   infeasible candidates -- would need re-checking, and `exp_coverage` ranks on
+   exactly that.
+
+### Why this is the place RL would have belonged, and why it earns little here
+
+*"Which candidate next, at which corner, and when to stop"* is a genuine
+sequential decision under a budget -- the shape RL is actually for, and the one
+role this project never tried. **The measurement above is also the reason it
+would not pay: when one action is correct 95 % of the time, the greedy fixed
+rule captures nearly all of the available value and a learned policy has
+almost nothing left to earn.** That is a finding about the problem rather than
+about the method, and it is worth more in the report than another negative.
