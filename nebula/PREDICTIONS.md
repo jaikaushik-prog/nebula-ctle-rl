@@ -10981,3 +10981,69 @@ simulations to evaluate.** That is the first thing in this project to improve
 the deployed proposer since entry 40. Before it is wired behind `AUTO_K` it
 needs the accepted candidates **verified at 45 corners** (entry 53's degradation
 is exactly the risk), and that verification is not in this entry.
+
+---
+
+## 62. Session 33 -- **the racing ceiling. A MEASUREMENT RECORD, not a pre-registration.**
+
+**Written after the fact and labelled as such** (entry 33's form, as entry 50
+did). No predictions were registered, so **nothing here may be scored**; it is
+arithmetic over `hybrid_run_retry_on.jsonl`, already on disk. **Zero decks.**
+
+### The question
+
+Entry 50 killed corner-*ordering* RL: one corner decides 95 % of screen
+rejections, so a greedy fixed rule captures nearly all the value. The successor
+proposed in its place was **racing** -- evaluate a candidate at one point, stop
+as soon as it cannot win -- aimed at the search's **9 970 decks** rather than
+the screen's 303.
+
+### What the search actually spends
+
+    2 000 search evaluations (entry 56's sweep, retry on)
+      feasible          156   must evaluate every point by definition
+      unscorable        632   2 944 point-evaluations
+      spec-failed     1 212   ~5 450 point-evaluations
+
+    racing the UNSCORABLE ones: 2 944 -> 632 point-evaluations, 79 % saved
+    which is ~25 % of the whole search bill
+
+### And it is not free, which is the finding
+
+The unscorable reward is an **exact function of how many points failed**:
+
+    1 of 4  -15.25     2 of 4  -15.50     3 of 4  -15.75     4 of 4  -16.00
+    1 of 5  -15.20     2 of 5  -15.40     3 of 5  -15.60     5 of 5  -16.00
+
+i.e. `reward = -15 - n_failed/n_points`, with **no other content**. So stopping
+at the first failure would return `-15 - 1/N` for every unscorable candidate and
+**flatten the entire infeasible region to one value.**
+
+That gradient is not decoration. CMA-ES ranks on it, 632 of 2 000 evaluations
+sit in it, and "fails 1 of 5" versus "fails 5 of 5" is the only signal telling
+the search which direction reduces failures. Entry 50 recorded this risk in the
+abstract -- *"any consumer of the screen's score would need re-checking, and
+`exp_coverage` ranks on exactly that"* -- and here it is measured concretely.
+
+### The version that would be semantics-preserving, and why it cannot be sized here
+
+Proper racing stops when a candidate **cannot beat the incumbent**: after `j` of
+`N` points with `f` failures, the best attainable reward is `-15 - f/N`, so the
+candidate can be abandoned once even that is below the current best. This
+changes no ranking among survivors.
+
+**Its saving depends on the incumbent trajectory**, which these artifacts do not
+record -- only the final per-evaluation reward is logged, not the order points
+were evaluated in or the best-so-far at that moment. **Sizing it needs an
+instrumented sweep (~70 min), not arithmetic.**
+
+### What this establishes
+
+* **The naive racing prize is ~25 % of the search bill and costs the
+  infeasible-region gradient.** Whether that trade is net positive is an
+  empirical question about CMA-ES's convergence, not something the logs answer.
+* **The safe version is not free to evaluate**: it needs a real run.
+* Combined with entry 50, **both cheap forms of "spend fewer decks per
+  candidate" are now measured and neither is a free win.** The screen's version
+  saves 2.1 % of a sweep; the search's version saves 25 % but perturbs the
+  objective the search descends.
