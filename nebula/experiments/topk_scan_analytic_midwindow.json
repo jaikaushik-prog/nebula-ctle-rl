@@ -1,0 +1,1211 @@
+{
+ "task": "entry 58: analytic inversion as a proposer",
+ "k": 5,
+ "n_decks": 232,
+ "run_pid": 18680,
+ "run_started_unix": 1788292710.7059531,
+ "run_host": "JAI",
+ "wall_clock_s": 347.45008516311646,
+ "requests": [
+  {
+   "index": 0,
+   "peaking_db": 4.0,
+   "f_peak_hz": 1386961840.0848064,
+   "n_candidates": 5,
+   "accepted_rank": null,
+   "candidates": [
+    {
+     "rank": 1,
+     "u": [
+      0.0,
+      1.0,
+      0.2857142857142859,
+      0.8205128205128209,
+      0.5351845630202107,
+      0.9797836240407889,
+      1.0
+     ],
+     "ok": true,
+     "feasible": false,
+     "reward": -0.17115647102320963,
+     "reason": null,
+     "worst_spec": "S3_f_peak_band",
+     "linf_to_library_rank1": 0.8852936708651549
+    },
+    {
+     "rank": 2,
+     "u": [
+      0.0,
+      0.7499999999999998,
+      0.42857142857142877,
+      0.6666666666666667,
+      0.7420444474375064,
+      0.7917470880038606,
+      1.0
+     ],
+     "ok": true,
+     "feasible": false,
+     "reward": -0.07392454386503067,
+     "reason": null,
+     "worst_spec": "S3_f_peak_band",
+     "linf_to_library_rank1": 0.6352936708651546
+    },
+    {
+     "rank": 3,
+     "u": [
+      0.0,
+      1.0,
+      0.2857142857142859,
+      0.7948717948717949,
+      0.6600326661131238,
+      0.7893656650813022,
+      1.0
+     ],
+     "ok": true,
+     "feasible": false,
+     "reward": -15.5,
+     "reason": "2 of 4 points unscorable; first: pole-zero fit rejected: fit residual 0.523 dB exceeds the 0.50 dB gate (CLAUDEwa.md \u00a75.3b): the one-zero/two-pole model does not describe this response, and its poles must not be used",
+     "worst_spec": null,
+     "linf_to_library_rank1": 0.8852936708651549
+    },
+    {
+     "rank": 4,
+     "u": [
+      0.12383719530530514,
+      1.0,
+      0.42857142857142877,
+      0.6666666666666667,
+      0.7090451891537874,
+      0.8487278545204262,
+      0.7999999999999998
+     ],
+     "ok": true,
+     "feasible": false,
+     "reward": -2.0,
+     "reason": null,
+     "worst_spec": "S3_f_peak_match",
+     "linf_to_library_rank1": 0.8852936708651549
+    },
+    {
+     "rank": 5,
+     "u": [
+      0.0,
+      1.0,
+      0.2857142857142859,
+      0.7948717948717949,
+      0.6600326661131238,
+      0.7893656650813022,
+      0.7999999999999998
+     ],
+     "ok": true,
+     "feasible": false,
+     "reward": -15.5,
+     "reason": "2 of 4 points unscorable; first: pole-zero fit rejected: fit residual 0.526 dB exceeds the 0.50 dB gate (CLAUDEwa.md \u00a75.3b): the one-zero/two-pole model does not describe this response, and its poles must not be used",
+     "worst_spec": null,
+     "linf_to_library_rank1": 0.8852936708651549
+    }
+   ]
+  },
+  {
+   "index": 1,
+   "peaking_db": 4.0,
+   "f_peak_hz": 1626677319.302417,
+   "n_candidates": 5,
+   "accepted_rank": 3,
+   "candidates": [
+    {
+     "rank": 1,
+     "u": [
+      0.0,
+      0.49999999999999956,
+      0.5714285714285716,
+      0.5384615384615385,
+      0.7836576526181954,
+      0.746565652019666,
+      1.0
+     ],
+     "ok": true,
+     "feasible": false,
+     "reward": -0.9084506152487664,
+     "reason": null,
+     "worst_spec": "S3_f_peak_match",
+     "linf_to_library_rank1": 0.5467394680270761
+    },
+    {
+     "rank": 2,
+     "u": [
+      0.0,
+      0.7499999999999998,
+      0.42857142857142877,
+      0.6666666666666667,
+      0.7074259979361489,
+      0.7342470880038606,
+      1.0
+     ],
+     "ok": true,
+     "feasible": false,
+     "reward": -0.3760478928366676,
+     "reason": null,
+     "worst_spec": "S3_f_peak_match",
+     "linf_to_library_rank1": 0.5467394680270761
+    },
+    {
+     "rank": 3,
+     "u": [
+      0.0,
+      1.0,
+      0.2857142857142859,
+      0.8205128205128209,
+      0.5005661135188532,
+      0.9222836240407889,
+      1.0
+     ],
+     "ok": true,
+     "feasible": true,
+     "reward": 14.163606494663435,
+     "reason": null,
+     "worst_spec": "S3_peaking",
+     "linf_to_library_rank1": 0.5467394680270761
+    }
+   ]
+  },
+  {
+   "index": 2,
+   "peaking_db": 4.0,
+   "f_peak_hz": 1921093976.6100154,
+   "n_candidates": 5,
+   "accepted_rank": 3,
+   "candidates": [
+    {
+     "rank": 1,
+     "u": [
+      0.0,
+      0.7499999999999998,
+      0.42857142857142877,
+      0.6923076923076922,
+      0.5473589944256434,
+      0.8631660649060183,
+      1.0
+     ],
+     "ok": true,
+     "feasible": false,
+     "reward": -0.45144163691890893,
+     "reason": null,
+     "worst_spec": "S3_f_peak_match",
+     "linf_to_library_rank1": 0.7851730486198849
+    },
+    {
+     "rank": 2,
+     "u": [
+      0.5859253812205276,
+      1.0,
+      0.7142857142857147,
+      0.38461538461538436,
+      0.9682760298149384,
+      0.481893800659947,
+      1.0
+     ],
+     "ok": true,
+     "feasible": false,
+     "reward": -16.0,
+     "reason": "4 of 4 points unscorable; first: pole-zero fit rejected: fit residual 0.771 dB exceeds the 0.50 dB gate (CLAUDEwa.md \u00a75.3b): the one-zero/two-pole model does not describe this response, and its poles must not be used",
+     "worst_spec": null,
+     "linf_to_library_rank1": 0.7851730486198849
+    },
+    {
+     "rank": 3,
+     "u": [
+      0.0,
+      0.49999999999999956,
+      0.5714285714285716,
+      0.5384615384615385,
+      0.7475340531385178,
+      0.6865656520196659,
+      1.0
+     ],
+     "ok": true,
+     "feasible": true,
+     "reward": 14.172671190678903,
+     "reason": null,
+     "worst_spec": "S3_f_peak_match",
+     "linf_to_library_rank1": 0.7851730486198849
+    }
+   ]
+  },
+  {
+   "index": 3,
+   "peaking_db": 4.0,
+   "f_peak_hz": 2253126156.5270753,
+   "n_candidates": 5,
+   "accepted_rank": 3,
+   "candidates": [
+    {
+     "rank": 1,
+     "u": [
+      0.0,
+      1.0,
+      0.2857142857142859,
+      0.8205128205128209,
+      0.42982406453781735,
+      0.8047836240407892,
+      1.0
+     ],
+     "ok": true,
+     "feasible": false,
+     "reward": -2.0,
+     "reason": null,
+     "worst_spec": "S3_f_peak_match",
+     "linf_to_library_rank1": 0.8966666666666667
+    },
+    {
+     "rank": 2,
+     "u": [
+      0.5859253812205276,
+      1.0,
+      0.7142857142857147,
+      0.38461538461538436,
+      0.9336575803135809,
+      0.4243938006599471,
+      1.0
+     ],
+     "ok": true,
+     "feasible": false,
+     "reward": -16.0,
+     "reason": "4 of 4 points unscorable; first: pole-zero fit rejected: fit residual 0.990 dB exceeds the 0.50 dB gate (CLAUDEwa.md \u00a75.3b): the one-zero/two-pole model does not describe this response, and its poles must not be used",
+     "worst_spec": null,
+     "linf_to_library_rank1": 0.8966666666666667
+    },
+    {
+     "rank": 3,
+     "u": [
+      0.0,
+      0.49999999999999956,
+      0.5714285714285716,
+      0.5384615384615385,
+      0.7129156036371603,
+      0.6290656520196659,
+      1.0
+     ],
+     "ok": true,
+     "feasible": true,
+     "reward": 14.170920954479017,
+     "reason": null,
+     "worst_spec": "S3_f_peak_match",
+     "linf_to_library_rank1": 0.3966666666666662
+    }
+   ]
+  },
+  {
+   "index": 4,
+   "peaking_db": 6.0,
+   "f_peak_hz": 1386961840.0848064,
+   "n_candidates": 5,
+   "accepted_rank": 5,
+   "candidates": [
+    {
+     "rank": 1,
+     "u": [
+      0.0,
+      1.0,
+      0.2857142857142859,
+      0.9743589743589746,
+      0.5712261445403396,
+      0.8685119387382002,
+      1.0
+     ],
+     "ok": true,
+     "feasible": false,
+     "reward": -2.0,
+     "reason": null,
+     "worst_spec": "S3_f_peak_match",
+     "linf_to_library_rank1": 1.0
+    },
+    {
+     "rank": 2,
+     "u": [
+      0.0,
+      0.7499999999999998,
+      0.42857142857142877,
+      0.846153846153846,
+      0.6534266702939598,
+      0.8706065655548357,
+      1.0
+     ],
+     "ok": true,
+     "feasible": false,
+     "reward": -0.9166120427852392,
+     "reason": null,
+     "worst_spec": "S3_f_peak_band",
+     "linf_to_library_rank1": 1.0
+    },
+    {
+     "rank": 3,
+     "u": [
+      0.0,
+      1.0,
+      0.2857142857142859,
+      0.9743589743589746,
+      0.5712261445403396,
+      0.8685119387382002,
+      0.7999999999999998
+     ],
+     "ok": true,
+     "feasible": false,
+     "reward": -2.0,
+     "reason": null,
+     "worst_spec": "S3_f_peak_match",
+     "linf_to_library_rank1": 1.0
+    },
+    {
+     "rank": 4,
+     "u": [
+      0.0,
+      0.7499999999999998,
+      0.42857142857142877,
+      0.846153846153846,
+      0.6534266702939598,
+      0.8706065655548357,
+      0.7999999999999998
+     ],
+     "ok": true,
+     "feasible": false,
+     "reward": -0.8877331785356583,
+     "reason": null,
+     "worst_spec": "S3_f_peak_band",
+     "linf_to_library_rank1": 1.0
+    },
+    {
+     "rank": 5,
+     "u": [
+      0.12383719530530514,
+      1.0,
+      0.2857142857142859,
+      0.8974358974358976,
+      0.5631180179739107,
+      0.9719014657056766,
+      0.5
+     ],
+     "ok": true,
+     "feasible": true,
+     "reward": 14.106028019964347,
+     "reason": null,
+     "worst_spec": "S3_f_peak_match",
+     "linf_to_library_rank1": 1.0
+    }
+   ]
+  },
+  {
+   "index": 5,
+   "peaking_db": 6.0,
+   "f_peak_hz": 1626677319.302417,
+   "n_candidates": 5,
+   "accepted_rank": 3,
+   "candidates": [
+    {
+     "rank": 1,
+     "u": [
+      0.0,
+      1.0,
+      0.2857142857142859,
+      1.0,
+      0.4227027666208397,
+      0.986923815870666,
+      1.0
+     ],
+     "ok": true,
+     "feasible": false,
+     "reward": -15.5,
+     "reason": "2 of 4 points unscorable; first: pole-zero fit rejected: fit residual 0.506 dB exceeds the 0.50 dB gate (CLAUDEwa.md \u00a75.3b): the one-zero/two-pole model does not describe this response, and its poles must not be used",
+     "worst_spec": null,
+     "linf_to_library_rank1": 0.9033791247845193
+    },
+    {
+     "rank": 2,
+     "u": [
+      0.0,
+      1.0,
+      0.2857142857142859,
+      0.9743589743589746,
+      0.5366076950389822,
+      0.8110119387382002,
+      1.0
+     ],
+     "ok": true,
+     "feasible": false,
+     "reward": -2.0,
+     "reason": null,
+     "worst_spec": "S3_f_peak_match",
+     "linf_to_library_rank1": 0.9033791247845193
+    },
+    {
+     "rank": 3,
+     "u": [
+      0.0,
+      0.7499999999999998,
+      0.42857142857142877,
+      0.846153846153846,
+      0.6188082207926023,
+      0.8131065655548358,
+      1.0
+     ],
+     "ok": true,
+     "feasible": true,
+     "reward": 14.358093287837834,
+     "reason": null,
+     "worst_spec": "S3_peaking_match",
+     "linf_to_library_rank1": 0.9033791247845193
+    }
+   ]
+  },
+  {
+   "index": 6,
+   "peaking_db": 6.0,
+   "f_peak_hz": 1921093976.6100154,
+   "n_candidates": 5,
+   "accepted_rank": 3,
+   "candidates": [
+    {
+     "rank": 1,
+     "u": [
+      0.0,
+      1.0,
+      0.2857142857142859,
+      1.0,
+      0.38657916714116214,
+      0.926923815870666,
+      1.0
+     ],
+     "ok": true,
+     "feasible": false,
+     "reward": -2.0,
+     "reason": null,
+     "worst_spec": "S3_f_peak_match",
+     "linf_to_library_rank1": 0.9625763159150734
+    },
+    {
+     "rank": 2,
+     "u": [
+      0.0,
+      1.0,
+      0.2857142857142859,
+      0.9743589743589746,
+      0.5004840955593038,
+      0.7510119387382005,
+      1.0
+     ],
+     "ok": true,
+     "feasible": false,
+     "reward": -15.5,
+     "reason": "2 of 4 points unscorable; first: pole-zero fit rejected: fit residual 0.581 dB exceeds the 0.50 dB gate (CLAUDEwa.md \u00a75.3b): the one-zero/two-pole model does not describe this response, and its poles must not be used",
+     "worst_spec": null,
+     "linf_to_library_rank1": 0.9625763159150734
+    },
+    {
+     "rank": 3,
+     "u": [
+      0.0,
+      0.7499999999999998,
+      0.42857142857142877,
+      0.846153846153846,
+      0.5826846213129248,
+      0.7531065655548357,
+      1.0
+     ],
+     "ok": true,
+     "feasible": true,
+     "reward": 14.28464001266869,
+     "reason": null,
+     "worst_spec": "S3_f_peak_match",
+     "linf_to_library_rank1": 0.9625763159150734
+    }
+   ]
+  },
+  {
+   "index": 7,
+   "peaking_db": 6.0,
+   "f_peak_hz": 2253126156.5270753,
+   "n_candidates": 5,
+   "accepted_rank": 3,
+   "candidates": [
+    {
+     "rank": 1,
+     "u": [
+      0.0,
+      0.49999999999999956,
+      0.5714285714285716,
+      0.717948717948718,
+      0.6252452353988494,
+      0.7064952433106829,
+      1.0
+     ],
+     "ok": true,
+     "feasible": false,
+     "reward": -0.11819488423579476,
+     "reason": null,
+     "worst_spec": "S3_f_peak_match",
+     "linf_to_library_rank1": 0.8291509293703305
+    },
+    {
+     "rank": 2,
+     "u": [
+      0.0,
+      1.0,
+      0.2857142857142859,
+      1.0,
+      0.3519607176398039,
+      0.8694238158706663,
+      1.0
+     ],
+     "ok": true,
+     "feasible": false,
+     "reward": -2.0,
+     "reason": null,
+     "worst_spec": "S3_f_peak_match",
+     "linf_to_library_rank1": 0.8291509293703305
+    },
+    {
+     "rank": 3,
+     "u": [
+      0.0,
+      0.7499999999999998,
+      0.42857142857142877,
+      0.846153846153846,
+      0.5480661718115666,
+      0.6956065655548361,
+      1.0
+     ],
+     "ok": true,
+     "feasible": true,
+     "reward": 14.292900051794625,
+     "reason": null,
+     "worst_spec": "S3_f_peak_band",
+     "linf_to_library_rank1": 0.8291509293703305
+    }
+   ]
+  },
+  {
+   "index": 8,
+   "peaking_db": 8.0,
+   "f_peak_hz": 1386961840.0848064,
+   "n_candidates": 5,
+   "accepted_rank": 2,
+   "candidates": [
+    {
+     "rank": 1,
+     "u": [
+      0.0,
+      0.49999999999999956,
+      0.5714285714285716,
+      0.846153846153846,
+      0.8007534345732241,
+      0.7250108981645735,
+      1.0
+     ],
+     "ok": true,
+     "feasible": false,
+     "reward": -1.24163290590388,
+     "reason": null,
+     "worst_spec": "S3_f_peak_band",
+     "linf_to_library_rank1": 0.33048918633948987
+    },
+    {
+     "rank": 2,
+     "u": [
+      0.0,
+      0.7499999999999998,
+      0.42857142857142877,
+      0.9743589743589746,
+      0.7363785388148125,
+      0.6927521917112057,
+      1.0
+     ],
+     "ok": true,
+     "feasible": true,
+     "reward": 14.232799069904821,
+     "reason": null,
+     "worst_spec": "S3_peaking_match",
+     "linf_to_library_rank1": 0.5804891863394901
+    }
+   ]
+  },
+  {
+   "index": 9,
+   "peaking_db": 8.0,
+   "f_peak_hz": 1626677319.302417,
+   "n_candidates": 5,
+   "accepted_rank": 3,
+   "candidates": [
+    {
+     "rank": 1,
+     "u": [
+      0.12383719530530514,
+      1.0,
+      0.42857142857142877,
+      0.9743589743589746,
+      0.6269479823288541,
+      0.7629719904676628,
+      1.0
+     ],
+     "ok": true,
+     "feasible": false,
+     "reward": -2.0,
+     "reason": null,
+     "worst_spec": "S3_f_peak_match",
+     "linf_to_library_rank1": 0.38598584956064674
+    },
+    {
+     "rank": 2,
+     "u": [
+      0.0,
+      0.7499999999999998,
+      0.42857142857142877,
+      0.9743589743589746,
+      0.7017600893134542,
+      0.6352521917112058,
+      1.0
+     ],
+     "ok": true,
+     "feasible": false,
+     "reward": -0.39202055700699623,
+     "reason": null,
+     "worst_spec": "S3_f_peak_match",
+     "linf_to_library_rank1": 0.5098230448659519
+    },
+    {
+     "rank": 3,
+     "u": [
+      0.0,
+      0.49999999999999956,
+      0.5714285714285716,
+      0.846153846153846,
+      0.7661349850718666,
+      0.6675108981645732,
+      1.0
+     ],
+     "ok": true,
+     "feasible": true,
+     "reward": 14.004871588328577,
+     "reason": null,
+     "worst_spec": "S3_f_peak_match",
+     "linf_to_library_rank1": 0.5098230448659519
+    }
+   ]
+  },
+  {
+   "index": 10,
+   "peaking_db": 8.0,
+   "f_peak_hz": 1921093976.6100154,
+   "n_candidates": 5,
+   "accepted_rank": 3,
+   "candidates": [
+    {
+     "rank": 1,
+     "u": [
+      0.12383719530530514,
+      1.0,
+      0.42857142857142877,
+      0.9743589743589746,
+      0.5908243828491765,
+      0.7029719904676628,
+      1.0
+     ],
+     "ok": true,
+     "feasible": false,
+     "reward": -15.5,
+     "reason": "2 of 4 points unscorable; first: pole-zero fit rejected: fit residual 0.640 dB exceeds the 0.50 dB gate (CLAUDEwa.md \u00a75.3b): the one-zero/two-pole model does not describe this response, and its poles must not be used",
+     "worst_spec": null,
+     "linf_to_library_rank1": 0.4979540771598684
+    },
+    {
+     "rank": 2,
+     "u": [
+      0.0,
+      0.7499999999999998,
+      0.42857142857142877,
+      0.9743589743589746,
+      0.6656364898337767,
+      0.575252191711206,
+      1.0
+     ],
+     "ok": true,
+     "feasible": false,
+     "reward": -2.0,
+     "reason": null,
+     "worst_spec": "S3_f_peak_match",
+     "linf_to_library_rank1": 0.5642439270858313
+    },
+    {
+     "rank": 3,
+     "u": [
+      0.0,
+      0.49999999999999956,
+      0.5714285714285716,
+      0.846153846153846,
+      0.7300113855921883,
+      0.6075108981645735,
+      1.0
+     ],
+     "ok": true,
+     "feasible": true,
+     "reward": 14.213107410384822,
+     "reason": null,
+     "worst_spec": "S3_peaking_match",
+     "linf_to_library_rank1": 0.5642439270858313
+    }
+   ]
+  },
+  {
+   "index": 11,
+   "peaking_db": 8.0,
+   "f_peak_hz": 2253126156.5270753,
+   "n_candidates": 5,
+   "accepted_rank": 2,
+   "candidates": [
+    {
+     "rank": 1,
+     "u": [
+      0.12383719530530514,
+      1.0,
+      0.42857142857142877,
+      0.9743589743589746,
+      0.5562059333478183,
+      0.6454719904676628,
+      1.0
+     ],
+     "ok": true,
+     "feasible": false,
+     "reward": -16.0,
+     "reason": "4 of 4 points unscorable; first: pole-zero fit rejected: fit residual 0.603 dB exceeds the 0.50 dB gate (CLAUDEwa.md \u00a75.3b): the one-zero/two-pole model does not describe this response, and its poles must not be used",
+     "worst_spec": null,
+     "linf_to_library_rank1": 0.9717827101247247
+    },
+    {
+     "rank": 2,
+     "u": [
+      0.0,
+      0.49999999999999956,
+      0.5714285714285716,
+      0.846153846153846,
+      0.6953929360908309,
+      0.5500108981645735,
+      1.0
+     ],
+     "ok": true,
+     "feasible": true,
+     "reward": 14.231032905631821,
+     "reason": null,
+     "worst_spec": "S3_peaking_match",
+     "linf_to_library_rank1": 0.9055042348244378
+    }
+   ]
+  },
+  {
+   "index": 12,
+   "peaking_db": 10.0,
+   "f_peak_hz": 1386961840.0848064,
+   "n_candidates": 5,
+   "accepted_rank": null,
+   "candidates": [
+    {
+     "rank": 1,
+     "u": [
+      0.3090169943749474,
+      1.0,
+      0.42857142857142877,
+      1.0,
+      0.7535108096787168,
+      0.7325881357661976,
+      0.5
+     ],
+     "ok": true,
+     "feasible": false,
+     "reward": -16.0,
+     "reason": "4 of 4 points unscorable; first: output swing 781.3 mVpp exceeds the linear limit 774.9 mVpp (vout_swing_v=774.9 mVpp). The stage is compressing, so the AC/pole-zero model behind every number in this DeviceResult no longer describes it \u2014 the eye cannot be computed from it. This is the same physical condition .disto reports as collapsing HD3.",
+     "worst_spec": null,
+     "linf_to_library_rank1": 0.6486346142020571
+    },
+    {
+     "rank": 2,
+     "u": [
+      0.12383719530530514,
+      0.7499999999999998,
+      0.42857142857142877,
+      1.0,
+      0.86547680970853,
+      0.543887498189261,
+      0.5
+     ],
+     "ok": true,
+     "feasible": false,
+     "reward": -15.5,
+     "reason": "2 of 4 points unscorable; first: output swing 514.7 mVpp exceeds the linear limit 465.6 mVpp (vout_swing_v=465.6 mVpp). The stage is compressing, so the AC/pole-zero model behind every number in this DeviceResult no longer describes it \u2014 the eye cannot be computed from it. This is the same physical condition .disto reports as collapsing HD3.",
+     "worst_spec": null,
+     "linf_to_library_rank1": 0.398634614202057
+    },
+    {
+     "rank": 3,
+     "u": [
+      0.12383719530530514,
+      0.7499999999999998,
+      0.42857142857142877,
+      1.0,
+      0.86547680970853,
+      0.543887498189261,
+      0.7999999999999998
+     ],
+     "ok": true,
+     "feasible": false,
+     "reward": -15.5,
+     "reason": "2 of 4 points unscorable; first: output swing 521.0 mVpp exceeds the linear limit 457.5 mVpp (vout_swing_v=457.5 mVpp). The stage is compressing, so the AC/pole-zero model behind every number in this DeviceResult no longer describes it \u2014 the eye cannot be computed from it. This is the same physical condition .disto reports as collapsing HD3.",
+     "worst_spec": null,
+     "linf_to_library_rank1": 0.398634614202057
+    },
+    {
+     "rank": 4,
+     "u": [
+      0.3090169943749474,
+      0.7499999999999998,
+      0.5714285714285716,
+      0.8717948717948718,
+      0.8092374051090169,
+      0.7798044071214558,
+      0.5
+     ],
+     "ok": true,
+     "feasible": false,
+     "reward": -1.6741085255820212,
+     "reason": null,
+     "worst_spec": "S3_f_peak_band",
+     "linf_to_library_rank1": 0.398634614202057
+    },
+    {
+     "rank": 5,
+     "u": [
+      0.3090169943749474,
+      1.0,
+      0.42857142857142877,
+      1.0,
+      0.7535108096787168,
+      0.7325881357661976,
+      0.7999999999999998
+     ],
+     "ok": true,
+     "feasible": false,
+     "reward": -16.0,
+     "reason": "4 of 4 points unscorable; first: output swing 789.3 mVpp exceeds the linear limit 762.7 mVpp (vout_swing_v=762.7 mVpp). The stage is compressing, so the AC/pole-zero model behind every number in this DeviceResult no longer describes it \u2014 the eye cannot be computed from it. This is the same physical condition .disto reports as collapsing HD3.",
+     "worst_spec": null,
+     "linf_to_library_rank1": 0.6486346142020571
+    }
+   ]
+  },
+  {
+   "index": 13,
+   "peaking_db": 10.0,
+   "f_peak_hz": 1626677319.302417,
+   "n_candidates": 5,
+   "accepted_rank": null,
+   "candidates": [
+    {
+     "rank": 1,
+     "u": [
+      0.12383719530530514,
+      0.49999999999999956,
+      0.5714285714285716,
+      0.8717948717948718,
+      0.8276147455773373,
+      0.6321380484213218,
+      0.5
+     ],
+     "ok": true,
+     "feasible": false,
+     "reward": -0.5588694313612933,
+     "reason": null,
+     "worst_spec": "S3_peaking_match",
+     "linf_to_library_rank1": 0.5214285714285716
+    },
+    {
+     "rank": 2,
+     "u": [
+      0.3090169943749474,
+      1.0,
+      0.42857142857142877,
+      1.0,
+      0.7188923601773586,
+      0.6750881357661977,
+      0.5
+     ],
+     "ok": true,
+     "feasible": false,
+     "reward": -15.5,
+     "reason": "2 of 4 points unscorable; first: pole-zero fit rejected: fit residual 0.988 dB exceeds the 0.50 dB gate (CLAUDEwa.md \u00a75.3b): the one-zero/two-pole model does not describe this response, and its poles must not be used",
+     "worst_spec": null,
+     "linf_to_library_rank1": 0.73
+    },
+    {
+     "rank": 3,
+     "u": [
+      0.3090169943749474,
+      1.0,
+      0.42857142857142877,
+      1.0,
+      0.7188923601773586,
+      0.6750881357661977,
+      0.7999999999999998
+     ],
+     "ok": true,
+     "feasible": false,
+     "reward": -15.75,
+     "reason": "3 of 4 points unscorable; first: output swing 650.2 mVpp exceeds the linear limit 650.1 mVpp (vout_swing_v=650.1 mVpp). The stage is compressing, so the AC/pole-zero model behind every number in this DeviceResult no longer describes it \u2014 the eye cannot be computed from it. This is the same physical condition .disto reports as collapsing HD3.",
+     "worst_spec": null,
+     "linf_to_library_rank1": 0.73
+    },
+    {
+     "rank": 4,
+     "u": [
+      0.3090169943749474,
+      0.7499999999999998,
+      0.5714285714285716,
+      0.8717948717948718,
+      0.7746189556076586,
+      0.7223044071214558,
+      0.5
+     ],
+     "ok": true,
+     "feasible": false,
+     "reward": -0.7357116125428536,
+     "reason": null,
+     "worst_spec": "S3_peaking_match",
+     "linf_to_library_rank1": 0.5214285714285716
+    },
+    {
+     "rank": 5,
+     "u": [
+      0.3090169943749474,
+      1.0,
+      0.42857142857142877,
+      1.0,
+      0.7188923601773586,
+      0.6750881357661977,
+      1.0
+     ],
+     "ok": true,
+     "feasible": false,
+     "reward": -16.0,
+     "reason": "4 of 4 points unscorable; first: output swing 653.0 mVpp exceeds the linear limit 648.3 mVpp (vout_swing_v=648.3 mVpp). The stage is compressing, so the AC/pole-zero model behind every number in this DeviceResult no longer describes it \u2014 the eye cannot be computed from it. This is the same physical condition .disto reports as collapsing HD3.",
+     "worst_spec": null,
+     "linf_to_library_rank1": 0.73
+    }
+   ]
+  },
+  {
+   "index": 14,
+   "peaking_db": 10.0,
+   "f_peak_hz": 1921093976.6100154,
+   "n_candidates": 5,
+   "accepted_rank": null,
+   "candidates": [
+    {
+     "rank": 1,
+     "u": [
+      0.3090169943749474,
+      1.0,
+      0.42857142857142877,
+      1.0,
+      0.6827687606976809,
+      0.6150881357661979,
+      0.5
+     ],
+     "ok": true,
+     "feasible": false,
+     "reward": -16.0,
+     "reason": "4 of 4 points unscorable; first: pole-zero fit rejected: fit residual 0.749 dB exceeds the 0.50 dB gate (CLAUDEwa.md \u00a75.3b): the one-zero/two-pole model does not describe this response, and its poles must not be used",
+     "worst_spec": null,
+     "linf_to_library_rank1": 0.978647071112781
+    },
+    {
+     "rank": 2,
+     "u": [
+      0.12383719530530514,
+      0.49999999999999956,
+      0.5714285714285716,
+      0.8717948717948718,
+      0.7914911460976589,
+      0.5721380484213217,
+      0.5
+     ],
+     "ok": true,
+     "feasible": false,
+     "reward": -0.3812927217464143,
+     "reason": null,
+     "worst_spec": "S3_peaking_match",
+     "linf_to_library_rank1": 0.4786470711127806
+    },
+    {
+     "rank": 3,
+     "u": [
+      0.3090169943749474,
+      1.0,
+      0.42857142857142877,
+      1.0,
+      0.6827687606976809,
+      0.6150881357661979,
+      0.7999999999999998
+     ],
+     "ok": true,
+     "feasible": false,
+     "reward": -16.0,
+     "reason": "4 of 4 points unscorable; first: pole-zero fit rejected: fit residual 0.736 dB exceeds the 0.50 dB gate (CLAUDEwa.md \u00a75.3b): the one-zero/two-pole model does not describe this response, and its poles must not be used",
+     "worst_spec": null,
+     "linf_to_library_rank1": 0.978647071112781
+    },
+    {
+     "rank": 4,
+     "u": [
+      0.5859253812205276,
+      1.0,
+      0.7142857142857147,
+      0.8205128205128209,
+      0.8247676634859328,
+      0.5722788705770052,
+      0.7999999999999998
+     ],
+     "ok": true,
+     "feasible": false,
+     "reward": -16.0,
+     "reason": "4 of 4 points unscorable; first: pole-zero fit rejected: fit residual 0.633 dB exceeds the 0.50 dB gate (CLAUDEwa.md \u00a75.3b): the one-zero/two-pole model does not describe this response, and its poles must not be used",
+     "worst_spec": null,
+     "linf_to_library_rank1": 0.978647071112781
+    },
+    {
+     "rank": 5,
+     "u": [
+      0.3090169943749474,
+      1.0,
+      0.42857142857142877,
+      1.0,
+      0.6827687606976809,
+      0.6150881357661979,
+      1.0
+     ],
+     "ok": true,
+     "feasible": false,
+     "reward": -16.0,
+     "reason": "4 of 4 points unscorable; first: pole-zero fit rejected: fit residual 0.731 dB exceeds the 0.50 dB gate (CLAUDEwa.md \u00a75.3b): the one-zero/two-pole model does not describe this response, and its poles must not be used",
+     "worst_spec": null,
+     "linf_to_library_rank1": 0.978647071112781
+    }
+   ]
+  },
+  {
+   "index": 15,
+   "peaking_db": 10.0,
+   "f_peak_hz": 2253126156.5270753,
+   "n_candidates": 5,
+   "accepted_rank": null,
+   "candidates": [
+    {
+     "rank": 1,
+     "u": [
+      0.0,
+      0.49999999999999956,
+      0.5714285714285716,
+      0.9743589743589746,
+      0.5626010325786558,
+      0.7343045948921884,
+      0.7999999999999998
+     ],
+     "ok": true,
+     "feasible": false,
+     "reward": -0.541962719433427,
+     "reason": null,
+     "worst_spec": "S3_peaking_match",
+     "linf_to_library_rank1": 0.3430347404400822
+    },
+    {
+     "rank": 2,
+     "u": [
+      0.5859253812205276,
+      1.0,
+      0.7142857142857147,
+      0.8205128205128209,
+      0.7901492139845745,
+      0.5147788705770056,
+      0.7999999999999998
+     ],
+     "ok": true,
+     "feasible": false,
+     "reward": -16.0,
+     "reason": "4 of 4 points unscorable; first: pole-zero fit rejected: fit residual 0.821 dB exceeds the 0.50 dB gate (CLAUDEwa.md \u00a75.3b): the one-zero/two-pole model does not describe this response, and its poles must not be used",
+     "worst_spec": null,
+     "linf_to_library_rank1": 0.26174471886459216
+    },
+    {
+     "rank": 3,
+     "u": [
+      0.0,
+      0.49999999999999956,
+      0.5714285714285716,
+      0.9743589743589746,
+      0.5626010325786558,
+      0.7343045948921884,
+      1.0
+     ],
+     "ok": true,
+     "feasible": false,
+     "reward": -0.2288907478621797,
+     "reason": null,
+     "worst_spec": "S3_peaking_match",
+     "linf_to_library_rank1": 0.3430347404400822
+    },
+    {
+     "rank": 4,
+     "u": [
+      0.3090169943749474,
+      0.7499999999999998,
+      0.5714285714285716,
+      0.8717948717948718,
+      0.7038769066266236,
+      0.6048044071214558,
+      0.5
+     ],
+     "ok": true,
+     "feasible": false,
+     "reward": -0.43685050209972554,
+     "reason": null,
+     "worst_spec": "S3_peaking_match",
+     "linf_to_library_rank1": 0.3193329113508795
+    },
+    {
+     "rank": 5,
+     "u": [
+      0.3090169943749474,
+      0.7499999999999998,
+      0.5714285714285716,
+      0.8717948717948718,
+      0.7038769066266236,
+      0.6048044071214558,
+      0.7999999999999998
+     ],
+     "ok": true,
+     "feasible": false,
+     "reward": -0.10046114180153391,
+     "reason": null,
+     "worst_spec": "S3_peaking_match",
+     "linf_to_library_rank1": 0.10211330093285353
+    }
+   ]
+  }
+ ],
+ "analysis": {
+  "A": 11,
+  "library_baseline": 6,
+  "n_rejected": 47,
+  "frac_swing": 0.1276595744680851,
+  "frac_shape_match": 0.44680851063829785,
+  "min_linf_to_library": 0.10211330093285353,
+  "Q1_at_least_library": true,
+  "Q2_swing_dominates": false,
+  "Q3_shape_survives": false,
+  "Q4_not_the_library": true
+ }
+}

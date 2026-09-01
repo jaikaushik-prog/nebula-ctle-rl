@@ -41,7 +41,7 @@ human in the loop. Deliverables that already exist and run:
 | G3 (RL beats random + grid) | **fails one clause** — RL is indistinguishable from random at every budget |
 | G4 (corner-robust design) | met on `V1_SPECS` (7 rows); **not** on the 11 competition rows |
 | Eleven-row compliance | **no design meets all 11 rows at all 135 points.** Two designs miss on opposite sides of one row |
-| **Mandated 45-corner coverage** | **9 of 16 ON THE DELIVERED PATH** (entry 55; entry 54 reached it with a wrapper, entry 55 wired the retry into `run_point` and re-measured with none). Was 8 since entry 40. The 135-point load grid stays **0 of 16** |
+| **Mandated 45-corner coverage** | **12 of 16 MEASURED** (entry 65, analytic proposer, verified with 8 controls) / **9 of 16 ON THE DELIVERED PATH** (entry 55; entry 54 reached it with a wrapper, entry 55 wired the retry into `run_point` and re-measured with none). Was 8 since entry 40. The 135-point load grid stays **0 of 16** |
 | Deliverable output | `design.py --out` writes `design.json`, `design.cir` **and `design_schematic.png`** — a drawn schematic rendered FROM the deck, annotated with the sized values, marked **NOT DELIVERED** when the run did not pass (session 33) |
 | Report | `nebula/report/Nebula_CTLE_Report.pdf`, rebuilt from artifacts. **Its RL chapter stops at PPO and the budget ladder** — entries 34-54 have not reached it |
 
@@ -1671,6 +1671,67 @@ names where to look next (row 4x).
 
 ---
 
+## 5x. THE MID-WINDOW SOLVE: **coverage 9 -> 12 of 16, verified, with eight controls**
+
+**2026-09-02 (session 33), entries 64 + 65.** 320 screening decks + ~1 485
+verification decks. **Entry 64 scored 5 of 5, entry 65 hit both scorable
+questions.**
+
+### The diagnosis: both failures ranked on something MONOTONE in `I_d * RL`
+
+`I_d * RL` is the single quantity **both** binding constraints act on:
+
+    swing capability  ~ 2 * I_d*RL              wants it LARGE
+    pair saturation     I_d*RL < VDD - vcm + c  wants it SMALL
+
+Measured on the candidates each earlier run proposed:
+
+    entry 58  ranked on current      median 2.278 V  -> DC died (tail in triode)
+    entry 60  ranked on DC margin    median 0.160 V  -> SWING died (2.2-4.9x over)
+    feasible window                       ~0.55-1.15 V -- NEITHER run entered it
+
+**A monotone objective always lands at an extreme of the quantity it is
+monotone in.** The defect was the *shape* of the criterion, not the proxy.
+
+### The fix: max-min (Chebyshev), and two calibrated predictors
+
+Maximise `min(pair_margin, tail_margin, swing_margin)` -- stationary in the
+middle of the window instead of at its ends. Built on:
+
+* `dc_margins`, fitted on 4 000 pool designs: tail corr **0.9835** / 29.6 mV,
+  pair corr **0.9903** / 34.3 mV;
+* `g_dc = gm*RL/k` with a -0.707 dB offset: corr **0.9880**, median 0.223 dB;
+* required swing `= v_in * g_dc * 10^(nyq_boost/20)`, returning ~1.19 V against
+  entry 53's measured ~1.1 V;
+* capability from entry 37's swing surrogate.
+
+### The result
+
+    screen acceptance   A = 11 of 16   (entries 58 and 60 both scored 0; library 6)
+    saturation rejections  0 of 47      swing rejections 100 % -> 12.8 %
+
+    VERIFIED at 45 mandated corners, 11 designs:
+      8 CONTROLS (already solved)   ALL 45/45 -- none lost
+      3 MOVABLE                     ALL 45/45
+        request 3   11/45 -> 45/45      request 5  44/45 -> 45/45
+        request 8   35/45 -> 45/45
+
+    MANDATED COVERAGE  9 -> 12 of 16
+
+**Q1 -- all eight controls holding -- was registered at 0.4, below even, and
+declared to outrank the headline**, because entry 63 had just lost one of two
+controls doing exactly this. It held 8 of 8.
+
+### What may NOT be said
+
+* **Not that `design.py` delivers 12.** The analytic proposer is **not wired
+  into `--method auto`**, which still reads the library. That is a code change
+  needing its own measurement -- the same gap entries 54/55 had before row 4r.
+* **Not a 135-point claim** (load grid untouched), and **not a deck saving**
+  until the verification cost is amortised.
+
+---
+
 ## 6. Next steps, in order
 
 | # | Task | Cost | Status |
@@ -1699,7 +1760,8 @@ names where to look next (row 4x).
 | **4r** | **The delivered path retries at 30 pF on a `-nan(ind)`.** Authorised by the owner 2026-09-01 and pre-registered as entry 55. Fires on the G54 signature only, once, never when the tail is already >= 30 pF; `nan_retry_bypass_f=None` reproduces the old behaviour; `C_BYPASS_F` stays 10 pF | 315 decks, 118 s | **DONE 2026-09-01. 4 of 4. Request 3 is 45/45 with NO wrapper — mandated coverage 9 of 16 on the DELIVERED path. See section 5r** |
 | **4t** | **Re-run one sweep with the retry on.** Declared but unmeasured (entry 55) | ~10 300 decks, 67 min | **DONE 2026-09-01. 6 of 6. Coverage 8 -> 9 of 16 on the DELIVERED path; 14 of 16 requests reproduced IDENTICALLY. `BASELINES.md` is NOT invalidated — pre-retry numbers may be quoted with the retry named. See section 5s** |
 | **4w** | **Verify entry 61's newly accepted candidates at 45 corners.** | 540 decks, 194 s | **DONE 2026-09-02. THE CONTROL FAILED.** Request 10 is 45/45 by the search and its re-ranked proposal gives **39/45**; deploying would take coverage 9 -> 8. Entry 61 is **screen-only and must NOT be deployed**. See section 5w |
-| **4x** | **A criterion that prices swing AND the rows the screen scores.** Entry 63 showed a swing-only ranking picks designs the 4-corner screen cannot distinguish from good ones (it rates all four within 0.34 while their 45-corner counts span 37-45). Unmeasured; must be pre-registered | TBD | open |
+| **4y** | **Wire the analytic proposer into `design.py --method auto`.** Entry 65 measured 12 of 16 with it; the shipped tool still reads the library and delivers 9. Same gap row 4r closed for the retry: needs the code change plus its own end-to-end measurement | ~0 sims to build | **the highest-value open item** |
+| **4x** | ~~A criterion that prices swing AND the rows the screen scores.~~ **SUPERSEDED by entry 64's max-min criterion**, which prices DC and swing jointly and took screen acceptance 0 -> 11 | Entry 63 showed a swing-only ranking picks designs the 4-corner screen cannot distinguish from good ones (it rates all four within 0.34 while their 45-corner counts span 37-45). Unmeasured; must be pre-registered | TBD | open |
 | **4v** | **Phase 2: price DC headroom and output swing JOINTLY.** Entries 58 and 60 are 0 of 16 twice for OPPOSITE reasons -- ranking on current killed the DC point, ranking on DC margin killed the swing (2.23-4.90x over the limit). The two pull in opposite directions, and entry 37's measured swing surrogate (4.7 % error, zero SPICE) is the tool for a joint criterion. **100 % of entry 60's failures are in its domain.** Must be pre-registered on its own | ~320 decks | open, indicated |
 | **4u** | **Retry decks are UNBILLED.** The retry is a recursive call inside `run_point`, so the caller's budget counter sees one call: `mean_sims_per_request` came back 642.0625, identical to entry 40 in every digit, despite ~30 extra decks. 0.3 % here and it changes no claim, but **every deck count in this repository excludes retry decks** | ~0 | open, stated |
 | **4s** | **Request 5's eight corners are the next coverage point, and they are NOT this bug.** All eight are output-swing compression at **VDD-5 %**, only **1.002-1.203x** over the measured linear limit — the closest any blocked corner has been. Whether a slightly larger `rl` or `i_bias` clears them at fixed peaking is unmeasured | TBD | open |

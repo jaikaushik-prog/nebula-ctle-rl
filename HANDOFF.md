@@ -13003,3 +13003,54 @@ trend, but it is the largest single-request improvement any proposer here has
 produced.
 
 **Tests unchanged at 2433** (259.3 s) - no code shipped.
+
+
+---
+
+### 2026-09-02 - session 33 (entries 64, 65). **The mid-window solve: mandated coverage 9 -> 12 of 16, verified, with eight controls.**
+
+Both pre-registered and committed before their runs (`b0e75d0`, `4b07e6f`).
+**Entry 64 scored 5 of 5; entry 65 hit both scorable questions.**
+
+**The diagnosis.** `I_d * RL` is the single quantity both binding constraints
+act on - swing capability rises with it, pair saturation falls with it.
+Measured on the candidates each earlier run proposed: entry 58 (ranked on
+current) median **2.278 V**, entry 60 (ranked on DC margin) median **0.160 V**,
+against a feasible window of roughly **0.55-1.15 V**. **Neither run put a single
+candidate inside it**, because both criteria are monotone in `I_d*RL` and a
+monotone objective always lands at an extreme. The defect was the **shape** of
+the criterion.
+
+**The fix.** A max-min (Chebyshev) criterion over pair, tail and swing margins,
+stationary in the middle of the window. Built on `dc_margins` (fitted, corr
+0.98-0.99, ~30 mV), `g_dc = gm*RL/k` with a -0.707 dB offset (corr 0.9880,
+0.223 dB), a required-swing formula returning ~1.19 V against entry 53's
+measured ~1.1 V, and entry 37's swing surrogate for capability.
+
+    screen acceptance   A = 11 of 16   (entries 58 and 60 scored 0; library 6)
+    saturation rejections 0 of 47      swing rejections 100 % -> 12.8 %
+
+    VERIFIED, 11 designs x 135 points:
+      8 CONTROLS (already solved)   ALL 45/45 -- none lost
+      3 MOVABLE                     ALL 45/45
+        req 3  11/45 -> 45/45   req 5  44/45 -> 45/45   req 8  35/45 -> 45/45
+
+    MANDATED COVERAGE  9 -> 12 of 16
+
+**Q1 - all eight controls holding - was registered at 0.4, below even, and
+declared to outrank the headline**, because entry 63 had just lost one of two
+controls doing exactly this. It held 8 of 8, with worst margins clustered
+tightly at +14.0 to +14.4. This is the first time a proposer's acceptances have
+converted completely.
+
+**What may NOT be said.** Not that `design.py` delivers 12: the analytic
+proposer is **not wired into `--method auto`**, which still reads the library
+and delivers 9. That is row **4y**, the highest-value open item, and the same
+gap row 4r closed for the retry. Not a 135-point claim. Not a deck saving until
+verification is amortised.
+
+**Artifacts:** `topk_scan_analytic.json` (entry 58, A=0),
+`topk_scan_analytic_dc.json` (entry 60, A=0),
+`topk_scan_analytic_midwindow.json` (entry 64, A=11),
+`midwindow_verify_results.json` (entry 65). **Tests unchanged at 2433**
+(385.3 s).

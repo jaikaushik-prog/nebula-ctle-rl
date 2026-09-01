@@ -57,6 +57,32 @@ else in the 22s brief stands.
 > before the run. Retrieval still beats every policy arm (entry 47 arm C, 18 of
 > 58). Read `PROGRESS.md` section 5t.
 
+> **2026-09-02 (session 33, LATEST). THE MID-WINDOW SOLVE: MANDATED COVERAGE
+> 9 -> 12 OF 16, VERIFIED, WITH EIGHT CONTROLS.** Entries 64 (5 of 5) + 65.
+>
+>     screen acceptance   A = 11 of 16   (entries 58 and 60 scored 0; library 6)
+>     verified at 45 corners, 11 designs:
+>       8 CONTROLS (already solved)  ALL 45/45 -- none lost
+>       3 MOVABLE                    ALL 45/45
+>         req 3  11/45 -> 45/45    req 5  44/45 -> 45/45    req 8  35/45 -> 45/45
+>     MANDATED COVERAGE  9 -> 12 of 16
+>
+> **The diagnosis:** `I_d*RL` is the one quantity both binding constraints act
+> on. Entry 58 ranked on something monotone INCREASING in it (median 2.278 V,
+> DC died); entry 60 on something monotone DECREASING (0.160 V, swing died);
+> the feasible window is ~0.55-1.15 V and **neither run entered it**. A monotone
+> objective always lands at an extreme. **The fix was the SHAPE of the criterion
+> -- a max-min over pair, tail and swing margins -- not a better proxy.**
+>
+> **Q1 (all eight controls hold) was registered at 0.4, below even, and declared
+> to outrank the headline**, because entry 63 had just lost one of two controls
+> doing exactly this. It held 8 of 8.
+>
+> **DO NOT SAY `design.py` DELIVERS 12.** The analytic proposer is **not wired
+> into `--method auto`**, which still reads the library and delivers **9**. That
+> is row **4y** and it is the highest-value open item -- the same gap row 4r
+> closed for the retry. Read `PROGRESS.md` section 5x, then entries 64-65.
+
 > **2026-09-01 (session 33, LATEST). THE SWEEP RE-RAN WITH THE RETRY ON:
 > COVERAGE 8 -> 9 OF 16 ON THE DELIVERED PATH, and pre-retry numbers SURVIVE.**
 > Entry 56, **6 of 6**, ~10 300 decks, 67 min.

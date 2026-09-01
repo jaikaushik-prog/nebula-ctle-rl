@@ -11382,3 +11382,76 @@ Confidence **0.6.**
   search on 8 requests) and not as coverage.
 
 **Cost: 11 designs x 135 points = 1 485 decks, ~12 min.**
+
+### OUTCOME, entry 65 (2026-09-02). **ALL EIGHT CONTROLS HELD AND ALL THREE MOVABLE REQUESTS PASSED. Mandated coverage 9 -> 12 of 16.**
+
+    11 designs x 135 points, ~1 485 decks
+    artifact: experiments/midwindow_verify_results.json
+
+    idx  role      rank   45 corners   worst
+      1  CONTROL     3      45/45      +14.164
+      2  CONTROL     3      45/45      +14.173
+      3  movable     3      45/45      +14.171     (was 11/45)
+      4  CONTROL     5      45/45      +14.106
+      5  movable     3      45/45      +14.358     (was 44/45)
+      6  CONTROL     3      45/45      +14.283
+      7  CONTROL     3      45/45      +14.293
+      8  movable     2      45/45      +14.233     (was 35/45)
+      9  CONTROL     3      45/45      +14.005
+     10  CONTROL     3      45/45      +14.213
+     11  CONTROL     2      45/45      +14.231
+
+    CONTROLS FAILED: none.        COVERAGE 9 -> 12 of 16.
+
+| | prediction | outcome | |
+|---|---|---|---|
+| **Q1** | all eight controls pass 45/45 (registered **0.4**) | **8 of 8** | **HIT** |
+| **Q2** | coverage lands at 10, 11 or 12 | **12** | **HIT** |
+| **Q3** | request 5 is the likeliest mover | **all three moved** -- nothing to discriminate | **NOT SCORABLE** |
+| **Q4** | failures are unscorable, not spec violations | **there are no failures** | **NOT SCORABLE** |
+
+### Q1 is the result. Q2 is its consequence.
+
+Entry 63 measured a re-ranking that raised 4-corner acceptance and **lost** a
+45-corner-solved request; that is why Q1 was registered **below even** and
+declared to outrank the headline. **Eight of eight held, at 45 of 45 each, with
+worst margins clustered tightly at +14.0 to +14.4.** The screen's verdict and
+the mandated grid's verdict agree on every one of the eleven -- which is the
+first time in this project a proposer's acceptances have converted completely.
+
+### What actually moved, and it is not only coverage
+
+    request  3   11/45  ->  45/45      (a 34-corner improvement)
+    request  5   44/45  ->  45/45
+    request  8   35/45  ->  45/45
+
+and the eleven requests are answered by proposals accepted at **ranks 2-5,
+~132 decks in total**, against the search's **~1 085 decks per request**.
+
+### Why this succeeded where entries 58, 60 and 61 failed
+
+One change, and it is about the **shape** of the criterion rather than the
+choice of proxy. `I_d * RL` is the single quantity both binding constraints act
+on:
+
+    entry 58   monotone increasing in it   ->  median 2.278 V   ->  DC died
+    entry 60   monotone decreasing in it   ->  median 0.160 V   ->  swing died
+    entry 64   MAX-MIN over both           ->  0.23-0.35 V      ->  neither dies
+
+A monotone objective always lands at an extreme of the quantity it is monotone
+in. The max-min is stationary in the middle of the feasible window, which is
+where the answer was the whole time.
+
+### What may and may not be said
+
+* **May: mandated 45-corner coverage is 12 of 16** on the same verifier, screen
+  and spec set entry 56 measured 9 with -- and it is **verified**, not screen-
+  only, with eight controls.
+* **May NOT: that `design.py` delivers 12.** This is the same gap entries 54/55
+  had: the analytic proposer is **not wired into `--method auto`**, which still
+  reads the library. Making it the shipped number is a code change and needs its
+  own measurement, exactly as row 4r did for the retry.
+* **May NOT: a 135-point claim.** The load grid is untouched.
+* **Not a deck-saving claim yet:** the proposals cost ~132 decks but the 135-
+  point verification each design still needs is not free, and no amortisation
+  number is computed here.
