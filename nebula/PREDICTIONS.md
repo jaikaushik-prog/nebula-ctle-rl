@@ -8758,3 +8758,116 @@ whole lesson of that correction. **Falsifier: p < 0.05.**
 * **Not a corner claim.** Four screen points, not the mandated 45.
 * **Not a retraining result.** No policy is trained here. If a sampled policy
   wins, what won is a checkpoint that already existed and was being read wrong.
+
+---
+
+## 49. Session 31 -- **can a learned ranker cut the simulation bill? The counterfactual is arithmetic, so it costs nothing to find out.**
+
+**Written 2026-09-01 BEFORE the reordering is computed.** The arithmetic
+*ceiling* below was computed first, because a design cannot be registered
+without knowing what the data can support; **the outcome was not.**
+
+### The declared risk, stated first because it is real
+
+**Entry 44 already tried a ranker and scored 2 of 4**, with its two
+rank-related predictions MISSING (Q3: no acceptance reached rank <= 2; Q4: the
+ranker's ordering lost to the library's `dev` at 0.578 vs 0.800, n = 14). This
+entry proposes a **fourth** metric after three related ones missed, which is a
+textbook garden-of-forking-paths setup and is registered as such.
+
+**The defence, and it must be judged on its merits:** deployed simulation count
+is **the competition's own criterion** (*"fewer search spaces... lowest design
+time"*) and has been this project's headline metric since entry 32 quoted
+*"35.6 % fewer simulations"*. It is not a metric invented to rescue a ranker;
+it is the metric entry 44 simply never computed. If that reads as
+rationalisation, the correct response is to weight this entry's outcome lower,
+not to pretend the risk is absent.
+
+### The arithmetic ceiling, computed BEFORE registering
+
+From `hybrid_topk_scan.json` -- 16 requests, 128 scored candidates, all with
+pass/fail labels already on disk:
+
+    accepted ranks  [1, 2, 2, 2, 3, 5]      unaccepted  10 of 16
+
+    k=2   coverage 4/16    31 candidates   124 decks
+    k=5   coverage 6/16    65 candidates   260 decks   <- what ships today
+    k=8   coverage 6/16    95 candidates   380 decks
+
+    reranking at FIXED k=5, perfect ranker:  65 -> 56  =  13.8 % saving
+    reranking THEN dropping to k=2:          65 -> 26  =  60.0 % saving
+
+**Two things this settles in advance.** Reordering alone is worth **at most
+13.8 %**, because the 10 requests with no feasible candidate pay the full `k`
+and no ordering can help them. The **60 % figure requires shrinking `k`**, and
+that is only legitimate if acceptances actually land at rank <= 2.
+
+**And the prize is narrower than it looks: four of the six acceptances are
+ALREADY at rank <= 2.** The entire question is whether the two at ranks **3 and
+5** can be moved up. Two requests. That is the whole experiment.
+
+### Zero simulations, and why that is not a loophole
+
+Every one of the 128 candidates was screened in entry 32 and carries its
+`feasible` label. Reordering them and recomputing "rank of the first feasible
+one" is **pure arithmetic over labels already paid for**. Nothing is
+re-simulated, and nothing *can* be -- the counterfactual is exact, not
+estimated.
+
+### Method, reusing entry 44 rather than rebuilding it
+
+`exp_rerank.features`, `make_model` and `leave_one_request_out` are used
+unchanged (rule 9). Training is **leave-one-request-out**: to rank request `i`'s
+candidates, the model never sees request `i`. Anything less is leakage, and the
+labelled pool covers the same 16 requests the metric is measured on.
+
+### Predictions
+
+**Q1 -- the signal transfers to this candidate set.** Pooled out-of-fold AUC on
+the 128 top-k candidates **>= 0.70**. Confidence **0.55.** Entry 44 measured
+0.891 on its 7 622-row pool and 0.724 transferring to a generator's own
+distribution; these 128 are a *harder* set -- all are already in-tolerance, so
+the easy negatives are gone. **Falsifier: AUC < 0.70.**
+
+**Q2 -- THE PRIMARY. Deployed candidates at matched 6/16 coverage fall below
+65.** Confidence **0.45.** *For:* only two requests need to move.
+*Against:* four acceptances are already at rank <= 2, so the ranker has little
+room and can only lose ground on them. **Falsifier: >= 65.**
+
+**Q3 -- THE PRIZE. Both the rank-3 and rank-5 acceptances reach rank <= 2**, so
+`k` could drop to 2 at unchanged coverage. Confidence **0.2**, deliberately
+low: this is entry 44's Q3 in a new outfit and entry 44's Q3 missed.
+**Falsifier: fewer than both.**
+
+**Q4 -- IT MUST NOT SCRAMBLE. No acceptance currently at rank <= 2 moves to a
+worse rank.** Confidence **0.5.** A ranker that promotes the hard two while
+demoting the easy four has bought nothing and would show up as a Q2 miss
+without explaining itself. **Falsifier: any of the four worsens.**
+
+**Q5 -- SANITY. The 10 requests with no feasible candidate cost exactly `k`
+before and after.** Confidence **0.95.** Not a finding -- registered because if
+it fails, the metric is being computed wrong and every other number here is
+void. **Falsifier: any change on those 10.**
+
+### The decision rule, before the result
+
+* **Q2 hits** -> reranking cuts the simulation bill at matched coverage.
+  Report it **with the 13.8 % ceiling stated**, so nobody reads it as the 60 %.
+* **Q3 also hits** -> `k` can drop to 2 and the saving is ~52-60 % at unchanged
+  coverage. This would be the largest cost result in the project and must be
+  re-checked against the raw labels before it is written anywhere.
+* **Q2 misses** -> the library's own `search_score` ordering is already close to
+  optimal on this set. **That closes the ranker line**, and it closes it with a
+  number rather than an AUC.
+* **Q5 misses** -> a metric bug. Fix it and rerun; read nothing else.
+
+### What no outcome may claim
+
+* **Not coverage.** Reranking cannot make an infeasible candidate feasible;
+  coverage stays 6 of 16 at k=5 by construction.
+* **Not compliance** (11 of 11 at 45 of 45) and not the 45-corner number.
+* **Not a generalisation to new requests.** 16 requests, 6 acceptances, and the
+  whole result turns on 2 of them. Any saving is quoted with n = 16 attached.
+* **Not an RL result.** This is a supervised ranker over a replay buffer. If it
+  works, it works as *retrieval done better*, which is what has been winning
+  all along.
