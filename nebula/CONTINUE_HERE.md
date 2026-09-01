@@ -6,7 +6,35 @@ on the coarse frequency lattice; on the corrected instrument that design passes
 10 of 11. Read §4, which is now the outcome rather than the warning. Everything
 else in the 22s brief stands.
 
-**24 days to the 15 Sept deadline. Demo 25 Sept at BITS Goa.**
+**14 days to the 15 Sept deadline (as of 2026-09-01). Demo 25 Sept at BITS Goa.**
+
+> **2026-09-01 (session 33, LATEST -- SUPERSEDES EVERY BLOCK BELOW ON COVERAGE).
+> MANDATED COVERAGE IS 9 OF 16. The last corner was a SIMULATOR BUG, not
+> physics.** Entry 54, 5 of 6, 450 decks, 239 s.
+>
+>     Q1 CONTROL  45 corners at 10 pF vs 30 pF, compared with ==
+>                 44 computed at both, 132 comparisons, 0 DIFFERING, 0 lost
+>     request 3   44/45 -> 45/45      request 5   37/45 -> 37/45 (registered null)
+>     MANDATED 45-corner coverage      8 -> 9 of 16
+>     135-point load grid              0 of 16   (unchanged)
+>
+> Entry 53 pointed task 4d at `link/calibration.py` and **for request 3 that was
+> the wrong address.** `_rescore` emits two verdicts -- `UNSCORABLE` (the point
+> never ran) and `EYE_UNMEASURABLE` (the point ran, the link refused) -- and
+> **discards the reason string `FullPointResult` already carries**, so every
+> artifact had them merged. Keeping it (`exp_unscorable.py`, 90 decks) splits
+> them: request 5 is **8 compression corners, ALL at VDD-5 %, only 1.002-1.203x
+> over the limit**; request 3 is **one `-nan(ind)` from ngspice's noise
+> integration** -- **G54**, documented 5 August, with a remedy G54 already
+> measured to be answer-neutral.
+>
+> **The control outranks the headline and was run first.** `C_BYPASS_F` stays
+> **10 pF**; entry 54 patches one call site in a wrapper and restores it in a
+> `finally`. Quote the 135-point 0/16 alongside, and note `pvt45_worst` is
+> unchanged at +14.2388. **Whether `design.py` should retry at 30 pF on a NaN is
+> the OWNER'S call** (row 4r). Read `PROGRESS.md` section 5p, then entry 54.
+> **Request 5's eight corners are now the closest coverage point on the board**
+> -- 1.002x over the line at the worst -- and they are row 4s.
 
 > **2026-08-26 (session 28, LATEST). THE HYBRID SWEEP RAN: coverage 7 -> 8 of
 > 16 for 25 % fewer simulations.** Entry 40, 5 of 5.

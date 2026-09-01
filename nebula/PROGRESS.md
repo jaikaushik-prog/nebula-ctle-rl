@@ -36,12 +36,13 @@ human in the loop. Deliverables that already exist and run:
 
 | | state |
 |---|---|
-| Test suite | **2242 passed**, 13 deselected, ~5.5 min (329 s), measured 2026-09-01 on system Python 3.13.14 (was 1861/11 here until session 31, stale by 381) (`python -m pytest tests nebula/tests -q -m "not slow"`). The **system** interpreter, not the conda env — that env has no `torch`, and `ngspice_con.exe` is found by absolute path anyway (G69) |
+| Test suite | **2329 passed**, 13 deselected, ~5.8 min (345 s), measured 2026-09-01 (session 33) (`python -m pytest tests nebula/tests -q -m "not slow"`). The **system** interpreter, not the conda env — that env has no `torch`, and `ngspice_con.exe` is found by absolute path anyway (G69) |
 | Gates G0–G2 | passed |
 | G3 (RL beats random + grid) | **fails one clause** — RL is indistinguishable from random at every budget |
 | G4 (corner-robust design) | met on `V1_SPECS` (7 rows); **not** on the 11 competition rows |
 | Eleven-row compliance | **no design meets all 11 rows at all 135 points.** Two designs miss on opposite sides of one row |
-| Report | `nebula/report/Nebula_CTLE_Report.pdf`, rebuilt from artifacts |
+| **Mandated 45-corner coverage** | **9 of 16** (entry 54, 2026-09-01; was 8 since entry 40). The 135-point load grid stays **0 of 16** |
+| Report | `nebula/report/Nebula_CTLE_Report.pdf`, rebuilt from artifacts. **Its RL chapter stops at PPO and the budget ladder** — entries 34-54 have not reached it |
 
 ### The two candidate designs
 
@@ -1132,6 +1133,176 @@ advance; measured now.
 * **This is not an RL result.** Library lookup proposes; CMA-ES falls back.
   Entry 36's 1 of 16 for SAC stands.
 
+## 5o. THE AMORTISATION INTERCEPT: **there is no small library. Break-even is 346 requests, not 2.**
+
+**2026-09-01 (session 32), `experiments/exp_pool_size.py`, 87.2 s, ZERO
+simulations, artifact `pool_size_results.json`.** Pre-registered as entry 51.
+**Scored 3 of 5 -- and both misses were the convenient ones.**
+
+Every deck saving this project publishes -- entry 32's **35.6 %**, entry 40's
+**25 %**, **1 284 decks per compliant design against 1 960** -- is a
+**marginal** cost. It prices the query and charges **nothing** for the 74 526-
+design library the query reads, whose one-off cost `spec_pool.py` has always
+stated: **~128 000 simulations**. No report or figure carried it. The sharpest
+attack available on this project is *"that is a lookup table, not design
+automation"*, and the answer to it is an amortisation curve with the library as
+an intercept.
+
+### The trap the entry was designed around
+
+The obvious experiment -- subsample to `N`, re-rank, count corner-feasible
+requests -- **cannot be run at zero simulations.** Only **128 of 74 526**
+designs carry a corner label, so subsampling to `N = 1000` keeps a *specific*
+labelled design with probability **1.3 %**. That curve would measure **label
+survival** and would read as a real finding. So the entry measures **match
+quality** (`dev`), which needs no labels, and names the weak link in its own
+chain: match quality is **necessary, not sufficient**, so `N*` is a **lower
+bound**.
+
+### The result: a power law, no knee anywhere
+
+           N        top-5 median dev      excess over full pool
+          50            0.9292                   0.898
+         300            0.4497                   0.424
+       1 000            0.2639                   0.235
+       3 000            0.1553                   0.121
+      10 000            0.0857                   0.052
+      30 000            0.0484                   0.016
+      74 526            0.0259                   0.000
+
+Deviation **halves for every ~3x** in library size, monotonically, on all 16
+requests. The registered hypothesis was that in-tolerance candidates are
+plentiful enough (§5h: 2 066-17 478 per request) that the top 5 saturate early.
+**They do not -- plentiful is not close.**
+
+    library charged at        0 decks  ->  break-even     0 requests  (by-product)
+    library charged at   74 526 decks  ->  break-even   346 requests  (from scratch)
+
+**The pre-committed branch fired as written** (Q1 misses -> report the question
+OPEN, show bounding lines, do not estimate an intercept). **No band was retuned
+after the run.**
+
+### Q4 is the one that changes how §5h reads
+
+`dev` -- the criterion the shipped proposer actually ranks on -- does **not**
+separate the 6 solved requests from the 10 unsolved (**p = 0.8708**). Third and
+strongest confirmation that nominal channels do not predict corner outcomes.
+
+**Read with the power law it says something sharper than either half: a bigger
+library buys MATCH QUALITY; match quality does not buy CORNER FEASIBILITY; and
+coverage is made of the latter. The power law is NOT evidence that a larger
+library would raise 8 of 16.**
+
+### The professor-ready version
+
+**Our speed numbers assume you already own the design library. If you have to
+build one from scratch, you do not come out ahead until about 350 design
+requests.** We looked for a cheaper library and there isn't one: shrinking it
+degrades the match smoothly with no safe stopping point. And a bigger library
+would not fix our coverage either -- we measured that how well a stored design
+matches the request tells you nothing about whether it survives the corners.
+
+**Named, not priced:** the pool was accumulated by random/LHS/CMA-ES benchmark
+arms, so uniform subsampling models the library we **have**, not one somebody
+sets out to **build**. A pool sampled deliberately across the two spec axes
+would plausibly reach the same match quality far cheaper. **Unmeasured, costs
+simulations, and it is the obvious attack on the 346.**
+
+### Two report defects fixed in the same pass
+
+1. **S7 area was quoted bare.** `bridge._area_mm2_of` sums **drawn passives
+   only** -- no head enclosure, routing, guard ring or MOSFET area -- and its
+   docstring said so while the report did not. Both tables now read **"lower
+   bound"**. At 23x inside the limit nothing binds; the honest phrasing is
+   *"at least 23x"*.
+2. **The DFE ablation (entry 39) reached the report.** Writing it caught a
+   defect: the first table took eye minima over **all 135 points** while every
+   published figure is over the **mandated 45** -- one quantity, one name, two
+   measurements (G32's shape). Both are now separate columns, reproducing
+   entry 39 exactly (382.4 / 358.5 / 377.6 / 372.5 mV).
+
+---
+
+## 5p. THE LAST CORNER WAS A SIMULATOR BUG, NOT PHYSICS: **coverage 8 -> 9 of 16**
+
+**2026-09-01 (session 33), `experiments/exp_unscorable.py` +
+`experiments/exp_bypass_recover.py`, 450 decks, 239 s.** Pre-registered as
+entry 54. **Scored 5 of 6**, and the miss is a defect in the question, not the
+answer.
+
+### Two failures had been merged in every artifact
+
+`exp_coverage._rescore` emits two different verdicts and **discards the reason
+string `FullPointResult` already carries**:
+
+    ok = False                   -> "UNSCORABLE"        the POINT never ran
+    ok = True, S8 rows missing   -> "EYE_UNMEASURABLE"  the LINK refused
+
+So `n_unscorable = 46` was all anyone could read. Keeping the reason (90 decks)
+splits it cleanly:
+
+    request 5   8 blocked   ALL compression, ALL at VDD-5 %, 1.002-1.203x over
+    request 3   1 blocked   ngspice: inoise_total = -nan(ind)   <- G54
+
+Request 3's blocking corner **never reached the link layer at all**. It is
+**G54**, documented 5 August: the mirror's reference-device noise is rejected to
+machine zero by symmetry, ngspice's integrated-noise log-slope integration
+evaluates `log(0)`, returns `-nan(ind)`, and **exits 0**.
+
+### The control is the result; the coverage number is the consequence
+
+Raising a circuit element until a number appears is indistinguishable from
+buying the answer unless the invariance is measured **on this design**. All 45
+mandated corners were re-run at 10 pF and 30 pF and compared with `==`:
+
+    computed at both                            44
+    differing in vn_in_vrms / g_dc_db / f_pk     0     <- 132 comparisons
+    recovered 1 (tt/1.00/0C)      lost 0
+
+Then, and only then: **request 3 goes 44/45 -> 45/45, and mandated coverage
+goes 8 -> 9 of 16.** Request 5 does not move, exactly as registered -- its
+failure is in the link layer, where a device-side bypass cannot reach.
+
+### The professor-ready version
+
+**One of our sixteen test requests was failing on a simulator bug, not a
+circuit problem.** At one corner ngspice's noise integration divides by zero,
+returns "not a number", and still reports success -- so our tool correctly
+refused to certify the design. Adding a bias-node bypass capacitor, which every
+current mirror has anyway, removes the numerical singularity. We checked on all
+45 corners that this changes **no** computed value to any printed digit before
+we accepted the corner it recovered. The circuit now meets every specification
+at all 45 mandated PVT corners.
+
+### What did NOT move, stated with it
+
+* The **135-point load grid** is still **0 of 16**; request 3 went 44 -> 45 of
+  135 points and its other two loads stay blocked.
+* `pvt45_worst` is unchanged at **+14.2388** -- the recovered corner did not
+  become the worst one, so no margin claim moves.
+* **`C_BYPASS_F` stays 10 pF.** Every published number was measured against it;
+  entry 54 patches one call site in a wrapper and restores it in a `finally`.
+  Whether the delivered path should retry at 30 pF on a NaN is **the owner's
+  call** (rule 7) and is row 4r below.
+* **So 9 of 16 is measured WITH that wrapper, and `design.py` today ships
+  WITHOUT it.** The shipped default still meets the NaN at that corner. The
+  honest sentence is *"the framework reaches 9 of 16; wiring the retry into the
+  delivered path is a one-line decision that has not been taken"* -- not
+  *"design.py delivers 9 of 16"*. Row 4r is what closes that gap.
+* 30 pF is a real capacitor whose area is **still not in any S7 estimate**.
+
+### The habit this entry and the last one share
+
+Entry 53's Q2 was a conditional whose antecedent could not be satisfied. Entry
+54's Q4 asked whether a **0 C** noise value lies between its **27 C and 125 C**
+neighbours -- and noise is cleanly banded by temperature (0 C, 27 C and 125 C
+occupy three disjoint ranges over all 45 corners), so no outcome could have made
+it true. Against the family the physics actually groups by -- the other 14
+corners at 0 C -- the recovered value is **inside**. **A "not an outlier" check
+must name the family the physics groups by, not the family the label groups by.**
+
+---
+
 ## 6. Next steps, in order
 
 | # | Task | Cost | Status |
@@ -1142,7 +1313,7 @@ advance; measured now.
 | 4 | `experiments/exp_coverage.py` — the 16-request coverage sweep | ~10 000 sims, ~1.5 h | **DONE.** Artifact `coverage_results_AFTER_seeding_fix.json`: 16 requests, 9 screen / **8 pvt45** / 0 full135, 13 718 sims, 5737.3 s (95.6 min) |
 | **4b** | **Re-run the sweep with `rank_unclipped=True`** (§5d). Pre-registered as **entry 30**, committed ahead of the run | ~14 000 sims, ~1.6 h | **DONE 2026-08-22.** 13 718 sims, 96.6 min. **Entry 30 scored 2 of 5; coverage 8/16 -> 7/16 (§5e).** Mechanism confirmed, headline a miss |
 | **4c** | **Reachability, not scoring** -- the branch entry 30 pre-committed to. Either the 2-D tuning bank (item 7) or raising `budget_design_evals` above 200. **Do NOT tune `SEARCH_TAIL_W`/`SEARCH_ROW_CAP`, `reward_v1.py`, the tolerances or `baselines.py`** to buy coverage | TBD | **owner's say-so required before starting** |
-| **4d** | **Explain the unmeasurable eyes.** `n_unscorable` rose **74 -> 133** over the 135-point grid, and both 45-corner regressions are lost eyes rather than spec violations (G120). Decide whether the 45/45 cliff or the search is the binding constraint | ~0 sims to start (artifacts exist) | open, not spun as a finding |
+| **4d** | **Why is the eye unmeasurable?** `exp_unscorable.py` keeps the reason string `_rescore` discards. (Was: *"explain the unmeasurable eyes; decide whether the 45/45 cliff or the search is the binding constraint"*) | 90 decks, 28 s | **DONE 2026-09-01 (session 33).** **Two failures, not one:** request 5 is 8 compression corners **all at VDD-5 %**; request 3 is a single **G54 NaN**. Neither is "the search". See section 5p |
 | **4e** | **SAC brief stage 0 -- `experiments/exp_hybrid.py`.** Propose a design, score it on the live 4-corner screen, deliver if feasible, else call `exp_coverage.solve_request` **unchanged**. Proposer = zero-simulation library lookup = the **control** for a future SAC policy. Measures the **amortisation curve** (decks per request): a **cost** claim, not a coverage claim | 0 sims to build | **DONE 2026-08-22 (session 26).** 28 tests, no SPICE; 4 new gates watched red; pre-registered as **entry 31** |
 | **4f** | **Run the 64-deck proposals-only scan** (`--proposals`, ~30 s). Entry 31 predicts **0 or 1 of 16** accepted at 75 %, dominant rejection bucket **unscorable not infeasible** (G107) | 64 sims, ~30 s | **DONE 2026-08-22 (session 26b).** 64 decks, 250.4 s. **1 accepted / 1 infeasible / 14 unscorable.** Entry 31 scored **5 of 5**; all 14 unscorable name output-swing compression |
 | **4g** | **The ~90-minute full hybrid sweep -- THE OWNER'S CALL.** Entry 31 pre-commits the rule: run it if **>= 3** proposals are accepted; **do not** run it if **<= 1**. The search is *budget-bound* (both prior sweeps cost **exactly 13 718 decks**), so at zero acceptances the hybrid costs **64 decks MORE** than the plain search and its coverage number is predicted unchanged at 7/16 +-1 | ~14 000 sims, ~1.6 h | **RULE SAYS DO NOT RUN** -- 4f returned `n_accepted = 1`, which is `<= 1`. Recommendation is to skip it; **still the owner's decision**, not taken unilaterally |
@@ -1156,6 +1327,9 @@ advance; measured now.
 | **4o** | **The swing surrogate (entry 37).** Fit `vout_swing_v` from the design vector on 2 228 labelled designs harvested from every sweep; validate on a TRANSFER split (train non-SAC, test the 245 designs the policies invented) | 0 sims, seconds | **DONE 2026-08-26. GO, 4 of 4: 4.7 % median error on transfer, rho 0.993.** A swing-aware reward is now minutes of training, not ~17 h. See section 5k |
 | **4q** | **The two things entry 38 did NOT settle.** (a) a reward scoring headroom AND shape together AT CORNERS -- a bigger change than a penalty term, since the analytic model predicts a nominal response, not a corner spread; (b) whether 50 000 steps is enough for this reward (entry 34 measured the plateau for the blind one; nobody has for this one) | TBD | **OWNER'S DECISION -- NOT STARTED.** Neither is a reason to re-roll `SWING_W` (G110): the binding constraint is no longer swing |
 | **4p** | **A swing-aware reward, and a retrained policy measured on accept rate.** Predicted-headroom shortfall penalty via a WRAPPER env (no surrogate number can reach the screen), retrain 50 000 steps, re-run the arms against the same 6-of-16 bar | 50 000 steps + 960 decks, 52.1 min measured | **DONE 2026-08-26. THE FIX WORKED AND IT DID NOT PAY: 0-1 of 16.** Entry 38 scored 4 of 6 -- headroom nearly doubled (1154 mV vs the library's 595), swing failures 96 % -> 28 %, scorable corners 0.30 -> 2.84 of 4, and accept rate did NOT move. Failures shifted to S3_peaking_match / S3_f_peak_match. See section 5l |
+| **4q2** | **Clear the G54 singularity and re-verify (entry 54).** Invariance control first: 45 corners at 10 pF vs 30 pF, compared with `==` | 360 decks, 211 s | **DONE 2026-09-01. 5 of 6. 132 comparisons, ZERO differing; request 3 44/45 -> 45/45; MANDATED COVERAGE 8 -> 9 of 16.** See section 5p |
+| **4r** | **Should the delivered path retry at 30 pF on a `-nan(ind)`?** The remedy is measured answer-neutral and the failure is detectable (`crosscheck.py` already pattern-matches it), so this is a bounded, honest robustness fix — **but it changes `design.py`'s behaviour, so it is the OWNER'S call** (rule 7). Not started | ~0 sims to build | **owner's decision** |
+| **4s** | **Request 5's eight corners are the next coverage point, and they are NOT this bug.** All eight are output-swing compression at **VDD-5 %**, only **1.002-1.203x** over the measured linear limit — the closest any blocked corner has been. Whether a slightly larger `rl` or `i_bias` clears them at fixed peaking is unmeasured | TBD | open |
 | **5** | **Corner-aware RL vs random / CMA-ES / library lookup.** Pre-registered as entry 25 (with a disclosed rule-3 violation: written after launch, before any artifact existed) | ~2.5 h | **RUNNING** |
 | **6** | **Re-run the coverage sweep on `V6_SPECS`** (§5b). Owner: *"polishing numbers is much needed for honesty."* **Publish both the old and the corrected coverage number** | ~2.5 h | **committed, do not drop** |
 | 7 | 2-D tuning bank (`Cs` axis) + the reading-(B) criterion | ~1 100 sims, ~8 min | built, not run |

@@ -9033,3 +9033,751 @@ would not pay: when one action is correct 95 % of the time, the greedy fixed
 rule captures nearly all of the available value and a learned policy has
 almost nothing left to earn.** That is a finding about the problem rather than
 about the method, and it is worth more in the report than another negative.
+
+---
+
+## 51. Session 32 -- **how big does the library actually have to be? The pool size is the intercept of the whole amortisation claim, and it has never been measured.**
+
+**Written 2026-09-01 BEFORE any subsample is drawn.** The arithmetic below was
+computed first, because an entry cannot be designed without knowing what the
+data can support (entry 49's precedent); **no outcome was looked at.**
+
+### Why this is load-bearing rather than tidy-up
+
+Every cost claim this project publishes -- entry 32's **35.6 %**, entry 40's
+**25 % fewer simulations** and **1 284 decks per compliant design against
+1 960** -- prices the *query* and charges **nothing** for the library the query
+reads. `spec_pool.py`'s own docstring states the one-off cost: **~128 000
+simulations** (31 879 + 96 000 trials -> 74 526 de-duplicated designs).
+
+The pool was a **by-product**: those simulations were spent running the
+baselines and budget-ladder benchmarks, for other reasons, and the library was
+free at the margin. That is true and it is **not the question a judge asks.**
+The question is *"what would this cost me to stand up on my topology?"*, and
+the answer is the break-even:
+
+    measured:  hybrid 642.1 decks/request, plain search 857.4  ->  saving 215.3
+
+    pool charged        0 sims  ->  break-even at    0.0 requests   (by-product reading)
+    pool charged      300 sims  ->  break-even at    1.4 requests
+    pool charged    1 000 sims  ->  break-even at    4.6 requests
+    pool charged    3 000 sims  ->  break-even at   13.9 requests
+    pool charged   10 000 sims  ->  break-even at   46.4 requests
+    pool charged   74 526 sims  ->  break-even at  346.1 requests
+    pool charged  127 879 sims  ->  break-even at  593.9 requests
+
+**The claim is excellent at 1 000 and indefensible at 74 526, and nothing in
+this repository says which.** That is the gap this entry closes.
+
+### THE TRAP, STATED BEFORE THE DESIGN, BECAUSE IT KILLS THE OBVIOUS EXPERIMENT
+
+The obvious experiment is: subsample the pool to `N`, re-rank, take the top 5,
+count how many requests still get a corner-feasible candidate. **It cannot be
+run at zero simulations and would produce a garbage curve if attempted.**
+
+Only **128 of 74 526** designs carry a corner-screen label
+(`hybrid_topk_scan.json`). Subsampling to `N = 1000` retains a *specific*
+labelled design with probability `1000/74526 = 1.3 %`. So a declining
+coverage-vs-`N` curve would be measuring **label survival**, not design
+quality, and would read as a real finding. Registering it here so the failed
+version cannot be quietly reissued as the successful one.
+
+### The design that avoids it, with its weak link named
+
+**Measure match quality, which needs no labels at all.** `dev` -- the
+max-normalised deviation on the two requested axes -- is the exact criterion
+`exp_coverage.library_candidates` ranks on (`max(|df|/TOL_f, |dpk|/TOL_pk)`),
+and it is computable for **every** pool row for free. So:
+
+1. for each of the 16 coverage requests, draw `S = 200` random subsamples of
+   size `N` in `{50, 100, 300, 1000, 3000, 10000, 30000, 74526}`;
+2. rank each subsample by the **unmodified** `dev` criterion, take the top 5;
+3. record the top-5 `dev` distribution against the **full-pool** top-5 `dev`,
+   which is the configuration that produced the measured **6 of 16**.
+
+**The inference chain, with the weak link stated rather than buried:**
+
+> top-5 `dev` at pool size `N` matches top-5 `dev` at 74 526
+>   -> the proposer sees candidates of the same match quality
+>   -> **[WEAK LINK]** corner feasibility is a function of match quality
+>   -> coverage holds at `N`
+
+**The weak link is false in general and this entry does not pretend otherwise.**
+Section 5h measured exactly that: no nominal channel separates the 1 accepted
+design from the 14 unscorable ones, and corner feasibility is emphatically
+**not** predictable from nominal match. So the honest reading of a flat curve is
+**necessary, not sufficient**: below `N*` the proposer provably degrades; above
+`N*` it provably sees equivalent-match candidates and coverage is *unresolved*
+by this experiment. **`N*` is a lower bound on the pool size, and the report
+must say so in those words.**
+
+### Predictions
+
+**Q1 -- there is a knee, and it is far below 74 526.** The top-5 median `dev`
+at `N = 3000` is within **0.05 of tolerance** of the full-pool value on at least
+**14 of 16** requests. Confidence **0.75.** *Mechanism:* section 5h measured
+**2 066-17 478** in-tolerance candidates per request (median 4 986) out of
+74 526, so ~6.7 % of the pool is in tolerance; at `N = 3000` that is ~200
+in-tolerance candidates and the top 5 are drawn from a crowded set.
+**Falsifier: 13 or fewer requests inside 0.05.**
+
+**Q2 -- the knee is above `N = 50`.** At `N = 50` the top-5 median `dev`
+degrades by more than **0.25 of tolerance** on at least **8 of 16** requests.
+Confidence **0.7.** *Mechanism:* ~6.7 % in-tolerance means `N = 50` yields ~3.4
+in-tolerance candidates, so the top 5 must reach outside tolerance.
+**Falsifier: 7 or fewer requests degrade that far.**
+
+**Q3 -- `N* <= 1000`, i.e. the break-even is under 5 requests.** The smallest
+`N` on the grid whose top-5 median `dev` is within 0.05 of tolerance of the
+full pool on >= 14 of 16 requests is **<= 1000**. Confidence **0.55.** This is
+the number the report quotes and it is registered at barely better than a coin
+flip on purpose. **Falsifier: `N* > 1000`.**
+
+**Q4 -- the six SOLVED requests are not the easy ones.** The six requests that
+`hybrid_topk_scan` accepted (`{2, 4, 7, 9, 11, 14}`, entry 49) do **not** have
+systematically lower full-pool top-5 `dev` than the ten unsolved: Mann-Whitney
+`p >= 0.05`. Confidence **0.65.** *Mechanism:* section 5h found nominal
+channels do not separate the outcomes, and `dev` is a nominal channel.
+**Falsifier: `p < 0.05`.** *If this MISSES, Q1-Q3's inference chain gets
+stronger, not weaker* -- match quality would then predict feasibility -- and
+that reversal is registered here so it cannot be claimed as a win either way.
+
+**Q5 -- the sanity check.** At `N = 74526` (the full pool, single "subsample")
+the top-5 `dev` reproduces `library_candidates(k=5)` **exactly**, all 16
+requests, to 1e-12. Confidence **0.95.** **Falsifier: any mismatch.** *A miss
+means the re-implementation is not the shipped criterion and nothing else in
+the entry may be read.*
+
+### Cost, and what is NOT touched
+
+**Zero simulations.** Pure re-analysis of `spec_pool` rows already on disk,
+plus `hybrid_topk_scan.json` for the labels in Q4. No search, no screen, no
+ngspice.
+
+`exp_coverage.library_candidates`, `exp_hybrid`, the tolerances, `reward_v1.py`,
+`V6_SPECS`, the box and the screen are **not modified** -- the criterion is
+re-implemented against the shipped one and Q5 is the test that they agree.
+
+### The decision rule, pre-committed
+
+* **Q1 and Q3 both hit** -> the report quotes `N*` and the break-even at `N*`,
+  with the "lower bound / necessary not sufficient" wording above attached.
+* **Q1 hits and Q3 misses** -> the knee exists but is expensive; the report
+  quotes the break-even at the measured `N*` **whatever it is**, and the
+  amortisation figure carries the by-product reading and the from-scratch
+  reading as two lines rather than one.
+* **Q1 misses** -> match quality degrades gracefully with pool size and there
+  is no knee to quote. The figure then shows the two bounding lines only, and
+  the pool-size question is reported as **open**, not estimated.
+
+**In every branch the figure shows the 74 526 line.** Dropping it would be
+quoting the cheaper of two numbers we hold, which is the thing entry 40's
+closing note forbids.
+
+### OUTCOME, entry 51 (2026-09-01). **SCORED 3 OF 5. There is NO KNEE: match quality is a power law in pool size, and the honest break-even is 346 requests, not 5.**
+
+    16 requests, 200 subsamples per (request, N), 87.2 s, ZERO simulations
+    artifact: experiments/pool_size_results.json
+
+| | prediction | outcome | |
+|---|---|---|---|
+| **Q1** | flat (<= 0.05 tol) at N = 3000 on >= 14 of 16 | **0 of 16** | **MISS** |
+| **Q2** | degraded (> 0.25 tol) at N = 50 on >= 8 of 16 | **16 of 16** | **HIT** |
+| **Q3** | `N* <= 1000` | **`N* = 30 000`** | **MISS** |
+| **Q4** | solved vs unsolved `dev`, p >= 0.05 | 0.0252 vs 0.0280, **p = 0.8708** | **HIT** |
+| **Q5** | control reproduces shipped ranking exactly | **16 of 16**, worst diff < 1e-12 | **HIT** |
+
+### The curve, which is the actual result
+
+Top-5 median `dev`, in units of tolerance, median across the 16 requests:
+
+           N        dev     excess over full pool
+          50     0.9292          0.898
+         100     0.7510          0.719
+         300     0.4497          0.424
+       1 000     0.2639          0.235
+       3 000     0.1553          0.121
+      10 000     0.0857          0.052
+      30 000     0.0484          0.016
+      74 526     0.0259          0.000
+
+**It is a power law with no knee anywhere on the grid.** Excess roughly halves
+for every ~3x in pool size, from N = 50 to the full pool, monotonically, on
+every one of the 16 requests. The registered hypothesis was that in-tolerance
+candidates are so plentiful (§5h: 2 066-17 478 per request) that the top 5
+saturate early. **They do not.** Plentiful is not the same as *close*, and the
+top-5 of a crowded set keeps improving as the set grows.
+
+### What this does to the amortisation claim, stated at full strength
+
+    pool charged        0 sims  ->  break-even at    0.0 requests   (by-product reading)
+    pool charged   30 000 sims  ->  break-even at  139.3 requests   (N*, this run)
+    pool charged   74 526 sims  ->  break-even at  346.1 requests   (the pool we have)
+
+**The pre-committed branch fires: Q1 misses, so the pool-size question is
+reported as OPEN and the figure carries the bounding lines rather than an
+estimated intercept.** Applied as written. No band was retuned after the run --
+`FLAT_BAND` and `DEGRADED_BAND` are the registered values and stay in the file
+at those values.
+
+**The honest sentence for the report:** *the 35.6 % and 25 % deck savings are
+marginal-cost numbers, correct for an operator who already holds the library;
+an operator building it from scratch by random sampling does not break even
+until ~346 spec requests.* Quoting the saving without that is quoting the
+cheaper of two numbers we hold.
+
+### Q4 is the one that should change how §5h is read
+
+`dev` does **not** separate the 6 solved requests from the 10 unsolved
+(p = 0.8708, medians 0.0252 vs 0.0280 -- the solved are *marginally* better
+matched and nowhere near significantly). This is now the **third** independent
+confirmation of §5h's finding that nominal channels do not predict corner
+outcomes, and it is the strongest, because `dev` is the criterion the shipped
+proposer actually ranks on.
+
+**Read together with the curve, it says something sharper than either alone:**
+growing the pool buys **match quality**, match quality does **not** buy corner
+feasibility, and corner feasibility is what coverage is made of. So the power
+law above is **not** evidence that a bigger pool would raise 8 of 16. Nothing
+here says it would.
+
+### What this experiment does NOT say, and one of these is a real lever
+
+1. **It does not say a 1 000-design library is useless.** At N = 1 000 the top-5
+   still match to **0.26 of tolerance** -- comfortably *inside* the tolerance,
+   just worse than the full pool. The registered band asked "is it *identical*
+   to the full pool", and the data says the more useful question is "is it
+   *good enough*", which is a **different question that is not scored here** and
+   needs its own registration. Noting it rather than answering it, because
+   answering it now would be choosing the question after seeing the data.
+2. **It does not price a TARGETED pool build.** This pool was accumulated by
+   random/LHS/CMA-ES benchmark arms, so the subsampling model -- draw `N`
+   uniformly from what we have -- is the right model for *this* library and the
+   wrong one for a library somebody sets out to build. A pool sampled on a grid
+   over the two spec axes would plausibly reach the same match quality for far
+   fewer designs. **Unmeasured, and it is the obvious next experiment**: it
+   attacks the 346 directly, and it costs simulations rather than re-analysis.
+3. **It does not resolve coverage at any N.** Only 128 of 74 526 designs carry
+   a corner label; that is the trap this entry was designed around and it is
+   still there afterwards.
+
+---
+
+## 52. Session 32 -- **is the k=5 plateau real, or just short? Reading the library 5x deeper is the only lever left that can move 8 of 16.**
+
+**Written 2026-09-01 BEFORE the deep scan runs.** The cost arithmetic and the
+base rates below come from artifacts already on disk; **no new measurement was
+looked at.** Authorised by the owner as the follow-on to entry 51.
+
+### Why this and not something else
+
+Coverage has been **8 of 16** since entry 40 and nothing since has moved it.
+Entry 51 closed one hope: a **bigger** library buys match quality, and match
+quality does **not** buy corner feasibility (p = 0.8708). What is still open is
+**depth** -- reading the library we already have further down.
+
+Three measurements point here and one points away, and the one pointing away is
+stated first:
+
+* **AGAINST.** Entry 32's `accepted_at_k = [1, 4, 5, 5, 6, 6, 6, 6]` is **flat
+  from rank 5 to rank 8** -- three consecutive ranks, zero new acceptances.
+  That is the single most relevant data point and it says the well is dry.
+* **FOR.** Entry 47's arm C: spending the same decks reading the library
+  *deeper* fixed **18 of 58** where the RL refiner fixed 5. *"The library holds
+  the answers; finding them is the binding problem."*
+* **FOR.** Entry 49: reranking moved two hard cases from rank 5 -> 2 and
+  3 -> 1, so useful candidates **do** sit below the `dev` ordering's nose.
+* **FOR.** The fallback search costs **857 decks per request**. A k=40 scan
+  costs **160**. Depth is cheap in exactly the units the slide grades.
+
+### The base rate, computed before registering
+
+From `hybrid_topk_scan.json`, 128 candidates over 16 requests:
+
+    all candidates                  7 feasible / 128        5.5 %
+    on the 6 SOLVED requests        7 feasible /  48       14.6 %
+    on the 10 UNSOLVED requests     0 feasible /  80        0.0 %   <- the number that matters
+
+**Zero of eighty.** The 95 % upper bound on that rate is ~3.7 % per candidate.
+Extending those 10 requests from rank 8 to rank 40 buys 320 more candidates:
+
+    at the 3.7 % upper bound   expected new acceptances  ~7 of 10  (optimistic ceiling)
+    at the 0/80 point estimate expected new acceptances  ~0
+
+**The honest range is wide because the data is a zero.** That is what makes it
+worth 33 minutes rather than an argument.
+
+### Predictions
+
+**Q1 -- THE CONTROL.** Ranks 1-8 of the deep scan reproduce
+`hybrid_topk_scan.json` **bit-identically**, all 16 requests, same
+`accepted_rank` and same per-candidate `reward`. Confidence **0.9.**
+**Falsifier: any difference.** *A miss means the instrument moved and no other
+number in this entry may be read.*
+
+**Q2 -- the headline.** `A(k=40)` lands in **[6, 10]**, central estimate **8**.
+Confidence **0.7.** **Falsifier: outside that band.**
+
+**Q3 -- diminishing returns are real.** Ranks 9-40 (32 ranks) yield **fewer**
+new acceptances than ranks 1-8 (8 ranks) did, i.e. **< 6**. Confidence **0.85.**
+**Falsifier: >= 6 new acceptances below rank 8.**
+
+**Q4 -- the plumbing.** Exactly `16 x 40 x 4 = 2560` decks measured, and
+`n_sims_deployed < n_sims_measured`. Confidence **0.9.** **Falsifier: any other
+measured count.**
+
+**Q5 -- the mechanism does not change with depth.** Output-swing compression
+remains **>= 85 %** of all non-feasible outcomes. Confidence **0.75.**
+*Mechanism:* it was 99.1 % at k=8 (115 of 116) and 95-96 % in every arm since.
+**Falsifier: < 85 %.**
+
+**Q6 -- deeper acceptances are WORSE acceptances.** Any candidate accepted below
+rank 8 has a **lower** screen reward than the median of the six accepted at
+k <= 5. Confidence **0.6.** *Mechanism:* `dev` degrades monotonically with rank,
+so a late acceptance is a worse match that happened to survive the corners.
+**Falsifier: any below-rank-8 acceptance at or above that median.** *Registered
+because it decides whether a deep acceptance is worth DELIVERING, separately
+from whether it exists.*
+
+### Cost, and the pre-committed decision rule
+
+**2 560 decks, ~33 min** at the 0.78 s/deck measured on this machine today.
+Writes a **new artifact** (`hybrid_topk_scan_k40.json`) -- it may **not**
+overwrite `hybrid_topk_scan.json`, which entry 32 and entry 49 both quote
+(G113). `scan_topk` is called **unmodified**, at a different `k`.
+
+* **`A(k=40) >= 9`** -> depth works. Run stage 2: deliver the newly accepted and
+  verify at the **mandated 45**, which is the only way coverage moves. Budget
+  45 decks per new acceptance.
+* **`A(k=40)` is 7 or 8** -> depth buys 1-2 and the report says so, but stage 2
+  runs only for the new ones -- a +1 on 8 of 16 is worth 45 decks.
+* **`A(k=40) <= 6`** -> **the retrieval-depth line is CLOSED.** 8 of 16 stands,
+  the plateau was real, and the report says the library was read to exhaustion
+  rather than leaving it ambiguous. **No further depth experiment without a new
+  registration.**
+
+**Nothing is touched to make acceptance look better:** the tolerances, the
+screen, `V6_SPECS`, the box, `reward_v1.py`, `library_candidates`,
+`SEARCH_TAIL_W` and `SEARCH_ROW_CAP` are all as they were.
+
+### OUTCOME, entry 52 (2026-09-01). **SCORED 5 OF 6. The plateau was NOT real: A goes 6 -> 10 of 16, and the one prediction that MISSED is the useful one -- deep acceptances are not worse acceptances.**
+
+    16 requests, k=40, 640 candidates, 2 560 decks, 995.9 s (16.6 min)
+    artifact: experiments/hybrid_topk_scan_k40.json  (NEW file; entry 32's baseline untouched)
+
+    accepted_at_k =
+      [1,4,5,5,6,6,6,6, 6,6,6,6,6,6,6,6, 8,8,9,9,9,9,9,9,9, 10,10,10,10,10,10,10,10,10,10,10,10,10,10,10]
+       ^--- ranks 1-8, bit-identical to entry 32      ^rank 17  ^19      ^rank 26, then flat to 40
+
+| | prediction | outcome | |
+|---|---|---|---|
+| **Q1** | ranks 1-8 reproduce entry 32 bit-identically | **128 candidates, 0 differences** | **HIT** |
+| **Q2** | `A(k=40)` in [6, 10], central 8 | **10** (top edge, inside) | **HIT** |
+| **Q3** | fewer than 6 new acceptances below rank 8 | **4** | **HIT** |
+| **Q4** | exactly 2 560 decks; deployed < measured | **2 560**; deployed **1 336** | **HIT** |
+| **Q5** | swing >= 85 % of non-feasible | **573 / 617 = 92.9 %** | **HIT** |
+| **Q6** | deep acceptances score below the shallow median | **3 of 4 are ABOVE it** | **MISS** |
+
+### The plateau was an artefact of stopping at 8
+
+`accepted_at_k` is flat at 6 from rank 5 **all the way to rank 16** -- twelve
+consecutive ranks, zero new acceptances -- and then steps to 8, 9 and 10 at
+ranks 17, 19 and 26. **Entry 32 stopped one rank into a twelve-rank dead zone
+and read it as a ceiling.** The registered `AGAINST` argument in this entry --
+*"three consecutive ranks, zero new acceptances, the well is dry"* -- was the
+single most relevant data point available and it was **wrong**, for a reason
+that is only visible once the dead zone is crossed.
+
+    accepted requests and the rank that served them
+      shallow (k<=5)   9:1   2:2   7:2   11:2   14:3   4:5
+      deep             3:17  5:17  10:19  6:26
+
+### Q6's miss is the finding, and it points somewhere specific
+
+The registration argued that `dev` degrades monotonically with rank, so a late
+acceptance must be a worse match that got lucky on the corners. **Measured, the
+opposite:** median screen reward of the six shallow acceptances is **+14.1825**,
+and three of the four deep ones beat it -- **+14.2388** (rank 17), **+14.3361**
+(rank 17), **+14.3654** (rank 26). Only request 10's +14.1543 sits below.
+
+**So the `dev` ordering is not merely incomplete, it is MIS-ORDERED: designs
+that screen BETTER are sitting below rank 8.** That is the strongest evidence
+yet for entry 49's reranking line, and it says the reranker should be fitted
+and then applied to a **deep** candidate list rather than to the top 8. It also
+kills the reading in which depth just scrapes the barrel.
+
+### What it costs, in the units the slide grades
+
+    deployed decks (early-exit cost)   entry 32, k=5   260  for 6 acceptances
+                                       entry 52, k=40 1 336  for 10 acceptances
+    per acceptance                                    43.3  ->  133.6 decks
+    the alternative for those 4 requests: 4 x 857 search decks = 3 428
+
+**More expensive per acceptance and much cheaper than the search it displaces.**
+The four extra requests cost **1 076** extra deployed decks against **3 428**
+for the fallback search -- and the report must quote both numbers, because
+"cheaper per acceptance" is false here and "cheaper overall" is true.
+
+### The pre-committed branch that fires
+
+`A >= 9` -> **depth works; run stage 2** -- deliver the newly accepted and
+verify at the mandated 45, the only thing that moves coverage.
+**Cross-referenced against entry 40 before running it, the coverage upside is
+bounded at +2, not +4:** requests **6 and 10 were already 45/45** via the
+fallback search, so their proposals save decks and not coverage. Only requests
+**3** (search got 11/45, worst **-0.5559**, a real spec failure) and **5**
+(44/45, worst **+14.5035**, so the missing corner is an unmeasurable eye and not
+a violation -- G120) can move the headline. Registered as entry 53.
+
+---
+
+## 53. Session 32 -- **stage 2: do the deep proposals actually hold up at 45 corners? At most +2, and the bound was computed before the run.**
+
+**Written 2026-09-01 BEFORE any verification deck runs.** Entry 52's decision
+rule pre-committed to this; these are its predictions.
+
+**Method.** Take the first feasible candidate for each of the four newly
+accepted requests (3 @ rank 17, 5 @ rank 17, 10 @ rank 19, 6 @ rank 26) and
+verify each at the **45 mandated PVT corners** at the design load, with the same
+verifier `exp_coverage` uses. **180 decks, ~3 min.**
+
+**The base rate, from entry 40:** of 6 accepted proposals, **5 passed 45/45 and
+1 passed 44/45** -- so the 4-corner screen has been a good filter for 45-corner
+compliance on retrieved designs, 5/6.
+
+**Q1 -- the headline.** Coverage lands at **9 or 10** of 16 (from 8).
+Confidence **0.7.** **Falsifier: 8 (neither of 3 and 5 passes) or any value
+above 10.**
+
+**Q2 -- request 3 is the harder one.** Request 3 passes 45/45 with probability
+lower than request 5: registered as *request 5 passes if only one of them does*.
+Confidence **0.6.** *Mechanism:* the search on request 3 bottomed at
+**-0.5559** and on request 5 at **+14.5035**; request 5's only gap is an
+unmeasurable eye. **Falsifier: request 3 passes and request 5 does not.**
+
+**Q3 -- the already-covered pair holds.** Requests 6 and 10, already 45/45 by
+search, are **also** 45/45 from their retrieved proposals -- so the proposal is
+a genuine substitute and not merely a cheaper wrong answer. Confidence **0.65.**
+**Falsifier: either fails.** *This is the control: if a proposal that passed the
+4-corner screen fails 45 corners on a request we KNOW is solvable, the screen is
+the problem and Q1's numbers mean less.*
+
+**Q4 -- unscorable, not infeasible.** Any 45-corner failure here is dominated by
+**unmeasurable** points rather than spec violations, continuing G120/G107.
+Confidence **0.6.** **Falsifier: a majority of failing points carry a real
+`failing_rows` entry.**
+
+**Cost:** 180 decks. **Nothing is tuned:** tolerances, screen, `V6_SPECS`, box,
+`reward_v1.py` untouched; the candidates are read from
+`hybrid_topk_scan_k40.json` exactly as scanned.
+
+### OUTCOME, entry 53 (2026-09-01). **Q1 MISSED. Coverage stays 8 of 16 -- ten screen acceptances bought ZERO extra compliant designs, and the reason is that the screen's filter quality FALLS with retrieval depth.**
+
+    4 designs, 135 points each, 540 decks, 184.9 s
+    artifact: experiments/deep_verify_results.json
+
+    req  rank   request              45 corners   screen reward   135      entry 40
+      3    17   4.0 dB @ 2.253 GHz     44/45         +14.2388    44/135   11/45 search
+      5    17   6.0 dB @ 1.627 GHz     37/45         +14.3361    59/135   44/45 search
+      6    26   6.0 dB @ 1.921 GHz     45/45         +14.3654    45/135   45/45 search
+     10    19   8.0 dB @ 1.921 GHz     45/45         +14.1543    45/135   45/45 search
+
+    GAINED  []          NEW COVERAGE  8 of 16   (unchanged)
+
+| | prediction | outcome | |
+|---|---|---|---|
+| **Q1** | coverage lands at 9 or 10 of 16 | **8** -- neither movable request passed | **MISS** |
+| **Q2** | request 5 passes if only one does | **neither passed** -- antecedent false | **NOT SCORABLE** |
+| **Q3** | the control pair is also 45/45 from its proposal | **both 45/45** | **HIT** |
+| **Q4** | failures are unmeasurable, not spec violations | **every failing point**; all four worsts POSITIVE | **HIT** |
+
+### The finding, and it is the opposite of what entry 52 pointed at
+
+Entry 52's Q6 measured that deep candidates **screen better** than shallow ones
+(+14.24 to +14.37 against a shallow median of +14.18). Stage 2 measures that
+they **verify worse**:
+
+    proposals that passed the 4-corner screen and then passed all 45
+      shallow (rank <= 5, entry 40)     5 of 6     83 %
+      deep    (rank 17-26, this run)    2 of 4     50 %
+
+**The 4-corner screen's predictive power DEGRADES WITH DEPTH, and the screen
+cannot see it happening** -- it rates all four of these designs within 0.22 of
+each other (+14.15 to +14.37) while their true 45-corner counts span **37 to
+45**. There is no correlation between screen reward and corner pass count in
+this set. Entry 52's `A = 10 of 16` is therefore a statement about **screen
+acceptance and nothing else**, and quoting it as a coverage or compliance number
+would be wrong.
+
+### The regression that matters most
+
+**Request 5 got WORSE: 44/45 by search, 37/45 from the retrieved proposal.**
+This is exactly the risk entry 40 registered at confidence 0.55 -- *an accepted
+proposal replaces whatever the search would have found, and a cheap accept can
+cost a request* -- which did **not** materialise at k<=5 and **does** materialise
+at k=17. So `propose_then_search` at large `k` is not safety-preserving in the
+way the shallow version measured, and `design.py`'s `AUTO_K = 5` must **not** be
+raised on the strength of entry 52. **Nothing has been changed.**
+
+### Q4 is a clean hit and it explains the whole result
+
+**All four worsts are POSITIVE** (+14.15 to +14.37), so not one failing point is
+a spec violation -- every one is an **unmeasurable eye** (G120/G107). Request 3
+went 11/45 -> 44/45 and is **one unscorable corner** from compliance; request 5's
+eight lost corners are all unscorable. **The binding constraint on coverage is
+not the search, the ranking or the library. It is that the eye cannot be
+computed at the corners where the stage compresses.** That is the same
+output-swing wall as 92.9 % of entry 52's rejections, arriving at the
+verification stage instead of the screen.
+
+### A defect in this entry's OWN registration, recorded as entry 46's was
+
+**Q2 was written as a conditional whose antecedent is false on the most likely
+outcome.** *"Request 5 passes if only one of them does"* cannot be scored when
+**neither** passes -- and neither passing was, in hindsight, the modal case
+given request 3 was starting from 11/45. It is recorded as NOT SCORABLE rather
+than quietly dropped or generously counted.
+
+**And its mechanism was backwards.** The argument was that request 3 is harder
+because its search bottomed at -0.5559 while request 5's was +14.5035.
+Measured, **request 3 did better (44/45) than request 5 (37/45)**. The search's
+prior difficulty on a request did not predict the retrieved proposal's corner
+behaviour -- consistent with §5h and entry 51 Q4, where nominal and shallow
+signals repeatedly fail to predict corner outcomes.
+
+### What is now established, and the one lever left
+
+* **Retrieval depth is exhausted as a coverage lever.** `A` 6 -> 10 costs 1 076
+  extra deployed decks and returns **zero** compliant designs. Combined with
+  entry 51 (a bigger library does not help) and entry 47 (the RL refiner loses
+  to random), **the retrieval line is closed for coverage**; it remains the
+  cheapest way to get a *starting point*.
+* **The lever that is left is the unmeasurable eye**, and it is now named three
+  independent times. Request 3 is **one corner** from 9 of 16. Whether that
+  corner is unscorable for a physical reason or a modelling one
+  (`link/calibration.py` refuses to score a compressing stage) is
+  **task 4d, still open, and it costs zero simulations to start** because the
+  artifacts are on disk.
+
+---
+
+## 54. Session 33 -- **the last corner is not physics, it is a known ngspice singularity. Does clearing it take coverage to 9 of 16?**
+
+**Written 2026-09-01 BEFORE the 45-corner runs.** The declared inputs below are
+measured (4 decks + the 90-deck diagnosis) and are stated so it is visible what
+was known when the predictions were fixed; **no 45-corner run has happened at
+any bypass value.**
+
+### How this entry came to exist, and it corrects entry 53's reading
+
+Entry 53 closed by naming task 4d: *"the lever that is left is the unmeasurable
+eye ... whether that corner is unscorable for a physical reason or a modelling
+one (`link/calibration.py` refuses to score a compressing stage)."*
+**That framing assumed one mechanism, and there are two.**
+`exp_coverage._rescore` emits two different verdicts and the artifacts record
+neither's reason:
+
+    ok = False                   -> "UNSCORABLE"        the POINT never ran
+    ok = True, S8 rows missing   -> "EYE_UNMEASURABLE"  the LINK refused
+
+`experiments/exp_unscorable.py` re-ran entry 53's two movable designs at the 45
+mandated corners keeping the reason (90 decks, 28.1 s,
+`unscorable_diagnosis.json`), and **they are not the same failure**:
+
+    request 5   8 blocked   ALL "EYE_UNMEASURABLE", all compression,
+                            ALL EIGHT at vdd_scale = 0.95, ratios 1.002-1.203x
+    request 3   1 blocked   "UNSCORABLE" at tt/1.00/0C:
+                            "ngspice silent failure: inoise_total = -nan(ind)"
+
+**Request 3's missing corner has nothing to do with the eye, compression, or
+the link layer.** It is **G54**, documented on 2026-08-05: ngspice's
+integrated-noise log-slope integration evaluates `log(0)` when the mirror's
+reference-device noise is rejected to machine zero by symmetry, returns
+`-nan(ind)`, and **exits 0**. G54 records the remedy and, more importantly,
+records that the remedy is answer-neutral: 1p/10p/100p/1n give `inoise_total`
+identical to every printed digit wherever they all compute.
+
+### Declared inputs, measured before this entry
+
+1. The 90-deck diagnosis above, reproducing entry 53's 44/45 and 37/45 exactly.
+2. **Four decks at the blocking corner** (`tt/1.00/0C`, request 3's design
+   `1e847743a24208c6`, design load, production `run_point` flags):
+
+        c_bypass    10 pF   ok=False  inoise_total = -nan(ind)
+        c_bypass    30 pF   ok=True   vn_in 0.0003477731  g_dc 2.165881  f_pk 2232742498.3187
+        c_bypass   100 pF   ok=True   vn_in 0.0003477731  g_dc 2.165881  f_pk 2232742498.3187
+        c_bypass     1 nF   ok=True   vn_in 0.0003477731  g_dc 2.165881  f_pk 2232742498.3187
+
+   Three values, **bit-identical on every field**. This is G54's invariance
+   table reproduced on a design G54 never saw.
+3. `noise_detail=True` produces a DIFFERENT failure at raised bypass
+   (`vector inoise_total_rlp ... zero length`). It is an artifact of the
+   detail flag, not of the bypass; **the production path passes
+   `noise_detail=False`** and the row above uses the production flags. Recorded
+   because a reader re-probing with the obvious diagnostic flag will hit it.
+
+### What is being changed, and what is NOT
+
+**One value, at one call site, in a wrapper.** `TailDevice.c_bypass_f` is a
+per-instance field; `dataclasses.replace` sets it on the point the existing
+`build_point` returns. **`C_BYPASS_F`'s default of 10 pF is NOT changed**, no
+protected file is touched (rule 7), and `check_compression`, the tolerances,
+the screen, `V6_SPECS`, the box and `reward_v1.py` are untouched.
+
+**This entry may not be quoted as fixing request 5.** Request 5's eight corners
+are compression at VDD-5 % and are a different, physical finding -- see Q5.
+
+### Predictions
+
+**Q1 -- THE CONTROL, AND IT OUTRANKS THE HEADLINE. At every one of the 44
+corners that already computed at 10 pF, the raised bypass returns
+`vn_in_vrms`, `g_dc_db` and the interpolated `f_pk` IDENTICAL to the printed
+digits.** Confidence **0.85.** *For:* G54's table, plus declared input 2 on
+this design. *Against:* neither was measured across process corners, and the
+bypass sits on a bias node whose impedance moves with corner.
+**Falsifier: any corner differing in any of the three fields. If it fires, the
+knob is buying the answer -- stop, report nothing else, and no coverage number
+from this entry is admissible.**
+
+**Q2 -- the blocking corner computes.** `tt/1.00/0C` returns `ok=True` at
+30 pF. Confidence **0.95.** Declared input 2 measured exactly this, so this is
+a reproduction check rather than a discovery. **Falsifier: it NaNs again.**
+
+**Q3 -- THE HEADLINE. Request 3 reaches 45 of 45 mandated corners, taking
+coverage from 8 to 9 of 16.** Confidence **0.6.** *For:* entry 53 measured
+44/45 with the only gap being this point, and the recovered corner's numbers
+are unremarkable -- `vn_in` 0.348 mV against S5's 1.5 mV limit, `f_pk`
+2.233 GHz inside S3's 1.25-2.5 GHz band and 0.013 octaves from the 2.253 GHz
+request. *Against:* **computing is not passing.** The point still has to clear
+all 13 `V6V_SPECS` rows including the two S8 eye rows, and this design has
+never been scored there at all. **Falsifier: request 3 lands at 44/45 or below.**
+
+**Q4 -- the recovered corner is not an outlier.** Its `vn_in_vrms` sits inside
+the range spanned by the other four `tt/1.00` corners. Confidence **0.8.**
+Registered because a corner that computes only under a changed element and then
+reads nothing like its neighbours would be a number to distrust, not to bank.
+**Falsifier: outside that range.**
+
+**Q5 -- REGISTERED EXPECTED NULL. Request 5 is NOT recovered by this.** Its
+eight corners fail in the link layer with `ok=True`, so a device-side bypass
+cannot touch them. Confidence **0.9.** Registered so that a coverage move of
++1 is not later mis-stated as +2. **Falsifier: request 5 moves at all.**
+
+**Q6 -- the population is unaffected.** Across the 45 corners of BOTH designs,
+the number of points blocked by `-nan(ind)` is 1, so this mechanism is a
+bounded nuisance rather than a general cause of the coverage gap. Confidence
+**0.75.** *Against:* G54 measured ~0.4 % of runs still NaN at extreme widths,
+and 1 in 90 is 1.1 %. **Falsifier: more than 2 such points.**
+
+### The decision rule, before the result
+
+* **Q1 misses** -> stop. Nothing else in this entry is admissible.
+* **Q1 and Q3 hit** -> mandated coverage is **9 of 16**, and the framework has
+  a named, bounded, answer-neutral retry available. Whether that retry is
+  wired into the delivered path is **the owner's decision** (rule 7), and the
+  number is reported with the mechanism attached either way.
+* **Q1 hits, Q3 misses** -> the corner is recovered and the design still fails
+  it. That is a **better** outcome than it sounds: it converts "unscorable" into
+  a measured spec failure, which is a thing the search can be pointed at.
+
+### What no outcome may claim
+
+* **Not that the eye problem is solved.** 8 of the 9 blocked corners in the
+  diagnosis are compression and are untouched by this.
+* **Not a new compliance result for any design other than request 3's.**
+* **Not that `C_BYPASS_F` should change.** That is a default every published
+  number was measured against; this entry changes one call site in a wrapper.
+
+### OUTCOME, entry 54 (2026-09-01). **SCORED 5 OF 6. The control held digit-for-digit, and MANDATED COVERAGE IS 9 OF 16 -- the first movement since entry 40.**
+
+    360 decks, 210.6 s
+    artifacts: experiments/bypass_recover_results.json
+               experiments/unscorable_diagnosis.json   (the 90-deck diagnosis)
+
+    Q1 CONTROL, 45 mandated corners at 10 pF vs 30 pF
+      computed at both                         44
+      differing in vn_in_vrms / g_dc_db / f_pk  0
+      recovered                                 1   tt/1.00/0C
+      lost                                      0
+
+    request 3 (target)   44/45 -> 45/45      request 5 (null)  37/45 -> 37/45
+    MANDATED COVERAGE     8 -> 9 of 16
+
+| | prediction | outcome | |
+|---|---|---|---|
+| **Q1** | 44 shared corners identical in all three fields | **0 differing, 0 lost** | **HIT** |
+| **Q2** | `tt/1.00/0C` computes at 30 pF | recovered, and it is the only one | **HIT** |
+| **Q3** | request 3 reaches 45/45, coverage 9 of 16 | **45/45** | **HIT** |
+| **Q4** | the recovered corner is inside its `tt/1.00` family | 3.478e-4 vs [3.731e-4, 4.659e-4] | **MISS** |
+| **Q5** | request 5 does not move | 37/45 -> 37/45 | **HIT** |
+| **Q6** | at most 2 NaN-blocked points | 1 of 45 | **HIT** |
+
+**Q1 is the result. Q3 is only the consequence.** Raising a circuit element
+until a number appears is indistinguishable from buying the answer unless the
+invariance is measured on the design in question, and it was: 44 corners, three
+fields each, **132 comparisons, zero disagreements, compared with `==` and not
+with a tolerance**. G54's invariance table was cited from a design it was
+measured on in August; it now holds on one it never saw.
+
+### Q4 MISSED BECAUSE IT WAS REGISTERED AGAINST THE WRONG FAMILY
+
+Recorded as a miss rather than argued away, and the defect is in the
+registration, not the number. Q4 compared the recovered `tt/1.00/0C` value
+against the *other* `tt/1.00` corners -- which are **27 C and 125 C**. Measured
+across all 45 corners, input-referred noise is **cleanly banded by temperature
+and nothing else**:
+
+        0 C   15 corners   [3.414e-4, 3.544e-4]
+       27 C   15 corners   [3.662e-4, 3.803e-4]
+      125 C   15 corners   [4.567e-4, 4.756e-4]
+
+Three disjoint bands. So a 0 C value is **required** by thermal physics to sit
+below every 27 C and 125 C value, and Q4 asked whether a cold number lies
+between two hotter ones. It cannot, and no outcome of this run could have made
+it. **The comparison that was meant:** against the other **14 corners at 0 C**,
+`3.478e-4` against `[3.414e-4, 3.544e-4]` -- **inside**. Same shape as entry
+53's Q2 defect (a question whose antecedent could not be satisfied), and the
+second time in two entries, so it is worth stating as a habit to break:
+**a "not an outlier" check must name the family the physics groups by, not the
+family the label groups by.**
+
+### What moved and what did not, stated separately
+
+* **Mandated 45-corner coverage: 8 -> 9 of 16.** This is the competition's grid
+  (D8) and the compliance column.
+* **The 135-point load grid did NOT move to compliance:** request 3 goes
+  44 -> 45 of 135 points passing, `n_unscorable` 46 -> 45. The other two loads
+  stay blocked, and the project's extra load axis remains **0 of 16**.
+* **`pvt45_worst` is unchanged at +14.2388.** The recovered corner did not
+  become the worst one, so no margin claim moves.
+* **Request 5 is untouched**, exactly as Q5 registered. Its eight corners are
+  link-layer compression at **VDD-5 % in all eight cases**, ratios 1.002-1.203x
+  over the measured linear limit -- a real headroom shortfall at low supply, and
+  a different problem from this one.
+
+### The correction this entry makes to entry 53
+
+Entry 53 closed with *"the lever that is left is the unmeasurable eye"* and
+pointed task 4d at `link/calibration.py`. **For request 3 that was the wrong
+address.** Its blocking corner never reached the link layer: the device point
+failed in ngspice. The two verdicts `_rescore` emits -- `UNSCORABLE` (the point
+never ran) and `EYE_UNMEASURABLE` (the point ran, the link refused) -- had been
+merged in every artifact, because `_rescore` discards the reason string
+`FullPointResult` carries. **One of the two was a solved problem with a
+documented, answer-neutral remedy sitting in the gotcha list since 5 August.**
+
+`exp_unscorable.py`'s first version reproduced the same merge in the opposite
+direction -- it filtered on `ok` alone and reported request 5 as "45 of 45
+evaluable" while 8 of its corners carried no eye. That defect is written into
+the module docstring rather than only fixed.
+
+### What this does NOT claim
+
+* **Not that the eye problem is solved.** 8 of the 9 blocked corners in the
+  diagnosis are compression and are untouched.
+* **Not that `C_BYPASS_F` should change.** 10 pF is the default every published
+  number was measured against; this entry patches one call site in a wrapper and
+  restores it in a `finally`.
+* **Not a coverage claim for any request other than 3.**
+* **Not free.** 30 pF is a real capacitor whose area is still not in any S7
+  estimate -- G54 said so in August and it remains true.

@@ -4713,6 +4713,41 @@ Plus: git init, .gitignore, 28 tests, Wilson-bound BER reporting.
   the runtime note is now a function of the path, a test **forbids the old
   string returning**, and all three documents carry a scope correction.
 
+- **G134 -- (nebula) "UNSCORABLE" WAS TWO DIFFERENT FAILURES WEARING ONE
+  LABEL, AND ONE OF THEM HAD A DOCUMENTED FIX SINCE AUGUST.**
+  `exp_coverage._rescore` emits `UNSCORABLE` when `p["ok"]` is False (the SPICE
+  point never ran) and `EYE_UNMEASURABLE` when the point ran fine and the LINK
+  refused to compute an eye (compression, C4). **Both were counted into one
+  `n_unscorable` field and the `reason` string `FullPointResult` already
+  carries was thrown away**, so four sessions of prose -- entry 53's closing
+  paragraph included -- attributed every blocked corner to
+  `link/calibration.py`. Measured (`exp_unscorable.py`, 90 decks): of the 9
+  blocked corners on entry 53's two movable designs, **8 were compression and
+  1 was `inoise_total = -nan(ind)`** -- **G54**, whose answer-neutral remedy has
+  been in this list since 5 August. That one corner was the whole distance
+  between mandated coverage 8 and 9 of 16.
+  **Three habits.** (1) When two causes share a label, the artifact must record
+  which; a count without a reason cannot be debugged and will be theorised
+  about instead. (2) The instrument written to check this **committed the same
+  error in the opposite direction** -- it filtered on `ok` alone, missed every
+  compression corner, and reported request 5 as "45 of 45 evaluable" when 8 of
+  its corners carry no eye (G115's shape: a set built by testing the convenient
+  flag loses members silently). (3) Before theorising about a blocked corner,
+  **print its reason** -- it costs 45 decks and it was a solved problem.
+
+- **G135 -- (nebula) A "NOT AN OUTLIER" CHECK MUST NAME THE FAMILY THE PHYSICS
+  GROUPS BY, NOT THE FAMILY THE LABEL GROUPS BY.** Entry 54's Q4 asked whether a
+  recovered `tt/1.00/0C` noise value sits inside its `tt/1.00` family -- whose
+  other members are **27 C and 125 C**. Input-referred noise over all 45 corners
+  is banded by temperature and nothing else: 0 C `[3.414e-4, 3.544e-4]`, 27 C
+  `[3.662e-4, 3.803e-4]`, 125 C `[4.567e-4, 4.756e-4]`, three **disjoint**
+  ranges. So a cold value is *required* to sit below every hot one and **no
+  outcome could have made Q4 true**; it was scored a MISS rather than argued
+  away. Against the other 14 corners at 0 C the value is comfortably inside.
+  Second ill-posed question in two entries (entry 53's Q2 had a false
+  antecedent), so the pattern is worth naming: **a registered sanity check has
+  to be falsifiable by the good outcome as well as the bad one.**
+
 - **G132 -- (nebula) A ROLLOUT'S WARM START IS NOT A PROPOSAL, and a
   best-of-visited selector that includes step 0 reports RETRIEVAL as RL.**
   `exp_rl_diagnose.best_feasible` scanned every design an episode visited,
@@ -12278,3 +12313,277 @@ captures nearly all the value.** A finding about the problem, not the method.
 entry 50.
 
 **Tests: 2258 passed / 13 deselected before; 2272 / 13 after** (251.8 s).
+
+### 2026-09-01 -- session 32: **the amortisation claim's intercept, MEASURED. There is no small library: match quality is a power law in pool size with no knee, and the honest break-even is 346 requests.**
+
+Driven by a judge-style review of the deliverable against the Astera slide.
+**Zero simulations in this session.**
+
+**THE GAP THAT WAS FOUND.** Every deck saving this project publishes -- entry
+32's **35.6 %**, entry 40's **25 %** and **1 284 decks per compliant design
+against 1 960** -- is a **marginal** cost. It prices the query and charges
+**nothing** for the 74 526-design library the query reads. `spec_pool.py` has
+always stated the one-off cost (**~128 000 simulations**, 31 879 + 96 000
+trials) and no report or figure had ever carried it. The sharpest available
+attack on this project is *"that is a lookup table, not design automation"*,
+and the answer to it is an amortisation curve with the library as an intercept.
+
+**ENTRY 51, pre-registered before any subsample was drawn, SCORED 3 OF 5.**
+
+    Q1  flat (<=0.05 tol) at N=3000 on >=14 of 16     0 of 16          MISS
+    Q2  degraded (>0.25 tol) at N=50 on >=8 of 16     16 of 16         HIT
+    Q3  N* <= 1000                                    N* = 30 000      MISS
+    Q4  solved vs unsolved dev, p >= 0.05             p = 0.8708       HIT
+    Q5  control reproduces shipped ranking exactly    16 of 16         HIT
+
+**THE TRAP THE ENTRY WAS DESIGNED AROUND, and it is worth remembering.** The
+obvious experiment -- subsample the pool to `N`, re-rank, count how many
+requests still get a corner-feasible candidate -- **cannot be run at zero
+simulations.** Only **128 of 74 526** designs carry a corner label, so
+subsampling to `N = 1000` retains a *specific* labelled design with probability
+**1.3 %**. The resulting curve would measure **label survival** and would read
+as a real finding. The entry measures **match quality** (`dev`) instead, which
+needs no labels, and states the weak link in its own inference chain: match
+quality is **necessary, not sufficient**, so `N*` is a **lower bound**.
+
+**THE RESULT: a power law, no knee anywhere on the grid.**
+
+           N        top-5 median dev      excess over full pool
+          50            0.9292                   0.898
+         300            0.4497                   0.424
+       1 000            0.2639                   0.235
+       3 000            0.1553                   0.121
+      10 000            0.0857                   0.052
+      30 000            0.0484                   0.016
+      74 526            0.0259                   0.000
+
+Deviation roughly **halves for every 3x** in library size, monotonically, on
+every one of the 16 requests. The registered hypothesis was that in-tolerance
+candidates are plentiful enough (G-- section 5h: 2 066-17 478 per request) that
+the top 5 saturate early. **They do not: plentiful is not close.**
+
+**THE NUMBER THE REPORT NOW CARRIES.**
+
+    library charged at        0 decks  ->  break-even     0 requests  (by-product)
+    library charged at   74 526 decks  ->  break-even   346 requests  (from scratch)
+
+**The pre-committed branch fired as written** (Q1 misses -> report the
+pool-size question as OPEN, show bounding lines, do not estimate an intercept).
+**No band was retuned after the run.**
+
+**Q4 IS THE ONE THAT CHANGES HOW SECTION 5h READS.** `dev` -- the criterion the
+shipped proposer actually ranks on -- does **not** separate the 6 solved
+requests from the 10 unsolved (p = 0.8708). Third independent confirmation that
+nominal channels do not predict corner outcomes, and the strongest.
+**Read with the power law it says something sharper than either half: a bigger
+library buys MATCH QUALITY, match quality does not buy CORNER FEASIBILITY, and
+coverage is made of the latter. The power law is NOT evidence that a larger
+library would raise 8 of 16.**
+
+**Named but not priced:** the pool was accumulated by random/LHS/CMA-ES
+benchmark arms, so uniform subsampling is the right model for the library we
+**have** and the wrong one for a library somebody sets out to **build**. A pool
+sampled deliberately across the two spec axes would plausibly reach the same
+match quality far cheaper. **Unmeasured, costs simulations, and it is the
+obvious attack on the 346.**
+
+**TWO REPORT DEFECTS FIXED IN THE SAME PASS.**
+
+1. **S7 area was quoted as a bare number.** `link/bridge.py::_area_mm2_of` sums
+   **drawn passive devices only** -- no head enclosure, no routing, no guard
+   ring, no MOSFET area -- and its docstring said so while the report did not.
+   Both report tables now read **"lower bound"**, with a paragraph naming what
+   is excluded. At 23x inside the limit nothing is close to binding, but the
+   honest statement is *"at least 23x"*.
+2. **The DFE ablation (entry 39) was in markdown and not in the report.** It is
+   now a table plus the sentence it earns. **A defect was caught writing it:**
+   the first version took the eye minima over **all 135 points** while every
+   published figure for that experiment is over the **mandated 45** -- the same
+   quantity under one name measured two ways (G32's shape). The table now
+   carries **both as separate columns** and reproduces entry 39 exactly
+   (382.4 / 358.5 / 377.6 / 372.5 mV).
+
+**New on disk:** `experiments/exp_pool_size.py`,
+`experiments/pool_size_results.json`, `report/figures/f5_amortisation.png`,
+`report/figures_v2.py::fig_amortisation`, `PREDICTIONS.md` entry 51 +
+outcome, two new `report/build_pdf.py` sections. Report rebuilt (1032 KB).
+
+**Tests: 2272 passed / 13 deselected before; 2290 / 13 after** (334.0 s).
+`tests/test_pool_size.py` adds **18**, and **four sabotage runs were watched go
+red** (G125): loosening `FLAT_BAND` past its registered 0.05, `dev_all` summing
+the two axes instead of taking their max, `n_star` falling back to the largest
+grid size instead of `None`, and the module reaching the device layer. The two
+gates that most needed them: `_mannwhitney_p` is **hand-rolled** because scipy
+is not a dependency of this project and Q4 rests entirely on it, and `dev_all`
+**duplicates the shipped ranking criterion** so that the vector can be
+subsampled -- two definitions of one thing (G32) is exactly how this would go
+wrong silently.
+
+**One test was WRONG before the code was:** the synthetic-pool ordering fixture
+asserted the far-off-frequency design ranked last, and it does not -- a design
+5 dB out on peaking scores `dev` 3.33 against 3.00 for one 0.9 octaves out.
+The fixture now writes each row's `dev` beside it, because the interesting
+orderings are the ones where the two axes disagree and an eyeballed fixture
+gets them wrong.
+
+### 2026-09-01 -- session 32 (continued): **the k=5 plateau was an artefact of stopping at rank 8 -- A goes 6 -> 10 of 16 -- and it bought ZERO extra compliant designs. The 4-corner screen's filter quality FALLS with retrieval depth.**
+
+Two runs, both pre-registered, **3 100 decks total**.
+
+**ENTRY 52 (k=40 deep scan, 2 560 decks, 16.6 min). SCORED 5 OF 6.**
+
+    accepted_at_k = [1,4,5,5,6,6,6,6, 6,6,6,6,6,6,6,6, 8,8,9,9,9,9,9,9,9, 10,...,10]
+                     ^ranks 1-8 BIT-IDENTICAL to entry 32   ^17 ^19        ^26, flat to 40
+
+    Q1 ranks 1-8 reproduce entry 32     128 candidates, 0 differences   HIT
+    Q2 A(k=40) in [6,10]                10  (top edge)                  HIT
+    Q3 < 6 new acceptances below rank 8  4                              HIT
+    Q4 2 560 decks, deployed < measured  2 560 / deployed 1 336         HIT
+    Q5 swing >= 85 % of non-feasible     573/617 = 92.9 %               HIT
+    Q6 deep acceptances score WORSE      3 of 4 score BETTER            MISS
+
+**Entry 32 stopped one rank into a TWELVE-rank dead zone and read it as a
+ceiling.** `accepted_at_k` is flat at 6 from rank 5 to rank 16, then steps at
+17, 19 and 26. The registered AGAINST argument -- *"three flat ranks, the well
+is dry"* -- was the most relevant data point available and was **wrong**.
+
+**Q6's miss says the `dev` ordering is MIS-ORDERED, not merely incomplete:**
+shallow acceptances have median screen reward **+14.1825** and three of the four
+deep ones beat it (+14.2388, +14.3361, +14.3654). Better-screening designs sit
+below rank 8. **That is the strongest support yet for entry 49's reranker, and
+it says fit the ranker then apply it to a DEEP list, not to the top 8.**
+
+**ENTRY 53 (stage 2, 45-corner verification of the 4 new acceptances, 540
+decks, 3.1 min). Q1 MISSED; coverage UNCHANGED at 8 of 16.**
+
+    req  rank   45 corners   screen reward    entry 40 was
+      3    17     44/45         +14.2388      11/45 search   <- ONE corner short
+      5    17     37/45         +14.3361      44/45 search   <- REGRESSED
+      6    26     45/45         +14.3654      45/45 search   <- control, holds
+     10    19     45/45         +14.1543      45/45 search   <- control, holds
+
+    Q1 coverage 9 or 10       8            MISS
+    Q2 (conditional)          not scorable NOT SCORABLE -- see below
+    Q3 control pair holds     both 45/45   HIT
+    Q4 failures unmeasurable  all of them  HIT
+
+**THE FINDING, and it is the opposite of what entry 52 pointed at.** Deep
+candidates **screen better** and **verify worse**:
+
+    passed the 4-corner screen AND all 45 corners
+      shallow (rank <= 5, entry 40)   5 of 6   83 %
+      deep    (rank 17-26)            2 of 4   50 %
+
+**The screen rates all four within 0.22 of each other (+14.15 to +14.37) while
+their true 45-corner counts span 37 to 45.** No correlation. So entry 52's
+`A = 10 of 16` is a statement about **screen acceptance only** and must never be
+quoted as coverage or compliance.
+
+**THE REGRESSION THAT MATTERS: request 5 went 44/45 -> 37/45.** This is exactly
+the risk entry 40 registered at 0.55 -- an accepted proposal replaces what the
+search would have found -- which did NOT materialise at k<=5 and DOES at k=17.
+**`propose_then_search` at large k is not safety-preserving in the way the
+shallow version measured. `design.py`'s `AUTO_K = 5` MUST NOT be raised on the
+strength of entry 52. Nothing was changed.**
+
+**Q4 explains the whole result.** All four worsts are **positive**, so not one
+failing point is a spec violation -- every one is an **unmeasurable eye**
+(G120/G107). Request 3 went 11/45 -> 44/45 and is **one unscorable corner** from
+9 of 16. **The binding constraint on coverage is not the search, the ranking or
+the library -- it is that the eye cannot be computed where the stage
+compresses**, the same wall as 92.9 % of entry 52's rejections.
+
+**A DEFECT IN ENTRY 53'S OWN REGISTRATION, recorded as entry 46's was.** Q2 was
+a conditional (*"request 5 passes if only one of them does"*) whose antecedent
+is false when **neither** passes -- which was the modal case given request 3
+started at 11/45. Recorded NOT SCORABLE rather than dropped or generously
+counted. **Its mechanism was also backwards:** request 3 (worse search history,
+-0.5559) beat request 5 (+14.5035) at verification, 44/45 against 37/45.
+
+**WHAT THIS CLOSES.** Retrieval depth is exhausted as a **coverage** lever:
+`A` 6 -> 10 costs 1 076 extra deployed decks and returns **zero** compliant
+designs. With entry 51 (a bigger library does not help) and entry 47 (the RL
+refiner loses to random), **the retrieval line is closed for coverage** and
+remains the cheapest source of a starting point. **The one lever left is the
+unmeasurable eye -- task 4d, zero simulations to start, artifacts on disk.**
+
+**New on disk:** `experiments/exp_pool_size.py`, `pool_size_results.json`,
+`experiments/exp_deep_verify.py`, `deep_verify_results.json`,
+`hybrid_topk_scan_k40.json` (**new file; entry 32's `hybrid_topk_scan.json` is
+byte-for-byte untouched, verified by git**), `tests/test_pool_size.py` (18),
+`tests/test_deep_verify.py` (15), `PREDICTIONS.md` entries 51-53 with outcomes,
+`report/figures/f5_amortisation.png`.
+
+**Tests: 2272 before; 2305 / 13 deselected after** (394.7 s). **Seven sabotage
+runs watched go red** across the two new files -- including the one that
+mattered most: an `analyse` that counted **all** passes rather than only the
+movable requests, which would have reported **12 of 16** instead of 8.
+
+---
+
+### 2026-09-01 — session 33. **Task 4d answered, and it was two questions. MANDATED COVERAGE 8 -> 9 OF 16.**
+
+**What was asked:** analyse the project against the competition slide and say
+how a judge would score it. The review found the RL story mis-stated in my own
+first pass (entry 48's sampled policy **loses to uniform random**, 10 vs 13, and
+its pre-registered rule says so explicitly), so the RL item was redirected and
+the session went to the coverage lever instead, at the owner's direction:
+*"focus more on the project submission than the report."*
+
+**New files.**
+- `nebula/experiments/exp_unscorable.py` — task 4d's missing instrument. Keeps
+  the `reason` string `exp_coverage._rescore` discards. 90 decks, 28.1 s,
+  artifact `unscorable_diagnosis.json`.
+- `nebula/experiments/exp_bypass_recover.py` — entry 54. Invariance control
+  first, then re-verify. 360 decks, 210.6 s, artifact
+  `bypass_recover_results.json`.
+- `nebula/tests/test_bypass_recover.py` — 24 tests, no SPICE.
+
+**The finding, in one line.** `n_unscorable` had been merging *"the SPICE point
+never ran"* with *"the point ran and the link refused to compute an eye"*
+(**G134**). Split: request 5 is **8 compression corners, all at VDD-5 %**,
+1.002–1.203x over the measured linear limit; request 3 is **one
+`inoise_total = -nan(ind)`** — **G54**, in this list since 5 August, with a
+remedy G54 had already measured to be answer-neutral.
+
+**The control was run before the headline and it is the part that matters.**
+All 45 mandated corners at 10 pF vs 30 pF, `vn_in_vrms` / `g_dc_db` /
+`f_pk_interp_hz`, compared with `==` and not a tolerance: **44 computed at
+both, 132 comparisons, 0 differing, 0 lost, 1 recovered.** Only then:
+**request 3 44/45 -> 45/45, mandated coverage 8 -> 9 of 16** — the first
+movement since entry 40. Request 5 did not move, as registered.
+
+**Entry 54 scored 5 of 6.** Q4 missed because it was registered against the
+wrong family (**G135**) — it asked whether a 0 °C noise value lies between its
+27 °C and 125 °C neighbours, and noise is cleanly banded by temperature, so no
+outcome could have made it true. Against the other 14 corners at 0 °C the value
+is inside. Recorded as a miss, not argued away.
+
+**What did NOT move, and must travel with the number:** the 135-point load grid
+is still **0 of 16** (request 3 went 44 -> 45 of 135); `pvt45_worst` is
+unchanged at **+14.2388**; **`C_BYPASS_F` stays 10 pF** — entry 54 patches one
+call site in a wrapper and restores it in a `finally`; and 30 pF is a real
+capacitor whose area is still not in any S7 estimate.
+
+**Two things left on the board, both named in `PROGRESS.md` §6.** Row **4r**:
+whether `design.py` should retry at 30 pF on a `-nan(ind)` — bounded, detectable
+and measured answer-neutral, but it changes the deliverable's behaviour, so it
+is the **owner's call** (rule 7). Row **4s**: request 5's eight corners are now
+the closest coverage point on the board at **1.002x** over the line at best.
+
+**Also corrected:** `CONTINUE_HERE.md`'s deadline line read "24 days" and was
+written on 2026-08-20; it now reads 14 days as of 2026-09-01.
+
+**New on disk (session 33):** `nebula/experiments/exp_unscorable.py`,
+`unscorable_diagnosis.json`, `nebula/experiments/exp_bypass_recover.py`,
+`bypass_recover_results.json`, `nebula/tests/test_bypass_recover.py`.
+`PREDICTIONS.md` entry 54 (pre-registration + outcome); `PROGRESS.md` §5p and
+rows 4d/4q2/4r/4s; `CONTINUE_HERE.md` session-33 block; gotchas **G134**,
+**G135**.
+
+**Tests: 2305 before; 2329 / 13 deselected after** (345.0 s, system Python
+3.13.14). The 24 new gates are `nebula/tests/test_bypass_recover.py`, and one
+of them **caught a real defect before the run was reported**: `_report`
+subscripted `target["before"]` on the Q1-failure path, where both arms are
+deliberately `None` because entry 54's decision rule forbids running them. The
+gate that fires on a failed control is the one gate that must not itself crash.
