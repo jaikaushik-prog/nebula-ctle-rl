@@ -13,10 +13,21 @@ scoring: `PREDICTIONS.md` entry 16.
 
 ## 0. The two findings, up front
 
-**1. The spec-conditioned problem is ONE-dimensional, not two.**
-`reward_v1.margins` accepts `target_peaking_db` and deliberately ignores it —
-its own docstring says so — because S3's peaking constraint is a **band**
-(3–12 dB) and `CLAUDEwa.md` §3 reads the band as the requirement. Measured:
+> **SCOPE CORRECTION, 2026-09-01 (session 31). Every measurement in this file
+> is on `V1_SPECS` and is correct there. Finding 1's *reason* is not.**
+> `margins()` does emit `S3_peaking_match` when a request is passed; what
+> decides whether it is scored is the spec set. `V1_SPECS` has no such row —
+> hence everything below. **`V5`/`V6_SPECS` do**, and `V6_SPECS` is what
+> `exp_coverage` and `design.py --method auto` score, so **on the delivered
+> path the problem is 2-D**. Nothing here is retracted; it is scoped. What is
+> **open** is whether finding 2 — a 600-design library answering every
+> held-out spec — survives on `V6_SPECS`. It has not been re-measured.
+> See `SCOPE_BOUNDARY.md` §3 and `POSITIONING.md` §1.
+
+**1. The spec-conditioned problem is ONE-dimensional, not two — on
+`V1_SPECS`.** That set carries no `S3_peaking_match` row, because S3's peaking
+constraint is a **band** (3–12 dB) and `CLAUDEwa.md` §3 reads the band as the
+requirement. Measured:
 one fixed design scores **8.999984 against targets of 3, 5, 7.5, 10 and 12 dB,
 identically**, while the same design moves `8.000 → 8.996 → −0.000` across a
 sweep of `target_f_peak_hz`. The observation's target block has two channels

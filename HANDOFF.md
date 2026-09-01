@@ -4695,6 +4695,24 @@ Plus: git init, .gitignore, 28 tests, Wilson-bound BER reporting.
   `nebula/tests/test_verify45_grid.py` (16 tests; the sabotage that restores the
   original two lines fails 6 of them).
 
+- **G133 -- (nebula) A CLAIM THAT WAS TRUE WHEN WRITTEN CAN BE FALSIFIED BY A
+  DECISION, AND NOTHING WILL TELL YOU.** Every run of `design.py` printed
+  *"reward_v1 deliberately ignores target_peaking_db"*. That was correct until
+  **decision D6** created `S3_peaking_match` and `V5`/`V6_SPECS`. After D6,
+  `margins()` emits the row whenever a request is passed; whether it is
+  **scored** is a property of the **spec set**, not of `reward_v1`. The
+  sentence stayed in the deliverable's output, in `SCOPE_BOUNDARY.md` §3, in
+  `POSITIONING.md` §1 and in `SPEC_CONDITIONED.md` §0 for a fortnight -- and
+  §3 is where `POSITIONING.md` gets **mechanism #1 for why retrieval beats
+  RL**, so a superseded premise was holding up the project's central negative
+  result. **No measured number was wrong**; the scope every number could be
+  quoted at was. Two habits that would have caught it: state the **spec set**
+  beside any claim about what the objective can see (V1 and V6 disagree on
+  exactly this), and when a decision changes a default, grep the prose for the
+  old claim -- a test pins code, nothing pins a docstring. Fixed 2026-09-01:
+  the runtime note is now a function of the path, a test **forbids the old
+  string returning**, and all three documents carry a scope correction.
+
 - **G132 -- (nebula) A ROLLOUT'S WARM START IS NOT A PROPOSAL, and a
   best-of-visited selector that includes step 0 reports RETRIEVAL as RL.**
   `exp_rl_diagnose.best_feasible` scanned every design an episode visited,
@@ -12047,3 +12065,25 @@ the policy's **k=5** so the depths match.
 
 **Tests: 45 passed across the three touched files. Full suite NOT yet re-run --
 `exp_rl_refine --n 128` is holding the simulator (G70).**
+
+### 2026-09-01 -- session 31 (continued): the prose owed by the previous entry. **G133 recorded.**
+
+`SCOPE_BOUNDARY.md` §3, `POSITIONING.md` §1 and `SPEC_CONDITIONED.md` §0 all
+carried the pre-D6 claim that `reward_v1` ignores `target_peaking_db`. All
+three now carry a **scope correction** rather than a retraction, because the
+distinction matters: **no measured number in any of them is wrong.** Every one
+was measured on `V1_SPECS`, which genuinely has no request row. What was wrong
+was the scope they could be quoted at, and `POSITIONING.md` §1 was quoting it
+at the delivered path, where `V6_SPECS` applies and the target axis is **2-D**.
+
+**The consequence, stated as an OPEN item rather than smoothed over:**
+`SPEC_CONDITIONED.md`'s finding 2 -- a 600-design library answers every
+held-out spec at 8.99 of a 9.0 ceiling -- is a `V1_SPECS` result and **has
+never been re-measured on `V6_SPECS`**. Until it is, *"on a 1-D manifold a
+lookup table is the optimal policy"* is the mechanism for every published
+benchmark number and is **not established** as the mechanism on the delivered
+path. That is now written in all three files.
+
+**G133** records the class: a claim true when written, falsified by a later
+decision, with nothing to detect it because a test pins code and nothing pins a
+docstring.

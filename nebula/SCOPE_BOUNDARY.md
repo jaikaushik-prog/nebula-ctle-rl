@@ -91,8 +91,38 @@ future work, not results.
 
 ## 3. The boundary row that is uncomfortable, stated anyway
 
-**The spec target axis is effectively one-dimensional.** `target_peaking_db` is
-accepted by `reward_v1.margins` and **deliberately ignored**, so one design scores
+> **CORRECTED 2026-09-01 (session 31). This section was scoped too widely, and
+> it is load-bearing, so the correction is stated before the claim.**
+>
+> The sentence below — *"`target_peaking_db` is accepted by `reward_v1.margins`
+> and deliberately ignored"* — **was true when written and has been false since
+> decision D6.** `margins()` emits **`S3_peaking_match`** whenever a request is
+> passed. What decides whether it is *scored* is the **spec set**, not
+> `reward_v1`:
+>
+> * **`V1_SPECS`** (7 rows) has no request row. Everything in this section, and
+>   every number in `SPEC_CONDITIONED.md`, is measured **on `V1_SPECS`** and is
+>   correct there.
+> * **`V5`/`V6_SPECS`** carry `S3_peaking_match` (and `S3_f_peak_match`).
+>   `reward_v1.py`'s own `V5D_SPECS` docstring says it directly: *"the spec
+>   manifold is still genuinely 2-D, because `S3_peaking_match` is in it."*
+>   **`exp_coverage` and `design.py --method auto` score `V6_SPECS`**, so on the
+>   delivered path the target axis is **two**-dimensional.
+>
+> **What this does and does not do to the conclusion.** The 1-D reading still
+> explains the amortisation result *on the paths that produced it*, which is
+> every published benchmark number, because all of them score `V1_SPECS`.
+> **Whether a 600-design library still serves every held-out target under
+> `V6_SPECS` has never been measured**, and until it is, "on a 1-D manifold a
+> lookup table is the optimal policy" may not be the mechanism behind
+> retrieval's win on the delivered path. `POSITIONING.md` §1 uses it as
+> mechanism #1 and carries the same correction.
+>
+> The retraction is narrow on purpose: **no measured number changes.** What
+> changes is the scope the sentence is allowed to be quoted at.
+
+**On `V1_SPECS`, the spec target axis is effectively one-dimensional.**
+`target_peaking_db` produces no scored row in that set, so one design scores
 identically against targets of 3, 5, 7.5, 10 and 12 dB
 (`CONTINUE_HERE.md` §5 OPEN item 5).
 

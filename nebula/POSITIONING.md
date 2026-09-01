@@ -41,9 +41,18 @@ substitution as a controlled comparison rather than an assertion:
 
 **And the mechanism is named, not hand-waved.** Two measured causes:
 
-1. **The spec manifold is effectively 1-D** (`SCOPE_BOUNDARY.md` §3). On a 1-D
-   manifold a lookup table *is* the optimal policy, which is exactly what the
-   amortisation result measured: a lookup serves 32 of 32 held-out targets.
+1. **The spec manifold is effectively 1-D — ON `V1_SPECS`** (`SCOPE_BOUNDARY.md`
+   §3, corrected 2026-09-01). On a 1-D manifold a lookup table *is* the optimal
+   policy, which is exactly what the amortisation result measured: a lookup
+   serves 32 of 32 held-out targets.
+
+   **The scope matters and was missing.** Decision D6 added `S3_peaking_match`,
+   and `V6_SPECS` — which `exp_coverage` and `design.py --method auto` score —
+   contains it, so **the delivered path's target axis is 2-D**. The 32-of-32
+   amortisation was measured on `V1_SPECS` and **has never been re-measured on
+   `V6_SPECS`**. So this remains the mechanism for every published benchmark
+   number, and it is **not established** as the mechanism on the delivered
+   path. Quote it with the spec set attached, or not at all.
 2. **95 % of the policy's rejections are output-swing compression** (entry 36) —
    a quantity the reward it was trained on did not contain. When that blindness
    was fixed (entry 38), headroom nearly doubled and swing failures fell
