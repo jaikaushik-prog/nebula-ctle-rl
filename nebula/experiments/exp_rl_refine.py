@@ -211,12 +211,23 @@ def _load_policy(obs_dim: int, act_dim: int, seed: int):
     return net, c
 
 
-def refine_one(net, target, seed: int) -> RefineResult:
+def refine_one(net, target, seed: int, actor=None) -> RefineResult:
     """Library start -> policy refinement -> paired comparison. **One request.**
 
     Both endpoints are scored through `exp_corner_rl._score`, the same shared
     evaluator every arm in entry 25 used, so this result sits on the same axis
     as the bar it is measured against.
+
+    `actor` is entry 47's seam and it exists so that the CONTROL ARM IS THIS
+    LOOP. It takes `(obs, rng)` and returns an action. `None` means the policy's
+    mean action, which is what entries 28 and 46 ran and what Q1 must reproduce
+    bit-for-bit -- so the default path is unchanged, and the `rng` the seam
+    needs is only created for a caller that supplies an actor.
+
+    Passing a random actor gives the matched-budget control: same env, same
+    horizon, same stride, same best-of-visited selector, **differing in exactly
+    one thing -- where the action comes from.** A refiner that cannot beat that
+    was never contributing a policy; it was contributing the selector.
     """
     import torch
 
@@ -272,10 +283,16 @@ def refine_one(net, target, seed: int) -> RefineResult:
     best_r = float(lib_ev.reward)
     n_steps = 0
     done = False
+    # Created only when a control arm needs it, so the policy path consumes no
+    # random numbers and stays bit-identical to entries 28 and 46 (Q1).
+    rng = None if actor is None else np.random.default_rng(seed)
     while not done:
-        with torch.no_grad():
-            o = torch.as_tensor(obs, dtype=torch.float32).unsqueeze(0)
-            a = net.distribution(o).mean.squeeze(0).numpy()
+        if actor is None:
+            with torch.no_grad():
+                o = torch.as_tensor(obs, dtype=torch.float32).unsqueeze(0)
+                a = net.distribution(o).mean.squeeze(0).numpy()
+        else:
+            a = np.asarray(actor(obs, rng), dtype=float)
         obs, r, term, trunc, _ = env.step(a)
         n_steps += 1
         if r > best_r:
