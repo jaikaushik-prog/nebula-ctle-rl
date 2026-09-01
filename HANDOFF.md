@@ -12087,3 +12087,72 @@ path. That is now written in all three files.
 **G133** records the class: a claim true when written, falsified by a later
 decision, with nothing to detect it because a test pins code and nothing pins a
 docstring.
+
+### 2026-09-01 -- session 31 (continued): **entry 46 RAN at n=128 and scored 4 of 6. Q2 missed, and the registered rule CLOSES the RL-contribution line.**
+
+    n = 128 held-out requests, 30.3 min, 26.9 sims/request
+    library start   70/128 feasible   median +10.0423    4.0 sims/req
+    after refining  75/128 feasible   median +10.0659   26.9 sims/req
+    IMPROVED 5   BROKE 0
+    rate 5/128 = 3.91%   95% Wilson [1.68%, 8.82%]   sign test p = 0.0625
+    control, first 16 rows: REPRODUCED
+
+    Q1 first 16 reproduce entry 28 exactly      HIT
+    Q2 >= 8 of 128 improve                      MISS  (5)
+    Q3 sign test p < 0.05                       MISS  (p = 0.0625)
+    Q4 n_broke < n_improved                     HIT   (0 < 5)
+    Q5 mean sims/request < 30                   HIT   (26.9)
+    Q6 improvements do not exceed the n=16 rate HIT   (5, vs < 17)
+
+**Q6 IS THE FINDING, AND IT IS THE WINNER'S CURSE.** **12.5 % lies OUTSIDE the
+n=128 interval [1.68 %, 8.82 %].** The n=16 point estimate was not merely
+noisy, it was an *overestimate by roughly 3x*, in the direction small samples
+always err. **2 of 16 was not a small true effect; it was a large sampling
+error.** That is the transferable lesson and it was registered in advance.
+
+**Q1 is worth more than a control.** The machine **reset mid-run**; the
+experiment was restarted from scratch on a fresh process after three stale run
+locks were cleared (`rl_refine` pid 8876, plus `hybrid_topk_scan` and
+`rwr_propose` both pid 25244 — the latter two left over from the abandoned RWR
+run of 2026-08-30 and **38 hours stale**, which would have blocked those two
+experiments for anyone who tried them). The first sixteen rows still reproduced
+**bit-for-bit**. That is an unplanned determinism check across a reboot.
+
+**Q3 missed by ONE EVENT and that is recorded so it cannot be re-narrated.**
+One further crossing would have given p = 0.03125. A test that turns on a
+single event has almost no evidence in it; the reading is that **5 events is
+thin**, not that the effect is nearly proven. Q3 is a miss.
+
+**The unregistered statistic, reported and NOT promoted.** `improved` counts
+**feasibility crossings**. The raw paired deltas are busier — **33 up, 6 down,
+89 declined**, sign test p = 1.4e-05. This was **not pre-registered**, and
+switching to the metric with the smaller p after seeing both is precisely what
+`PREDICTIONS.md` exists to prevent. It supports a *future* pre-registration and
+nothing today: moving the score is not crossing the feasibility line, and only
+the crossing pays.
+
+**In 128 attempts the refiner broke NOTHING.** Entry 28's one-line fix — let
+the policy return the design it was given — holds at eight times the sample.
+
+**THE DECISION RULE FIRES ON THE Q2 BRANCH: the line is closed.** The refiner
+improves **3.9 %** of requests [1.68 %, 8.82 %], breaks none, and costs **26.9
+simulations per request against retrieval's 4.0 — 6.7x**. Reported with the
+cost attached it is a measured negative, and a far more useful one than the
+p = 0.50 ambiguity it replaces. **No further RL rescue should be started for
+this submission.**
+
+**Not moved by any of this:** coverage (8 of 16, entry 40), compliance (11 of
+11 rows at 45 of 45 corners), the 135-point grid (0 of 16).
+
+**New on disk:** `experiments/rl_refine_results_n128.json`,
+`experiments/rl_refine_run_n128.jsonl`, `PREDICTIONS.md` entry 46's OUTCOME.
+`rl_refine_results.json` (the n=16 control) is **untouched**, as designed.
+
+**Two stale-count corrections**, both flagged by the review that started this
+session: `CLAUDE.md` rule 2 and `PROGRESS.md` §2 read **1861 passed / 11
+deselected** from 2026-08-22 while the suite actually ran **2213/13** — stale
+by 381 tests for ten days. Both now read the measured figure.
+
+**Tests: 2213 passed / 13 deselected before; 2242 passed / 13 deselected
+after** (328.7 s). +29 across `test_rl_refine.py` (8 -> 19), `test_union.py`
+(0 -> 9) and `test_design_cli.py` (8 -> 17).

@@ -61,16 +61,20 @@ zero**.
    §8 next steps, §9 gotchas). A change without a handoff update is
    incomplete.
 2. **Run the test suite before and after changes** (from repo root):
-   `python -m pytest tests nebula/tests -q -m "not slow"` — **1861 passed,
-   11 deselected, ~4 min** (254 s, measured 2026-08-22 on system Python 3.13.14;
-   it was 1834 before `nebula/tests/test_hybrid_topk.py` added 27, and 1806
-   before `nebula/tests/test_hybrid.py` added 28).
+   `python -m pytest tests nebula/tests -q -m "not slow"` — **2242 passed,
+   13 deselected, ~5.5 min** (329 s, measured 2026-09-01 on system Python
+   3.13.14; it was 2213 before session 31 added 29 across
+   `test_rl_refine.py`, `test_union.py` and `test_design_cli.py`).
+   **This line was stale by 381 tests for ten days** — it read 1861/11 from
+   2026-08-22 while the suite ran 2213/13. Re-measure it when you change the
+   count; a reviewer who clones the tag and finds the stated figure wrong
+   starts checking every other number.
    Report the count before and after. Never commit with failures. Add tests for
    anything you fix or build.
    - Use the **system** interpreter, not the conda env `nebula` — that env has
      no `torch`, and `ngspice_con.exe` is found by absolute path regardless
      (HANDOFF §9 G69), so activation buys nothing for the suite.
-   - `-m "not slow"` deselects 11 tests, incl. ones that re-derive golden values
+   - `-m "not slow"` deselects 13 tests, incl. ones that re-derive golden values
      from the full SKY130 library (~30 s each). Run them after a PDK update.
    - Either suite runs standalone; the two `conftest.py` files do not collide.
    - Do **not** run the suite alongside an experiment sweep (G70): one

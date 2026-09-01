@@ -8328,3 +8328,97 @@ so that a hit cannot later be told as an unexpected triumph, and so that a
 * **Not a corner claim.** The refiner scores the 4-corner screen, not 45.
 * **Not a cost win.** Refining costs ~5x the library's 4.0 sims/request. Any
   improvement is bought, and the price is reported beside it.
+
+### OUTCOME (2026-09-01, same session). **SCORED 4 OF 6. Q2 missed, and the registered rule closes the line.**
+
+    n = 128 held-out requests, 30.3 min, 26.9 sims/request
+    library start   70/128 feasible   median +10.0423    4.0 sims/req
+    after refining  75/128 feasible   median +10.0659   26.9 sims/req
+    IMPROVED 5   BROKE 0   median paired delta 0.0000
+    rate 5/128 = 3.91%   95% Wilson [1.68%, 8.82%]   sign test p = 0.0625
+    control, first 16 rows: REPRODUCED
+
+| | prediction | outcome | |
+|---|---|---|---|
+| **Q1** | first 16 rows reproduce entry 28 exactly | 2 improved, 0 broken, lib 9 -> pol 11 | **HIT** |
+| **Q2** | >= 8 of 128 improve | **5** | **MISS** |
+| **Q3** | sign test p < 0.05 | **p = 0.0625** | **MISS** |
+| **Q4** | `n_broke < n_improved` | 0 < 5 | **HIT** |
+| **Q5** | mean sims/request < 30 | 26.9 | **HIT** |
+| **Q6** | improvements do not exceed the n=16 rate (< 17) | 5 | **HIT** |
+
+### Q1 is the result that licenses every other line
+
+The first sixteen rows came back **2 improved, 0 broken, lib 9 -> pol 11** --
+entry 28, element for element. The prefix-stability argument held, so the free
+replication was real rather than hoped for.
+
+It is worth more than that. **The machine reset mid-run and the experiment was
+restarted from scratch**, on a fresh process, after three stale run locks were
+cleared. The first sixteen rows still reproduced bit-for-bit. That is an
+unplanned determinism check across a reboot, and it is the strongest evidence
+in this project that the refiner harness is reproducible at all.
+
+### Q6 is the finding, and it is the winner's curse
+
+**12.5 % is OUTSIDE the n=128 interval [1.68 %, 8.82 %].** The n=16 point
+estimate was not merely noisy; it was an *overestimate*, by roughly 3x, in the
+direction small samples always err. That is exactly what Q6 registered at
+confidence 0.6 and it is the most transferable thing in this entry: **2 of 16
+was not a small true effect, it was a large sampling error.**
+
+### Q3 missed by one event, and that is a statement about thinness, not a near-miss
+
+At 5 improvements and 0 regressions the exact two-sided sign test is
+**p = 0.0625**. One more crossing would have made it **0.03125**. **This is
+recorded so that it cannot be re-narrated later as "nearly significant."** A
+test that turns on a single event is a test with almost no evidence in it; the
+right reading is that 5 events is thin, not that the effect is nearly proven.
+**Q3 is a miss and is reported as a miss.**
+
+### The unregistered statistic, reported and NOT promoted
+
+The registered outcome counts **feasibility crossings** -- `improved` is
+`pol_ev.feasible and not lib_ev.feasible`. The raw paired deltas are a
+different and much busier picture:
+
+    delta > 0   33        delta < 0    6        declined (delta == 0)   89
+    sign test on 33 vs 6:  p = 1.4e-05
+
+**This is NOT a result and it is not being claimed as one.** It was not
+pre-registered, and switching to the metric that gives the smaller p-value
+after seeing both is the exact move this file exists to prevent. What it
+honestly supports is a *future* pre-registration: the policy moves a retrieved
+design's score in the right direction far more often than the wrong one
+(**25.8 %** of requests, CI [19.0 %, 34.0 %], against 4.7 % moved down), and it
+**declines on 89 of 128** -- but moving the score is not the same as crossing
+the feasibility line, and only the crossing pays.
+
+### What the refiner never did, in 128 attempts
+
+**It broke nothing.** Zero regressions out of 128, against 6 requests whose
+score moved down without losing feasibility. Entry 28's one-line fix -- letting
+the policy return the design it was given -- holds at eight times the sample.
+
+### The decision rule fires, and it is the Q2 branch
+
+Entry 46 registered: *"**Q2 misses** -> 2 of 16 was noise. That closes the
+RL-contribution line for this submission, and it closes it with an n eight
+times larger than the one that opened it, which is the strongest form the
+negative can take. Report it and stop."*
+
+**That is the outcome. The line is closed.** The refiner improves 3.9 % of
+requests [1.68 %, 8.82 %], breaks none, and costs **26.9 simulations per
+request against retrieval's 4.0 -- 6.7x** for that 3.9 %. Reported with the
+cost attached, it is a measured negative, and a much more useful one than the
+p = 0.50 ambiguity it replaces.
+
+### What this outcome may NOT be quoted as
+
+* **Not that RL is useless.** It is one policy, one checkpoint, one refinement
+  stride, on one topology, measured on feasibility crossings.
+* **Not that RL beats or loses to retrieval.** Retrieval supplies the start
+  point in every arm; this is the paired delta on top of it.
+* **Not coverage** (8 of 16, entry 40) and **not compliance** (11 of 11 rows at
+  45 of 45 corners). Neither moved.
+* **Not a corner claim.** The refiner scores the 4-corner screen, not 45.
