@@ -11519,3 +11519,102 @@ control: a change to the proposer must not cost a solved request.
 
 * **Not a 135-point claim.** The load grid stays 0 of 16.
 * **Not a deck saving** until the verification cost is amortised.
+
+### OUTCOME, entry 66 (2026-09-02). **Q1 MISSED, and the reason is a DEFECT IN THE DELIVERABLE: the proposer's ranker re-fits itself every time any experiment writes a log.**
+
+    shipped candidate source, 16 requests, 296 decks
+    A = 13 of 16      (entry 64's standalone run: 11)
+    reproduced entry 64's accepted rank on only 8 of 16
+
+| | prediction | outcome | |
+|---|---|---|---|
+| **Q1** | same 11 requests at the same ranks | **8 of 16 reproduced** | **MISS** |
+| **Q2** | the 5 analytic failures still get library candidates | all 16 got 10 candidates | **HIT** |
+| **Q3** | coverage 12 on the shipped path | **not scorable yet** -- see below | **DEFERRED** |
+| **Q4** | no request entry 56 solved becomes unsolved | deferred with Q3 | **DEFERRED** |
+
+### The defect Q1 exposed
+
+`exp_swing_surrogate.load_surrogate` re-fits from `harvest()`, which **globs
+`*.jsonl` in the experiments directory**. Every experiment that writes a log
+changes the training set, and therefore the model, and therefore the candidate
+ORDER. Measured:
+
+    surrogate training rows when entry 64 ran   3 356
+    surrogate training rows when entry 66 ran   3 362      (entry 65's own logs)
+    requests whose accepted rank reproduced      8 of 16
+
+**A deliverable whose output drifts as the repository accumulates data is not a
+deliverable.** A judge running the tool twice, with any experiment in between,
+gets different designs. This was invisible until the proposer was wired into
+`design.py`, because every earlier use fitted and used the model inside a single
+run.
+
+**Fixed:** `exp_invert_screen.frozen_surrogate()` fits **once**, pickles to
+`swing_surrogate_frozen.pkl`, and loads that thereafter. The file is committed,
+so the delivered path is deterministic and reproducible from a clone. Deleting
+the file re-fits deliberately; nothing re-fits implicitly.
+
+### The consequence for entry 65, stated plainly
+
+**Entry 65's verification does not transfer to the shipped path.** It verified
+the designs entry 64's *3 356-row* ranking proposed; the shipped path with the
+frozen *3 362-row* ranking proposes **different designs on 8 of 16 requests**.
+The 12-of-16 figure is therefore **not yet a shipped number**, and Q3/Q4 are
+deferred to entry 67, which screens and verifies **what the tool actually
+proposes**.
+
+**A = 13 of 16 at the screen is also not a coverage number** -- entry 63 is the
+standing reminder that screen acceptance need not convert, and two of the 13
+(idx 14 at rank 8, idx 15 at rank 5) are new acceptances that no one has
+verified at 45 corners.
+
+---
+
+## 67. Session 33 -- **row 4y measured on what the tool ACTUALLY proposes, with the ranker frozen.**
+
+**Written 2026-09-02 BEFORE the run**, after entry 66 found the ranker drifting
+and froze it.
+
+### Why entry 65 is not enough
+
+Entry 65 verified the designs entry 64's ranking proposed. Entry 66 showed the
+ranking changes with the training set, and the shipped path now proposes
+**different designs on 8 of 16 requests**. So the shipped path must be screened
+and verified as one pipeline, which is what this entry does:
+`analytic_then_library` -> the live 4-corner screen -> `verify_one` at the 45
+mandated corners, on **whatever the tool accepts**.
+
+**The ranker is frozen** (`swing_surrogate_frozen.pkl`, 3 362 rows) so this run
+is reproducible from a clone.
+
+### Predictions
+
+**Q1 -- THE CONTROL, AND IT OUTRANKS THE HEADLINE. No request entry 56 solved
+becomes unsolved.** Confidence **0.7.** Entry 63 lost a solved request doing
+something very like this, and entry 65's controls all held -- but on *different*
+designs from the ones being verified here. **Falsifier: any regression.**
+
+**Q2 -- THE HEADLINE. Coverage lands at 12 or more of 16.** Confidence
+**0.6.** *For:* entry 65 verified 11 analytic acceptances at 45/45, and the
+frozen ranking is a small perturbation of that one. *Against:* it is a
+perturbation on 8 of 16 requests, and screen acceptance has failed to convert
+twice in this project. **Falsifier: 11 or below.**
+
+**Q3 -- THE TWO NEW LIBRARY-SOURCED ACCEPTANCES CONVERT NO BETTER THAN
+CHANCE.** Requests 14 and 15 were accepted at ranks 8 and 5 from the library
+tail; entry 53 measured deep library acceptances converting at **50 %**.
+Registered so a gain there is not over-read. Confidence **0.5** that at most one
+of the two reaches 45/45. **Falsifier: both pass, or neither is accepted.**
+
+**Q4 -- REGISTERED EXPECTED NULL. The 135-point load grid stays 0 of 16.**
+Confidence **0.9.**
+
+### The decision rule, before the result
+
+* **Q1 fails** -> revert `solve_auto` to the library source. A proposer that
+  costs a solved request is not deployable, whatever its acceptance rate.
+* **Q1 holds, Q2 >= 12** -> `design.py` delivers that number and the docstring,
+  README and report may say so.
+* **Q1 holds, Q2 = 11** -> deploy anyway on the deck saving, but the coverage
+  claim stays at entry 56's 9 until a full sweep says otherwise.

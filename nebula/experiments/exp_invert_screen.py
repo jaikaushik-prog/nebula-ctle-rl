@@ -68,6 +68,37 @@ def _in_box(sol) -> bool:
             and BOX["rl"][0] <= sol.rl <= BOX["rl"][1])
 
 
+#: The FROZEN swing surrogate the delivered path ranks with.
+#:
+#: **Entry 66 found this the hard way.** `exp_swing_surrogate.load_surrogate`
+#: re-fits from `harvest()`, which globs `*.jsonl` in this directory -- so the
+#: model changes every time any experiment writes a log. Between entry 64 and
+#: entry 66 the training set grew **3 356 -> 3 362 rows** and the candidate
+#: ORDER changed with it: only 8 of 16 requests reproduced their accepted rank.
+#:
+#: **A deliverable whose output drifts as the repository accumulates data is not
+#: a deliverable.** So the model is fitted ONCE, written here, and loaded from
+#: this file thereafter. Delete the file to re-fit deliberately; do not re-fit
+#: implicitly.
+FROZEN_SURROGATE = HERE / "swing_surrogate_frozen.pkl"
+
+
+def frozen_surrogate():
+    """The pinned ranker. Fits and saves on first use, loads thereafter."""
+    import pickle
+
+    if FROZEN_SURROGATE.exists():
+        with FROZEN_SURROGATE.open("rb") as fh:
+            return pickle.load(fh)
+    from nebula.experiments.exp_swing_surrogate import harvest, load_surrogate
+
+    model, meta = load_surrogate()
+    meta = {**meta, "frozen_rows": len(harvest()["rows"])}
+    with FROZEN_SURROGATE.open("wb") as fh:
+        pickle.dump((model, meta), fh)
+    return model, meta
+
+
 def analytic_candidates(f_peak_hz: float, peaking_db: float,
                         k: int = K) -> list[list[float]]:
     """The top `k` analytic solutions for one request, as `u` vectors.
@@ -127,11 +158,11 @@ def analytic_candidates(f_peak_hz: float, peaking_db: float,
     # criterion, not the choice of proxy: maximise the TIGHTEST margin, which is
     # stationary in the middle of the window instead of at its ends.
     if found:
-        from nebula.experiments.exp_swing_surrogate import features, load_surrogate
+        from nebula.experiments.exp_swing_surrogate import features
         from nebula.experiments.prescreen import predict_response
         from nebula.link.config import LinkConfig
 
-        model, _ = load_surrogate()
+        model, _ = frozen_surrogate()
         # The same channel loss `exp_g4_verify` verifies at, imported rather
         # than restated (rule 9).
         from nebula.experiments.exp_g4_verify import FUNNEL_LOSS_DB
