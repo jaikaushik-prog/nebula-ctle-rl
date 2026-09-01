@@ -76,7 +76,8 @@ def analytic_candidates(f_peak_hz: float, peaking_db: float,
     model by construction, so the ranking spends its only degree of freedom on
     the constraint that actually binds.
     """
-    from nebula.experiments.invert_response import dc_margins, dc_ok, invert
+    from nebula.experiments.invert_response import (dc_margins, dc_ok,
+                                                    invert, margins)
     from nebula.experiments.prescreen import predict_gm
     from nebula.experiments.s9_yield import PROMOTION_LOADS
     from nebula.rl.contract import u_from_params
@@ -114,13 +115,51 @@ def analytic_candidates(f_peak_hz: float, peaking_db: float,
                         # propose a design.
                         if not dc_ok(params):
                             continue
-                        # **Rank on DC ROBUSTNESS, not current.** Entry 58's
-                        # proxy was increasing in `i_bias`, which pushed every
-                        # candidate to 8 mA where `I/2*RL` ate the headroom the
-                        # tail needed. It measured LINEAR RANGE; the constraint
-                        # that bound was DC HEADROOM. This ranks by distance
-                        # from the constraint that actually killed them.
-                        found.append((min(dc_margins(params)), params))
+                        # Collected now, SCORED below in one batch: the swing
+                        # surrogate is the expensive part and it vectorises.
+                        found.append((0.0, params, sol))
+
+    # ── the max-min score (entry 64) ────────────────────────────────────────
+    # Entries 58 and 60 both ranked on something MONOTONE in `I_d*RL` -- current
+    # up, DC margin down -- and each landed at an opposite extreme of it:
+    # medians 2.278 V and 0.160 V against a feasible window of ~0.55-1.15 V.
+    # Neither run put a single candidate inside. The fix is the SHAPE of the
+    # criterion, not the choice of proxy: maximise the TIGHTEST margin, which is
+    # stationary in the middle of the window instead of at its ends.
+    if found:
+        from nebula.experiments.exp_swing_surrogate import features, load_surrogate
+        from nebula.experiments.prescreen import predict_response
+        from nebula.link.config import LinkConfig
+
+        model, _ = load_surrogate()
+        # The same channel loss `exp_g4_verify` verifies at, imported rather
+        # than restated (rule 9).
+        from nebula.experiments.exp_g4_verify import FUNNEL_LOSS_DB
+
+        v_in = float(LinkConfig(
+            channel_loss_db_at_nyquist=FUNNEL_LOSS_DB).v_in_diff_pp_v)
+        us, keep = [], []
+        for _, params, sol in found:
+            try:
+                u = u_from_params(params)
+            except Exception:                                   # noqa: BLE001
+                continue
+            uu = [float(x) for x in np.asarray(u).ravel()]
+            if any(not (-1e-9 <= x <= 1.0 + 1e-9) for x in uu):
+                continue
+            keep.append((params, [min(1.0, max(0.0, x)) for x in uu]))
+            us.append(features(uu))
+        limits = model.predict(np.array(us)) if us else []
+        scored = []
+        for (params, uu), lim in zip(keep, limits):
+            try:
+                pred = predict_response({**params, "cl": cl}, drawn=True)
+            except Exception:                                   # noqa: BLE001
+                continue
+            m = margins(params, pred.nyq_boost_db, v_in, float(lim))
+            scored.append((m["worst"], uu))
+        scored.sort(key=lambda t: -t[0])
+        return [uu for _, uu in scored[:int(k)]]
     found.sort(key=lambda t: -t[0])
 
     out: list[list[float]] = []

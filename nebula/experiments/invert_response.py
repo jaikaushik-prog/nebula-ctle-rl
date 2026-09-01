@@ -381,3 +381,75 @@ def dc_ok(params: Mapping[str, float], floor: float = DC_MARGIN_FLOOR_V,
     """Is this design's operating point plausible? A filter, never a verdict."""
     pair, tail = dc_margins(params, vdd=vdd)
     return bool(pair >= floor and tail >= floor)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# The mid-window solve: both constraints act on I_d x RL, so target it.
+# ─────────────────────────────────────────────────────────────────────────────
+#
+# **Entries 58 and 60 are why this exists, and they failed for OPPOSITE
+# reasons.** Measured `I_d * RL` on their candidates:
+#
+#     entry 58, ranked on current      median 2.278 V   -> 2x ABOVE the ceiling
+#     entry 60, ranked on DC margin    median 0.160 V   -> 3x BELOW the floor
+#     the feasible window                  ~0.55-1.15 V -> NEITHER run entered it
+#
+# The two constraints are not in conflict; they act on the **same quantity**:
+#
+#     swing capability  ~ 2 * I_d*RL             wants it LARGE
+#     pair saturation     I_d*RL < VDD - vcm + c wants it SMALL
+#
+# A ranking that is MONOTONE in `I_d*RL` therefore always lands at one extreme
+# of it, and both previous attempts did. **The fix is not a better proxy but a
+# different SHAPE of criterion**: maximise the tightest margin (a max-min /
+# Chebyshev criterion), which is stationary in the middle of the window instead
+# of at its ends.
+
+#: `g_dc = gm*RL/k`, in dB, plus this offset. **Fitted on 3 000 pool designs**:
+#: corr 0.9880, median |error| 0.223 dB after the offset. The offset is the
+#: r_o shunt and the finite-gm corrections the one-line formula omits.
+_G_DC_OFFSET_DB: float = -0.707
+
+
+def g_dc_linear(params: Mapping[str, float]) -> float:
+    """Predicted DC gain, V/V. Fitted, with a stated 0.223 dB median error."""
+    _require_metres(params)
+    gm, gmbs = predict_gm(params)
+    k = 1.0 + K_ALPHA * (gm + gmbs) * float(params["rs"]) / 2.0
+    g = gm * float(params["rl"]) / k if k > 0 else 0.0
+    return float(g * 10.0 ** (_G_DC_OFFSET_DB / 20.0))
+
+
+def required_swing_pp_v(params: Mapping[str, float], nyq_boost_db: float,
+                        v_in_pp_v: float) -> float:
+    """Differential output swing the link will actually demand, volts.
+
+    `v_in * g_dc * 10**(nyq_boost/20)` -- the input the transmitter and channel
+    deliver, times the gain at the band that matters. This is the analytic
+    cross-check `link/bridge.py` already computes as `v_out_pp`; the GATE there
+    is the pulse response's own peak excursion, which is stricter. So this is a
+    **lower bound on the demand** and the filter built on it is optimistic by a
+    stated amount rather than by an unknown one.
+    """
+    return float(v_in_pp_v) * g_dc_linear(params) * 10.0 ** (
+        float(nyq_boost_db) / 20.0)
+
+
+def margins(params: Mapping[str, float], nyq_boost_db: float,
+            v_in_pp_v: float, swing_limit_pp_v: float) -> dict:
+    """The three margins the two failures identified, in volts, plus the min.
+
+    `swing_limit_pp_v` is the CAPABILITY -- pass entry 37's surrogate
+    prediction, or a measured `vout_swing_v`. Nothing here measures it.
+
+    **`worst` is the max-min objective.** Maximising it is stationary in the
+    middle of the feasible window; maximising any one of the three lands at an
+    extreme, which is exactly what entries 58 and 60 did.
+    """
+    pair, tail = dc_margins(params)
+    need = required_swing_pp_v(params, nyq_boost_db, v_in_pp_v)
+    swing = float(swing_limit_pp_v) - need
+    return {"pair_v": pair, "tail_v": tail, "swing_v": swing,
+            "required_swing_pp_v": need,
+            "i_d_rl_v": 0.5 * float(params["i_bias"]) * float(params["rl"]),
+            "worst": min(pair, tail, swing)}

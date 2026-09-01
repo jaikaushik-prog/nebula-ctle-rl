@@ -11212,3 +11212,89 @@ remains useful as a *predictor* (entry 37's 4.7 %, and it eliminated its target
 failure in entry 60), and it is **not** useful as the ranking criterion on its
 own. A criterion that priced swing **and** the shape rows the screen actually
 scores might do better; that is unmeasured and must be pre-registered.
+
+---
+
+## 64. Session 33 -- **the mid-window solve. Both failures ranked on something MONOTONE in `I_d*RL` and landed at opposite ends of it.**
+
+**Written 2026-09-02 BEFORE the run.**
+
+### The diagnosis, measured on the two failed runs
+
+`I_d * RL` is the quantity **both** constraints act on:
+
+    swing capability   ~ 2 * I_d*RL                  wants it LARGE
+    pair saturation      I_d*RL < VDD - vcm + c      wants it SMALL
+
+Measured on the candidates each run actually proposed:
+
+    entry 58, ranked on current       median I_d*RL  2.278 V   -> DC died
+    entry 60, ranked on DC margin     median I_d*RL  0.160 V   -> SWING died
+    a feasible window exists at roughly              0.55-1.15 V
+
+**Neither run put a single candidate inside it.** That is not a coincidence:
+both criteria are **monotone in `I_d*RL`**, and a monotone objective always
+lands at an extreme of it. The defect is the **shape** of the criterion, not the
+choice of proxy.
+
+### What changed
+
+A **max-min (Chebyshev) criterion**: maximise `min(pair_margin, tail_margin,
+swing_margin)`. It is stationary in the middle of the feasible window rather
+than at its ends, and a candidate at either extreme scores badly by
+construction.
+
+Two new calibrated pieces, both fitted on pool data and both stated with error:
+
+* `g_dc = gm*RL/k` with a **-0.707 dB** offset -- corr **0.9880**, median error
+  **0.223 dB** on 3 000 designs;
+* required swing `= v_in * g_dc * 10^(nyq_boost/20)`, with `v_in = 0.5347 V`
+  from `LinkConfig`. Sanity: this returns **~1.19 V** on a mid-box design
+  against entry 53's measured **~1.1 V** median required excursion.
+
+Capability comes from entry 37's surrogate. **Nothing here measures swing**; the
+criterion is built from two fitted predictors and one surrogate, and
+`rl/evaluator` still decides.
+
+Measured before registering: the top candidates now carry **all three margins
+positive simultaneously** for the first time -- `I_d*RL` **0.23-0.35 V**, pair
++0.6 to +1.0, tail +0.1 to +0.26, swing **+0.08 to +0.21** (the tight one).
+
+### Predictions
+
+**Q1 -- the DC fix still holds. No candidate is rejected as out of saturation.**
+Confidence **0.85.** The filter is unchanged from entry 60, which scored 0 of 80
+saturation failures. **Falsifier: any saturation rejection.**
+
+**Q2 -- THE HEADLINE. `A >= 1`.** Entries 58 and 60 both scored **0 of 16**.
+Confidence **0.5.** *For:* it is the first criterion that prices both binding
+constraints, and the predicted margins are positive on all three for the first
+time. *Against:* the swing margin is thin (+0.08 V on a quantity whose surrogate
+has 4.7 % error), the required-swing formula is a **lower bound** on the gate's
+own pulse-response excursion, and this is the third attempt at one method.
+**Falsifier: `A = 0` again.**
+
+**Q3 -- THE BAR. `A >= 6`.** Confidence **0.15**, deliberately very low.
+**Falsifier: `A <= 5`.**
+
+**Q4 -- THE MECHANISM MOVED. Swing rejections fall below entry 60's 100 %.**
+Confidence **0.7.** If the criterion prices swing and swing still rejects
+everything, the pricing is wrong rather than the idea. **Falsifier: 100 %
+again.**
+
+**Q5 -- REGISTERED CONSTRAINT, from entry 63's lesson. NO COVERAGE CLAIM.**
+Entry 63 measured a re-ranking that raised 4-corner acceptance and **lost a
+45-corner-solved request**. So any acceptance here must be verified at 45
+corners **including an already-solved request as a control** before it may be
+called an improvement. This entry does not verify and therefore claims nothing
+about coverage.
+
+### The decision rule, before the result
+
+* **Q2 misses** -> three attempts, three failures, and the method is retired for
+  this project with the mechanism recorded. Not attempted a fourth time.
+* **Q2 hits, Q3 misses** -> the criterion works and is weaker than retrieval;
+  report `A` and verify the accepted ones with entry 63's control before any
+  claim.
+* **Q3 hits** -> verify at 45 corners **with the control** before anything else
+  is said.
