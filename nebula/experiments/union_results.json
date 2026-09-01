@@ -1,0 +1,132 @@
+{
+ "task": "coverage of the UNION: does the policy answer any request retrieval cannot?",
+ "simulations_run_by_this_file": 0,
+ "matched_k": 5,
+ "n_requests": 16,
+ "retrieval": {
+  "artifact": "hybrid_topk_scan.json",
+  "accepted": [
+   2,
+   4,
+   7,
+   9,
+   11,
+   14
+  ],
+  "n_accepted": 6,
+  "decks": 65
+ },
+ "arms": {
+  "sac_random_analytic": {
+   "artifact": "topk_scan_sac_random_analytic.json",
+   "accepted": [
+    4,
+    7
+   ],
+   "n_accepted": 2,
+   "adds_over_retrieval": [],
+   "n_adds": 0,
+   "decks": 73,
+   "pair_with_retrieval": [
+    2,
+    4,
+    7,
+    9,
+    11,
+    14
+   ],
+   "n_pair": 6,
+   "pair_decks": 138
+  },
+  "sac_random_finetuned": {
+   "artifact": "topk_scan_sac_random_finetuned.json",
+   "accepted": [],
+   "n_accepted": 0,
+   "adds_over_retrieval": [],
+   "n_adds": 0,
+   "decks": 80,
+   "pair_with_retrieval": [
+    2,
+    4,
+    7,
+    9,
+    11,
+    14
+   ],
+   "n_pair": 6,
+   "pair_decks": 145
+  },
+  "sac_seeded_analytic": {
+   "artifact": "topk_scan_sac_seeded_analytic.json",
+   "accepted": [
+    7
+   ],
+   "n_accepted": 1,
+   "adds_over_retrieval": [],
+   "n_adds": 0,
+   "decks": 76,
+   "pair_with_retrieval": [
+    2,
+    4,
+    7,
+    9,
+    11,
+    14
+   ],
+   "n_pair": 6,
+   "pair_decks": 141
+  },
+  "sac_seeded_finetuned": {
+   "artifact": "topk_scan_sac_seeded_finetuned.json",
+   "accepted": [
+    0
+   ],
+   "n_accepted": 1,
+   "adds_over_retrieval": [
+    0
+   ],
+   "n_adds": 1,
+   "decks": 80,
+   "pair_with_retrieval": [
+    0,
+    2,
+    4,
+    7,
+    9,
+    11,
+    14
+   ],
+   "n_pair": 7,
+   "pair_decks": 145
+  }
+ },
+ "headline_pair": {
+  "arm": "sac_seeded_finetuned",
+  "n_retrieval": 6,
+  "n_pair": 7,
+  "adds": [
+   0
+  ],
+  "decks": 145,
+  "caveat": "n = 1 addition. Entry 28 set this project's own bar for a contribution claim at TWO, so this is below the bar the project set for itself. The arm was named by entry 36's OUTCOME before this file existed; it is not selected here."
+ },
+ "five_arm_union": {
+  "accepted": [
+   0,
+   2,
+   4,
+   7,
+   9,
+   11,
+   14
+  ],
+  "n": 7,
+  "warning": "SELECTING ON THE OUTCOME. Taking the best of four policies per request is a multiple comparison and is NOT a method that could be deployed. Reported as an upper bound only."
+ },
+ "not_claimed": [
+  "not that RL beats retrieval -- retrieval answers 6, the policy 1",
+  "not compliance (11 of 11 rows at 45 of 45 corners)",
+  "not the 45-corner coverage number (8 of 16, entry 40)",
+  "not free -- the second proposer's decks are in the table"
+ ]
+}
