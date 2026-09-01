@@ -1414,6 +1414,52 @@ PVT corners **from the shipped command**, not from a test harness.
 
 ---
 
+## 5s. THE RETRY MOVES THE SWEEP: **coverage 8 -> 9 of 16 on the delivered path**
+
+**2026-09-01 (session 33), `exp_hybrid --run --topk-deliver 5` with the G54
+retry live. ~10 300 decks, 67 min.** Pre-registered as entry 56 with the
+exposure counted first at zero simulations. **Scored 6 of 6.**
+
+### The effect size tracks the exposure, which is what makes it believable
+
+Entry 56 counted, from `hybrid_run.jsonl` and **before the run**, that 29 of
+2 082 design evaluations had been rejected on the G54 NaN, and that 24 of them
+landed on four unsolved requests. The three requests that moved are the three
+with the most, in order:
+
+    request 13   10 G54 rows (8 single-point)   17/45 -> 45/45   GAINED
+    request 12    8 G54 rows (5 single-point)    0/45 -> 41/45
+    request 15    6 G54 rows (4 single-point)   37/45 -> 39/45
+
+The two exposed requests that were **already solved** held at 45/45, and every
+unexposed request reproduced **identically** -- same 45-corner count, same path.
+**Q3 was the sharpest question** (registered at 0.55, because divergence is not
+obviously local) and it held: exactly one request changed state, inside the
+exposed set. **The retry is a local fix, not a global perturbation.**
+
+### What it settles
+
+* **`BASELINES.md` and entry 40 are NOT invalidated.** 14 of 16 identical. Row
+  4t's debt is discharged: pre-retry numbers may be quoted with the retry named.
+* **This 9 of 16 is NOT entries 54/55's 9 of 16**, and they may not be added.
+  That one counts request 3 via a **rank-17 retrieved proposal**; this counts
+  request 13 via the **search**, and here request 3 is still 11/45 because the
+  delivered path reads to k=5 and never sees rank 17. **The delivered path,
+  measured end to end, is 9 of 16.**
+* **Request 12 went 0/45 -> 41/45 and is still unsolved.** The biggest single
+  improvement in the run buys no coverage. That is the ordinary shape of this
+  problem and it is why coverage moves so slowly.
+* **The 135-point load grid is unchanged at 0 of 16.**
+
+### The accounting gap Q4 exposed
+
+`mean_sims_per_request` returned **642.0625, identical to entry 40 in every
+digit**, because the retry is a recursive call inside `run_point` and the
+caller's budget counter sees one call. **Retry decks are unbilled** -- ~30 in
+~10 300 here. It changes no claim and it is now row 4u.
+
+---
+
 ## 6. Next steps, in order
 
 | # | Task | Cost | Status |
@@ -1440,7 +1486,8 @@ PVT corners **from the shipped command**, not from a test harness.
 | **4p** | **A swing-aware reward, and a retrained policy measured on accept rate.** Predicted-headroom shortfall penalty via a WRAPPER env (no surrogate number can reach the screen), retrain 50 000 steps, re-run the arms against the same 6-of-16 bar | 50 000 steps + 960 decks, 52.1 min measured | **DONE 2026-08-26. THE FIX WORKED AND IT DID NOT PAY: 0-1 of 16.** Entry 38 scored 4 of 6 -- headroom nearly doubled (1154 mV vs the library's 595), swing failures 96 % -> 28 %, scorable corners 0.30 -> 2.84 of 4, and accept rate did NOT move. Failures shifted to S3_peaking_match / S3_f_peak_match. See section 5l |
 | **4q2** | **Clear the G54 singularity and re-verify (entry 54).** Invariance control first: 45 corners at 10 pF vs 30 pF, compared with `==` | 360 decks, 211 s | **DONE 2026-09-01. 5 of 6. 132 comparisons, ZERO differing; request 3 44/45 -> 45/45; MANDATED COVERAGE 8 -> 9 of 16.** See section 5p |
 | **4r** | **The delivered path retries at 30 pF on a `-nan(ind)`.** Authorised by the owner 2026-09-01 and pre-registered as entry 55. Fires on the G54 signature only, once, never when the tail is already >= 30 pF; `nan_retry_bypass_f=None` reproduces the old behaviour; `C_BYPASS_F` stays 10 pF | 315 decks, 118 s | **DONE 2026-09-01. 4 of 4. Request 3 is 45/45 with NO wrapper — mandated coverage 9 of 16 on the DELIVERED path. See section 5r** |
-| **4t** | **Re-run one sweep with the retry on.** Declared but unmeasured (entry 55): the retry can change what the SEARCH returns, since a candidate that used to die on a NaN now gets scored. Until then no `BASELINES.md` number may be re-quoted as if measured with it | ~90 min | open, declared |
+| **4t** | **Re-run one sweep with the retry on.** Declared but unmeasured (entry 55) | ~10 300 decks, 67 min | **DONE 2026-09-01. 6 of 6. Coverage 8 -> 9 of 16 on the DELIVERED path; 14 of 16 requests reproduced IDENTICALLY. `BASELINES.md` is NOT invalidated — pre-retry numbers may be quoted with the retry named. See section 5s** |
+| **4u** | **Retry decks are UNBILLED.** The retry is a recursive call inside `run_point`, so the caller's budget counter sees one call: `mean_sims_per_request` came back 642.0625, identical to entry 40 in every digit, despite ~30 extra decks. 0.3 % here and it changes no claim, but **every deck count in this repository excludes retry decks** | ~0 | open, stated |
 | **4s** | **Request 5's eight corners are the next coverage point, and they are NOT this bug.** All eight are output-swing compression at **VDD-5 %**, only **1.002-1.203x** over the measured linear limit — the closest any blocked corner has been. Whether a slightly larger `rl` or `i_bias` clears them at fixed peaking is unmeasured | TBD | open |
 | **5** | **Corner-aware RL vs random / CMA-ES / library lookup.** Pre-registered as entry 25 (with a disclosed rule-3 violation: written after launch, before any artifact existed) | ~2.5 h | **RUNNING** |
 | **6** | **Re-run the coverage sweep on `V6_SPECS`** (§5b). Owner: *"polishing numbers is much needed for honesty."* **Publish both the old and the corrected coverage number** | ~2.5 h | **committed, do not drop** |

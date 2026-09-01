@@ -12732,3 +12732,46 @@ are `nebula/tests/test_nan_retry.py`. The device layer changed here, so the
 whole suite is the gate that matters: every existing G54 test is string-level
 (`scan_for_silent_failures`, the evaluator's handling) and none of them runs a
 real NaN deck, so none of them was silently rerouted through the retry.
+
+---
+
+### 2026-09-01 — session 33 (row 4t). **The sweep re-ran with the retry on: 8 -> 9 of 16, and the pre-retry numbers survive.**
+
+Pre-registered as `PREDICTIONS.md` entry 56 and **committed before the run**
+(`3071288`), with the exposure counted from artifacts at zero simulations:
+**29 of 2 082 design evaluations** had been rejected on the G54 NaN, 18 of them
+with exactly one unscorable point, and **24 of the 29 on four unsolved
+requests**. **Scored 6 of 6.**
+
+    request 13   10 G54 rows (8 single-point)   17/45 -> 45/45   GAINED
+    request 12    8 G54 rows (5 single-point)    0/45 -> 41/45
+    request 15    6 G54 rows (4 single-point)   37/45 -> 39/45
+    requests 1 and 10 (exposed, already solved)  held at 45/45
+    every unexposed request                      IDENTICAL
+
+**The effect size tracks the exposure**, which is what makes it believable, and
+**Q3 — the sharpest question, registered at 0.55 — held**: exactly one request
+changed state and it was inside the exposed set. The retry is a local fix, not
+a global perturbation.
+
+**What it settles.** `BASELINES.md` and entry 40 are **not** invalidated (14 of
+16 identical), so row 4t's debt is discharged and pre-retry numbers may be
+quoted with the retry named. **This 9 of 16 is NOT entries 54/55's 9** — that
+one counts request 3 via a rank-17 retrieved proposal, this counts request 13
+via the search, and here request 3 is still 11/45 because the delivered path
+reads to k=5. **They may not be added.** The 135-point grid is unchanged at 0.
+
+**New debt, row 4u: retry decks are UNBILLED.** `mean_sims_per_request` came
+back **642.0625 — identical to entry 40 in every digit** — because the retry is
+a recursive call inside `run_point` and the caller's budget counter sees one
+call. ~30 decks in ~10 300 (0.3 %); it changes no claim, but every deck count
+in this repository excludes them.
+
+**Artifact handling (G113's shape, handled deliberately):** `--run` writes
+`hybrid_results.json` / `hybrid_run.jsonl`, which are entry 40's committed
+artifacts. The new run was moved to `hybrid_results_retry_on.json` /
+`hybrid_run_retry_on.jsonl` and **entry 40's were restored from git**. Both
+survive.
+
+**No code changed in this step** — the retry itself was committed and
+suite-verified in `8189110`. This is artifacts and documentation only.

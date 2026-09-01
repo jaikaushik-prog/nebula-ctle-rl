@@ -8,6 +8,35 @@ else in the 22s brief stands.
 
 **14 days to the 15 Sept deadline (as of 2026-09-01). Demo 25 Sept at BITS Goa.**
 
+> **2026-09-01 (session 33, LATEST). THE SWEEP RE-RAN WITH THE RETRY ON:
+> COVERAGE 8 -> 9 OF 16 ON THE DELIVERED PATH, and pre-retry numbers SURVIVE.**
+> Entry 56, **6 of 6**, ~10 300 decks, 67 min.
+>
+>     request 13   10 G54 rows   17/45 -> 45/45   GAINED
+>     request 12    8 G54 rows    0/45 -> 41/45   (still unsolved)
+>     request 15    6 G54 rows   37/45 -> 39/45
+>     14 of 16 requests IDENTICAL -- same 45-corner count, same path
+>
+> The exposure was counted **before** the run (29 of 2 082 evaluations, 24 of
+> them on unsolved requests) and the effect size tracks it exactly. **Q3 held**:
+> exactly one request changed state and it was in the exposed set, so the retry
+> is a **local fix, not a global perturbation**. **`BASELINES.md` is NOT
+> invalidated** -- row 4t is discharged, and pre-retry numbers may be quoted
+> with the retry named.
+>
+> **DO NOT ADD THIS TO ENTRIES 54/55's 9 OF 16.** That one counts request 3 via
+> a rank-17 **retrieved proposal**; this counts request 13 via the **search**,
+> and here request 3 is still 11/45 because the delivered path reads to k=5.
+> The delivered path end to end is **9 of 16**.
+>
+> **New debt (row 4u): retry decks are UNBILLED.** `mean_sims_per_request` came
+> back 642.0625, identical to entry 40 in every digit, because the retry is a
+> recursive call inside `run_point`. ~30 decks in ~10 300 here. Every deck count
+> in this repository excludes them. Read `PROGRESS.md` section 5s.
+>
+> Artifacts: `hybrid_results_retry_on.json` / `hybrid_run_retry_on.jsonl`.
+> **Entry 40's artifacts were restored from git, not overwritten.**
+
 > **2026-09-01 (session 33, LATEST). THE RETRY IS IN THE SHIPPED TOOL:
 > MANDATED COVERAGE 9 OF 16 WITH NO WRAPPER.** Entry 55, **4 of 4**, 315 decks.
 >

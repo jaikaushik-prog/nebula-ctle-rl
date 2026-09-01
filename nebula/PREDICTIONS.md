@@ -10297,3 +10297,70 @@ it is exactly the shape entry 38 hit -- fixing one blind spot exposes the next
   SPICE error is measured and has a real tail.
 * **Not a deck-saving claim against the search.** The proposal is free; the
   screen is not, and the fallback search is unchanged.
+
+### OUTCOME, entry 56 (2026-09-01). **SCORED 6 OF 6. The retry moves the sweep: coverage 8 -> 9 of 16, and every change lands inside the exposed set.**
+
+    ~10 300 decks, 67 min
+    artifacts: experiments/hybrid_results_retry_on.json
+               experiments/hybrid_run_retry_on.jsonl
+    entry 40's artifacts were RESTORED from git, not overwritten.
+
+    idx  target                 entry 40 -> entry 56   G54 rows
+     12  10.0 dB @ 1.387 GHz      0/45  ->  41/45         8
+     13  10.0 dB @ 1.627 GHz     17/45  ->  45/45  GAIN  10   <- the most exposed
+     15  10.0 dB @ 2.253 GHz     37/45  ->  39/45         6
+      1   4.0 dB @ 1.627 GHz     45/45  ->  45/45  hold   3
+      8   8.0 dB @ 1.387 GHz     35/45  ->  35/45         1
+     10   8.0 dB @ 1.921 GHz     45/45  ->  45/45  hold   1
+    every other request: IDENTICAL, 45-corner count and path
+
+| | prediction | outcome | |
+|---|---|---|---|
+| **Q1** | `n_solved_pvt45` is 8 or 9 | **9** | **HIT** |
+| **Q2** | requests 1 and 10 still 45/45 | both hold | **HIT** |
+| **Q3** | changes confined to {1,8,10,12,13,15} | only request 13 changed state | **HIT** |
+| **Q4** | mean decks within 5 % of 642.06 | **642.0625, identical** | **HIT** |
+| **Q5** | proposals accepted stays 6 | 6 | **HIT** |
+| **Q6** | `n_solved_full135` stays 0 | 0 | **HIT** |
+
+### The effect size tracks the exposure, which is what makes this believable
+
+Entry 56 counted the G54 rejections per request **before** the run. The three
+requests that moved are the three with the most of them, in order:
+
+    request 13   10 G54 rows (8 single-point)   17/45 -> 45/45
+    request 12    8 G54 rows (5 single-point)    0/45 -> 41/45
+    request 15    6 G54 rows (4 single-point)   37/45 -> 39/45
+
+and the two exposed requests that were **already solved** (1 and 10) held at
+45/45 rather than being disturbed. **Q3 is the sharpest of the six**: it was
+registered at 0.55 precisely because divergence is not obviously local, and it
+held -- exactly one request changed state and it was in the exposed set. The
+retry is a local fix, not a global perturbation.
+
+### The accounting gap this exposes, stated because Q4 is suspiciously clean
+
+`mean_sims_per_request` came back **642.0625 -- identical to entry 40 in every
+digit.** The retry fires as a recursive call *inside* `run_point`, so the
+caller's budget counter sees one call and **the retry's extra decks are not
+billed**. On this run that is ~30 unbilled decks in ~10 300 (0.3 %), which
+changes no claim, but it must be said rather than left for a reader to notice:
+**every deck count in this repository excludes retry decks.** A future
+accounting of true simulator cost has to add them.
+
+### What this does and does not settle
+
+* **`BASELINES.md` and entry 40 are NOT invalidated.** The retry only ever
+  converts a failure into a measurement, and 14 of 16 requests reproduced
+  **identically** -- same 45-corner count, same path. Row 4t's debt is
+  discharged: pre-retry sweep numbers may be quoted, with the retry named.
+* **This 9 of 16 is NOT entries 54/55's 9 of 16.** That one counts request 3,
+  solved by a **rank-17 retrieved proposal** verified at 45 corners; this one
+  counts request 13, solved by the **search**. In this sweep request 3 is still
+  11/45, because the delivered path reads the library to k=5 and never sees
+  rank 17. **The two must not be added.** What is true of the delivered path,
+  measured end to end, is **9 of 16**.
+* **The 135-point grid is still 0 of 16.**
+* **Request 12 went 0/45 -> 41/45 without being solved.** The biggest single
+  improvement in the run buys no coverage, which is the ordinary shape of this
+  problem and is why coverage moves so slowly.
