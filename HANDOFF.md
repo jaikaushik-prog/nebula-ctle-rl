@@ -12924,3 +12924,41 @@ checking without SPICE.
 **Artifacts:** `topk_scan_analytic.json` is entry 58's (restored);
 `topk_scan_analytic_dc.json` is entry 60's; `invert_decompose.json` is entry
 59's. **Tests: 2428 before; 2433 after** (345.8 s).
+
+---
+
+### 2026-09-02 — session 33 (entry 61). **Phase 2 on the delivered path: re-ranking the library by predicted swing takes A from 6 to 8.**
+
+Pre-registered and committed before the computation (`4d454c1`). **Scored 4 of
+4**, at **zero decks** — a counterfactual over `hybrid_topk_scan_k40.json`, 640
+library candidates whose feasibility was already measured, re-ordered by
+`exp_swing_surrogate`'s predicted swing limit.
+
+    k= 5   old A= 6   new A= 8      <- today's delivered setting (AUTO_K)
+    k= 8   old A= 6   new A= 9
+    k=40   old A=10   new A=10      <- control; a re-order cannot change the set
+
+`A = 6` is reached at **k = 4** instead of 5. AUC 0.6128; median predicted limit
+**1 104 mV feasible vs 973 mV infeasible**.
+
+**The registered weakness did not hold, and it is recorded as a correction in
+the result's favour.** The entry declared this an in-sample re-ranking and
+therefore only a ceiling. Measured afterwards: **zero of the 55 scorable
+candidates appear in the surrogate's 3 356 training rows** (`harvest` globs
+`*.jsonl`, the scan is a `.json`, and no design coincides by value). The ranker
+is a fixed model of a physical quantity, fitted on disjoint data, applied out of
+sample.
+
+**What is genuinely limited:** AUC 0.6128 is weak separation — the effect is
+real, the signal modest, and the k=3 column moves the *wrong* way (5 → 4), which
+is what a modest signal on n = 16 looks like. The candidate **set** is still
+`dev`-selected; the surrogate only re-orders the top 40 `dev` chose. And this is
+screen acceptance, not coverage.
+
+**Row 4w blocks deployment:** verify the newly accepted candidates at the 45
+mandated corners first. They sit at ranks 4, 5 and 7, and entry 53 measured the
+screen's filter quality degrading with depth (83 % → 50 %).
+
+**This is the first thing in the project to improve the deployed proposer since
+entry 40.** Tests unchanged at 2433 (350.7 s) — no code shipped, the entry is a
+counterfactual.

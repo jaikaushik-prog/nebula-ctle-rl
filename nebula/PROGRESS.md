@@ -1576,6 +1576,56 @@ same screen, before it may be called an improvement.**
 
 ---
 
+## 5v. PHASE 2 ON THE DELIVERED PATH: **re-ranking the library by predicted swing takes A from 6 to 8**
+
+**2026-09-02 (session 33), entry 61, ZERO decks.** A counterfactual over
+`hybrid_topk_scan_k40.json` -- 640 library candidates whose feasibility was
+already measured -- re-ordered by `exp_swing_surrogate`'s predicted swing limit.
+**Scored 4 of 4.**
+
+    first-feasible rank, per request
+      old (`dev`)   [-, -,  2, 17,  5, 17, 26,  2, -,  1, 19,  2, -, -,  3, -]
+      new (swing)   [-, -,  4,  4, 11,  4,  1,  2, -,  5,  2,  1, -, -,  7, -]
+
+      k= 5   old A= 6   new A= 8      <- today's delivered setting (AUTO_K)
+      k= 8   old A= 6   new A= 9
+      k=40   old A=10   new A=10      <- control, a re-order cannot change the set
+
+`A = 6` is now reached at **k = 4** instead of 5. AUC of the predicted limit
+against measured feasibility: **0.6128**; median predicted limit **1 104 mV on
+feasible candidates against 973 mV on infeasible**.
+
+### The registered weakness did not hold, and that is in the result's favour
+
+Entry 61 declared prominently that this is an **in-sample** re-ranking and
+therefore only a ceiling. **Measured afterwards: ZERO of the 55 scorable
+candidates appear in the surrogate's 3 356 training rows.** The ranker is a
+fixed model of a physical quantity, fitted on disjoint data, applied out of
+sample -- it is not fitted to these labels at all.
+
+### What is genuinely limited
+
+* **AUC 0.6128 is weak separation.** The effect is real and the mechanism is
+  right; the signal is modest. The k=3 column even moves the wrong way (5 -> 4),
+  which is what a modest signal on `n = 16` looks like.
+* **The candidate SET is still `dev`-selected** -- the surrogate re-orders the
+  top 40 that `dev` chose. Selecting from the full in-tolerance pool
+  (2 066-17 478 per request) by swing is a different, untested thing.
+* **Screen acceptance, not coverage.** The newly accepted requests sit at ranks
+  4, 5 and 7, and entry 53 measured the screen's filter quality **degrading with
+  depth** (83 % -> 50 %).
+
+### Before it is deployed
+
+**Verify the newly accepted candidates at the 45 mandated corners.** Entry 53's
+degradation is exactly the risk, and no coverage claim may be made from a
+4-corner screen. That verification is row 4w and is not in entry 61.
+
+**This is the first thing in the project to improve the deployed proposer since
+entry 40.**
+
+---
+
 ## 6. Next steps, in order
 
 | # | Task | Cost | Status |
@@ -1603,6 +1653,7 @@ same screen, before it may be called an improvement.**
 | **4q2** | **Clear the G54 singularity and re-verify (entry 54).** Invariance control first: 45 corners at 10 pF vs 30 pF, compared with `==` | 360 decks, 211 s | **DONE 2026-09-01. 5 of 6. 132 comparisons, ZERO differing; request 3 44/45 -> 45/45; MANDATED COVERAGE 8 -> 9 of 16.** See section 5p |
 | **4r** | **The delivered path retries at 30 pF on a `-nan(ind)`.** Authorised by the owner 2026-09-01 and pre-registered as entry 55. Fires on the G54 signature only, once, never when the tail is already >= 30 pF; `nan_retry_bypass_f=None` reproduces the old behaviour; `C_BYPASS_F` stays 10 pF | 315 decks, 118 s | **DONE 2026-09-01. 4 of 4. Request 3 is 45/45 with NO wrapper — mandated coverage 9 of 16 on the DELIVERED path. See section 5r** |
 | **4t** | **Re-run one sweep with the retry on.** Declared but unmeasured (entry 55) | ~10 300 decks, 67 min | **DONE 2026-09-01. 6 of 6. Coverage 8 -> 9 of 16 on the DELIVERED path; 14 of 16 requests reproduced IDENTICALLY. `BASELINES.md` is NOT invalidated — pre-retry numbers may be quoted with the retry named. See section 5s** |
+| **4w** | **Verify entry 61's newly accepted candidates at 45 corners.** Re-ranking took screen acceptance 6 -> 8 at k=5, but entry 53 measured the screen's filter quality degrading with depth (83 % -> 50 %) and the new acceptances sit at ranks 4, 5 and 7. **No coverage claim until this runs.** ~135 decks per candidate | ~400 decks | open, blocking deployment |
 | **4v** | **Phase 2: price DC headroom and output swing JOINTLY.** Entries 58 and 60 are 0 of 16 twice for OPPOSITE reasons -- ranking on current killed the DC point, ranking on DC margin killed the swing (2.23-4.90x over the limit). The two pull in opposite directions, and entry 37's measured swing surrogate (4.7 % error, zero SPICE) is the tool for a joint criterion. **100 % of entry 60's failures are in its domain.** Must be pre-registered on its own | ~320 decks | open, indicated |
 | **4u** | **Retry decks are UNBILLED.** The retry is a recursive call inside `run_point`, so the caller's budget counter sees one call: `mean_sims_per_request` came back 642.0625, identical to entry 40 in every digit, despite ~30 extra decks. 0.3 % here and it changes no claim, but **every deck count in this repository excludes retry decks** | ~0 | open, stated |
 | **4s** | **Request 5's eight corners are the next coverage point, and they are NOT this bug.** All eight are output-swing compression at **VDD-5 %**, only **1.002-1.203x** over the measured linear limit — the closest any blocked corner has been. Whether a slightly larger `rl` or `i_bias` clears them at fixed peaking is unmeasured | TBD | open |

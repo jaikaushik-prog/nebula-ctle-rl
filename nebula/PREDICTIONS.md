@@ -10918,3 +10918,66 @@ must not be quoted as if it had.
 
 * **Not coverage, not compliance.** Screen acceptance, 4 corners.
 * **Not a deployed saving.** In-sample, per the weakness above.
+
+### OUTCOME, entry 61 (2026-09-02). **SCORED 4 OF 4. Re-ranking the library by predicted output swing takes the delivered path from A = 6 to A = 8 at the same k, and reaches A = 6 at k = 4 instead of 5.**
+
+    640 candidates re-ordered, ZERO decks
+    surrogate: exp_swing_surrogate.load_surrogate(), 3 356 training rows
+
+    first-feasible rank, per request
+      old (`dev`)   [-, -,  2, 17,  5, 17, 26,  2, -,  1, 19,  2, -, -,  3, -]
+      new (swing)   [-, -,  4,  4, 11,  4,  1,  2, -,  5,  2,  1, -, -,  7, -]
+
+      k= 1   old A= 1   new A= 2
+      k= 2   old A= 4   new A= 4
+      k= 3   old A= 5   new A= 4
+      k= 5   old A= 6   new A= 8     <- today's delivered setting
+      k= 8   old A= 6   new A= 9
+      k=40   old A=10   new A=10     <- control
+
+| | prediction | outcome | |
+|---|---|---|---|
+| **Q1** | AUC of predicted limit vs feasibility > 0.6 | **0.6128** | **HIT** |
+| **Q2** | `A >= 6` at `k = 5` | **8** | **HIT** |
+| **Q3** | `k` for `A = 6` falls below 5 | **4** | **HIT** |
+| **Q4** | `A` at `k = 40` unchanged at 10 | **10** | **HIT** |
+
+Median predicted limit: **1 104 mV on feasible candidates against 973 mV on
+infeasible** ones.
+
+### THE REGISTERED WEAKNESS IS WEAKER THAN REGISTERED, AND THAT IS A CORRECTION IN THE RESULT'S FAVOUR
+
+The entry declared, first and prominently, that this is an **in-sample
+re-ranking** and therefore only a ceiling. **Measured after the fact: of the 55
+scorable candidates, ZERO appear in the surrogate's 3 356 training rows.**
+`harvest` globs `*.jsonl`/`*.jsonl.gz` and the scan is a `.json`, and no design
+coincides by value either.
+
+So the ranker is **not fitted on these labels and shares no design with them** —
+it is a fixed model of a physical quantity, trained on disjoint data, applied
+out of sample. The only selection effect left is that *I chose to try the swing
+surrogate after knowing swing causes 92.9 % of rejections*, which is a far
+weaker form of it. **Stating this is not softening the caveat; the caveat was
+measured and it did not hold.**
+
+### What is genuinely limited about it
+
+* **The AUC is 0.6128 — weak separation.** The effect on `A` is real and the
+  mechanism is right, but the signal is modest and should not be described as
+  strong. It moves the ordering usefully without being a good classifier.
+* **`n = 16` requests.** Going 6 -> 8 is two requests. The k=3 column even goes
+  the *wrong* way (5 -> 4), which is what a modest signal on small n looks like.
+* **The candidate SET is still `dev`-selected.** The surrogate re-orders the top
+  40 that the `dev` ordering chose; selecting from the full in-tolerance pool
+  (2 066-17 478 per request) by swing is a different and untested thing.
+* **Screen acceptance, not coverage.** Four corners, not 45. Entry 53 measured
+  that the screen's filter quality degrades with depth, and the newly accepted
+  requests here sit at ranks 4, 5 and 7.
+
+### What it licenses
+
+**A > B at the delivered setting, out of sample, from a model that costs no
+simulations to evaluate.** That is the first thing in this project to improve
+the deployed proposer since entry 40. Before it is wired behind `AUTO_K` it
+needs the accepted candidates **verified at 45 corners** (entry 53's degradation
+is exactly the risk), and that verification is not in this entry.
