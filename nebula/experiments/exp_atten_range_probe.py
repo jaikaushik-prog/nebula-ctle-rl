@@ -164,7 +164,8 @@ def _measurement_row(kind: str, corner_label: str, bank_code: int,
 
 
 def _measure(base_u: Sequence[float], bank_code: int, corner: Corner,
-             atten_code: int, kind: str, requests=()) -> dict:
+             atten_code: int, kind: str, requests=(),
+             atten_max_x: float = PROBE_MAX_X) -> dict:
     settings = bank(base_u, n_rs=N_RS, n_cs=N_CS, rs_span=RS_SPAN,
                     cs_span=CS_SPAN)
     st = settings[int(bank_code)]
@@ -173,7 +174,7 @@ def _measure(base_u: Sequence[float], bank_code: int, corner: Corner,
         st.u, [ScreenPoint(corner, CL_MID_F, label)],
         target_f_peak_hz=1.9e9, target_peaking_db=7.5, specs=SPECS,
         link_losses_db=(LOSS_SHORT_DB, LOSS_LONG_DB),
-        atten_code=int(atten_code), atten_max_x=PROBE_MAX_X)
+        atten_code=int(atten_code), atten_max_x=float(atten_max_x))
     return _measurement_row(kind, label, bank_code, atten_code, ev, requests)
 
 

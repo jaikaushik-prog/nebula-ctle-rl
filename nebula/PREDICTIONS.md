@@ -13705,3 +13705,13 @@ clock is 10 s or more.
 Pre-change baseline: complete non-slow suite **2,589 passed, 13 deselected, 2
 warnings in 287.79 s**. No entry-85 code exists and no 7.3 dB SPICE point has
 run.
+
+**Pre-run implementation certificate.** `exp_atten_final_probe.py` verifies
+the exact entry-84 SHA-256, selects only the registered compression row, and
+reuses entry 83's measurement path with an explicit 7.3 dB divider ratio. The
+historical path defaults to its unchanged 7.0 dB value. The driver refuses
+overwrite and independently scores all six registered gates. The intentional
+red-first collection error was observed before implementation; afterward,
+**13/13 direct tests** and the complete attenuator/joint-bank focused group
+**83/83** pass. The complete non-slow suite is also green at **2,596 passed,
+13 deselected and 2 warnings in 490.86 s**. No entry-85 SPICE point has run.

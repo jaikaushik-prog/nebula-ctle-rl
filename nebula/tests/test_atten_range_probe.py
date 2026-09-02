@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import ast
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 
@@ -109,6 +110,23 @@ def test_probe_refuses_to_overwrite_its_result(monkeypatch, tmp_path):
     monkeypatch.setattr(P, "RESULTS", result)
     with pytest.raises(FileExistsError, match="refusing to overwrite"):
         P.run()
+
+
+def test_measure_forwards_an_explicit_attenuator_range(monkeypatch):
+    captured = {}
+    monkeypatch.setattr(P, "bank", lambda *args, **kwargs: [
+        SimpleNamespace(u=(0.5,) * 7)])
+
+    def fake_evaluate(*args, **kwargs):
+        captured.update(kwargs)
+        return SimpleNamespace(points=[])
+
+    monkeypatch.setattr(P, "evaluate_at_points", fake_evaluate)
+    monkeypatch.setattr(P, "_measurement_row",
+                        lambda *args, **kwargs: {"ok": True})
+    P._measure((0.5,) * 7, 0, P._parse_corner("tt/1.00/27C"), 7,
+               "probe", atten_max_x=2.3)
+    assert captured["atten_max_x"] == pytest.approx(2.3)
 
 
 def test_console_print_literals_are_ascii():

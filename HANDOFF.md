@@ -17,14 +17,13 @@
 > decisions that are OPEN and human-only, and what to do next. It supersedes
 > `nebula/NEXT_STEPS.md`. This file remains the full state of record.
 
-Last updated: **2026-09-03** (session 37, entry 85 pre-registration: after
-entry 84 reached 15/16, the owner approved exactly one 7.3 dB top-code
-diagnostic at the final `sf/0.95/125C`, request-12, R6C2 compression boundary.
-The source hash, divider ratio, one-row membership and six gates are fixed
-before implementation or SPICE. This is measurement permission only; D11's
-production range and the full table remain unchanged. Continuation instructions
-are saved in `nebula/NEXT_AGENT_ENTRY85.md`; the two intentional red-first test
-changes remain uncommitted for the next session.)
+Last updated: **2026-09-03** (session 37, entry 85 implementation: the one-row
+7.3 dB boundary driver is built and its fail-capable gates are green. It
+hash-checks entry 84, forwards the opt-in divider ratio through the existing
+measurement path, and refuses overwrite. **No entry-85 SPICE point has run.**
+The next action is to commit this implementation, then run exactly the one
+authorised `sf/0.95/125C`, request-12, R6C2 measurement. D11's production
+range and the full table remain unchanged.)
 
 Earlier session 22p: (**THE REPORT EXISTS** --
 `nebula/report/Nebula_CTLE_Report.pdf`, **10 pages, 9 figures, 598 KB**,
@@ -1428,6 +1427,9 @@ signaling, ADC-based DSP receiver, 28 nm CMOS reference parameters).
 │   ├── experiments/exp_atten_cs_probe.py  Entry 84's three-row closure test:
 │   │                       keeps 7 dB fixed and moves only the three measured
 │   │                       high-side frequency misses from C1 to C2.
+│   ├── experiments/exp_atten_final_probe.py  Entry 85's one-row 7.3 dB
+│   │                       boundary diagnostic. Hash-pinned, anti-overwrite,
+│   │                       six-gate analysis; no production-range adoption.
 │   ├── NEXT_AGENT_ENTRY85.md  Self-contained continuation prompt for the
 │   │                       preregistered one-point 7.3 dB boundary probe.
 │   │                       NOTE: this tree lags for the session 23-25 files —
@@ -1640,13 +1642,15 @@ Plus: git init, .gitignore, 28 tests, Wilson-bound BER reporting.
 - **Nebula final-boundary probe (D14, entry 85):** the owner approved exactly
   7.3 dB nominal maximum at the one remaining R6C2 row. The registered divider
   maximum is 2.31739464996848. One real-PMOS invocation will score 3 dB full
-  compliance, 12 dB scorability, physical gain movement, noise and cost. It is
-  not implemented and no entry-85 SPICE point has run.
+  compliance, 12 dB scorability, physical gain movement, noise and cost. The
+  driver and fail-capable gates are implemented; **no entry-85 SPICE point has
+  run**.
 
 - Tests: **2589 non-slow collected** (entry 84): pre-run **2588 passed plus one
   timing-only `ll` failure**; the exact failed node passed alone. Post-result,
   **all 2589 passed**, 13 deselected, 2 warnings in 287.79 s. Entry-83 clean
-  baseline: 2583 passed. —
+  baseline: 2583 passed. Entry-85 pre-SPICE implementation: **2596 passed**, 13
+  deselected, 2 warnings in 490.86 s. —
   `python -m pytest tests nebula/tests -q -m "not slow"`.
   (Was 65 + 267 = 332 at the start of session 9; 430 at the end of it; 444
   after 10b; 528 after 11; 618 after 12b; 679 after 13; 1007 after 16; 1246
@@ -2086,7 +2090,8 @@ explicit scope.
    correct frequency/peaking and is only 3.076% above the measured compression
    limit. The owner has now made the next human decision as D14: pre-register,
    implement and run exactly one 7.3 dB measurement at that row. Do not expand
-   it into production adoption or a full-table run. The
+   it into production adoption or a full-table run. The driver is now built and
+   must be committed before the one authorised measurement is launched. The
    standing owner item is also urgent: `nebula/report/Nebula_CTLE_Report.pdf`
    is about three weeks behind,
    still says one simulation / under five seconds rather than 17 / ~22 s,
@@ -14099,3 +14104,20 @@ uncommitted and must be preserved. Their focused collection fails only because
 `exp_atten_final_probe.py` does not exist yet. No Entry 85 SPICE point or
 background process was started. The unrelated `gmcmp.pkl` and `nebula/.claude/`
 remain untouched.
+
+### 2026-09-03 - session 37 (entry 85 implementation, before measurement). **The one-row 7.3 dB driver is built; no entry-85 SPICE point has run.**
+
+`exp_atten_range_probe._measure()` now accepts an optional `atten_max_x` and
+defaults to entry 83's existing 7.0 dB ratio, preserving every historical call.
+`exp_atten_final_probe.py` verifies entry 84's exact SHA-256, derives only the
+registered `sf/0.95/125C`, request-12, bank-50/code-7 compression row, verifies
+the entry-83 artifact that supplies the design vector, and forwards the fixed
+7.3 dB ratio through that same measurement path. It refuses overwrite and
+scores Q1-Q6 independently: membership/device validity, 0.20-0.40 dB DC-gain
+movement, complete 3 dB compliance, 12 dB scorability, noise and cost.
+
+The inherited red-first collection error is resolved. **13/13 direct tests**
+and the full attenuator/joint-bank focused group (**83/83**) pass. No simulator
+was invoked. The complete non-slow suite passes **2,596/2,596**, with 13
+deselected and 2 warnings in 490.86 s. Commit the implementation before running exactly
+`py -3.13 -m nebula.experiments.exp_atten_final_probe --run` once.
