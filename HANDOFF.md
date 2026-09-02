@@ -4790,6 +4790,23 @@ Plus: git init, .gitignore, 28 tests, Wilson-bound BER reporting.
   the retry only ever converts a failure into a measurement -- but they are not
   re-measured either.
 
+- **G138 -- (nebula) A TEST THAT PINS A HELP STRING GOES RED FOR TWO
+  DIFFERENT REASONS, AND ONLY ONE OF THEM IS A BUG.**
+  `test_auto_is_documented_as_ESCALATION_not_as_a_seventh_method` asserted
+  `"retrieval proposes" in help_text`. Row 4y changed the first proposer from
+  retrieval to the closed-form solve, and the test went red **for the right
+  reason**: the help text had become inaccurate and was telling the operator
+  something the tool no longer did. That is the guard working.
+  **Then it went red a second time for the wrong reason.** After the text was
+  corrected, `"no human picks a strategy"` failed -- because **argparse
+  re-wraps help text**, and the longer replacement pushed the phrase across a
+  line break. The content was right; the substring was not.
+  **Two habits.** (1) Assert on the **property**, not on one marketing phrase:
+  the guard is now that every escalation stage (`SOLVED`, `retrieval`,
+  `screen`, `search`) is named, which survives rewording. (2) **Normalise
+  whitespace before matching anything argparse produced** -- `" ".join(text.
+  split())` -- or a formatting change reads as a content regression.
+
 - **G132 -- (nebula) A ROLLOUT'S WARM START IS NOT A PROPOSAL, and a
   best-of-visited selector that includes step 0 reports RETRIEVAL as RL.**
   `exp_rl_diagnose.best_feasible` scanned every design an episode visited,
@@ -13054,3 +13071,59 @@ verification is amortised.
 `topk_scan_analytic_midwindow.json` (entry 64, A=11),
 `midwindow_verify_results.json` (entry 65). **Tests unchanged at 2433**
 (385.3 s).
+
+
+---
+
+### 2026-09-02 - session 33 (entries 66, 67; row 4y). **`design.py` delivers 13 of 16 at the mandated corners.**
+
+Both pre-registered and committed before their runs. **Entry 67 scored 4 of 4.**
+
+`solve_auto` now passes `candidates=analytic_then_library`: the analytic
+proposer first, the library after. `propose_then_search` stops at the first
+feasible candidate, so the ordering is the policy and the library is a strict
+fallback.
+
+    idx  source    rank  role      45 corners
+      3  analytic    3   movable     45/45     <- was 11/45
+      5  analytic    3   movable     45/45     <- was 44/45
+      8  analytic    2   movable     45/45     <- was 35/45
+     15  analytic    5   movable     45/45     <- was 39/45
+     14  library     8   movable     44/45
+     eight CONTROLS (1,2,4,6,7,9,10,11)        45/45, NONE LOST
+
+    COVERAGE 9 -> 13 OF 16, shipped path, verified end to end.
+
+**12 of the 13 acceptances are analytic**, ranks 1-5, 8-20 decks each against
+the search's ~1 085.
+
+**Entry 66 found a defect in the deliverable and fixed it.**
+`exp_swing_surrogate.load_surrogate` re-fits from `harvest()`, which globs
+`*.jsonl` - so every experiment that wrote a log changed the model and therefore
+which design the tool proposed. Measured: 3 356 rows when entry 64 ran, 3 362
+when entry 66 ran, and only **8 of 16** accepted ranks reproduced. A judge
+running the tool twice with anything in between would have got different
+circuits. `frozen_surrogate()` fits once, pickles to
+`swing_surrogate_frozen.pkl`, and the file is committed so a clone reproduces
+the run. Invisible until the proposer was wired in, because every earlier use
+fitted and used the model inside a single run.
+
+**A consequence worth keeping:** entry 65's 12-of-16 verified *entry 64's*
+designs and did **not** transfer to the shipped path, which proposes different
+ones on 8 of 16 requests. Entry 67 re-verified what the tool actually proposes.
+
+**What may NOT be said.** Not 135-point compliance - the load grid is **0 of
+16**, best 63 of 135. Not a deck saving until verification is amortised. The 3
+unanswered requests (idx 0, 12, 13) are the low-frequency, high-peaking corner,
+row 4z.
+
+**New on disk:** `swing_surrogate_frozen.pkl`, `shipped_proposer_results.json`,
+`shipped_verify_results.json`, `midwindow_verify_results.json`,
+`topk_scan_analytic_midwindow.json`, `topk_scan_analytic_dc.json`,
+`invert_decompose.json`.
+
+**Tests: 2433 before; 2433 / 13 deselected after** (659.3 s). One test went red
+and it was the guard working: `test_auto_is_documented_as_ESCALATION...` pinned
+the phrase `"retrieval proposes"`, which row 4y made inaccurate. Fixed the help
+text, then the test went red a second time for a formatting reason (argparse
+re-wraps). Both recorded as **G138**.

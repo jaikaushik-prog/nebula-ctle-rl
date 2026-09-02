@@ -57,7 +57,35 @@ else in the 22s brief stands.
 > before the run. Retrieval still beats every policy arm (entry 47 arm C, 18 of
 > 58). Read `PROGRESS.md` section 5t.
 
-> **2026-09-02 (session 33, LATEST). THE MID-WINDOW SOLVE: MANDATED COVERAGE
+> **2026-09-02 (session 33, LATEST). `design.py` NOW DELIVERS 13 OF 16 AT THE
+> MANDATED CORNERS.** Entries 66 + 67, **4 of 4**, verified end to end.
+>
+>     idx  source    rank   45 corners
+>       3  analytic    3      45/45   <- was 11/45
+>       5  analytic    3      45/45   <- was 44/45
+>       8  analytic    2      45/45   <- was 35/45
+>      15  analytic    5      45/45   <- was 39/45
+>      14  library     8      44/45
+>      eight CONTROLS               45/45, NONE LOST
+>     COVERAGE 9 -> 13 OF 16 on the shipped path
+>
+> `--method auto` proposes **analytic first, library second**; the analytic
+> proposer solves the passives in closed form and ranks by a **max-min** margin
+> over DC headroom and output swing. **12 of the 13 acceptances are analytic**,
+> ranks 1-5, **8-20 decks each** against the search's ~1 085.
+>
+> **Entry 66 found a defect in the deliverable on the way, now fixed.** The
+> ranker re-fitted itself from `harvest()`'s `*.jsonl` glob every run, so any
+> experiment changed which design the tool proposed -- 3 356 rows vs 3 362, and
+> only 8 of 16 ranks reproduced. `frozen_surrogate()` pins it to
+> `swing_surrogate_frozen.pkl`, committed, so a clone reproduces the run.
+>
+> **DO NOT SAY 135-point compliance:** the load grid is **0 of 16** (best 63 of
+> 135). **DO NOT SAY a deck saving** until verification is amortised. The 3
+> unanswered requests (idx 0, 12, 13) are the low-frequency, high-peaking
+> corner -- row 4z. Read `PROGRESS.md` section 5y, then entries 64-67.
+
+> **2026-09-02 (session 33). THE MID-WINDOW SOLVE: MANDATED COVERAGE
 > 9 -> 12 OF 16, VERIFIED, WITH EIGHT CONTROLS.** Entries 64 (5 of 5) + 65.
 >
 >     screen acceptance   A = 11 of 16   (entries 58 and 60 scored 0; library 6)

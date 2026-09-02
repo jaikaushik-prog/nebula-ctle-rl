@@ -248,9 +248,21 @@ def _help_text() -> str:
 
 def test_auto_is_documented_as_ESCALATION_not_as_a_seventh_method():
     """The help text must say what `auto` does, or the operator will still
-    reach for a named method out of habit."""
-    text = _help_text()
-    assert "retrieval proposes" in text
+    reach for a named method out of habit.
+
+    **Asserted on the ESCALATION, not on one phrase.** Row 4y changed the first
+    proposer from retrieval to the closed-form solve, and the old assertion
+    (`"retrieval proposes"`) went red for the right reason -- the help text had
+    become inaccurate. The guard is that every stage the tool escalates through
+    is named and that the operator is told they need not choose, so it is
+    written that way rather than pinned to today's wording.
+    """
+    # **Whitespace-normalised.** argparse re-wraps help text, so a phrase can
+    # break across lines and a raw substring check goes red for a formatting
+    # reason rather than a content one -- which it did, once.
+    text = " ".join(_help_text().split())
+    for stage in ("SOLVED", "retrieval", "screen", "search"):
+        assert stage in text, f"the help text does not name the {stage!r} stage"
     assert "no human picks a strategy" in text
 
 

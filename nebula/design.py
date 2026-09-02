@@ -52,8 +52,11 @@ proposer solves the passives in closed form from the requested peak and peaking
 (`experiments/invert_response.py`) and ranks candidates by a **max-min** margin
 over DC headroom and output swing -- the two constraints that pull against each
 other through `I_d * RL`. Entry 64 measured it accepting **11 of 16** against
-the library's 6; **entry 65 verified all 11 at the 45 mandated corners, with
-eight already-solved controls, none lost: coverage 9 -> 12 of 16.**
+the library's 6, and **entry 67 verified the SHIPPED path end to end: 13 of 16
+requests answered at all 45 mandated corners, with eight already-solved controls
+and none lost -- coverage 9 -> 13 of 16.** Twelve of the thirteen come from the
+analytic proposer, at ranks 1-5, for 8-20 decks each against the search's
+~1 085.
 
 The library stays behind it because the analytic proposer fails 5 of 16 -- all
 four 10 dB requests and 4 dB @ 1.387 GHz -- and on those the tool must be no
@@ -561,9 +564,11 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     ap.add_argument("--method", default="auto",
                     choices=("auto", "library", "uniform", "lhs", "grid",
                              "cmaes", "gp_bo", "ppo"),
-                    help="auto = THE DEFAULT and the deliverable: retrieval "
-                         "proposes, the 4-corner screen decides, the search "
-                         "runs only if it must -- no human picks a strategy. "
+                    help="auto = THE DEFAULT and the deliverable: the "
+                         "passives are SOLVED in closed form and proposed "
+                         "first, retrieval proposes next, the 4-corner screen "
+                         "decides, and the search runs only if it must -- "
+                         "no human picks a strategy. "
                          "library = 0 simulations, no corner screen; "
                          "cmaes = the best SEARCHER; ppo = the RL policy, "
                          "measured indistinguishable from uniform random")

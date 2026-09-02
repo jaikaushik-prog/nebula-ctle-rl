@@ -11618,3 +11618,71 @@ Confidence **0.9.**
   README and report may say so.
 * **Q1 holds, Q2 = 11** -> deploy anyway on the deck saving, but the coverage
   claim stays at entry 56's 9 until a full sweep says otherwise.
+
+### OUTCOME, entry 67 (2026-09-02). **SCORED 4 OF 4. `design.py` delivers 13 of 16 at the 45 mandated corners, verified, with eight controls and no regression.**
+
+    shipped path: analytic_then_library -> live 4-corner screen -> 45-corner verify
+    13 accepted of 16, 296 screen decks + 1 755 verify decks, 735 s
+    artifact: experiments/shipped_verify_results.json
+
+    idx  source    rank  role      45 corners
+      1  analytic    4   CONTROL     45/45
+      2  analytic    1   CONTROL     45/45
+      3  analytic    3   movable     45/45     <- was 11/45
+      4  analytic    5   CONTROL     45/45
+      5  analytic    3   movable     45/45     <- was 44/45
+      6  analytic    3   CONTROL     45/45
+      7  analytic    4   CONTROL     45/45
+      8  analytic    2   movable     45/45     <- was 35/45
+      9  analytic    1   CONTROL     45/45
+     10  analytic    2   CONTROL     45/45
+     11  analytic    3   CONTROL     45/45
+     14  library     8   movable     44/45
+     15  analytic    5   movable     45/45     <- was 39/45
+
+    CONTROLS LOST: none.        COVERAGE 9 -> 13 OF 16.
+
+| | prediction | outcome | |
+|---|---|---|---|
+| **Q1** | no request entry 56 solved becomes unsolved | **none lost, 8 of 8 controls at 45/45** | **HIT** |
+| **Q2** | coverage 12 or more | **13** | **HIT** |
+| **Q3** | at most one of the two new acceptances converts | **exactly one** (15 passed, 14 at 44/45) | **HIT** |
+| **Q4** | the 135-point grid stays 0 of 16 | **0** (best 63 of 135) | **HIT** |
+
+**Q1 is the result and it was registered to outrank the headline.** Entry 63
+lost a solved request doing something very like this; here **all eight controls
+held at 45 of 45**, on designs the shipped path chose for itself.
+
+### A defect in Q3's own wording, recorded
+
+Q3 called requests 14 and 15 "the two new **library-sourced** acceptances".
+Measured, **15 came from the analytic source at rank 5**, not the library; only
+14 is library-sourced. The prediction it made -- at most one of the two converts
+-- is still scored on what it said, and it hit. But the label was wrong, and
+entry 53's lesson about naming a set before measuring it applies to sources as
+much as to requests.
+
+### Four requests newly solved
+
+    idx  3   4.0 dB @ 2.253 GHz   11/45 -> 45/45
+    idx  5   6.0 dB @ 1.627 GHz   44/45 -> 45/45
+    idx  8   8.0 dB @ 1.387 GHz   35/45 -> 45/45
+    idx 15  10.0 dB @ 2.253 GHz   39/45 -> 45/45
+
+and **12 of the 13 acceptances come from the analytic proposer**, at ranks 1-5,
+for **8-20 decks each** against the search's ~1 085.
+
+### What may now be said, and what still may not
+
+* **May: `python -m nebula.design --method auto` answers 13 of 16 requests at
+  all 45 mandated corners.** It is the shipped path, measured end to end, with
+  a frozen ranker so a clone reproduces it.
+* **May NOT: 135-point compliance.** The load grid is **0 of 16**; the best
+  design reaches 63 of 135. That axis is untouched and remains this project's
+  own addition beyond the brief.
+* **May NOT: a deck-saving headline yet.** The proposal is cheap but the
+  45-corner verification each design still needs is not, and no amortisation
+  number is computed here.
+* **The 3 unanswered requests** are idx 0 (4 dB @ 1.387 GHz), 12 and 13
+  (10 dB @ 1.387 and 1.627 GHz) -- the low-frequency, high-peaking corner, which
+  is where the analytic feasibility map was always thinnest.

@@ -41,7 +41,7 @@ human in the loop. Deliverables that already exist and run:
 | G3 (RL beats random + grid) | **fails one clause** — RL is indistinguishable from random at every budget |
 | G4 (corner-robust design) | met on `V1_SPECS` (7 rows); **not** on the 11 competition rows |
 | Eleven-row compliance | **no design meets all 11 rows at all 135 points.** Two designs miss on opposite sides of one row |
-| **Mandated 45-corner coverage** | **12 of 16 MEASURED** (entry 65, analytic proposer, verified with 8 controls) / **9 of 16 ON THE DELIVERED PATH** (entry 55; entry 54 reached it with a wrapper, entry 55 wired the retry into `run_point` and re-measured with none). Was 8 since entry 40. The 135-point load grid stays **0 of 16** |
+| **Mandated 45-corner coverage** | **13 of 16 ON THE DELIVERED PATH** (entry 67: `design.py --method auto`, verified end to end, 8 controls, none lost; was 9) (entry 55; entry 54 reached it with a wrapper, entry 55 wired the retry into `run_point` and re-measured with none). Was 8 since entry 40. The 135-point load grid stays **0 of 16** |
 | Deliverable output | `design.py --out` writes `design.json`, `design.cir` **and `design_schematic.png`** — a drawn schematic rendered FROM the deck, annotated with the sized values, marked **NOT DELIVERED** when the run did not pass (session 33) |
 | Report | `nebula/report/Nebula_CTLE_Report.pdf`, rebuilt from artifacts. **Its RL chapter stops at PPO and the budget ladder** — entries 34-54 have not reached it |
 
@@ -1732,6 +1732,48 @@ controls doing exactly this. It held 8 of 8.
 
 ---
 
+## 5y. ROW 4y: **`design.py` now delivers 13 of 16 at the mandated corners**
+
+**2026-09-02 (session 33), entries 66 + 67.** The analytic proposer is wired
+into `--method auto` as the first candidate source, library second.
+**Entry 67 scored 4 of 4.**
+
+    idx  source    rank  role      45 corners
+      3  analytic    3   movable     45/45     <- was 11/45
+      5  analytic    3   movable     45/45     <- was 44/45
+      8  analytic    2   movable     45/45     <- was 35/45
+     15  analytic    5   movable     45/45     <- was 39/45
+     14  library     8   movable     44/45
+     eight CONTROLS (1,2,4,6,7,9,10,11)        45/45, none lost
+
+    COVERAGE 9 -> 13 OF 16, on the shipped path, verified end to end.
+
+**12 of the 13 acceptances come from the analytic proposer**, at ranks 1-5, for
+**8-20 decks each** against the search's ~1 085.
+
+### Entry 66 found a defect in the deliverable on the way
+
+`exp_swing_surrogate.load_surrogate` re-fits from `harvest()`, which globs
+`*.jsonl` -- so **every experiment that writes a log changed the model, and
+therefore which design the tool proposed.** Measured: 3 356 rows when entry 64
+ran, 3 362 when entry 66 ran, and only **8 of 16** accepted ranks reproduced.
+A judge running the tool twice with anything in between would have got different
+circuits. **Fixed:** `frozen_surrogate()` fits once, pickles to
+`swing_surrogate_frozen.pkl`, and the file is committed, so a clone reproduces
+the run. It was invisible until the proposer was wired in, because every earlier
+use fitted and used the model inside a single run.
+
+### What may NOT be said
+
+* **Not 135-point compliance.** The load grid is **0 of 16**; the best design
+  reaches 63 of 135.
+* **Not a deck saving** until the 45-corner verification each design needs is
+  amortised.
+* **The 3 unanswered requests** (idx 0, 12, 13) are the low-frequency,
+  high-peaking corner -- row 4z.
+
+---
+
 ## 6. Next steps, in order
 
 | # | Task | Cost | Status |
@@ -1760,7 +1802,8 @@ controls doing exactly this. It held 8 of 8.
 | **4r** | **The delivered path retries at 30 pF on a `-nan(ind)`.** Authorised by the owner 2026-09-01 and pre-registered as entry 55. Fires on the G54 signature only, once, never when the tail is already >= 30 pF; `nan_retry_bypass_f=None` reproduces the old behaviour; `C_BYPASS_F` stays 10 pF | 315 decks, 118 s | **DONE 2026-09-01. 4 of 4. Request 3 is 45/45 with NO wrapper — mandated coverage 9 of 16 on the DELIVERED path. See section 5r** |
 | **4t** | **Re-run one sweep with the retry on.** Declared but unmeasured (entry 55) | ~10 300 decks, 67 min | **DONE 2026-09-01. 6 of 6. Coverage 8 -> 9 of 16 on the DELIVERED path; 14 of 16 requests reproduced IDENTICALLY. `BASELINES.md` is NOT invalidated — pre-retry numbers may be quoted with the retry named. See section 5s** |
 | **4w** | **Verify entry 61's newly accepted candidates at 45 corners.** | 540 decks, 194 s | **DONE 2026-09-02. THE CONTROL FAILED.** Request 10 is 45/45 by the search and its re-ranked proposal gives **39/45**; deploying would take coverage 9 -> 8. Entry 61 is **screen-only and must NOT be deployed**. See section 5w |
-| **4y** | **Wire the analytic proposer into `design.py --method auto`.** Entry 65 measured 12 of 16 with it; the shipped tool still reads the library and delivers 9. Same gap row 4r closed for the retry: needs the code change plus its own end-to-end measurement | ~0 sims to build | **the highest-value open item** |
+| **4y** | **Wire the analytic proposer into `design.py --method auto`.** | 296 + 1 755 decks | **DONE 2026-09-02. 4 of 4. `design.py` delivers 13 of 16 at the mandated corners**, verified end to end with 8 controls, none lost. Entry 66 found and fixed a drift defect on the way (the ranker re-fitted itself every run). See section 5y |
+| **4z** | **The 3 unanswered requests are all low-frequency, high-peaking** (idx 0, 12, 13 -- 4 dB @ 1.387 and 10 dB @ 1.387/1.627 GHz), which is where the analytic feasibility map was always thinnest (132 solutions of 8 000 at the worst). Whether the box admits a DC-valid, swing-feasible solution there at all is unmeasured | ~0 sims to start | open |
 | **4x** | ~~A criterion that prices swing AND the rows the screen scores.~~ **SUPERSEDED by entry 64's max-min criterion**, which prices DC and swing jointly and took screen acceptance 0 -> 11 | Entry 63 showed a swing-only ranking picks designs the 4-corner screen cannot distinguish from good ones (it rates all four within 0.34 while their 45-corner counts span 37-45). Unmeasured; must be pre-registered | TBD | open |
 | **4v** | **Phase 2: price DC headroom and output swing JOINTLY.** Entries 58 and 60 are 0 of 16 twice for OPPOSITE reasons -- ranking on current killed the DC point, ranking on DC margin killed the swing (2.23-4.90x over the limit). The two pull in opposite directions, and entry 37's measured swing surrogate (4.7 % error, zero SPICE) is the tool for a joint criterion. **100 % of entry 60's failures are in its domain.** Must be pre-registered on its own | ~320 decks | open, indicated |
 | **4u** | **Retry decks are UNBILLED.** The retry is a recursive call inside `run_point`, so the caller's budget counter sees one call: `mean_sims_per_request` came back 642.0625, identical to entry 40 in every digit, despite ~30 extra decks. 0.3 % here and it changes no claim, but **every deck count in this repository excludes retry decks** | ~0 | open, stated |
