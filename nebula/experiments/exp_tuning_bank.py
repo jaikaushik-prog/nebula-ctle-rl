@@ -98,6 +98,27 @@ from nebula.rl.contract import ACTION_NAMES, design_id, sizing_from_u
 HERE = Path(__file__).resolve().parent
 RESULTS = HERE / "tuning_bank_results.json"
 
+
+def results_path(n_rs: int, n_cs: int, rs_span: float, cs_span: float) -> Path:
+    """Where a run of THIS geometry writes. **Anti-clobber, not cosmetics.**
+
+    Section 5z's 45-of-45 was measured at the committed default geometry and is
+    quoted in `PROGRESS.md`, `HANDOFF.md` and a commit message. Row 4aa widens
+    the boost axis; a wider run writing to the same path would overwrite that
+    measurement and every citation of it would silently start pointing at
+    different numbers -- the exact shape CLAUDEwa.md sec 8 rule 10 forbids.
+
+    The default geometry keeps the historical filename so nothing that already
+    reads `tuning_bank_results.json` breaks. Any other geometry is tagged with
+    all four knobs, so two different banks can never collide on one file.
+    `nebula/tests/test_tuning_bank.py` proves both halves can fail.
+    """
+    if (n_rs, n_cs, float(rs_span), float(cs_span)) == (
+            N_RS_SETTINGS, N_CS_SETTINGS, float(RS_SPAN), float(CS_SPAN)):
+        return RESULTS
+    return HERE / (f"tuning_bank_{n_rs}x{n_cs}"
+                   f"_rs{float(rs_span):g}_cs{float(cs_span):g}_results.json")
+
 #: Which normalised coordinates the bank moves. `Rs` is the boost axis, `Cs`
 #: the frequency axis. Read from `ACTION_NAMES` rather than hard-coded, so a
 #: change to the action space breaks loudly here instead of silently tuning
@@ -293,18 +314,30 @@ def compensate(base_u: Sequence[float], target_f_peak_hz: float,
 
 def run(base_u: Optional[Sequence[float]] = None,
         target_f_peak_hz: Optional[float] = None,
-        target_peaking_db: float = 7.5) -> dict:
-    """Both measurements, on one base design. Writes its own artifact."""
+        target_peaking_db: float = 7.5,
+        n_rs: int = N_RS_SETTINGS, n_cs: int = N_CS_SETTINGS,
+        rs_span: float = RS_SPAN, cs_span: float = CS_SPAN,
+        tt_only: bool = False) -> dict:
+    """Both measurements, on one base design. Writes its own artifact.
+
+    `tt_only` runs measurement 1 and **skips** measurement 2 -- the cheap gate
+    row 4aa asks for, because the tuning range costs `n_rs * n_cs` decks and the
+    PVT compensation costs 45x that. A geometry whose boost axis does not reach
+    S3's range should be found for 64 decks, not 2 880.
+    """
     from nebula.experiments.adaptive_screen import TARGET_F_PEAK_HZ
 
     if base_u is None:
         base_u = _base_from_artifacts()
     target_f_peak_hz = float(target_f_peak_hz or TARGET_F_PEAK_HZ)
     t0 = time.time()
-    settings = bank(base_u)
+    settings = bank(base_u, n_rs=n_rs, n_cs=n_cs, rs_span=rs_span,
+                    cs_span=cs_span)
     did = design_id(sizing_from_u(np.asarray(base_u)))
+    out_path = results_path(n_rs, n_cs, rs_span, cs_span)
     print(f"base design {did}, {len(settings)} bank settings "
-          f"({N_RS_SETTINGS} boost x {N_CS_SETTINGS} frequency)", flush=True)
+          f"({n_rs} boost x {n_cs} frequency, rs_span {rs_span:g}, "
+          f"cs_span {cs_span:g}) -> {out_path.name}", flush=True)
 
     tr = tuning_range(settings)
     print(f"  tuning range: {tr['n_ok']}/{tr['n_settings']} settings scorable, "
@@ -314,11 +347,17 @@ def run(base_u: Optional[Sequence[float]] = None,
           f"{tr['peaking_lo_db'] or 0:.2f}-{tr['peaking_hi_db'] or 0:.2f} dB",
           flush=True)
 
-    cp = compensate(base_u, target_f_peak_hz, target_peaking_db,
-                    settings=settings)
-    print(f"  PVT compensation: {cp['n_served']}/{cp['n_corners']} mandated "
-          f"corners served by at least one setting ({cp['n_sims']} sims)",
-          flush=True)
+    if tt_only:
+        cp = {"n_corners": 0, "n_served": 0, "n_sims": 0,
+              "n_settings": len(settings), "settings_used": {}, "corners": [],
+              "skipped": "tt_only: the 45-corner compensation was NOT run"}
+        print("  PVT compensation: SKIPPED (--tt-only)", flush=True)
+    else:
+        cp = compensate(base_u, target_f_peak_hz, target_peaking_db,
+                        settings=settings)
+        print(f"  PVT compensation: {cp['n_served']}/{cp['n_corners']} mandated "
+              f"corners served by at least one setting ({cp['n_sims']} sims)",
+              flush=True)
 
     out = {
         "task": "the 2-D tuning bank: Rs sets boost, Cs sets frequency",
@@ -326,8 +365,8 @@ def run(base_u: Optional[Sequence[float]] = None,
         "target_f_peak_hz": target_f_peak_hz,
         "target_peaking_db": target_peaking_db,
         "spec_set": list(R.V5_SPECS),
-        "n_rs_settings": N_RS_SETTINGS, "n_cs_settings": N_CS_SETTINGS,
-        "rs_span": RS_SPAN, "cs_span": CS_SPAN,
+        "n_rs_settings": n_rs, "n_cs_settings": n_cs,
+        "rs_span": rs_span, "cs_span": cs_span, "tt_only": bool(tt_only),
         "tuning_range": tr, "pvt_compensation": cp,
         "total_sims": tr["n_sims"] + cp["n_sims"],
         "wall_clock_s": time.time() - t0,
@@ -335,7 +374,7 @@ def run(base_u: Optional[Sequence[float]] = None,
                  "real SPICE run: `alter` fails SILENTLY on drawn geometry "
                  "(G63) and must not be used here."),
     }
-    RESULTS.write_text(json.dumps(out, indent=1), encoding="utf-8")
+    out_path.write_text(json.dumps(out, indent=1), encoding="utf-8")
     return out
 
 
@@ -371,6 +410,10 @@ def _report(d: dict) -> None:
     print(f"     S3 window 1.25-2.5 GHz covered: "
           f"{100.0 * (tr['window_covered_frac'] or 0.0):.1f} %")
     print()
+    if cp.get("skipped"):
+        print()
+        print(f"  2. PVT COMPENSATION: {cp['skipped']}")
+        return
     print("  2. PVT COMPENSATION (reading B of S3)")
     print(f"     {cp['n_served']} of {cp['n_corners']} mandated corners have at "
           f"least one compliant setting")
@@ -387,13 +430,26 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     ap.add_argument("--analyse", action="store_true")
     ap.add_argument("--peaking", type=float, default=7.5)
     ap.add_argument("--f-peak", type=float, default=None)
+    ap.add_argument("--n-rs", type=int, default=N_RS_SETTINGS,
+                    help="boost settings (default: the committed 3)")
+    ap.add_argument("--n-cs", type=int, default=N_CS_SETTINGS,
+                    help="frequency settings (default: the committed 5)")
+    ap.add_argument("--rs-span", type=float, default=RS_SPAN,
+                    help="boost half-span in normalised box units")
+    ap.add_argument("--cs-span", type=float, default=CS_SPAN,
+                    help="frequency half-span in normalised box units")
+    ap.add_argument("--tt-only", action="store_true",
+                    help="measure the tuning range and SKIP the 45 corners")
     a = ap.parse_args(argv)
+    geom = dict(n_rs=a.n_rs, n_cs=a.n_cs, rs_span=a.rs_span, cs_span=a.cs_span)
     if a.run:
-        _report(run(target_f_peak_hz=a.f_peak, target_peaking_db=a.peaking))
+        _report(run(target_f_peak_hz=a.f_peak, target_peaking_db=a.peaking,
+                    tt_only=a.tt_only, **geom))
     elif a.analyse:
-        if not RESULTS.exists():
-            raise SystemExit(f"{RESULTS.name} missing: run --run first")
-        _report(json.loads(RESULTS.read_text(encoding="utf-8")))
+        p = results_path(**geom)
+        if not p.exists():
+            raise SystemExit(f"{p.name} missing: run --run first")
+        _report(json.loads(p.read_text(encoding="utf-8")))
     else:
         ap.print_help()
     return 0

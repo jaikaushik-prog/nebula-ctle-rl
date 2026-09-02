@@ -11929,3 +11929,87 @@ ran.
 * **Still 0 of 16 on the 135-point load grid**, this project's own extra axis.
 * **idx 12 and 13 remain unsolved** at any depth, and **idx 14 is solvable but
   not delivered.**
+
+## 70. Session 34 -- **the WIDE bank: does one fixed part's knob span S3's whole boost range, or only the middle of it?**
+
+**Written 2026-09-02 BEFORE the run.** Row 4aa. Owner decision **D10** chose
+architecture (A), *one sized part plus a wide bank*, over a per-request trim
+bank.
+
+### The geometry is DERIVED from the measurement and the tolerances, not chosen
+
+Section 5z measured, at fixed `Cs` (column C2):
+
+    R0 (u_rs = 0.373) -> 4.98 dB      R2 (u_rs = 0.613) -> 8.35 dB
+    slope = 3.37 dB / 0.24 box = 14.04 dB per box unit
+
+Extrapolating that slope to S3's own range, and remembering `u_rs` of the base
+design `c507a3ba6f58b9a6` is **0.4931**:
+
+     3 dB at u_rs = 0.373 - (4.98 - 3) / 14.04 = 0.232
+    12 dB at u_rs = 0.613 + (12 - 8.35) / 14.04 = 0.873
+    symmetric half-span must reach the FARTHER edge: |0.873 - 0.4931| = 0.380
+
+So **`RS_SPAN = 0.38`** (box 0.113-0.873, inside the box). `CS_SPAN` stays
+**0.20**: section 5z already measured 100 % of S3's frequency window at that
+span, and widening it only clips harder -- the base sits at `u_cs = 0.8133`, so
++0.20 is already 1.013 and C4 is a clipped step (`test_the_real_base_clips_on_
+the_cs_axis`).
+
+Setting counts come from the **spec tolerances**, since nearest-code error is
+half a step:
+
+    boost      0.76 box / 7 steps = 0.109 box = 1.52 dB -> error <= 0.76 dB   (TOL 1.5 dB)
+    frequency  1.379 oct / 7 steps = 0.197 oct         -> error <= 0.099 oct (TOL 0.3 oct)
+
+**8 x 8 = 64 codes = 6 bits**, which is an ordinary production CTLE code width.
+
+**This run is `--tt-only`: 64 decks, not 2 880.** A geometry whose boost axis
+does not reach S3's range should be found for 64 decks. The 45-corner
+compensation is the second half of row 4aa and runs only if Q1 and Q5 hold.
+
+**It cannot overwrite section 5z's artifact.** `results_path()` tags any
+non-default geometry, and `nebula/tests/test_tuning_bank.py` breaks the gate
+deliberately and watches four tests go red (rule 10).
+
+### Predictions
+
+**Q1 -- THE GATE. The measured TT boost range spans S3's 3-12 dB**, i.e.
+min <= 3.0 dB and max >= 12.0 dB. Confidence **0.6**. The extrapolation is
+linear in `u_rs`, which holds only while `(gm+gmbs)Rs/2 >> 1`; at the low end
+that term stops dominating and `20log10(1 + x)` **flattens**, so the LOW edge is
+the likelier miss. **Falsifier: either edge not reached.**
+
+**Q2 -- the frequency window is still 100 % covered at 8 settings.**
+Confidence **0.9**: 5 settings covered it and this is strictly finer over the
+same span. **Falsifier: `window_covered_frac` < 1.0.**
+
+**Q3 -- the bank OVERSHOOTS below S3's floor: the lowest boost row lands under
+3 dB.** Confidence **0.7**. A symmetric span reaching 12 dB from a base at
+6.55 dB must go 5.45 dB up and therefore ~5.45 dB down, to ~1.1 dB. Registered
+because it is a *wasted-code* finding, not a failure: it says an asymmetric span
+would buy back codes. **Falsifier: min peaking >= 3.0 dB.**
+
+**Q4 -- COST. 64 decks in under 90 s.** The tuning range is `ac_only=True`, and
+section 5z measured 690 decks in 264 s (0.38 s/deck) including the full-eval
+compensation. **Falsifier: over 180 s.**
+
+**Q5 -- LOAD-BEARING FOR ROW 4ab. The code -> response map stays monotone and
+separable at 8x8**: peaking rises monotonically down every `Cs` column and
+`f_peak` falls monotonically along every `Rs` row, with no crossings.
+Confidence **0.85**. **This is not a nicety.** Row 4ab's matched control is a
+hand-written *bisection* on the eye metric, and bisection is only well-posed on
+a monotone map. If Q5 fails the control must be redesigned before any policy is
+trained. **Falsifier: any non-monotone column or row.**
+
+### The decision rule, before the result
+
+* **Q1 fails at the TOP** (max < 12 dB) -> the wide bank cannot reach S3's
+  ceiling from this base. Report it, and either move the base design or accept a
+  reduced range as the measured result. **Do NOT run the 45 corners.**
+* **Q1 fails only at the BOTTOM** (min > 3 dB) -> harmless and Q3's converse;
+  proceed.
+* **Q5 fails** -> the bisection control is not well-posed; fix row 4ab's control
+  design before training anything.
+* **Q1 and Q5 hold** -> run the 45-corner compensation, 2 880 decks, ~19 min.
+
