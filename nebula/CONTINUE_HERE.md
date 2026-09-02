@@ -57,7 +57,34 @@ else in the 22s brief stands.
 > before the run. Retrieval still beats every policy arm (entry 47 arm C, 18 of
 > 58). Read `PROGRESS.md` section 5t.
 
-> **2026-09-02 (session 33, LATEST). `design.py` NOW DELIVERS 13 OF 16 AT THE
+> **2026-09-02 (session 33, LATEST). ESCALATING DEPTH: COVERAGE 14 OF 16 ON THE
+> DELIVERED PATH.** Entry 69, 3 of 5.
+>
+>     idx  0  analytic-DEEP rank 15  ->  VERIFIED 45/45   (was 32/45)   NEW
+>     idx 14  library rank 8         ->  44/45, still unsolved
+>     all 13 previously solved: IDENTICAL rank, no regression
+>     COVERAGE 13 -> 14 OF 16
+>
+> `analytic_then_library` now returns 45 candidates: analytic 1-5, library 1-5,
+> then analytic 6-40. The tail is reached **only** when the first ten fail, so a
+> deep candidate can never be preferred to a shallow one (entry 53's rule).
+> `AUTO_K` is still 5.
+>
+> **TWO MISSES WORTH READING.** Q5 said idx 0 would NOT be rescued -- it was,
+> and verifies 45/45. Q2 said idx 14 would be rescued by the tail -- it was not:
+> the **library's** candidate at position 8 passes the screen first at 44/45 and
+> **blocks** the analytic rank-39 candidate that entry 68 verified at 45/45. So
+> **a solving design for idx 14 exists, is verified, and the tool does not
+> deliver it.** That is an ordering defect, stated and not fixed.
+>
+> **ALSO THIS SESSION: an independent review found three defects on the
+> DELIVERED path, all now fixed** -- `feasible=True` on a design missing the
+> request by 2x tolerance (decision D6 violated; `--peaking 12` returns 9.10 dB
+> and said nothing), retrieval credited for the analytic solver's work, and
+> `--verify` unable to print the mandated-45 number at all. Read `PROGRESS.md`
+> sections 5y and 5w, then entries 64-69.
+
+> **2026-09-02 (session 33). `design.py` NOW DELIVERS 13 OF 16 AT THE
 > MANDATED CORNERS.** Entries 66 + 67, **4 of 4**, verified end to end.
 >
 >     idx  source    rank   45 corners
