@@ -1407,6 +1407,10 @@ signaling, ADC-based DSP receiver, 28 nm CMOS reference parameters).
 │   │                       adaptation controls. Entry 79 is the zero-SPICE
 │   │                       old-table diagnostic; fixed code is its strongest
 │   │                       arm and its random estimate is not yet qualified.
+│   ├── experiments/exp_joint_bank.py  The real 8-attenuator x 64-CTLE x
+│   │                       45-corner table, with seven free channel views per
+│   │                       SPICE point. Crash-resumable, membership-gated and
+│   │                       anti-clobber. Entry 81 is preregistered, not run.
 │   │                       NOTE: this tree lags for the session 23-25 files —
 │   │                       exp_coverage.py, adaptive_screen.py, search_score.py
 │   │                       and runlock.py are documented in §9 and §12 but are
@@ -1586,6 +1590,11 @@ Plus: git init, .gitignore, 28 tests, Wilson-bound BER reporting.
   hillclimb 51, deterministic eight-code random 32, and exhaustive-max-eye 20.
   No policy was trained. The table has no attenuator or hidden-channel state,
   and the random arm needs a multi-seed repair before comparison.
+- **Nebula combined bank (entry 81):** implementation and 74 focused tests are
+  complete; no combined SPICE row has run. Scope is 8 real-PMOS attenuator
+  codes x 64 CTLE codes x 45 PVT corners, each re-scored on seven channels.
+  RL is gated on at least 72/720 corner/request pairs requiring a genuinely
+  channel-specific setting.
 
 - Tests: **1942 passing, 12 deselected** (session 28) —
   `python -m pytest tests nebula/tests -q -m "not slow"`.
@@ -1981,6 +1990,11 @@ Plus: git init, .gitignore, 28 tests, Wilson-bound BER reporting.
   one channel. The printed hillclimb bar is weaker than the TRAIN-selected
   fixed code, and the random row repeats one deterministic order; both defects
   must be repaired before a learned-policy comparison.
+- **(nebula) The combined-bank experiment still uses the constructed channel,
+  modeled eye and one design load.** Seven loss values do not add measured
+  reflections, crosstalk or termination interaction. Any coverage result from
+  entry 81 must travel with those boundaries and may not be added to the
+  delivered path's 14/16 or the extra 135-load result.
 - JTOL amplitude grid is coarse (0.05/0.1/0.2/0.4/0.7/1.0 UI).
 - Power numbers are PLACEHOLDERS (literature-based), never simulated.
 - rtl/, verification/, veriloga_models/, matlab_models/, optical_dsp.py,
@@ -1994,6 +2008,12 @@ Plus: git init, .gitignore, 28 tests, Wilson-bound BER reporting.
 then train a discrete policy on held-out processes/channels. The learned arm
 must beat the complete non-RL Pareto frontier at equal compliance; hillclimb is
 not privileged merely because the old script named it.
+
+**Entry-81 gate:** the combined experiment is now implemented and
+preregistered. Run `python -m nebula.experiments.exp_joint_bank --run --workers
+8`; after interruption use `--resume`, never delete or overwrite the journal.
+Do not train a policy unless at least 72/720 fully-solvable corner/request pairs
+have an empty intersection of compliant settings across the seven channels.
 
 **-1. NEBULA competition track (ACTIVE, started 2026-08-03).** Separate
    project, own contract (`CLAUDEwa.md`), hard deadline 15 Sept 2026.
@@ -13699,3 +13719,22 @@ SPICE. This qualifies the measurement machinery and fixes G142/G143. It is not
 an RL result and the old no-attenuator/one-channel table remains forbidden for
 policy training. The next authorised measurement is the separately
 preregistered combined attenuator/CTLE/PVT/channel table.
+
+### 2026-09-02 - session 36 (entry 81 pre-registration). **The combined real-PMOS attenuator/CTLE sweep is implemented; no production SPICE row has run.**
+
+`adaptive_screen.evaluate_at_points` now accepts an opt-in `atten_code` and
+passes both the real bank code and G140's `vid_max = 0.8/A` into the one
+`run_point` path. Default `None` remains the historical circuit with the same
+0.8 V sweep. `exp_joint_bank.py` builds the 512-setting action space and runs it
+over all 45 corners, re-scoring each result on seven constructed channels. Its
+JSONL journal is crash-resumable, flushed per row, exact-membership gated, and
+refuses overwrites, duplicate keys and truncated rows.
+
+The analysis separates basic scorable settings, all-45 request coverage and
+the load-bearing RL question: a pair needs channel adaptation only when all
+seven channels have a solution but their compliant-setting intersection is
+empty. Entry 81 fixes the training threshold at 72/720 before data exists.
+**Seventy-four focused tests pass.** The complete non-slow suite is **2,571
+passed, 13 deselected, 2 warnings in 193.04 s**, against the pre-change baseline
+of 2,549 passed and 13 deselected. The preregistered 23,040-invocation run is
+next; no policy is trained beforehand.

@@ -13237,3 +13237,83 @@ on both axes, so the decision bar does not move.
 
 Per the registered rule, this qualifies the control instrument and authorises
 the combined-table experiment. It does not authorise a policy on the old table.
+
+## 81. Session 36 -- **the real 8-code input attenuator x 64-code CTLE bank over 45 PVT corners and seven channels.**
+
+**Written 2026-09-02 BEFORE any combined-table SPICE run.** This is improvement
+2 and the missing prerequisite for improvement 1. The committed experiment is
+`exp_joint_bank.py`: 8 real-PMOS attenuator settings x 64 Rs/Cs settings x 45
+mandated PVT corners = **23,040 SPICE invocations** at the design load. Every
+device measurement is re-evaluated on the seven constructed 3-12 dB channel
+losses in Python. The journal is flushed after every row, resumes by exact
+`(setting, corner)` membership, rejects duplicates/truncation, and refuses a
+fresh overwrite. Retry decks inside `run_point` remain unbilled (G138) and that
+limitation is written into the result.
+
+The scorer uses `V6_SPECS` including operating-point/Nyquist HD3, exactly as
+entry 71; this is stricter than the slide's literal 100 MHz S4 row. It is one
+load, not the project's extra 135-point load sweep. The channel family is
+constructed from the specification, not measured hardware. `atten_code=None`
+is not in the action table: codes 0-7 all instantiate the same real series arm
+and all disabled PMOS parasitics; this is a fabricated bank, not a comparison
+against an absent block.
+
+### Predictions
+
+**Q1 -- membership/plumbing gate.** The completed journal contains exactly
+23,040 rows and 23,040 unique `(setting, corner)` keys; analysis reports
+`membership_ok=True`. Confidence **0.9**. **Falsifier: any missing, duplicate,
+truncated or extra row.**
+
+**Q2 -- embedded reproduction control.** Setting attenuator 5 / CTLE R4C3 at
+TT reproduces entry 78's decision: both 3 dB and 12 dB channels are scorable,
+with peaking/frequency/noise changes attributable only to running the identical
+circuit path again. Confidence **0.95**. **Falsifier: either channel is
+unscorable or the row fails SPICE.**
+
+**Q3 -- the attenuator fixes the measured blocker.** At 3 dB, at least one
+combined setting is scorable at every one of the 45 corners, and the total
+scorable count is strictly above entry 72's zero. Confidence **0.85**: the top
+attenuator code was sized from the worst 1.98x overdrive across the old table.
+**Falsifier: any corner has zero scorable setting, or the global count is zero.**
+
+**Q4 -- request coverage.** The combined bank serves at least **4 of 16**
+requests over all 45 corners at 3 dB and at least **8 of 16** at 12 dB.
+Confidence **0.65**. The short channel gains eye margin but needs attenuation;
+the long-channel threshold is entry 71's measured 8/16, though the real bank's
+series arm/parasitics can move a boundary. **Falsifier: either lower bound
+missed.**
+
+**Q5 -- no monotonicity assumption.** Scorable counts and request coverage are
+reported at all seven losses, but are not required to be monotone. Compression
+improves with attenuation while eye height falls with channel loss, so either
+direction can bind. This is a guard against selecting only a convenient edge.
+
+**Q6 -- the RL go/no-go gate.** A `(corner, request)` pair counts as genuinely
+channel-adaptive only if every one of the seven channels is individually
+solvable **and** no single combined setting complies on all seven. Require at
+least **72 of 720 pairs (10%)** before training a policy. Confidence **0.5**
+that the gate holds: code 5 may also leave enough long-channel eye to become a
+single conservative setting, which would correctly falsify the RL premise.
+**Falsifier: fewer than 72 pairs.**
+
+**Q7 -- cost.** Eight workers complete the table in under **90 minutes** on the
+current machine. Confidence **0.75**, based on entry 71's 0.333 s/deck and
+entry 76's measured 25.4% PFET-library overhead. **Falsifier: wall clock above
+90 minutes, excluding an interrupted/resumed pause.**
+
+### Decision rule, before the run
+
+* Q1 or Q2 fails -> do not analyse coverage; repair plumbing and resume without
+  changing circuit values or thresholds.
+* Q3 fails -> the input attenuator does not solve the PVT form of the blocker;
+  report the failed corners and stop the RL line.
+* Q6 fails -> improvement 2 still reports its PVT/channel coverage, but no RL
+  policy is trained: a fixed conservative code is the correct controller.
+* Q1-Q3 and Q6 hold -> freeze this table, rebuild matched controls on the joint
+  action space, then train/evaluate a discrete policy on held-out processes and
+  held-out channel losses. No SPICE is spent during learning.
+
+**Pre-run test certificate:** the complete non-slow suite is **2,571 passed,
+13 deselected, 2 warnings in 193.04 s**. The pre-change baseline was 2,549
+passed, 13 deselected. No production combined-table SPICE row exists yet.

@@ -262,6 +262,16 @@ class DesignEval:
     eye_w_ui: Optional[float] = None
 
 
+def _attenuation_run_args(atten_code: Optional[int]) -> dict:
+    """Runner arguments that keep the G140 swing instrument honest."""
+    if atten_code is None:
+        input_gain = 1.0
+    else:
+        from nebula.device.attenuator import attenuation
+        input_gain = attenuation(int(atten_code))
+    return {"vid_max": 0.8 / input_gain, "atten_code": atten_code}
+
+
 def evaluate_at_points(u: Sequence[float],
                        points: Sequence[ScreenPoint],
                        target_f_peak_hz: float = TARGET_F_PEAK_HZ,
@@ -270,7 +280,8 @@ def evaluate_at_points(u: Sequence[float],
                        ac_only: bool = False,
                        ac_peak_interp: bool = True,
                        validity_gate: bool = False,
-                       link_losses_db: Optional[Sequence[float]] = None
+                       link_losses_db: Optional[Sequence[float]] = None,
+                       atten_code: Optional[int] = None,
                        ) -> DesignEval:
     """Score one sizing at an explicit list of (corner, load) pairs.
 
@@ -325,11 +336,15 @@ def evaluate_at_points(u: Sequence[float],
                               feasible=False, n_sims=n_sims,
                               n_points=n_points, n_scorable=0,
                               reason=f"unrealisable: {exc}")
+        # G140: with an input attenuator the DC sweep must be enlarged by the
+        # inverse input gain, or the sweep boundary masquerades as the stage's
+        # linear limit.  At ``None`` this is exactly the historical 0.8 V.
         pt = run_point(point, c.process, temp_c=c.temp_c,
                        swing=not ac_only, ac_sweep=True, hd3=not ac_only,
                        ac_peak_interp=ac_peak_interp,
                        hd3_vin_pk_v=(None if ac_only else drive_pk),
-                       hd3_tone_hz=(None if ac_only else cfg.nyquist_hz))
+                       hd3_tone_hz=(None if ac_only else cfg.nyquist_hz),
+                       **_attenuation_run_args(atten_code))
         n_sims += 1
 
         if not pt.ok:
