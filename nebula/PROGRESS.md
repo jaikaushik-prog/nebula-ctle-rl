@@ -42,6 +42,7 @@ human in the loop. Deliverables that already exist and run:
 | G4 (corner-robust design) | met on `V1_SPECS` (7 rows); **not** on the 11 competition rows |
 | Eleven-row compliance | **no design meets all 11 rows at all 135 points.** Two designs miss on opposite sides of one row |
 | **Mandated 45-corner coverage** | **13 of 16 ON THE DELIVERED PATH** (entry 67: `design.py --method auto`, verified end to end, 8 controls, none lost; was 9) (entry 55; entry 54 reached it with a wrapper, entry 55 wired the retry into `run_point` and re-measured with none). Was 8 since entry 40. The 135-point load grid stays **0 of 16** |
+| **Tunable-bank compliance (D10)** | **45 of 45 mandated corners served by at least one bank setting**, one request (7.5 dB @ 1.768 GHz), design load, `V5_SPECS` (section 5z; `experiments/tuning_bank_results.json`). S3 frequency window **100 %** covered against the same fixed design's **0.0 %**. Boost range reaches only **4.41-8.56 dB** of S3's mandated 3-12; two corners have **one** passing setting and therefore no tuning margin |
 | Deliverable output | `design.py --out` writes `design.json`, `design.cir` **and `design_schematic.png`** — a drawn schematic rendered FROM the deck, annotated with the sized values, marked **NOT DELIVERED** when the run did not pass (session 33) |
 | Report | `nebula/report/Nebula_CTLE_Report.pdf`, rebuilt from artifacts. **Its RL chapter stops at PPO and the budget ladder** — entries 34-54 have not reached it |
 
@@ -69,6 +70,7 @@ human in the loop. Deliverables that already exist and run:
 | **D7** | **The deliverable is the FRAMEWORK, not one design.** Measure *spec coverage* — for every request a judge might type, does the framework return a PVT-compliant circuit? | `exp_coverage.py` is now the centrepiece. The single-design searches are demoted to one cell of its grid |
 | **D8** | **Search on the MANDATED 45-corner grid; report the 135-point load sweep separately** | The slide mandates PVT (5 process × VDD±5% × 0–125 °C = 45) and says nothing about load. See §5 |
 | **D9** | **The competition mentor approved the SAC + CMA-ES hybrid — CONDITIONALLY** (2026-08-26): the approach is fine enough **if the SAC contributes as RL** | **Unblocks `NEXT_AGENT_SAC.md` stages 1–3**, which its §8 item 1 had gated on exactly this answer. **The condition is the deliverable, not a formality** — it does not approve a hybrid in which the policy is decoration and CMA-ES does the work, which is what today's numbers describe. Discharged by `exp_hybrid`'s **accept rate** against the non-RL baseline of **6 of 16 accepted / 35.6 % fewer decks** (entry 32). A SAC proposer that does not beat that has **not** contributed as RL, and reporting that is the honest outcome |
+| **D10** | **Build the tunable bank as the delivered topology, and put the RL on the ADAPTATION problem** (owner, 2026-09-02, session 34). Reading (B) of S3: one sized part plus a switched `Rs`/`Cs` code, chosen per part. **This is a topology change and therefore required a human decision (CLAUDEwa.md sec 8 rule 5).** | Unblocks `exp_tuning_bank` (measured, section 5z) and the adaptation environment. The RL is scored on **trials-to-lock with an asymmetric false-lock penalty**, against an exhaustive control AND a hand-written bisection heuristic -- the matched control entry 47 established as mandatory. Architecture chosen: **wide bank on ONE fixed part**, not a per-request trim bank |
 
 ---
 
@@ -1774,6 +1776,58 @@ use fitted and used the model inside a single run.
 
 ---
 
+## 5z. THE TUNING BANK: **the spec becomes satisfiable, 45 of 45 corners served**
+
+**2026-09-02 (session 34), owner decision D10.** `exp_tuning_bank.py` was
+written in session 22 and **never run**. It ran, unchanged, at its committed
+defaults.
+
+    base c507a3ba6f58b9a6   target 7.5 dB @ 1.768 GHz   V5_SPECS (12 rows)
+    3 boost x 5 frequency = 15 settings, 690 SPICE runs, 4.4 min
+    artifact: experiments/tuning_bank_results.json
+
+                  C0       C1       C2       C3       C4       peaking
+       R0      3.122    2.525    2.028    1.622    1.334 GHz   4.41 - 5.22 dB
+       R1      2.981    2.400    1.923    1.535    1.261 GHz   6.02 - 6.78 dB
+       R2      2.850    2.290    1.833    1.462    1.201 GHz   7.85 - 8.56 dB
+
+    tuning range   1.201 - 3.122 GHz (1.379 oct)   S3 window covered 100 %
+    PVT            45 of 45 mandated corners served by at least one setting
+    codes used     R2C2 x20, R1C3 x12, R1C2 x11, R2C1 x2
+
+**The two axes came out orthogonal**, as the design equations say they should:
+`Cs` moves `f_peak` monotonically across the whole window and barely touches
+boost; `Rs` moves boost monotonically and barely touches `f_peak`.
+
+### Why this is the headline and not a refinement
+
+The SAME base design, **fixed**, has an `f_peak` PVT spread of **0.99979
+octaves** and therefore serves **0.0 %** of S3's window (`exp_tuning_bank.py`
+docstring, from session 23's spread measurement). With the bank it serves
+**100 %**. That is not a better search. It is **reading (B) of S3 -- the word
+"tunable" -- being satisfiable where reading (A) is arithmetically not.**
+
+### What may NOT be said
+
+* **Not 3-12 dB.** The measured boost range is **4.41-8.56 dB**, 46 % of S3's
+  own range. `RS_SPAN = 0.12` is the limiter. The frequency axis covers its
+  whole spec range; the boost axis does not cover its.
+* **Two corners have exactly ONE passing setting** -- `ff/0.95/125C` and
+  `sf/0.95/125C`. Zero tuning margin there: the next lot of silicon walks off
+  the end of the bank. Reported per the file's own rule that an aggregate
+  must not hide which setting served which corner.
+* **One request, one load.** 7.5 dB @ 1.768 GHz at the design load, 45 mandated
+  corners. **Not** the 16-request grid and **not** the 135-point load sweep.
+* **Only 4 of the 15 codes are ever used**, and never an extreme one. Good for
+  margin; it also says the bank as spanned is oversized on frequency and
+  undersized on boost.
+* **The prediction on record before the run was that output-swing compression
+  would limit compensation** (on the basis of `tunable_trade_results.json`'s
+  `n_accepting_drive: 0`). **It did not: 45 of 45.** Recorded as a miss.
+
+---
+
+
 ## 6. Next steps, in order
 
 | # | Task | Cost | Status |
@@ -1808,6 +1862,9 @@ use fitted and used the model inside a single run.
 | **4v** | **Phase 2: price DC headroom and output swing JOINTLY.** Entries 58 and 60 are 0 of 16 twice for OPPOSITE reasons -- ranking on current killed the DC point, ranking on DC margin killed the swing (2.23-4.90x over the limit). The two pull in opposite directions, and entry 37's measured swing surrogate (4.7 % error, zero SPICE) is the tool for a joint criterion. **100 % of entry 60's failures are in its domain.** Must be pre-registered on its own | ~320 decks | open, indicated |
 | **4u** | **Retry decks are UNBILLED.** The retry is a recursive call inside `run_point`, so the caller's budget counter sees one call: `mean_sims_per_request` came back 642.0625, identical to entry 40 in every digit, despite ~30 extra decks. 0.3 % here and it changes no claim, but **every deck count in this repository excludes retry decks** | ~0 | open, stated |
 | **4s** | **Request 5's eight corners are the next coverage point, and they are NOT this bug.** All eight are output-swing compression at **VDD-5 %**, only **1.002-1.203x** over the measured linear limit — the closest any blocked corner has been. Whether a slightly larger `rl` or `i_bias` clears them at fixed peaking is unmeasured | TBD | open |
+| **4aa** | **The WIDE bank (entry 70).** Section 5z measured 4.41-8.56 dB against S3's mandated 3-12. Widen `RS_SPAN` and re-measure the tuning range and the drive-handling limit at TT only, before paying for 45 corners. Step sizes derived from the spec tolerances, not chosen: `S3_peaking_match` is 1.5 dB and `S3_f_peak_match` is 0.3 oct, so a code step must be no coarser than either | ~64-128 decks | pre-registered as entry 70 |
+| **4ab** | **The adaptation environment + the two controls.** Cache (code, corner) -> `DeviceResult` once with SPICE; the 21-member channel family is then FREE because `evaluate_link` re-scores a cached device result in Python. Controls: exhaustive sweep (upper bound on compliance, `n_codes` trials) and a hand-written bisection on the eye metric (the matched control) | ~2 900 decks once, then 0 | blocked on 4aa |
+| **4ac** | **The RL adaptation policy.** Discrete action over codes; observation is what a real RX can see (eye height/width from trials so far), NOT the corner label. Neither PPO nor SAC has a discrete head today -- both are Gaussian -- so this is new code. Scored on trials-to-lock at equal compliance against BOTH controls in 4ab | 0 new SPICE | blocked on 4ab |
 | **5** | **Corner-aware RL vs random / CMA-ES / library lookup.** Pre-registered as entry 25 (with a disclosed rule-3 violation: written after launch, before any artifact existed) | ~2.5 h | **RUNNING** |
 | **6** | **Re-run the coverage sweep on `V6_SPECS`** (§5b). Owner: *"polishing numbers is much needed for honesty."* **Publish both the old and the corrected coverage number** | ~2.5 h | **committed, do not drop** |
 | 7 | 2-D tuning bank (`Cs` axis) + the reading-(B) criterion | ~1 100 sims, ~8 min | built, not run |

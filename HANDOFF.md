@@ -13127,3 +13127,51 @@ and it was the guard working: `test_auto_is_documented_as_ESCALATION...` pinned
 the phrase `"retrieval proposes"`, which row 4y made inaccurate. Fixed the help
 text, then the test went red a second time for a formatting reason (argparse
 re-wraps). Both recorded as **G138**.
+
+### 2026-09-02 - session 34 (decision D10, section 5z). **The tuning bank RAN: 45 of 45 mandated corners served, and the spec becomes satisfiable.**
+
+**Owner decision D10**, taken this session: build the tunable bank as the
+delivered topology and put the RL on the **adaptation** problem rather than on
+sizing. A bank is a topology change, so CLAUDEwa.md sec 8 rule 5 required a
+human to authorise it; this is that authorisation, recorded before any code
+moved.
+
+`experiments/exp_tuning_bank.py` was written in session 22 and **never run**.
+It ran unchanged, at its committed defaults.
+
+    base c507a3ba6f58b9a6   target 7.5 dB @ 1.768 GHz   V5_SPECS (12 rows)
+    3 boost x 5 frequency = 15 settings, 690 SPICE runs, 4.4 min
+    artifact: experiments/tuning_bank_results.json
+
+                  C0       C1       C2       C3       C4       peaking
+       R0      3.122    2.525    2.028    1.622    1.334 GHz   4.41 - 5.22 dB
+       R1      2.981    2.400    1.923    1.535    1.261 GHz   6.02 - 6.78 dB
+       R2      2.850    2.290    1.833    1.462    1.201 GHz   7.85 - 8.56 dB
+
+    tuning range   1.201 - 3.122 GHz (1.379 oct)   S3 window covered 100 %
+    PVT            45 of 45 mandated corners served
+    codes used     R2C2 x20, R1C3 x12, R1C2 x11, R2C1 x2
+
+The two axes came out **orthogonal**: `Cs` moves `f_peak` monotonically across
+the whole window and barely touches boost, `Rs` the reverse.
+
+**Why it matters.** The same base design *fixed* has an `f_peak` PVT spread of
+0.99979 octaves and serves **0.0 %** of S3's window; banked it serves **100 %**.
+Reading (B) of S3 -- the word "tunable" -- is satisfiable where reading (A) is
+arithmetically not.
+
+**Four things that are NOT 45/45**, all recorded in PROGRESS section 5z:
+boost reaches only 4.41-8.56 dB of S3's mandated 3-12 (`RS_SPAN = 0.12` is the
+limiter); `ff/0.95/125C` and `sf/0.95/125C` have exactly **one** passing setting
+and therefore no tuning margin; it is one request at one load, not the
+16-request grid or the 135-point sweep; and only 4 of 15 codes are ever used.
+
+**A prediction of mine missed and is recorded as a miss.** Before the run I
+predicted output-swing compression would limit PVT compensation, on the basis of
+`tunable_trade_results.json`'s `n_accepting_drive: 0` across all 8 settings of
+the earlier peaking-only bank. Compensation was not limited by it: 45 of 45.
+
+Next: rows **4aa** (the wide bank, pre-registered as entry 70), **4ab** (the
+adaptation environment plus an exhaustive control and a bisection control), and
+**4ac** (the discrete-action policy -- neither PPO nor SAC has a discrete head
+today, both are Gaussian).
