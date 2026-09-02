@@ -17,13 +17,13 @@
 > decisions that are OPEN and human-only, and what to do next. It supersedes
 > `nebula/NEXT_STEPS.md`. This file remains the full state of record.
 
-Last updated: **2026-09-03** (session 37, entry 84 implementation: the owner's
-three-row adjacent-C2 probe is built and tested but has not run. It reads the
-hash-pinned entry-83 artifact, keeps 7 dB fixed and permits only C1-to-C2 at
-R6/R5/R6. Focused 6/6 and combined 80/80 pass. The full suite had one known
-timing-only `ll` trim-speed reversal with identical values; that exact node
-passed alone. D11's production range remains unchanged pending full
-verification.)
+Last updated: **2026-09-03** (session 37, entry 84 outcome: C2 lowers frequency
+at all 3 registered points and closes 2, taking the combined result from 13/16
+to **15/16**. The last `sf/0.95/125C` request-12 row has the correct frequency
+and peaking but compresses at 754.0 mVpp demand versus 731.5 mVpp limit. Entry
+84 scores 5/6, overall fail. The residual is a 0.263140 dB input-reduction
+lower bound, not permission to choose a new attenuator range. D11's production
+range remains unchanged.)
 
 Earlier session 22p: (**THE REPORT EXISTS** --
 `nebula/report/Nebula_CTLE_Report.pdf`, **10 pages, 9 figures, 598 KB**,
@@ -1627,15 +1627,18 @@ Plus: git init, .gitignore, 28 tests, Wilson-bound BER reporting.
   system-level miss, while 7 dB is retained as the successful compression
   candidate. The official D11 maximum remains 5.933 dB pending full
   verification.
-- **Nebula adjacent-Cs probe (D13, entry 84):** the owner approved exactly
-  three rows, keeping 7 dB and moving R6C1/R5C1/R6C1 to R6C2/R5C2/R6C2 at the
-  three remaining high-side frequency misses. The hash-pinned, anti-overwrite
-  instrument is implemented; focused 6/6 and combined 80/80 tests pass. It has
-  not run.
+- **Nebula adjacent-Cs probe (D13, entry 84):** exactly 3 real-PMOS rows ran.
+  C2 lowers frequency by 11.91-11.94% at all three and fully closes two, so the
+  combined diagnosed set moves from 13/16 to **15/16**. The remaining
+  `sf/0.95/125C` request-12 R6C2 point is no longer a frequency miss; its 3 dB
+  link compresses at 754.0 mVpp demand versus 731.5 mVpp limit. Q1, Q2 and
+  Q4-Q6 hit; Q3 misses at 2/3, so overall 5/6 fail. Artifact SHA-256:
+  `BAECB4621818D80B71BFC9CF1977EF81E71A02BB3026CF67211123FCFFA204C5`.
 
-- Tests: **2589 non-slow collected** (entry 84): latest full run **2588 passed
-  plus one timing-only `ll` failure**, 13 deselected, 2 warnings; the exact
-  failed node passed alone. Entry-83 clean baseline: 2583 passed. —
+- Tests: **2589 non-slow collected** (entry 84): pre-run **2588 passed plus one
+  timing-only `ll` failure**; the exact failed node passed alone. Post-result,
+  **all 2589 passed**, 13 deselected, 2 warnings in 287.79 s. Entry-83 clean
+  baseline: 2583 passed. —
   `python -m pytest tests nebula/tests -q -m "not slow"`.
   (Was 65 + 267 = 332 at the start of session 9; 430 at the end of it; 444
   after 10b; 528 after 11; 618 after 12b; 679 after 13; 1007 after 16; 1246
@@ -2066,13 +2069,15 @@ explicit scope.
 
 **-1. NEBULA competition track (ACTIVE, started 2026-08-03).** Separate
    project, own contract (`CLAUDEwa.md`), hard deadline 15 Sept 2026.
-   **CURRENT 2026-09-02:** D11 is complete at its registered TT/one-load scope
+   **CURRENT 2026-09-03:** D11 is complete at its registered TT/one-load scope
    (entry 78, 7 of 7). Do not expand that into a coverage statement without a
    separately authorised preregistration. D12/entry 83 is complete at 5/6:
    compression is cleared and 7 dB is retained as that block's candidate under
-   the owner's D13 scope clarification. Entry 84 now authorises exactly three
-   adjacent-higher-Cs rows for the remaining frequency misses; implement and
-   run those unchanged. The
+   the owner's D13 scope clarification. Entry 84's adjacent-C2 probe closes two
+   of the three remaining rows; combined closure is 15/16. The last point has
+   correct frequency/peaking and is only 3.076% above the measured compression
+   limit. Do not choose a new attenuator range from its 0.263140 dB lower bound;
+   that is the next human decision. The
    standing owner item is also urgent: `nebula/report/Nebula_CTLE_Report.pdf`
    is about three weeks behind,
    still says one simulation / under five seconds rather than 17 / ~22 s,
@@ -4952,6 +4957,20 @@ explicit scope.
   compliant design produced by RL" that was neither produced by RL nor 45 of 45.
   **Two independent defects pointing the same way is how a headline gets
   published.**
+
+### G147. A CTLE frequency correction can re-open the swing constraint
+
+Increasing `Cs` did exactly what the pole-zero mechanism predicted in entry
+84: it lowered `f_peak` by about 11.9% at all three measured points. It also
+changed the high-frequency gain. At `sf/0.95/125C`, R6C1 was scorable with the
+7 dB candidate, while adjacent R6C2 demanded 754.0 mVpp against a 731.5 mVpp
+limit and became unscorable. A one-axis correction therefore moved the active
+constraint from frequency to compression even though the device simulation,
+noise and 12 dB channel all passed.
+
+**Rule:** after changing an `Rs` or `Cs` code, rerun the link/scorability gate;
+never infer compliance from the AC peak alone. Report the new active constraint
+instead of calling the code "better" in the abstract.
 
 ## 10. Environment
 
@@ -14010,3 +14029,34 @@ produced identical circuit values but timed trimmed 4.22 s versus untrimmed
 3.79 s under load. Its exact isolated rerun passed in 4.25 s. This is the known
 machine-cache timing class previously seen at `ss_hh`; no PDK, trim or runner
 code changed. Commit the implementation before launching the fixed three rows.
+
+### 2026-09-03 - session 37 (entry 84 outcome). **C2 closes two rows; the final row moves from frequency failure to compression.**
+
+The fixed experiment ran exactly **3 real-PMOS SPICE invocations** in 2.0222 s
+and wrote `experiments/atten_cs_probe_results.json` (SHA-256
+`BAECB4621818D80B71BFC9CF1977EF81E71A02BB3026CF67211123FCFFA204C5`).
+Membership/source identity and device validity pass. C2 lowers peak frequency
+by 11.91-11.94% at all three points. The `ff/0.95/125C` request-12 and
+`sf/0.95/0C` request-13 rows become fully compliant; combined recovery is now
+**15 of the original 16**.
+
+Q3 misses because `sf/0.95/125C`, request 12, R6C2 is unscorable at 3 dB:
+754.0 mVpp demanded versus a 731.5 mVpp measured limit. Its frequency and
+peaking are in range, all three 12 dB controls remain scorable, and noise spans
+0.514108-0.736965 mV_rms. The residual ratio is 1.030759, equivalent to a
+**0.263140 dB input-swing reduction lower bound** under G145. Thus Q1, Q2 and
+Q4-Q6 hit, Q3 misses, and entry 84 scores **5/6 overall fail** under its fixed
+rule.
+
+The 7 dB value remains the successful entry-83 compression candidate; it is
+not promoted to D11's production range. The old measured table shows R5C2 at
+this corner has only 8.077 dB peaking, below request 12's 8.5 dB match floor,
+so that existing code would exchange compression for a peaking miss. No
+further SPICE or range choice is authorised by this result. The next decision
+is human: whether to pre-register a one-point, slightly wider attenuator probe;
+only a pass there can authorise full-bank/45-corner verification.
+
+Post-result checks are green: the focused entry-84 file passes **6/6** and the
+complete non-slow suite passes **2,589/2,589**, with 13 deselected and 2
+warnings in 287.79 s. This replaces the pre-run suite's timing-only `ll`
+reversal with a clean complete run.

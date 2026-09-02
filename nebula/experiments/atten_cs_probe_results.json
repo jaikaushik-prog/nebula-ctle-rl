@@ -1,0 +1,168 @@
+{
+ "task": "entry 84 adjacent-Cs correction at three frequency misses",
+ "source": "atten_range_probe_results.json",
+ "source_sha256": "9A06AA65D71B463D4F75CC2072D82BC845799BAF6FE073F66C25C069ED2F358B",
+ "probe_top_db": 7.0,
+ "probe_max_x": 2.2387211385683394,
+ "spice_invocations": 3,
+ "rows": [
+  {
+   "kind": "cs_probe",
+   "corner": "ff/0.95/125C",
+   "bank_code": 50,
+   "atten_code": 7,
+   "device_ok": true,
+   "reason": null,
+   "g_dc_db": -10.974390828187634,
+   "noise_mvrms": 0.7369647,
+   "peaking_db": 9.887165946478834,
+   "f_peak_hz": 1562277634.8422735,
+   "links": {
+    "3.0": {
+     "ok": true,
+     "eye_h_v": 0.2974051350101318,
+     "eye_w_ui": 0.859375
+    },
+    "12.0": {
+     "ok": true,
+     "eye_h_v": 0.12390715959054807,
+     "eye_w_ui": 0.8125
+    }
+   },
+   "requests": [
+    {
+     "request_id": 12,
+     "scorable": true,
+     "compliant": true,
+     "violations": [],
+     "margins": {
+      "S3_f_peak_band": 0.32172276500578423,
+      "S3_f_peak_match": 0.12827723499421578,
+      "S3_peaking": 2.1128340535211656,
+      "S3_peaking_match": 1.3871659464788344,
+      "S3_nyq_boost": 9.699105,
+      "S5_noise": 0.0007630353,
+      "S6_power": 0.008582489700000001,
+      "saturation": 0.44492430000000005,
+      "tail_saturation": 0.3444242,
+      "S8_eye_h": 0.19740513501013182,
+      "S8_eye_w": 0.459375,
+      "S7_area": 0.047907615975000005,
+      "S4_hd3_nyq": 24.638948018291238
+     }
+    }
+   ],
+   "request_id": 12,
+   "old_bank_code": 49,
+   "old_f_peak_hz": 1774007212.7255468
+  },
+  {
+   "kind": "cs_probe",
+   "corner": "sf/0.95/0C",
+   "bank_code": 42,
+   "atten_code": 7,
+   "device_ok": true,
+   "reason": null,
+   "g_dc_db": -8.067507150504357,
+   "noise_mvrms": 0.5141075,
+   "peaking_db": 9.40345511539408,
+   "f_peak_hz": 1806262935.3728068,
+   "links": {
+    "3.0": {
+     "ok": true,
+     "eye_h_v": 0.420813233108003,
+     "eye_w_ui": 0.921875
+    },
+    "12.0": {
+     "ok": true,
+     "eye_h_v": 0.18424485630555723,
+     "eye_w_ui": 0.84375
+    }
+   },
+   "requests": [
+    {
+     "request_id": 13,
+     "scorable": true,
+     "compliant": true,
+     "violations": [],
+     "margins": {
+      "S3_f_peak_band": 0.46892017551964976,
+      "S3_f_peak_match": 0.14892017551964976,
+      "S3_peaking": 2.5965448846059207,
+      "S3_peaking_match": 0.9034551153940793,
+      "S3_nyq_boost": 9.285413,
+      "S5_noise": 0.0009858925,
+      "S6_power": 0.0086066349,
+      "saturation": 0.5434899,
+      "tail_saturation": 0.4015048,
+      "S8_eye_h": 0.320813233108003,
+      "S8_eye_w": 0.521875,
+      "S7_area": 0.047994835975000004,
+      "S4_hd3_nyq": 20.04201777279853
+     }
+    }
+   ],
+   "request_id": 13,
+   "old_bank_code": 41,
+   "old_f_peak_hz": 2050359067.2067423
+  },
+  {
+   "kind": "cs_probe",
+   "corner": "sf/0.95/125C",
+   "bank_code": 50,
+   "atten_code": 7,
+   "device_ok": true,
+   "reason": null,
+   "g_dc_db": -10.708719157811116,
+   "noise_mvrms": 0.7151105,
+   "peaking_db": 9.873178914031657,
+   "f_peak_hz": 1545748489.9104176,
+   "links": {
+    "3.0": {
+     "ok": false,
+     "reason": "compression",
+     "demand_mvpp": 754.0,
+     "limit_mvpp": 731.5
+    },
+    "12.0": {
+     "ok": true,
+     "eye_h_v": 0.12738018450527655,
+     "eye_w_ui": 0.8125
+    }
+   },
+   "requests": [
+    {
+     "request_id": 12,
+     "scorable": false,
+     "compliant": false,
+     "violations": [
+      "unscorable"
+     ]
+    }
+   ],
+   "request_id": 12,
+   "old_bank_code": 49,
+   "old_f_peak_hz": 1755257128.5100873
+  }
+ ],
+ "summary": {
+  "membership_ok": true,
+  "all_device_ok": true,
+  "n_rows": 3,
+  "frequency_lowered": 3,
+  "requests_recovered": 2,
+  "long_channel_scorable": 3,
+  "noise_pass": 3,
+  "wall_clock_s": 2.0221904999998515,
+  "checks": {
+   "Q1": true,
+   "Q2": true,
+   "Q3": false,
+   "Q4": true,
+   "Q5": true,
+   "Q6": true
+  },
+  "passed": false
+ },
+ "scope": "three focused C1-to-C2 measurements; no production-range change, full-PVT coverage claim or RL training"
+}

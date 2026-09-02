@@ -13597,3 +13597,45 @@ speed assertion: identical circuit values, but one loaded run measured 4.22 s
 trimmed versus 3.79 s untrimmed. The exact node passed alone in **4.25 s**.
 This is the same cache/load class already recorded for `ss_hh`; no PDK, trim or
 simulator code changed. No entry-84 SPICE point has run.
+
+### Outcome -- run 2026-09-03
+
+The fixed command completed exactly **3 real-PMOS SPICE invocations** and the
+source/member gate passed. Artifact:
+`experiments/atten_cs_probe_results.json`, SHA-256
+`BAECB4621818D80B71BFC9CF1977EF81E71A02BB3026CF67211123FCFFA204C5`.
+
+**Q1 HIT.** The artifact has exactly the three registered C1-to-C2 rows, all
+device-valid, and the entry-83 source hash is unchanged.
+
+**Q2 HIT.** C2 lowered peak frequency at all three points by **11.91-11.94%**:
+1.7740 -> 1.5623 GHz, 2.0504 -> 1.8063 GHz and 1.7553 -> 1.5457 GHz.
+
+**Q3 MISS.** **2 of 3**, not 3 of 3, are fully scorable and compliant. The
+`ff/0.95/125C` request-12 and `sf/0.95/0C` request-13 rows close. At
+`sf/0.95/125C`, request 12, R6C2 puts frequency and peaking in range but the
+3 dB channel re-enters compression: **754.0 mVpp demanded versus 731.5 mVpp
+measured limit**. That is a ratio of **1.030759**, or **0.263140 dB** additional
+input-swing reduction as a G145 lower bound. It is not a verified new
+attenuator range.
+
+**Q4 HIT.** All **3 of 3** 12 dB controls remain scorable. Their worst eye is
+123.907 mV high and 0.8125 UI wide, above S8.
+
+**Q5 HIT.** Noise is **0.514108-0.736965 mV_rms**, below 1.5 mV_rms at all
+three points.
+
+**Q6 HIT.** Wall clock is **2.0222 s**, below 15 s.
+
+**Score: 5 of 6 predictions hit; OVERALL FAIL by the registered all-six
+rule.** The mechanism was right and closes two of the three frequency misses,
+so the combined evidence recovers **15 of the original 16** request/corner
+pairs. The final row is a narrow compression boundary, not a frequency miss.
+Per the written decision, 7 dB remains the successful compression candidate
+at entry 83's measured points, but the 16-case closure claim and full-bank/PVT
+verification are not authorised. No further SPICE point is selected from this
+result. The historical 5.933 dB table also shows that replacing R6C2 with
+R5C2 at this corner lowers boost to 8.077 dB, below request 12's 8.5 dB lower
+match limit; it merely trades the compression problem for a peaking problem.
+Post-result verification is green: **6/6 focused tests** and the complete
+non-slow suite **2,589 passed, 13 deselected, 2 warnings in 287.79 s**.

@@ -83,7 +83,7 @@ human in the loop. Deliverables that already exist and run:
 | **D10** | **Build the tunable bank as the delivered topology, and put the RL on the ADAPTATION problem** (owner, 2026-09-02, session 34). Reading (B) of S3: one sized part plus a switched `Rs`/`Cs` code, chosen per part. **This is a topology change and therefore required a human decision (CLAUDEwa.md sec 8 rule 5).** | Unblocks `exp_tuning_bank` (measured, section 5z) and the adaptation environment. The RL is scored on **trials-to-lock with an asymmetric false-lock penalty**, against an exhaustive control AND a hand-written bisection heuristic -- the matched control entry 47 established as mandatory. Architecture chosen: **wide bank on ONE fixed part**, not a per-request trim bank |
 | **D11** | **Size and build the input attenuator** (owner, 2026-09-02, session 34), as a **parallel** experiment. Entry 73 measured that a load trim cannot fix compression because `RL` scales signal and headroom together; the block must therefore sit **ahead** of the pair | **COMPLETE, entry 78.** `device/attenuator.py` is opt-in and byte-identical when off. The corrected bank uses measured PMOS `Ron*W = 4086.824988 ohm.um`, W/nf 40/1, 80/2, 160/4. Code 5 is first to clear; all nine rows instantiate and the switchless gate passes. Verified only at TT, one load, one CTLE bank code — **no coverage number**. |
 | **D12** | **Approve a focused 7.0 dB maximum-code diagnostic** (owner, 2026-09-02, session 36), after entry 82 derived 6.964 dB as the tightest compression-only lower bound | **APPROVES MEASUREMENT, NOT ADOPTION.** Entry 83 fixes 16 real-PMOS invocations, noise/3 dB/12 dB controls and a full-pass decision before implementation. D11 remains 5.933 dB unless the probe passes and a later full-bank/PVT experiment separately authorises replacement. |
-| **D13** | **Judge 7 dB on its attenuator scope and test C2 for the three frequency misses** (owner, 2026-09-03, session 37) | Entry 83's 13/16 system gate remains a recorded miss, but 7 dB is retained as the successful compression candidate because all 14/14 physical points became scorable with noise/eye/12 dB controls intact. Entry 84 fixes exactly three adjacent-C2 SPICE rows. Production D11 is still unchanged pending full verification. |
+| **D13** | **Judge 7 dB on its attenuator scope and test C2 for the three frequency misses** (owner, 2026-09-03, session 37) | Entry 83's 13/16 system gate remains a recorded miss, but 7 dB is retained as the successful compression candidate because all 14/14 physical points became scorable with noise/eye/12 dB controls intact. Entry 84's fixed C2 probe closes 2/3 rows and reaches 15/16 combined; the final `sf/0.95/125C` row is 3.076% over its compression limit. Production D11 is still unchanged pending a human range decision and full verification. |
 
 ---
 
@@ -2240,6 +2240,36 @@ not a coverage number.** The final non-slow suite is **2,549 passed, 13
 deselected** in 279.39 s; the PDK trim suite including its slow full-library
 equivalence checks is **24 passed** in 107.57 s.
 
+## 5af. THE 7 dB + C2 CLOSURE PROBE: **15 of 16 close; the last is compression by 3.076%**
+
+**2026-09-03, sessions 36-37, entries 82-84.** The 7.0 dB candidate first
+removed compression at all 14/14 critical physical points and recovered 13/16
+request/corner pairs. The owner correctly retained that as an attenuator-block
+success: the three misses were fully scorable and failed only CTLE peak
+frequency, outside the attenuator probe's scope.
+
+Entry 84 then tested only the three registered adjacent-higher-Cs codes. C2
+lowered peak frequency by 11.91-11.94% at all three points and fully closed
+two. The final `sf/0.95/125C`, request-12 point now has the right frequency and
+peaking, but C2 raises its demanded 3 dB swing to 754.0 mVpp against a measured
+731.5 mVpp limit. It therefore remains unscorable by **22.5 mVpp / 3.076%**.
+All three 12 dB controls remain scorable, all noise readings are below 0.737
+mV_rms, and the three calls took 2.022 s.
+
+This is **5/6 and an overall fail** under entry 84's all-six gate, while the
+engineering progress is 13/16 -> **15/16**. The residual swing ratio is
+0.263140 dB of additional input reduction as a lower bound only (G145).
+R5C2 is not a clean escape: the committed 5.933 dB table measures only 8.077
+dB peaking at the same corner, below request 12's 8.5 dB match boundary. No
+production range changes, full-PVT claim or RL training follow from this run.
+Artifact: `experiments/atten_cs_probe_results.json`.
+
+Post-result verification is clean: **6/6 focused tests** and **2,589/2,589
+non-slow tests** pass (13 deselected, 2 warnings) in 287.79 s. The pre-run full
+suite had 2,588 passes plus one timing-only PDK-trim speed assertion; its exact
+node passed alone. Thus the before/after functional count is 2,588 plus one
+isolated timing recheck -> **2,589 clean**.
+
 ## 6. Next steps, in order
 
 **2026-09-02, session 35 / entry 78:** D11 is complete at its registered
@@ -2289,7 +2319,8 @@ and inconsistent test counts.
 | **4ac** | **The RL adaptation policy.** Discrete action over codes; observation is what a real RX can see (eye height/width from trials so far), NOT the corner label | 0 new SPICE | **STOPPED BY THE PREREGISTERED GATE.** Measured 0/720 compliance-level channel-adaptive pairs against the required 72/720. Do not train on this table |
 | **4ad** | **Diagnose the remaining short-channel boundary before changing hardware.** The 16 unsolved 3 dB corner/request pairs are all compression-related, concentrated at 8-10 dB boost and low requested frequency; 15/16 are at VDD -5% | zero SPICE | **DONE, entry 82.** All 16 have a shape-compliant compressed candidate at maximum code 7; measured headroom deficit is 0.0234-1.0304 dB. A ~7.0 dB top-code probe is indicated but requires the rule-6 human range decision before SPICE |
 | **4ae** | **Run the owner-approved 7.0 dB focused probe.** Exercise the 14 unique critical circuit/corner points covering all 16 failures, plus TT code-0/code-7 controls; score 3 dB requests, 12 dB scorability, noise and realised attenuation | 16 real-PMOS SPICE invocations | **DONE: 5/6, OVERALL FAIL.** Compression clears at 14/14 and 13/16 request pairs recover; three scorable rows miss only `S3_f_peak_match`. D11 remains unchanged |
-| **4af** | **Test the adjacent higher-Cs code at the three remaining frequency misses.** All three are high-side peak misses at C1; C2 is the existing bank's next lower-frequency setting. Register exact points and controls before SPICE | exactly 3 decks | **IMPLEMENTED AND GREEN; not yet run.** Keep 7 dB fixed; test R6C2/R5C2/R6C2 only |
+| **4af** | **Test the adjacent higher-Cs code at the three remaining frequency misses.** All three are high-side peak misses at C1; C2 is the existing bank's next lower-frequency setting. Register exact points and controls before SPICE | exactly 3 decks | **DONE: 5/6.** Frequency moved correctly at 3/3 and 2/3 rows close. The last is `sf/0.95/125C` request 12: 754.0 mVpp demand versus 731.5 mVpp limit. Combined closure is 15/16 |
+| **4ag** | **Resolve the final 3 dB row without moving a human-controlled range silently.** Existing R5C2 is below the peaking-match floor; R6C2 needs 0.263140 dB less input swing as a lower bound. A separately registered one-point attenuator probe needs the owner's range decision | 1 deck to diagnose, then full verification only if it passes | **OPEN, awaiting human range decision.** Do not infer a new maximum from the lower bound (G145) |
 | **5** | **Corner-aware RL vs random / CMA-ES / library lookup.** Pre-registered as entry 25 (with a disclosed rule-3 violation: written after launch, before any artifact existed) | ~2.5 h | **RUNNING** |
 | **6** | **Re-run the coverage sweep on `V6_SPECS`** (§5b). Owner: *"polishing numbers is much needed for honesty."* **Publish both the old and the corrected coverage number** | ~2.5 h | **committed, do not drop** |
 | 7 | 2-D tuning bank (`Cs` axis) + the reading-(B) criterion | ~1 100 sims, ~8 min | built, not run |
