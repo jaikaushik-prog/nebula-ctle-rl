@@ -13502,3 +13502,22 @@ unchanged. The reporter now handles absent fields, prints every failed member's
 reason, writes the artifact, and exits nonzero through Q1. Its new regression
 test failed before the repair; **19 focused tests pass** afterward. Re-run the
 unchanged circuit next.
+
+### 2026-09-02 - session 35 (entry 77 outcome; entry 78 pre-registration). **The PFET card loads, but its LOD parameter context was omitted.**
+
+Entry 77's failure-safe rerun wrote
+`experiments/atten_verify_switched_results.json` and exited 1. The `None`
+control reproduced 1805.1/1110.5 mVpp with the long channel scorable. Every
+PMOS code 0..7 returned `device_ok=False` with the same exact reason:
+`Undefined parameter [sky130_fd_pr__pfet_01v8__wlod_diff]`. Wall clock 2.14 s.
+Q1 missed and Q6 hit; Q2-Q5 are not evaluated because there is no valid PMOS
+row. **Scored 1 of 2 evaluable. Nothing is tuned or inferred from survivors.**
+
+The named parameter is defined by SKY130 `parameters/lod.spice`, supplied to a
+full-library corner through `all.spice`; the derived PFET section added the
+device card without that context. Entry 78 is committed before repair/run: use
+`needed_names` to generate PFET-only supplements from `lod.spice` and
+`invariant.spice`, include them only in PFET sections, prove all ordinary trim
+files byte-identical, and rerun the unchanged entry-77 table and thresholds.
+If any member still fails, record the next exact reason and stop rather than
+adding parameters iteratively inside one result.

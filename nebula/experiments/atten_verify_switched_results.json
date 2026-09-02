@@ -1,0 +1,103 @@
+{
+ "task": "does the sized attenuator clear the compression? (G140 applied)",
+ "base_u": [
+  0.47470897153701547,
+  0.5052153178730102,
+  0.7146841021685507,
+  0.4931434027122009,
+  0.8132546712336066,
+  0.5871048097551593,
+  0.8020459464395331
+ ],
+ "probe_code": [
+  4,
+  3
+ ],
+ "switched": true,
+ "switched_note": "real binary-weighted pfet_01v8 switches: entry 75 measured Ron*W = 4086.8 ohm.um at VCM = 1.5 V; gate low is on and bulk is tied to VDD.",
+ "rows": [
+  {
+   "code": null,
+   "device_ok": true,
+   "atten_design_db": 0.0,
+   "atten_realised_db": 0.0,
+   "vid_max_v": 0.8,
+   "noise_mvrms": 0.2141952,
+   "short_ok": false,
+   "short_demand_mvpp": 1805.1,
+   "short_limit_mvpp": 1110.5,
+   "long_ok": true,
+   "long_demand_mvpp": null,
+   "long_limit_mvpp": null
+  },
+  {
+   "code": 0,
+   "device_ok": false,
+   "reason": "ngspice silent failure: Undefined parameter [sky130_fd_pr__pfet_01v8__wlod_diff]"
+  },
+  {
+   "code": 1,
+   "device_ok": false,
+   "reason": "ngspice silent failure: Undefined parameter [sky130_fd_pr__pfet_01v8__wlod_diff]"
+  },
+  {
+   "code": 2,
+   "device_ok": false,
+   "reason": "ngspice silent failure: Undefined parameter [sky130_fd_pr__pfet_01v8__wlod_diff]"
+  },
+  {
+   "code": 3,
+   "device_ok": false,
+   "reason": "ngspice silent failure: Undefined parameter [sky130_fd_pr__pfet_01v8__wlod_diff]"
+  },
+  {
+   "code": 4,
+   "device_ok": false,
+   "reason": "ngspice silent failure: Undefined parameter [sky130_fd_pr__pfet_01v8__wlod_diff]"
+  },
+  {
+   "code": 5,
+   "device_ok": false,
+   "reason": "ngspice silent failure: Undefined parameter [sky130_fd_pr__pfet_01v8__wlod_diff]"
+  },
+  {
+   "code": 6,
+   "device_ok": false,
+   "reason": "ngspice silent failure: Undefined parameter [sky130_fd_pr__pfet_01v8__wlod_diff]"
+  },
+  {
+   "code": 7,
+   "device_ok": false,
+   "reason": "ngspice silent failure: Undefined parameter [sky130_fd_pr__pfet_01v8__wlod_diff]"
+  }
+ ],
+ "first_clearing_code": null,
+ "first_clearing_atten_db": null,
+ "limit_mvpp_min": 1110.5,
+ "limit_mvpp_max": 1110.5,
+ "noise_mvrms_unattenuated": 0.2141952,
+ "noise_mvrms_top_code": null,
+ "wall_clock_s": 2.1360456943511963,
+ "scope": "TT only, one load, one bank code. NOT a coverage number.",
+ "switchless_reference": "atten_verify_results.json",
+ "reproduction": {
+  "passed": false,
+  "membership_ok": true,
+  "all_device_ok": false,
+  "first_clearing_code": null,
+  "long_channel_all_ok": false,
+  "limit_mvpp_min": 1110.5,
+  "limit_mvpp_max": 1110.5,
+  "limit_spread_mvpp": 0.0,
+  "max_abs_attenuation_delta_db": null,
+  "limits": {
+   "first_clearing_code": 5,
+   "limit_window_mvpp": [
+    1105.0,
+    1115.0
+   ],
+   "limit_spread_max_mvpp": 5.0,
+   "attenuation_delta_max_db": 0.25
+  }
+ }
+}

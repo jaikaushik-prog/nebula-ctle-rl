@@ -2191,6 +2191,18 @@ available to score. The circuit and thresholds are unchanged; the reporter is
 now failure-safe and its regression gate went red before the fix. Re-run and
 score the complete written table. **19 focused tests pass.**
 
+**Entry 77 outcome:** Q1 failed. The `None` control reproduced 1805.1/1110.5
+mVpp and `long_ok=True`, but all eight real-PMOS codes failed with
+`Undefined parameter [sky130_fd_pr__pfet_01v8__wlod_diff]`. The artifact was
+written and the command exited 1 in 2.14 s. Q2-Q5 are not evaluated because no
+PMOS code is valid; Q6 hit. **Scored 1 of 2 evaluable. No code is interpreted
+and no circuit value is tuned.**
+
+Entry 78 pre-registers the plumbing-only repair: generate PFET parameter
+supplements from SKY130 `lod.spice` and `invariant.spice` via `needed_names`,
+include them only in the PFET sections, prove the ordinary trim byte-identical,
+and rerun the unchanged table under the same thresholds.
+
 ## 6. Next steps, in order
 
 **2026-09-02, session 35 / entry 76:** parse cost is measured **material** at
@@ -2198,10 +2210,10 @@ score the complete written table. **19 focused tests pass.**
 attenuator-only PFET-capable variant, then emit the measured binary-weighted
 PMOS switches and reproduce entry 74's switchless verification table.
 
-**Entry 77 is now the active gate:** run the nine-point real-PMOS table once.
-It must contain every member, first clear at code 5, keep the limit within
-1105-1115 mVpp with <=5 mV spread, reproduce attenuation within 0.25 dB, and
-keep the 12 dB channel scorable. A miss is reported without tuning.
+**Entry 78 is now the active gate:** add only the missing generated PFET
+parameter context, keeping the ordinary trim unchanged, then rerun the same
+nine-point table. The code-5/limit/attenuation/long-channel thresholds are
+unchanged from entry 77. A miss is reported without tuning.
 
 | # | Task | Cost | Status |
 |---|---|---|---|

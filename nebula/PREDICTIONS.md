@@ -13000,3 +13000,79 @@ failed member's reason, writes the artifact, and lets the already-registered Q1
 membership/device gate return a nonzero exit. A test reproduced the crash and
 failed before the repair; **19 focused tests now pass**. Re-run the unchanged
 circuit and score the written result, including failures, without tuning.
+
+### OUTCOME, entry 77 (2026-09-02). **SCORED 1 OF 2 EVALUABLE. Q1 FAILED: all eight PMOS codes name one missing LOD parameter.**
+
+    artifact: experiments/atten_verify_switched_results.json
+    control None       device_ok=True, 1805.1 / 1110.5 mVpp, long_ok=True
+    codes 0..7         device_ok=False, all eight
+    exact reason       Undefined parameter [sky130_fd_pr__pfet_01v8__wlod_diff]
+    wall clock         2.14 s
+    command exit       1, reproduction gate FAIL
+
+| | prediction | outcome | |
+|---|---|---|---|
+| **Q1** | all nine members device-valid | **control only; codes 0..7 all fail** | **MISS** |
+| **Q2** | first clearing code 5 | no valid PMOS code | **not evaluated** |
+| **Q3** | limit near 1110 mVpp | only the control exists | **not evaluated** |
+| **Q4** | attenuation within 0.25 dB | no valid PMOS code | **not evaluated** |
+| **Q5** | long channel holds at all members | only the control exists | **not evaluated** |
+| **Q6** | under 120 s | **2.14 s to the gated failure** | **HIT** |
+
+The failure is narrower than the device family: the section finds and parses
+`pfet_01v8`, then rejects its first instantiated model because the derived
+variant did not carry SKY130's load-dependent parameter deck. The missing name
+is defined in `parameters/lod.spice`; no resistor or switch value is implicated.
+Per the registered rule, codes 0..7 are **not interpreted** and nothing is
+tuned.
+
+## 78. Session 35 -- **does a generated PFET parameter supplement make the unchanged D11 bank instantiable?**
+
+**Written 2026-09-02 BEFORE the repair and before its run.** Entry 77 found one
+plumbing omission: the derived PFET section included the model card but not the
+parameter context that the full SKY130 corner supplies through `all.spice`.
+
+Repair only that dependency. Extend `pdk_trim` to derive PFET-only supplements
+from SKY130's `parameters/lod.spice` and `parameters/invariant.spice` using the
+same `needed_names` closure as the existing trim, include those generated files
+only in `sky130_ctle_pfet` sections, and leave the ordinary trim byte-identical.
+Do **not** change `Ron*W`, switch geometry, resistor geometry, topology, G140,
+or any reproduction threshold. Then rerun the same command and compare against
+the same switchless artifact.
+
+### Predictions
+
+**Q1 -- PLUMBING GATE. All nine members are present and `device_ok=True`.**
+Confidence **0.9**: entry 77 reached the PFET model and named the exact missing
+dependency. **Falsifier: any missing member or any failed member, asserted
+before filtering (G139).**
+
+**Q2 -- THE HEADLINE. The first clearing code is 5.** Confidence **0.8**.
+**Falsifier: any other value or no clearing code.**
+
+**Q3 -- G140. Rejected-row limits stay in 1105-1115 mVpp with <=5 mV spread.**
+Confidence **0.9**. **Falsifier: either bound or spread exceeded.**
+
+**Q4 -- TABLE REPRODUCTION. Every realised attenuation differs from the
+switchless table by <=0.25 dB.** Confidence **0.75**. **Falsifier: any member
+above 0.25 dB.**
+
+**Q5 -- the 12 dB channel is scorable at all nine members.** Confidence
+**0.95**. **Falsifier: any `long_ok=False`.**
+
+**Q6 -- isolation. The ordinary generated trim files remain byte-identical,
+and only PFET sections include the two generated parameter supplements.**
+Confidence **0.99**. **Falsifier: any ordinary generated-file diff or any
+supplement include in an ordinary section.**
+
+**Q7 -- cost. The complete nine-point run finishes in under 120 s.** Confidence
+**0.85**. **Falsifier: wall clock over 120 s.**
+
+### Decision rule, before the result
+
+* Q1 fails -> report the next exact simulator failure and stop interpreting
+  codes; do not add parameters by trial and error inside the same result.
+* Any of Q2-Q6 fails -> report the disagreement and do not tune the circuit to
+  the reference.
+* Q1-Q6 hold -> D11 is instantiable and verified only at TT, one load, one bank
+  code. It still has **no coverage number**.
