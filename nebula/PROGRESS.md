@@ -2184,6 +2184,13 @@ and bulk at VDD. The switchless comparison is preserved as its own artifact.
 **69 focused tests pass, 2 slow deselected; the switched SPICE table has not
 been run yet.** Entry 77 is committed before that measurement.
 
+The first entry-77 invocation produced no result: after the `None` control it
+encountered failed PMOS rows, then the reporter crashed by indexing code 7's
+missing `noise_mvrms`. No artifact was written, so the exact failures were not
+available to score. The circuit and thresholds are unchanged; the reporter is
+now failure-safe and its regression gate went red before the fix. Re-run and
+score the complete written table. **19 focused tests pass.**
+
 ## 6. Next steps, in order
 
 **2026-09-02, session 35 / entry 76:** parse cost is measured **material** at

@@ -13493,3 +13493,12 @@ switched result before it exists: every member device-valid, first clearing
 code 5, limit 1105-1115 mVpp with <=5 mV spread, attenuation within 0.25 dB of
 the preserved switchless artifact, and every long-channel row scorable. **The
 SPICE verification has not run yet.**
+
+The first invocation did not produce a scoreable result. It printed the `None`
+control, encountered failed PMOS rows, then raised `KeyError: noise_mvrms`
+because the summary assumed code 7 succeeded. No switched artifact was written
+and the exact failure text was lost. The circuit and entry-77 thresholds are
+unchanged. The reporter now handles absent fields, prints every failed member's
+reason, writes the artifact, and exits nonzero through Q1. Its new regression
+test failed before the repair; **19 focused tests pass** afterward. Re-run the
+unchanged circuit next.

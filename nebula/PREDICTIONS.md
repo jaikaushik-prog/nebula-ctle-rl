@@ -12985,3 +12985,18 @@ PFET-library overhead. **Falsifier: wall clock over 120 s.**
 * Q1-Q5 hold -> D11's missing plumbing is verified at the stated TT/one-load
   scope. This still creates **no coverage number** and does not authorise a
   PVT or 135-point claim.
+
+### Instrument correction before a scorable entry-77 run
+
+The first invocation printed the successful `None` control, encountered failed
+PMOS rows, and then raised `KeyError: 'noise_mvrms'` while building the summary:
+the reporter assumed code 7 had succeeded and indexed a field absent from a
+failed row. **No switched artifact was written and the exact device failures
+were lost, so this attempt does not score entry 77.** The circuit and every
+registered threshold remain unchanged.
+
+The reporter now reads optional fields without assuming success, prints each
+failed member's reason, writes the artifact, and lets the already-registered Q1
+membership/device gate return a nonzero exit. A test reproduced the crash and
+failed before the repair; **19 focused tests now pass**. Re-run the unchanged
+circuit and score the written result, including failures, without tuning.

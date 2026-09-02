@@ -127,6 +127,11 @@ def _reproduction(rows: list[dict], reference: dict) -> dict:
     }
 
 
+def _row_value(rows: list[dict], code: Optional[int], key: str):
+    """Return one optional result field without assuming that row succeeded."""
+    return next((r.get(key) for r in rows if r.get("code") == code), None)
+
+
 def run(base_u: Optional[Sequence[float]] = None) -> dict:
     from nebula.experiments.exp_tuning_bank import _base_from_artifacts
     if base_u is None:
@@ -192,11 +197,10 @@ def run(base_u: Optional[Sequence[float]] = None) -> dict:
         "first_clearing_atten_db": (first["atten_design_db"] if first else None),
         "limit_mvpp_min": (min(lims) if lims else None),
         "limit_mvpp_max": (max(lims) if lims else None),
-        "noise_mvrms_unattenuated": next(
-            (r["noise_mvrms"] for r in rows if r.get("code") is None), None),
-        "noise_mvrms_top_code": next(
-            (r["noise_mvrms"] for r in rows
-             if r.get("code") == AT.N_CODES - 1), None),
+        "noise_mvrms_unattenuated": _row_value(
+            rows, None, "noise_mvrms"),
+        "noise_mvrms_top_code": _row_value(
+            rows, AT.N_CODES - 1, "noise_mvrms"),
         "wall_clock_s": time.time() - t0,
         "scope": "TT only, one load, one bank code. NOT a coverage number.",
     }
@@ -215,7 +219,8 @@ def _report(d: dict) -> None:
     print("  code  design  realised   demand    limit  ratio   3dB  12dB   noise")
     for r in d["rows"]:
         if not r.get("device_ok"):
-            print(f"   {str(r['code']):>4}  device FAIL"); continue
+            print(f"   {str(r['code']):>4}  device FAIL: {r.get('reason')}")
+            continue
         dem, lim = r["short_demand_mvpp"], r["short_limit_mvpp"]
         ratio = (dem / lim) if dem and lim else float("nan")
         print(f"   {str(r['code']):>4} {r['atten_design_db']:6.2f} "
@@ -225,14 +230,22 @@ def _report(d: dict) -> None:
               f"{str(r['short_ok']):>5} {str(r['long_ok']):>5} "
               f"{r['noise_mvrms']:7.4f}")
     print()
+    first_att = d.get("first_clearing_atten_db")
+    first_text = "n/a" if first_att is None else f"{first_att:.2f} dB"
     print(f"  FIRST CODE CLEARING 3 dB (and holding 12 dB): "
-          f"{d['first_clearing_code']} at {d['first_clearing_atten_db']:.2f} dB")
-    print(f"  limit across every code: {d['limit_mvpp_min']:.1f} - "
-          f"{d['limit_mvpp_max']:.1f} mVpp  <- constant, so input attenuation")
-    print(f"     scales DEMAND alone (entry 73's mechanism, by its converse)")
-    print(f"  noise {d['noise_mvrms_unattenuated']:.4f} -> "
-          f"{d['noise_mvrms_top_code']:.4f} mVrms at the top code, "
-          f"against S5's 1.5 mVrms")
+          f"{d['first_clearing_code']} at {first_text}")
+    if d.get("limit_mvpp_min") is not None:
+        print(f"  limit across every code: {d['limit_mvpp_min']:.1f} - "
+              f"{d['limit_mvpp_max']:.1f} mVpp  <- constant, so input attenuation")
+        print(f"     scales DEMAND alone (entry 73's mechanism, by its converse)")
+    else:
+        print("  limit across every code: n/a")
+    n0, n7 = d.get("noise_mvrms_unattenuated"), d.get("noise_mvrms_top_code")
+    if n0 is not None and n7 is not None:
+        print(f"  noise {n0:.4f} -> {n7:.4f} mVrms at the top code, "
+              f"against S5's 1.5 mVrms")
+    else:
+        print(f"  noise unattenuated={n0!r}, top_code={n7!r}")
     rep = d.get("reproduction", {})
     print(f"  SWITCHLESS REPRODUCTION GATE: "
           f"{'PASS' if rep.get('passed') else 'FAIL'}")

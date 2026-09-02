@@ -119,3 +119,8 @@ def test_switched_reproduction_gate_can_fail(damage: str):
     else:
         rows[3]["atten_realised_db"] += 0.3
     assert not VERIFY._reproduction(rows, ref)["passed"]
+
+
+def test_failed_top_code_is_reported_without_crashing_the_experiment():
+    rows = [{"code": 7, "device_ok": False, "reason": "model missing"}]
+    assert VERIFY._row_value(rows, 7, "noise_mvrms") is None
