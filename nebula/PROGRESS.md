@@ -43,6 +43,7 @@ human in the loop. Deliverables that already exist and run:
 | Eleven-row compliance | **no design meets all 11 rows at all 135 points.** Two designs miss on opposite sides of one row |
 | **Mandated 45-corner coverage** | **14 of 16 ON THE DELIVERED PATH** (entry 69: `design.py --method auto`, verified end to end, 8 controls, none lost). Was 8 at the start of session 33. **The 135-point load grid stays 0 of 16** -- this project's own extra axis, which the brief does not mandate |
 | **Tunable-bank compliance (D10)** | **45 of 45 mandated corners served by at least one bank setting**, one request (7.5 dB @ 1.768 GHz), design load, `V5_SPECS` (section 5z; `experiments/tuning_bank_results.json`). S3 frequency window **100 %** covered against the same fixed design's **0.0 %**. Boost range reaches only **4.41-8.56 dB** of S3's mandated 3-12; two corners have **one** passing setting and therefore no tuning margin |
+| **Wide bank, one fixed part** | **8 of 16** requests served at all 45 mandated corners, `V6_SPECS`, 64 codes x 45 corners = 2 880 decks (section 5aa; entries 70-71). **Six of the eight need only ONE code**, so the knob is decoration across PVT and load-bearing only across REQUESTS. Not comparable with entry 69's 14 of 16 -- different evaluator and a stricter S4 row |
 | Deliverable output | `design.py --out` writes `design.json`, `design.cir` **and `design_schematic.png`** — a drawn schematic rendered FROM the deck, annotated with the sized values, marked **NOT DELIVERED** when the run did not pass (session 33) |
 | Report | `nebula/report/Nebula_CTLE_Report.pdf`, rebuilt from artifacts. **Its RL chapter stops at PPO and the budget ladder** — entries 34-54 have not reached it |
 
@@ -1824,6 +1825,85 @@ docstring, from session 23's spread measurement). With the bank it serves
 * **The prediction on record before the run was that output-swing compression
   would limit compensation** (on the basis of `tunable_trade_results.json`'s
   `n_accepting_drive: 0`). **It did not: 45 of 45.** Recorded as a miss.
+
+---
+
+
+## 5aa. THE WIDE BANK: **8 of 16, and the knob is decoration on six of them**
+
+**2026-09-02 (session 34), entries 70 + 71, row 4aa.** Both pre-registered and
+committed before their runs. **Entry 70 scored 5 of 5, entry 71 scored 2 of 5.**
+
+**Entry 70 — the knob's reach** (64 decks, 17.7 s, TT only, `--tt-only`).
+Geometry derived from 5z's measured 14.04 dB/box slope and the spec tolerances,
+not chosen: `RS_SPAN = 0.38`, 8x8 = **64 codes = 6 bits**, nearest-code error
+0.76 dB against a 1.5 dB tolerance and 0.099 oct against 0.3 oct.
+
+    peaking  1.78 - 13.05 dB    covers S3's mandated 3-12
+    f_peak   1.109 - 3.387 GHz  1.611 oct, S3 window 100 % covered
+    the code -> response map is MONOTONE and separable on every row and column
+
+**Entry 71 — what it complies with** (2 880 decks, 16.0 min; 64 codes x 45
+mandated corners at the design load, `V6_SPECS`, then all 16 requests re-scored
+free because only three of the 13 rows depend on the request).
+
+    REQUESTS SERVED AT ALL 45 MANDATED CORNERS: 8 of 16
+    2 117 / 2 880 points scorable (73.5 %)
+
+### The negative result, which is the point of the section
+
+**Q3 was written to be able to falsify D10, and it did.** Six of the eight
+served requests are met at all 45 mandated corners by a **single fixed code**:
+
+    4.0 @ 1.627 -> code 21     6.0 @ 1.627 -> code 28     8.0 @ 1.921 -> 38/45 best
+    4.0 @ 1.921 -> code 19     6.0 @ 1.921 -> code 27     8.0 @ 2.253 -> 37/45 best
+    4.0 @ 2.253 -> code 19     6.0 @ 2.253 -> code 27
+
+Only the two 8 dB requests genuinely need more than one code across PVT.
+
+**This sharpens section 5z rather than contradicting it.** 5z measured the base
+design *at its as-sized `(rs, cs)`* serving 0.0 % of S3's window. That was true,
+and it meant the base was sized at a **poor point on the two tuned axes** — not
+that PVT drift needs a knob to absorb it:
+
+* **across REQUESTS the knob is load-bearing** — six distinct best-single codes
+  across eight requests; no one code serves both 4 dB @ 1.627 and 8 dB @ 2.253;
+* **across PVT at a fixed request it mostly is not.**
+
+**What that does to the RL.** D10 framed adaptation as *infer the code from eye
+measurements without knowing the corner*. That problem is only real where the
+right code depends on the **hidden** state. It depends almost entirely on the
+**request**, which the policy is handed — so a request→code lookup is
+near-optimal, and a policy trained on this artifact would be learning a 16-row
+table. **This is entry 36 and `POSITIONING.md` §1 arriving by a third road.**
+
+### Where the bank actually fails, measured
+
+Of the 54 unserved (request, corner) pairs:
+
+    S3_f_peak_match  34     S3_peaking_match  16     S3_f_peak_band   4
+    HD3 / eye / power / noise:  ZERO
+
+Entry 71's Q2 predicted compression and **missed**. Compression is real — 763 of
+2 880 points (26.5 %) are unscorable and every sampled reason is output swing
+over the linear limit — but among codes that *can* be scored the bank fails
+because it **cannot reach the requested response there**. With entry 70's Q3
+(18 of 64 codes fall outside S3's 3-12 dB because a symmetric span overshoots
+downward), the redesign is arithmetic: **move code budget from boost to
+frequency resolution.**
+
+### What may NOT be said
+
+* **8 of 16 is not comparable with entry 69's 14 of 16.** Different evaluator
+  (`evaluate_at_points`, not `verify_full`), and this scores `S4_hd3_nyq` at the
+  operating point where entry 69 scores S4's literal 100 MHz row — so this set
+  is **stricter**. They may not be added or traded.
+* **One fixed part is not competitive with sixteen bespoke designs**, and no
+  reading of these numbers makes it so. That was always the trade; it is now
+  measured.
+* **No policy has been trained.** Entry 71's pre-committed rule said Q1 < 10
+  re-opens the architecture first. `rl/adapt_env.py` and
+  `experiments/exp_adapt_controls.py` are committed **unrun**.
 
 ---
 

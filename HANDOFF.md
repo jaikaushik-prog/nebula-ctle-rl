@@ -13223,3 +13223,49 @@ load and printed first, with the 135-point load sweep still shown beside them --
 `test_pdk_trim...[hh]` on its **wall-clock** assertion (*"the trimmed library
 (2.70 s) is not faster"*) - **G136**, second occurrence. Re-run alone: **24 of
 24 in 229 s**.
+
+### 2026-09-02 - session 34 (entries 70, 71; row 4aa). **The wide bank serves 8 of 16 -- and on six of them the knob is decoration.**
+
+Both pre-registered and committed before their runs. **Entry 70 scored 5 of 5;
+entry 71 scored 2 of 5.**
+
+Entry 70 (64 decks, TT only): the 8x8 bank reaches **1.78-13.05 dB** and
+**1.109-3.387 GHz**, covering S3's mandated 3-12 dB and 100 % of its frequency
+window, and the code -> response map is **monotone and separable** on every row
+and column. Geometry derived from 5z's 14.04 dB/box slope and the spec
+tolerances rather than chosen.
+
+Entry 71 (2 880 decks, 16.0 min): 64 codes x 45 mandated corners once, then all
+16 requests re-scored for free -- only three of `V6_SPECS`' 13 rows depend on
+the request, and `reward_v1.request_rows` is now their one definition (the
+duplicate it replaces is G115).
+
+    REQUESTS SERVED AT ALL 45 MANDATED CORNERS: 8 of 16
+    2 117 / 2 880 points scorable (73.5 %)
+
+**Q3 was written to be able to falsify D10 and it did.** Six of the eight served
+requests are met at all 45 corners by a SINGLE fixed code. The knob is
+load-bearing **across requests** (six distinct best-single codes across eight
+requests) and mostly **not across PVT**. So the adaptation problem D10 framed --
+infer the code from eye measurements without knowing the corner -- is largely
+not there: the right code depends on the REQUEST, which the policy is handed.
+A policy trained on this artifact would be learning a 16-row lookup table.
+
+**Q2 missed informatively.** Of 54 unserved (request, corner) pairs the binding
+row is `S3_f_peak_match` 34, `S3_peaking_match` 16, `S3_f_peak_band` 4 and
+HD3/eye/power/noise **zero**. Compression is real (763 unscorable points, all
+output swing over the linear limit) but is not what blocks the scorable codes.
+With entry 70's 18-of-64 wasted codes, the redesign is arithmetic: move code
+budget from boost to frequency resolution.
+
+**Per entry 71's pre-committed rule (Q1 < 10) the architecture is re-opened and
+NO policy was trained.** `rl/adapt_env.py` (11 tests, including a leak gate
+proving the observation reveals neither the corner nor compliance) and
+`experiments/exp_adapt_controls.py` (oracle / exhaustive / hillclimb / fixed /
+random, split by PROCESS so the test corners are held out) are committed
+**unrun**.
+
+Also this session: `reward_v1.request_rows()` factored out and `margins()` plus
+`exp_coverage._rescore` both delegate to it; 52 new tests across four files;
+three gates deliberately broken and watched go red before restoring.
+
