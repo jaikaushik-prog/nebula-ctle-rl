@@ -13514,3 +13514,72 @@ higher-`Cs` CTLE code at the three named rows, separately registered before
 SPICE. Artifact: `experiments/atten_range_probe_results.json`. Post-result
 verification: **74 focused tests passed**; complete non-slow suite **2,583
 passed, 13 deselected, 2 warnings in 290.02 s**.
+
+## 84. Session 37 -- **the three adjacent-Cs corrections, after the owner clarified entry 83's scope.**
+
+**Written 2026-09-03 BEFORE implementation or new SPICE.** The owner correctly
+clarified that entry 83's attenuator question was whether 7 dB removes
+compression without breaking noise, eye or the 12 dB control; it was not
+required to make the same three CTLE codes serve all 16 requests. On that
+block-level question, 7 dB succeeded at all 14/14 critical physical points.
+Entry 83's Q4 remains an honest pre-registered miss, but it no longer means the
+7 dB compression candidate is discarded.
+
+The remaining system problem is now exactly three fully scorable rows, all
+missing only `S3_f_peak_match` on the high-frequency side. Every one uses C1.
+Entry 84 keeps the measured 7.0 dB candidate and moves only to the existing
+adjacent higher-capacitance C2 setting:
+
+| corner | request | old bank | probe bank |
+|---|---:|---:|---:|
+| `ff/0.95/125C` | 12 | R6C1 / 49 | R6C2 / 50 |
+| `sf/0.95/0C` | 13 | R5C1 / 41 | R5C2 / 42 |
+| `sf/0.95/125C` | 12 | R6C1 / 49 | R6C2 / 50 |
+
+Exactly **three real-PMOS SPICE invocations** run, each re-scored at 3 and
+12 dB with `V6_SPECS`. The source entry-83 artifact and SHA-256
+`9A06AA65D71B463D4F75CC2072D82BC845799BAF6FE073F66C25C069ED2F358B`
+are fixed. No attenuator, CTLE bank, tolerance, reward or channel value changes.
+The new artifact is `experiments/atten_cs_probe_results.json` and must not
+overwrite entry 83.
+
+### Predictions
+
+**Q1 -- membership/source gate.** Exactly the three rows above appear once,
+all device-valid, and the source hash matches. Confidence **0.99**. **Falsifier:
+any missing, duplicate, extra or invalid row, or a changed source.**
+
+**Q2 -- mechanism.** Higher Cs lowers measured peak frequency at all three
+points relative to their C1 entry-83 controls. Confidence **0.95**, from the
+CTLE pole-zero mechanism and the bank's designated frequency axis. **Falsifier:
+any peak stays equal or moves upward.**
+
+**Q3 -- close the three request rows.** All **3 of 3** C2 rows are scorable and
+fully compliant with all 13 `V6_SPECS` rows at 3 dB for their associated
+requests. Confidence **0.85**: the C1 misses are only 0.034-0.055 oct and the
+bank step is deliberately finer than the 0.30-oct request tolerance.
+**Falsifier: any request is unscorable or violates any row.**
+
+**Q4 -- long-channel guard.** All **3 of 3** remain scorable at 12 dB.
+Confidence **0.9**. **Falsifier: any 12 dB link is unscorable.**
+
+**Q5 -- noise guard.** All three remain below **1.5 mV_rms** input-referred
+noise. Confidence **0.99**: their C1 values are 0.538-0.770 mV_rms and Cs does
+not change the input divider ratio. **Falsifier: any value is unavailable or
+at/above 1.5 mV_rms.**
+
+**Q6 -- cost.** Three serial invocations finish in under **15 seconds**.
+Confidence **0.95**, from entry 83's 16 calls in 7.69 s. **Falsifier: elapsed
+time is 15 s or more.**
+
+### Decision rule, before the run
+
+* Q1 fails -> stop; do not interpret the probe.
+* Q2 fails -> the proposed Cs mechanism is wrong at that row; do not search
+  further codes in the same result.
+* Q3, Q4 or Q5 fails -> retain 7 dB as the measured compression candidate but
+  do not claim the 16 diagnosed system cases are closed; report the exact row.
+* Q1-Q6 all hold -> the focused evidence says 7 dB plus the existing CTLE bank
+  can serve all 16 previously unsolved cases. This authorises a separately
+  registered full-bank/45-corner verification; it still does not by itself
+  replace D11's production range or authorise RL training.

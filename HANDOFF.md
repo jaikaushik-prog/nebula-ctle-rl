@@ -17,13 +17,13 @@
 > decisions that are OPEN and human-only, and what to do next. It supersedes
 > `nebula/NEXT_STEPS.md`. This file remains the full state of record.
 
-Last updated: **2026-09-03** (session 36, entry 83 outcome: the focused 7.0 dB
-probe scores **5 of 6, OVERALL FAIL**. The real divider delivers 7.0176 dB,
-noise is safe, and all 14 critical physical points are scorable at both 3 and
-12 dB. It recovers 13/16 request pairs; three remain fully scorable but miss
-only peak-frequency matching by 0.034-0.055 oct. Per the registered rule, 7.0
-dB is not adopted and D11 stays at 5.933 dB. Next indicated measurement is the
-adjacent higher-Cs code at those three rows, not more attenuation.)
+Last updated: **2026-09-03** (session 37, entry 84 pre-registration: the owner
+clarified entry 83's scope and approved exactly three adjacent-C2 measurements.
+Entry 83's 13/16 full-system Q4 stays a recorded miss, while 7 dB is retained
+as the successful compression candidate because it made all 14/14 physical
+points scorable with noise, eye and 12 dB controls intact. The new probe keeps
+7 dB fixed and tests R6C2/R5C2/R6C2 at the three high-frequency misses. D11's
+production range remains unchanged pending later full verification.)
 
 Earlier session 22p: (**THE REPORT EXISTS** --
 `nebula/report/Nebula_CTLE_Report.pdf`, **10 pages, 9 figures, 598 KB**,
@@ -1620,8 +1620,14 @@ Plus: git init, .gitignore, 28 tests, Wilson-bound BER reporting.
   not adoption. The opt-in 16-invocation probe measured 7.0176 dB realised and
   0.5357 mV_rms TT noise; all 14 critical points are scorable at 3 and 12 dB.
   It recovers 13/16 requests, while three miss only `S3_f_peak_match` by
-  0.034-0.055 oct. Score 5/6, overall fail; the official D11 maximum remains
-  5.933 dB.
+  0.034-0.055 oct. Score 5/6. D13 correctly separates the scopes: Q4 remains a
+  system-level miss, while 7 dB is retained as the successful compression
+  candidate. The official D11 maximum remains 5.933 dB pending full
+  verification.
+- **Nebula adjacent-Cs probe (D13, entry 84):** the owner approved exactly
+  three rows, keeping 7 dB and moving R6C1/R5C1/R6C1 to R6C2/R5C2/R6C2 at the
+  three remaining high-side frequency misses. Registered before implementation
+  or SPICE; not yet run.
 
 - Tests: **2583 passing, 13 deselected, 2 warnings** (session 36, entry 83) —
   `python -m pytest tests nebula/tests -q -m "not slow"`.
@@ -2057,9 +2063,10 @@ explicit scope.
    **CURRENT 2026-09-02:** D11 is complete at its registered TT/one-load scope
    (entry 78, 7 of 7). Do not expand that into a coverage statement without a
    separately authorised preregistration. D12/entry 83 is complete at 5/6:
-   compression is cleared but three rows miss only the frequency request, so
-   7.0 dB is not adopted. The next indicated probe is the adjacent higher-Cs
-   CTLE code at those three rows; register it separately before SPICE. The
+   compression is cleared and 7 dB is retained as that block's candidate under
+   the owner's D13 scope clarification. Entry 84 now authorises exactly three
+   adjacent-higher-Cs rows for the remaining frequency misses; implement and
+   run those unchanged. The
    standing owner item is also urgent: `nebula/report/Nebula_CTLE_Report.pdf`
    is about three weeks behind,
    still says one simulation / under five seconds rather than 17 / ~22 s,
@@ -13960,3 +13967,22 @@ before its roughly three SPICE rows. Artifact:
 `experiments/atten_range_probe_results.json`. Post-result verification is
 green: **74 focused tests passed**; complete non-slow suite **2,583 passed, 13
 deselected, 2 warnings in 290.02 s**.
+
+### 2026-09-03 - session 37 (entry 84 pre-registration, decision D13). **The owner corrected the scope: 7 dB passed compression; test only the three C2 frequency corrections next.**
+
+The owner correctly challenged entry 83's phrase "7.0 dB is not adopted": the
+approved attenuator experiment was scoped to removing compression while
+checking noise, eye and 12 dB, not to making the same selected CTLE codes close
+all 16 complete requests. The historical Q4 remains a miss exactly as written,
+but D13 retains 7 dB as the measured compression candidate. It is still not a
+production-range change until a later full-bank/PVT verification passes.
+
+Entry 84 is committed before implementation or new SPICE. It keeps 7.0 dB and
+tests exactly the three existing next-higher-Cs settings selected by the
+measured failure mechanism: R6C2 at `ff/0.95/125C` request 12, R5C2 at
+`sf/0.95/0C` request 13, and R6C2 at `sf/0.95/125C` request 12. All three C1
+controls are fully scorable and miss only `S3_f_peak_match` on the high side by
+0.034-0.055 oct. Q1-Q6 fix membership/source identity, downward frequency
+movement, 3/3 full V6 compliance at 3 dB, 3/3 12 dB scorability, the 1.5 mV_rms
+noise limit and a 15 s cost ceiling. Source artifact SHA-256:
+`9A06AA65D71B463D4F75CC2072D82BC845799BAF6FE073F66C25C069ED2F358B`.
