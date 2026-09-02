@@ -187,5 +187,9 @@ nebula/experiments/joint_search_run.jsonl
 # crash-resume journal, but commit its byte-verified gzip copy (G49/G144).
 nebula/experiments/joint_bank_run.jsonl
 
+# session 38: entry 86 has the same 23,040-row evidence policy. Keep the raw
+# resume source locally and commit its hash-verified gzip copy.
+nebula/experiments/joint_bank_73_run.jsonl
+
 # Raw desktop-app session transcript kept as a local backup only (2026-08-22).
 session25_desktop_transcript.jsonl

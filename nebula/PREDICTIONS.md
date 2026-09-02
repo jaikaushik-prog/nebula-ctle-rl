@@ -13869,3 +13869,23 @@ to be counted separately; the focused group passes **26/26** and the complete
 non-slow suite passes **2,606/2,606**, with 13 deselected and 2 warnings in
 304.31 s. The original result remains preserved. A distinct zero-SPICE
 reanalysis of the same frozen journal is next; final Q1-Q7 scoring waits for it.
+
+### Final outcome -- 2026-09-03
+
+The committed Q1 repair was applied once to the frozen journal with **zero
+additional SPICE invocations**. Corrected outcome: **Q1-Q7 PASS** and the
+registered adoption-recommendation gate **PASS**. Membership is exactly
+23,040/23,040 with zero hard device failures and 1,390 compression-only link
+rejections. All seven channel losses serve 16/16 requests across all 45
+corners. At 3 dB, scorable rows improve 7,519 -> 10,378 and the minimum per
+corner improves 54 -> 114. The complete uninterrupted physical run remains
+7,875.99 s (131.27 min).
+
+The original analysis is preserved at SHA-256
+`A6B5979C6401B8FAFA4DD011B37BB1531930396CA064B8E765A872E22540A9F9`.
+The corrected result SHA-256 is
+`D86CCC9E939C213AB18CE91CE41627D6D7DF5A67892198EB92299325FA8F591C`.
+The compressed journal decodes to SHA-256
+`1B5F941DF4B34F3C90F6DD050F264D8A77C7BB2E5CE4D9EED8CC29EBD9F9843F`.
+This recommends 7.3 dB for a separate owner adoption decision; it does not
+change production D11 or authorise an RL claim.

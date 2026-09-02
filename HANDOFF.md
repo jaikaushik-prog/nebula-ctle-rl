@@ -17,12 +17,12 @@
 > decisions that are OPEN and human-only, and what to do next. It supersedes
 > `nebula/NEXT_STEPS.md`. This file remains the full state of record.
 
-Last updated: **2026-09-03** (session 38, entry 86 Q1 audit: all 23,040 rows
-completed uninterrupted in 131.27 min and Q2-Q7 pass. The first scorer called
-1,390 ordinary compression/unscorable rows hard device failures, so Q1 falsely
-failed. The frozen journal shows the mechanism; a fail-capable classification
-repair is green and the original result is preserved. Commit the repair, then
-perform one distinct zero-SPICE reanalysis. No circuit or threshold changes.)
+Last updated: **2026-09-03** (session 38, entry 86 complete: all 23,040 rows
+completed uninterrupted in 131.27 min. The frozen-journal Q1 correction used
+zero additional SPICE calls; Q1-Q7 and the adoption-recommendation gate all
+pass. Coverage is 16/16 at every loss. Production D11 remains unchanged until
+the owner explicitly decides whether to adopt 7.3 dB. This is analog evidence,
+not a new RL result.)
 
 Earlier session 22p: (**THE REPORT EXISTS** --
 `nebula/report/Nebula_CTLE_Report.pdf`, **10 pages, 9 figures, 598 KB**,
@@ -1422,6 +1422,10 @@ signaling, ADC-based DSP receiver, 28 nm CMOS reference parameters).
 │   ├── experiments/exp_joint_bank_73.py  Entry 86's distinct resumable full
 │   │                       bank/PVT verification of the 7.3 dB candidate.
 │   │                       Reuses entry 81 machinery; scores Q1-Q7 and deltas.
+│   ├── JOINT_BANK_73_RESULTS.md  Entry 86's complete result, Q1 audit,
+│   │                       evidence hashes and RL implication.
+│   ├── experiments/joint_bank_73_run.jsonl.gz  Entry 86's complete compressed
+│   │                       23,040-row journal; decoded hash pinned in result.
 │   ├── experiments/exp_atten_range_probe.py  Entry 83's focused 7.0 dB
 │   │                       diagnostic: 14 critical circuit/corner points plus
 │   │                       two TT controls, full V6/noise/3 dB/12 dB gates.
@@ -1650,15 +1654,24 @@ Plus: git init, .gitignore, 28 tests, Wilson-bound BER reporting.
   compliance at 3 dB, a scorable 12 dB link, 0.7367804 mV_rms noise and 0.805 s
   measured cost. Focused closure is now **16/16**. Artifact SHA-256:
   `352D8589CCF0D0874F1C8359E6F9B4122A802B418EDCD82E41A64A3A0102E1BF`.
-  D11 is unchanged; full-bank/45-corner verification still needs a separate
-  preregistration and owner authority.
+  D11 is unchanged; the required full-bank/45-corner verification is now
+  complete as entry 86.
+- **Nebula full 7.3 dB verification (D15, entry 86):** all **23,040/23,040**
+  rows completed in 131.27 min, with exact membership and zero hard device
+  failures. All seven losses now serve **16/16** requests at all 45 corners;
+  the 3 dB table improves from 7,519 to 10,378 scorable rows and every corner
+  has at least 114. Q1-Q7 pass after a zero-SPICE classification correction
+  preserved the original artifact. The recommendation gate passes; D11 still
+  requires an explicit owner adoption decision. Full result:
+  `nebula/JOINT_BANK_73_RESULTS.md`.
 
 - Tests: **2589 non-slow collected** (entry 84): pre-run **2588 passed plus one
   timing-only `ll` failure**; the exact failed node passed alone. Post-result,
   **all 2589 passed**, 13 deselected, 2 warnings in 287.79 s. Entry-83 clean
   baseline: 2583 passed. Entry-85 pre-SPICE implementation: **2596 passed**, 13
   deselected, 2 warnings in 490.86 s; post-result: **2596 passed**, 13
-  deselected, 2 warnings in 295.93 s. —
+  deselected, 2 warnings in 295.93 s. Entry-86 Q1 repair: **2606 passed**, 13
+  deselected, 2 warnings in 304.31 s. —
   `python -m pytest tests nebula/tests -q -m "not slow"`.
   (Was 65 + 267 = 332 at the start of session 9; 430 at the end of it; 444
   after 10b; 528 after 11; 618 after 12b; 679 after 13; 1007 after 16; 1246
@@ -2067,19 +2080,15 @@ Plus: git init, .gitignore, 28 tests, Wilson-bound BER reporting.
 
 ## 8. Next steps (prioritized backlog with context)
 
-**Session-36 ordering:** entries 80 and 81 are complete. The non-RL controls
-are qualified and the combined 8-attenuator x 64-CTLE x 45-corner table is
-measured. Its RL gate failed: **0/720** pairs need a channel-specific setting
-for compliance against the registered threshold of 72. **Do not train a
-discrete policy on this table.** Entry 82's zero-SPICE diagnosis of the 16
-unsolved 3 dB pairs is complete: all have a shape-compliant candidate blocked
-by only 0.0234-1.0304 dB of compression headroom at maximum code 7. The owner
-approved the focused 7.0 dB diagnostic as D12, and entry 83 fixes its 16 SPICE
-invocations and six gates. The instrument is implemented with 73 focused and
-2,582 complete non-slow tests passing. The repaired command then measured all
-16 rows: five gates pass and Q4 misses at 13/16 recovered request pairs. Per
-the registered decision, D11 remains unchanged and no full-table rerun or RL
-training is authorised.
+**Session-38 ordering:** entries 80 through 86 are complete. The non-RL
+controls are qualified and the 7.3 dB combined bank has been measured across
+all 23,040 bank/PVT rows. Q1-Q7 pass, coverage is 16/16 at every channel loss,
+and the recommendation gate supports adopting 7.3 dB. D11 remains unchanged
+until the owner makes that explicit production decision. The old compliance
+RL gate remains correctly failed: **0/720** cases require channel-specific
+codes merely to pass. A future RL experiment must instead preregister
+eye/margin optimization and beat the qualified controls; best-eye code changes
+with channel loss in 580/720 cases.
 
 **Entry-81 artifacts:** preserve `joint_bank_results.json` and the byte-verified
 compressed journal `joint_bank_run.jsonl.gz`. The local raw journal remains the
@@ -2097,10 +2106,12 @@ explicit scope.
    of the three remaining rows; combined closure is 15/16. The last point has
    correct frequency/peaking and is only 3.076% above the measured compression
    limit. D14's one 7.3 dB measurement now passes all six gates and closes the
-   focused set at 16/16. The owner approved the next step as D15; Entry 86 is
-   preregistered and its distinct resumable 23,040-row runner is built. Commit
-   it, then launch without changing the registered circuit or gates.
-   Production adoption remains a post-result human decision. The
+   focused set at 16/16. D15/entry 86 is now complete: 23,040/23,040 rows,
+   zero hard failures, 16/16 all-corner coverage at all seven losses, and all
+   Q1-Q7 gates pass after a documented zero-SPICE classification correction.
+   Production adoption remains a human decision. The next RL proposal must
+   optimize eye/margin and beat the qualified controls; binary compliance is
+   already solvable without adaptation. The
    standing owner item is also urgent: `nebula/report/Nebula_CTLE_Report.pdf`
    is about three weeks behind,
    still says one simulation / under five seconds rather than 17 / ~22 s,
@@ -14227,3 +14238,23 @@ The focused group passes **26/26** and the complete non-slow suite passes
 **2,606/2,606**, with 13 deselected and 2 warnings in 304.31 s. Commit this
 plumbing-only repair before running the distinct zero-SPICE `--reanalyse-q1`;
 do not rerun any of the 23,040 physical points.
+
+### 2026-09-03 - session 38 (entry 86 final outcome). **Q1-Q7 PASS; the 7.3 dB adoption recommendation gate passes.**
+
+Commit `5e04916` froze the fail-capable Q1 classification repair before any
+reanalysis. The distinct `--reanalyse-q1` then read the unchanged 23,040-row
+journal and used zero additional SPICE invocations. It records zero hard
+device failures and 1,390 compression-only link rejections. Every request is
+served at every corner for all seven channel losses; 3 dB scorable rows improve
+7,519 -> 10,378 and the weakest corner improves 54 -> 114. The full run's
+measured 7,875.99 s remains unchanged.
+
+The original and corrected result SHA-256 values are respectively
+`A6B5979C6401B8FAFA4DD011B37BB1531930396CA064B8E765A872E22540A9F9` and
+`D86CCC9E939C213AB18CE91CE41627D6D7DF5A67892198EB92299325FA8F591C`.
+The committed gzip's decoded journal SHA-256 is
+`1B5F941DF4B34F3C90F6DD050F264D8A77C7BB2E5CE4D9EED8CC29EBD9F9843F`.
+`JOINT_BANK_73_RESULTS.md` is the professor-ready result. D11 remains unchanged
+until the owner adopts the candidate; this experiment does not train RL. The
+final complete non-slow suite passes **2,606/2,606**, with 13 deselected and 2
+warnings in 343.54 s.

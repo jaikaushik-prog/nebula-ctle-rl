@@ -1,0 +1,404 @@
+{
+ "task": "entry 86 full 7.3 dB attenuator x CTLE bank verification",
+ "probe_top_db": 7.3,
+ "probe_max_x": 2.3173946499684783,
+ "production_atten_max_x_unchanged": 1.98,
+ "source_hashes": {
+  "entry85_sha256": "352D8589CCF0D0874F1C8359E6F9B4122A802B418EDCD82E41A64A3A0102E1BF",
+  "baseline_decoded_sha256": "A205303614ABCC5F76D6EA78CFA1C9687E49A3817FA1E9FA9EC314336E20CA33",
+  "root_source_sha256": "9A06AA65D71B463D4F75CC2072D82BC845799BAF6FE073F66C25C069ED2F358B"
+ },
+ "geometry": {
+  "attenuator_codes": 8,
+  "ctle_codes": 64,
+  "corners": 45,
+  "expected_rows": 23040
+ },
+ "losses_db": [
+  3.0,
+  4.5,
+  6.0,
+  7.5,
+  9.0,
+  10.5,
+  12.0
+ ],
+ "analysis": {
+  "current": {
+   "n_rows": 23040,
+   "n_expected": 23040,
+   "membership_ok": true,
+   "n_corners": 45,
+   "n_requests": 16,
+   "per_loss": [
+    {
+     "loss_db": 3.0,
+     "n_scorable": 10378,
+     "n_solvable_corner_requests": 720,
+     "n_requests_served_all_corners": 16
+    },
+    {
+     "loss_db": 4.5,
+     "n_scorable": 13100,
+     "n_solvable_corner_requests": 720,
+     "n_requests_served_all_corners": 16
+    },
+    {
+     "loss_db": 6.0,
+     "n_scorable": 15955,
+     "n_solvable_corner_requests": 720,
+     "n_requests_served_all_corners": 16
+    },
+    {
+     "loss_db": 7.5,
+     "n_scorable": 18566,
+     "n_solvable_corner_requests": 720,
+     "n_requests_served_all_corners": 16
+    },
+    {
+     "loss_db": 9.0,
+     "n_scorable": 20209,
+     "n_solvable_corner_requests": 720,
+     "n_requests_served_all_corners": 16
+    },
+    {
+     "loss_db": 10.5,
+     "n_scorable": 21101,
+     "n_solvable_corner_requests": 720,
+     "n_requests_served_all_corners": 16
+    },
+    {
+     "loss_db": 12.0,
+     "n_scorable": 21650,
+     "n_solvable_corner_requests": 720,
+     "n_requests_served_all_corners": 16
+    }
+   ],
+   "channel_adaptation": {
+    "n_corner_requests_solvable_on_every_channel": 720,
+    "n_needing_different_setting_for_compliance": 0,
+    "n_whose_best_eye_setting_moves": 580,
+    "best_setting_attenuator_histogram": {
+     "0": 1317,
+     "1": 1084,
+     "2": 1119,
+     "3": 831,
+     "4": 318,
+     "5": 283,
+     "6": 65,
+     "7": 23
+    }
+   }
+  },
+  "baseline": {
+   "n_rows": 23040,
+   "n_expected": 23040,
+   "membership_ok": true,
+   "n_corners": 45,
+   "n_requests": 16,
+   "per_loss": [
+    {
+     "loss_db": 3.0,
+     "n_scorable": 7519,
+     "n_solvable_corner_requests": 704,
+     "n_requests_served_all_corners": 11
+    },
+    {
+     "loss_db": 4.5,
+     "n_scorable": 10803,
+     "n_solvable_corner_requests": 718,
+     "n_requests_served_all_corners": 15
+    },
+    {
+     "loss_db": 6.0,
+     "n_scorable": 14430,
+     "n_solvable_corner_requests": 720,
+     "n_requests_served_all_corners": 16
+    },
+    {
+     "loss_db": 7.5,
+     "n_scorable": 17681,
+     "n_solvable_corner_requests": 720,
+     "n_requests_served_all_corners": 16
+    },
+    {
+     "loss_db": 9.0,
+     "n_scorable": 19694,
+     "n_solvable_corner_requests": 720,
+     "n_requests_served_all_corners": 16
+    },
+    {
+     "loss_db": 10.5,
+     "n_scorable": 20755,
+     "n_solvable_corner_requests": 720,
+     "n_requests_served_all_corners": 16
+    },
+    {
+     "loss_db": 12.0,
+     "n_scorable": 21427,
+     "n_solvable_corner_requests": 720,
+     "n_requests_served_all_corners": 16
+    }
+   ],
+   "channel_adaptation": {
+    "n_corner_requests_solvable_on_every_channel": 704,
+    "n_needing_different_setting_for_compliance": 0,
+    "n_whose_best_eye_setting_moves": 551,
+    "best_setting_attenuator_histogram": {
+     "0": 1002,
+     "1": 1104,
+     "2": 566,
+     "3": 1160,
+     "4": 298,
+     "5": 575,
+     "6": 62,
+     "7": 255
+    }
+   }
+  },
+  "coverage_delta": [
+   {
+    "loss_db": 3.0,
+    "scorable_delta": 2859,
+    "solvable_pair_delta": 16,
+    "all_corner_request_delta": 5
+   },
+   {
+    "loss_db": 4.5,
+    "scorable_delta": 2297,
+    "solvable_pair_delta": 2,
+    "all_corner_request_delta": 1
+   },
+   {
+    "loss_db": 6.0,
+    "scorable_delta": 1525,
+    "solvable_pair_delta": 0,
+    "all_corner_request_delta": 0
+   },
+   {
+    "loss_db": 7.5,
+    "scorable_delta": 885,
+    "solvable_pair_delta": 0,
+    "all_corner_request_delta": 0
+   },
+   {
+    "loss_db": 9.0,
+    "scorable_delta": 515,
+    "solvable_pair_delta": 0,
+    "all_corner_request_delta": 0
+   },
+   {
+    "loss_db": 10.5,
+    "scorable_delta": 346,
+    "solvable_pair_delta": 0,
+    "all_corner_request_delta": 0
+   },
+   {
+    "loss_db": 12.0,
+    "scorable_delta": 223,
+    "solvable_pair_delta": 0,
+    "all_corner_request_delta": 0
+   }
+  ],
+  "per_code_scorable": {
+   "3.0": {
+    "0": 0,
+    "1": 70,
+    "2": 415,
+    "3": 1001,
+    "4": 1675,
+    "5": 2145,
+    "6": 2448,
+    "7": 2624
+   },
+   "4.5": {
+    "0": 55,
+    "1": 328,
+    "2": 980,
+    "3": 1677,
+    "4": 2194,
+    "5": 2467,
+    "6": 2646,
+    "7": 2753
+   },
+   "6.0": {
+    "0": 324,
+    "1": 913,
+    "2": 1723,
+    "3": 2204,
+    "4": 2509,
+    "5": 2661,
+    "6": 2773,
+    "7": 2848
+   },
+   "7.5": {
+    "0": 872,
+    "1": 1713,
+    "2": 2235,
+    "3": 2512,
+    "4": 2691,
+    "5": 2798,
+    "6": 2865,
+    "7": 2880
+   },
+   "9.0": {
+    "0": 1412,
+    "1": 2147,
+    "2": 2509,
+    "3": 2697,
+    "4": 2812,
+    "5": 2872,
+    "6": 2880,
+    "7": 2880
+   },
+   "10.5": {
+    "0": 1779,
+    "1": 2368,
+    "2": 2658,
+    "3": 2788,
+    "4": 2868,
+    "5": 2880,
+    "6": 2880,
+    "7": 2880
+   },
+   "12.0": {
+    "0": 2043,
+    "1": 2522,
+    "2": 2734,
+    "3": 2832,
+    "4": 2879,
+    "5": 2880,
+    "6": 2880,
+    "7": 2880
+   }
+  },
+  "corner_scorable_3db": {
+   "ff/0.95/0C": 144,
+   "ff/0.95/125C": 173,
+   "ff/0.95/27C": 160,
+   "ff/1.00/0C": 182,
+   "ff/1.00/125C": 247,
+   "ff/1.00/27C": 204,
+   "ff/1.05/0C": 196,
+   "ff/1.05/125C": 289,
+   "ff/1.05/27C": 226,
+   "fs/0.95/0C": 221,
+   "fs/0.95/125C": 287,
+   "fs/0.95/27C": 245,
+   "fs/1.00/0C": 239,
+   "fs/1.00/125C": 330,
+   "fs/1.00/27C": 266,
+   "fs/1.05/0C": 249,
+   "fs/1.05/125C": 352,
+   "fs/1.05/27C": 276,
+   "sf/0.95/0C": 114,
+   "sf/0.95/125C": 154,
+   "sf/0.95/27C": 132,
+   "sf/1.00/0C": 156,
+   "sf/1.00/125C": 233,
+   "sf/1.00/27C": 184,
+   "sf/1.05/0C": 183,
+   "sf/1.05/125C": 282,
+   "sf/1.05/27C": 211,
+   "ss/0.95/0C": 200,
+   "ss/0.95/125C": 277,
+   "ss/0.95/27C": 227,
+   "ss/1.00/0C": 223,
+   "ss/1.00/125C": 324,
+   "ss/1.00/27C": 254,
+   "ss/1.05/0C": 236,
+   "ss/1.05/125C": 347,
+   "ss/1.05/27C": 268,
+   "tt/0.95/0C": 174,
+   "tt/0.95/125C": 226,
+   "tt/0.95/27C": 190,
+   "tt/1.00/0C": 204,
+   "tt/1.00/125C": 286,
+   "tt/1.00/27C": 229,
+   "tt/1.05/0C": 217,
+   "tt/1.05/125C": 316,
+   "tt/1.05/27C": 245
+  },
+  "summary": {
+   "hard_device_failures": 1390,
+   "entry85_control_ok": true,
+   "entry85_control": {
+    "g_dc_db": -11.002473381707903,
+    "peaking_db": 9.879560171693162,
+    "f_peak_hz": 1565785667.344873,
+    "noise_mvrms": 0.7367804,
+    "links": {
+     "3.0": {
+      "ok": true,
+      "eye_h_v": 0.29613997555708843,
+      "eye_w_ui": 0.859375
+     },
+     "4.5": {
+      "ok": true,
+      "eye_h_v": 0.26897440636686665,
+      "eye_w_ui": 0.75
+     },
+     "6.0": {
+      "ok": true,
+      "eye_h_v": 0.2350752209713693,
+      "eye_w_ui": 0.78125
+     },
+     "7.5": {
+      "ok": true,
+      "eye_h_v": 0.20278418975251708,
+      "eye_w_ui": 0.796875
+     },
+     "9.0": {
+      "ok": true,
+      "eye_h_v": 0.17244749472282372,
+      "eye_w_ui": 0.796875
+     },
+     "10.5": {
+      "ok": true,
+      "eye_h_v": 0.14643844594981026,
+      "eye_w_ui": 0.8125
+     },
+     "12.0": {
+      "ok": true,
+      "eye_h_v": 0.12346360000231471,
+      "eye_w_ui": 0.8125
+     }
+    }
+   },
+   "short_channel_coverage": 16,
+   "short_channel_solvable_pairs": 720,
+   "long_channel_coverage": [
+    16,
+    16,
+    16,
+    16,
+    16,
+    16
+   ],
+   "baseline_short_scorable": 7519,
+   "short_scorable": 10378,
+   "minimum_corner_scorable_3db": 114,
+   "wall_clock_s": 7875.9914309978485,
+   "wall_clock_scope": "complete uninterrupted run",
+   "checks": {
+    "Q1": false,
+    "Q2": true,
+    "Q3": true,
+    "Q4": true,
+    "Q5": true,
+    "Q6": true,
+    "Q7": true
+   },
+   "passed": false,
+   "recommend_adoption": false
+  }
+ },
+ "spice_invocations": 23040,
+ "resumed": false,
+ "rows_before_segment": 0,
+ "spice_invocations_this_segment": 23040,
+ "retry_decks_unbilled": true,
+ "wall_clock_s": 7875.9914309978485,
+ "wall_clock_scope": "complete uninterrupted run",
+ "scope": "45 mandated PVT corners at one design load, V6_SPECS and seven constructed channels; not the 135-point load grid, not measured channels and not production adoption"
+}
