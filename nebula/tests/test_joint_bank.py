@@ -120,6 +120,36 @@ def test_duplicate_journal_keys_are_rejected(tmp_path):
         J._load_rows(path)
 
 
+def test_resumed_run_labels_segment_cost_instead_of_total_cost(monkeypatch,
+                                                                 tmp_path):
+    """A resumed timer must not masquerade as the cost of the whole table."""
+    from nebula.experiments import exp_tuning_bank as T
+
+    old = [
+        _row(setting=0, atten_code=0, bank_code=0, i_rs=0, i_cs=0),
+        _row(setting=1, atten_code=0, bank_code=1, i_rs=0, i_cs=1),
+    ]
+    new = _row(setting=2, atten_code=0, bank_code=2, i_rs=0, i_cs=2)
+    log = tmp_path / "rows.jsonl"
+    log.write_text("".join(json.dumps(asdict(row)) + "\n" for row in old),
+                   encoding="utf-8")
+    monkeypatch.setattr(J, "RUN_LOG", log)
+    monkeypatch.setattr(J, "RESULTS", tmp_path / "results.json")
+    monkeypatch.setattr(T, "_base_from_artifacts", lambda: [0.5] * 7)
+    monkeypatch.setattr(
+        J, "sweep",
+        lambda base_u, workers, resume: old + [new],
+    )
+    monkeypatch.setattr(J, "analyse", lambda rows: {"membership_ok": True})
+
+    out = J.run(workers=3, resume=True)
+
+    assert out["resumed"] is True
+    assert out["rows_before_segment"] == 2
+    assert out["spice_invocations_this_segment"] == 1
+    assert out["wall_clock_scope"] == "resume segment only"
+
+
 def test_console_print_literals_are_ascii():
     path = Path(J.__file__)
     tree = ast.parse(path.read_text(encoding="utf-8"))

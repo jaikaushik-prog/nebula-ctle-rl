@@ -16,7 +16,7 @@ the tuning-bank and input-attenuator line through decision D11.
 carries three design traps found by measurement that will otherwise cost a day
 each.
 
-**Updated 2026-09-02, session 35.** 13 days to the 15 Sept deadline.
+**Updated 2026-09-02, session 36.** 13 days to the 15 Sept deadline.
 
 ---
 
@@ -36,11 +36,11 @@ human in the loop. Deliverables that already exist and run:
 
 | | state |
 |---|---|
-| **Adaptation controls (entry 79)** | **MEASURED on the old no-attenuator/one-channel table, 0 new SPICE.** Of 262 solvable held-out cases: oracle 262, fixed TRAIN-selected code 69, hillclimb 51, random 32, exhaustive-max-eye 20. The fixed arm, not hillclimb, is the present non-RL bar. The random arm repeats one deterministic order and needs a multi-seed repair before comparison. **No policy trained; this is not the combined adaptation problem.** |
-| **Control qualification (entry 80)** | **IMPLEMENTED, NOT YET RUN.** Twenty explicit random seeds, stable per-episode streams, uncertainty reporting, correct final-code trial accounting, computed non-RL Pareto frontier, an anti-clobber artifact path, and ASCII console gates. Twenty focused tests pass. |
+| **Adaptation controls (entries 79-80)** | **QUALIFIED on the old no-attenuator/one-channel table, 0 new SPICE.** Of 262 solvable held-out cases, TRAIN-selected fixed code 20 reaches 69 in one trial and is the sole non-RL Pareto arm. Hillclimb reaches 55 in 7.218 trials; exhaustive-max-eye 20 in 65. Random over 20 seeds is 12.156% mean, 1.912% SD, 95% CI 11.319-12.994%, 7.857 trials. **No policy trained; this is not the combined adaptation problem.** |
+| **Control qualification (entry 80)** | **COMPLETE, 4/4 predictions hit.** Twenty explicit random seeds, stable per-episode streams, uncertainty reporting, correct final-code trial accounting, a computed non-RL Pareto frontier, an anti-clobber artifact path, and ASCII console gates. |
 | **Control qualification outcome** | **4/4 predictions hit.** Fixed code 20 is the only non-RL Pareto arm: 69/262 solvable held-out cases in 1 trial. Hillclimb 55/262 in 7.218 trials; exhaustive-max-eye 20/262 in 65. Random over 20 seeds is 12.156% mean, 1.912% SD, 95% CI 11.319-12.994%, 7.857 trials. Instrument qualified; still no RL result. |
-| **Combined attenuator/CTLE table (entry 81)** | **IMPLEMENTED AND PREREGISTERED; NOT RUN.** 8 x 64 x 45 = 23,040 real-PMOS SPICE points, each re-scored on seven channels. Crash-resumable journal, exact membership/duplicate/truncation gates, G140 applied, no overwrite, ASCII output. RL training is authorised only if at least 72/720 `(corner, request)` pairs truly require different settings across channel. |
-| Test suite | **2571 passed**, 13 deselected, 193.04 s, measured 2026-09-02 (session 36); 2 warnings (`python -m pytest tests nebula/tests -q -m "not slow"`). Pre-change baseline: **2549 passed**, 13 deselected. The **system** interpreter, not the conda env — that env has no `torch`, and `ngspice_con.exe` is found by absolute path anyway (G69) |
+| **Combined attenuator/CTLE table (entry 81)** | **COMPLETE: 23,040/23,040 rows, membership PASS, zero hard simulator failures.** All-corner coverage is 11/16 at 3 dB, 15/16 at 4.5 dB and 16/16 at every loss from 6-12 dB. The RL gate **FAILS: 0/720** pairs require different channel-specific settings against a registered threshold of 72. No policy is authorised on this table. See `JOINT_BANK_RESULTS.md`. |
+| Test suite | **2572 passed**, 13 deselected, 306.14 s, measured 2026-09-02 (session 36); 2 warnings (`python -m pytest tests nebula/tests -q -m "not slow"`). The point-1 pre-change run had 2,570 passes plus one timing-only trim-speed reversal; that exact test passed alone, and the complete post-change run is green. The **system** interpreter, not the conda env — that env has no `torch`, and `ngspice_con.exe` is found by absolute path anyway (G69) |
 | Gates G0–G2 | passed |
 | G3 (RL beats random + grid) | **fails one clause** — RL is indistinguishable from random at every budget |
 | G4 (corner-robust design) | met on `V1_SPECS` (7 rows); **not** on the 11 competition rows |
@@ -2281,8 +2281,9 @@ and inconsistent test counts.
 | **4u** | **Retry decks are UNBILLED.** The retry is a recursive call inside `run_point`, so the caller's budget counter sees one call: `mean_sims_per_request` came back 642.0625, identical to entry 40 in every digit, despite ~30 extra decks. 0.3 % here and it changes no claim, but **every deck count in this repository excludes retry decks** | ~0 | open, stated |
 | **4s** | **Request 5's eight corners are the next coverage point, and they are NOT this bug.** All eight are output-swing compression at **VDD-5 %**, only **1.002-1.203x** over the measured linear limit — the closest any blocked corner has been. Whether a slightly larger `rl` or `i_bias` clears them at fixed peaking is unmeasured | TBD | open |
 | **4aa** | **The WIDE bank (entry 70).** Section 5z measured 4.41-8.56 dB against S3's mandated 3-12. Widen `RS_SPAN` and re-measure the tuning range and the drive-handling limit at TT only, before paying for 45 corners. Step sizes derived from the spec tolerances, not chosen: `S3_peaking_match` is 1.5 dB and `S3_f_peak_match` is 0.3 oct, so a code step must be no coarser than either | ~64-128 decks | pre-registered as entry 70 |
-| **4ab** | **The adaptation environment + the two controls.** Cache (code, corner) -> `DeviceResult` once with SPICE; the 21-member channel family is then FREE because `evaluate_link` re-scores a cached device result in Python. Controls: exhaustive sweep (upper bound on compliance, `n_codes` trials) and a hand-written bisection on the eye metric (the matched control) | ~2 900 decks once, then 0 | blocked on 4aa |
-| **4ac** | **The RL adaptation policy.** Discrete action over codes; observation is what a real RX can see (eye height/width from trials so far), NOT the corner label. Neither PPO nor SAC has a discrete head today -- both are Gaussian -- so this is new code. Scored on trials-to-lock at equal compliance against BOTH controls in 4ab | 0 new SPICE | blocked on 4ab |
+| **4ab** | **The adaptation environment, qualified controls and real combined table.** The old-table control instrument is qualified (entry 80); the 8-attenuator x 64-CTLE x 45-corner table is complete and each device result has seven free channel views (entry 81) | 23,040 decks, then 0 | **DONE.** Membership pass; 11/16 all-corner coverage at 3 dB and 16/16 at 6-12 dB. See `JOINT_BANK_RESULTS.md` |
+| **4ac** | **The RL adaptation policy.** Discrete action over codes; observation is what a real RX can see (eye height/width from trials so far), NOT the corner label | 0 new SPICE | **STOPPED BY THE PREREGISTERED GATE.** Measured 0/720 compliance-level channel-adaptive pairs against the required 72/720. Do not train on this table |
+| **4ad** | **Diagnose the remaining short-channel boundary before changing hardware.** The 16 unsolved 3 dB corner/request pairs are all compression-related, concentrated at 8-10 dB boost and low requested frequency; 15/16 are at VDD -5% | zero SPICE to classify; focused reruns TBD | **NEXT ANALOG STEP.** No range, topology, bias or reward change is authorised yet |
 | **5** | **Corner-aware RL vs random / CMA-ES / library lookup.** Pre-registered as entry 25 (with a disclosed rule-3 violation: written after launch, before any artifact existed) | ~2.5 h | **RUNNING** |
 | **6** | **Re-run the coverage sweep on `V6_SPECS`** (§5b). Owner: *"polishing numbers is much needed for honesty."* **Publish both the old and the corrected coverage number** | ~2.5 h | **committed, do not drop** |
 | 7 | 2-D tuning bank (`Cs` axis) + the reading-(B) criterion | ~1 100 sims, ~8 min | built, not run |
@@ -2291,12 +2292,13 @@ and inconsistent test counts.
 | 10 | Report: compliance matrix on page 1; renumber figures; point the grounding checker at report prose | ~2 h | |
 | 11 | Demo capture: plain-English request → schematic → specs → verification | ~1 h | |
 
-**Session-36 update to rows 4ab/4ac.** Entry 79 ran the old-table controls:
-fixed code 69/262 solvable, hillclimb 51, random 32, exhaustive-max-eye 20.
-This is not the combined problem. Repair the repeated-seed random estimate and
-score every non-RL arm; then build the measured 8-attenuator x 64-CTLE x
-45-corner table and re-score its channel views. Policy training remains blocked
-until that table establishes a real hidden-state problem.
+**Session-36 update to rows 4ab/4ac.** Entry 80 qualified the controls and
+entry 81 completed the real 512-setting table. The hidden-state premise did
+not survive: all 704 pairs that are solvable across every channel have at least
+one common compliant setting, so the measured adaptive count is 0/720. The
+precommitted decision is to stop policy training on this table. Best-eye code
+movement in 551/704 cases is reported as a possible new margin objective, not
+used to rewrite the failed compliance gate.
 
 ### THE RL DIAGNOSIS (2026-08-21) — it is simulator cost, not the algorithm
 

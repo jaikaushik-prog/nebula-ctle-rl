@@ -13317,3 +13317,42 @@ entry 76's measured 25.4% PFET-library overhead. **Falsifier: wall clock above
 **Pre-run test certificate:** the complete non-slow suite is **2,571 passed,
 13 deselected, 2 warnings in 193.04 s**. The pre-change baseline was 2,549
 passed, 13 deselected. No production combined-table SPICE row exists yet.
+
+### Outcome -- measured 2026-09-02 after the laptop-interrupted run resumed
+
+**Q1 HIT.** The journal contains exactly **23,040 rows and 23,040 unique
+expected keys**; membership is true and there are no missing, duplicate, extra
+or truncated rows.
+
+**Q2 HIT.** Attenuator 5 / CTLE R4C3 at `tt/1.00/27C` is device-valid and both
+3 and 12 dB links are scorable. Its 0.4268671 mV_rms noise exactly reproduces
+entry 78's real-PMOS row.
+
+**Q3 HIT.** The 3 dB channel has **7,519 scorable rows** and every PVT corner
+has at least 54. Entry 72's zero is removed.
+
+**Q4 HIT.** All-corner request coverage is **11/16 at 3 dB** and **16/16 at
+12 dB**, above the registered 4/16 and 8/16 floors.
+
+**Q5 HONOURED.** All seven losses are reported: all-corner coverage is
+11, 15, 16, 16, 16, 16, 16 of 16 from 3 to 12 dB. No convenient edge was
+selected after measurement.
+
+**Q6 MISS -- THE DECISION GATE FAILS.** Of 720 `(corner, request)` pairs, 704
+are solvable on every channel, but **zero** have an empty intersection of
+compliant settings. The registered training threshold was 72. Per the rule
+above, **no RL policy is trained on this table**; the compliance controller is
+a fixed conservative code. The best-eye code does move in 551/704 cases, but
+that is a different margin-optimisation question and does not retroactively
+change this gate.
+
+**Q7 MISS.** The saved 5,798.91 s = 96.65 min is the resume segment alone,
+after 8,060 rows had already completed. It exceeds 90 minutes without counting
+the initial active segment; the shutdown pause is also excluded. The true
+active total is therefore greater than 96.65 minutes but is not reconstructed
+from an unavailable timer.
+
+**Score: 4 of 6 outcome predictions hit; the Q5 reporting guard was
+honoured.** There were zero hard simulator failures. All 1,613 base-row
+rejections and every shorter-channel re-score failure explicitly name
+output-swing compression. Full result and limits: `JOINT_BANK_RESULTS.md`.

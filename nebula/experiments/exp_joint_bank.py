@@ -281,9 +281,12 @@ def analyse(rows: Sequence[JointRow]) -> dict:
 def run(workers: int = 1, resume: bool = False) -> dict:
     from nebula.experiments.exp_tuning_bank import _base_from_artifacts
     base_u = _base_from_artifacts()
+    rows_before = (len(_load_rows(RUN_LOG))
+                   if resume and RUN_LOG.exists() else 0)
     t0 = time.time()
     rows = sweep(base_u, workers=workers, resume=resume)
     analysis = analyse(rows)
+    elapsed_s = time.time() - t0
     out = {
         "task": "real attenuator x CTLE bank over 45 PVT corners and 7 channels",
         "base_design_id": design_id(sizing_from_u(np.asarray(base_u))),
@@ -293,8 +296,13 @@ def run(workers: int = 1, resume: bool = False) -> dict:
                      "rs_span": RS_SPAN, "cs_span": CS_SPAN},
         "losses_db": list(LOSSES_DB), "analysis": analysis,
         "spice_invocations": len(rows),
+        "resumed": bool(resume),
+        "rows_before_segment": rows_before,
+        "spice_invocations_this_segment": len(rows) - rows_before,
         "retry_decks_unbilled": True,
-        "wall_clock_s": time.time() - t0,
+        "wall_clock_s": elapsed_s,
+        "wall_clock_scope": ("resume segment only" if resume else
+                             "complete uninterrupted run"),
         "scope": ("45 mandated PVT corners at the design load, V6_SPECS with "
                   "operating-point HD3; seven constructed channel losses. "
                   "Not the 135-point load grid."),
@@ -322,7 +330,9 @@ def _report(out: dict) -> None:
           f"{ch['n_needing_different_setting_for_compliance']}")
     print(f"  pairs whose best-eye setting moves: "
           f"{ch['n_whose_best_eye_setting_moves']}")
-    print(f"  wall clock {out['wall_clock_s'] / 60:.1f} min")
+    timing_scope = out.get("wall_clock_scope", "scope not recorded")
+    print(f"  wall clock ({timing_scope}) "
+          f"{out['wall_clock_s'] / 60:.1f} min")
 
 
 def main(argv: Optional[Sequence[str]] = None) -> int:

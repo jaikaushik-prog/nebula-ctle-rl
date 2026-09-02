@@ -17,7 +17,17 @@
 > decisions that are OPEN and human-only, and what to do next. It supersedes
 > `nebula/NEXT_STEPS.md`. This file remains the full state of record.
 
-Last updated: **2026-08-20** (session 22p: **THE REPORT EXISTS** --
+Last updated: **2026-09-02** (session 36, entry 81 outcome: **THE REAL
+ATTENUATOR x CTLE TABLE IS COMPLETE, AND ITS PREREGISTERED RL GATE FAILS.**
+All 23,040 expected rows are present and unique; all-corner request coverage is
+11/16 at 3 dB, 15/16 at 4.5 dB and 16/16 from 6-12 dB. Of 720
+`(corner, request)` pairs, 704 are solvable on every channel and **zero** need
+different settings for compliance, below the registered 72 threshold. Per the
+pre-run decision, no policy is trained on this table. The best-eye setting does
+move in 551/704 cases, but that is a new margin objective, not permission to
+rewrite the gate. Full result: `nebula/JOINT_BANK_RESULTS.md`.)
+
+Earlier session 22p: (**THE REPORT EXISTS** --
 `nebula/report/Nebula_CTLE_Report.pdf`, **10 pages, 9 figures, 598 KB**,
 rebuilt from the run logs by two commands. **No number in either module is
 typed by hand**: the figure and prose builders read the artifact each
@@ -1410,7 +1420,8 @@ signaling, ADC-based DSP receiver, 28 nm CMOS reference parameters).
 │   ├── experiments/exp_joint_bank.py  The real 8-attenuator x 64-CTLE x
 │   │                       45-corner table, with seven free channel views per
 │   │                       SPICE point. Crash-resumable, membership-gated and
-│   │                       anti-clobber. Entry 81 is preregistered, not run.
+│   │                       anti-clobber. Entry 81 completed all 23,040 rows;
+│   │                       `JOINT_BANK_RESULTS.md` scores the failed RL gate.
 │   │                       NOTE: this tree lags for the session 23-25 files —
 │   │                       exp_coverage.py, adaptive_screen.py, search_score.py
 │   │                       and runlock.py are documented in §9 and §12 but are
@@ -1585,16 +1596,18 @@ Plus: git init, .gitignore, 28 tests, Wilson-bound BER reporting.
 
 ## 6. Key numbers & validated behavior (current state)
 
-- **Nebula adaptation controls (entry 79, old table only):** of 262 solvable
-  held-out `(corner, request)` cases, oracle 262, TRAIN-selected fixed code 69,
-  hillclimb 51, deterministic eight-code random 32, and exhaustive-max-eye 20.
-  No policy was trained. The table has no attenuator or hidden-channel state,
-  and the random arm needs a multi-seed repair before comparison.
-- **Nebula combined bank (entry 81):** implementation and 74 focused tests are
-  complete; no combined SPICE row has run. Scope is 8 real-PMOS attenuator
-  codes x 64 CTLE codes x 45 PVT corners, each re-scored on seven channels.
-  RL is gated on at least 72/720 corner/request pairs requiring a genuinely
-  channel-specific setting.
+- **Nebula adaptation controls (entries 79-80, old table only):** of 262
+  solvable held-out `(corner, request)` cases, TRAIN-selected fixed code 20
+  reaches 69 in one trial and is the sole non-RL Pareto arm. The qualified
+  hillclimb reaches 55 in 7.218 trials; exhaustive-max-eye reaches 20 in 65.
+  Random over 20 seeds is 12.156% mean, 1.912% SD and 11.319-12.994% 95% CI.
+  No policy was trained, and the old table remains forbidden for training.
+- **Nebula combined bank (entry 81):** all **23,040/23,040** real-PMOS
+  attenuator x CTLE x PVT rows are present and unique, with zero hard simulator
+  failures. All-corner coverage is **11/16 at 3 dB, 15/16 at 4.5 dB and 16/16
+  from 6-12 dB**. The registered RL gate **fails: 0/720** pairs require a
+  channel-specific setting for compliance against the threshold of 72. No
+  policy is authorised on this table. Full result: `nebula/JOINT_BANK_RESULTS.md`.
 
 - Tests: **1942 passing, 12 deselected** (session 28) —
   `python -m pytest tests nebula/tests -q -m "not slow"`.
@@ -1981,20 +1994,22 @@ Plus: git init, .gitignore, 28 tests, Wilson-bound BER reporting.
   Real PCIe traffic is 8b/10b-coded and run-length-limited, so the true peak
   excursion is smaller. Convention C is the right bound; the gap to typical
   traffic is unmeasured.
-- **(nebula) The real-PMOS input attenuator has no coverage result.** Entry 78
-  verifies one TT load and one CTLE bank code only. It may not be described as
-  PVT-qualified, added to entry 69's 14-of-16 delivered coverage, or compared
-  with entry 71's 8-of-16 wide-bank result.
-- **(nebula) The entry-79 adaptation controls are not an RL result and not the
-  combined adaptation task.** They use the old 64-code, no-attenuator table at
-  one channel. The printed hillclimb bar is weaker than the TRAIN-selected
-  fixed code, and the random row repeats one deterministic order; both defects
-  must be repaired before a learned-policy comparison.
-- **(nebula) The combined-bank experiment still uses the constructed channel,
-  modeled eye and one design load.** Seven loss values do not add measured
-  reflections, crosstalk or termination interaction. Any coverage result from
-  entry 81 must travel with those boundaries and may not be added to the
-  delivered path's 14/16 or the extra 135-load result.
+- **(nebula) The real-PMOS input attenuator now has one coverage result, with
+  strict boundaries.** Entry 81 is 45 PVT corners at the design load on seven
+  constructed channels and `V6_SPECS`; it is not the delivered path, not the
+  extra 135-point load grid and not measured channel hardware. It may not be
+  added to entry 69's 14-of-16 result or compared directly with entry 71's
+  no-attenuator 8-of-16 result.
+- **(nebula) The entry-79/80 adaptation controls are not an RL result and not
+  the combined adaptation task.** They use the old 64-code, no-attenuator table
+  at one channel. Entry 80 repaired the random seeding and last-code accounting
+  and found TRAIN-selected fixed code 20 to be the sole non-RL Pareto arm; the
+  old table remains forbidden for policy training.
+- **(nebula) The completed combined-bank experiment still uses the constructed
+  channel, modeled eye and one design load.** Seven loss values do not add
+  measured reflections, crosstalk or termination interaction. Entry 81's
+  11/16 to 16/16 coverage must travel with those boundaries and may not be
+  added to the delivered path's 14/16 or the extra 135-load result.
 - JTOL amplitude grid is coarse (0.05/0.1/0.2/0.4/0.7/1.0 UI).
 - Power numbers are PLACEHOLDERS (literature-based), never simulated.
 - rtl/, verification/, veriloga_models/, matlab_models/, optical_dsp.py,
@@ -2003,17 +2018,19 @@ Plus: git init, .gitignore, 28 tests, Wilson-bound BER reporting.
 
 ## 8. Next steps (prioritized backlog with context)
 
-**Session-36 ordering:** qualify the non-RL controls, then measure the combined
-8-attenuator x 64-CTLE x 45-corner table and its free channel views, and only
-then train a discrete policy on held-out processes/channels. The learned arm
-must beat the complete non-RL Pareto frontier at equal compliance; hillclimb is
-not privileged merely because the old script named it.
+**Session-36 ordering:** entries 80 and 81 are complete. The non-RL controls
+are qualified and the combined 8-attenuator x 64-CTLE x 45-corner table is
+measured. Its RL gate failed: **0/720** pairs need a channel-specific setting
+for compliance against the registered threshold of 72. **Do not train a
+discrete policy on this table.** The next analog step is a focused diagnosis of
+the 16 unsolved 3 dB corner/request pairs, all compression-related and
+concentrated at high boost, low requested frequency and VDD -5%.
 
-**Entry-81 gate:** the combined experiment is now implemented and
-preregistered. Run `python -m nebula.experiments.exp_joint_bank --run --workers
-8`; after interruption use `--resume`, never delete or overwrite the journal.
-Do not train a policy unless at least 72/720 fully-solvable corner/request pairs
-have an empty intersection of compliant settings across the seven channels.
+**Entry-81 artifacts:** preserve `joint_bank_results.json` and the byte-verified
+compressed journal `joint_bank_run.jsonl.gz`. The local raw journal remains the
+resume source and is ignored by Git. `wall_clock_s=5798.91` is the post-restart
+segment only, not the full experiment; G144 records why resumed timing needs an
+explicit scope.
 
 **-1. NEBULA competition track (ACTIVE, started 2026-08-03).** Separate
    project, own contract (`CLAUDEwa.md`), hard deadline 15 Sept 2026.
@@ -13738,3 +13755,52 @@ empty. Entry 81 fixes the training threshold at 72/720 before data exists.
 passed, 13 deselected, 2 warnings in 193.04 s**, against the pre-change baseline
 of 2,549 passed and 13 deselected. The preregistered 23,040-invocation run is
 next; no policy is trained beforehand.
+
+### G144. A resumed run's timer measures the segment, not the experiment
+
+`exp_joint_bank.run()` started its timer immediately before calling the
+resume-aware sweep. After the laptop shutdown, the resumed process loaded
+8,060 completed rows and measured **5,798.91 s** while producing the remaining
+14,980 plus the final analysis. The artifact called that value
+`wall_clock_s`, which looks like a total but excludes both the first active
+segment and the shutdown pause. It is already above entry 81's 90-minute gate,
+so the prediction misses without reconstructing an unavailable total.
+
+**Rule:** every resumable experiment must record the row count present at the
+start, the work completed in that process and whether its timer is a complete
+run or a resume segment. Never add a downtime pause, and never present a
+segment timer as total active cost. `exp_joint_bank` now writes `resumed`,
+`rows_before_segment`, `spice_invocations_this_segment` and
+`wall_clock_scope`; a regression test failed on the old artifact shape before
+the fix.
+
+### 2026-09-02 - session 36 (entry 81 outcome). **The bank works; the compliance-level RL premise does not.**
+
+The laptop stopped the first process after 8,060 durable rows. The JSONL
+journal parsed completely with 8,060 unique expected keys, and `--resume`
+continued at row 8,061 rather than restarting. The completed process exited
+zero with **23,040/23,040 rows, exact membership and zero hard simulator
+failures**. The 24,021,107-byte journal is committed as a 3,878,881-byte gzip;
+its decompressed SHA-256 is
+`A205303614ABCC5F76D6EA78CFA1C9687E49A3817FA1E9FA9EC314336E20CA33`.
+
+All-corner request coverage is **11/16 at 3 dB, 15/16 at 4.5 dB and 16/16 at
+every loss from 6-12 dB**. At 3 dB every corner has at least 54 scorable
+settings. Q1-Q4 hit and Q5's all-loss reporting guard was honoured. Q6 missed:
+704/720 corner/request pairs are solvable on every channel, but **0/720** need
+different settings for compliance against the registered threshold of 72.
+Q7 also missed because the resume segment alone was 96.65 minutes. Score:
+**4 of 6 outcome predictions hit; one reporting guard honoured.**
+
+Per the decision written before the data, no policy is trained on this table.
+The best-eye setting moves in 551/704 cases, but that is recorded as a possible
+new margin objective, not used to move the failed gate. Every rejection is
+output-swing compression. The next analog question is the 16 unsolved 3 dB
+pairs, concentrated at 8-10 dB requested boost, low frequency and VDD -5%.
+Full result and scope: `nebula/JOINT_BANK_RESULTS.md`.
+
+Point-1 audit also fixed G144's future timing metadata with a test that failed
+first; **14 focused joint-bank tests pass**. The pre-change full suite produced
+2,570 passes and one timing-only `ss_hh` trim-speed reversal (3.39 vs 3.35 s);
+the exact test passed alone in 4.03 s. The post-change complete non-slow suite
+is green at **2,572 passed, 13 deselected, 2 warnings in 306.14 s**.

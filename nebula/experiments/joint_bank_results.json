@@ -1,0 +1,100 @@
+{
+ "task": "real attenuator x CTLE bank over 45 PVT corners and 7 channels",
+ "base_design_id": "c507a3ba6f58b9a6",
+ "base_u": [
+  0.47470897153701547,
+  0.5052153178730102,
+  0.7146841021685507,
+  0.4931434027122009,
+  0.8132546712336066,
+  0.5871048097551593,
+  0.8020459464395331
+ ],
+ "geometry": {
+  "attenuator_codes": 8,
+  "ctle_codes": 64,
+  "n_rs": 8,
+  "n_cs": 8,
+  "rs_span": 0.38,
+  "cs_span": 0.2
+ },
+ "losses_db": [
+  3.0,
+  4.5,
+  6.0,
+  7.5,
+  9.0,
+  10.5,
+  12.0
+ ],
+ "analysis": {
+  "n_rows": 23040,
+  "n_expected": 23040,
+  "membership_ok": true,
+  "n_corners": 45,
+  "n_requests": 16,
+  "per_loss": [
+   {
+    "loss_db": 3.0,
+    "n_scorable": 7519,
+    "n_solvable_corner_requests": 704,
+    "n_requests_served_all_corners": 11
+   },
+   {
+    "loss_db": 4.5,
+    "n_scorable": 10803,
+    "n_solvable_corner_requests": 718,
+    "n_requests_served_all_corners": 15
+   },
+   {
+    "loss_db": 6.0,
+    "n_scorable": 14430,
+    "n_solvable_corner_requests": 720,
+    "n_requests_served_all_corners": 16
+   },
+   {
+    "loss_db": 7.5,
+    "n_scorable": 17681,
+    "n_solvable_corner_requests": 720,
+    "n_requests_served_all_corners": 16
+   },
+   {
+    "loss_db": 9.0,
+    "n_scorable": 19694,
+    "n_solvable_corner_requests": 720,
+    "n_requests_served_all_corners": 16
+   },
+   {
+    "loss_db": 10.5,
+    "n_scorable": 20755,
+    "n_solvable_corner_requests": 720,
+    "n_requests_served_all_corners": 16
+   },
+   {
+    "loss_db": 12.0,
+    "n_scorable": 21427,
+    "n_solvable_corner_requests": 720,
+    "n_requests_served_all_corners": 16
+   }
+  ],
+  "channel_adaptation": {
+   "n_corner_requests_solvable_on_every_channel": 704,
+   "n_needing_different_setting_for_compliance": 0,
+   "n_whose_best_eye_setting_moves": 551,
+   "best_setting_attenuator_histogram": {
+    "0": 1002,
+    "1": 1104,
+    "2": 566,
+    "3": 1160,
+    "4": 298,
+    "5": 575,
+    "6": 62,
+    "7": 255
+   }
+  }
+ },
+ "spice_invocations": 23040,
+ "retry_decks_unbilled": true,
+ "wall_clock_s": 5798.90923166275,
+ "scope": "45 mandated PVT corners at the design load, V6_SPECS with operating-point HD3; seven constructed channel losses. Not the 135-point load grid."
+}
