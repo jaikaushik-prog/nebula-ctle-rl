@@ -22,7 +22,9 @@ entry 84 reached 15/16, the owner approved exactly one 7.3 dB top-code
 diagnostic at the final `sf/0.95/125C`, request-12, R6C2 compression boundary.
 The source hash, divider ratio, one-row membership and six gates are fixed
 before implementation or SPICE. This is measurement permission only; D11's
-production range and the full table remain unchanged.)
+production range and the full table remain unchanged. Continuation instructions
+are saved in `nebula/NEXT_AGENT_ENTRY85.md`; the two intentional red-first test
+changes remain uncommitted for the next session.)
 
 Earlier session 22p: (**THE REPORT EXISTS** --
 `nebula/report/Nebula_CTLE_Report.pdf`, **10 pages, 9 figures, 598 KB**,
@@ -1426,6 +1428,8 @@ signaling, ADC-based DSP receiver, 28 nm CMOS reference parameters).
 │   ├── experiments/exp_atten_cs_probe.py  Entry 84's three-row closure test:
 │   │                       keeps 7 dB fixed and moves only the three measured
 │   │                       high-side frequency misses from C1 to C2.
+│   ├── NEXT_AGENT_ENTRY85.md  Self-contained continuation prompt for the
+│   │                       preregistered one-point 7.3 dB boundary probe.
 │   │                       NOTE: this tree lags for the session 23-25 files —
 │   │                       exp_coverage.py, adaptive_screen.py, search_score.py
 │   │                       and runlock.py are documented in §9 and §12 but are
@@ -14084,3 +14088,14 @@ just 0.42% margin. A miss does not authorise another increase. An all-six pass
 only authorises proposing a separately registered full-bank/45-corner run;
 D11 is unchanged. Pre-change baseline: **2,589 passed, 13 deselected, 2
 warnings in 287.79 s**. No entry-85 implementation or SPICE exists yet.
+
+### 2026-09-03 - session 37 (Entry 85 session handoff). **A self-contained continuation prompt is saved; implementation has not started.**
+
+`nebula/NEXT_AGENT_ENTRY85.md` records the exact branch/commit state, Entry 84
+result, Entry 85 authority boundary, intended implementation steps and test
+commands for a fresh session. The intentional red-first changes in
+`test_atten_range_probe.py` and the new `test_atten_final_probe.py` remain
+uncommitted and must be preserved. Their focused collection fails only because
+`exp_atten_final_probe.py` does not exist yet. No Entry 85 SPICE point or
+background process was started. The unrelated `gmcmp.pkl` and `nebula/.claude/`
+remain untouched.
