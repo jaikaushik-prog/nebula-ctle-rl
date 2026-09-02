@@ -17,13 +17,12 @@
 > decisions that are OPEN and human-only, and what to do next. It supersedes
 > `nebula/NEXT_STEPS.md`. This file remains the full state of record.
 
-Last updated: **2026-09-03** (session 38, entry 86 pre-registration: after
-entry 85 closed the focused set at 16/16, the owner approved the distinct full
-7.3 dB verification. Before implementation or SPICE, Entry 86 fixes one
-physical change, two source hashes, exact 23,040-row membership, an embedded
-entry-85 control, coverage/no-regression/scorable-population gates, honest
-resume timing and all-loss reporting. No entry-86 SPICE row exists yet. A pass
-supports recommending adoption; it does not make that human decision.)
+Last updated: **2026-09-03** (session 38, entry 86 implementation: the distinct
+full 7.3 dB verification runner is built and 25 focused gates pass. It reuses
+entry 81's qualified journal/resume/analysis path, verifies both registered
+source hashes, and forwards the custom ratio in every physical task. No
+entry-86 SPICE row exists yet. Commit the implementation before launching the
+authorised 23,040-row run; production adoption remains a later human decision.)
 
 Earlier session 22p: (**THE REPORT EXISTS** --
 `nebula/report/Nebula_CTLE_Report.pdf`, **10 pages, 9 figures, 598 KB**,
@@ -1420,6 +1419,9 @@ signaling, ADC-based DSP receiver, 28 nm CMOS reference parameters).
 │   │                       SPICE point. Crash-resumable, membership-gated and
 │   │                       anti-clobber. Entry 81 completed all 23,040 rows;
 │   │                       `JOINT_BANK_RESULTS.md` scores the failed RL gate.
+│   ├── experiments/exp_joint_bank_73.py  Entry 86's distinct resumable full
+│   │                       bank/PVT verification of the 7.3 dB candidate.
+│   │                       Reuses entry 81 machinery; scores Q1-Q7 and deltas.
 │   ├── experiments/exp_atten_range_probe.py  Entry 83's focused 7.0 dB
 │   │                       diagnostic: 14 critical circuit/corner points plus
 │   │                       two TT controls, full V6/noise/3 dB/12 dB gates.
@@ -2095,9 +2097,9 @@ explicit scope.
    of the three remaining rows; combined closure is 15/16. The last point has
    correct frequency/peaking and is only 3.076% above the measured compression
    limit. D14's one 7.3 dB measurement now passes all six gates and closes the
-   focused set at 16/16. The owner approved the next step as D15 and Entry 86
-   is preregistered: implement and commit a distinct resumable 23,040-row
-   runner, then launch it without changing the registered circuit or gates.
+   focused set at 16/16. The owner approved the next step as D15; Entry 86 is
+   preregistered and its distinct resumable 23,040-row runner is built. Commit
+   it, then launch without changing the registered circuit or gates.
    Production adoption remains a post-result human decision. The
    standing owner item is also urgent: `nebula/report/Nebula_CTLE_Report.pdf`
    is about three weeks behind,
@@ -14174,3 +14176,22 @@ The entry-86 baseline is **2,595 passed plus one known timing-only `hl`
 trim-speed reversal**, 13 deselected and 2 warnings in 416.51 s; the exact
 node passes alone in 3.94 s. The preceding clean count is 2,596/2,596. No
 entry-86 implementation, journal, result or SPICE row exists.
+
+### 2026-09-03 - session 38 (entry 86 implementation, before measurement). **The full 7.3 dB runner is built; no entry-86 SPICE row has run.**
+
+`exp_joint_bank` now accepts an optional `atten_max_x` in its physical task.
+Omitting it preserves entry 81's D11 circuit. The journal row adds optional DC
+gain and noise fields so the full run can reproduce Entry 85 inside the table;
+old rows load with `None` and remain valid. `exp_joint_bank_73.py` uses distinct
+anti-overwrite journal/result paths, verifies the Entry 85 and Entry 81 hashes,
+derives the same seven-value design vector from the pinned source, and reuses
+the qualified crash-resume and exact-membership machinery.
+
+Its analysis reports all seven losses, deltas against Entry 81, per-code and
+per-corner scorable counts, the channel-adaptation diagnostics and Q1-Q7. The
+new tests were red on the absent module before implementation. The shared and
+Entry-86 focused group is now **25/25 green**. No journal, result or simulator
+process exists. The complete non-slow suite passes **2,605/2,605**, with 13
+deselected and 2 warnings in 294.32 s. Commit this implementation before launching
+`py -3.13 -m nebula.experiments.exp_joint_bank_73 --run --workers 8`; if the
+process is interrupted, resume only with `--resume --workers 8`.

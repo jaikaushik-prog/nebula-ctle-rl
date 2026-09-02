@@ -13840,3 +13840,13 @@ Baseline before any entry-86 change: **2,595 passed plus one known timing-only
 `hl` trimmed-library speed reversal**, 13 deselected and 2 warnings in 416.51
 s. The exact `hl` node passed alone in 3.94 s. The preceding clean entry-85
 suite was 2,596/2,596. No entry-86 implementation, journal or SPICE row exists.
+
+**Pre-run implementation certificate.** `exp_joint_bank_73.py` reuses entry
+81's membership, resume and analysis machinery with an explicit opt-in range;
+the historical runner retains `atten_max_x=None`. Its source loader verifies
+both registered hashes before constructing work. The new journal/result paths
+are distinct, the control row records DC gain and noise, and Q1-Q7 are scored
+without changing any registered threshold. Tests were red first on the absent
+module. After implementation, the shared and Entry-86 focused group passes
+**25/25**. The complete non-slow suite passes **2,605/2,605**, with 13
+deselected and 2 warnings in 294.32 s. No entry-86 SPICE row or result exists.

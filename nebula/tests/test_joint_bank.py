@@ -8,6 +8,7 @@ import json
 import math
 from dataclasses import asdict
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 
@@ -120,6 +121,38 @@ def test_sweep_journals_every_member_and_resume_runs_nothing(monkeypatch,
                       log_path=path, resume=True)
     assert len(resumed) == len(rows)
     assert calls == []
+
+
+def test_custom_range_is_part_of_every_physical_task():
+    corner = Corner("tt", 1.0, 27.0)
+    tasks = J._tasks([0.5] * 7, [corner], [0, 7], atten_max_x=2.3)
+    assert len(tasks) == 2 * J.N_BANK_CODES
+    assert all(task[4] == pytest.approx(2.3) for task in tasks)
+
+
+def test_custom_range_reaches_measurement_and_records_control_fields(monkeypatch):
+    captured = {}
+    point = SimpleNamespace(
+        ok=True,
+        links_by_loss={loss: {"ok": True, "eye_h_v": 0.3,
+                              "eye_w_ui": 0.7} for loss in J.LOSSES_DB},
+        peaking_db=9.0, f_peak_oct=-0.4,
+        margins={name: 1.0 for name in J.SPECS
+                 if name not in J.REQUEST_ROWS},
+        eye_h_v=0.3, eye_w_ui=0.7, power_w=5e-3,
+        hd3_nyq_dbc=-40.0, g_dc_db=-11.0, noise_vrms=0.7e-3,
+    )
+
+    def fake_evaluate(*args, **kwargs):
+        captured.update(kwargs)
+        return SimpleNamespace(points=[point], reason=None)
+
+    monkeypatch.setattr(J, "evaluate_at_points", fake_evaluate)
+    st = SimpleNamespace(u=(0.5,) * 7, i_rs=0, i_cs=0)
+    row = J._measure((0, st, 7, Corner("tt", 1.0, 27.0), 2.3))
+    assert captured["atten_max_x"] == pytest.approx(2.3)
+    assert row.g_dc_db == pytest.approx(-11.0)
+    assert row.noise_mvrms == pytest.approx(0.7)
 
 
 def test_duplicate_journal_keys_are_rejected(tmp_path):

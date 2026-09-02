@@ -71,6 +71,8 @@ class JointRow:
     power_w: Optional[float] = None
     hd3_nyq_dbc: Optional[float] = None
     links: dict = None
+    g_dc_db: Optional[float] = None
+    noise_mvrms: Optional[float] = None
 
 
 def setting_id(atten_code: int, bank_code: int) -> int:
@@ -101,12 +103,19 @@ def _compact_link(link: Optional[dict]) -> dict:
     return {"ok": False, "reason": reason}
 
 
-def _measure(task: tuple[int, Setting, int, Corner]) -> JointRow:
-    bank_code, st, atten_code, corner = task
+def _measure(task: tuple) -> JointRow:
+    if len(task) == 4:
+        bank_code, st, atten_code, corner = task
+        atten_max_x = None
+    elif len(task) == 5:
+        bank_code, st, atten_code, corner, atten_max_x = task
+    else:
+        raise ValueError(f"expected a 4- or 5-field joint-bank task, got {len(task)}")
     ev = evaluate_at_points(
         st.u, [ScreenPoint(corner, CL_MID_F, "joint bank")],
         target_f_peak_hz=1.9e9, target_peaking_db=7.5, specs=SPECS,
-        link_losses_db=LOSSES_DB, atten_code=atten_code)
+        link_losses_db=LOSSES_DB, atten_code=atten_code,
+        atten_max_x=atten_max_x)
     point = ev.points[0] if ev.points else None
     ok = bool(point and point.ok)
     links = ({str(loss): _compact_link((point.links_by_loss or {}).get(loss))
@@ -122,7 +131,9 @@ def _measure(task: tuple[int, Setting, int, Corner]) -> JointRow:
         eye_h_v=(point.eye_h_v if ok else None),
         eye_w_ui=(point.eye_w_ui if ok else None),
         power_w=(point.power_w if ok else None),
-        hd3_nyq_dbc=(point.hd3_nyq_dbc if ok else None), links=links)
+        hd3_nyq_dbc=(point.hd3_nyq_dbc if ok else None), links=links,
+        g_dc_db=(point.g_dc_db if ok else None),
+        noise_mvrms=(float(point.noise_vrms) * 1e3 if ok else None))
 
 
 def _load_rows(path: Path) -> list[JointRow]:
@@ -144,20 +155,25 @@ def _load_rows(path: Path) -> list[JointRow]:
 
 
 def _tasks(base_u: Sequence[float], corners: Sequence[Corner],
-           atten_codes: Sequence[int]) -> list[tuple[int, Setting, int, Corner]]:
+           atten_codes: Sequence[int],
+           atten_max_x: Optional[float] = None) -> list[tuple]:
     settings = bank(base_u, n_rs=N_RS, n_cs=N_CS, rs_span=RS_SPAN,
                     cs_span=CS_SPAN)
-    return [(bank_code, st, int(a), c)
-            for a in atten_codes for bank_code, st in enumerate(settings)
-            for c in corners]
+    tasks = [(bank_code, st, int(a), c)
+             for a in atten_codes for bank_code, st in enumerate(settings)
+             for c in corners]
+    if atten_max_x is None:
+        return tasks
+    return [task + (float(atten_max_x),) for task in tasks]
 
 
 def sweep(base_u: Sequence[float], corners: Optional[Sequence[Corner]] = None,
           atten_codes: Sequence[int] = ATTEN_CODES, workers: int = 1,
-          resume: bool = False, log_path: Path = RUN_LOG) -> list[JointRow]:
+          resume: bool = False, log_path: Path = RUN_LOG,
+          atten_max_x: Optional[float] = None) -> list[JointRow]:
     """Run or resume the full table, journalling every completed SPICE call."""
     corners = list(corners if corners is not None else all_corners())
-    tasks = _tasks(base_u, corners, atten_codes)
+    tasks = _tasks(base_u, corners, atten_codes, atten_max_x=atten_max_x)
     old = _load_rows(log_path) if resume and log_path.exists() else []
     if log_path.exists() and not resume:
         raise FileExistsError(f"{log_path} exists; use --resume, never overwrite")
