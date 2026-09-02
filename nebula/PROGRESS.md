@@ -2035,6 +2035,40 @@ number rather than an optimisation.
 
 ## 5ad. THE INPUT ATTENUATOR: **it works, the spec was too small, and it found two defects first**
 
+> **CORRECTED 2026-09-02, same session, before this section was quoted
+> anywhere.** The paragraph below headed *"The result, and the honest
+> shortfall"* said the derived 6 dB spec **undershot** and that the requirement
+> was *"at least ~9.5 dB"*. **Both halves are wrong.**
+>
+> The cause was my own diagnostic, not the sizing. `resistor_geometry` returns
+> an `m` multiplier when a target needs parallel instances, and the throwaway
+> fixed divider I substituted to isolate the physics emitted `w` and `l` and
+> **dropped `m`** — asking for a 153.1 ohm shunt, which needs `m = 2`, and
+> emitting one **306.2 ohm** instance. That gives 3.47 dB against the 3.43 dB
+> measured: the discrepancy was mine to within 0.04 dB. **The bank's own legs
+> were never affected** — all three are `m = 1` and realise their design values
+> to 0.01 dB.
+>
+> Re-measured over all eight codes with the multiplier emitted and `vid_max`
+> scaled (`experiments/atten_verify_results.json`, reproducible via
+> `exp_atten_verify --run`):
+>
+>     code  design  realised  demand   limit  ratio  3dB  12dB   noise
+>     None    0.00      0.00  1805.1  1110.5   1.63 fail    OK  0.2142
+>        4    3.86      4.04  1162.4  1109.8   1.05 fail    OK  0.3981
+>        5    4.61      4.78       -       -      -   OK    OK  0.4289
+>        7    5.93      6.12       -       -      -   OK    OK  0.4911
+>
+> **The requirement is 4.61 dB (code 5), and the derived 5.94 dB spec was
+> correct with ~1.3 dB of margin.** The limit is constant at
+> **1109.8-1112.0 mVpp** across all eight codes — a 0.2 % spread — which is
+> entry 73's mechanism confirmed by its converse on eight points instead of two.
+> `attenuator_block` now emits `_m_suffix(geo.m)` and three tests gate it.
+>
+> **Defect 1 and G140 below are unchanged and both still stand.**
+
+
+
 **2026-09-02 (session 34), entry 74, decision D11.** Built **opt-in**:
 `atten_code=None` is the default and the assembled deck is **byte-identical** to
 every deck this project has simulated. The delivered path is untouched. A

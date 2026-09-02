@@ -13394,3 +13394,43 @@ works.
 `vid_max` by the same factor, or the compression number measures the sweep.**
 Nothing committed is affected -- every existing number is at unity input gain.
 
+### 2026-09-02 - session 34, CORRECTION to entry 74. **The spec did NOT undershoot: the 3 dB channel clears at 4.61 dB.**
+
+Entry 74 said the derived 6 dB spec undershot and the requirement was "at least
+~9.5 dB", with the realised-vs-nominal gap unresolved. **Both halves were
+wrong**, and the cause was my diagnostic rather than the sizing.
+
+`resistor_geometry` returns an `m` multiplier when a target needs parallel
+instances. The throwaway fixed divider I substituted to isolate the physics
+emitted `w` and `l` and DROPPED `m`: it asked for a 153.1 ohm shunt, which needs
+`m = 2`, and emitted one 306.2 ohm instance. A = 306.2/(150+306.2) = 0.671 =
+3.47 dB, against the 3.43 dB measured. Mine to within 0.04 dB.
+
+The bank's own legs were never affected -- all three are `m = 1` and realise
+their design values to 0.01 dB. `attenuator_block` now emits `_m_suffix(geo.m)`
+(the repo's one definition, ` m=` never `mult=`, G56) and three tests gate it,
+including one that parses the emitted text back and checks the ohms.
+
+Re-measured over all eight codes, `vid_max` scaled per G140
+(`experiments/atten_verify_results.json`, `exp_atten_verify --run`):
+
+    code  design  realised  demand   limit  ratio  3dB  12dB   noise
+    None    0.00      0.00  1805.1  1110.5   1.63 fail    OK  0.2142
+       4    3.86      4.04  1162.4  1109.8   1.05 fail    OK  0.3981
+       5    4.61      4.78       -       -      -   OK    OK  0.4289
+       7    5.93      6.12       -       -      -   OK    OK  0.4911
+
+* **The requirement is 4.61 dB (code 5)**; the derived 5.94 dB spec was correct
+  and carried ~1.3 dB of margin.
+* **The limit is constant at 1109.8-1112.0 mVpp across all eight codes**, a
+  0.2 % spread -- entry 73's mechanism confirmed by its converse on eight points
+  rather than two.
+* Noise 0.2142 -> 0.4911 mVrms at the top code, 3.1x inside S5's budget.
+
+Unchanged: **defect 1 is still unresolved** (NMOS switches off at VCM = 1.5 V,
+so all of this is measured with `switched=False` -- an instrument, not a
+deliverable), **G140 stands** and every row uses `vid_max = 0.8 / A`, and there
+is still **no coverage number**.
+
+Suite green at **2 522 passed**, 13 deselected.
+
