@@ -12928,3 +12928,60 @@ the exact-equivalence gate had zero shared results, and the command exited 1.
 Their apparent timing deltas are discarded. `test_lib_cost_pfet.py` now proves
 the staged candidate carries the complete recursive relative-include closure,
 and the valid third run is the artifact above.
+
+## 77. Session 35 -- **does the real binary-weighted PMOS bank reproduce the ideal-switch attenuator table?**
+
+**Written 2026-09-02 BEFORE the run.** D11's implementation is complete but
+unmeasured: 25 generated `sky130_ctle_pfet` one-section libraries are selected
+only when `atten_code is not None`; the switch uses entry 75's measured
+`Ron*W = 4086.824988 ohm.um`; bit widths/fingers are 40/1, 80/2 and 160/4;
+gate low is ON and the n-well bulk is at VDD. The ordinary no-attenuator path
+still selects the historical library.
+
+Run `python -m nebula.experiments.exp_atten_verify --run` at its committed TT,
+one-load, R4C3 scope, with **real switches** and G140's `vid_max = 0.8/A`.
+Compare against the preserved switchless artifact
+`atten_verify_results.json`; write the switched result separately as
+`atten_verify_switched_results.json`.
+
+### Predictions
+
+**Q1 -- PLUMBING GATE. All nine requested members (`None`, codes 0..7) produce
+`device_ok=True`.** Confidence **0.8**. The generated variant includes the
+right PFET corner and mismatch card, but this is its first instantiated run.
+**Falsifier: any member missing or any device failure; filtering survivors is
+forbidden by G139.**
+
+**Q2 -- THE HEADLINE. Code 5 is again the first code that clears the 3 dB
+channel while holding the 12 dB channel.** Confidence **0.8**. The resistor in
+each leg was reduced by the measured, binary-scaled PMOS Ron, so the realised
+total should match the switchless leg. **Falsifier: first clearing code is not
+5, including no clearing code.**
+
+**Q3 -- G140. The reported linear limit remains near 1110 mVpp:** every
+available rejected-row limit lies in **1105-1115 mVpp** and the spread is no
+more than **5 mVpp**. Confidence **0.9**. **Falsifier: either bound or the
+spread exceeded.**
+
+**Q4 -- TABLE REPRODUCTION. Realised attenuation at every one of the nine
+members differs from the switchless reference by no more than 0.25 dB.**
+Confidence **0.75**. Ron was measured at the operating common mode, but the
+signal-dependent channel resistance and switch parasitics are real and are why
+this comparison is measured. **Falsifier: any absolute delta above 0.25 dB.**
+
+**Q5 -- no relocation. The 12 dB channel remains scorable at all nine
+members.** Confidence **0.95**. **Falsifier: any `long_ok=False`.**
+
+**Q6 -- cost. The nine-point run completes in under two minutes.** Confidence
+**0.85**, from entry 74's ~0.1 min switchless run and entry 76's measured 25.4%
+PFET-library overhead. **Falsifier: wall clock over 120 s.**
+
+### Decision rule, before the result
+
+* Q1 fails -> the PFET variant is not instantiable; report the exact failure
+  and do not interpret the surviving codes.
+* Any of Q2-Q5 fails -> report the disagreement as D11's result and **do not
+  tune** widths, resistor values, thresholds or the topology on this run.
+* Q1-Q5 hold -> D11's missing plumbing is verified at the stated TT/one-load
+  scope. This still creates **no coverage number** and does not authorise a
+  PVT or 135-point claim.

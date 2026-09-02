@@ -1336,7 +1336,8 @@ def assemble_netlist(template: str = None, **fields: object) -> str:
 
 
 def lib_for_device(device: str, real_passives: bool = False,
-                   section: Optional[str] = None) -> Path:
+                   section: Optional[str] = None,
+                   include_pfet: bool = False) -> Path:
     """The library that carries `device`'s model cards.
 
     The nfet-only trim (G36) includes **only** `nfet_01v8`. Anything else has
@@ -1367,6 +1368,20 @@ def lib_for_device(device: str, real_passives: bool = False,
     8823 of its 8909 parameters bought 1.55x, against the 15x the section split
     bought. See `nebula/LIB_COST.md`.
     """
+    if include_pfet:
+        if section:
+            from nebula.device.pdk_trim import PFET_STEM, section_library_path
+            per_section = section_library_path(section, PFET_STEM)
+            if per_section.exists():
+                return per_section
+        # A missing generated variant is slow but correct, never a silent
+        # NFET-only fallback that cannot instantiate the attenuator's PMOS.
+        full = Path(r"C:/Users/DELL/sky130A/libs.tech/ngspice/sky130.lib.spice")
+        if full.exists():
+            return full
+        raise FileNotFoundError(
+            "the PFET-capable trim is missing and the full SKY130 library "
+            f"was not found at {full} (HANDOFF G33).")
     if device == NFET_01V8:
         mono = CTLE_LIB if real_passives else TRIMMED_LIB
         if section:
@@ -1639,7 +1654,8 @@ def run_point(
     try:
         lib = lib_for_device(point.device,
                              real_passives=point.passives is not None,
-                             section=corner)
+                             section=corner,
+                             include_pfet=atten_code is not None)
     except FileNotFoundError as exc:
         return Sky130Point(ok=False, fail_reason=str(exc), point=point, corner=corner)
 

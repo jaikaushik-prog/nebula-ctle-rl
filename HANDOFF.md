@@ -13469,3 +13469,27 @@ passive include, then it omitted that deck's nested trim include. Both arms
 failed 50/50 and the command exited 1; neither timing delta is used. The
 instrument now recursively stages relative dependencies, and five focused tests
 pass, including a fail-capable nested-include gate.
+
+### 2026-09-02 - session 35 (entry 77 pre-registration). **D11 is implemented; the real-PMOS verification is committed before measurement.**
+
+Because entry 76 measured PFET availability at +25.4%, `pdk_trim` derives a
+separate set of 25 `sky130_ctle_pfet` one-section files from the live CTLE
+library. There is no second hand-maintained model card. `run_point` selects the
+variant only for `atten_code is not None`; the ordinary delivered path still
+selects the historical file and remains byte-identical.
+
+The attenuator now emits `pfet_01v8` with entry 75's measured
+`Ron*W = 4086.824988 ohm.um`: bit W/nf = 40/1, 80/2, 160/4, keeping 40 um per
+finger and making Ron scale 1:1/2:1/4 with the resistor legs. Gate 0 is ON,
+gate VDD is OFF, source returns to `cm`, and bulk ties to VDD. The drawn leg
+resistors are 969.2/484.6/242.3 ohm before geometry quantisation.
+
+Tests were written first: the new PDK/emission suite showed **14 failures**,
+and the final table comparator separately showed **4 failures** before their
+implementations. After generation, **69 focused tests pass, 2 slow deselected**,
+including gates that deliberately remove a corner include, omit a table member,
+move the limit, and perturb attenuation. Entry 77 registers the required
+switched result before it exists: every member device-valid, first clearing
+code 5, limit 1105-1115 mVpp with <=5 mV spread, attenuation within 0.25 dB of
+the preserved switchless artifact, and every long-channel row scorable. **The
+SPICE verification has not run yet.**

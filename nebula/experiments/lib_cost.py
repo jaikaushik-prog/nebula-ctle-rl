@@ -252,23 +252,11 @@ def _with_pfet_includes(section_text: str) -> str:
     production library is edited.  The two asserted insertion counts are the
     gate: measuring a half-built candidate would understate its parse cost.
     """
-    lines = section_text.splitlines(keepends=True)
-    out: "list[str]" = []
-    n_corner = n_mismatch = 0
-    for line in lines:
-        out.append(line)
-        if "sky130_fd_pr__nfet_01v8__mismatch.corner.spice" in line:
-            out.append(line.replace("nfet_01v8__mismatch",
-                                    "pfet_01v8__mismatch"))
-            n_mismatch += 1
-        elif "sky130_fd_pr__nfet_01v8__" in line and ".pm3.spice" in line:
-            out.append(line.replace("nfet_01v8__", "pfet_01v8__"))
-            n_corner += 1
-    if (n_corner, n_mismatch) != (1, 1):
-        raise ValueError(
-            "a split CTLE section must contain one corner and one mismatch "
-            f"NFET include; found corner={n_corner}, mismatch={n_mismatch}")
-    return "".join(out)
+    try:
+        return pdk_trim.add_pfet_includes(section_text, expected_sites=1)
+    except pdk_trim.PdkTrimError as exc:
+        # Preserve this instrument's pre-entry-76 public failure type.
+        raise ValueError(str(exc)) from exc
 
 
 def _pfet_cost_decision(current_s: float, pfet_s: float) -> dict:

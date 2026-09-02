@@ -39,7 +39,7 @@ A series-shunt divider per side, with a **binary-weighted 3-bit shunt bank**:
               |     |     |     |
             [2R0] [ R0 ] [R0/2]        <- drawn poly, switched to cm
               |     |     |
-            [sw]  [sw]  [sw]           <- nfet, gate at VDD or 0
+            [sw]  [sw]  [sw]           <- pfet, gate at 0 or VDD
 
 Three resistors and three switches give eight settings instead of eight of
 each. `A = 1 / (1 + n * RSER * G0)` for code `n`, so the codes are not evenly
@@ -104,20 +104,20 @@ N_CODES: int = 2 ** N_BITS
 #: Unit shunt conductance, sized so the TOP code reaches `ATTEN_MAX_X` exactly.
 G0_S: float = (ATTEN_MAX_X - 1.0) / ((N_CODES - 1) * RSER_OHM)
 
-#: The switch, and its **measured** on-resistance — a real SKY130 `nfet_01v8` at
-#: `vgs = 1.8 V`, dV/dI over 5-45 mV of `vds`
-#: (`experiments/tunable_trade_results.json`). Subtracted from each drawn leg so
-#: the realised conductance is the designed one.
+#: The switch, and its **measured** on-resistance — a real SKY130 `pfet_01v8`
+#: at |Vgs| = 1.5 V, source at the 1.5 V input common mode, TT/27 C. Entry 75
+#: measured Ron*W flat over W=40..400 um (`pmos_switch_results.json`).
 SWITCH_W_UM: float = 40.0
 SWITCH_L_UM: float = 0.15
-SWITCH_RON_OHM: float = 16.502243688504894
+SWITCH_RON_W_OHM_UM: float = 4086.824988354164
+SWITCH_RON_OHM: float = SWITCH_RON_W_OHM_UM / SWITCH_W_UM
 
 
 def leg_resistance_ohm(bit: int) -> float:
     """Drawn resistance of shunt leg `bit`, with the switch's Ron removed."""
     if not 0 <= bit < N_BITS:
         raise ValueError(f"bit {bit} outside 0..{N_BITS - 1}")
-    return 1.0 / ((2 ** bit) * G0_S) - SWITCH_RON_OHM
+    return (1.0 / G0_S - SWITCH_RON_OHM) / (2 ** bit)
 
 
 def attenuation(code: int) -> float:
@@ -154,11 +154,9 @@ def attenuator_block(code: int, node_p: str = "inx", node_n: str = "iny",
     disabled ones and every switch. That is the divider with an ideal switch --
     a fixed pad at this code's attenuation.
 
-    **It exists because the switch does not work** (entry 74 defect 1: the NMOS
-    sits at `Vgs = 0.3 V` at `VCM = 1.5 V` and never turns on). Separating the
-    two lets the *attenuation* be measured while the *switching* is still
-    unsolved, instead of one unknown hiding behind the other. It is a
-    measurement instrument, not a deliverable: a fixed pad cannot adapt.
+    `switched=False` remains entry 74's ideal-switch measurement control. The
+    delivered switched path uses entry 75's PMOS: gate low is ON, gate at VDD
+    is OFF, and the n-well bulk is tied to VDD.
     """
     if not 0 <= code < N_CODES:
         raise ValueError(f"code {code} outside 0..{N_CODES - 1}")
@@ -186,7 +184,7 @@ def attenuator_block(code: int, node_p: str = "inx", node_n: str = "iny",
     ]
     for bit in range(N_BITS):
         on = bool(code & (1 << bit))
-        g = "vdd" if on else "0"
+        g = "0" if on else "vdd"
         if not switched and not on:
             continue                       # ideal switch: an off leg is absent
         geo = resistor_geometry(leg_resistance_ohm(bit), RES_HIGH_PO)
@@ -200,8 +198,9 @@ def attenuator_block(code: int, node_p: str = "inx", node_n: str = "iny",
             # Emitted whether or not it is on, so a disabled leg still presents
             # its switch capacitance to the input node.
             lines.append(
-                f"Xatt_sw{side}{bit} {mid} {g} cm 0 sky130_fd_pr__nfet_01v8 "
-                f"W={SWITCH_W_UM:g} L={SWITCH_L_UM:g} nf=1")
+                f"Xatt_sw{side}{bit} {mid} {g} cm vdd "
+                f"sky130_fd_pr__pfet_01v8 W={SWITCH_W_UM * (2 ** bit):g} "
+                f"L={SWITCH_L_UM:g} nf={2 ** bit}")
     return "\n".join(lines)
 
 
@@ -222,6 +221,6 @@ REQUIREMENT_BY_LOSS_DB: dict = {
 }
 
 __all__ = ("ATTEN_MAX_X", "RSER_OHM", "N_BITS", "N_CODES", "G0_S",
-           "SWITCH_RON_OHM", "leg_resistance_ohm", "attenuation",
+           "SWITCH_RON_W_OHM_UM", "SWITCH_RON_OHM", "leg_resistance_ohm", "attenuation",
            "attenuation_db", "code_for", "attenuator_block", "netlist_fields",
            "REQUIREMENT_BY_LOSS_DB")

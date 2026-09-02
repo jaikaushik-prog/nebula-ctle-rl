@@ -106,7 +106,7 @@ def test_the_switch_on_resistance_is_removed_from_each_drawn_leg():
     for bit in range(A.N_BITS):
         ideal = 1.0 / ((2 ** bit) * A.G0_S)
         assert A.leg_resistance_ohm(bit) == pytest.approx(
-            ideal - A.SWITCH_RON_OHM)
+            ideal - A.SWITCH_RON_OHM / (2 ** bit))
     assert A.leg_resistance_ohm(0) > A.leg_resistance_ohm(A.N_BITS - 1)
 
 
@@ -133,7 +133,7 @@ def test_the_switch_gates_encode_the_code_in_binary(code):
         line = next(l for l in txt.splitlines()
                     if l.startswith(f"Xatt_swp{bit} "))
         gate = line.split()[2]
-        assert gate == ("vdd" if code & (1 << bit) else "0"), (code, bit, line)
+        assert gate == ("0" if code & (1 << bit) else "vdd"), (code, bit, line)
 
 
 def test_the_block_is_differential_and_symmetric():

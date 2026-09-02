@@ -2174,12 +2174,27 @@ missed a direct relative passive include and then its nested trim include. Both
 failed 50/50 on both arms and exited nonzero. The instrument now recursively
 stages the full relative-include closure, with a test that breaks this gate.
 
+**D11 implementation, pre-measurement (entry 77):** `pdk_trim` now derives 25
+PFET-capable one-section libraries from the existing CTLE library; there is no
+second hand-maintained model definition. `run_point` selects them only when
+`atten_code` is present, so the no-attenuator delivered path remains on the
+historical files. The emitted PMOS switches use entry 75's measured
+`Ron*W = 4086.824988 ohm.um`, binary W/nf = 40/1, 80/2, 160/4, low-true gates,
+and bulk at VDD. The switchless comparison is preserved as its own artifact.
+**69 focused tests pass, 2 slow deselected; the switched SPICE table has not
+been run yet.** Entry 77 is committed before that measurement.
+
 ## 6. Next steps, in order
 
 **2026-09-02, session 35 / entry 76:** parse cost is measured **material** at
 +41.4 ms / +25.4%, with exact equivalence and a clean control. Build the
 attenuator-only PFET-capable variant, then emit the measured binary-weighted
 PMOS switches and reproduce entry 74's switchless verification table.
+
+**Entry 77 is now the active gate:** run the nine-point real-PMOS table once.
+It must contain every member, first clear at code 5, keep the limit within
+1105-1115 mVpp with <=5 mV spread, reproduce attenuation within 0.25 dB, and
+keep the 12 dB channel scorable. A miss is reported without tuning.
 
 | # | Task | Cost | Status |
 |---|---|---|---|

@@ -96,6 +96,11 @@ SPICE_DIR: Path = Path(__file__).resolve().parent / "spice"
 #: it rather than restating it is what makes the keep-set self-maintaining.
 CTLE_LIB: Path = SPICE_DIR / "sky130_ctle.lib.spice"
 
+#: Generated-section stem for D11's PFET-capable derivative. There is no
+#: hand-maintained monolithic copy: `pfet_library_text` derives it from
+#: `CTLE_LIB`, preserving rule 9's single definition.
+PFET_STEM: str = "sky130_ctle_pfet"
+
 #: Generated output. Tracked in git (G49: results are tracked), never edited.
 TRIM_DIR: Path = SPICE_DIR / "pdk_trim"
 
@@ -420,6 +425,20 @@ def build() -> TrimBuild:
                 render_section_library(sect, stem, lib_text)
         all_sections[stem] = tuple(sections)
 
+    # D11's opt-in PFET-capable derivative. Keeping this outside
+    # SPLIT_LIBRARIES is deliberate: that mapping names checked-in monolithic
+    # sources, while this variant has exactly one source -- CTLE_LIB above.
+    pfet_text = pfet_library_text()
+    pfet_sections = library_sections(PFET_STEM, pfet_text)
+    if len(pfet_sections) != 25:
+        raise PdkTrimError(
+            f"{PFET_STEM} derivative has {len(pfet_sections)} sections, "
+            f"expected 25: {pfet_sections}")
+    for sect in pfet_sections:
+        files[f"sections/{section_library_path(sect, PFET_STEM).name}"] = \
+            render_section_library(sect, PFET_STEM, pfet_text)
+    all_sections[PFET_STEM] = tuple(pfet_sections)
+
     return TrimBuild(
         files=files, keep=frozenset(keep), referenced=len(referenced),
         per_deck=per_deck, tree_files=len(tree),
@@ -506,6 +525,39 @@ def library_sections(stem: str = "sky130_ctle",
     """Every `.lib` section name in a library, in file order."""
     text = library_text if library_text is not None else _read(library_path(stem))
     return [m.group(1) for m in _LIB_BLOCK.finditer(text)]
+
+
+def add_pfet_includes(library_text: str, expected_sites: int) -> str:
+    """Add matching `pfet_01v8` cards after every NFET corner/mismatch card.
+
+    This is the ONE transformation used both by the entry-76 cost instrument
+    and by the generated production variant. Count the sites before returning:
+    a partial library would work at some corners and fail much later at S9.
+    """
+    out: "list[str]" = []
+    n_corner = n_mismatch = 0
+    for line in library_text.splitlines(keepends=True):
+        out.append(line)
+        if "sky130_fd_pr__nfet_01v8__mismatch.corner.spice" in line:
+            out.append(line.replace("nfet_01v8__mismatch",
+                                    "pfet_01v8__mismatch"))
+            n_mismatch += 1
+        elif "sky130_fd_pr__nfet_01v8__" in line and ".pm3.spice" in line:
+            out.append(line.replace("nfet_01v8__", "pfet_01v8__"))
+            n_corner += 1
+    if (n_corner, n_mismatch) != (expected_sites, expected_sites):
+        label = ("one corner and one mismatch" if expected_sites == 1 else
+                 f"{expected_sites} corner and {expected_sites} mismatch")
+        raise PdkTrimError(
+            f"PFET derivative expected {label} NFET include sites; found "
+            f"corner={n_corner}, mismatch={n_mismatch}")
+    return "".join(out)
+
+
+def pfet_library_text(library_text: "str | None" = None) -> str:
+    """The opt-in 25-section PFET derivative of the live CTLE library."""
+    source = _read(CTLE_LIB) if library_text is None else library_text
+    return add_pfet_includes(source, expected_sites=25)
 
 
 def section_library_path(section: str, stem: str = "sky130_ctle") -> Path:
@@ -603,13 +655,14 @@ def _main(argv: "Sequence[str] | None" = None) -> int:
 
 __all__: Sequence[str] = (
     "PdkTrimError", "ParamLine", "TrimBuild",
-    "SPICE_DIR", "CTLE_LIB", "TRIM_DIR", "SECTION_DIR", "PDK_NGSPICE",
+    "SPICE_DIR", "CTLE_LIB", "PFET_STEM", "TRIM_DIR", "SECTION_DIR", "PDK_NGSPICE",
     "RC_CORNERS",
     "rc_corner_parameter_file", "library_include_tree", "parse_param_lines",
     "needed_names", "render_trim", "render_rc_corner", "build",
     "render_section_library", "library_sections", "section_library_path",
     "library_path", "SPLIT_LIBRARIES", "NFET_LIB",
-    "untrimmed_library_text", "stale_files", "write",
+    "add_pfet_includes", "pfet_library_text", "untrimmed_library_text",
+    "stale_files", "write",
 )
 
 if __name__ == "__main__":                                  # pragma: no cover
