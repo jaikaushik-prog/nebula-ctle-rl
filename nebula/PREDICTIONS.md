@@ -11686,3 +11686,71 @@ for **8-20 decks each** against the search's ~1 085.
 * **The 3 unanswered requests** are idx 0 (4 dB @ 1.387 GHz), 12 and 13
   (10 dB @ 1.387 and 1.627 GHz) -- the low-frequency, high-peaking corner, which
   is where the analytic feasibility map was always thinnest.
+
+---
+
+## 68. Session 33 -- **idx 14 is not a grid-density problem. 30 % of the analytic proposer's rejections are its OWN model being wrong.**
+
+**Written 2026-09-02 BEFORE the deeper scan.**
+
+### What the diagnosis found, and it is not what was expected
+
+Idx 14 (10 dB @ 1.921 GHz) is the cheapest open coverage point: its delivered
+design misses **one** corner by **0.56 %** on output swing (1 290.0 mVpp needed
+against a **measured** 1 dB compression point of 1 282.8 mVpp -- checked, and it
+is **not** the conservative `max_swept` fallback). The obvious move was a finer
+analytic grid.
+
+**The candidate rejections say otherwise.** Four of idx 14's five analytic
+candidates were rejected with
+
+    pole-zero fit rejected: fit residual 0.63-0.75 dB exceeds the 0.50 dB gate
+
+and across entry 64's whole run that is the **largest single bucket**:
+
+    14 (29.8 %)  pole-zero FIT rejected
+    14 (29.8 %)  S3_f_peak_match
+     7 (14.9 %)  S3_peaking_match
+     6 (12.8 %)  S3_f_peak_band
+     6 (12.8 %)  swing compression
+
+    fit residuals: min 0.506  median 0.731  max 0.990 dB   (gate 0.50)
+
+**The analytic proposer inverts a one-zero/two-pole model, and ~30 % of the
+designs it proposes are not one-zero/two-pole circuits in SPICE.** The inversion
+works entirely inside the model and cannot see this. A finer grid samples the
+same model more densely and inherits the same defect, so **grid density is the
+wrong lever**.
+
+### What is tried instead
+
+**Depth**, exactly as entry 32 did for the library when k=1 read 1 of 16 and
+k=5 read 6. If ~30 % of candidates fail on fit and others on shape, a deeper
+scan should reach one that survives. Idx 14 only, `k = 40`, **160 decks, ~2 min**.
+Nothing is tuned; the same generator, the same max-min ranking, the same screen.
+
+### Predictions
+
+**Q1 -- SOME candidate in the top 40 passes the screen.** Confidence **0.55.**
+*For:* 665 DC-valid analytic solutions exist for this target and only 5 were
+tried. *Against:* the top 5 by max-min margin should be the best ones, so rank
+6-40 are by construction worse on the criterion that matters.
+**Falsifier: none of the 40 passes.**
+
+**Q2 -- FIT REJECTION STAYS THE DOMINANT REASON** among idx 14's rejected
+candidates, above 25 %. Confidence **0.7.** If it drops away with depth, the
+top-5 sample was unrepresentative rather than the model being wrong.
+**Falsifier: under 25 %.**
+
+**Q3 -- REGISTERED CONSTRAINT. Any acceptance is verified at 45 corners before
+it counts.** Entry 63's standing lesson. A screen pass at rank 30-something is
+exactly where entry 53 measured conversion dropping to 50 %.
+
+### The decision rule, before the result
+
+* **Q1 hits** -> verify at 45 corners. If it passes, coverage 13 -> 14.
+* **Q1 misses with Q2 holding** -> **the binding constraint on this proposer is
+  the validity of its own model, not its search depth.** That is a sharper and
+  more useful statement than "idx 14 is hard", and it closes the coverage chase
+  honestly: the next real improvement would be a fit-quality predictor, which
+  does not exist and is not built here.
