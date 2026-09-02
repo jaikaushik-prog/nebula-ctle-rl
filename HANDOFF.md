@@ -17,12 +17,13 @@
 > decisions that are OPEN and human-only, and what to do next. It supersedes
 > `nebula/NEXT_STEPS.md`. This file remains the full state of record.
 
-Last updated: **2026-09-02** (session 36, entry 83 pre-SPICE repair: the owner's
-approved **focused 7.0 dB top-code diagnostic** is built and tested but has not
-run. Its first command stopped before any simulator call on a validator that
-mistook a request ID repeated across corners for a duplicate. Identity is now
-`(corner, request_id)` and the regression suite is **2,583 passed**. The fixed
-16 real-PMOS invocations and six gates are unchanged; D11 remains 5.933 dB.)
+Last updated: **2026-09-03** (session 36, entry 83 outcome: the focused 7.0 dB
+probe scores **5 of 6, OVERALL FAIL**. The real divider delivers 7.0176 dB,
+noise is safe, and all 14 critical physical points are scorable at both 3 and
+12 dB. It recovers 13/16 request pairs; three remain fully scorable but miss
+only peak-frequency matching by 0.034-0.055 oct. Per the registered rule, 7.0
+dB is not adopted and D11 stays at 5.933 dB. Next indicated measurement is the
+adjacent higher-Cs code at those three rows, not more attenuation.)
 
 Earlier session 22p: (**THE REPORT EXISTS** --
 `nebula/report/Nebula_CTLE_Report.pdf`, **10 pages, 9 figures, 598 KB**,
@@ -1616,11 +1617,11 @@ Plus: git init, .gitignore, 28 tests, Wilson-bound BER reporting.
   for all 16; its swing ratio implies **0.0234-1.0304 dB** extra attenuation
   headroom. This is a zero-SPICE lower bound, not a verified fix.
 - **Nebula 7.0 dB diagnostic (D12, entry 83):** the owner approved measurement,
-  not adoption. The opt-in 16-invocation probe is implemented and green: 14
-  unique critical points covering all 16 unsolved requests, plus TT
-  code-0/code-7 controls. It has not run. The official D11 maximum remains
-  5.933 dB until this focused probe and a later full-bank/PVT adoption
-  experiment both pass.
+  not adoption. The opt-in 16-invocation probe measured 7.0176 dB realised and
+  0.5357 mV_rms TT noise; all 14 critical points are scorable at 3 and 12 dB.
+  It recovers 13/16 requests, while three miss only `S3_f_peak_match` by
+  0.034-0.055 oct. Score 5/6, overall fail; the official D11 maximum remains
+  5.933 dB.
 
 - Tests: **2583 passing, 13 deselected, 2 warnings** (session 36, entry 83) —
   `python -m pytest tests nebula/tests -q -m "not slow"`.
@@ -2040,9 +2041,10 @@ unsolved 3 dB pairs is complete: all have a shape-compliant candidate blocked
 by only 0.0234-1.0304 dB of compression headroom at maximum code 7. The owner
 approved the focused 7.0 dB diagnostic as D12, and entry 83 fixes its 16 SPICE
 invocations and six gates. The instrument is implemented with 73 focused and
-2,582 complete non-slow tests passing; **the entry-83 SPICE run has not started**.
-This approval does not change D11's production range and does not authorise a
-full-table rerun or RL training.
+2,582 complete non-slow tests passing. The repaired command then measured all
+16 rows: five gates pass and Q4 misses at 13/16 recovered request pairs. Per
+the registered decision, D11 remains unchanged and no full-table rerun or RL
+training is authorised.
 
 **Entry-81 artifacts:** preserve `joint_bank_results.json` and the byte-verified
 compressed journal `joint_bank_run.jsonl.gz`. The local raw journal remains the
@@ -2054,9 +2056,10 @@ explicit scope.
    project, own contract (`CLAUDEwa.md`), hard deadline 15 Sept 2026.
    **CURRENT 2026-09-02:** D11 is complete at its registered TT/one-load scope
    (entry 78, 7 of 7). Do not expand that into a coverage statement without a
-   separately authorised preregistration. D12/entry 83 now authorises only the
-   focused 7.0 dB probe: implement its opt-in range, run the fixed 16-point
-   experiment, and score all six gates before considering adoption. The
+   separately authorised preregistration. D12/entry 83 is complete at 5/6:
+   compression is cleared but three rows miss only the frequency request, so
+   7.0 dB is not adopted. The next indicated probe is the adjacent higher-Cs
+   CTLE code at those three rows; register it separately before SPICE. The
    standing owner item is also urgent: `nebula/report/Nebula_CTLE_Report.pdf`
    is about three weeks behind,
    still says one simulation / under five seconds rather than 17 / ~22 s,
@@ -13931,3 +13934,29 @@ No measurement exists to tune against: zero SPICE invocations ran and
 points, 16 request pairs, two controls and all six thresholds are unchanged.
 The post-repair complete non-slow suite is **2,583 passed, 13 deselected, 2
 warnings in 312.93 s**. Commit this repair, then rerun the same command.
+
+### 2026-09-03 - session 36 (entry 83 outcome). **The 7.0 dB probe clears compression everywhere but misses three frequency requests: 5 of 6, overall fail.**
+
+The repaired unchanged command ran exactly **16 real-PMOS SPICE invocations**
+in 7.6857 s. Q1, Q2, Q3, Q5 and Q6 pass: exact membership and all devices
+valid; **7.017623 dB** realised attenuation; **0.535673 mV_rms** TT top-code
+noise; all 14/14 critical 12 dB links still scorable; and both TT control links
+scorable. Critical-row noise spans 0.476711-0.784521 mV_rms. The minimum 12 dB
+eye remains 132.885 mV and 0.828125 UI.
+
+**Q4 misses: 13/16 request pairs recover, not 16/16.** Importantly, all 14
+physical points are now scorable at 3 dB, so attenuation has removed the
+compression blocker. The three remaining failures are scorable, have large eye
+margins, and violate only `S3_f_peak_match` on the high-frequency side:
+`ff/0.95/125C` bank 49 request 12 by -0.055084 oct;
+`sf/0.95/0C` bank 41 request 13 by -0.033948 oct; and
+`sf/0.95/125C` bank 49 request 12 by -0.039754 oct.
+
+Per the pre-run rule, **7.0 dB is not adopted** and D11 remains 5.933 dB. More
+attenuation is not the next move: compression is already gone. All three
+frequency misses use C1 and need a slightly lower peak; the existing adjacent
+higher-Cs C2 setting is the evidence-led next probe, separately registered
+before its roughly three SPICE rows. Artifact:
+`experiments/atten_range_probe_results.json`. Post-result verification is
+green: **74 focused tests passed**; complete non-slow suite **2,583 passed, 13
+deselected, 2 warnings in 290.02 s**.

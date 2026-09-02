@@ -13470,3 +13470,47 @@ the one-line correction and a cross-corner repeated-ID regression test are now
 green. The predictions, 7.0 dB circuit, 14 tasks and 16-invocation membership
 are unchanged. Complete suite: **2,583 passed, 13 deselected, 2 warnings in
 312.93 s**. No result artifact exists and no entry-83 SPICE point has run.
+
+### Outcome -- measured 2026-09-02
+
+**Q1 HIT.** Exactly 16 rows were measured: 14 unique critical physical points
+and two TT controls. Membership and device validity both pass; the default D11
+deck remains pinned by its pre-change hash.
+
+**Q2 HIT.** The real switched divider delivered **7.017623 dB**, inside the
+registered 6.75-7.25 dB interval.
+
+**Q3 HIT.** TT/R4C3 top-code noise is **0.535673 mV_rms**, 2.8x below S5's
+1.5 mV_rms limit. Across the 14 critical rows it is 0.476711-0.784521 mV_rms.
+
+**Q4 MISS.** The candidate recovers **13 of 16**, not 16 of 16, previously
+unserved corner/request pairs. All 14 physical points are now scorable at 3 dB,
+so compression is cleared. The three remaining rows are fully scorable and
+violate only `S3_f_peak_match`:
+
+| corner | bank | request | measured f_peak | request-margin miss |
+|---|---:|---:|---:|---:|
+| `ff/0.95/125C` | 49 (R6C1) | 12 | 1.774007 GHz | -0.055084 oct |
+| `sf/0.95/0C` | 41 (R5C1) | 13 | 2.050359 GHz | -0.033948 oct |
+| `sf/0.95/125C` | 49 (R6C1) | 12 | 1.755257 GHz | -0.039754 oct |
+
+Every miss is on the high-frequency side. Their eye margins remain large
+(205-331 mV vertically and 0.522-0.569 UI horizontally), so this is a CTLE
+frequency-code boundary, not hidden eye loss.
+
+**Q5 HIT.** All **14 of 14** critical 12 dB links remain scorable, exactly
+preserving the registered baseline. The minimum 12 dB eye is 132.885 mV and
+0.828125 UI, both above S8.
+
+**Q6 HIT.** The TT top-code 3 dB and 12 dB links are both scorable. All 16
+serial invocations finished in **7.6857 s**, well below 60 s.
+
+**Score: 5 of 6 predictions hit; OVERALL FAIL by the committed all-six rule.**
+Per the decision, 7.0 dB is **not adopted** and D11 stays at 5.933 dB. The
+measurement says not to keep increasing attenuation blindly: compression is
+already gone at 14/14 physical points, while the only remaining misses are
+peak frequency slightly too high. The next evidence-led probe is the adjacent
+higher-`Cs` CTLE code at the three named rows, separately registered before
+SPICE. Artifact: `experiments/atten_range_probe_results.json`. Post-result
+verification: **74 focused tests passed**; complete non-slow suite **2,583
+passed, 13 deselected, 2 warnings in 290.02 s**.
