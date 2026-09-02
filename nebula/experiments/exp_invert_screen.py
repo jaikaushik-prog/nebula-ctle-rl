@@ -49,6 +49,14 @@ RESULTS = HERE / "topk_scan_analytic.json"
 #: Entry 32's measured optimum and `design.AUTO_K`. **Not swept here.**
 K: int = 5
 
+#: How deep the analytic tail goes when BOTH shallow sources fail. Entry 68
+#: measured idx 14 accepted at analytic rank **39** and verified 45/45, so 40 is
+#: the depth that was shown to reach it -- not a swept value. The tail is only
+#: ever reached when there is no shallow acceptance, where the alternative is
+#: the ~1 085-deck search, so 35 extra candidates (140 decks) is the cheap side
+#: of that trade.
+DEEP_K: int = 40
+
 #: The (w, l, i_bias, rs) grid the feasibility map used. Registered in entry 58;
 #: a later run on a finer grid is a different experiment, not this one.
 N_W, N_L, N_I, N_RS = 5, 5, 8, 40
@@ -381,12 +389,13 @@ def analytic_then_library(f_peak_hz: float, peaking_db: float,
     rather than propagating: a new proposer must not be able to break the
     delivered path.
     """
-    out: list[list[float]] = []
+    deep: list[list[float]] = []
     try:
-        out = list(analytic_candidates(float(f_peak_hz), float(peaking_db),
-                                       int(k)))
+        deep = list(analytic_candidates(float(f_peak_hz), float(peaking_db),
+                                        int(DEEP_K)))
     except Exception:                                           # noqa: BLE001
-        out = []
+        deep = []
+    out: list[list[float]] = list(deep[:int(k)])
     try:
         from nebula.experiments.exp_hybrid import library_candidates_k
 
@@ -395,4 +404,13 @@ def analytic_then_library(f_peak_hz: float, peaking_db: float,
             out.append([float(x) for x in np.asarray(u).ravel()])
     except Exception:                                           # noqa: BLE001
         pass
+    # **The deep tail comes LAST, and that ordering is the whole safety
+    # argument** (entry 69). Entry 53 measured deep acceptances converting at
+    # 50 % against shallow at 83 %, and one deep proposal made a request WORSE
+    # -- so a deep candidate must never be PREFERRED to a shallow one. Here it
+    # cannot be: `propose_then_search` stops at the first feasible candidate, so
+    # ranks beyond `k` are reached only when both shallow sources have already
+    # failed, and the alternative at that point is not a shallow proposal but
+    # the ~1 085-deck search.
+    out.extend(deep[int(k):])
     return out

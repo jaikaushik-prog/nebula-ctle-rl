@@ -11806,3 +11806,64 @@ The inversion assumes a one-zero/two-pole circuit and roughly a third of what it
 proposes is not one in SPICE, which it has no way to detect from inside the
 model. A **fit-quality predictor** would attack that directly; none exists, and
 none is built here.
+
+---
+
+## 69. Session 33 -- **escalating depth: the deep analytic tail runs ONLY when both shallow sources have failed.**
+
+**Written 2026-09-02 BEFORE the run.**
+
+### What changed, and why the ordering is the entire safety argument
+
+`analytic_then_library` now returns **45** candidates in this order:
+
+    1-5    analytic, ranks 1-5      (unchanged from entry 67)
+    6-10   library,  ranks 1-5      (unchanged from entry 67)
+    11-45  analytic, ranks 6-40     (NEW -- the deep tail)
+
+`propose_then_search` stops at the **first feasible** candidate, so positions
+11-45 are reached **only when the first ten have all failed**. At that moment
+the alternative is not a shallow proposal -- it is the **~1 085-deck search**.
+So the deep tail costs 140 decks on exactly the requests that would otherwise
+pay 1 085, and **it can never be preferred to a shallow acceptance**.
+
+That is the direct answer to entry 53, which measured deep acceptances (ranks
+17-26) converting at **50 %** against shallow at 83 % and forbade raising
+`AUTO_K`. **`AUTO_K` is still 5.** Nothing prefers a deep candidate; the tail is
+a fallback ahead of a more expensive fallback.
+
+`DEEP_K = 40` is the depth entry 68 measured reaching idx 14's rank-39
+candidate, which verified **45/45**. It is not swept.
+
+### Predictions
+
+**Q1 -- THE CONTROL, AND IT OUTRANKS THE HEADLINE. All 13 requests solved in
+entry 67 remain solved, from the SAME candidate position.** Confidence
+**0.9**: positions 1-10 are byte-identical to entry 67, and a request that
+accepted inside them cannot see the tail. **Falsifier: any of the 13 changing.**
+
+**Q2 -- idx 14 is accepted from the deep tail** (position 11-45) and verifies
+45/45. Confidence **0.8.** Entry 68 measured exactly this candidate at analytic
+rank 39 and verified it; the only new thing is reaching it through the shipped
+ordering. **Falsifier: not accepted, or accepted and below 45/45.**
+
+**Q3 -- THE HEADLINE. Shipped coverage becomes 14 of 16.** Confidence **0.75.**
+**Falsifier: anything but 14.**
+
+**Q4 -- THE COST IS CONFINED TO THE FAILURES. The 13 already-solved requests
+spend no more decks than in entry 67.** Confidence **0.9.** If a solved request
+pays for the tail, the ordering is wrong. **Falsifier: any increase on the 13.**
+
+**Q5 -- idx 0 and idx 12 are NOT rescued by depth.** Confidence **0.7.** idx 12
+fails on `S3_peaking_match` at four 125 C corners -- a thermal-margin gap the
+proposer's criterion does not price -- and idx 0 is 13 corners short.
+Registered so a null there is not read as the tail failing.
+
+### The decision rule, before the result
+
+* **Q1 or Q4 fails** -> the ordering is wrong; revert and fix before quoting
+  anything.
+* **Q1 holds and Q3 hits** -> `design.py` delivers **14 of 16** and the
+  docstring may say so.
+* **Q1 holds, Q2 misses** -> the tail does not reach through the shipped path;
+  report the measured/shipped gap as it stands at 13 and stop.
