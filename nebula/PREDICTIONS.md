@@ -12580,3 +12580,114 @@ to the pair stays inside its linear input range at the shortest channel in
 scope. The measurement says how much: **the ratio to close is 1.44-1.52x at
 3 dB**, and it is constant in `rl`, so it is a clean specification for the new
 block rather than a search.
+
+## 74. Session 34 -- **the input attenuator, sized and built. A MEASUREMENT RECORD, not a pre-registration** — and it found two defects of mine before it found its result.
+
+**2026-09-02.** Decision **D11** (owner): size the input attenuator entry 73
+showed the CTLE is missing. Built **opt-in**: `atten_code=None` is the default
+and the assembled deck is **byte-identical** to every deck this project has ever
+simulated (`test_attenuator.py`, 21 tests). The delivered path is untouched.
+
+This is a measurement record because the two findings below were reached while
+**debugging my own implementation**, not by testing a prediction. Registering
+them after the fact as if they had been predicted would be dishonest, so they
+are not.
+
+### The sizing, derived from entry 72's artifact
+
+`channel_probe_run.jsonl` carries a demand and a capability for every rejected
+point. Worst case per channel:
+
+    channel loss dB    3.0   4.5   6.0   7.5   9.0  10.5  12.0
+    worst over-drive  1.98  1.79  1.62  1.45  1.28  1.13  1.00
+    attenuation dB    5.94  5.06  4.17  3.20  2.16  1.05  0.00
+
+**~0.66 dB of attenuation per dB of channel loss removed.** Built as a
+series-shunt divider with a binary-weighted 3-bit shunt bank: `RSER = 150 ohm`,
+legs **1054.9 / 519.2 / 251.4 ohm** (the measured switch `Ron = 16.50 ohm`
+subtracted from each), eight codes spanning **0 to 5.93 dB**.
+
+### DEFECT 1 (mine): the NMOS shunt switches are OFF at this common mode
+
+First SPICE run: noise rose 0.2142 -> 0.2914 mVrms, so the resistors were
+present -- and `g_dc_db` moved by **0.036 dB** and the demand by **1.3 %**. The
+divider was doing nothing.
+
+The switch source sits at `cm = 1.5 V` and its gate at `VDD = 1.8 V`, so
+**`Vgs = 0.3 V`, below threshold.** The `Ron = 16.5 ohm` I sized the legs
+against was measured at `vgs = 1.8 V` with the source near ground
+(`tunable_trade_results.json`), and I carried the number across without carrying
+its condition.
+
+**This is the shape this repository has a gotcha list for**: it simulated
+cleanly, exited zero, produced a plausible noise increase, and attenuated
+nothing. Only comparing `g_dc_db` against the nominal divider ratio exposed it.
+
+**Consequence for the design, stated not worked around:** a switched resistive
+attenuator to `cm` is **not realisable with NMOS switches at VCM = 1.5 V** in
+the nfet-only trim. It needs a transmission gate (a PDK extension), a lower
+input common mode, or a different switching scheme. **Unresolved.**
+
+### DEFECT 2 (the repo's, and it is latent for anyone else): `vid_max` is fixed
+
+With the switches bypassed and a **fixed** divider substituted to isolate the
+physics, demand fell as designed -- and **so did the reported limit**, leaving
+the ratio stuck near 1.13 no matter how hard the input was attenuated:
+
+    A       att dB   demand   limit   ratio    3 dB link
+    1.0000    0.00   1805.1  1110.5   1.63     fail
+    0.5051    5.93   1246.8  1061.2   1.17     fail
+    0.2500   12.04    736.7   644.4   1.14     fail
+    0.1667   15.56    523.1   462.2   1.13     fail
+
+That says input attenuation cannot work either, and it is **wrong**.
+`run_point(vid_max=0.8)` is a **fixed** sweep range. Attenuate the input and the
+pair never reaches its own limit inside that sweep, so the "measured linear
+range" is just the swept span, which shrinks with `A`. The limit was reporting
+the instrument, not the circuit.
+
+Re-running with `vid_max = 0.8 / A`:
+
+    A       att dB   vid_max   demand   limit   ratio   3 dB   12 dB
+    0.5051    5.93     1.584   1246.8  1109.9   1.12    fail     OK
+    0.3333    9.54     2.400        -       -      -     OK      OK
+    0.2500   12.04     3.200        -       -      -     OK      OK
+
+**The limit is 1109.9 against 1110.5 unattenuated** -- constant to 0.05 %, which
+is what the physics says: the output linear range is a property of the output
+node and input attenuation does not scale it. **Entry 73's mechanism is
+confirmed by its converse.** Trimming `RL` scales demand and capability
+together; attenuating the input scales demand alone.
+
+### THE RESULT: input attenuation works, and the spec was too small
+
+**At 9.54 dB the 3 dB channel becomes scorable, and the 12 dB channel still
+is.** So the block does what entry 73 said it must.
+
+But **5.94 dB is not enough** -- the naive spec undershot. At the nominal
+5.93 dB code the ratio is 1.12, still compressed. The realised attenuation is
+smaller than the divider ratio implies (`g_dc_db` moved 3.43 dB for a nominal
+5.93 dB divider), and **why is unresolved** -- the poly resistor's fixed head
+resistance and the divider's pole into the gate capacitance are the two
+candidates, and neither has been separated.
+
+**So the honest sizing outcome is: 3 bits over 6 dB is too little range. The
+measured requirement is at least ~9.5 dB**, and the realised-vs-nominal gap must
+be explained before a code table can be trusted.
+
+### Cost, measured
+
+Input-referred noise rises **0.2142 -> 0.4836 mVrms** at 9.54 dB -- a 2.26x
+penalty, against S5's 1.5 mVrms budget, so it still passes with 3.1x margin.
+That is the real price of the block and it is affordable here.
+
+### What is NOT claimed
+
+* **No coverage number.** One code, one corner (TT), one load. Nothing has been
+  re-verified at 45 corners with the attenuator in.
+* **The switched implementation does not work** (defect 1). Everything above is
+  a **fixed** divider, which is not the variable block a receiver needs.
+* `vid_max` is **not** fixed in the repository yet -- see G140. Every existing
+  compression number was taken at unity input gain, where the artefact does not
+  bite, so **no committed result is invalidated**; but any future work that
+  reduces input gain must scale the sweep or it will measure the instrument.

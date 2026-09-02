@@ -85,6 +85,7 @@ from nebula.device.crosscheck import (
     scan_for_silent_failures,
 )
 from nebula.device.netlist_gates import assert_no_inert_writes
+from nebula.device import attenuator as _attenuator
 from nebula.device.ngspice_runner import ngspice_path
 from nebula.device.passives import PassiveGeometry
 from nebula.device.tail import TailDevice
@@ -999,8 +1000,9 @@ Vcm   cm  0 {{VCM}}
 * .noise input reference DIFFERENTIAL (see the module docstring) and lets .dc
 * sweep the differential input directly.
 Vid   vid 0 dc 0 ac 1{tran_src}
-Einp  inp cm vid 0 0.5
-Einn  inn cm vid 0 -0.5
+Einp  {in_p} cm vid 0 0.5
+Einn  {in_n} cm vid 0 -0.5
+{atten_block}
 
 XM1   outp inp s1 0 {device} W={{W}} L={{L}} nf={{NF}}
 XM2   outn inn s2 0 {device} W={{W}} L={{L}} nf={{NF}}
@@ -1312,7 +1314,14 @@ wrdata swing.txt v(outp) v(outn)
 #: **a shared template with growing placeholders needs ONE place that knows the
 #: defaults**, or every caller has to be found again next time. That place is
 #: `assemble_netlist`.
-_OPTIONAL_NETLIST_FIELDS: dict = {"ac_dump": "", "tran_src": "", "hd3_block": ""}
+_OPTIONAL_NETLIST_FIELDS: dict = {"ac_dump": "", "tran_src": "",
+                                   "hd3_block": "",
+                                   # The input attenuator (D11). OFF by
+                                   # default and byte-identical when off:
+                                   # the VCVSs drive the gates directly,
+                                   # exactly as they always have.
+                                   "in_p": "inp", "in_n": "inn",
+                                   "atten_block": ""}
 
 
 def assemble_netlist(template: str = None, **fields: object) -> str:
@@ -1585,6 +1594,7 @@ def run_point(
     hd3_vin_pk_v: Optional[float] = None,
     hd3_tone_hz: Optional[float] = None,
     nan_retry_bypass_f: Optional[float] = NAN_RETRY_BYPASS_F,
+    atten_code: Optional[int] = None,
 ) -> Sky130Point:
     """Simulate one sizing point. Never raises — failures come back ok=False.
 
@@ -1684,6 +1694,12 @@ def run_point(
         ac_dump=(_AC_DUMP_BLOCK if ac_sweep else ""),
         tran_src=_hd3_source(hd3_vin_pk_v, hd3_tone_hz) if hd3 else "",
         hd3_block=_hd3_block(hd3_tone_hz) if hd3 else "",
+        # **The input attenuator (D11), OFF by default.** `None` returns the
+        # historical field values, so the assembled text is byte-identical to
+        # every deck this project has ever simulated -- asserted in
+        # `test_attenuator.py`, which is what makes this safe to add to a file
+        # every result depends on.
+        **_attenuator.netlist_fields(atten_code),
     )
 
     # THE TWO SILENT WRITES, GATED ON THE ASSEMBLED TEXT (G56, G57). This
