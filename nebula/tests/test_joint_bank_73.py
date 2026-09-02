@@ -100,6 +100,30 @@ def test_entry85_control_rejects_a_wrong_physical_range_fingerprint():
     assert not out["checks"]["Q2"]
 
 
+def test_q1_separates_compression_from_a_hard_measurement_failure():
+    compressed = J.JointRow(
+        setting=0, atten_code=0, bank_code=0, i_rs=0, i_cs=0,
+        corner="tt/1.00/27C", ok=False,
+        reason=("output swing 900.0 mVpp exceeds the linear limit "
+                "800.0 mVpp (vout_swing_v=800.0 mVpp)"),
+    )
+    baseline = _analysis((11, 15, 16, 16, 16, 16, 16),
+                         scorable_3db=7519, all_channel=704)
+    out = P.score(_analysis(), baseline, [_control(), compressed],
+                  _corner_counts(), wall_clock_s=60.0)
+    assert out["compression_rows"] == 1
+    assert out["hard_device_failures"] == 0
+    assert out["checks"]["Q1"]
+
+    failed = J.JointRow(
+        setting=1, atten_code=0, bank_code=1, i_rs=0, i_cs=1,
+        corner="tt/1.00/27C", ok=False, reason="ngspice parse failure")
+    out = P.score(_analysis(), baseline, [_control(), failed],
+                  _corner_counts(), wall_clock_s=60.0)
+    assert out["hard_device_failures"] == 1
+    assert not out["checks"]["Q1"]
+
+
 def test_run_refuses_to_overwrite_result(monkeypatch, tmp_path):
     result = tmp_path / "result.json"
     result.write_text("keep", encoding="utf-8")

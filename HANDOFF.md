@@ -17,12 +17,12 @@
 > decisions that are OPEN and human-only, and what to do next. It supersedes
 > `nebula/NEXT_STEPS.md`. This file remains the full state of record.
 
-Last updated: **2026-09-03** (session 38, entry 86 implementation: the distinct
-full 7.3 dB verification runner is built and 25 focused gates pass. It reuses
-entry 81's qualified journal/resume/analysis path, verifies both registered
-source hashes, and forwards the custom ratio in every physical task. No
-entry-86 SPICE row exists yet. Commit the implementation before launching the
-authorised 23,040-row run; production adoption remains a later human decision.)
+Last updated: **2026-09-03** (session 38, entry 86 Q1 audit: all 23,040 rows
+completed uninterrupted in 131.27 min and Q2-Q7 pass. The first scorer called
+1,390 ordinary compression/unscorable rows hard device failures, so Q1 falsely
+failed. The frozen journal shows the mechanism; a fail-capable classification
+repair is green and the original result is preserved. Commit the repair, then
+perform one distinct zero-SPICE reanalysis. No circuit or threshold changes.)
 
 Earlier session 22p: (**THE REPORT EXISTS** --
 `nebula/report/Nebula_CTLE_Report.pdf`, **10 pages, 9 figures, 598 KB**,
@@ -13956,6 +13956,19 @@ there is no fingerprint of this defect in the points selected for entry 83;
 the old full joint artifact did not store `nan_retry_used`, so do not claim a
 table-wide retry count from it.
 
+### G147. An unscorable joint-table row is not automatically a device failure
+
+`adaptive_screen.PointResult.ok=False` means the point cannot be scored. Output
+swing compression is one normal reason: SPICE and the device extraction
+succeeded, but the link fit is outside its linear-use contract. Entry 86's
+first summary instead counted every false `JointRow.ok` as a hard device
+failure, turning 1,390 explicit compression rows into a false Q1 failure.
+
+**Rule:** classify the stored reason before counting failures. A compression
+signature is a link rejection; only a non-compression false row is a hard
+device/measurement failure. Preserve the first artifact, repair the analysis
+with a red-first test and re-score the frozen journal with zero SPICE.
+
 ### 2026-09-02 - session 36 (entry 83 implementation, before measurement). **The focused probe is built and green; no entry-83 SPICE point has run.**
 
 `attenuator.py` now accepts an explicit optional maximum ratio through its one
@@ -14195,3 +14208,22 @@ process exists. The complete non-slow suite passes **2,605/2,605**, with 13
 deselected and 2 warnings in 294.32 s. Commit this implementation before launching
 `py -3.13 -m nebula.experiments.exp_joint_bank_73 --run --workers 8`; if the
 process is interrupted, resume only with `--resume --workers 8`.
+
+### 2026-09-03 - session 38 (entry 86 initial outcome and Q1 audit). **The table is complete; the first Q1 failure is a classification defect, not yet a final result.**
+
+The uninterrupted eight-worker run wrote exactly 23,040 unique rows in
+7,875.99 s (131.27 min). Q2-Q7 pass in the first artifact: the Entry 85 row
+reproduces, all seven losses reach 16/16 all-corner coverage, 3 dB scorable
+rows rise 7,519 -> 10,378, the weakest corner has 114, and all reporting/cost
+gates hold. However, Q1 was printed FAIL because the new score used
+`sum(not row.ok)` as “hard device failures.”
+
+All 1,390 such rows contain the expected output-swing compression signature.
+They are unscorable link points, not simulator/device failures; entry 81's
+result already makes this distinction. New G147 records the trap. The repair
+counts compression and non-compression failures separately, and a test proves
+each branch; the focused group passes 26/26. The original result is retained.
+The focused group passes **26/26** and the complete non-slow suite passes
+**2,606/2,606**, with 13 deselected and 2 warnings in 304.31 s. Commit this
+plumbing-only repair before running the distinct zero-SPICE `--reanalyse-q1`;
+do not rerun any of the 23,040 physical points.

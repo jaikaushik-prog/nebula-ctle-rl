@@ -13850,3 +13850,22 @@ without changing any registered threshold. Tests were red first on the absent
 module. After implementation, the shared and Entry-86 focused group passes
 **25/25**. The complete non-slow suite passes **2,605/2,605**, with 13
 deselected and 2 warnings in 294.32 s. No entry-86 SPICE row or result exists.
+
+### Initial outcome and Q1 classification audit -- 2026-09-03
+
+The uninterrupted command completed all **23,040/23,040** rows in **131.27
+minutes**. The first result artifact reports Q2-Q7 PASS but Q1 FAIL because the
+new summary counted every `JointRow.ok=False` as a hard device failure: 1,390
+rows. Inspection of the frozen journal shows those rows carry the ordinary
+`output swing ... exceeds the linear limit ...` compression reason. In this
+table `ok=False` means **unscorable**, not necessarily that SPICE or the device
+measurement failed; entry 81 likewise reported compressed rejected rows while
+correctly recording zero hard simulator failures.
+
+This is the Q1 plumbing/classification defect covered by the pre-run decision
+rule. No circuit value, tolerance, source, journal row or outcome gate changes.
+A fail-capable test now requires compression rows and hard measurement failures
+to be counted separately; the focused group passes **26/26** and the complete
+non-slow suite passes **2,606/2,606**, with 13 deselected and 2 warnings in
+304.31 s. The original result remains preserved. A distinct zero-SPICE
+reanalysis of the same frozen journal is next; final Q1-Q7 scoring waits for it.

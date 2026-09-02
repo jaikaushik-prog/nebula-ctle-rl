@@ -26,6 +26,7 @@ from nebula.experiments import exp_joint_bank as J
 HERE = Path(__file__).resolve().parent
 RUN_LOG = HERE / "joint_bank_73_run.jsonl"
 RESULTS = HERE / "joint_bank_73_results.json"
+REANALYSIS = HERE / "joint_bank_73_results_q1_reanalysis.json"
 ENTRY85 = HERE / "atten_final_probe_results.json"
 BASELINE_JOURNAL = HERE / "joint_bank_run.jsonl.gz"
 
@@ -90,7 +91,12 @@ def score(current: dict, baseline: dict, rows: Sequence[J.JointRow],
           wall_clock_scope: str = "complete uninterrupted run") -> dict:
     """Score Q1-Q7 exactly as preregistered in PREDICTIONS entry 86."""
     rows = list(rows)
-    hard_failures = sum(not row.ok for row in rows)
+    compression_rows = sum(
+        not row.ok and J._SWING.search(str(row.reason or "")) is not None
+        for row in rows)
+    hard_failures = sum(
+        not row.ok and J._SWING.search(str(row.reason or "")) is None
+        for row in rows)
     control = _control_row(rows)
     control_links = (control.links or {}) if control is not None else {}
     control_ok = bool(
@@ -148,6 +154,7 @@ def score(current: dict, baseline: dict, rows: Sequence[J.JointRow],
     }
     return {
         "hard_device_failures": int(hard_failures),
+        "compression_rows": int(compression_rows),
         "entry85_control_ok": control_ok,
         "entry85_control": ({
             "g_dc_db": control.g_dc_db,
@@ -285,6 +292,34 @@ def run(workers: int = 1, resume: bool = False) -> dict:
     return out
 
 
+def reanalyse() -> dict:
+    """Correct Q1 classification from the frozen journal with zero SPICE."""
+    if REANALYSIS.exists():
+        raise FileExistsError(f"refusing to overwrite {REANALYSIS.name}")
+    if not RESULTS.exists():
+        raise FileNotFoundError(f"original result missing: {RESULTS}")
+    if not RUN_LOG.exists():
+        raise FileNotFoundError(f"entry-86 journal missing: {RUN_LOG}")
+    original = json.loads(RESULTS.read_text(encoding="utf-8"))
+    _, baseline_rows, _, hashes = _load_sources()
+    rows = J._load_rows(RUN_LOG)
+    analysis = analyse(
+        rows, baseline_rows, float(original["wall_clock_s"]),
+        wall_clock_scope=str(original["wall_clock_scope"]))
+    out = dict(original)
+    out["task"] = ("entry 86 full 7.3 dB bank verification - Q1 "
+                   "classification reanalysis")
+    out["source_hashes"] = hashes
+    out["analysis"] = analysis
+    out["supersedes_analysis_only"] = RESULTS.name
+    out["additional_spice_invocations"] = 0
+    out["analysis_correction"] = (
+        "row.ok=False means unscorable; output-swing compression is a link "
+        "rejection, not a hard device/simulator failure")
+    REANALYSIS.write_text(json.dumps(out, indent=1), encoding="utf-8")
+    return out
+
+
 def _report(out: dict) -> None:
     analysis = out["analysis"]
     current = analysis["current"]
@@ -295,6 +330,7 @@ def _report(out: dict) -> None:
     print("=" * 78)
     print(f"  rows: {current['n_rows']}/{current['n_expected']}")
     print(f"  hard device failures: {summary['hard_device_failures']}")
+    print(f"  compression-only rows: {summary['compression_rows']}")
     print("  loss dB   scorable   all-corner requests   delta")
     for row, delta in zip(current["per_loss"], analysis["coverage_delta"]):
         print(f"   {row['loss_db']:5.1f}      {row['n_scorable']:5d}"
@@ -319,10 +355,13 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     mode.add_argument("--run", action="store_true")
     mode.add_argument("--resume", action="store_true")
     mode.add_argument("--analyse", action="store_true")
+    mode.add_argument("--reanalyse-q1", action="store_true")
     parser.add_argument("--workers", type=int, default=1)
     args = parser.parse_args(argv)
     if args.run or args.resume:
         out = run(workers=max(1, args.workers), resume=args.resume)
+    elif args.reanalyse_q1:
+        out = reanalyse()
     elif args.analyse:
         if not RESULTS.exists():
             raise SystemExit(f"{RESULTS.name} missing: run the sweep first")
