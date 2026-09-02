@@ -1,0 +1,369 @@
+{
+ "task": "adaptation controls, measured BEFORE any policy exists",
+ "source": "bank_sweep_run.jsonl",
+ "split": {
+  "by": "process",
+  "train_processes": [
+   "tt",
+   "ss",
+   "ff"
+  ],
+  "test_processes": [
+   "sf",
+   "fs"
+  ],
+  "n_train_corners": 27,
+  "n_test_corners": 18
+ },
+ "reward": {
+  "trial_cost": 1.0,
+  "lock_bonus": 20.0,
+  "false_lock": 60.0,
+  "invalid_lock": 1.0
+ },
+ "budget": 8,
+ "fixed_code_chosen_on_train": 20,
+ "n_requests": 16,
+ "arms": [
+  {
+   "arm": "arm_oracle",
+   "n_episodes": 288,
+   "n_solvable": 262,
+   "n_compliant_locks": 262,
+   "compliance_rate_of_solvable": 1.0,
+   "mean_trials": 1.0,
+   "mean_trials_on_solvable": 1.0,
+   "mean_return": 11.777777777777779,
+   "n_false_locks": 0,
+   "budget": 8
+  },
+  {
+   "arm": "arm_exhaustive",
+   "n_episodes": 288,
+   "n_solvable": 262,
+   "n_compliant_locks": 20,
+   "compliance_rate_of_solvable": 0.07633587786259542,
+   "mean_trials": 65.0,
+   "mean_trials_on_solvable": 65.0,
+   "mean_return": -119.44444444444444,
+   "n_false_locks": 242,
+   "budget": 66
+  },
+  {
+   "arm": "arm_hillclimb",
+   "n_episodes": 288,
+   "n_solvable": 262,
+   "n_compliant_locks": 55,
+   "compliance_rate_of_solvable": 0.2099236641221374,
+   "mean_trials": 7.222222222222222,
+   "mean_trials_on_solvable": 7.217557251908397,
+   "mean_return": -51.94444444444444,
+   "n_false_locks": 207,
+   "budget": 8
+  },
+  {
+   "arm": "fixed_20",
+   "n_episodes": 288,
+   "n_solvable": 262,
+   "n_compliant_locks": 69,
+   "compliance_rate_of_solvable": 0.2633587786259542,
+   "mean_trials": 1.0,
+   "mean_trials_on_solvable": 1.0,
+   "mean_return": -41.833333333333336,
+   "n_false_locks": 193,
+   "budget": 8
+  }
+ ],
+ "random": {
+  "arm": "random",
+  "n_seeds": 20,
+  "seeds": [
+   2026090200,
+   2026090201,
+   2026090202,
+   2026090203,
+   2026090204,
+   2026090205,
+   2026090206,
+   2026090207,
+   2026090208,
+   2026090209,
+   2026090210,
+   2026090211,
+   2026090212,
+   2026090213,
+   2026090214,
+   2026090215,
+   2026090216,
+   2026090217,
+   2026090218,
+   2026090219
+  ],
+  "n_solvable": 262,
+  "compliance_rate_mean": 0.1215648854961832,
+  "compliance_rate_sd": 0.01911508110858189,
+  "compliance_rate_ci95": [
+   0.11318733182835782,
+   0.12994243916400858
+  ],
+  "mean_trials_on_solvable": 7.8574427480916045,
+  "per_seed": [
+   {
+    "arm": "random",
+    "n_episodes": 288,
+    "n_solvable": 262,
+    "n_compliant_locks": 25,
+    "compliance_rate_of_solvable": 0.09541984732824428,
+    "mean_trials": 7.861111111111111,
+    "mean_trials_on_solvable": 7.866412213740458,
+    "mean_return": -60.916666666666664,
+    "n_false_locks": 237,
+    "seed": 2026090200
+   },
+   {
+    "arm": "random",
+    "n_episodes": 288,
+    "n_solvable": 262,
+    "n_compliant_locks": 32,
+    "compliance_rate_of_solvable": 0.12213740458015267,
+    "mean_trials": 7.861111111111111,
+    "mean_trials_on_solvable": 7.858778625954199,
+    "mean_return": -58.97222222222222,
+    "n_false_locks": 230,
+    "seed": 2026090201
+   },
+   {
+    "arm": "random",
+    "n_episodes": 288,
+    "n_solvable": 262,
+    "n_compliant_locks": 31,
+    "compliance_rate_of_solvable": 0.1183206106870229,
+    "mean_trials": 7.854166666666667,
+    "mean_trials_on_solvable": 7.862595419847328,
+    "mean_return": -59.24305555555556,
+    "n_false_locks": 231,
+    "seed": 2026090202
+   },
+   {
+    "arm": "random",
+    "n_episodes": 288,
+    "n_solvable": 262,
+    "n_compliant_locks": 39,
+    "compliance_rate_of_solvable": 0.14885496183206107,
+    "mean_trials": 7.864583333333333,
+    "mean_trials_on_solvable": 7.866412213740458,
+    "mean_return": -57.03125,
+    "n_false_locks": 223,
+    "seed": 2026090203
+   },
+   {
+    "arm": "random",
+    "n_episodes": 288,
+    "n_solvable": 262,
+    "n_compliant_locks": 31,
+    "compliance_rate_of_solvable": 0.1183206106870229,
+    "mean_trials": 7.84375,
+    "mean_trials_on_solvable": 7.851145038167939,
+    "mean_return": -59.232638888888886,
+    "n_false_locks": 231,
+    "seed": 2026090204
+   },
+   {
+    "arm": "random",
+    "n_episodes": 288,
+    "n_solvable": 262,
+    "n_compliant_locks": 31,
+    "compliance_rate_of_solvable": 0.1183206106870229,
+    "mean_trials": 7.864583333333333,
+    "mean_trials_on_solvable": 7.854961832061068,
+    "mean_return": -59.25347222222222,
+    "n_false_locks": 231,
+    "seed": 2026090205
+   },
+   {
+    "arm": "random",
+    "n_episodes": 288,
+    "n_solvable": 262,
+    "n_compliant_locks": 25,
+    "compliance_rate_of_solvable": 0.09541984732824428,
+    "mean_trials": 7.899305555555555,
+    "mean_trials_on_solvable": 7.900763358778626,
+    "mean_return": -60.954861111111114,
+    "n_false_locks": 237,
+    "seed": 2026090206
+   },
+   {
+    "arm": "random",
+    "n_episodes": 288,
+    "n_solvable": 262,
+    "n_compliant_locks": 27,
+    "compliance_rate_of_solvable": 0.10305343511450382,
+    "mean_trials": 7.899305555555555,
+    "mean_trials_on_solvable": 7.893129770992366,
+    "mean_return": -60.39930555555556,
+    "n_false_locks": 235,
+    "seed": 2026090207
+   },
+   {
+    "arm": "random",
+    "n_episodes": 288,
+    "n_solvable": 262,
+    "n_compliant_locks": 29,
+    "compliance_rate_of_solvable": 0.11068702290076336,
+    "mean_trials": 7.871527777777778,
+    "mean_trials_on_solvable": 7.862595419847328,
+    "mean_return": -59.81597222222222,
+    "n_false_locks": 233,
+    "seed": 2026090208
+   },
+   {
+    "arm": "random",
+    "n_episodes": 288,
+    "n_solvable": 262,
+    "n_compliant_locks": 25,
+    "compliance_rate_of_solvable": 0.09541984732824428,
+    "mean_trials": 7.833333333333333,
+    "mean_trials_on_solvable": 7.824427480916031,
+    "mean_return": -60.888888888888886,
+    "n_false_locks": 237,
+    "seed": 2026090209
+   },
+   {
+    "arm": "random",
+    "n_episodes": 288,
+    "n_solvable": 262,
+    "n_compliant_locks": 37,
+    "compliance_rate_of_solvable": 0.14122137404580154,
+    "mean_trials": 7.833333333333333,
+    "mean_trials_on_solvable": 7.82824427480916,
+    "mean_return": -57.55555555555556,
+    "n_false_locks": 225,
+    "seed": 2026090210
+   },
+   {
+    "arm": "random",
+    "n_episodes": 288,
+    "n_solvable": 262,
+    "n_compliant_locks": 27,
+    "compliance_rate_of_solvable": 0.10305343511450382,
+    "mean_trials": 7.861111111111111,
+    "mean_trials_on_solvable": 7.851145038167939,
+    "mean_return": -60.361111111111114,
+    "n_false_locks": 235,
+    "seed": 2026090211
+   },
+   {
+    "arm": "random",
+    "n_episodes": 288,
+    "n_solvable": 262,
+    "n_compliant_locks": 34,
+    "compliance_rate_of_solvable": 0.1297709923664122,
+    "mean_trials": 7.815972222222222,
+    "mean_trials_on_solvable": 7.824427480916031,
+    "mean_return": -58.37152777777778,
+    "n_false_locks": 228,
+    "seed": 2026090212
+   },
+   {
+    "arm": "random",
+    "n_episodes": 288,
+    "n_solvable": 262,
+    "n_compliant_locks": 44,
+    "compliance_rate_of_solvable": 0.16793893129770993,
+    "mean_trials": 7.888888888888889,
+    "mean_trials_on_solvable": 7.885496183206107,
+    "mean_return": -55.666666666666664,
+    "n_false_locks": 218,
+    "seed": 2026090213
+   },
+   {
+    "arm": "random",
+    "n_episodes": 288,
+    "n_solvable": 262,
+    "n_compliant_locks": 35,
+    "compliance_rate_of_solvable": 0.13358778625954199,
+    "mean_trials": 7.822916666666667,
+    "mean_trials_on_solvable": 7.8320610687022905,
+    "mean_return": -58.10069444444444,
+    "n_false_locks": 227,
+    "seed": 2026090214
+   },
+   {
+    "arm": "random",
+    "n_episodes": 288,
+    "n_solvable": 262,
+    "n_compliant_locks": 32,
+    "compliance_rate_of_solvable": 0.12213740458015267,
+    "mean_trials": 7.888888888888889,
+    "mean_trials_on_solvable": 7.885496183206107,
+    "mean_return": -59.0,
+    "n_false_locks": 230,
+    "seed": 2026090215
+   },
+   {
+    "arm": "random",
+    "n_episodes": 288,
+    "n_solvable": 262,
+    "n_compliant_locks": 30,
+    "compliance_rate_of_solvable": 0.11450381679389313,
+    "mean_trials": 7.8125,
+    "mean_trials_on_solvable": 7.820610687022901,
+    "mean_return": -59.479166666666664,
+    "n_false_locks": 232,
+    "seed": 2026090216
+   },
+   {
+    "arm": "random",
+    "n_episodes": 288,
+    "n_solvable": 262,
+    "n_compliant_locks": 36,
+    "compliance_rate_of_solvable": 0.13740458015267176,
+    "mean_trials": 7.864583333333333,
+    "mean_trials_on_solvable": 7.870229007633588,
+    "mean_return": -57.864583333333336,
+    "n_false_locks": 226,
+    "seed": 2026090217
+   },
+   {
+    "arm": "random",
+    "n_episodes": 288,
+    "n_solvable": 262,
+    "n_compliant_locks": 36,
+    "compliance_rate_of_solvable": 0.13740458015267176,
+    "mean_trials": 7.875,
+    "mean_trials_on_solvable": 7.877862595419847,
+    "mean_return": -57.875,
+    "n_false_locks": 226,
+    "seed": 2026090218
+   },
+   {
+    "arm": "random",
+    "n_episodes": 288,
+    "n_solvable": 262,
+    "n_compliant_locks": 31,
+    "compliance_rate_of_solvable": 0.1183206106870229,
+    "mean_trials": 7.836805555555555,
+    "mean_trials_on_solvable": 7.8320610687022905,
+    "mean_return": -59.22569444444444,
+    "n_false_locks": 231,
+    "seed": 2026090219
+   }
+  ]
+ },
+ "non_rl_pareto_frontier": [
+  {
+   "arm": "fixed_20",
+   "n_episodes": 288,
+   "n_solvable": 262,
+   "n_compliant_locks": 69,
+   "compliance_rate_of_solvable": 0.2633587786259542,
+   "mean_trials": 1.0,
+   "mean_trials_on_solvable": 1.0,
+   "mean_return": -41.833333333333336,
+   "n_false_locks": 193,
+   "budget": 8
+  }
+ ],
+ "wall_clock_s": 3.4635205268859863,
+ "simulations_run_by_this_file": 0
+}

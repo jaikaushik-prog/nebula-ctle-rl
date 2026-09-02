@@ -13685,3 +13685,17 @@ Tests were written first and failed on the missing qualification functions;
 after implementation, **20 focused adaptation tests pass**. Entry 80 registers
 the invariant counts, random bounds, frontier membership and console gate
 before the corrected zero-SPICE run. No policy is authorised on this old table.
+
+### 2026-09-02 - session 36 (entry 80 outcome). **The control instrument is qualified; fixed code is the sole non-RL Pareto arm.**
+
+All four registered checks hit. Oracle/fixed/exhaustive exactly reproduced
+262/262, 69/262 and 20/262 with mean trials 1/1/65. The repaired hillclimb is
+55/262 in 7.218 trials. Across 20 independent experiment seeds, random is
+12.156% mean compliance, 1.912% SD, 95% normal CI 11.319-12.994%, and 7.857
+trials. The computed frontier contains only TRAIN-selected `fixed_20`.
+
+Artifact: `nebula/experiments/adapt_controls_multiseed_results.json`; zero
+SPICE. This qualifies the measurement machinery and fixes G142/G143. It is not
+an RL result and the old no-attenuator/one-channel table remains forbidden for
+policy training. The next authorised measurement is the separately
+preregistered combined attenuator/CTLE/PVT/channel table.

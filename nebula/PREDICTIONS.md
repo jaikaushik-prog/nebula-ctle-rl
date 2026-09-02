@@ -13210,3 +13210,30 @@ literal. **Falsifier: any non-ASCII output byte/string.**
   hillclimb bar.
 * Q1-Q4 hold -> the controls are qualified as an instrument only. Proceed to
   the separately preregistered combined circuit table; do not train here.
+
+### OUTCOME, entry 80 (2026-09-02). **SCORED 4 OF 4. The qualified non-RL bar is fixed code 20: 69/262 solvable cases in one trial.**
+
+    oracle                       262/262, 1.000 trials
+    exhaustive-max-eye            20/262, 65.000 trials
+    coordinate hillclimb          55/262, 7.218 trials
+    fixed code 20                 69/262, 1.000 trials
+    random, 20 seeds        12.156% mean, 1.912% SD
+                             95% CI 11.319-12.994%, 7.857 trials
+    non-RL Pareto frontier        fixed_20 only
+    artifact                      adapt_controls_multiseed_results.json
+    simulations                   0
+
+| | prediction | outcome | |
+|---|---|---|---|
+| **Q1** | oracle 262, fixed 69, exhaustive 20; 1/1/65 trials | **exactly reproduced** | **HIT** |
+| **Q2** | random 5-20%, nonzero SD, <=8 trials | **12.156%, 1.912% SD, 7.857** | **HIT** |
+| **Q3** | fixed on frontier; hillclimb/exhaustive absent | **frontier = fixed_20** | **HIT** |
+| **Q4** | ASCII console | **ASCII-only output; AST gate passes** | **HIT** |
+
+The hillclimb count moved 51 -> 55 and its mean trials 8.000 -> 7.218 because
+the repaired arm now reserves enough budget to re-apply the best observed code.
+That row was deliberately not in Q1's invariant set. Fixed still dominates it
+on both axes, so the decision bar does not move.
+
+Per the registered rule, this qualifies the control instrument and authorises
+the combined-table experiment. It does not authorise a policy on the old table.
