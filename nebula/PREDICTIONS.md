@@ -11867,3 +11867,65 @@ Registered so a null there is not read as the tail failing.
   docstring may say so.
 * **Q1 holds, Q2 misses** -> the tail does not reach through the shipped path;
   report the measured/shipped gap as it stands at 13 and stop.
+
+### OUTCOME, entry 69 (2026-09-02). **SCORED 3 OF 5. Coverage 13 -> 14, but via idx 0, not idx 14 -- and the ordering I chose BLOCKED the fix it was built for.**
+
+    16 requests screened, 599 s; 2 new designs verified; 734 s total
+    artifact: experiments/escalate_results.json
+
+    idx   rank  source             decks   entry 67
+      0    15   analytic-DEEP        60     None      -> VERIFIED 45/45  NEW
+      1-11  same as entry 67, all analytic-shallow, 4-20 decks each
+     12   None  none                180     None
+     13   None  none                180     None
+     14     8   library              32     8         -> 44/45, still unsolved
+     15     5   analytic-shallow     20     5
+
+    COVERAGE 13 -> 14 OF 16
+
+| | prediction | outcome | |
+|---|---|---|---|
+| **Q1** | all 13 solved requests unchanged, same position | **all identical** | **HIT** |
+| **Q2** | idx 14 accepted from the deep tail, verifies 45/45 | **accepted from the LIBRARY at position 8, 44/45** | **MISS** |
+| **Q3** | shipped coverage becomes 14 of 16 | **14** | **HIT** |
+| **Q4** | cost confined to the failures | solved 4-20 decks; idx 0 paid 60; idx 12/13 paid 180 | **HIT** |
+| **Q5** | idx 0 and 12 are NOT rescued by depth | **idx 0 WAS rescued, and verifies 45/45** | **MISS** |
+
+### The irony, and it is the most useful thing here
+
+**The deep tail works. It just did not reach the request it was built for.**
+
+Entry 68 measured an analytic candidate for idx 14 at **rank 39** that verifies
+**45/45**. In the shipped ordering that candidate sits at position **44** -- and
+the **library's** candidate at position **8** passes the screen first. So the
+tool accepts a design that reaches **44/45** and never sees the one that reaches
+**45/45**.
+
+That is entry 53's mechanism a third time: **screen acceptance does not predict
+45-corner conversion**, and here it actively pre-empts a better design. The
+ordering `analytic-shallow -> library -> analytic-deep` was chosen to protect
+shallow acceptances, and it does; it also lets a mediocre shallow acceptance
+block a good deep one.
+
+**A solving design for idx 14 exists, is verified 45/45, and the shipped tool
+does not deliver it.** That gap is stated, not fixed.
+
+### And the null that failed, in the good direction
+
+**Q5 predicted idx 0 would not be rescued.** It was: accepted at analytic rank
+15 and **verified 45 of 45**, having been **32/45** by search. Registered at 0.7
+against, and wrong. The reason it was reachable and idx 14's was not is
+positional, not physical -- idx 0 had no library acceptance at all, so the tail
+ran.
+
+### What may be said now
+
+* **`design.py --method auto` answers 14 of 16 requests at all 45 mandated
+  corners**, verified, with every previously-solved request unchanged and no
+  regression.
+* **Cost is confined to failures**: 4-20 decks on the twelve shallow
+  acceptances, 60 on idx 0, 180 on the two that still fail -- against a
+  ~1 085-deck search.
+* **Still 0 of 16 on the 135-point load grid**, this project's own extra axis.
+* **idx 12 and 13 remain unsolved** at any depth, and **idx 14 is solvable but
+  not delivered.**
