@@ -1,0 +1,293 @@
+{
+ "loss_db": 3.0,
+ "n_rows": 23040,
+ "n_corners": 45,
+ "n_requests": 16,
+ "n_unserved_corner_requests": 16,
+ "best_scorable_single_violation_histogram": {
+  "S3_f_peak_match": 9,
+  "S3_peaking_match": 7
+ },
+ "n_with_shape_compliant_compressed_candidate": 16,
+ "n_min_extra_candidate_at_max_attenuator": 16,
+ "least_extra_attenuation_db_min": 0.02340064751622177,
+ "least_extra_attenuation_db_max": 1.0304084235530193,
+ "extra_attenuation_interpretation": "compression-ratio lower bound only; noise and eye are unverified",
+ "unserved": [
+  {
+   "corner": "ff/0.95/0C",
+   "request_id": 12,
+   "target_peaking_db": 10.0,
+   "target_f_peak_hz": 1386961840.0848064,
+   "n_scorable": 69,
+   "best_scorable_setting": 483,
+   "best_scorable_violations": [
+    "S3_peaking_match"
+   ],
+   "shape_compliant_compressed_candidates": 33,
+   "least_extra_attenuation_db": 0.6090236969648387,
+   "least_extra_setting": 491,
+   "least_extra_atten_code": 7,
+   "least_extra_demand_mvpp": 1055.9,
+   "least_extra_limit_mvpp": 984.4
+  },
+  {
+   "corner": "ff/0.95/0C",
+   "request_id": 13,
+   "target_peaking_db": 10.0,
+   "target_f_peak_hz": 1626677319.302417,
+   "n_scorable": 69,
+   "best_scorable_setting": 489,
+   "best_scorable_violations": [
+    "S3_f_peak_match"
+   ],
+   "shape_compliant_compressed_candidates": 39,
+   "least_extra_attenuation_db": 0.1669154358547885,
+   "least_extra_setting": 490,
+   "least_extra_atten_code": 7,
+   "least_extra_demand_mvpp": 1003.5,
+   "least_extra_limit_mvpp": 984.4
+  },
+  {
+   "corner": "ff/0.95/125C",
+   "request_id": 12,
+   "target_peaking_db": 10.0,
+   "target_f_peak_hz": 1386961840.0848064,
+   "n_scorable": 105,
+   "best_scorable_setting": 496,
+   "best_scorable_violations": [
+    "S3_f_peak_match"
+   ],
+   "shape_compliant_compressed_candidates": 21,
+   "least_extra_attenuation_db": 0.503310907229594,
+   "least_extra_setting": 497,
+   "least_extra_atten_code": 7,
+   "least_extra_demand_mvpp": 792.2,
+   "least_extra_limit_mvpp": 747.6
+  },
+  {
+   "corner": "ff/0.95/27C",
+   "request_id": 12,
+   "target_peaking_db": 10.0,
+   "target_f_peak_hz": 1386961840.0848064,
+   "n_scorable": 84,
+   "best_scorable_setting": 489,
+   "best_scorable_violations": [
+    "S3_f_peak_match"
+   ],
+   "shape_compliant_compressed_candidates": 30,
+   "least_extra_attenuation_db": 0.4794606062988279,
+   "least_extra_setting": 491,
+   "least_extra_atten_code": 7,
+   "least_extra_demand_mvpp": 996.2,
+   "least_extra_limit_mvpp": 942.7
+  },
+  {
+   "corner": "sf/0.95/0C",
+   "request_id": 8,
+   "target_peaking_db": 8.0,
+   "target_f_peak_hz": 1386961840.0848064,
+   "n_scorable": 54,
+   "best_scorable_setting": 475,
+   "best_scorable_violations": [
+    "S3_peaking_match"
+   ],
+   "shape_compliant_compressed_candidates": 36,
+   "least_extra_attenuation_db": 0.3387731578110164,
+   "least_extra_setting": 483,
+   "least_extra_atten_code": 7,
+   "least_extra_demand_mvpp": 1045.7,
+   "least_extra_limit_mvpp": 1005.7
+  },
+  {
+   "corner": "sf/0.95/0C",
+   "request_id": 12,
+   "target_peaking_db": 10.0,
+   "target_f_peak_hz": 1386961840.0848064,
+   "n_scorable": 54,
+   "best_scorable_setting": 424,
+   "best_scorable_violations": [
+    "S3_f_peak_match"
+   ],
+   "shape_compliant_compressed_candidates": 33,
+   "least_extra_attenuation_db": 1.0304084235530193,
+   "least_extra_setting": 491,
+   "least_extra_atten_code": 7,
+   "least_extra_demand_mvpp": 1092.4,
+   "least_extra_limit_mvpp": 970.2
+  },
+  {
+   "corner": "sf/0.95/0C",
+   "request_id": 13,
+   "target_peaking_db": 10.0,
+   "target_f_peak_hz": 1626677319.302417,
+   "n_scorable": 54,
+   "best_scorable_setting": 424,
+   "best_scorable_violations": [
+    "S3_f_peak_match"
+   ],
+   "shape_compliant_compressed_candidates": 40,
+   "least_extra_attenuation_db": 0.08197658784308987,
+   "least_extra_setting": 489,
+   "least_extra_atten_code": 7,
+   "least_extra_demand_mvpp": 979.4,
+   "least_extra_limit_mvpp": 970.2
+  },
+  {
+   "corner": "sf/0.95/125C",
+   "request_id": 8,
+   "target_peaking_db": 8.0,
+   "target_f_peak_hz": 1386961840.0848064,
+   "n_scorable": 91,
+   "best_scorable_setting": 482,
+   "best_scorable_violations": [
+    "S3_peaking_match"
+   ],
+   "shape_compliant_compressed_candidates": 23,
+   "least_extra_attenuation_db": 0.02340064751622177,
+   "least_extra_setting": 483,
+   "least_extra_atten_code": 7,
+   "least_extra_demand_mvpp": 817.7,
+   "least_extra_limit_mvpp": 815.5
+  },
+  {
+   "corner": "sf/0.95/125C",
+   "request_id": 12,
+   "target_peaking_db": 10.0,
+   "target_f_peak_hz": 1386961840.0848064,
+   "n_scorable": 91,
+   "best_scorable_setting": 482,
+   "best_scorable_violations": [
+    "S3_peaking_match"
+   ],
+   "shape_compliant_compressed_candidates": 21,
+   "least_extra_attenuation_db": 0.8856075611340422,
+   "least_extra_setting": 497,
+   "least_extra_atten_code": 7,
+   "least_extra_demand_mvpp": 808.8,
+   "least_extra_limit_mvpp": 730.4
+  },
+  {
+   "corner": "sf/0.95/125C",
+   "request_id": 13,
+   "target_peaking_db": 10.0,
+   "target_f_peak_hz": 1626677319.302417,
+   "n_scorable": 91,
+   "best_scorable_setting": 489,
+   "best_scorable_violations": [
+    "S3_peaking_match"
+   ],
+   "shape_compliant_compressed_candidates": 24,
+   "least_extra_attenuation_db": 0.3792754685727586,
+   "least_extra_setting": 496,
+   "least_extra_atten_code": 7,
+   "least_extra_demand_mvpp": 763.0,
+   "least_extra_limit_mvpp": 730.4
+  },
+  {
+   "corner": "sf/0.95/125C",
+   "request_id": 14,
+   "target_peaking_db": 10.0,
+   "target_f_peak_hz": 1921093976.6100154,
+   "n_scorable": 91,
+   "best_scorable_setting": 489,
+   "best_scorable_violations": [
+    "S3_peaking_match"
+   ],
+   "shape_compliant_compressed_candidates": 8,
+   "least_extra_attenuation_db": 0.3792754685727586,
+   "least_extra_setting": 496,
+   "least_extra_atten_code": 7,
+   "least_extra_demand_mvpp": 763.0,
+   "least_extra_limit_mvpp": 730.4
+  },
+  {
+   "corner": "sf/0.95/125C",
+   "request_id": 15,
+   "target_peaking_db": 10.0,
+   "target_f_peak_hz": 2253126156.5270753,
+   "n_scorable": 91,
+   "best_scorable_setting": 488,
+   "best_scorable_violations": [
+    "S3_peaking_match"
+   ],
+   "shape_compliant_compressed_candidates": 2,
+   "least_extra_attenuation_db": 0.3792754685727586,
+   "least_extra_setting": 496,
+   "least_extra_atten_code": 7,
+   "least_extra_demand_mvpp": 763.0,
+   "least_extra_limit_mvpp": 730.4
+  },
+  {
+   "corner": "sf/0.95/27C",
+   "request_id": 8,
+   "target_peaking_db": 8.0,
+   "target_f_peak_hz": 1386961840.0848064,
+   "n_scorable": 68,
+   "best_scorable_setting": 482,
+   "best_scorable_violations": [
+    "S3_f_peak_match"
+   ],
+   "shape_compliant_compressed_candidates": 32,
+   "least_extra_attenuation_db": 0.1540833953516956,
+   "least_extra_setting": 483,
+   "least_extra_atten_code": 7,
+   "least_extra_demand_mvpp": 983.9,
+   "least_extra_limit_mvpp": 966.6
+  },
+  {
+   "corner": "sf/0.95/27C",
+   "request_id": 12,
+   "target_peaking_db": 10.0,
+   "target_f_peak_hz": 1386961840.0848064,
+   "n_scorable": 68,
+   "best_scorable_setting": 489,
+   "best_scorable_violations": [
+    "S3_f_peak_match"
+   ],
+   "shape_compliant_compressed_candidates": 29,
+   "least_extra_attenuation_db": 0.8821406901183206,
+   "least_extra_setting": 491,
+   "least_extra_atten_code": 7,
+   "least_extra_demand_mvpp": 1027.2,
+   "least_extra_limit_mvpp": 928.0
+  },
+  {
+   "corner": "sf/1.00/0C",
+   "request_id": 12,
+   "target_peaking_db": 10.0,
+   "target_f_peak_hz": 1386961840.0848064,
+   "n_scorable": 84,
+   "best_scorable_setting": 490,
+   "best_scorable_violations": [
+    "S3_f_peak_match"
+   ],
+   "shape_compliant_compressed_candidates": 33,
+   "least_extra_attenuation_db": 0.08022883654682954,
+   "least_extra_setting": 491,
+   "least_extra_atten_code": 7,
+   "least_extra_demand_mvpp": 1109.4,
+   "least_extra_limit_mvpp": 1099.2
+  },
+  {
+   "corner": "tt/0.95/0C",
+   "request_id": 12,
+   "target_peaking_db": 10.0,
+   "target_f_peak_hz": 1386961840.0848064,
+   "n_scorable": 98,
+   "best_scorable_setting": 490,
+   "best_scorable_violations": [
+    "S3_f_peak_match"
+   ],
+   "shape_compliant_compressed_candidates": 31,
+   "least_extra_attenuation_db": 0.04337638111752551,
+   "least_extra_setting": 491,
+   "least_extra_atten_code": 7,
+   "least_extra_demand_mvpp": 1023.8,
+   "least_extra_limit_mvpp": 1018.7
+  }
+ ],
+ "source": "joint_bank_run.jsonl.gz",
+ "source_decoded_sha256": "A205303614ABCC5F76D6EA78CFA1C9687E49A3817FA1E9FA9EC314336E20CA33",
+ "scope": "post-outcome descriptive diagnosis; zero SPICE and no circuit, range, tolerance or reward change"
+}

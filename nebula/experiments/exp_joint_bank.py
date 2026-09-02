@@ -16,7 +16,10 @@ from __future__ import annotations
 import argparse
 import collections
 import concurrent.futures
+import gzip
+import hashlib
 import json
+import math
 import re
 import time
 from dataclasses import asdict, dataclass
@@ -38,6 +41,7 @@ from nebula.rl.contract import design_id, sizing_from_u
 HERE = Path(__file__).resolve().parent
 RUN_LOG = HERE / "joint_bank_run.jsonl"
 RESULTS = HERE / "joint_bank_results.json"
+DIAGNOSIS = HERE / "joint_bank_diagnosis.json"
 
 N_RS, N_CS, RS_SPAN, CS_SPAN = 8, 8, 0.38, 0.20
 N_BANK_CODES = N_RS * N_CS
@@ -123,13 +127,16 @@ def _measure(task: tuple[int, Setting, int, Corner]) -> JointRow:
 
 def _load_rows(path: Path) -> list[JointRow]:
     rows = []
-    for lineno, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
-        if not line.strip():
-            continue
-        try:
-            rows.append(JointRow(**json.loads(line)))
-        except Exception as exc:
-            raise ValueError(f"{path.name}:{lineno}: invalid journal row: {exc}") from exc
+    opener = gzip.open if path.suffix == ".gz" else open
+    with opener(path, "rt", encoding="utf-8") as fh:
+        for lineno, line in enumerate(fh, 1):
+            if not line.strip():
+                continue
+            try:
+                rows.append(JointRow(**json.loads(line)))
+            except Exception as exc:
+                raise ValueError(
+                    f"{path.name}:{lineno}: invalid journal row: {exc}") from exc
     keys = [(r.setting, r.corner) for r in rows]
     if len(keys) != len(set(keys)):
         raise ValueError(f"{path.name}: duplicate setting/corner rows")
@@ -278,6 +285,138 @@ def analyse(rows: Sequence[JointRow]) -> dict:
     }
 
 
+def diagnose(rows: Sequence[JointRow], loss_db: float = 3.0,
+             requests: Optional[Sequence[tuple[float, float]]] = None) -> dict:
+    """Explain unserved corner/requests without changing a circuit value.
+
+    ``least_extra_attenuation_db`` is only the compression ratio expressed in
+    dB.  It is a lower-bound diagnostic, not a prediction that a resized
+    attenuator will pass: extra attenuation also changes noise and eye height.
+    """
+    requests = list(requests if requests is not None else
+                    ((float(pk), float(freq)) for pk in PEAKING_REQUESTS
+                     for freq in FREQ_REQUESTS))
+    by_corner = collections.defaultdict(list)
+    for row in rows:
+        by_corner[row.corner].append(row)
+    non_eye_specs = tuple(name for name in SPECS
+                          if not name.startswith("S8_"))
+    unserved = []
+    single_violation = collections.Counter()
+    extra_values = []
+    n_at_max_atten = 0
+
+    for corner in sorted(by_corner):
+        corner_rows = by_corner[corner]
+        for request_id, (target_pk, target_freq) in enumerate(requests):
+            if any(is_compliant(row, loss_db, target_freq, target_pk)
+                   for row in corner_rows):
+                continue
+
+            scored = []
+            compressed = []
+            for row in corner_rows:
+                margins = margins_at(row, loss_db, target_freq, target_pk)
+                if margins is not None:
+                    sf = R.shortfalls(margins, SPECS)
+                    violations = sorted(name for name, value in sf.items()
+                                        if value > 0.0)
+                    scored.append((len(violations), max(sf.values()),
+                                   sum(sf.values()), row.setting,
+                                   row, violations))
+
+                if not row.ok:
+                    continue
+                link = (row.links or {}).get(str(float(loss_db)), {})
+                if link.get("reason") != "compression":
+                    continue
+                shape_margins = dict(row.margins or {})
+                shape_margins.update(R.request_rows(
+                    float(row.f_peak_oct), float(row.peaking_db),
+                    float(target_freq), float(target_pk)))
+                if not all(float(shape_margins[name]) >= 0.0
+                           for name in non_eye_specs):
+                    continue
+                demand = float(link["demand_mvpp"])
+                limit = float(link["limit_mvpp"])
+                if not demand > limit > 0.0:
+                    raise ValueError("compression row has an invalid swing ratio")
+                extra_db = 20.0 * math.log10(demand / limit)
+                compressed.append((extra_db, row.setting, row, demand, limit))
+
+            best = min(scored, key=lambda item: item[:4]) if scored else None
+            least = min(compressed, key=lambda item: item[:2]) if compressed else None
+            violations = [] if best is None else best[5]
+            if len(violations) == 1:
+                single_violation[violations[0]] += 1
+            if least is not None:
+                extra_values.append(least[0])
+                n_at_max_atten += least[2].atten_code == max(ATTEN_CODES)
+
+            unserved.append({
+                "corner": corner, "request_id": request_id,
+                "target_peaking_db": float(target_pk),
+                "target_f_peak_hz": float(target_freq),
+                "n_scorable": len(scored),
+                "best_scorable_setting": (None if best is None else
+                                           best[4].setting),
+                "best_scorable_violations": violations,
+                "shape_compliant_compressed_candidates": len(compressed),
+                "least_extra_attenuation_db": (None if least is None else
+                                                least[0]),
+                "least_extra_setting": (None if least is None else
+                                         least[2].setting),
+                "least_extra_atten_code": (None if least is None else
+                                            least[2].atten_code),
+                "least_extra_demand_mvpp": (None if least is None else
+                                             least[3]),
+                "least_extra_limit_mvpp": (None if least is None else
+                                            least[4]),
+            })
+
+    return {
+        "loss_db": float(loss_db), "n_rows": len(rows),
+        "n_corners": len(by_corner), "n_requests": len(requests),
+        "n_unserved_corner_requests": len(unserved),
+        "best_scorable_single_violation_histogram": {
+            key: int(value) for key, value in sorted(single_violation.items())},
+        "n_with_shape_compliant_compressed_candidate": len(extra_values),
+        "n_min_extra_candidate_at_max_attenuator": n_at_max_atten,
+        "least_extra_attenuation_db_min": (min(extra_values)
+                                            if extra_values else None),
+        "least_extra_attenuation_db_max": (max(extra_values)
+                                            if extra_values else None),
+        "extra_attenuation_interpretation": (
+            "compression-ratio lower bound only; noise and eye are unverified"),
+        "unserved": unserved,
+    }
+
+
+def _decoded_sha256(path: Path) -> str:
+    opener = gzip.open if path.suffix == ".gz" else open
+    digest = hashlib.sha256()
+    with opener(path, "rb") as fh:
+        for chunk in iter(lambda: fh.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest().upper()
+
+
+def run_diagnosis(source: Optional[Path] = None) -> dict:
+    """Write the deterministic, zero-SPICE boundary diagnosis."""
+    archive = Path(str(RUN_LOG) + ".gz")
+    source = Path(source) if source is not None else (
+        archive if archive.exists() else RUN_LOG)
+    if not source.exists():
+        raise FileNotFoundError(f"joint-bank journal not found: {source}")
+    out = diagnose(_load_rows(source))
+    out["source"] = source.name
+    out["source_decoded_sha256"] = _decoded_sha256(source)
+    out["scope"] = ("post-outcome descriptive diagnosis; zero SPICE and no "
+                    "circuit, range, tolerance or reward change")
+    DIAGNOSIS.write_text(json.dumps(out, indent=1), encoding="utf-8")
+    return out
+
+
 def run(workers: int = 1, resume: bool = False) -> dict:
     from nebula.experiments.exp_tuning_bank import _base_from_artifacts
     base_u = _base_from_artifacts()
@@ -335,12 +474,30 @@ def _report(out: dict) -> None:
           f"{out['wall_clock_s'] / 60:.1f} min")
 
 
+def _report_diagnosis(out: dict) -> None:
+    print()
+    print("=" * 78)
+    print("JOINT BANK - 3 DB FAILURE DIAGNOSIS")
+    print("=" * 78)
+    print(f"  unserved corner/request pairs: "
+          f"{out['n_unserved_corner_requests']}")
+    print(f"  closest scorable one-row misses: "
+          f"{out['best_scorable_single_violation_histogram']}")
+    print(f"  pairs with a shape-compliant compressed candidate: "
+          f"{out['n_with_shape_compliant_compressed_candidate']}")
+    print(f"  least extra attenuation lower-bound range: "
+          f"{out['least_extra_attenuation_db_min']:.3f} to "
+          f"{out['least_extra_attenuation_db_max']:.3f} dB")
+    print("  NOTE: this range does not verify noise or eye height")
+
+
 def main(argv: Optional[Sequence[str]] = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     mode = ap.add_mutually_exclusive_group()
     mode.add_argument("--run", action="store_true")
     mode.add_argument("--resume", action="store_true")
     mode.add_argument("--analyse", action="store_true")
+    mode.add_argument("--diagnose", action="store_true")
     ap.add_argument("--workers", type=int, default=1)
     args = ap.parse_args(argv)
     if args.run or args.resume:
@@ -351,6 +508,9 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         if not RESULTS.exists():
             raise SystemExit(f"{RESULTS.name} missing: run the sweep first")
         _report(json.loads(RESULTS.read_text(encoding="utf-8")))
+        return 0
+    if args.diagnose:
+        _report_diagnosis(run_diagnosis())
         return 0
     ap.print_help()
     return 0

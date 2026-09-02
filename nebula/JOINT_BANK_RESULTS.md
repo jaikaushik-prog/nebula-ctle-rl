@@ -90,9 +90,34 @@ corners, and 15 of 16 are at VDD -5%. This is the focused boundary for the
 next analog investigation. It should be diagnosed before changing attenuator
 range, CTLE values, bias or device sizes.
 
+### Point-2 boundary diagnosis
+
+`exp_joint_bank --diagnose` performs that investigation from the frozen table
+with zero new SPICE. For every one of the 16 unsolved pairs it found both:
+
+1. a scorable near-solution that violates exactly one request row; and
+2. at least one setting that passes every non-eye row but is rejected because
+   the 3 dB channel compresses.
+
+The closest scorable settings miss `S3_f_peak_match` in 9 cases and
+`S3_peaking_match` in 7. The least-overdriven shape-compliant candidate uses
+maximum attenuation code 7 in all 16 cases. Expressing its measured
+`demand/limit` ratio in dB gives **0.0234-1.0304 dB** of additional attenuation
+headroom, with the maximum at `sf/0.95/0C`, 10 dB @ 1.387 GHz
+(1,092.4 mVpp demand against a 970.2 mVpp limit).
+
+This calculation is a lower-bound diagnosis, not a verified fix. A stronger
+attenuator also changes input-referred noise, PMOS parasitics and eye height.
+The current top code is designed for 5.933 dB; the data therefore justify a
+focused probe near **7.0 dB**, but no new top-code value or guard margin has
+been adopted. Changing that range requires the human decision mandated by
+`CLAUDEwa.md` rule 6, followed by a preregistered SPICE probe.
+
 ## Evidence and reproduction
 
 - `experiments/joint_bank_results.json` is the compact result.
+- `experiments/joint_bank_diagnosis.json` is the deterministic zero-SPICE
+  point-2 boundary diagnosis.
 - `experiments/joint_bank_run.jsonl.gz` is the complete journal, compressed
   from 24,021,107 to 3,878,881 bytes. The decompressed SHA-256 is
   `A205303614ABCC5F76D6EA78CFA1C9687E49A3817FA1E9FA9EC314336E20CA33`.
@@ -120,6 +145,7 @@ misread again.
 ## Verification certificate
 
 The timing-metadata regression failed before its implementation and the
-focused joint-bank file then passed **14/14** tests. The complete post-change
-non-slow suite passed **2,572 tests**, with 13 deselected and two existing
-warnings, in 306.14 s.
+focused joint-bank file then passed **14/14** tests. Point 1's complete
+non-slow suite passed **2,572 tests**. Point 2 added two fail-first diagnostic
+gates; the focused file passed **16/16** and the complete suite passed **2,574
+tests**, with 13 deselected and two existing warnings, in 435.56 s.

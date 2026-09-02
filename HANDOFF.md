@@ -1608,6 +1608,14 @@ Plus: git init, .gitignore, 28 tests, Wilson-bound BER reporting.
   from 6-12 dB**. The registered RL gate **fails: 0/720** pairs require a
   channel-specific setting for compliance against the threshold of 72. No
   policy is authorised on this table. Full result: `nebula/JOINT_BANK_RESULTS.md`.
+- **Nebula 3 dB boundary diagnosis (entry 82):** every one of the 16 unsolved
+  corner/request pairs has a scorable one-row near-miss (9 frequency-match,
+  7 peaking-match) and a non-eye-compliant candidate blocked only by
+  compression. The least-overdriven candidate is at maximum attenuator code 7
+  for all 16; its swing ratio implies **0.0234-1.0304 dB** extra attenuation
+  headroom. This is a zero-SPICE lower bound, not a verified fix. A ~7.0 dB
+  top-code probe is indicated but awaits the `CLAUDEwa.md` rule-6 human range
+  decision.
 
 - Tests: **1942 passing, 12 deselected** (session 28) —
   `python -m pytest tests nebula/tests -q -m "not slow"`.
@@ -2022,9 +2030,11 @@ Plus: git init, .gitignore, 28 tests, Wilson-bound BER reporting.
 are qualified and the combined 8-attenuator x 64-CTLE x 45-corner table is
 measured. Its RL gate failed: **0/720** pairs need a channel-specific setting
 for compliance against the registered threshold of 72. **Do not train a
-discrete policy on this table.** The next analog step is a focused diagnosis of
-the 16 unsolved 3 dB corner/request pairs, all compression-related and
-concentrated at high boost, low requested frequency and VDD -5%.
+discrete policy on this table.** Entry 82's zero-SPICE diagnosis of the 16
+unsolved 3 dB pairs is complete: all have a shape-compliant candidate blocked
+by only 0.0234-1.0304 dB of compression headroom at maximum code 7. The next
+step is a human decision on whether to test a ~7.0 dB top attenuator code;
+range, circuit and SPICE remain unchanged until that decision.
 
 **Entry-81 artifacts:** preserve `joint_bank_results.json` and the byte-verified
 compressed journal `joint_bank_run.jsonl.gz`. The local raw journal remains the
@@ -13804,3 +13814,39 @@ first; **14 focused joint-bank tests pass**. The pre-change full suite produced
 2,570 passes and one timing-only `ss_hh` trim-speed reversal (3.39 vs 3.35 s);
 the exact test passed alone in 4.03 s. The post-change complete non-slow suite
 is green at **2,572 passed, 13 deselected, 2 warnings in 306.14 s**.
+
+### G145. Compression headroom in dB is a lower bound, not a resized-circuit result
+
+For a stored compression failure, `20*log10(demand_mvpp/limit_mvpp)` answers
+one narrow counterfactual: how much smaller the present demanded swing must be
+to reach the present measured limit. It does **not** say that adding that much
+physical attenuation produces a compliant circuit. A different resistor bank
+and PMOS operating point also change thermal noise, parasitics and eye height;
+the limit itself must be re-measured with G140's input sweep scaling.
+
+**Rule:** call this number an attenuation-headroom lower bound. It may select a
+focused diagnostic point, but only a real switched-PMOS rerun can call that
+point scorable, and the full spec rows must decide whether it passes.
+
+### 2026-09-02 - session 36 (entry 82). **Point 2 diagnoses the 3 dB boundary; it does not change the attenuator.**
+
+`exp_joint_bank --diagnose` reads the committed gzip directly, verifies the
+same decompressed source hash, and writes a deterministic zero-SPICE artifact.
+The two new tests failed first on the absent gzip reader and diagnostic, then
+passed; the focused joint-bank file is **16 passed**.
+
+For all 16 unsolved corner/request pairs, the closest scorable code violates
+exactly one request row: 9 `S3_f_peak_match`, 7 `S3_peaking_match`. All 16 also
+have at least one code that passes every non-eye row and is rejected only by
+3 dB compression. In every case the least-overdriven such candidate uses the
+maximum attenuation code 7. Its measured swing ratio is equivalent to
+**0.0234-1.0304 dB** extra attenuation; the maximum is at `sf/0.95/0C`,
+10 dB @ 1.387 GHz (1092.4 mVpp demanded, 970.2 mVpp limit).
+
+The current top code is designed for 5.933 dB, so a ~7.0 dB top-code probe is
+the smallest data-derived next measurement. Per `CLAUDEwa.md` rule 6, no range
+or guard margin is chosen and no new SPICE is run until the owner approves
+that range. G145 prevents the headroom calculation from being reported as a
+passing circuit result. Artifact: `experiments/joint_bank_diagnosis.json`.
+The complete post-change non-slow suite is green at **2,574 passed, 13
+deselected, 2 warnings in 435.56 s**, against the point-2 baseline of 2,572.

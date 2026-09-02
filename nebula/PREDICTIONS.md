@@ -13356,3 +13356,25 @@ from an unavailable timer.
 honoured.** There were zero hard simulator failures. All 1,613 base-row
 rejections and every shorter-channel re-score failure explicitly name
 output-swing compression. Full result and limits: `JOINT_BANK_RESULTS.md`.
+
+## 82. Session 36 -- **post-outcome diagnosis of the 16 unsolved 3 dB pairs. A descriptive measurement record, not a preregistration.**
+
+This analysis was written after entry 81 completed and after an exploratory
+console query had already shown its direction. It contains no inferential
+threshold and spends zero SPICE. `exp_joint_bank --diagnose` makes the query
+reproducible from the committed gzip and writes
+`joint_bank_diagnosis.json`, including the source journal's decompressed
+SHA-256.
+
+Every unsolved pair has a scorable candidate that misses exactly one request
+row: **9 `S3_f_peak_match`, 7 `S3_peaking_match`**. More importantly, every
+pair has at least one candidate that passes all non-eye rows and then compresses
+on the 3 dB channel. The least-overdriven such candidate is at maximum
+attenuator code 7 for **16/16** pairs. Its measured swing ratio corresponds to
+**0.0234-1.0304 dB** additional attenuation headroom.
+
+That range is not a passing prediction. It is `20*log10(demand/limit)` and
+does not re-evaluate noise, PMOS parasitics or eye height after changing the
+attenuator. The current code-7 design point is 5.933 dB, so a ~7.0 dB top-code
+probe is data-derived, but rule 6 requires a human to approve the range before
+any circuit value changes or SPICE run. No value has been adopted here.

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import ast
+import gzip
 import json
 import math
 from dataclasses import asdict
@@ -118,6 +119,44 @@ def test_duplicate_journal_keys_are_rejected(tmp_path):
     path.write_text(line + "\n" + line + "\n", encoding="utf-8")
     with pytest.raises(ValueError, match="duplicate"):
         J._load_rows(path)
+
+
+def test_completed_journal_can_be_a_byte_preserving_gzip(tmp_path):
+    path = tmp_path / "rows.jsonl.gz"
+    expected = _row()
+    with gzip.open(path, "wt", encoding="utf-8", newline="\n") as fh:
+        fh.write(json.dumps(asdict(expected)) + "\n")
+
+    assert J._load_rows(path) == [expected]
+
+
+def test_diagnosis_separates_request_miss_from_compression_headroom():
+    target_hz, target_db = 1.9e9, 9.0
+    compressed = _row(
+        setting=J.setting_id(7, 35), atten_code=7,
+        links={"3.0": {"ok": False, "reason": "compression",
+                       "demand_mvpp": 110.0, "limit_mvpp": 100.0}},
+    )
+    shape_miss = _row(
+        setting=J.setting_id(7, 36), atten_code=7, bank_code=36,
+        peaking_db=6.0,
+        links={"3.0": {"ok": True, "eye_h_v": 0.3,
+                       "eye_w_ui": 0.7}},
+    )
+
+    out = J.diagnose([compressed, shape_miss], loss_db=3.0,
+                     requests=[(target_db, target_hz)])
+
+    assert out["n_unserved_corner_requests"] == 1
+    assert out["best_scorable_single_violation_histogram"] == {
+        "S3_peaking_match": 1}
+    assert out["n_with_shape_compliant_compressed_candidate"] == 1
+    assert out["n_min_extra_candidate_at_max_attenuator"] == 1
+    row = out["unserved"][0]
+    assert row["best_scorable_violations"] == ["S3_peaking_match"]
+    assert row["shape_compliant_compressed_candidates"] == 1
+    assert row["least_extra_attenuation_db"] == pytest.approx(
+        20.0 * math.log10(1.1))
 
 
 def test_resumed_run_labels_segment_cost_instead_of_total_cost(monkeypatch,
