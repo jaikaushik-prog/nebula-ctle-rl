@@ -12760,3 +12760,81 @@ that parses the emitted text back and checks the ohms.
   the ratio pins near 1.13, which is what produced entry 74's wrong conclusion
   in the first place.
 * **No coverage number.** One bank code, TT, one load.
+
+## 75. Session 34 -- **defect 1 solved: the switch must be a PMOS, and the switch bank must be binary-weighted too. A MEASUREMENT RECORD.**
+
+**2026-09-02.** Entry 74 left the attenuator with a dead switch. This measures
+the replacement rather than assuming it -- which is precisely the mistake that
+produced the defect, when the nfet's `Ron = 16.5 ohm` was carried across without
+its measurement condition.
+
+    deck:     nebula/device/spice/g5_pmos_switch.cir
+    artifact: nebula/experiments/pmos_switch_results.json
+    library:  FULL sky130.lib.spice tt -- the trim carries no pfet yet
+
+### The diagnosis, confirmed and quantified
+
+    device                       Vgs      Vth    overdrive       Ron
+    PMOS, gate at 0            1.500    0.872      +0.628     102.17 ohm
+    NMOS, gate at VDD          0.300    0.890      -0.590    9.148e9 ohm
+
+**The NMOS is nine gigaohms.** And its `Vth` is **0.890 V**, not its ~0.45 V
+nominal: `Vsb = 1.5 V` puts a body-effect penalty on top of an already
+inadequate `Vgs`. So the failure was doubly determined, and swapping to a PMOS
+-- whose source at 1.5 V is the *comfortable* end of its range, with an n-well
+bulk that can tie to VDD -- fixes both halves at once.
+
+### Ron scales as 1/W, exactly
+
+    W um     40      80     120     200     400
+    Ron    102.17  51.09   34.06   20.43   10.22 ohm
+    Ron*W    4087    4087    4087    4087    4087 ohm.um     spread 0.0 %
+
+**`Ron * W = 4086.8 ohm.um`** at `|Vgs| = 1.5 V`, source at 1.5 V, tt/27 C.
+
+### A PDK semantic that cost two failed runs, and is worth a line
+
+**`W` is the TOTAL width in the SKY130 subckt; `nf` only splits it into
+fingers.** Measured: `Ron` is *flat* in `nf` -- 101.75 / 101.44 / 105.63 ohm at
+`nf = 3 / 6 / 12` with `W = 40` fixed -- and scales as `1/W`.
+
+What must stay in bin is the **per-finger** width. `W = 120 nf = 1` is refused
+with *"could not find a valid modelname"*, which G31 warns reads as a units
+error; `W = 120 nf = 3` is fine, because each finger is 40 um. Both halves of
+G31 apply here at once.
+
+### The design this produces, and why the switches are ALSO binary-weighted
+
+Entry 74 sized the legs by subtracting a single switch `Ron`. With a PMOS that
+`Ron` is **102 ohm against a 268 ohm smallest leg -- 38 %** -- so a PVT shift in
+the switch would move the attenuation, and the 1:2:4 conductance ratio the code
+depends on would drift with it.
+
+**Scaling the switch with the leg removes that entirely:**
+
+    bit   switch W   nf   Ron      drawn R    leg total   target
+     0      40 um     1   102.17    969.2      1071.4     1071.4
+     1      80 um     2    51.09    484.6       535.7      535.7
+     2     160 um     4    25.54    242.3       267.9      267.9
+
+`Ron_b = Ron_unit / 2^b` and `R_drawn_b = (R_unit - Ron_unit) / 2^b`, so every
+leg is `R_unit / 2^b` **exactly**, and the ratio is preserved under any common
+shift of `Ron`. The switch stops being an error term and becomes part of the
+divider. Total added PMOS: 280 um per side, 560 um differential.
+
+### What is NOT done
+
+* **The trim carries no pfet**, so `run_point` still cannot instantiate this.
+  Every number above comes from the FULL library. Extending
+  `sky130_ctle.lib.spice` (25 sections x 2 includes) and regenerating via
+  `pdk_trim --write` is the remaining step; the generator's `needed_names` will
+  pull the pfet parameter set in automatically, which is why the standalone deck
+  needed `lod.spice` and `invariant.spice` and the trimmed decks do not carry
+  them today.
+* **Parse cost is unmeasured.** The trim exists to keep the inner loop fast
+  (16.5 s -> 0.02 s), and adding a device family to a 25-section library is
+  exactly the cost G34 and the section-splitting work were about. It must be
+  measured before the shared library is extended, and a pfet-only variant used
+  when the attenuator is on is the fallback if it is material.
+* **Nothing is re-verified.** No corner sweep, no coverage number, and the
+  attenuator's own `SWITCH_RON_OHM = 16.50` still holds the nfet value.

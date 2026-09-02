@@ -1,0 +1,66 @@
+{
+ "task": "PMOS vs NMOS shunt switch at the CTLE input common mode (entry 75)",
+ "deck": "nebula/device/spice/g5_pmos_switch.cir",
+ "library": "FULL sky130.lib.spice tt (the trim carries no pfet yet)",
+ "corner": "tt",
+ "temp_c": 27.0,
+ "source_v": 1.5,
+ "vdd_v": 1.8,
+ "why": "entry 74 defect 1: the NMOS shunt switch is off at VCM = 1.5 V. This measures the replacement rather than assuming it, which is the mistake that produced the defect.",
+ "operating_point": {
+  "pmos_vgs_v": 1.5,
+  "pmos_vth_v": 0.8720727,
+  "pmos_overdrive_v": 0.6279273,
+  "nmos_vgs_v": 0.3,
+  "nmos_vth_v": 0.8903276,
+  "nmos_overdrive_v": -0.5903276,
+  "note": "the NMOS vth is 0.890 V, not its ~0.45 V nominal, because Vsb = 1.5 V: body effect on top of an already-inadequate Vgs."
+ },
+ "nmos_ron_ohm": 9148392002.439045,
+ "pmos_ron_vs_width": [
+  {
+   "w_um": 40,
+   "nf": 1,
+   "ron_ohm": 102.17062470396235
+  },
+  {
+   "w_um": 80,
+   "nf": 2,
+   "ron_ohm": 51.08531237057326
+  },
+  {
+   "w_um": 120,
+   "nf": 3,
+   "ron_ohm": 34.056874875461375
+  },
+  {
+   "w_um": 200,
+   "nf": 5,
+   "ron_ohm": 20.4341249526308
+  },
+  {
+   "w_um": 400,
+   "nf": 10,
+   "ron_ohm": 10.21706247096235
+  }
+ ],
+ "pmos_ron_times_width_ohm_um": {
+  "values": [
+   4086.824988158494,
+   4086.824989645861,
+   4086.824985055365,
+   4086.82499052616,
+   4086.8249883849403
+  ],
+  "mean": 4086.824988354164,
+  "spread_pct": 1.3386419223182367e-07
+ },
+ "nf_does_not_change_total_width": {
+  "measured_ron_ohm": {
+   "nf3": 101.75,
+   "nf6": 101.44,
+   "nf12": 105.63
+  },
+  "conclusion": "W is the TOTAL width in the SKY130 subckt and nf only splits it into fingers. Ron is flat in nf and scales as 1/W. The per-FINGER width is what must stay in bin -- W=120 nf=1 is refused, W=120 nf=3 is fine."
+ }
+}

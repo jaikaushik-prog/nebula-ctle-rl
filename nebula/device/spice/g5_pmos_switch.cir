@@ -1,0 +1,56 @@
+* PMOS shunt-switch feasibility at a 1.5 V common mode.
+* Uses the FULL sky130 library deliberately: this is a feasibility + Ron
+* measurement, and it must not depend on a trim that has not been extended yet.
+* Slow (~16 s parse) and run once.
+.lib "C:/Users/DELL/sky130A/libs.tech/ngspice/sky130.lib.spice" tt
+.temp 27
+
+* Source at the CTLE input common mode; gate at 0 => |Vgs| = 1.5 V, fully on.
+* Bulk (n-well) to VDD, the standard connection.
+Vs   s 0 1.5
+Vg   g 0 0
+Vb   b 0 1.8
+Vd   d 0 1.5
+XP1  d g s b sky130_fd_pr__pfet_01v8 W=40 L=0.15 nf=3
+
+* The NMOS the attenuator currently uses, at the SAME node, for the contrast.
+Vgn  gn 0 1.8
+Vdn  dn 0 1.5
+XN1  dn gn s 0 sky130_fd_pr__nfet_01v8 W=40 L=0.15 nf=3
+
+Vw40  dw40 0 1.5
+XPW40 dw40 g s b sky130_fd_pr__pfet_01v8 W=40 L=0.15 nf=1
+Vw80  dw80 0 1.5
+XPW80 dw80 g s b sky130_fd_pr__pfet_01v8 W=80 L=0.15 nf=2
+Vw120  dw120 0 1.5
+XPW120 dw120 g s b sky130_fd_pr__pfet_01v8 W=120 L=0.15 nf=3
+Vw200  dw200 0 1.5
+XPW200 dw200 g s b sky130_fd_pr__pfet_01v8 W=200 L=0.15 nf=5
+Vw400  dw400 0 1.5
+XPW400 dw400 g s b sky130_fd_pr__pfet_01v8 W=400 L=0.15 nf=10
+
+.control
+set noaskquit
+set filetype=ascii
+op
+print @m.xp1.msky130_fd_pr__pfet_01v8[vgs] @m.xp1.msky130_fd_pr__pfet_01v8[vth]
+print @m.xn1.msky130_fd_pr__nfet_01v8[vgs] @m.xn1.msky130_fd_pr__nfet_01v8[vth]
+* Ron as dV/dI over a small window about the operating point -- the same
+* method the nfet number in tunable_trade_results.json was measured with.
+dc Vd 1.455 1.545 0.005
+wrdata pmos_dc.txt i(Vd)
+dc Vdn 1.455 1.545 0.005
+wrdata nmos_dc.txt i(Vdn)
+dc Vw40 1.455 1.545 0.005
+wrdata pw40.txt i(Vw40)
+dc Vw80 1.455 1.545 0.005
+wrdata pw80.txt i(Vw80)
+dc Vw120 1.455 1.545 0.005
+wrdata pw120.txt i(Vw120)
+dc Vw200 1.455 1.545 0.005
+wrdata pw200.txt i(Vw200)
+dc Vw400 1.455 1.545 0.005
+wrdata pw400.txt i(Vw400)
+quit
+.endc
+.end
