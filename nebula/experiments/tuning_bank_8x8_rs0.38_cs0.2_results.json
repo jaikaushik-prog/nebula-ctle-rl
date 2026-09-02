@@ -1,0 +1,571 @@
+{
+ "task": "the 2-D tuning bank: Rs sets boost, Cs sets frequency",
+ "base_design_id": "c507a3ba6f58b9a6",
+ "base_u": [
+  0.47470897153701547,
+  0.5052153178730102,
+  0.7146841021685507,
+  0.4931434027122009,
+  0.8132546712336066,
+  0.5871048097551593,
+  0.8020459464395331
+ ],
+ "target_f_peak_hz": 1767766952.966369,
+ "target_peaking_db": 7.5,
+ "spec_set": [
+  "S3_f_peak",
+  "S3_peaking",
+  "S3_peaking_match",
+  "S3_nyq_boost",
+  "S5_noise",
+  "S6_power",
+  "saturation",
+  "tail_saturation",
+  "S8_eye_h",
+  "S8_eye_w",
+  "S7_area",
+  "S4_hd3_nyq"
+ ],
+ "n_rs_settings": 8,
+ "n_cs_settings": 8,
+ "rs_span": 0.38,
+ "cs_span": 0.2,
+ "tt_only": true,
+ "tuning_range": {
+  "n_settings": 64,
+  "n_ok": 64,
+  "n_sims": 64,
+  "f_peak_lo_hz": 1108915868.5643518,
+  "f_peak_hi_hz": 3386886208.2579713,
+  "f_peak_span_oct": 1.6108096013495838,
+  "peaking_lo_db": 1.7758189300237088,
+  "peaking_hi_db": 13.049534931941244,
+  "window_covered_frac": 1.0,
+  "settings": [
+   {
+    "setting": "R0C0",
+    "i_rs": 0,
+    "i_cs": 0,
+    "ok": true,
+    "f_peak_hz": 3386886208.2579713,
+    "peaking_db": 1.7758189300237088
+   },
+   {
+    "setting": "R0C1",
+    "i_rs": 0,
+    "i_cs": 1,
+    "ok": true,
+    "f_peak_hz": 3055462390.736144,
+    "peaking_db": 2.006153199988759
+   },
+   {
+    "setting": "R0C2",
+    "i_rs": 0,
+    "i_cs": 2,
+    "ok": true,
+    "f_peak_hz": 2735575048.9005017,
+    "peaking_db": 2.197091237101631
+   },
+   {
+    "setting": "R0C3",
+    "i_rs": 0,
+    "i_cs": 3,
+    "ok": true,
+    "f_peak_hz": 2436016371.0181117,
+    "peaking_db": 2.352637371820599
+   },
+   {
+    "setting": "R0C4",
+    "i_rs": 0,
+    "i_cs": 4,
+    "ok": true,
+    "f_peak_hz": 2160712323.1646037,
+    "peaking_db": 2.4776689607263114
+   },
+   {
+    "setting": "R0C5",
+    "i_rs": 0,
+    "i_cs": 5,
+    "ok": true,
+    "f_peak_hz": 1910916563.4011583,
+    "peaking_db": 2.577215269571294
+   },
+   {
+    "setting": "R0C6",
+    "i_rs": 0,
+    "i_cs": 6,
+    "ok": true,
+    "f_peak_hz": 1686501995.427037,
+    "peaking_db": 2.655788592330814
+   },
+   {
+    "setting": "R0C7",
+    "i_rs": 0,
+    "i_cs": 7,
+    "ok": true,
+    "f_peak_hz": 1530507531.8372545,
+    "peaking_db": 2.704447432330798
+   },
+   {
+    "setting": "R1C0",
+    "i_rs": 1,
+    "i_cs": 0,
+    "ok": true,
+    "f_peak_hz": 3297935679.0428634,
+    "peaking_db": 2.73873037257328
+   },
+   {
+    "setting": "R1C1",
+    "i_rs": 1,
+    "i_cs": 1,
+    "ok": true,
+    "f_peak_hz": 2945095809.1588764,
+    "peaking_db": 2.962860733692242
+   },
+   {
+    "setting": "R1C2",
+    "i_rs": 1,
+    "i_cs": 2,
+    "ok": true,
+    "f_peak_hz": 2617483518.752418,
+    "peaking_db": 3.145493261794196
+   },
+   {
+    "setting": "R1C3",
+    "i_rs": 1,
+    "i_cs": 3,
+    "ok": true,
+    "f_peak_hz": 2318619235.8015337,
+    "peaking_db": 3.292375680775735
+   },
+   {
+    "setting": "R1C4",
+    "i_rs": 1,
+    "i_cs": 4,
+    "ok": true,
+    "f_peak_hz": 2048784313.4625835,
+    "peaking_db": 3.4092926903169145
+   },
+   {
+    "setting": "R1C5",
+    "i_rs": 1,
+    "i_cs": 5,
+    "ok": true,
+    "f_peak_hz": 1806785862.2647188,
+    "peaking_db": 3.50168691755833
+   },
+   {
+    "setting": "R1C6",
+    "i_rs": 1,
+    "i_cs": 6,
+    "ok": true,
+    "f_peak_hz": 1591210012.6250956,
+    "peaking_db": 3.5741929998368764
+   },
+   {
+    "setting": "R1C7",
+    "i_rs": 1,
+    "i_cs": 7,
+    "ok": true,
+    "f_peak_hz": 1442226135.5114014,
+    "peaking_db": 3.618907124307306
+   },
+   {
+    "setting": "R2C0",
+    "i_rs": 2,
+    "i_cs": 0,
+    "ok": true,
+    "f_peak_hz": 3174185142.2673545,
+    "peaking_db": 3.89989956601097
+   },
+   {
+    "setting": "R2C1",
+    "i_rs": 2,
+    "i_cs": 1,
+    "ok": true,
+    "f_peak_hz": 2818556203.4986095,
+    "peaking_db": 4.114379247414547
+   },
+   {
+    "setting": "R2C2",
+    "i_rs": 2,
+    "i_cs": 2,
+    "ok": true,
+    "f_peak_hz": 2494851790.9826293,
+    "peaking_db": 4.287334199413234
+   },
+   {
+    "setting": "R2C3",
+    "i_rs": 2,
+    "i_cs": 3,
+    "ok": true,
+    "f_peak_hz": 2203338199.2961116,
+    "peaking_db": 4.425330995090601
+   },
+   {
+    "setting": "R2C4",
+    "i_rs": 2,
+    "i_cs": 4,
+    "ok": true,
+    "f_peak_hz": 1942592182.4754083,
+    "peaking_db": 4.5344955760121515
+   },
+   {
+    "setting": "R2C5",
+    "i_rs": 2,
+    "i_cs": 5,
+    "ok": true,
+    "f_peak_hz": 1710299226.4368236,
+    "peaking_db": 4.620349825789743
+   },
+   {
+    "setting": "R2C6",
+    "i_rs": 2,
+    "i_cs": 6,
+    "ok": true,
+    "f_peak_hz": 1504334533.7579808,
+    "peaking_db": 4.687458347141579
+   },
+   {
+    "setting": "R2C7",
+    "i_rs": 2,
+    "i_cs": 7,
+    "ok": true,
+    "f_peak_hz": 1362465781.3747995,
+    "peaking_db": 4.728719852233858
+   },
+   {
+    "setting": "R3C0",
+    "i_rs": 3,
+    "i_cs": 0,
+    "ok": true,
+    "f_peak_hz": 3044895250.915009,
+    "peaking_db": 5.261549456478262
+   },
+   {
+    "setting": "R3C1",
+    "i_rs": 3,
+    "i_cs": 1,
+    "ok": true,
+    "f_peak_hz": 2694836323.5340905,
+    "peaking_db": 5.465986593197828
+   },
+   {
+    "setting": "R3C2",
+    "i_rs": 3,
+    "i_cs": 2,
+    "ok": true,
+    "f_peak_hz": 2379625209.191816,
+    "peaking_db": 5.62970930428976
+   },
+   {
+    "setting": "R3C3",
+    "i_rs": 3,
+    "i_cs": 3,
+    "ok": true,
+    "f_peak_hz": 2097781858.0120878,
+    "peaking_db": 5.759632935773771
+   },
+   {
+    "setting": "R3C4",
+    "i_rs": 3,
+    "i_cs": 4,
+    "ok": true,
+    "f_peak_hz": 1847013971.6087859,
+    "peaking_db": 5.861968902699376
+   },
+   {
+    "setting": "R3C5",
+    "i_rs": 3,
+    "i_cs": 5,
+    "ok": true,
+    "f_peak_hz": 1624502206.5643246,
+    "peaking_db": 5.942170633872183
+   },
+   {
+    "setting": "R3C6",
+    "i_rs": 3,
+    "i_cs": 6,
+    "ok": true,
+    "f_peak_hz": 1427758370.9422452,
+    "peaking_db": 6.004668970264143
+   },
+   {
+    "setting": "R3C7",
+    "i_rs": 3,
+    "i_cs": 7,
+    "ok": true,
+    "f_peak_hz": 1292512563.495581,
+    "peaking_db": 6.0429869973958885
+   },
+   {
+    "setting": "R4C0",
+    "i_rs": 4,
+    "i_cs": 0,
+    "ok": true,
+    "f_peak_hz": 2920570441.613011,
+    "peaking_db": 6.818450444840867
+   },
+   {
+    "setting": "R4C1",
+    "i_rs": 4,
+    "i_cs": 1,
+    "ok": true,
+    "f_peak_hz": 2580314398.5237117,
+    "peaking_db": 7.012889459639699
+   },
+   {
+    "setting": "R4C2",
+    "i_rs": 4,
+    "i_cs": 2,
+    "ok": true,
+    "f_peak_hz": 2275612337.715096,
+    "peaking_db": 7.167982503143003
+   },
+   {
+    "setting": "R4C3",
+    "i_rs": 4,
+    "i_cs": 3,
+    "ok": true,
+    "f_peak_hz": 2004169891.0209882,
+    "peaking_db": 7.290663101615514
+   },
+   {
+    "setting": "R4C4",
+    "i_rs": 4,
+    "i_cs": 4,
+    "ok": true,
+    "f_peak_hz": 1763316926.9293926,
+    "peaking_db": 7.387036595778367
+   },
+   {
+    "setting": "R4C5",
+    "i_rs": 4,
+    "i_cs": 5,
+    "ok": true,
+    "f_peak_hz": 1550042384.8336272,
+    "peaking_db": 7.462381737672273
+   },
+   {
+    "setting": "R4C6",
+    "i_rs": 4,
+    "i_cs": 6,
+    "ok": true,
+    "f_peak_hz": 1361755460.4708781,
+    "peaking_db": 7.520940040033075
+   },
+   {
+    "setting": "R4C7",
+    "i_rs": 4,
+    "i_cs": 7,
+    "ok": true,
+    "f_peak_hz": 1232455734.2671149,
+    "peaking_db": 7.5567276543838275
+   },
+   {
+    "setting": "R5C0",
+    "i_rs": 5,
+    "i_cs": 0,
+    "ok": true,
+    "f_peak_hz": 2814757280.6690345,
+    "peaking_db": 8.547039310526994
+   },
+   {
+    "setting": "R5C1",
+    "i_rs": 5,
+    "i_cs": 1,
+    "ok": true,
+    "f_peak_hz": 2483702930.49958,
+    "peaking_db": 8.73368816406427
+   },
+   {
+    "setting": "R5C2",
+    "i_rs": 5,
+    "i_cs": 2,
+    "ok": true,
+    "f_peak_hz": 2188344385.0698338,
+    "peaking_db": 8.882016145516069
+   },
+   {
+    "setting": "R5C3",
+    "i_rs": 5,
+    "i_cs": 3,
+    "ok": true,
+    "f_peak_hz": 1925917102.3412867,
+    "peaking_db": 8.998986687544656
+   },
+   {
+    "setting": "R5C4",
+    "i_rs": 5,
+    "i_cs": 4,
+    "ok": true,
+    "f_peak_hz": 1693526077.6630237,
+    "peaking_db": 9.09062275127619
+   },
+   {
+    "setting": "R5C5",
+    "i_rs": 5,
+    "i_cs": 5,
+    "ok": true,
+    "f_peak_hz": 1488062974.018811,
+    "peaking_db": 9.162061319483461
+   },
+   {
+    "setting": "R5C6",
+    "i_rs": 5,
+    "i_cs": 6,
+    "ok": true,
+    "f_peak_hz": 1306892951.3584397,
+    "peaking_db": 9.2173745270048
+   },
+   {
+    "setting": "R5C7",
+    "i_rs": 5,
+    "i_cs": 7,
+    "ok": true,
+    "f_peak_hz": 1182566720.5940635,
+    "peaking_db": 9.250997144610906
+   },
+   {
+    "setting": "R6C0",
+    "i_rs": 6,
+    "i_cs": 0,
+    "ok": true,
+    "f_peak_hz": 2720659288.559253,
+    "peaking_db": 10.423360392279069
+   },
+   {
+    "setting": "R6C1",
+    "i_rs": 6,
+    "i_cs": 1,
+    "ok": true,
+    "f_peak_hz": 2399717056.33893,
+    "peaking_db": 10.602453132724486
+   },
+   {
+    "setting": "R6C2",
+    "i_rs": 6,
+    "i_cs": 2,
+    "ok": true,
+    "f_peak_hz": 2113706970.7879977,
+    "peaking_db": 10.744560270485575
+   },
+   {
+    "setting": "R6C3",
+    "i_rs": 6,
+    "i_cs": 3,
+    "ok": true,
+    "f_peak_hz": 1859795678.084704,
+    "peaking_db": 10.856458893311434
+   },
+   {
+    "setting": "R6C4",
+    "i_rs": 6,
+    "i_cs": 4,
+    "ok": true,
+    "f_peak_hz": 1635102924.9535167,
+    "peaking_db": 10.943964688367096
+   },
+   {
+    "setting": "R6C5",
+    "i_rs": 6,
+    "i_cs": 5,
+    "ok": true,
+    "f_peak_hz": 1436559835.789282,
+    "peaking_db": 11.01199323249983
+   },
+   {
+    "setting": "R6C6",
+    "i_rs": 6,
+    "i_cs": 6,
+    "ok": true,
+    "f_peak_hz": 1261545579.8085093,
+    "peaking_db": 11.064391122225693
+   },
+   {
+    "setting": "R6C7",
+    "i_rs": 6,
+    "i_cs": 7,
+    "ok": true,
+    "f_peak_hz": 1141462157.4401393,
+    "peaking_db": 11.095950302657027
+   },
+   {
+    "setting": "R7C0",
+    "i_rs": 7,
+    "i_cs": 0,
+    "ok": true,
+    "f_peak_hz": 2648096913.282601,
+    "peaking_db": 12.400915258636065
+   },
+   {
+    "setting": "R7C1",
+    "i_rs": 7,
+    "i_cs": 1,
+    "ok": true,
+    "f_peak_hz": 2334457501.195866,
+    "peaking_db": 12.574880842049563
+   },
+   {
+    "setting": "R7C2",
+    "i_rs": 7,
+    "i_cs": 2,
+    "ok": true,
+    "f_peak_hz": 2055372411.7322552,
+    "peaking_db": 12.712589445257525
+   },
+   {
+    "setting": "R7C3",
+    "i_rs": 7,
+    "i_cs": 3,
+    "ok": true,
+    "f_peak_hz": 1807919673.711191,
+    "peaking_db": 12.820760789698696
+   },
+   {
+    "setting": "R7C4",
+    "i_rs": 7,
+    "i_cs": 4,
+    "ok": true,
+    "f_peak_hz": 1589130959.4783137,
+    "peaking_db": 12.905093023923683
+   },
+   {
+    "setting": "R7C5",
+    "i_rs": 7,
+    "i_cs": 5,
+    "ok": true,
+    "f_peak_hz": 1395914743.0267975,
+    "peaking_db": 12.970326546634137
+   },
+   {
+    "setting": "R7C6",
+    "i_rs": 7,
+    "i_cs": 6,
+    "ok": true,
+    "f_peak_hz": 1225670364.1216695,
+    "peaking_db": 13.020085917709798
+   },
+   {
+    "setting": "R7C7",
+    "i_rs": 7,
+    "i_cs": 7,
+    "ok": true,
+    "f_peak_hz": 1108915868.5643518,
+    "peaking_db": 13.049534931941244
+   }
+  ]
+ },
+ "pvt_compensation": {
+  "n_corners": 0,
+  "n_served": 0,
+  "n_sims": 0,
+  "n_settings": 64,
+  "settings_used": {},
+  "corners": [],
+  "skipped": "tt_only: the 45-corner compensation was NOT run"
+ },
+ "total_sims": 64,
+ "wall_clock_s": 17.709033727645874,
+ "note": "Drawn passives, so every setting is a full re-parse and a real SPICE run: `alter` fails SILENTLY on drawn geometry (G63) and must not be used here."
+}

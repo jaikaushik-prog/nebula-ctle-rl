@@ -12013,3 +12013,60 @@ trained. **Falsifier: any non-monotone column or row.**
   design before training anything.
 * **Q1 and Q5 hold** -> run the 45-corner compensation, 2 880 decks, ~19 min.
 
+### OUTCOME, entry 70 (2026-09-02). **SCORED 5 OF 5. The knob spans S3's whole boost range, and the map is monotone.**
+
+    64 decks, 17.7 s, --tt-only
+    artifact: experiments/tuning_bank_8x8_rs0.38_cs0.2_results.json
+    (section 5z's 3x5 artifact is untouched -- results_path() tagged this one)
+
+    peaking, dB          f_peak, GHz
+          C0     C7            C0     C7
+    R0   1.78   2.70      R0  3.387  1.531
+    R1   2.74   3.62      R1  3.298  1.442
+    R2   3.90   4.73      R2  3.174  1.362
+    R3   5.26   6.04      R3  3.045  1.293
+    R4   6.82   7.56      R4  2.921  1.232
+    R5   8.55   9.25      R5  2.815  1.183
+    R6  10.42  11.10      R6  2.721  1.141
+    R7  12.40  13.05      R7  2.648  1.109
+
+    64/64 scorable   peaking 1.78 - 13.05 dB   f_peak 1.109 - 3.387 GHz (1.611 oct)
+
+| | prediction | outcome | |
+|---|---|---|---|
+| **Q1** | TT boost range spans 3-12 dB | **1.78 - 13.05 dB** | **HIT** |
+| **Q2** | frequency window still 100 % covered | **100.0 %** | **HIT** |
+| **Q3** | bank overshoots below S3's 3 dB floor | **min 1.78 dB; 10 of 64 codes below 3** | **HIT** |
+| **Q4** | 64 decks under 90 s | **64 decks, 17.7 s** | **HIT** |
+| **Q5** | map monotone and separable at 8x8 | **holds on every row and column** | **HIT** |
+
+**Q1's derivation was slightly conservative in the direction that costs
+nothing.** The linear-in-`u_rs` extrapolation predicted 12 dB at `u_rs = 0.873`;
+the measurement puts **13.05 dB** there. The flattening of `20log10(1 + x)` I
+registered as the low-edge risk did appear -- the bottom row is 1.78 dB where a
+pure linear fit says ~1.1 -- but not enough to threaten the 3 dB floor.
+
+**Q5 is the one that unblocks row 4ab.** Peaking rises monotonically down every
+`Cs` column, `f_peak` falls monotonically along every `Rs` row, and neither axis
+crosses. A bisection control is therefore well-posed, and the matched control
+entry 47 made mandatory can be written.
+
+**The wasted-code finding, which is Q3's real content.** 18 of 64 codes sit
+outside S3's 3-12 dB range -- 10 below, 8 above -- because a *symmetric* span
+reaching 13.05 dB from a base at 6.55 dB must also travel the same distance
+down. An asymmetric span would buy back ~28 % of the code space, or equivalently
+reach the same range in 5 bits instead of 6. **Not changed here:** the geometry
+was pre-registered and re-rolling it on the run that measured it is tuning
+(G110). Recorded as row 4aa's follow-up.
+
+**What this does NOT say.** This is TT only. It is the *reachable* range of the
+knob, not a compliance result: no corner, no load, no drive handling, no eye.
+`tuning_range()` scores `ac_only=True`, so output-swing compression -- which
+`tunable_trade_results.json` measured rejecting **all 8** settings of the
+earlier bank at the link's 534.675 mVpp -- **has not been asked here at all**,
+and the top boost rows are exactly where it is expected to bite.
+
+Per the decision rule, Q1 and Q5 both hold, so the 45-corner compensation is
+authorised. It is not run at this geometry yet -- see entry 71, which makes the
+same 2 880 decks answer all 16 requests instead of one.
+
