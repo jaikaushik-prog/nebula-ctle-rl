@@ -13521,3 +13521,23 @@ device card without that context. Entry 78 is committed before repair/run: use
 files byte-identical, and rerun the unchanged entry-77 table and thresholds.
 If any member still fails, record the next exact reason and stop rather than
 adding parameters iteratively inside one result.
+
+### 2026-09-02 - session 35 (entry 78 implementation, before measurement). **The generated PFET section is now parameter-complete at its layer gate.**
+
+Tests were added before the repair and failed in the two required ways: the
+generated supplements were absent, and a minimal real-ngspice PMOS deck stopped
+on entry 77's exact `sky130_fd_pr__pfet_01v8__wlod_diff` error. `pdk_trim` now
+compares the ordinary and PFET include trees, derives only parameter names
+referenced by newly reached PFET model files, and closes their dependencies with
+the existing `needed_names` algorithm.
+
+The generated PFET-only context is **8 of 70** lines from `lod.spice` and **22
+of 7,338** from `invariant.spice`; both files are included in all 25
+`sky130_ctle_pfet` sections. The ordinary generated files do not appear in
+`git diff`, so the no-attenuator path remains byte-identical. A mutation test
+also removes one section marker and watches the 25-section gate fail. **22
+focused tests pass**, including the real PMOS instantiation probe.
+
+No `Ron`, switch width/finger count, resistor geometry, topology, G140 sweep,
+or verification threshold changed. The nine-point entry-78 SPICE run has not
+run yet; run it next and report any miss without tuning.

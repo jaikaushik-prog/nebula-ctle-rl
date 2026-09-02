@@ -13076,3 +13076,14 @@ supplement include in an ordinary section.**
   the reference.
 * Q1-Q6 hold -> D11 is instantiable and verified only at TT, one load, one bank
   code. It still has **no coverage number**.
+
+### Implementation record before the entry-78 run
+
+The repair is committed before measurement. `pdk_trim` derives **8 of 70** LOD
+definitions and **22 of 7,338** invariant definitions from only the model files
+newly reached by adding `pfet_01v8`; every one of the 25 PFET sections includes
+both generated supplements. No ordinary generated file differs. The layer gate
+first failed on the missing supplement and the exact entry-77 undefined
+parameter, then a real ngspice PMOS probe passed after regeneration. **22 focused
+tests pass.** The nine-point production command has not run yet, and no circuit
+constant or registered threshold changed.

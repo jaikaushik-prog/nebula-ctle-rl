@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import json
 import re
+import shutil
+import subprocess
 from pathlib import Path
 
 import pytest
@@ -39,6 +41,13 @@ def test_pfet_derivation_gate_fails_if_a_source_site_is_missing():
         PT.pfet_library_text(broken)
 
 
+def test_pfet_parameter_context_gate_fails_if_a_section_marker_is_missing():
+    broken = PT.CTLE_LIB.read_text(encoding="ascii").replace(
+        ".param mc_pr_switch=0", ".param missing_pr_switch=0", 1)
+    with pytest.raises(PT.PdkTrimError, match="24 sections, expected 25"):
+        PT.pfet_library_text(broken)
+
+
 def test_every_pfet_section_is_generated_and_contains_only_its_section():
     build = PT.build()
     assert len(build.sections[PT.PFET_STEM]) == 25
@@ -47,6 +56,46 @@ def test_every_pfet_section_is_generated_and_contains_only_its_section():
         text = build.files[name]
         assert len(re.findall(r"^\.lib\s+", text, flags=re.MULTILINE)) == 1
         assert "sky130_fd_pr__pfet_01v8" in text
+
+
+def test_pfet_supplements_are_derived_and_isolated_from_ordinary_sections():
+    build = PT.build()
+    lod = build.files["pfet_lod.trim.spice"]
+    invariant = build.files["pfet_invariant.trim.spice"]
+    assert "sky130_fd_pr__pfet_01v8__wlod_diff" in lod
+    assert ".param" in invariant
+    pfet = build.files[f"sections/{PT.PFET_STEM}__tt.lib.spice"]
+    ordinary = build.files["sections/sky130_ctle__tt.lib.spice"]
+    for name in ("pfet_lod.trim.spice", "pfet_invariant.trim.spice"):
+        assert f'../{name}' in pfet
+        assert name not in ordinary
+
+
+@pytest.mark.skipif(
+    not Path(r"C:\Users\DELL\miniforge3\envs\nebula\Library\bin\ngspice_con.exe").exists(),
+    reason="needs ngspice (HANDOFF G33)",
+)
+def test_generated_variant_can_instantiate_the_pmos(tmp_path: Path):
+    """The exact entry-77 failure must be impossible at the layer boundary."""
+    ngspice = Path(
+        r"C:\Users\DELL\miniforge3\envs\nebula\Library\bin\ngspice_con.exe")
+    shutil.copy(PT.SPICE_DIR / ".spiceinit", tmp_path / ".spiceinit")
+    lib = PT.section_library_path("tt", PT.PFET_STEM).as_posix()
+    deck = (
+        f'.lib "{lib}" tt\n'
+        ".temp 27\nVs s 0 1.5\nVg g 0 0\nVb b 0 1.8\nVd d 0 1.49\n"
+        "XP d g s b sky130_fd_pr__pfet_01v8 W=40 L=0.15 nf=1\n"
+        ".control\nset noaskquit\nop\n"
+        "print @m.xp.msky130_fd_pr__pfet_01v8[id]\nquit\n.endc\n.end\n"
+    )
+    (tmp_path / "probe.cir").write_text(deck, encoding="ascii")
+    proc = subprocess.run(
+        [str(ngspice), "-b", "probe.cir"], cwd=tmp_path,
+        capture_output=True, text=True, timeout=60,
+    )
+    output = proc.stdout + "\n" + proc.stderr
+    assert "Undefined parameter" not in output, output
+    assert re.search(r"@m\.xp.*\[id\]\s*=", output), output
 
 
 def test_runner_selects_pfet_variant_only_when_explicitly_requested():

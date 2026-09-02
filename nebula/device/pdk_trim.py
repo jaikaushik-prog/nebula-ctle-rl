@@ -168,6 +168,23 @@ def _walk(path: Path, acc: "dict[Path, str]", stop: "set[Path]") -> None:
             _walk((path.parent / m.group(1)), acc, stop)
 
 
+def _library_include_tree(library_text: str, library_dir: Path) -> "dict[Path, str]":
+    """Every file `library_text` reaches, minus generated/PDK parameter decks."""
+    stop = {(PDK_NGSPICE / "parameters" / f"{p}.spice").resolve()
+            for p in ("typical", "fast", "slow", "fast_70p", "slow_70p",
+                      "invariant", "montecarlo", "critical", "lod")}
+    stop |= {p.resolve() for p in TRIM_DIR.glob("*.trim.spice")}
+
+    acc: "dict[Path, str]" = {}
+    for line in library_text.splitlines():
+        m = _INCLUDE.match(line)
+        if m:
+            included = Path(m.group(1))
+            _walk(included if included.is_absolute()
+                  else library_dir / included, acc, stop)
+    return acc
+
+
 def library_include_tree() -> "dict[Path, str]":
     """Every file `sky130_ctle.lib.spice` reaches, minus the parameter decks.
 
@@ -177,17 +194,7 @@ def library_include_tree() -> "dict[Path, str]":
     the generator against an already-trimmed library reproduces the same
     keep-set instead of shrinking it a second time.
     """
-    stop = {(PDK_NGSPICE / "parameters" / f"{p}.spice").resolve()
-            for p in ("typical", "fast", "slow", "fast_70p", "slow_70p",
-                      "invariant", "montecarlo", "critical", "lod")}
-    stop |= {p.resolve() for p in TRIM_DIR.glob("*.trim.spice")}
-
-    acc: "dict[Path, str]" = {}
-    for line in _read(CTLE_LIB).splitlines():
-        m = _INCLUDE.match(line)
-        if m:
-            _walk(Path(m.group(1)) if Path(m.group(1)).is_absolute()
-                  else CTLE_LIB.parent / m.group(1), acc, stop)
+    acc = _library_include_tree(_read(CTLE_LIB), CTLE_LIB.parent)
     if not acc:
         raise PdkTrimError(f"{CTLE_LIB} resolved to no include files at all")
     return acc
@@ -297,13 +304,12 @@ _TRIM_HEADER = """\
 *
 * Source: {src}
 * Kept {kept} of {total} .param definition lines ({names} of {all_names} names):
-* exactly those reachable from the model cards sky130_ctle.lib.spice includes,
+* exactly those reachable from {consumer},
 * closed over right-hand sides. The rest describe vpp fringe caps, flash
-* cells, ESD diodes, 20 V devices and the pfet set -- parsed and thrown away.
+* {discarded} -- parsed and thrown away.
 *
 * Order is the PDK's own, so a parameter that depends on an earlier one still
-* resolves. Equivalence to the untrimmed deck is asserted at rel=0, abs=0 by
-* nebula/tests/test_pdk_trim.py, which also re-derives this file byte for byte.
+* resolves. {verification}
 """
 
 _RC_HEADER = """\
@@ -317,7 +323,14 @@ _RC_HEADER = """\
 """
 
 
-def render_trim(src: Path, keep: "set[str]") -> str:
+def render_trim(src: Path, keep: "set[str]", *,
+                consumer: str = "the model cards sky130_ctle.lib.spice includes",
+                discarded: str = (
+                    "cells, ESD diodes, 20 V devices and the pfet set"),
+                verification: str = (
+                    "Equivalence to the untrimmed deck is asserted at rel=0, "
+                    "abs=0 by\n* nebula/tests/test_pdk_trim.py, which also "
+                    "re-derives this file byte for byte.")) -> str:
     """The trimmed parameter deck, as text."""
     text = _read(src)
     defs = parse_param_lines(text)
@@ -325,7 +338,8 @@ def render_trim(src: Path, keep: "set[str]") -> str:
     all_names = {n for d in defs for n in d.names}
     lines = [_TRIM_HEADER.format(
         src=src.as_posix(), kept=len(kept), total=len(defs),
-        names=len(keep & all_names), all_names=len(all_names))]
+        names=len(keep & all_names), all_names=len(all_names),
+        consumer=consumer, discarded=discarded, verification=verification)]
     for d in kept:
         # A `+` continuation becomes its own card. Same tokens, same order,
         # no dependence on which line happens to precede it after the cut.
@@ -429,6 +443,7 @@ def build() -> TrimBuild:
     # SPLIT_LIBRARIES is deliberate: that mapping names checked-in monolithic
     # sources, while this variant has exactly one source -- CTLE_LIB above.
     pfet_text = pfet_library_text()
+    files.update(pfet_parameter_supplements())
     pfet_sections = library_sections(PFET_STEM, pfet_text)
     if len(pfet_sections) != 25:
         raise PdkTrimError(
@@ -554,10 +569,89 @@ def add_pfet_includes(library_text: str, expected_sites: int) -> str:
     return "".join(out)
 
 
-def pfet_library_text(library_text: "str | None" = None) -> str:
-    """The opt-in 25-section PFET derivative of the live CTLE library."""
+_PFET_PARAMETER_DECKS: tuple[str, ...] = ("lod", "invariant")
+_PFET_PARAMETER_INCLUDE_MARKER = ".param mc_pr_switch=0"
+
+
+def _pfet_model_library_text(library_text: str) -> str:
+    """Base CTLE library plus PFET model cards, before parameter supplements."""
+    return add_pfet_includes(library_text, expected_sites=25)
+
+
+def pfet_parameter_supplements(
+        library_text: "str | None" = None) -> "dict[str, str]":
+    """Minimal PDK parameter context needed only by the added PFET cards.
+
+    The reference set is derived from files newly reached when PFET cards are
+    added to the live CTLE library. `needed_names` then closes each PDK deck
+    over right-hand-side dependencies. This is deliberately not folded into
+    the ordinary trim: entry 76 measured that doing so materially increases
+    every design's parse time.
+    """
     source = _read(CTLE_LIB) if library_text is None else library_text
-    return add_pfet_includes(source, expected_sites=25)
+    base_tree = _library_include_tree(source, CTLE_LIB.parent)
+    pfet_tree = _library_include_tree(
+        _pfet_model_library_text(source), CTLE_LIB.parent)
+    added_paths = set(pfet_tree) - set(base_tree)
+    if not added_paths:
+        raise PdkTrimError("PFET derivative reached no new model-card files")
+
+    referenced: "set[str]" = set()
+    for path in added_paths:
+        referenced |= set(_IDENT.findall(pfet_tree[path]))
+
+    files: "dict[str, str]" = {}
+    kept_by_deck: "dict[str, set[str]]" = {}
+    for deck in _PFET_PARAMETER_DECKS:
+        src = PDK_NGSPICE / "parameters" / f"{deck}.spice"
+        defs = parse_param_lines(_read(src))
+        keep = needed_names(defs, referenced)
+        if not keep:
+            raise PdkTrimError(
+                f"PFET model cards reference no names in {src}; refusing an "
+                "empty parameter supplement")
+        kept_by_deck[deck] = keep
+        files[f"pfet_{deck}.trim.spice"] = render_trim(
+            src, keep, consumer="the opt-in PFET model cards",
+            discarded="cells, ESD diodes and unrelated devices",
+            verification=(
+                "Dependency derivation and real-ngspice PMOS instantiation "
+                "are asserted by\n* "
+                "nebula/tests/test_pfet_attenuator.py."))
+
+    required = {"sky130_fd_pr__pfet_01v8__wlod_diff"}
+    missing = required - kept_by_deck["lod"]
+    if missing:
+        raise PdkTrimError(
+            "PFET LOD supplement omitted the parameter that stopped entry "
+            f"77: {sorted(missing)}")
+    return files
+
+
+def _add_pfet_parameter_includes(library_text: str,
+                                 expected_sites: int = 25) -> str:
+    """Insert PFET-only parameter decks once at the start of every section."""
+    includes = "".join(
+        f'.include "pdk_trim/pfet_{deck}.trim.spice"\n'
+        for deck in _PFET_PARAMETER_DECKS)
+    out: "list[str]" = []
+    inserted = 0
+    for line in library_text.splitlines(keepends=True):
+        out.append(line)
+        if line.strip().lower() == _PFET_PARAMETER_INCLUDE_MARKER:
+            out.append(includes)
+            inserted += 1
+    if inserted != expected_sites:
+        raise PdkTrimError(
+            f"PFET derivative inserted parameter context at {inserted} "
+            f"sections, expected {expected_sites}")
+    return "".join(out)
+
+
+def pfet_library_text(library_text: "str | None" = None) -> str:
+    """The opt-in 25-section, parameter-complete PFET derivative."""
+    source = _read(CTLE_LIB) if library_text is None else library_text
+    return _add_pfet_parameter_includes(_pfet_model_library_text(source))
 
 
 def section_library_path(section: str, stem: str = "sky130_ctle") -> Path:

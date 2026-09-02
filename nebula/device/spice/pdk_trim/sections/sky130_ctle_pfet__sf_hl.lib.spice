@@ -24,6 +24,8 @@
 .option scale=1.0u
 .param mc_mm_switch=0
 .param mc_pr_switch=0
+.include "../pfet_lod.trim.spice"
+.include "../pfet_invariant.trim.spice"
 * --- MOSFET ---
 .include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__nfet_01v8__sf.pm3.spice"
 .include "C:/Users/DELL/sky130A/libs.ref/sky130_fd_pr/spice/sky130_fd_pr__pfet_01v8__sf.pm3.spice"

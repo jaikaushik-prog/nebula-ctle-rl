@@ -2203,6 +2203,20 @@ supplements from SKY130 `lod.spice` and `invariant.spice` via `needed_names`,
 include them only in the PFET sections, prove the ordinary trim byte-identical,
 and rerun the unchanged table under the same thresholds.
 
+**Entry 78 implementation, committed before measurement:** the generator now
+walks the model files added by the PFET derivative and closes only their PDK
+parameter references. It emits `pfet_lod.trim.spice` with **8 of 70** definition
+lines and `pfet_invariant.trim.spice` with **22 of 7,338**, then includes both in
+each of the 25 PFET-only sections. `git diff` shows no ordinary generated trim
+file, so the no-attenuator path remains byte-identical.
+
+Tests were written first. The focused suite initially failed twice: the
+supplements did not exist and a real ngspice PMOS probe reproduced entry 77's
+`wlod_diff` error. After generation the same layer gate passes; an additional
+mutation test removes one section marker and proves the 25-section completeness
+gate fails. **22 focused tests pass. The nine-point entry-78 run has not run
+yet; no circuit value or result threshold changed.**
+
 ## 6. Next steps, in order
 
 **2026-09-02, session 35 / entry 76:** parse cost is measured **material** at
