@@ -24,8 +24,9 @@ comparison can be confounded by the scoring.
   it reads ground truth. **Not an arm, a ceiling.** It answers "was this corner
   solvable at all", which is the only fair denominator.
 * **`exhaustive`** -- tries every code, then locks the one with the largest
-  observed eye. This is the honest brute force: 64 trials, and it still only
-  ever *observes* the eye, so it can lock a big-eye code that fails HD3.
+  observed eye. This is the honest brute force: 64 measurements plus at most
+  one re-apply of the winning code, and it still only *observes* the eye, so it
+  can lock a big-eye code that fails HD3.
 * **`hillclimb`** -- **the matched control.** Coordinate ascent on the observed
   eye: start at the centre code, probe +-1 on the boost axis, move while the eye
   improves, then the same on the frequency axis. It is what an engineer actually
@@ -34,8 +35,9 @@ comparison can be confounded by the scoring.
 * **`fixed`** -- the single code that is compliant at the most TRAIN corners,
   chosen offline and then frozen. **This is the no-tuning baseline**: if it
   scores as well as the others, the bank is decoration.
-* **`random`** -- codes drawn without replacement until the budget runs out.
-  The floor, and the arm PPO was statistically indistinguishable from when this
+* **`random`** -- codes drawn without replacement, reserving the final trial to
+  re-apply the largest-eye code. Reported over multiple explicit seeds. The
+  floor, and the arm PPO was statistically indistinguishable from when this
   project last measured a learner (`BASELINES.md`).
 
 THE SPLIT, AND WHY IT IS BY PROCESS
@@ -58,7 +60,9 @@ because they behave differently (decision D1).
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
+import math
 import time
 from pathlib import Path
 from typing import Callable, Optional, Sequence
@@ -78,7 +82,10 @@ from nebula.rl.adapt_env import (
 
 HERE = Path(__file__).resolve().parent
 RUN_LOG = HERE / "bank_sweep_run.jsonl"
-RESULTS = HERE / "adapt_controls_results.json"
+#: Entry 79's first run is preserved verbatim.  The qualified multi-seed
+#: benchmark must never silently replace the artifact that exposed G142.
+LEGACY_RESULTS = HERE / "adapt_controls_results.json"
+RESULTS = HERE / "adapt_controls_multiseed_results.json"
 
 #: Held-out processes. See the module docstring: this is a split by PROCESS, so
 #: the test corners are ones no arm was tuned on.
@@ -115,6 +122,16 @@ def arm_oracle(env: AdaptEnv) -> Episode:
     return env.ep
 
 
+def _finish_on_code(env: AdaptEnv, code: int) -> Episode:
+    """Make ``code`` the shipped setting without hiding a re-apply trial."""
+    if env.ep.codes_tried[-1] != int(code):
+        _, _, term, _, _ = env.step(int(code))
+        if term:
+            return env.ep
+    env.step(LOCK)
+    return env.ep
+
+
 def arm_exhaustive(env: AdaptEnv) -> Episode:
     """Try everything, lock the biggest observed eye. 64 trials."""
     best, best_eye = None, -1.0
@@ -125,10 +142,7 @@ def arm_exhaustive(env: AdaptEnv) -> Episode:
         e = _eye_of(obs, c)
         if e is not None and e > best_eye:
             best, best_eye = c, e
-    if best is not None:
-        env.step(best)
-        env.step(LOCK)
-    return env.ep
+    return _finish_on_code(env, best) if best is not None else env.ep
 
 
 def arm_hillclimb(env: AdaptEnv) -> Episode:
@@ -149,6 +163,9 @@ def arm_hillclimb(env: AdaptEnv) -> Episode:
         while improving:
             improving = False
             for d in (+1, -1):
+                # Reserve one possible trial to re-apply the best observed code.
+                if env.ep.n_trials >= env.max_trials - 1:
+                    return _finish_on_code(env, rs * 8 + cs)
                 nr = rs + d if axis == 0 else rs
                 nc = cs if axis == 0 else cs + d
                 if not (0 <= nr < 8 and 0 <= nc < 8):
@@ -163,9 +180,7 @@ def arm_hillclimb(env: AdaptEnv) -> Episode:
                 if e > cur:
                     rs, cs, cur, improving = nr, nc, e, True
                     break
-    env.step(rs * 8 + cs)
-    env.step(LOCK)
-    return env.ep
+    return _finish_on_code(env, rs * 8 + cs)
 
 
 def _fixed_code(table: BankTable, corners: Sequence[str],
@@ -189,10 +204,23 @@ def make_arm_fixed(code: int) -> Callable:
     return arm
 
 
+def _episode_seed(seed: int, ep: Episode) -> int:
+    """Stable per-episode seed; unlike ``hash()``, identical across processes."""
+    payload = (f"{int(seed)}|{ep.corner}|{ep.target_peaking_db:.17g}|"
+               f"{ep.target_f_peak_hz:.17g}").encode("ascii")
+    return int.from_bytes(hashlib.blake2b(payload, digest_size=8).digest(),
+                          "little")
+
+
 def make_arm_random(seed: int) -> Callable:
     def arm(env: AdaptEnv) -> Episode:
-        rng = np.random.default_rng(seed + env.ep.n_trials)
-        order = rng.permutation(N_CODES)[:BUDGET]
+        # G142: ``seed + ep.n_trials`` used zero for every new episode and
+        # replayed one fixed order over the whole benchmark.  This stable
+        # digest gives every episode an independent, reproducible stream.
+        rng = np.random.default_rng(_episode_seed(seed, env.ep))
+        # Reserve one possible trial to re-apply the best observed setting.
+        n_probe = max(1, env.max_trials - 1)
+        order = rng.permutation(N_CODES)[:n_probe]
         best, best_eye = None, -1.0
         for c in order:
             obs, _, term, _, _ = env.step(int(c))
@@ -201,10 +229,7 @@ def make_arm_random(seed: int) -> Callable:
             e = _eye_of(obs, int(c))
             if e is not None and e > best_eye:
                 best, best_eye = int(c), e
-        if best is not None:
-            env.step(best)
-            env.step(LOCK)
-        return env.ep
+        return _finish_on_code(env, best) if best is not None else env.ep
     arm.__name__ = "random"
     return arm
 
@@ -243,6 +268,59 @@ def score_arm(table: BankTable, arm: Callable, corners: Sequence[str],
     }
 
 
+def score_random_seeds(table: BankTable, corners: Sequence[str],
+                       requests: Sequence[tuple], reward: AdaptReward,
+                       max_trials: int, seeds: Sequence[int]) -> dict:
+    """Random-search mean and spread over explicit experiment seeds."""
+    rows = []
+    for seed in seeds:
+        row = score_arm(table, make_arm_random(int(seed)), corners, requests,
+                        reward, max_trials)
+        row["seed"] = int(seed)
+        rows.append(row)
+    if not rows:
+        raise ValueError("random baseline requires at least one seed")
+    rates = np.asarray([r["compliance_rate_of_solvable"] for r in rows],
+                       dtype=float)
+    trials = np.asarray([r["mean_trials_on_solvable"] for r in rows],
+                        dtype=float)
+    mean = float(np.mean(rates))
+    sd = float(np.std(rates, ddof=1)) if len(rates) > 1 else 0.0
+    half = 1.96 * sd / math.sqrt(len(rates))
+    return {
+        "arm": "random",
+        "n_seeds": len(rows),
+        "seeds": [int(s) for s in seeds],
+        "n_solvable": rows[0]["n_solvable"],
+        "compliance_rate_mean": mean,
+        "compliance_rate_sd": sd,
+        "compliance_rate_ci95": [max(0.0, mean - half),
+                                  min(1.0, mean + half)],
+        "mean_trials_on_solvable": float(np.mean(trials)),
+        "per_seed": rows,
+    }
+
+
+def pareto_frontier(rows: Sequence[dict]) -> list[dict]:
+    """Non-dominated arms: maximise compliance and minimise trial count."""
+    usable = [r for r in rows
+              if r.get("compliance_rate_of_solvable") is not None
+              and r.get("mean_trials_on_solvable") is not None]
+    out = []
+    for row in usable:
+        rate = float(row["compliance_rate_of_solvable"])
+        trials = float(row["mean_trials_on_solvable"])
+        dominated = any(
+            float(other["compliance_rate_of_solvable"]) >= rate
+            and float(other["mean_trials_on_solvable"]) <= trials
+            and (float(other["compliance_rate_of_solvable"]) > rate
+                 or float(other["mean_trials_on_solvable"]) < trials)
+            for other in usable if other is not row)
+        if not dominated:
+            out.append(row)
+    return out
+
+
 def run() -> dict:
     t0 = time.time()
     table = BankTable.from_jsonl(RUN_LOG)
@@ -256,8 +334,7 @@ def run() -> dict:
     print(f"train {len(train)} corners, test {len(test)}; "
           f"fixed arm uses code {fixed} (chosen on TRAIN only)", flush=True)
 
-    arms = [arm_oracle, arm_exhaustive, arm_hillclimb, make_arm_fixed(fixed),
-            make_arm_random(20260902)]
+    arms = [arm_oracle, arm_exhaustive, arm_hillclimb, make_arm_fixed(fixed)]
     rows = []
     for arm in arms:
         budget = N_CODES + 2 if arm is arm_exhaustive else BUDGET
@@ -267,6 +344,19 @@ def run() -> dict:
         print(f"  {r['arm']:<12} compliant {r['n_compliant_locks']:3d}/"
               f"{r['n_solvable']:3d} solvable   trials {r['mean_trials']:5.2f}"
               f"   return {r['mean_return']:7.2f}", flush=True)
+    random = score_random_seeds(
+        table, test, requests, reward, BUDGET,
+        seeds=range(2026090200, 2026090220))
+    random_as_arm = {
+        "arm": "random_mean",
+        "compliance_rate_of_solvable": random["compliance_rate_mean"],
+        "mean_trials_on_solvable": random["mean_trials_on_solvable"],
+    }
+    frontier = pareto_frontier(rows[1:] + [random_as_arm])
+    print(f"  random x{random['n_seeds']:<3} compliant "
+          f"{100 * random['compliance_rate_mean']:5.1f}% +/- "
+          f"{100 * random['compliance_rate_sd']:4.1f}%   trials "
+          f"{random['mean_trials_on_solvable']:5.2f}", flush=True)
 
     out = {
         "task": "adaptation controls, measured BEFORE any policy exists",
@@ -277,6 +367,8 @@ def run() -> dict:
         "reward": reward.__dict__, "budget": BUDGET,
         "fixed_code_chosen_on_train": fixed,
         "n_requests": len(requests), "arms": rows,
+        "random": random,
+        "non_rl_pareto_frontier": frontier,
         "wall_clock_s": time.time() - t0,
         "simulations_run_by_this_file": 0,
     }
@@ -287,7 +379,7 @@ def run() -> dict:
 def _report(d: dict) -> None:
     print()
     print("=" * 78)
-    print(f"ADAPTATION CONTROLS — {d['split']['n_test_corners']} held-out "
+    print(f"ADAPTATION CONTROLS - {d['split']['n_test_corners']} held-out "
           f"corners x {d['n_requests']} requests, 0 simulations")
     print("=" * 78)
     print(f"  split by process: train {d['split']['train_processes']} -> "
@@ -301,10 +393,18 @@ def _report(d: dict) -> None:
               f"{r['n_compliant_locks']:3d}/{r['n_solvable']:3d} "
               f"({0.0 if rate is None else 100 * rate:5.1f} %)  "
               f"{r['mean_trials']:6.2f}  {r['mean_return']:7.2f}")
+    rnd = d.get("random")
+    if rnd:
+        lo, hi = rnd["compliance_rate_ci95"]
+        print(f"   {'random mean':<13} {d['budget']:4d}   "
+              f"{100 * rnd['compliance_rate_mean']:5.1f}% "
+              f"(95% CI {100 * lo:.1f}-{100 * hi:.1f})  "
+              f"{rnd['mean_trials_on_solvable']:6.2f}")
     print()
-    print("  THE BAR THE POLICY MUST CLEAR is the hillclimb row, on BOTH")
-    print("  compliance and trials. Beating only `random` or only `fixed`")
-    print("  is not a contribution (entry 47).")
+    names = ", ".join(r["arm"] for r in d.get("non_rl_pareto_frontier", []))
+    print(f"  NON-RL PARETO FRONTIER: {names or 'not recorded'}")
+    print("  A policy must improve that frontier at matched conditions;")
+    print("  beating only a weaker named arm is not a contribution (entry 47).")
 
 
 def main(argv: Optional[Sequence[str]] = None) -> int:

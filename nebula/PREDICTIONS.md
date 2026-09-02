@@ -13163,3 +13163,50 @@ attenuator or hidden channel axis and entry 71 already showed that its code is
 mostly request-determined. The next expensive measurement is the combined
 8-attenuator x 64-CTLE x 45-corner table; only that table can reopen the
 channel-adaptation question honestly.
+
+## 80. Session 36 -- **qualify the old-table controls before building the combined adaptation experiment.**
+
+**Written 2026-09-02 BEFORE the corrected control run.** Entry 79 froze two
+accounting defects. The repair is now implemented with 20 fail-capable focused
+tests: a stable BLAKE2 episode seed replaces the repeated seed; twenty explicit
+experiment seeds produce a random mean, standard deviation and 95% normal
+interval; every budgeted arm reserves a possible final trial to re-apply its
+best observed setting before lock; and the reported comparison target is the
+computed non-dominated compliance/trials frontier. Console print literals are
+ASCII-gated for the Windows cp1252 rule.
+
+The corrected run writes `adapt_controls_multiseed_results.json`, never entry
+79's `adapt_controls_results.json`. Circuit table, process split, 16 requests,
+reward weights and eight-trial budget are unchanged. This is still the old
+no-attenuator, one-channel diagnostic and **no policy will be trained on it**.
+
+### Predictions
+
+**Q1 -- invariant arms.** Oracle remains 262/262, fixed code 20 remains 69/262
+in one trial, and exhaustive-max-eye remains 20/262 with mean 65 trials.
+Confidence **0.99**: none of their episode choices changed. **Falsifier: any of
+those counts or trial means changes.**
+
+**Q2 -- qualified random floor.** The 20-seed mean compliance is **5-20%** of
+solvable cases, the between-seed standard deviation is nonzero, and mean trials
+do not exceed 8. Confidence **0.9**, centred on entry 79's unqualified 12.2%.
+**Falsifier: any bound fails or the spread is zero.**
+
+**Q3 -- the decision bar.** The TRAIN-selected fixed code is on the computed
+non-RL Pareto frontier; hillclimb and exhaustive-max-eye are not. Confidence
+**0.9** because fixed already Pareto-dominated both in entry 79. Random may join
+the frontier only if its mean compliance exceeds fixed's 26.3%, which Q2 says
+it will not. **Falsifier: fixed absent, or hillclimb/exhaustive present.**
+
+**Q4 -- Windows output.** The command emits ASCII only and no replacement
+character. Confidence **0.99**, backed by an AST test over every `print()`
+literal. **Falsifier: any non-ASCII output byte/string.**
+
+### Decision rule, before the run
+
+* Q1 fails -> the accounting repair moved an invariant arm; stop and debug.
+* Q2 fails -> do not quote random performance until its sampling is explained.
+* Q3 fails -> carry the measured frontier forward; do not restore a hard-coded
+  hillclimb bar.
+* Q1-Q4 hold -> the controls are qualified as an instrument only. Proceed to
+  the separately preregistered combined circuit table; do not train here.

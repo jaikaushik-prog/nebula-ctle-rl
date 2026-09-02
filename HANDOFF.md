@@ -13659,3 +13659,29 @@ code Pareto-dominates it, and the random factory recreates one seed in every
 episode (G142). Artifact: `nebula/experiments/adapt_controls_results.json`.
 Next: preserve this diagnostic, repair the controls with fail-capable tests,
 then preregister and measure the combined 8 x 64 x 45 table before training.
+
+### G143. If an environment auto-locks the last trial at its horizon, a control cannot spend the whole budget exploring and then silently select an earlier result
+
+Entry 79's random and hillclimb controls intended to choose the largest-eye
+code after their eight probes, but `AdaptEnv.step()` auto-locks the eighth code.
+Their later `step(best); step(LOCK)` was dead whenever the full budget had been
+used, so the scripts shipped the last probe rather than the stated best probe.
+
+**Rule:** reserve a possible final trial to re-apply the selected code, count
+that re-application as a trial, and test the locked code against the observable
+history. Never describe post-budget selection that the environment cannot
+execute.
+
+### 2026-09-02 - session 36 (entry 80 pre-registration). **The adaptation controls are repaired and gated; the corrected measurement has not run.**
+
+The entry-79 artifact remains at `adapt_controls_results.json`. The qualified
+run writes a distinct `adapt_controls_multiseed_results.json`: 20 explicit
+experiment seeds, stable per-episode BLAKE2 streams (G142), mean/SD/95% interval,
+and a computed compliance/trials Pareto frontier. Random and hillclimb reserve
+a final possible trial to re-apply their selected code before the environment's
+automatic horizon lock (G143). Every `print()` literal is ASCII-gated.
+
+Tests were written first and failed on the missing qualification functions;
+after implementation, **20 focused adaptation tests pass**. Entry 80 registers
+the invariant counts, random bounds, frontier membership and console gate
+before the corrected zero-SPICE run. No policy is authorised on this old table.
