@@ -12329,3 +12329,98 @@ link evaluations per scorable point add Python time only. **Falsifier: over
   the channel is an easier/harder axis rather than a hidden one; report and stop.
 * **Q4 fails** -> the free-channel argument is wrong somewhere; fix the plumbing
   before reading Q1 at all.
+
+### OUTCOME, entry 72 (2026-09-02). **Q4 FAILED and the pre-committed rule forbids reading Q1/Q2. But the failure is the finding: this CTLE SATURATES on any channel shorter than ~9 dB, at every code.**
+
+    2 880 decks x 7 channels, 34.3 min
+    artifacts: experiments/channel_probe_results.json, channel_probe_run.jsonl
+
+    scorable points, of the 2 117 the device layer accepts:
+
+        loss dB    3.0   4.5   6.0   7.5    9.0   10.5   12.0
+        scorable     0    18   128   485   1179   1823   2117
+
+| | prediction | outcome | |
+|---|---|---|---|
+| **Q4** | scorable count identical (2 117) at every loss | **0 to 2 117, a 100 % swing** | **MISS** |
+| **Q5** | under 45 min | **34.3 min** | **HIT** |
+| **Q3** | coverage rises as loss falls | **it falls**: 8, 4, 0, 0, 0, 0, 0 | **MISS** |
+| **Q1** | best code moves with channel, link framing | **NOT READ** — see the rule | — |
+| **Q2** | best code does not move, request framing | **NOT READ** — see the rule | — |
+
+### The premise I pre-registered was wrong, and it was wrong in a specific way
+
+Entry 72 was registered on this argument:
+
+> the family's insertion loss at DC is exactly 0 by construction, so
+> `LinkConfig.v_in_diff_pp_v` is identical at 3 dB and 12 dB; the CTLE sees the
+> same input amplitude on every channel, so the compression rejections are
+> channel-independent and **only the eye moves**.
+
+**The first clause is true and is asserted in a passing test. The conclusion
+does not follow.** `v_in_diff_pp_v` is the drive at DC. The link rejection is on
+the CTLE's **output** swing, and a *shorter* channel delivers far more
+high-frequency content for the stage to amplify. Less loss is not an easier
+problem for this circuit; it is a harder one.
+
+### What that means physically, and it is the most useful thing here
+
+Median output swing at 3 dB loss, against the measured linear limit, by boost row:
+
+    R0  1480.0 mVpp  vs limit 1035.5   over by 1.43x     R4  1696.1  vs 1110.5   1.53x
+    R1  1518.0       vs        1054.3            1.44x   R5  1738.9  vs 1104.9   1.57x
+    R2  1577.8       vs        1082.8            1.46x   R6  1737.8  vs 1023.5   1.70x
+    R3  1638.0       vs        1101.3            1.49x   R7  1548.0  vs  832.9   1.86x
+
+**Even the lowest-boost code over-drives by 1.43x.** The bank makes it worse
+(1.43x -> 1.86x across the boost axis) but the bank did not cause it, and **no
+bank code fixes it**, because the binding quantity is the stage's **total
+gain**, not its peaking. Turning the boost down does not turn the gain down
+enough.
+
+So the honest sentence is:
+
+> The delivered CTLE is sized for a 12 dB channel and **saturates on any channel
+> shorter than about 9 dB**. The knob this part is missing is not equalisation —
+> it is **gain control**. A real PCIe receiver puts a VGA/AGC around the CTLE for
+> exactly this reason, and this design has none.
+
+That is a **scope finding about the circuit**, not about the search or the
+learner, and it was invisible for the whole project because every number in this
+repository was measured at `FUNNEL_LOSS_DB = 12.0` — the family's worst member
+and, it turns out, its *easiest* one for this stage.
+
+### Why Q1 and Q2 are not read
+
+The pre-committed rule says: *"Q4 fails -> the free-channel argument is wrong
+somewhere; fix the plumbing before reading Q1 at all."*
+
+The plumbing is in fact sound — the numbers are real measurements — but the
+**premise** that made Q1/Q2 interpretable is not. At five of the seven channels
+almost nothing is scorable, so framing (b)'s printed *"0 of 45 corners move"* is
+an artifact of there being no scorable codes to move **between**, not evidence
+that the best code is channel-independent. Reading it as the latter is exactly
+the mistake this rule exists to prevent. **Q1 and Q2 are unmeasured, and the
+probe would have to be re-run against a gain-controlled stage to measure them.**
+
+### A test of mine committed this repository's own recurring defect
+
+`test_a_worse_channel_never_gives_a_taller_eye` was written to guard the channel
+model. It filters `if by[loss]["ok"]` and then asserts monotonicity over what
+survives — so at the tested sizing it silently compared the two high-loss points
+and **passed**, while five of seven channels were being rejected outright. It
+guarded the claim it was written for and missed the one that mattered.
+
+**A set built by FILTERING loses members without saying so** — G101, G106 and
+G115 are the same shape, and G115 cost a design peaking at 10.818 GHz a 45-of-45
+verification. `test_scorability_is_CHANNEL_DEPENDENT_and_the_short_channel_is_
+the_hard_one` now asserts the membership itself, and records the measured table
+so the false premise cannot be re-asserted silently.
+
+### Status of the RL line after three roads
+
+No policy has been trained, and none should be on this artifact. The adaptation
+problem D10 framed remains **unmeasured** rather than refuted on the channel
+axis — but it cannot be measured on a stage that saturates across most of the
+channel family. **Gain control is now upstream of the RL question**, not
+downstream of it.

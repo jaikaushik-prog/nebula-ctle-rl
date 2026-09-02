@@ -48,6 +48,21 @@ per (code, corner) and the link is re-evaluated per channel in Python.
 `bank_sweep_run.jsonl` stored the eye at one channel and not the device result,
 so the seven channels need the 2 880 decks re-run. What is free is the *seventh*
 channel given the first, not the sweep.
+
+CORRECTED 2026-09-02 BY ENTRY 72'S OWN RESULT
+-----------------------------------------------
+**The paragraph above is right that one SPICE run yields every channel, and
+WRONG that "only the eye moves".** `v_in_diff_pp_v` is the drive at DC; the link
+rejection is on the CTLE's **output** swing, and a shorter channel delivers far
+more high-frequency content for the stage to amplify. Measured over this probe:
+
+    loss dB   3.0   4.5   6.0   7.5   9.0  10.5  12.0
+    scorable    0    18   128   485  1179  1823  2117   (of 2117)
+
+At 3 dB **every** point is rejected on output swing, the lowest-boost code
+included, over-driving by 1.43x. **Less channel loss is a HARDER problem for
+this stage, not an easier one**, and no bank code fixes it because the binding
+quantity is total gain rather than peaking. See `PREDICTIONS.md` entry 72.
 """
 
 from __future__ import annotations
@@ -301,14 +316,14 @@ def _report(d: dict) -> None:
     print("      loss dB   requests served at all 45 corners")
     for p in a["framing_a_request"]["per_loss"]:
         print(f"       {p['loss_db']:5.1f}          {p['n_requests_served']:2d} of "
-              f"{d['n_requests']}")
+              f"{a['n_requests']}")
     print(f"      requests whose best-single code MOVES with the channel: "
-          f"{a['framing_a_request']['n_moved']} of {d['n_requests']}")
+          f"{a['framing_a_request']['n_moved']} of {a['n_requests']}")
     print()
     print("  (b) LINK framing - V6_LINK, nobody names a peaking")
     b = a["framing_b_link"]
     print(f"      corners whose best code MOVES with the channel: "
-          f"{b['n_corners_moved']} of {d['n_corners']}")
+          f"{b['n_corners_moved']} of {a['n_corners']}")
     print(f"      median code span across channels: {b['median_code_span']:.1f}"
           f"   max: {b['max_code_span']}")
     print()

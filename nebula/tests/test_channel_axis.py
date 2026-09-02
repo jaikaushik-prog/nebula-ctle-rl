@@ -90,6 +90,10 @@ def test_a_worse_channel_never_gives_a_taller_eye():
     Not a tautology of the code: the eye comes from a pole-zero fit through the
     channel, and a fit that moved the wrong way would say the channel model is
     wrong, which is worth catching here rather than in a coverage number.
+
+    **The `if ok` filter below is load-bearing and nearly cost this project a
+    wrong result** — see `test_scorability_is_CHANNEL_DEPENDENT` for what it hid
+    and why the filter alone is not enough.
     """
     ev = evaluate_at_points(U, PTS, specs=R.V6_SPECS,
                             link_losses_db=FAMILY_IL_DB)
@@ -99,3 +103,46 @@ def test_a_worse_channel_never_gives_a_taller_eye():
     assert len(heights) >= 2
     for (l0, h0), (l1, h1) in zip(heights, heights[1:]):
         assert h1 <= h0 + 1e-12, f"eye grew from {l0} dB to {l1} dB"
+
+
+def test_scorability_is_CHANNEL_DEPENDENT_and_the_short_channel_is_the_hard_one():
+    """**Entry 72's Q4 failure, pinned so the false premise cannot come back.**
+
+    Entry 72 was pre-registered on the claim that *"compression rejections are
+    channel-independent, so only the eye moves"*. The argument was that the
+    family's loss at DC is exactly 0, so `v_in_diff_pp_v` is the same on every
+    channel — which is true, and is asserted above — and the conclusion drawn
+    from it was **wrong**.
+
+    `v_in_diff_pp_v` is the drive at DC. The link rejection is on the CTLE's
+    **output** swing, and a shorter channel delivers far more HIGH-frequency
+    content for the stage to amplify. Measured over the 2 880-point probe:
+
+        loss dB   3.0   4.5   6.0   7.5   9.0  10.5  12.0
+        scorable    0    18   128   485  1179  1823  2117   (of 2117)
+
+    At 3.0 dB **every** point is rejected, including the lowest-boost code,
+    which over-drives by 1.43x. So scorability is strongly channel-dependent and
+    the short channel is the hard one — the opposite of the intuition that less
+    loss is easier.
+
+    **The test above did not catch this because it filters on `ok`**, which is
+    this repository's own recurring shape: a set built by filtering loses
+    members without saying so (G101, G106, G115). This test asserts the
+    membership itself.
+    """
+    ev = evaluate_at_points(U, PTS, specs=R.V6_SPECS,
+                            link_losses_db=FAMILY_IL_DB)
+    by = ev.points[0].links_by_loss
+    ok_losses = {loss for loss, v in by.items() if v["ok"]}
+    assert ok_losses, "nothing scorable anywhere — the probe cannot be read"
+    assert ok_losses != set(by), (
+        "every channel scorable at this sizing: the claim that scorability is "
+        "channel-dependent is what entry 72 measured, and this test is the "
+        "record of it")
+    # The rejected ones are the SHORT channels, not the long ones.
+    assert max(by) in ok_losses, "the worst channel should be the easy one here"
+    assert min(by) not in ok_losses, "the shortest channel should be rejected"
+    for loss in sorted(by):
+        if not by[loss]["ok"]:
+            assert "output swing" in (by[loss]["reason"] or ""), by[loss]
