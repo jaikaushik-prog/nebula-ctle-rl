@@ -1,0 +1,91 @@
+{
+ "task": "adaptation controls, measured BEFORE any policy exists",
+ "source": "bank_sweep_run.jsonl",
+ "split": {
+  "by": "process",
+  "train_processes": [
+   "tt",
+   "ss",
+   "ff"
+  ],
+  "test_processes": [
+   "sf",
+   "fs"
+  ],
+  "n_train_corners": 27,
+  "n_test_corners": 18
+ },
+ "reward": {
+  "trial_cost": 1.0,
+  "lock_bonus": 20.0,
+  "false_lock": 60.0,
+  "invalid_lock": 1.0
+ },
+ "budget": 8,
+ "fixed_code_chosen_on_train": 20,
+ "n_requests": 16,
+ "arms": [
+  {
+   "arm": "arm_oracle",
+   "n_episodes": 288,
+   "n_solvable": 262,
+   "n_compliant_locks": 262,
+   "compliance_rate_of_solvable": 1.0,
+   "mean_trials": 1.0,
+   "mean_trials_on_solvable": 1.0,
+   "mean_return": 11.777777777777779,
+   "n_false_locks": 0,
+   "budget": 8
+  },
+  {
+   "arm": "arm_exhaustive",
+   "n_episodes": 288,
+   "n_solvable": 262,
+   "n_compliant_locks": 20,
+   "compliance_rate_of_solvable": 0.07633587786259542,
+   "mean_trials": 65.0,
+   "mean_trials_on_solvable": 65.0,
+   "mean_return": -119.44444444444444,
+   "n_false_locks": 242,
+   "budget": 66
+  },
+  {
+   "arm": "arm_hillclimb",
+   "n_episodes": 288,
+   "n_solvable": 262,
+   "n_compliant_locks": 51,
+   "compliance_rate_of_solvable": 0.1946564885496183,
+   "mean_trials": 8.0,
+   "mean_trials_on_solvable": 8.0,
+   "mean_return": -64.38888888888889,
+   "n_false_locks": 211,
+   "budget": 8
+  },
+  {
+   "arm": "fixed_20",
+   "n_episodes": 288,
+   "n_solvable": 262,
+   "n_compliant_locks": 69,
+   "compliance_rate_of_solvable": 0.2633587786259542,
+   "mean_trials": 1.0,
+   "mean_trials_on_solvable": 1.0,
+   "mean_return": -41.833333333333336,
+   "n_false_locks": 193,
+   "budget": 8
+  },
+  {
+   "arm": "random",
+   "n_episodes": 288,
+   "n_solvable": 262,
+   "n_compliant_locks": 32,
+   "compliance_rate_of_solvable": 0.12213740458015267,
+   "mean_trials": 8.0,
+   "mean_trials_on_solvable": 8.0,
+   "mean_return": -59.111111111111114,
+   "n_false_locks": 230,
+   "budget": 8
+  }
+ ],
+ "wall_clock_s": 1.103989601135254,
+ "simulations_run_by_this_file": 0
+}

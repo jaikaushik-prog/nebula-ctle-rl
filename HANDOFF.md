@@ -1371,6 +1371,11 @@ signaling, ADC-based DSP receiver, 28 nm CMOS reference parameters).
 │   ├── rl/ppo.py           Minimal PPO in torch, ~150 lines. Every constant is
 │   │                       a PPO-paper or SB3 default, written down. NOTHING
 │   │                       TUNED. Worth 0.2% of a run's wall clock (G65 note).
+│   ├── rl/adapt_env.py     Discrete CTLE-code adaptation environment. Hides
+│   │                       process corner and exposes only the requested
+│   │                       response plus tried-code eye height/width. Its
+│   │                       session-34 table has no attenuator/channel state;
+│   │                       do not train on it as the final adaptation task.
 │   ├── rl/runlog.py        JSONL run log. Row 0 is a HEADER row, not a separate
 │   │                       file, so a log cannot be read without its conditions.
 │   ├── device/netlist_gates.py  §6a's two gates, on the ASSEMBLED netlist text:
@@ -1397,6 +1402,11 @@ signaling, ADC-based DSP receiver, 28 nm CMOS reference parameters).
 │   │                       because a completed run once overwrote another
 │   │                       (G113). `--proposals` is the 64-deck / ~30 s scan
 │   │                       that runs no search and verifies nothing.
+│   ├── experiments/exp_adapt_controls.py  Oracle, exhaustive-max-eye,
+│   │                       coordinate hillclimb, fixed-code and random
+│   │                       adaptation controls. Entry 79 is the zero-SPICE
+│   │                       old-table diagnostic; fixed code is its strongest
+│   │                       arm and its random estimate is not yet qualified.
 │   │                       NOTE: this tree lags for the session 23-25 files —
 │   │                       exp_coverage.py, adaptive_screen.py, search_score.py
 │   │                       and runlock.py are documented in §9 and §12 but are
@@ -1570,6 +1580,12 @@ Plus: git init, .gitignore, 28 tests, Wilson-bound BER reporting.
   the owner in plain language for professor communication.
 
 ## 6. Key numbers & validated behavior (current state)
+
+- **Nebula adaptation controls (entry 79, old table only):** of 262 solvable
+  held-out `(corner, request)` cases, oracle 262, TRAIN-selected fixed code 69,
+  hillclimb 51, deterministic eight-code random 32, and exhaustive-max-eye 20.
+  No policy was trained. The table has no attenuator or hidden-channel state,
+  and the random arm needs a multi-seed repair before comparison.
 
 - Tests: **1942 passing, 12 deselected** (session 28) —
   `python -m pytest tests nebula/tests -q -m "not slow"`.
@@ -1960,6 +1976,11 @@ Plus: git init, .gitignore, 28 tests, Wilson-bound BER reporting.
   verifies one TT load and one CTLE bank code only. It may not be described as
   PVT-qualified, added to entry 69's 14-of-16 delivered coverage, or compared
   with entry 71's 8-of-16 wide-bank result.
+- **(nebula) The entry-79 adaptation controls are not an RL result and not the
+  combined adaptation task.** They use the old 64-code, no-attenuator table at
+  one channel. The printed hillclimb bar is weaker than the TRAIN-selected
+  fixed code, and the random row repeats one deterministic order; both defects
+  must be repaired before a learned-policy comparison.
 - JTOL amplitude grid is coarse (0.05/0.1/0.2/0.4/0.7/1.0 UI).
 - Power numbers are PLACEHOLDERS (literature-based), never simulated.
 - rtl/, verification/, veriloga_models/, matlab_models/, optical_dsp.py,
@@ -1967,6 +1988,12 @@ Plus: git init, .gitignore, 28 tests, Wilson-bound BER reporting.
   untrusted until proven (the Phase-0 experience says assume bugs).
 
 ## 8. Next steps (prioritized backlog with context)
+
+**Session-36 ordering:** qualify the non-RL controls, then measure the combined
+8-attenuator x 64-CTLE x 45-corner table and its free channel views, and only
+then train a discrete policy on held-out processes/channels. The learned arm
+must beat the complete non-RL Pareto frontier at equal compliance; hillclimb is
+not privileged merely because the old script named it.
 
 **-1. NEBULA competition track (ACTIVE, started 2026-08-03).** Separate
    project, own contract (`CLAUDEwa.md`), hard deadline 15 Sept 2026.
@@ -13602,3 +13629,33 @@ suite, **2,549 passed, 13 deselected in 279.39 s**. Pre-change baseline was
 Honest scope: **TT, one load, one CTLE bank code. No coverage number.** No PVT
 or 135-point attenuator sweep was run, and this result may not be combined with
 entry 69 or entry 71.
+
+### G142. A seeded "random" arm that recreates its RNG inside every episode is a fixed sequence, not a random-search estimate
+
+Entry 79's `make_arm_random(seed)` creates `default_rng(seed +
+env.ep.n_trials)` when `n_trials` is zero at every episode. It therefore tries
+the same eight codes in the same order for all 288 cases. The row is a valid
+deterministic control, but it has no between-seed uncertainty and must not be
+reported as expected random performance.
+
+**Rule:** derive an episode seed from an explicit experiment seed plus a stable
+episode identifier, run multiple experiment seeds, and report the aggregate
+and spread. Never use Python's salted `hash()` for that identifier.
+
+### 2026-09-02 - session 36 (entry 79). **The old-table adaptation controls ran; fixed code beats hillclimb, and the random estimate is not qualified.**
+
+At the owner's request to make RL load-bearing, the session-34 control harness
+was finally run on its preserved `bank_sweep_run.jsonl`: 18 held-out `sf/fs`
+corners x 16 requests, 262/288 solvable, and zero new SPICE. Oracle reached
+262/262; TRAIN-selected fixed code 20 reached 69/262 in one trial; hillclimb
+51/262 in eight; the deterministic eight-code random row 32/262; and trying all
+64 codes then locking the largest eye only 20/262 in 65 trials.
+
+The result establishes that eye maximisation does not reveal full compliance,
+but it does **not** establish an RL task: the table contains no attenuator and
+only the original 12 dB channel. It also exposed two control-accounting defects
+before policy training: the script names hillclimb as the bar even though fixed
+code Pareto-dominates it, and the random factory recreates one seed in every
+episode (G142). Artifact: `nebula/experiments/adapt_controls_results.json`.
+Next: preserve this diagnostic, repair the controls with fail-capable tests,
+then preregister and measure the combined 8 x 64 x 45 table before training.

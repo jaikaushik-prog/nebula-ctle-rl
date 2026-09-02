@@ -13121,3 +13121,45 @@ artifact path now holds this successful rerun.
 
 **D11 is complete only at the scope above.** No 45-corner or 135-point run was
 performed, and the attenuator still has **no coverage number**.
+
+## 79. Session 36 -- **the previously committed adaptation controls, run before any policy or combined attenuator table exists. A measurement record, not a scored preregistration.**
+
+**Run 2026-09-02 at the owner's request to make RL load-bearing.** The control
+harness and its split were already committed in session 34 and explicitly left
+unrun after entry 71 invalidated the original PVT-only adaptation premise. No
+numeric predictions were registered for these rows, so this is a measurement
+record rather than a prediction score.
+
+    18 held-out sf/fs corners x 16 requests = 288 episodes
+    262 episodes have at least one compliant bank code
+    source: bank_sweep_run.jsonl (NO attenuator, ONE 12 dB channel)
+    artifact: experiments/adapt_controls_results.json
+    simulations in this run: 0
+
+    arm                         compliant / solvable    trials
+    oracle ceiling                    262 / 262           1
+    exhaustive, lock max eye           20 / 262          65
+    coordinate hillclimb                51 / 262           8
+    fixed code 20, TRAIN-chosen         69 / 262           1
+    random                               32 / 262           8
+
+**The useful finding is not that an RL policy has a bar yet.** It is that the
+largest observed eye is a poor proxy for the hidden 13-row compliance verdict:
+even trying all 64 codes and locking the largest eye succeeds on only 7.6% of
+solvable cases. That is the partial-observability mechanism the policy would
+have to learn around.
+
+**Two benchmark defects are frozen before repair.** First, the script prints
+that hillclimb is the bar, but fixed code 20 has both higher compliance
+(26.3% versus 19.5%) and fewer trials (1 versus 8); a learned arm must beat the
+strongest non-RL Pareto frontier, not a named favourite. Second, the random arm
+reinitialises the same RNG seed in every episode, so it repeats one eight-code
+order and has no multi-seed uncertainty. Its 32/262 is a deterministic control,
+not a random-search estimate.
+
+**Decision.** Preserve this artifact, repair those two control-accounting
+defects with fail-capable tests, and do not train on this table. It has no
+attenuator or hidden channel axis and entry 71 already showed that its code is
+mostly request-determined. The next expensive measurement is the combined
+8-attenuator x 64-CTLE x 45-corner table; only that table can reopen the
+channel-adaptation question honestly.

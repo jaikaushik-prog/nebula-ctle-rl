@@ -36,6 +36,7 @@ human in the loop. Deliverables that already exist and run:
 
 | | state |
 |---|---|
+| **Adaptation controls (entry 79)** | **MEASURED on the old no-attenuator/one-channel table, 0 new SPICE.** Of 262 solvable held-out cases: oracle 262, fixed TRAIN-selected code 69, hillclimb 51, random 32, exhaustive-max-eye 20. The fixed arm, not hillclimb, is the present non-RL bar. The random arm repeats one deterministic order and needs a multi-seed repair before comparison. **No policy trained; this is not the combined adaptation problem.** |
 | Test suite | **2549 passed**, 13 deselected, 279.39 s, measured 2026-09-02 (session 35); one timing-flaky test, **G136** (`python -m pytest tests nebula/tests -q -m "not slow"`). The **system** interpreter, not the conda env — that env has no `torch`, and `ngspice_con.exe` is found by absolute path anyway (G69) |
 | Gates G0–G2 | passed |
 | G3 (RL beats random + grid) | **fails one clause** — RL is indistinguishable from random at every budget |
@@ -2286,6 +2287,13 @@ and inconsistent test counts.
 | 9 | Option B: deliberate output loading, to desensitise the load axis. Measure device output capacitance with `device/cap_probe.py` first rather than inferring it (§4b infers ~90 fF) | ~30 sims | |
 | 10 | Report: compliance matrix on page 1; renumber figures; point the grounding checker at report prose | ~2 h | |
 | 11 | Demo capture: plain-English request → schematic → specs → verification | ~1 h | |
+
+**Session-36 update to rows 4ab/4ac.** Entry 79 ran the old-table controls:
+fixed code 69/262 solvable, hillclimb 51, random 32, exhaustive-max-eye 20.
+This is not the combined problem. Repair the repeated-seed random estimate and
+score every non-RL arm; then build the measured 8-attenuator x 64-CTLE x
+45-corner table and re-score its channel views. Policy training remains blocked
+until that table establishes a real hidden-state problem.
 
 ### THE RL DIAGNOSIS (2026-08-21) — it is simulator cost, not the algorithm
 
