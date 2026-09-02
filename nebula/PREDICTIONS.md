@@ -12505,3 +12505,78 @@ point on any rescued code.**
   reused as they stand.
 * **Q5 fails** -> the knob trades the short channel for the long one, which is
   not a rescue but a relocation. Report it that way.
+
+### OUTCOME, entry 73 (2026-09-02). **Q1 FAILED, 0 of 3 rescued — and the reason is exact: the load scales the SIGNAL and the HEADROOM together, so the ratio is invariant.**
+
+    30 points, 0.3 min, TT only
+    artifact: experiments/gain_axis_results.json
+
+    R0C3, short channel (3 dB)          R4C3, short channel (3 dB)
+    rl_ohm  x base  demand  limit  ratio     rl_ohm  x base  demand  limit  ratio
+     254.6   1.00x  1532.4 1035.5  1.48x      254.6   1.00x  1805.1 1110.5  1.63x
+     193.0   0.76x  1192.2  830.5  1.44x      193.0   0.76x  1408.1  935.5  1.51x
+     127.3   0.50x   805.4  556.7  1.45x      127.3   0.50x   953.9  639.5  1.49x
+      73.1   0.29x   472.0  323.0  1.46x       73.1   0.29x   563.5  369.9  1.52x
+
+| | prediction | outcome | |
+|---|---|---|---|
+| **Q1** | >= 2 of 3 codes rescued at 3 dB | **0 of 3**, down to 0.29x of base | **MISS** |
+| **Q2** | flip at 0.50-0.75x of base | **no flip point exists** | n/a |
+| **Q3** | peaking drifts < 1.5 dB across the sweep | **1.25 dB** | **HIT** |
+| **Q4** | `f_peak` rises monotonically as `rl` falls | **2.436 -> 19.953 GHz, monotone** | **HIT** |
+| **Q5** | long channel survives at the flip point | **no flip point** | n/a |
+
+### Why it failed, and this is the useful part
+
+Cutting `rl` by **71 %** cut the demand by 69 % — exactly as the design equation
+says. It also cut the **capability** by 69 %. **The ratio never moved**: 1.48x
+-> 1.46x on R0C3, 1.63x -> 1.52x on R4C3, across a 3.5x sweep of the load.
+
+The reason is that both quantities are the same gain:
+
+    demand      = (input signal seen by the pair) x A_v ,  A_v ~ gm RL / (1 + gm Rs/2)
+    capability  = (pair's LINEAR INPUT RANGE)     x A_v ,  same A_v
+
+`RL` multiplies the numerator and the denominator of the thing that matters. So
+**the load resistor is not a gain knob in the sense the problem needs.** The
+over-drive is set by the ratio
+
+    (signal amplitude arriving at the input pair) / (pair's linear input range)
+
+and **no output-side scaling can change it.** Entry 72 called the missing knob
+"gain control"; that was right in spirit and imprecise in a way that would have
+sent an implementer to the wrong node.
+
+> **The corrected statement: the missing block is INPUT attenuation — a variable
+> gain stage AHEAD of the CTLE — not a trim on its load.** That is what an
+> AGC/VGA actually is in a receiver, and it is why it sits where it sits.
+
+### Two further things the sweep recorded
+
+* **Low `rl` destroys the equaliser.** `f_peak` runs 2.436 -> 19.953 GHz as the
+  load falls, and 19.953 GHz is the G44 signature -- no interior peak, i.e. a
+  wideband attenuator rather than an equaliser. So even if the ratio had moved,
+  the bottom of this axis is not usable.
+* **R7C3 is unrealisable at TT at every `rl`** (`device_ok = False`, peaking
+  `nan` at all ten steps). The top boost row of entry 70's bank does not stand
+  up at this corner once `rl` moves at all.
+
+### Q3 holds, and it is now a fact without a use
+
+Peaking drifted **1.25 dB** across the whole load sweep, inside
+`TOL["S3_peaking_match"] = 1.5`. So `RL` genuinely is near-orthogonal to the
+boost axis and a 3-axis bank *would* have been coherent. It is not built,
+because Q1 says the third axis does not buy the thing it was for.
+
+### Per the decision rule, written before the run
+
+*"Q1 fails -> a switched load does not rescue the short channel. Gain control
+then genuinely needs a separate VGA stage, which is a topology decision for the
+owner and NOT taken here."*
+
+**No VGA is built.** What entry 73 buys is that the decision is now specific and
+cheap to state: an input-side variable attenuator, sized so the signal presented
+to the pair stays inside its linear input range at the shortest channel in
+scope. The measurement says how much: **the ratio to close is 1.44-1.52x at
+3 dB**, and it is constant in `rl`, so it is a clean specification for the new
+block rather than a search.
