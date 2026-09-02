@@ -13304,3 +13304,38 @@ it was written for and missed the one that mattered.
 
 Suite green at **2 498 passed**, 13 deselected.
 
+### 2026-09-02 - session 34 (entry 73). **The AGC gate: the load is not a gain knob, and the missing block is INPUT attenuation.**
+
+Pre-registered and committed before the run, as a PARALLEL experiment: the
+delivered path is untouched and no committed number changes.
+
+Entry 72 said the missing knob is gain. Before paying for a VGA, the cheap thing
+was tried -- `rl` is already an axis and does not appear in the peaking
+expression, so gain control might have been a third bank axis.
+
+    30 points, 0.3 min, TT only.  0 of 3 codes rescued at 3 dB.
+    R0C3  rl 254.6 -> 73.1 ohm (0.29x):  demand 1532.4 -> 472.0 mVpp
+                                          limit  1035.5 -> 323.0 mVpp
+                                          ratio    1.48x ->   1.46x
+
+Cutting rl by 71 % cut demand by 69 % AND capability by 69 %. Both are the same
+gain: demand is the arriving signal times A_v, capability is the pair's LINEAR
+INPUT RANGE times A_v. RL multiplies numerator and denominator, so the ratio is
+invariant and no output-side scaling can fix compression.
+
+**Entry 72's phrasing is corrected here: the missing block is INPUT ATTENUATION,
+a variable-gain stage AHEAD of the CTLE, not a trim on its load.** That is where
+a receiver puts its VGA and this measurement is why.
+
+Also recorded: the bottom of the rl axis is unusable regardless (f_peak
+2.436 -> 19.953 GHz, the G44 no-interior-peak signature), and R7C3 is
+unrealisable at TT at every rl.
+
+Q3 HIT -- peaking drifted 1.25 dB across the sweep, inside TOL 1.5 -- so RL is
+near-orthogonal to boost and a 3-axis bank would have been coherent. Not built,
+because the axis does not buy what it was for. Q4 HIT. Q2/Q5 not evaluable.
+
+NO VGA built: a topology decision for the owner. What this buys is that the
+decision is a specification rather than a search -- the ratio to close is
+1.44-1.52x at 3 dB and it is constant in rl.
+

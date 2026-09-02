@@ -45,6 +45,7 @@ human in the loop. Deliverables that already exist and run:
 | **Tunable-bank compliance (D10)** | **45 of 45 mandated corners served by at least one bank setting**, one request (7.5 dB @ 1.768 GHz), design load, `V5_SPECS` (section 5z; `experiments/tuning_bank_results.json`). S3 frequency window **100 %** covered against the same fixed design's **0.0 %**. Boost range reaches only **4.41-8.56 dB** of S3's mandated 3-12; two corners have **one** passing setting and therefore no tuning margin |
 | **Wide bank, one fixed part** | **8 of 16** requests served at all 45 mandated corners, `V6_SPECS`, 64 codes x 45 corners = 2 880 decks (section 5aa; entries 70-71). **Six of the eight need only ONE code**, so the knob is decoration across PVT and load-bearing only across REQUESTS. Not comparable with entry 69's 14 of 16 -- different evaluator and a stricter S4 row |
 | **Channel axis (NEW, entry 72)** | **The stage saturates on SHORT channels.** Scorable points fall 2 117 -> 0 as loss falls 12.0 -> 3.0 dB; even the lowest-boost code over-drives by **1.43x** at 3 dB. No bank code fixes it -- the binding quantity is **total gain**, not peaking. **Gain control (VGA/AGC) is the missing knob**, and every number in this repo was measured at `FUNNEL_LOSS_DB = 12.0`, the family's worst member and this stage's easiest (section 5ab) |
+| **The AGC question (entry 73)** | **The load is NOT a gain knob.** Cutting `rl` to 0.29x of base cut demand AND capability by ~69 %, leaving the compression ratio invariant at **1.48x -> 1.46x**. The missing block is **INPUT attenuation ahead of the CTLE**, not a load trim (section 5ac). No VGA built -- a topology decision for the owner; the requirement is now one number, **1.44-1.52x at 3 dB** |
 | Deliverable output | `design.py --out` writes `design.json`, `design.cir` **and `design_schematic.png`** — a drawn schematic rendered FROM the deck, annotated with the sized values, marked **NOT DELIVERED** when the run did not pass (session 33) |
 | Report | `nebula/report/Nebula_CTLE_Report.pdf`, rebuilt from artifacts. **Its RL chapter stops at PPO and the budget ladder** — entries 34-54 have not reached it |
 
@@ -1964,6 +1965,69 @@ member and, for this stage, its **easiest** one.
   at the channel it was measured on. What is new is that the channel was never
   swept, and the axis is not benign.
 * **No policy has been trained**, on this artifact or entry 71's.
+
+---
+
+
+## 5ac. THE AGC GATE: **the load is not a gain knob, and the missing block is INPUT attenuation**
+
+**2026-09-02 (session 34), entry 73.** Pre-registered and committed before the
+run; authorised as a **parallel** experiment, so the delivered path is untouched
+and no committed number changes.
+
+Entry 72 concluded the missing knob is gain. Before paying for a VGA -- a new
+topology block that re-opens every number in this repository -- the cheap thing
+was tried: `rl` is already an axis (50-800 ohm, base 254.63), and the design
+equations say `RL` scales gain and output swing while **not** appearing in the
+peaking expression. So gain control might have been a **third bank axis**.
+
+    30 points, 0.3 min, TT only.  0 of 3 codes rescued at 3 dB.
+
+    R0C3   rl 254.6 -> 73.1 ohm (0.29x)
+           demand 1532.4 -> 472.0 mVpp     limit 1035.5 -> 323.0 mVpp
+           ratio    1.48x ->   1.46x       <- never moves
+
+### Why, exactly
+
+Cutting `rl` by 71 % cut the demand by 69 %, as predicted. **It cut the
+capability by 69 % too.** Both are the same gain:
+
+    demand      = (signal arriving at the input pair)  x A_v
+    capability  = (the pair's LINEAR INPUT RANGE)      x A_v
+
+`RL` multiplies the numerator and denominator of the quantity that decides
+compression, so the ratio is **invariant in `rl`** -- measured 1.48x -> 1.46x
+across a 3.5x load sweep. The over-drive is set by
+
+    (signal amplitude at the input pair) / (pair's linear input range)
+
+and **no output-side scaling can change it.**
+
+> **Entry 72's "the missing knob is gain control" was right in spirit and
+> imprecise in a way that would have sent an implementer to the wrong node. The
+> corrected statement: the missing block is INPUT ATTENUATION — a variable-gain
+> stage AHEAD of the CTLE — not a trim on its load.** That is exactly where a
+> receiver puts its VGA, and this is why.
+
+### What else the sweep recorded
+
+* **The bottom of the `rl` axis is not usable anyway.** `f_peak` runs
+  2.436 -> 19.953 GHz as the load falls; 19.953 GHz is the G44 signature, i.e. a
+  wideband attenuator rather than an equaliser.
+* **R7C3 is unrealisable at TT at every `rl`** (`device_ok = False`, peaking
+  `nan` at all ten steps).
+* **Q3 HIT and is now a fact without a use.** Peaking drifted **1.25 dB** across
+  the whole sweep, inside `TOL["S3_peaking_match"] = 1.5`, so `RL` genuinely is
+  near-orthogonal to boost and a 3-axis bank *would* have been coherent. Not
+  built, because the third axis does not buy the thing it was for.
+
+### What this buys
+
+Per the rule committed before the run, **no VGA is built** -- that is a topology
+decision for the owner. What entry 73 buys is that the decision is now a
+**specification rather than a search**: the ratio to close is **1.44-1.52x at
+3 dB**, and it is constant in `rl`, so the new block's requirement is a single
+number rather than an optimisation.
 
 ---
 
