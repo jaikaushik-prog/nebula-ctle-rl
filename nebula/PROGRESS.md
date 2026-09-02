@@ -74,6 +74,7 @@ human in the loop. Deliverables that already exist and run:
 | **D8** | **Search on the MANDATED 45-corner grid; report the 135-point load sweep separately** | The slide mandates PVT (5 process × VDD±5% × 0–125 °C = 45) and says nothing about load. See §5 |
 | **D9** | **The competition mentor approved the SAC + CMA-ES hybrid — CONDITIONALLY** (2026-08-26): the approach is fine enough **if the SAC contributes as RL** | **Unblocks `NEXT_AGENT_SAC.md` stages 1–3**, which its §8 item 1 had gated on exactly this answer. **The condition is the deliverable, not a formality** — it does not approve a hybrid in which the policy is decoration and CMA-ES does the work, which is what today's numbers describe. Discharged by `exp_hybrid`'s **accept rate** against the non-RL baseline of **6 of 16 accepted / 35.6 % fewer decks** (entry 32). A SAC proposer that does not beat that has **not** contributed as RL, and reporting that is the honest outcome |
 | **D10** | **Build the tunable bank as the delivered topology, and put the RL on the ADAPTATION problem** (owner, 2026-09-02, session 34). Reading (B) of S3: one sized part plus a switched `Rs`/`Cs` code, chosen per part. **This is a topology change and therefore required a human decision (CLAUDEwa.md sec 8 rule 5).** | Unblocks `exp_tuning_bank` (measured, section 5z) and the adaptation environment. The RL is scored on **trials-to-lock with an asymmetric false-lock penalty**, against an exhaustive control AND a hand-written bisection heuristic -- the matched control entry 47 established as mandatory. Architecture chosen: **wide bank on ONE fixed part**, not a per-request trim bank |
+| **D11** | **Size and build the input attenuator** (owner, 2026-09-02, session 34), as a **parallel** experiment. Entry 73 measured that a load trim cannot fix compression because `RL` scales signal and headroom together; the block must therefore sit **ahead** of the pair | `device/attenuator.py`, opt-in, deck byte-identical when off. Entry 74: **input attenuation works** (3 dB channel scorable at 9.54 dB, 12 dB still OK, noise 0.21 -> 0.48 mVrms), but the derived 6 dB spec **undershot** and the **switched** implementation does not work at `VCM = 1.5 V` (NMOS `Vgs = 0.3 V`). Both stated, neither worked around |
 
 ---
 
@@ -2028,6 +2029,85 @@ decision for the owner. What entry 73 buys is that the decision is now a
 **specification rather than a search**: the ratio to close is **1.44-1.52x at
 3 dB**, and it is constant in `rl`, so the new block's requirement is a single
 number rather than an optimisation.
+
+---
+
+
+## 5ad. THE INPUT ATTENUATOR: **it works, the spec was too small, and it found two defects first**
+
+**2026-09-02 (session 34), entry 74, decision D11.** Built **opt-in**:
+`atten_code=None` is the default and the assembled deck is **byte-identical** to
+every deck this project has simulated. The delivered path is untouched. A
+**measurement record**, not a pre-registration -- both defects below were found
+while debugging the implementation, not by testing a prediction.
+
+### The sizing, derived from entry 72's artifact
+
+    channel loss dB    3.0   4.5   6.0   7.5   9.0  10.5  12.0
+    worst over-drive  1.98  1.79  1.62  1.45  1.28  1.13  1.00
+    attenuation dB    5.94  5.06  4.17  3.20  2.16  1.05  0.00
+
+~0.66 dB of attenuation per dB of channel loss removed. Series-shunt divider,
+binary-weighted 3-bit shunt bank: `RSER = 150 ohm`, legs **1054.9 / 519.2 /
+251.4 ohm**, eight codes over 0-5.93 dB.
+
+### DEFECT 1 (mine, UNRESOLVED): the NMOS shunt switches are off
+
+The switch source sits at `cm = 1.5 V`, its gate at `VDD = 1.8 V`, so
+**`Vgs = 0.3 V`** -- below threshold. The `Ron = 16.5 ohm` the legs were sized
+against was measured at `vgs = 1.8 V` with the source near ground; the number
+was carried across without its condition.
+
+It simulated cleanly, exited zero, raised the noise plausibly
+(0.2142 -> 0.2914 mVrms) and **attenuated nothing** (`g_dc_db` moved 0.036 dB).
+Only comparing `g_dc_db` against the nominal divider ratio exposed it.
+
+**A switched resistive attenuator to `cm` is not realisable with NMOS switches
+at `VCM = 1.5 V` in the nfet-only trim.** It needs a transmission gate (a PDK
+extension), a lower input common mode, or a different scheme.
+
+### DEFECT 2 (the repo's, latent, now G140): `vid_max` is a FIXED sweep range
+
+With a fixed divider substituted to isolate the physics, demand fell as designed
+**and so did the reported limit**, pinning the ratio near 1.13 at any
+attenuation -- which says input attenuation cannot work, and is wrong.
+`run_point(vid_max=0.8)` is fixed, so an attenuated input never drives the pair
+to its own limit inside the sweep and the "measured linear range" is just the
+swept span. Re-running with `vid_max = 0.8 / A`:
+
+    A       att dB   limit    3 dB link   12 dB link
+    1.0000    0.00  1110.5      fail          OK
+    0.5051    5.93  1109.9      fail          OK
+    0.3333    9.54       -       OK           OK
+    0.2500   12.04       -       OK           OK
+
+**The limit is constant to 0.05 %** -- the output linear range is a property of
+the output node and input attenuation does not scale it. **Entry 73's mechanism
+is confirmed by its converse:** trimming `RL` scales demand and capability
+together; attenuating the input scales demand alone.
+
+### The result, and the honest shortfall
+
+**Input attenuation works: at 9.54 dB the 3 dB channel becomes scorable and
+12 dB still is.** But **5.94 dB is not enough** -- the derived spec undershot,
+and at the nominal 5.93 dB code the ratio is still 1.12. The realised
+attenuation is smaller than the divider ratio implies (`g_dc_db` moved 3.43 dB
+for a nominal 5.93 dB divider) and **why is unresolved**: the poly head
+resistance and the divider's pole into the gate capacitance are the candidates,
+neither separated. **3 bits over 6 dB is too little range; the measured
+requirement is at least ~9.5 dB.**
+
+Cost, measured: input-referred noise **0.2142 -> 0.4836 mVrms** at 9.54 dB, a
+2.26x penalty against S5's 1.5 mVrms budget -- still passing with 3.1x margin.
+
+### What may NOT be said
+
+* **No coverage number.** One code, TT, one load. Nothing re-verified at 45
+  corners with the attenuator in.
+* **The switched implementation does not work.** Everything measured is a
+  **fixed** divider, not the variable block a receiver needs.
+* **No committed result is invalidated.** Every existing compression number was
+  taken at unity input gain, where G140 does not bite.
 
 ---
 

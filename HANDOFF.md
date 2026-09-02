@@ -13339,3 +13339,58 @@ NO VGA built: a topology decision for the owner. What this buys is that the
 decision is a specification rather than a search -- the ratio to close is
 1.44-1.52x at 3 dB and it is constant in rl.
 
+### 2026-09-02 - session 34 (entry 74, decision D11). **The input attenuator: it works, the spec was too small, and it found two defects first.**
+
+Built OPT-IN. `atten_code=None` is the default and the assembled deck is
+BYTE-IDENTICAL to every deck this project has simulated (21 tests, including
+that gate). The delivered path is untouched. A MEASUREMENT RECORD, not a
+pre-registration: both defects were found while debugging the implementation.
+
+**DEFECT 1, mine, UNRESOLVED.** The NMOS shunt switches are OFF: source at
+`cm = 1.5 V`, gate at `VDD = 1.8 V`, so Vgs = 0.3 V, below threshold. The
+Ron = 16.5 ohm the legs were sized against was measured at vgs = 1.8 V with the
+source near ground -- the number was carried across without its condition. It
+simulated cleanly, exited zero, raised the noise plausibly and attenuated
+nothing (g_dc moved 0.036 dB). A switched resistive attenuator to `cm` is not
+realisable with NMOS switches at VCM = 1.5 V in the nfet-only trim.
+
+**DEFECT 2, the repo's, latent, now G140.** `run_point(vid_max=0.8)` is a FIXED
+sweep range, so an attenuated input never drives the pair to its own limit and
+the "measured linear range" is just the swept span. It made input attenuation
+look impossible (ratio pinned at 1.13 at any attenuation). With
+`vid_max = 0.8 / A` the limit is 1109.9 against 1110.5 unattenuated -- constant
+to 0.05 %. **No committed result is invalidated:** every existing compression
+number was taken at unity input gain, where the artefact does not bite.
+
+**RESULT.** Input attenuation works -- at 9.54 dB the 3 dB channel becomes
+scorable and 12 dB still is. Entry 73's mechanism is confirmed by its converse:
+trimming RL scales demand and capability together, attenuating the input scales
+demand alone. But 5.94 dB is NOT enough; the derived spec undershot and the
+realised attenuation is smaller than the divider ratio implies (g_dc moved
+3.43 dB for a nominal 5.93 dB divider), cause unresolved. The requirement is at
+least ~9.5 dB, so 3 bits over 6 dB is too little range.
+
+Noise cost measured: 0.2142 -> 0.4836 mVrms at 9.54 dB, 2.26x, still 3.1x inside
+S5's budget.
+
+Suite green at **2 519 passed**, 13 deselected, after touching `sky130_runner`.
+
+### G140. `vid_max` is a FIXED sweep range, so the measured linear limit becomes the INSTRUMENT once input gain is reduced
+
+`run_point(vid_max=0.8)` sweeps a fixed differential input range, and the
+compression check reads the *linear output range* off that sweep. Put anything
+in front of the pair that reduces input gain -- an attenuator, a divider, a
+front-end stage -- and the pair no longer reaches its own limit inside the
+sweep, so the reported limit collapses in proportion and the compression ratio
+looks constant no matter what you do.
+
+Measured (entry 74): a fixed input divider drove the reported limit
+1110.5 -> 462.2 mVpp as attenuation went 0 -> 15.56 dB, pinning the ratio at
+~1.13 and making input attenuation look useless. With `vid_max` scaled as
+`0.8 / A` the limit is **1109.9**, constant to 0.05 %, and the attenuation
+works.
+
+**Rule: any change that reduces the gain from `vid` to the input pair must scale
+`vid_max` by the same factor, or the compression number measures the sweep.**
+Nothing committed is affected -- every existing number is at unity input gain.
+
