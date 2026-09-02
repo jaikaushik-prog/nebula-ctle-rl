@@ -1,0 +1,58 @@
+{
+  "task": "entry 76: parse cost of PFET support in one CTLE section",
+  "n_designs": 50,
+  "seed": 20260808,
+  "corner": "tt",
+  "arms": [
+    "current_section",
+    "pfet_section"
+  ],
+  "warmup_median_s": {
+    "current_section": 0.1794207999992068,
+    "pfet_section": 0.20707670000047074
+  },
+  "rows": {
+    "current_section": {
+      "n": 50,
+      "median_s": 0.16309540000111156,
+      "mean_s": 0.17095727000007174,
+      "p10_s": 0.15133849999983795,
+      "p90_s": 0.21966059999977006,
+      "n_failed": 0,
+      "failures": []
+    },
+    "pfet_section": {
+      "n": 50,
+      "median_s": 0.20449255000130506,
+      "mean_s": 0.21633748199994443,
+      "p10_s": 0.1946012000007613,
+      "p90_s": 0.2724969000009878,
+      "n_failed": 0,
+      "failures": []
+    }
+  },
+  "control": {
+    "arm": "current_section",
+    "median_s": 0.18799945000137086,
+    "first_pass_median_s": 0.16309540000111156,
+    "ratio_to_first_pass": 0.8675312613942343,
+    "contaminated": false
+  },
+  "equivalence": {
+    "checked": 50,
+    "fields": 11,
+    "n_diff": 0,
+    "diffs": [],
+    "identical": true
+  },
+  "decision": {
+    "current_median_s": 0.16309540000111156,
+    "pfet_median_s": 0.20449255000130506,
+    "added_median_s": 0.041397150000193506,
+    "ratio": 1.2538216896363195,
+    "absolute_limit_s": 0.01,
+    "relative_limit": 1.05,
+    "immaterial": false
+  },
+  "wall_clock_s": 30.16198500000246
+}

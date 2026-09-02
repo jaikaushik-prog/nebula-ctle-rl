@@ -13448,3 +13448,24 @@ warm-up discarded, final order control, and exact parsed-value equivalence.
 median overhead. If both hold, PFET goes in the shared trim; otherwise an
 attenuator-only library variant preserves the delivered path. **No timing has
 been run yet.**
+
+### 2026-09-02 - session 35 (entry 76 outcome). **PFET parse cost is material: +25.4%; isolate it to attenuator runs.**
+
+Pre-registered and committed before the run. **Scored 3 of 4; Q1 missed.** On
+50 TT designs through the same drawn-passive `run_point` path, the current
+one-section trim measured **0.163095 s** median and the same section with
+matching PFET corner/mismatch includes measured **0.204493 s**: **+0.041397 s,
++25.38%**. Both arms had zero failures; all 50 x 11 compared fields were
+bit-identical; the final order-control ratio was 0.868, inside [0.8, 1.25]; wall
+clock was 30.16 s. Artifact: `experiments/pfet_lib_cost_results.json`.
+
+Per the committed rule, D11 must use an **attenuator-only PFET-capable library
+variant selected when `atten_code is not None`**. The normal delivered path
+stays on the existing split trim, byte-identical and without the measured 25%
+penalty.
+
+Two prior attempts are void: first the temporary tree omitted a direct relative
+passive include, then it omitted that deck's nested trim include. Both arms
+failed 50/50 and the command exited 1; neither timing delta is used. The
+instrument now recursively stages relative dependencies, and five focused tests
+pass, including a fail-capable nested-include gate.

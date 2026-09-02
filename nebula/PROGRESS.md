@@ -2146,14 +2146,40 @@ Cost, measured: input-referred noise **0.2142 -> 0.4836 mVrms** at 9.54 dB, a
 ---
 
 
+## 5ae. THE PFET LIBRARY COST: **material at +25.4%; isolate it to attenuator runs**
+
+**2026-09-02, session 35, entry 76.** Pre-registered and committed before the
+run. **Scored 3 of 4; Q1 missed.** The measurement compared the current
+one-section extended trim with the same section carrying the matching
+`pfet_01v8` corner and mismatch includes. Both used the same drawn-passive CTLE
+netlist, and no PMOS was instantiated, so this is the cost of model availability
+alone.
+
+    50 TT designs, shuffled arm order, warm-up discarded, control re-run last
+    current section   0.163095 s median
+    PFET section      0.204493 s median
+    delta             0.041397 s, +25.38 %
+    equivalence       50 designs x 11 fields, exactly identical
+    failures          zero on both arms
+    order control     0.868, clean
+    wall clock        30.16 s
+
+The pre-registered immaterial limits were <=10 ms **and** <=5%. Both are
+exceeded, so the rule chooses a **PFET-capable trim variant used only when
+`atten_code is not None`**. The no-attenuator delivered path must remain on the
+existing library, byte-identical and without this measured slowdown.
+
+Two earlier attempts are explicitly void: the temporary measurement tree first
+missed a direct relative passive include and then its nested trim include. Both
+failed 50/50 on both arms and exited nonzero. The instrument now recursively
+stages the full relative-include closure, with a test that breaks this gate.
+
 ## 6. Next steps, in order
 
-**2026-09-02, session 35 / entry 76 (pre-registered, not yet run):** finish D11
-by measuring the parse cost of adding `pfet_01v8` support before changing the
-trim. The committed decision rule calls the cost immaterial only if the added
-median is <= 0.010 s and <= 5%, with exact result equivalence and the G71 order
-control both passing. Immaterial selects the shared trim; material selects an
-attenuator-only PFET-capable variant. No measurement exists yet.
+**2026-09-02, session 35 / entry 76:** parse cost is measured **material** at
++41.4 ms / +25.4%, with exact equivalence and a clean control. Build the
+attenuator-only PFET-capable variant, then emit the measured binary-weighted
+PMOS switches and reproduce entry 74's switchless verification table.
 
 | # | Task | Cost | Status |
 |---|---|---|---|

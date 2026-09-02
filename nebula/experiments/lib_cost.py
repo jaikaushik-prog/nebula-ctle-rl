@@ -4,6 +4,7 @@ experiments/lib_cost.py — what the parameter-deck trim actually bought.
     python -m nebula.experiments.lib_cost                 # 50 designs, ~4 min
     python -m nebula.experiments.lib_cost --designs 100
     python -m nebula.experiments.lib_cost --json out.json
+    python -m nebula.experiments.lib_cost --pfet-cost     # entry 76, ~30 s
 
 THE QUESTION
 ------------
@@ -66,6 +67,7 @@ import argparse
 import json
 import math
 import random
+import re
 import statistics
 import sys
 import time
@@ -103,6 +105,12 @@ HERE = Path(__file__).resolve().parent
 ARMS: "tuple[str, ...]" = ("extended_untrimmed_mono", "extended_trimmed_mono",
                            "extended_trimmed_split", "extended_ideal",
                            "nfet_only")
+
+#: Entry 76's deliberately narrow comparison. Both arms use the same drawn
+#: passive netlist and one-section library; only PFET model availability moves.
+PFET_ARMS: "tuple[str, str]" = ("current_section", "pfet_section")
+PFET_ABS_LIMIT_S: float = 0.010
+PFET_REL_LIMIT: float = 1.05
 
 #: Arms that run the IDEAL R/C netlist rather than drawn SKY130 devices. They
 #: are a different circuit, so they are excluded from the equivalence check by
@@ -237,6 +245,73 @@ def _with_library(**libs: Path):
     return _Swap()
 
 
+def _with_pfet_includes(section_text: str) -> str:
+    """Return one current CTLE section with matching PFET includes added.
+
+    This builds entry 76's candidate in a temporary directory, before the
+    production library is edited.  The two asserted insertion counts are the
+    gate: measuring a half-built candidate would understate its parse cost.
+    """
+    lines = section_text.splitlines(keepends=True)
+    out: "list[str]" = []
+    n_corner = n_mismatch = 0
+    for line in lines:
+        out.append(line)
+        if "sky130_fd_pr__nfet_01v8__mismatch.corner.spice" in line:
+            out.append(line.replace("nfet_01v8__mismatch",
+                                    "pfet_01v8__mismatch"))
+            n_mismatch += 1
+        elif "sky130_fd_pr__nfet_01v8__" in line and ".pm3.spice" in line:
+            out.append(line.replace("nfet_01v8__", "pfet_01v8__"))
+            n_corner += 1
+    if (n_corner, n_mismatch) != (1, 1):
+        raise ValueError(
+            "a split CTLE section must contain one corner and one mismatch "
+            f"NFET include; found corner={n_corner}, mismatch={n_mismatch}")
+    return "".join(out)
+
+
+def _pfet_cost_decision(current_s: float, pfet_s: float) -> dict:
+    """Apply entry 76's pre-registered absolute AND relative cost limits."""
+    added = pfet_s - current_s
+    ratio = pfet_s / current_s if current_s else math.inf
+    return {
+        "current_median_s": current_s,
+        "pfet_median_s": pfet_s,
+        "added_median_s": added,
+        "ratio": ratio,
+        "absolute_limit_s": PFET_ABS_LIMIT_S,
+        "relative_limit": PFET_REL_LIMIT,
+        "immaterial": added <= PFET_ABS_LIMIT_S and ratio <= PFET_REL_LIMIT,
+    }
+
+
+def _stage_section_tree(source: Path, destination_dir: Path, text: str) -> None:
+    """Stage one split library plus every relative include it references."""
+    seen: "set[Path]" = set()
+
+    def stage(src: Path, dst: Path, body: "str | None" = None) -> None:
+        src = src.resolve()
+        if src in seen:
+            return
+        seen.add(src)
+        if body is None:
+            if not src.is_file():
+                raise FileNotFoundError(
+                    f"relative include missing while staging: {src}")
+            body = src.read_text(encoding="ascii")
+        dst.parent.mkdir(parents=True, exist_ok=True)
+        dst.write_text(body, encoding="ascii", newline="\n")
+        for raw in re.findall(r'^\.include\s+"([^"]+)"', body,
+                              flags=re.MULTILINE | re.IGNORECASE):
+            inc = Path(raw)
+            if inc.is_absolute():
+                continue
+            stage(src.parent / inc, dst.parent / inc)
+
+    stage(source, destination_dir / source.name, text)
+
+
 def _no_section_libraries(empty_dir: Path):
     """Point `pdk_trim.SECTION_DIR` at an empty directory for the duration.
 
@@ -340,6 +415,77 @@ def measure(n_designs: int = 50, seed: int = 20260808, corner: str = "tt",
     }
 
 
+def measure_pfet_cost(n_designs: int = 50, seed: int = 20260808,
+                      corner: str = "tt", warmup: int = 3) -> dict:
+    """Measure PFET model availability before changing the production trim."""
+    import tempfile
+
+    designs = _designs(n_designs, seed)
+    rng = random.Random(seed)
+    t_wall = time.perf_counter()
+    source = pdk_trim.section_library_path(corner)
+    if not source.exists():
+        raise FileNotFoundError(f"missing current split library {source}")
+
+    with tempfile.TemporaryDirectory() as td:
+        root = Path(td)
+        dirs = {arm: root / arm / "sections" for arm in PFET_ARMS}
+        current_text = source.read_text(encoding="ascii")
+        _stage_section_tree(source, dirs["current_section"], current_text)
+        _stage_section_tree(source, dirs["pfet_section"],
+                            _with_pfet_includes(current_text))
+
+        def _run_arm(arm: str, design: dict):
+            with _no_section_libraries(dirs[arm]):
+                return _evaluate(arm, design, corner)
+
+        warm = {}
+        for arm in PFET_ARMS:
+            warm[arm] = statistics.median(
+                _run_arm(arm, designs[i % len(designs)])[0]
+                for i in range(warmup))
+
+        results = {a: ArmResult(a) for a in PFET_ARMS}
+        for idx, design in enumerate(designs):
+            order = list(PFET_ARMS)
+            rng.shuffle(order)
+            for arm in order:
+                dt, vals, fail = _run_arm(arm, design)
+                results[arm].seconds.append(dt)
+                if fail:
+                    results[arm].failures.append(f"design {idx}: {fail}")
+                else:
+                    results[arm].values[idx] = vals
+
+        control = [_run_arm(PFET_ARMS[0], d)[0] for d in designs]
+
+    first = results[PFET_ARMS[0]].median_s
+    ctrl = statistics.median(control)
+    control_ratio = first / ctrl if ctrl else math.nan
+    rows = {
+        a: {"n": r.n, "median_s": r.median_s, "mean_s": r.mean_s,
+            "p10_s": r.quantile(0.10), "p90_s": r.quantile(0.90),
+            "n_failed": len(r.failures), "failures": r.failures[:5]}
+        for a, r in results.items()
+    }
+    return {
+        "task": "entry 76: parse cost of PFET support in one CTLE section",
+        "n_designs": n_designs, "seed": seed, "corner": corner,
+        "arms": list(PFET_ARMS), "warmup_median_s": warm, "rows": rows,
+        "control": {
+            "arm": PFET_ARMS[0], "median_s": ctrl,
+            "first_pass_median_s": first,
+            "ratio_to_first_pass": control_ratio,
+            "contaminated": not (0.8 <= control_ratio <= 1.25),
+        },
+        "equivalence": _equivalence_pair(
+            results, PFET_ARMS[0], PFET_ARMS[1]),
+        "decision": _pfet_cost_decision(
+            rows[PFET_ARMS[0]]["median_s"], rows[PFET_ARMS[1]]["median_s"]),
+        "wall_clock_s": time.perf_counter() - t_wall,
+    }
+
+
 def _decompose(results: "dict[str, ArmResult]") -> "Optional[dict]":
     """Split an evaluation's cost into its four additive terms.
 
@@ -380,8 +526,15 @@ def _equivalence(results: "dict[str, ArmResult]") -> dict:
     SHOULD disagree, and folding it in would make a real regression look like
     an expected one.
     """
-    a = results.get("extended_untrimmed_mono")
-    b = results.get("extended_trimmed_split")
+    return _equivalence_pair(results, "extended_untrimmed_mono",
+                             "extended_trimmed_split")
+
+
+def _equivalence_pair(results: "dict[str, ArmResult]", first: str,
+                      second: str) -> dict:
+    """Exact comparison for two arms that must produce the same circuit."""
+    a = results.get(first)
+    b = results.get(second)
     if a is None or b is None:
         return {"checked": 0, "note": "both extended arms are needed"}
     shared = sorted(set(a.values) & set(b.values))
@@ -486,17 +639,26 @@ def main(argv: "Optional[Sequence[str]]" = None) -> int:
     ap.add_argument("--designs", type=int, default=50)
     ap.add_argument("--seed", type=int, default=20260808)
     ap.add_argument("--corner", type=str, default="tt")
-    ap.add_argument("--json", type=Path, default=HERE / "lib_cost_results.json")
+    ap.add_argument("--json", type=Path, default=None)
+    ap.add_argument("--pfet-cost", action="store_true",
+                    help="entry 76: compare current and PFET-capable sections")
     args = ap.parse_args(argv)
 
     if args.designs < 50:
         print(f"WARNING: {args.designs} designs is below the 50 the step asks "
               f"for; the median will be noisy.", file=sys.stderr)
 
-    res = measure(n_designs=args.designs, seed=args.seed, corner=args.corner)
-    print(report(res))
-    args.json.write_text(json.dumps(res, indent=2, default=str), encoding="ascii")
-    print(f"  wrote {args.json.as_posix()}")
+    if args.pfet_cost:
+        res = measure_pfet_cost(n_designs=args.designs, seed=args.seed,
+                                corner=args.corner)
+        print(json.dumps(res, indent=2, default=str))
+        output = args.json or HERE / "pfet_lib_cost_results.json"
+    else:
+        res = measure(n_designs=args.designs, seed=args.seed, corner=args.corner)
+        print(report(res))
+        output = args.json or HERE / "lib_cost_results.json"
+    output.write_text(json.dumps(res, indent=2, default=str), encoding="ascii")
+    print(f"  wrote {output.as_posix()}")
 
     if res["control"]["contaminated"]:
         print("  EXIT 1: the timing control disagreed.", file=sys.stderr)
@@ -504,11 +666,14 @@ def main(argv: "Optional[Sequence[str]]" = None) -> int:
     if not res["equivalence"].get("identical"):
         print("  EXIT 1: the trim changed a measured value.", file=sys.stderr)
         return 1
+    if args.pfet_cost and any(r["n_failed"] for r in res["rows"].values()):
+        print("  EXIT 1: at least one PFET-cost arm failed.", file=sys.stderr)
+        return 1
     return 0
 
 
-__all__: Sequence[str] = ("ARMS", "COMPARED", "ArmResult", "measure",
-                          "report", "main")
+__all__: Sequence[str] = ("ARMS", "PFET_ARMS", "COMPARED", "ArmResult",
+                          "measure", "measure_pfet_cost", "report", "main")
 
 if __name__ == "__main__":                                  # pragma: no cover
     sys.exit(main())

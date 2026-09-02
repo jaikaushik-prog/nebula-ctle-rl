@@ -12894,3 +12894,37 @@ final control pass. **Falsifier: wall clock over 90 seconds.**
 * Q1 fails -> build a PFET-capable library variant selected **only** when
   `atten_code is not None`, preserving the existing delivered path byte-for-byte
   and without its measured slowdown.
+
+### OUTCOME, entry 76 (2026-09-02). **SCORED 3 OF 4. PFET support is MATERIAL: +41.4 ms, +25.4%, so D11 gets an attenuator-only library variant.**
+
+    50 designs, TT, one process, same drawn-passive netlist
+    artifact: experiments/pfet_lib_cost_results.json
+
+    current one-section trim     0.163095 s median
+    PFET-capable section         0.204493 s median
+    added cost                   0.041397 s = 25.38 %
+    exact equivalence            50 designs x 11 fields, n_diff = 0
+    failures                     0 / 50 on both arms
+    order control                0.868, inside [0.8, 1.25]
+    wall clock                   30.16 s
+
+| | prediction | outcome | |
+|---|---|---|---|
+| **Q1** | <= 10 ms and <= 5% | **41.4 ms and 25.4%** | **MISS** |
+| **Q2** | all values exactly identical | **50 x 11, no differences** | **HIT** |
+| **Q3** | zero failures; clean control | **zero; 0.868 control** | **HIT** |
+| **Q4** | under 90 s | **30.16 s** | **HIT** |
+
+**The miss is operationally important.** Adding an unused PFET family to every
+ordinary evaluation would spend one quarter more wall time before the
+attenuator is even instantiated. The committed decision rule therefore selects
+a PFET-capable variant used only when `atten_code is not None`; the historical
+and delivered no-attenuator path stays on the existing split trim.
+
+**Two earlier attempts are void, not evidence.** The first temporary tree
+omitted `../res_typical__cap_typical.spice`; the second copied that first-level
+deck but omitted its nested `typical.trim.spice`. Both arms failed 50 of 50,
+the exact-equivalence gate had zero shared results, and the command exited 1.
+Their apparent timing deltas are discarded. `test_lib_cost_pfet.py` now proves
+the staged candidate carries the complete recursive relative-include closure,
+and the valid third run is the artifact above.
