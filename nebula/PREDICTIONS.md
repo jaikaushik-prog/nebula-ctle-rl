@@ -12070,3 +12070,68 @@ Per the decision rule, Q1 and Q5 both hold, so the 45-corner compensation is
 authorised. It is not run at this geometry yet -- see entry 71, which makes the
 same 2 880 decks answer all 16 requests instead of one.
 
+## 71. Session 34 -- **one fixed part, one 6-bit code: how much of the 16-request grid does the bank actually serve at 45 corners?**
+
+**Written 2026-09-02 BEFORE the run.** Row 4aa, second half, under decision D10.
+
+### What it costs, and why the grid is free
+
+64 codes x 45 mandated corners = **2 880 SPICE decks, once**. Of `V6_SPECS`'
+13 rows exactly **three** depend on the request, and all three are computable
+from `peaking_db` and `f_peak_oct`, which the measurement already carries. So
+all 16 requests are a **free re-score** through `reward_v1.request_rows` -- one
+definition, now shared by `margins()`, `exp_coverage._rescore` and this sweep.
+
+**Scope, stated before the number exists.** 45 mandated PVT corners at the
+**design load**, scored on `V6_SPECS` through `evaluate_at_points` -- the same
+evaluator and the same 13 rows `design.py --method auto` screens on. It is
+**not** `verify_full`, **not** the 135-point load grid, and its S4 row is
+`S4_hd3_nyq` at the operating point, which is **stricter** than the 100 MHz row
+the 135-point checklist scores. A number from here may **not** be added to
+entry 69's 14 of 16.
+
+### Predictions
+
+**Q1 -- THE HEADLINE. Requests served at all 45 mandated corners: 10 to 14 of
+16**, point estimate **12**. Confidence **0.6**. The frequency axis is not the
+worry -- entry 70 reaches 1.109-3.387 GHz with 8 settings. The 10 dB row is:
+codes R5-R6 reach it on paper (8.55-11.10 dB, inside the 1.5 dB tolerance), but
+that is where drive handling fails. **Falsifier: outside 10-14.**
+
+**Q2 -- the unserved corners are a COMPRESSION story, not a frequency one.**
+Among corners no code serves, the modal failing row is `S4_hd3_nyq` or an S8 eye
+row rather than `S3_f_peak_band` / `S3_f_peak_match`. Confidence **0.75**:
+G103 makes peaking and drive handling one knob, and
+`tunable_trade_results.json` measured **0 of 8** settings accepting the link's
+534.675 mVpp. **Falsifier: a majority of unserved corners naming a frequency
+row.**
+
+**Q3 -- THE ONE THAT CAN FALSIFY D10 ITSELF. No request is served at all 45
+corners by a SINGLE code**: every served request needs **two or more** distinct
+codes across the corner set. Confidence **0.8** -- the 3x5 bank needed four
+codes for one request, and the fixed design's `f_peak` PVT spread is 0.99979
+octaves against a 0.3-octave tolerance. **This is the load-bearing claim of the
+whole architecture.** If one code serves 45 corners, the knob is decoration for
+that request and a fixed part would have done. **Falsifier: any request served
+at all 45 corners by one code.**
+
+**Q4 -- COST. 2 880 decks in under 30 minutes.** Section 5z measured 675 full
+evaluations in ~250 s (0.37 s/deck). **Falsifier: over 45 min.**
+
+**Q5 -- at least one (request, corner) pair is served by exactly ONE code.**
+Confidence **0.7**; the 3x5 bank had two such corners. Registered because it
+bounds how wrong an adaptation policy may be: where only one code works, a
+policy that lands anywhere else fails that corner outright. **Falsifier: every
+served corner has two or more codes on every request.**
+
+### The decision rule, before the result
+
+* **Q3 fails** -> the bank is not load-bearing for the requests it fails on.
+  Report which ones need no tuning; D10's premise is weakened and the RL's
+  problem is smaller than claimed.
+* **Q1 >= 10** -> proceed to row 4ab: build the adaptation environment on this
+  artifact, with the exhaustive and bisection controls.
+* **Q1 < 10** -> the wide bank serves less of the grid than the delivered
+  non-tunable path already does (14 of 16, entry 69, different scope). Report
+  the gap and re-open the architecture before training any policy.
+

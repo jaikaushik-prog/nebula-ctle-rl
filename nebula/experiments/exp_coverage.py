@@ -597,7 +597,6 @@ def _rescore(points: Sequence[dict], target_f_peak_hz: float,
             raise ValueError(
                 f"point {p.get('corner')} carries no scored peak; refusing to "
                 f"re-score against an instrument that is not stated (G108)")
-        tgt_oct = math.log2(float(target_f_peak_hz) / 2.5e9)
         f_oct = float(f_oct)
         # **All four request-dependent rows, and the BAND rows are the two that
         # were missing.** `_rescore` used to compute `S3_f_peak` -- which is not
@@ -614,10 +613,12 @@ def _rescore(points: Sequence[dict], target_f_peak_hz: float,
         #
         # Third instance today of one shape: **a set built by FILTERING loses
         # members without saying so** (G101, G106).
-        m["S3_f_peak_band"] = min(f_oct - R._F_LO_OCT, R._F_HI_OCT - f_oct)
-        m["S3_f_peak_match"] = R.TOL["S3_f_peak_match"] - abs(f_oct - tgt_oct)
-        m["S3_peaking_match"] = (R.TOL["S3_peaking_match"]
-                                 - abs(float(pk) - float(target_peaking_db)))
+        # **ONE definition, shared with `reward_v1.margins` and the bank
+        # sweep** (rule 9). The three lines that used to live here were the
+        # second copy G115 is about; `request_rows` is now the only one, and
+        # `test_request_rows.py` pins `margins` to it row for row.
+        m.update(R.request_rows(f_oct, float(pk), float(target_f_peak_hz),
+                                float(target_peaking_db)))
         # **RAISE on a missing row rather than filtering it away.** The filter
         # was the defect; an assertion is the fix. A verification that cannot
         # score every row it claims to score must fail loudly.

@@ -580,6 +580,42 @@ TOLERANCE_SCAN: tuple[float, ...] = (0.5, 1.0, 2.0)
 # ─────────────────────────────────────────────────────────────────────────────
 
 
+def request_rows(f_peak_oct: float, peaking_db: float,
+                 target_f_peak_hz: float,
+                 target_peaking_db: Optional[float]) -> dict:
+    """The three spec rows that depend on the REQUEST, from measured primitives.
+
+    **One definition, three callers (CLAUDEwa.md sec 8 rule 9).** `margins()`
+    delegates here; `exp_coverage._rescore` re-scores a verified point against a
+    different target; `exp_bank_sweep` re-scores one (code, corner) measurement
+    against all 16 requests for free. Before this existed the arithmetic lived in
+    two places, and **G115 is what the second copy cost**: `_rescore` silently
+    dropped `S3_f_peak_band` and `S3_f_peak_match`, and a design peaking at
+    10.818 GHz -- 4.3x outside S3's window -- verified at 45 of 45 corners.
+
+    Why this is exactly the re-scorable set: a measurement does not know what it
+    was aiming at, so every OTHER row is a property of the circuit alone and
+    survives a change of target untouched. These three do not.
+
+    `S3_f_peak_band` is emitted always -- it is the window, not the request --
+    and the two `_match` rows carry their tolerance folded in so that, like
+    every other row, **positive means satisfied**. `S3_peaking_match` is present
+    only when a peaking was actually requested, which is what keeps `V1_SPECS`
+    through `V4_SPECS` untouched.
+    """
+    f_oct = float(f_peak_oct)
+    target_oct = math.log2(float(target_f_peak_hz) / 2.5e9)
+    out = {
+        "S3_f_peak_band": min(f_oct - _F_LO_OCT, _F_HI_OCT - f_oct),
+        "S3_f_peak_match": TOL["S3_f_peak_match"] - abs(f_oct - target_oct),
+    }
+    if target_peaking_db is not None:
+        out["S3_peaking_match"] = (TOL["S3_peaking_match"]
+                                   - abs(float(peaking_db)
+                                         - float(target_peaking_db)))
+    return out
+
+
 def margins(meas: Mapping[str, float],
             target_f_peak_hz: float,
             target_peaking_db: Optional[float] = None,
@@ -630,12 +666,6 @@ def margins(meas: Mapping[str, float],
         # §6h's `-|log2(f_peak / f_target)|`, with the half-width folded in so
         # the quantity is a MARGIN like every other row.
         "S3_f_peak": TOL["S3_f_peak"] - abs(f_oct - target_oct),
-        # **The BAND. Positive inside S3's window, negative by how far
-        # outside** -- the frequency twin of `S3_peaking` above, and the row
-        # whose absence let 4 of 16 coverage designs peak past 2.5 GHz
-        # unpenalised (G111). Emitted ALWAYS: it is a property of the circuit,
-        # not of anybody's request, so there is nothing to be conditional on.
-        "S3_f_peak_band": min(f_oct - _F_LO_OCT, _F_HI_OCT - f_oct),
         "S3_nyq_boost": float(meas["nyq_boost_db"]),
         "S5_noise": SPEC_VN_IN_MAX_VRMS - float(meas["inoise_vrms"]),
         "S6_power": SPEC_POWER_MAX_W - float(meas["power_w"]),
@@ -643,15 +673,13 @@ def margins(meas: Mapping[str, float],
         "tail_saturation": float(meas["tail_margin_v"]),
     }
 
-    # The REQUESTED peaking, only when a request was actually made. Same form
-    # as `S3_f_peak` above -- the tolerance folded in so the quantity is a
-    # margin -- and present only when asked for, so V1..V4 are untouched.
-    if target_peaking_db is not None:
-        out["S3_peaking_match"] = (TOL["S3_peaking_match"]
-                                   - abs(pk - float(target_peaking_db)))
-    # The frequency request, on the same terms: present only when asked for.
-    out["S3_f_peak_match"] = (TOL["S3_f_peak_match"]
-                              - abs(f_oct - target_oct))
+    # **The three request-dependent rows come from `request_rows`, which is
+    # their ONE definition** -- `S3_f_peak_band` (the window, always emitted),
+    # `S3_f_peak_match` and `S3_peaking_match` (present only when asked for, so
+    # V1..V4 are untouched). `exp_coverage._rescore` and the bank sweep call the
+    # same function to re-score a measurement against a different target; G115
+    # is what the duplicate copy cost.
+    out.update(request_rows(f_oct, pk, target_f_peak_hz, target_peaking_db))
 
     # S8, only when a real link result is in hand. Both are MEASURED-minus-
     # SPEC margins in the spec's own units, like every other row.
@@ -842,6 +870,6 @@ __all__: Sequence[str] = (
     "TOLERANCE_SCAN",
     "feasible_bonus", "invalid_reward", "headroom_band_top",
     "headroom_reward",
-    "margins", "shortfalls", "RewardBreakdown",
+    "margins", "request_rows", "shortfalls", "RewardBreakdown",
     "reward", "reward_v0", "reward_v1",
 )
