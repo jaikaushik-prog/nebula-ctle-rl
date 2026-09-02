@@ -15,6 +15,7 @@ notice the spec drifting.
 from __future__ import annotations
 
 import math
+import hashlib
 
 import pytest
 
@@ -77,6 +78,21 @@ def test_the_spec_constant_is_the_measured_worst_case():
 
 def test_the_top_code_reaches_the_measured_worst_case_exactly():
     assert 1.0 / A.attenuation(A.N_CODES - 1) == pytest.approx(A.ATTEN_MAX_X)
+
+
+def test_the_default_D11_block_is_BYTE_IDENTICAL_to_the_registered_circuit():
+    digest = hashlib.sha256(A.attenuator_block(7).encode("ascii")).hexdigest()
+    assert digest == "c8aa0ecf291adbb3ce7d0b0321468d08be9703ca5de3e725b39feb698e286429"
+
+
+def test_an_opt_in_range_changes_the_top_code_without_changing_D11():
+    candidate_x = 10.0 ** (7.0 / 20.0)
+    assert A.attenuation_db(7, atten_max_x=candidate_x) == pytest.approx(7.0)
+    assert 1.0 / A.attenuation(7, atten_max_x=candidate_x) == pytest.approx(
+        candidate_x)
+    assert A.attenuation_db(7) == pytest.approx(
+        20.0 * math.log10(A.ATTEN_MAX_X))
+    assert A.netlist_fields(7, atten_max_x=candidate_x) != A.netlist_fields(7)
 
 
 def test_attenuation_is_monotone_and_starts_at_unity():

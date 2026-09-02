@@ -223,6 +223,8 @@ class PointResult:
     hd3_nyq_dbc: Optional[float] = None
     eye_h_v: Optional[float] = None
     eye_w_ui: Optional[float] = None
+    g_dc_db: Optional[float] = None
+    noise_vrms: Optional[float] = None
     #: `{channel_loss_db: {"ok", "eye_h_v", "eye_w_ui"}}`, present ONLY when
     #: `evaluate_at_points(link_losses_db=...)` asked for it. The device is
     #: simulated once and the link re-evaluated per channel in Python, which is
@@ -262,14 +264,18 @@ class DesignEval:
     eye_w_ui: Optional[float] = None
 
 
-def _attenuation_run_args(atten_code: Optional[int]) -> dict:
+def _attenuation_run_args(atten_code: Optional[int],
+                          atten_max_x: Optional[float] = None) -> dict:
     """Runner arguments that keep the G140 swing instrument honest."""
     if atten_code is None:
         input_gain = 1.0
     else:
         from nebula.device.attenuator import attenuation
-        input_gain = attenuation(int(atten_code))
-    return {"vid_max": 0.8 / input_gain, "atten_code": atten_code}
+        input_gain = attenuation(int(atten_code), atten_max_x=atten_max_x)
+    result = {"vid_max": 0.8 / input_gain, "atten_code": atten_code}
+    if atten_max_x is not None:
+        result["atten_max_x"] = float(atten_max_x)
+    return result
 
 
 def evaluate_at_points(u: Sequence[float],
@@ -282,6 +288,7 @@ def evaluate_at_points(u: Sequence[float],
                        validity_gate: bool = False,
                        link_losses_db: Optional[Sequence[float]] = None,
                        atten_code: Optional[int] = None,
+                       atten_max_x: Optional[float] = None,
                        ) -> DesignEval:
     """Score one sizing at an explicit list of (corner, load) pairs.
 
@@ -344,7 +351,7 @@ def evaluate_at_points(u: Sequence[float],
                        ac_peak_interp=ac_peak_interp,
                        hd3_vin_pk_v=(None if ac_only else drive_pk),
                        hd3_tone_hz=(None if ac_only else cfg.nyquist_hz),
-                       **_attenuation_run_args(atten_code))
+                       **_attenuation_run_args(atten_code, atten_max_x))
         n_sims += 1
 
         if not pt.ok:
@@ -471,6 +478,8 @@ def evaluate_at_points(u: Sequence[float],
             hd3_nyq_dbc=dev.hd3_dbc,
             eye_h_v=(lr.eye_h_v if lr.ok else None),
             eye_w_ui=(lr.eye_w_ui if lr.ok else None),
+            g_dc_db=float(dev.g_dc_db),
+            noise_vrms=float(dev.vn_in_vrms),
             reason=(None if lr.ok else lr.fail_reason))
         # **The channel axis, for one SPICE run.** Asked for explicitly or not
         # computed at all, so no existing caller changes behaviour or pays for

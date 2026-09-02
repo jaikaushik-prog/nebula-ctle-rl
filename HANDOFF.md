@@ -17,13 +17,12 @@
 > decisions that are OPEN and human-only, and what to do next. It supersedes
 > `nebula/NEXT_STEPS.md`. This file remains the full state of record.
 
-Last updated: **2026-09-02** (session 36, entry 83 pre-registration: the owner
-approved a **focused 7.0 dB top-code diagnostic**, not a production range
-change. Sixteen real-PMOS invocations are fixed before implementation: 14
-unique critical circuit/corner points covering the 16 unsolved 3 dB requests,
-plus TT code-0/code-7 controls. Full `V6_SPECS`, noise, realised attenuation,
-12 dB regression and cost gates are registered. D11 stays at 5.933 dB unless
-this probe and a later full-bank/PVT adoption experiment both pass.)
+Last updated: **2026-09-02** (session 36, entry 83 implementation: the owner's
+approved **focused 7.0 dB top-code diagnostic** is built and tested but has not
+run. The range is opt-in through the physical divider and G140 swing scaling;
+D11's default code-7 deck is pinned to its pre-change SHA-256. Exactly 16
+real-PMOS invocations and six outcome gates remain fixed. Focused 73 passed;
+full non-slow 2,582 passed, 13 deselected, 2 warnings. D11 remains 5.933 dB.)
 
 Earlier session 22p: (**THE REPORT EXISTS** --
 `nebula/report/Nebula_CTLE_Report.pdf`, **10 pages, 9 figures, 598 KB**,
@@ -1420,6 +1419,10 @@ signaling, ADC-based DSP receiver, 28 nm CMOS reference parameters).
 │   │                       SPICE point. Crash-resumable, membership-gated and
 │   │                       anti-clobber. Entry 81 completed all 23,040 rows;
 │   │                       `JOINT_BANK_RESULTS.md` scores the failed RL gate.
+│   ├── experiments/exp_atten_range_probe.py  Entry 83's focused 7.0 dB
+│   │                       diagnostic: 14 critical circuit/corner points plus
+│   │                       two TT controls, full V6/noise/3 dB/12 dB gates.
+│   │                       Passing makes a candidate; it does not adopt one.
 │   │                       NOTE: this tree lags for the session 23-25 files —
 │   │                       exp_coverage.py, adaptive_screen.py, search_score.py
 │   │                       and runlock.py are documented in §9 and §12 but are
@@ -1613,12 +1616,13 @@ Plus: git init, .gitignore, 28 tests, Wilson-bound BER reporting.
   for all 16; its swing ratio implies **0.0234-1.0304 dB** extra attenuation
   headroom. This is a zero-SPICE lower bound, not a verified fix.
 - **Nebula 7.0 dB diagnostic (D12, entry 83):** the owner approved measurement,
-  not adoption. Exactly 16 real-PMOS invocations are pre-registered: 14 unique
-  critical points covering all 16 unsolved requests, plus TT code-0/code-7
-  controls. The official D11 maximum remains 5.933 dB until this focused probe
-  and a later full-bank/PVT adoption experiment both pass.
+  not adoption. The opt-in 16-invocation probe is implemented and green: 14
+  unique critical points covering all 16 unsolved requests, plus TT
+  code-0/code-7 controls. It has not run. The official D11 maximum remains
+  5.933 dB until this focused probe and a later full-bank/PVT adoption
+  experiment both pass.
 
-- Tests: **2574 passing, 13 deselected, 2 warnings** (session 36, entry 82) —
+- Tests: **2582 passing, 13 deselected, 2 warnings** (session 36, entry 83) —
   `python -m pytest tests nebula/tests -q -m "not slow"`.
   (Was 65 + 267 = 332 at the start of session 9; 430 at the end of it; 444
   after 10b; 528 after 11; 618 after 12b; 679 after 13; 1007 after 16; 1246
@@ -2035,8 +2039,10 @@ discrete policy on this table.** Entry 82's zero-SPICE diagnosis of the 16
 unsolved 3 dB pairs is complete: all have a shape-compliant candidate blocked
 by only 0.0234-1.0304 dB of compression headroom at maximum code 7. The owner
 approved the focused 7.0 dB diagnostic as D12, and entry 83 fixes its 16 SPICE
-invocations and six gates before implementation. This approval does not change
-D11's production range and does not authorise a full-table rerun or RL training.
+invocations and six gates. The instrument is implemented with 73 focused and
+2,582 complete non-slow tests passing; **the entry-83 SPICE run has not started**.
+This approval does not change D11's production range and does not authorise a
+full-table rerun or RL training.
 
 **Entry-81 artifacts:** preserve `joint_bank_results.json` and the byte-verified
 compressed journal `joint_bank_run.jsonl.gz`. The local raw journal remains the
@@ -13874,3 +13880,40 @@ Even a six-gate pass does not adopt the range: it only authorises proposing a
 separately registered full-eight-code/PVT coverage experiment. No full 23,040
 row rerun and no RL policy are authorised. The unchanged pre-registration
 baseline is **2,574 passed, 13 deselected, 2 warnings** from entry 82.
+
+### G146. A recursive simulator retry must preserve every circuit-selection argument
+
+While plumbing entry 83's opt-in range, the G54 NaN retry was found forwarding
+the sizing, corner and analysis controls but **not `atten_code`**. A retry from
+an attenuated run could therefore silently measure the historical unattenuated
+circuit with the ordinary no-PFET library. The new custom-range argument would
+have been lost the same way.
+
+**Rule:** a recursive retry is the same experiment with exactly one named
+change. Forward every topology/range selector explicitly and gate the recursive
+call. `test_nan_retry.py` now proves both `atten_code` and `atten_max_x` survive;
+only `nan_retry_bypass_f` changes to disable a second retry. The 14 critical
+source rows show smooth code-6-to-code-7 noise/peaking/frequency movement, so
+there is no fingerprint of this defect in the points selected for entry 83;
+the old full joint artifact did not store `nan_retry_used`, so do not claim a
+table-wide retry count from it.
+
+### 2026-09-02 - session 36 (entry 83 implementation, before measurement). **The focused probe is built and green; no entry-83 SPICE point has run.**
+
+`attenuator.py` now accepts an explicit optional maximum ratio through its one
+conductance definition. Omitting it retains D11's 1.98x values and exact code-7
+SPICE text, pinned to the pre-change SHA-256
+`c8aa0ecf291adbb3ce7d0b0321468d08be9703ca5de3e725b39feb698e286429`.
+`adaptive_screen` and `run_point` carry the same opt-in ratio into both the
+physical resistor geometry and G140's `vid_max = 0.8/A` sweep. They also expose
+the measured DC gain and noise already present in the device result, so the TT
+controls do not need a second simulator path.
+
+`exp_atten_range_probe.py` derives the 14 unique physical tasks directly from
+the committed diagnosis, checks its joint-table SHA-256, runs those plus two TT
+controls, refuses to overwrite its artifact, and scores Q1-Q6 without tuning.
+Its fail-capable analysis was watched reject both a request miss and a 12 dB
+regression. Seven new tests plus the G146 retry gate raise the suite from 2,574
+to **2,582 passed, 13 deselected, 2 warnings in 382.17 s**. The focused set is
+**73 passed**. Commit this implementation before launching the unchanged
+16-invocation command.

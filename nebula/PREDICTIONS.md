@@ -13452,3 +13452,13 @@ is >=60 s.**
   top range, but is **still not adopted**. First verify the full eight-code
   geometry and the all-45-corner/request coverage in a separately registered
   experiment. No 23,040-row rerun and no RL training is authorised here.
+
+**Pre-run implementation certificate.** The opt-in range now flows through one
+definition from `attenuator.py` to `run_point` and G140's sweep scaling. The
+historical D11 code-7 block is pinned to its pre-change SHA-256 and passes
+byte-identically. The probe derives its 14 physical tasks from the entry-82
+artifact and refuses a changed source hash or an existing result file. Its
+analysis gate was watched fail on a request miss and a 12 dB regression.
+Focused tests are **73 passed**; the complete non-slow suite is **2,582 passed,
+13 deselected, 2 warnings in 382.17 s**, against entry 82's unchanged baseline
+of 2,574. No entry-83 SPICE point has run yet.

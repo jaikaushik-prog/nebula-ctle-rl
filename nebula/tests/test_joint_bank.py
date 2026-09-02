@@ -47,6 +47,15 @@ def test_g140_swing_range_scales_with_the_real_attenuation():
     assert args["atten_code"] == 7
     assert args["vid_max"] == pytest.approx(0.8 / AT.attenuation(7))
 
+    candidate_x = 10.0 ** (7.0 / 20.0)
+    custom = _attenuation_run_args(7, atten_max_x=candidate_x)
+    assert custom == {
+        "vid_max": pytest.approx(
+            0.8 / AT.attenuation(7, atten_max_x=candidate_x)),
+        "atten_code": 7,
+        "atten_max_x": candidate_x,
+    }
+
 
 def test_channel_rescore_replaces_both_eye_rows_and_request_rows():
     margins = J.margins_at(_row(), 3.0, 1.9e9, 9.0)

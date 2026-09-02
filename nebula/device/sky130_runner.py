@@ -1610,6 +1610,7 @@ def run_point(
     hd3_tone_hz: Optional[float] = None,
     nan_retry_bypass_f: Optional[float] = NAN_RETRY_BYPASS_F,
     atten_code: Optional[int] = None,
+    atten_max_x: Optional[float] = None,
 ) -> Sky130Point:
     """Simulate one sizing point. Never raises — failures come back ok=False.
 
@@ -1697,6 +1698,13 @@ def run_point(
             noise_keys += [(k, v.format(device=point.tail.device))
                            for k, v in _NOISE_KEYS_TAIL]
 
+    # The custom range exists only for a pre-registered diagnostic. Keep the
+    # historical call shape at ``None`` so existing monkeypatches and the D11
+    # deck remain byte-identical.
+    atten_fields = (_attenuator.netlist_fields(atten_code)
+                    if atten_max_x is None else
+                    _attenuator.netlist_fields(
+                        atten_code, atten_max_x=float(atten_max_x)))
     text = assemble_netlist(
         lib=lib.as_posix(), corner=corner, device=point.device,
         w=point.w, l=point.l, nf=int(point.nf),
@@ -1715,7 +1723,7 @@ def run_point(
         # every deck this project has ever simulated -- asserted in
         # `test_attenuator.py`, which is what makes this safe to add to a file
         # every result depends on.
-        **_attenuator.netlist_fields(atten_code),
+        **atten_fields,
     )
 
     # THE TWO SILENT WRITES, GATED ON THE ASSEMBLED TEXT (G56, G57). This
@@ -1797,7 +1805,8 @@ def run_point(
                 keep_netlist=keep_netlist, ac_sweep=ac_sweep,
                 ac_peak_interp=ac_peak_interp, hd3=hd3,
                 hd3_vin_pk_v=hd3_vin_pk_v, hd3_tone_hz=hd3_tone_hz,
-                nan_retry_bypass_f=None)
+                nan_retry_bypass_f=None, atten_code=atten_code,
+                atten_max_x=atten_max_x)
             # Stamped whether it worked or not: a corner that is STILL NaN at
             # 30 pF is a different fact from one that was never retried, and
             # G54 records that ~0.4 % of runs stay NaN at extreme widths.

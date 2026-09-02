@@ -113,25 +113,39 @@ SWITCH_RON_W_OHM_UM: float = 4086.824988354164
 SWITCH_RON_OHM: float = SWITCH_RON_W_OHM_UM / SWITCH_W_UM
 
 
-def leg_resistance_ohm(bit: int) -> float:
+def _unit_conductance_s(atten_max_x: Optional[float] = None) -> float:
+    """Resolve an opt-in range without changing D11's registered default."""
+    if atten_max_x is None:
+        return G0_S
+    value = float(atten_max_x)
+    if not math.isfinite(value) or value <= 1.0:
+        raise ValueError("atten_max_x must be finite and greater than 1")
+    return (value - 1.0) / ((N_CODES - 1) * RSER_OHM)
+
+
+def leg_resistance_ohm(bit: int,
+                       atten_max_x: Optional[float] = None) -> float:
     """Drawn resistance of shunt leg `bit`, with the switch's Ron removed."""
     if not 0 <= bit < N_BITS:
         raise ValueError(f"bit {bit} outside 0..{N_BITS - 1}")
-    return (1.0 / G0_S - SWITCH_RON_OHM) / (2 ** bit)
+    return (1.0 / _unit_conductance_s(atten_max_x)
+            - SWITCH_RON_OHM) / (2 ** bit)
 
 
-def attenuation(code: int) -> float:
+def attenuation(code: int, atten_max_x: Optional[float] = None) -> float:
     """Voltage ratio `A` for `code`. `A = 1` at code 0, falling as code rises."""
     if not 0 <= code < N_CODES:
         raise ValueError(f"code {code} outside 0..{N_CODES - 1}")
-    return 1.0 / (1.0 + code * RSER_OHM * G0_S)
+    return 1.0 / (1.0 + code * RSER_OHM
+                  * _unit_conductance_s(atten_max_x))
 
 
-def attenuation_db(code: int) -> float:
-    return -20.0 * math.log10(attenuation(code))
+def attenuation_db(code: int, atten_max_x: Optional[float] = None) -> float:
+    return -20.0 * math.log10(attenuation(code, atten_max_x=atten_max_x))
 
 
-def code_for(required_x: float) -> int:
+def code_for(required_x: float,
+             atten_max_x: Optional[float] = None) -> int:
     """The smallest code whose attenuation clears `required_x`. **Rounds UP.**
 
     Rounding up rather than to nearest: falling one step short leaves the stage
@@ -140,14 +154,15 @@ def code_for(required_x: float) -> int:
     """
     need_db = 20.0 * math.log10(max(float(required_x), 1.0))
     for n in range(N_CODES):
-        if attenuation_db(n) >= need_db - 1e-9:
+        if attenuation_db(n, atten_max_x=atten_max_x) >= need_db - 1e-9:
             return n
     return N_CODES - 1
 
 
 def attenuator_block(code: int, node_p: str = "inx", node_n: str = "iny",
                      gate_p: str = "inp", gate_n: str = "inn",
-                     switched: bool = True) -> str:
+                     switched: bool = True,
+                     atten_max_x: Optional[float] = None) -> str:
     """The SPICE text for one code. **All legs emitted, enabled ones switched on.**
 
     `switched=False` wires the ENABLED legs straight to `cm` and omits the
@@ -173,10 +188,22 @@ def attenuator_block(code: int, node_p: str = "inx", node_n: str = "iny",
     ser = resistor_geometry(RSER_OHM, RES_HIGH_PO)
     lines = [
         f"* Input attenuator (D11), code {code} of {N_CODES - 1}: "
-        f"A = {attenuation(code):.4f} ({attenuation_db(code):.2f} dB).",
-        "* Sized to the worst-case over-drive entry 72 measured at the shortest",
-        "* channel (1.98x). Entry 73 measured why a load trim cannot do this:",
-        "* RL scales the signal and the headroom together.",
+        f"A = {attenuation(code, atten_max_x=atten_max_x):.4f} "
+        f"({attenuation_db(code, atten_max_x=atten_max_x):.2f} dB).",
+    ]
+    if atten_max_x is None:
+        # These exact lines and their order are part of D11's registered deck.
+        lines += [
+            "* Sized to the worst-case over-drive entry 72 measured at the shortest",
+            "* channel (1.98x). Entry 73 measured why a load trim cannot do this:",
+            "* RL scales the signal and the headroom together.",
+        ]
+    else:
+        lines += [
+            f"* Opt-in diagnostic range: {float(atten_max_x):.6g}x maximum.",
+            "* D11's registered 1.98x default is unchanged.",
+        ]
+    lines += [
         f"Xatt_sp {node_p} {gate_p} 0 {ser.subckt} "
         f"w={ser.w_um:g} l={ser.l_um:g}{_m_suffix(ser.m)}",
         f"Xatt_sn {node_n} {gate_n} 0 {ser.subckt} "
@@ -187,7 +214,8 @@ def attenuator_block(code: int, node_p: str = "inx", node_n: str = "iny",
         g = "0" if on else "vdd"
         if not switched and not on:
             continue                       # ideal switch: an off leg is absent
-        geo = resistor_geometry(leg_resistance_ohm(bit), RES_HIGH_PO)
+        geo = resistor_geometry(
+            leg_resistance_ohm(bit, atten_max_x=atten_max_x), RES_HIGH_PO)
         for side, gate in (("p", gate_p), ("n", gate_n)):
             mid = f"att_{side}{bit}" if switched else "cm"
             lines.append(
@@ -204,12 +232,14 @@ def attenuator_block(code: int, node_p: str = "inx", node_n: str = "iny",
     return "\n".join(lines)
 
 
-def netlist_fields(code: Optional[int], switched: bool = True) -> dict:
+def netlist_fields(code: Optional[int], switched: bool = True,
+                   atten_max_x: Optional[float] = None) -> dict:
     """What `assemble_netlist` needs. `None` -> the historical deck, unchanged."""
     if code is None:
         return {"in_p": "inp", "in_n": "inn", "atten_block": ""}
     return {"in_p": "inx", "in_n": "iny",
-            "atten_block": attenuator_block(int(code), switched=switched)}
+            "atten_block": attenuator_block(
+                int(code), switched=switched, atten_max_x=atten_max_x)}
 
 
 #: The measured requirement per channel, and what each code delivers. Recorded

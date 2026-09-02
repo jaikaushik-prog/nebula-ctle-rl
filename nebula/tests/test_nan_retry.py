@@ -32,6 +32,9 @@ entry 55 (315 decks) rather than asserted here.
 from __future__ import annotations
 
 import dataclasses
+import ast
+import inspect
+import textwrap
 
 import pytest
 
@@ -111,6 +114,21 @@ def test_run_point_exposes_the_switch():
     sig = inspect.signature(SR.run_point)
     assert "nan_retry_bypass_f" in sig.parameters
     assert sig.parameters["nan_retry_bypass_f"].default == SR.NAN_RETRY_BYPASS_F
+
+
+def test_the_retry_preserves_the_attenuator_and_custom_range():
+    """A retry must not silently measure a different circuit."""
+    tree = ast.parse(textwrap.dedent(inspect.getsource(SR.run_point)))
+    recursive = [
+        call for call in ast.walk(tree)
+        if isinstance(call, ast.Call) and isinstance(call.func, ast.Name)
+        and call.func.id == "run_point"
+    ]
+    assert len(recursive) == 1
+    keywords = {item.arg: ast.unparse(item.value)
+                for item in recursive[0].keywords}
+    assert keywords["atten_code"] == "atten_code"
+    assert keywords["atten_max_x"] == "atten_max_x"
 
 
 # ─────────────────────────────────────────────────────────────────────────────
