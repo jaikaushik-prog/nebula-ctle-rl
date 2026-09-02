@@ -17,15 +17,13 @@
 > decisions that are OPEN and human-only, and what to do next. It supersedes
 > `nebula/NEXT_STEPS.md`. This file remains the full state of record.
 
-Last updated: **2026-09-02** (session 36, entry 81 outcome: **THE REAL
-ATTENUATOR x CTLE TABLE IS COMPLETE, AND ITS PREREGISTERED RL GATE FAILS.**
-All 23,040 expected rows are present and unique; all-corner request coverage is
-11/16 at 3 dB, 15/16 at 4.5 dB and 16/16 from 6-12 dB. Of 720
-`(corner, request)` pairs, 704 are solvable on every channel and **zero** need
-different settings for compliance, below the registered 72 threshold. Per the
-pre-run decision, no policy is trained on this table. The best-eye setting does
-move in 551/704 cases, but that is a new margin objective, not permission to
-rewrite the gate. Full result: `nebula/JOINT_BANK_RESULTS.md`.)
+Last updated: **2026-09-02** (session 36, entry 83 pre-registration: the owner
+approved a **focused 7.0 dB top-code diagnostic**, not a production range
+change. Sixteen real-PMOS invocations are fixed before implementation: 14
+unique critical circuit/corner points covering the 16 unsolved 3 dB requests,
+plus TT code-0/code-7 controls. Full `V6_SPECS`, noise, realised attenuation,
+12 dB regression and cost gates are registered. D11 stays at 5.933 dB unless
+this probe and a later full-bank/PVT adoption experiment both pass.)
 
 Earlier session 22p: (**THE REPORT EXISTS** --
 `nebula/report/Nebula_CTLE_Report.pdf`, **10 pages, 9 figures, 598 KB**,
@@ -1613,11 +1611,14 @@ Plus: git init, .gitignore, 28 tests, Wilson-bound BER reporting.
   7 peaking-match) and a non-eye-compliant candidate blocked only by
   compression. The least-overdriven candidate is at maximum attenuator code 7
   for all 16; its swing ratio implies **0.0234-1.0304 dB** extra attenuation
-  headroom. This is a zero-SPICE lower bound, not a verified fix. A ~7.0 dB
-  top-code probe is indicated but awaits the `CLAUDEwa.md` rule-6 human range
-  decision.
+  headroom. This is a zero-SPICE lower bound, not a verified fix.
+- **Nebula 7.0 dB diagnostic (D12, entry 83):** the owner approved measurement,
+  not adoption. Exactly 16 real-PMOS invocations are pre-registered: 14 unique
+  critical points covering all 16 unsolved requests, plus TT code-0/code-7
+  controls. The official D11 maximum remains 5.933 dB until this focused probe
+  and a later full-bank/PVT adoption experiment both pass.
 
-- Tests: **1942 passing, 12 deselected** (session 28) —
+- Tests: **2574 passing, 13 deselected, 2 warnings** (session 36, entry 82) —
   `python -m pytest tests nebula/tests -q -m "not slow"`.
   (Was 65 + 267 = 332 at the start of session 9; 430 at the end of it; 444
   after 10b; 528 after 11; 618 after 12b; 679 after 13; 1007 after 16; 1246
@@ -2032,9 +2033,10 @@ measured. Its RL gate failed: **0/720** pairs need a channel-specific setting
 for compliance against the registered threshold of 72. **Do not train a
 discrete policy on this table.** Entry 82's zero-SPICE diagnosis of the 16
 unsolved 3 dB pairs is complete: all have a shape-compliant candidate blocked
-by only 0.0234-1.0304 dB of compression headroom at maximum code 7. The next
-step is a human decision on whether to test a ~7.0 dB top attenuator code;
-range, circuit and SPICE remain unchanged until that decision.
+by only 0.0234-1.0304 dB of compression headroom at maximum code 7. The owner
+approved the focused 7.0 dB diagnostic as D12, and entry 83 fixes its 16 SPICE
+invocations and six gates before implementation. This approval does not change
+D11's production range and does not authorise a full-table rerun or RL training.
 
 **Entry-81 artifacts:** preserve `joint_bank_results.json` and the byte-verified
 compressed journal `joint_bank_run.jsonl.gz`. The local raw journal remains the
@@ -2046,8 +2048,11 @@ explicit scope.
    project, own contract (`CLAUDEwa.md`), hard deadline 15 Sept 2026.
    **CURRENT 2026-09-02:** D11 is complete at its registered TT/one-load scope
    (entry 78, 7 of 7). Do not expand that into a coverage statement without a
-   separately authorised preregistration. The standing owner item is now
-   urgent: `nebula/report/Nebula_CTLE_Report.pdf` is about three weeks behind,
+   separately authorised preregistration. D12/entry 83 now authorises only the
+   focused 7.0 dB probe: implement its opt-in range, run the fixed 16-point
+   experiment, and score all six gates before considering adoption. The
+   standing owner item is also urgent: `nebula/report/Nebula_CTLE_Report.pdf`
+   is about three weeks behind,
    still says one simulation / under five seconds rather than 17 / ~22 s,
    contains one stale 8-of-16 statement, says SAC zero times, and reports two
    test counts. It has been deferred twice; 13 days remain.
@@ -13850,3 +13855,22 @@ that range. G145 prevents the headroom calculation from being reported as a
 passing circuit result. Artifact: `experiments/joint_bank_diagnosis.json`.
 The complete post-change non-slow suite is green at **2,574 passed, 13
 deselected, 2 warnings in 435.56 s**, against the point-2 baseline of 2,572.
+
+### 2026-09-02 - session 36 (entry 83 pre-registration, decision D12). **The owner approved the focused 7.0 dB diagnostic; the production range is unchanged.**
+
+Entry 82's 1.0304 dB maximum compression-only deficit plus D11's 5.933 dB top
+code indicates 6.964 dB. The owner approved the smallest round probe, 7.0 dB.
+This is permission to measure the candidate, not to adopt it.
+
+Before implementation or new SPICE, entry 83 fixes exactly 16 real-PMOS
+invocations: 14 unique critical `(corner, CTLE setting)` points covering all 16
+unsolved 3 dB requests, plus candidate code 0 and code 7 at TT/R4C3. Six gates
+cover exact membership/device validity, 7.0 +/- 0.25 dB realised attenuation,
+the 1.5 mV_rms noise limit, 16/16 full-`V6_SPECS` recovery at 3 dB, preservation
+of the measured 14/14 12 dB scorable baseline, and TT/cost sanity. G140 uses
+the candidate attenuation in its DC sweep scaling.
+
+Even a six-gate pass does not adopt the range: it only authorises proposing a
+separately registered full-eight-code/PVT coverage experiment. No full 23,040
+row rerun and no RL policy are authorised. The unchanged pre-registration
+baseline is **2,574 passed, 13 deselected, 2 warnings** from entry 82.

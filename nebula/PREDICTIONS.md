@@ -13378,3 +13378,77 @@ does not re-evaluate noise, PMOS parasitics or eye height after changing the
 attenuator. The current code-7 design point is 5.933 dB, so a ~7.0 dB top-code
 probe is data-derived, but rule 6 requires a human to approve the range before
 any circuit value changes or SPICE run. No value has been adopted here.
+
+## 83. Session 36 -- **focused 7.0 dB top-code probe, approved by the owner and registered before implementation or SPICE.**
+
+**Written 2026-09-02 BEFORE changing the attenuator API or running any new
+SPICE point.** Entry 82 measured that the present 5.933 dB top code is short by
+at most 1.0304 dB at the 16 unsolved 3 dB corner/request pairs. The owner has
+approved the smallest round diagnostic range, **7.0 dB**, for a focused test.
+This is approval to measure a candidate, not approval to replace D11's
+5.933 dB production range.
+
+The probe contains exactly **16 real-PMOS SPICE invocations**: the 14 unique
+`(corner, least-extra CTLE setting)` points that represent all 16 failures,
+plus code 0 and code 7 at the existing TT/R4C3 control. Each of the 14 critical
+device measurements is re-evaluated in Python on both 3 dB and 12 dB channels
+and against every associated `V6_SPECS` request. The two TT rows measure
+realised attenuation relative to the same candidate bank's code 0. The G140
+sweep is `vid_max = 0.8/A` using the candidate attenuation, not D11's old
+attenuation. The source diagnosis file and its decoded joint-bank SHA-256 are
+part of the artifact.
+
+The 7.0 dB range is opt-in. Calls that do not supply it must emit the historical
+netlist byte for byte, and D11's public constants and default code meanings stay
+unchanged. The result writes a new artifact,
+`experiments/atten_range_probe_results.json`; it never overwrites entries
+77/78 or the 23,040-row joint table.
+
+### Predictions
+
+**Q1 -- plumbing and membership.** The artifact contains exactly 16 SPICE rows:
+14 unique critical rows plus the two TT controls; every requested key appears
+once and every device result is valid. The default/off and default-D11 netlists
+remain byte-identical. Confidence **0.95**. **Falsifier: any missing, duplicate,
+extra or invalid row, or either byte-identity gate changes.**
+
+**Q2 -- the physical divider realises the candidate.** Relative to candidate
+code 0 at TT/R4C3, candidate code 7 realises **7.0 +/- 0.25 dB**. Confidence
+**0.9**, using entry 78's <=0.207 dB switched-versus-ideal discrepancy.
+**Falsifier: realised attenuation outside 6.75-7.25 dB.**
+
+**Q3 -- noise guard.** TT/R4C3 code-7 input-referred noise remains below the
+slide's **1.5 mV_rms** S5 limit. Confidence **0.95**: entry 78 measured
+0.4269 mV_rms at code 5 and the added range is only about 1 dB. **Falsifier:
+noise >=1.5 mV_rms or unavailable.**
+
+**Q4 -- the 3 dB failures clear completely.** All **16 of 16** previously
+unserved corner/request pairs are scorable and compliant on all 13
+`V6_SPECS` rows at 3 dB. Confidence **0.6**: 7.0 dB covers the measured
+compression lower bound with about 0.036 dB at the tightest point, but G145
+warns that new resistor geometry, PMOS parasitics, noise and eye can move the
+boundary. **Falsifier: even one of the 16 remains unscorable or noncompliant.**
+
+**Q5 -- long-channel regression guard.** All **14 of 14** critical physical
+points remain scorable at 12 dB, exactly matching their old 14/14 baseline.
+Confidence **0.85**. **Falsifier: any 12 dB link becomes unscorable.** This is
+an eye/compression guard, not a claim that those settings satisfy every request
+at 12 dB.
+
+**Q6 -- instrument sanity and cost.** The TT code-7 3 dB and 12 dB links are
+both scorable, and the 16 serial invocations finish in under **60 seconds**.
+Confidence **0.9**, based on entry 78's nine points in 3.74 s while allowing a
+large machine-load margin. **Falsifier: either link is unscorable or wall clock
+is >=60 s.**
+
+### Decision rule, before the run
+
+* Q1 fails -> stop; the probe is not interpretable.
+* Q2 or Q3 fails -> reject the 7.0 dB candidate; do not inspect survivors to
+  choose another range in the same experiment.
+* Q4 or Q5 fails -> do not adopt 7.0 dB. Report the exact remaining request,
+  spec row or link failure and use it to design a separately registered probe.
+* Q1-Q6 all hold -> 7.0 dB becomes the measured leading candidate for D11's
+  top range, but is **still not adopted**. First verify the full eight-code
+  geometry and the all-45-corner/request coverage in a separately registered
+  experiment. No 23,040-row rerun and no RL training is authorised here.
