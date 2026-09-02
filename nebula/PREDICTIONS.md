@@ -12135,3 +12135,106 @@ served corner has two or more codes on every request.**
   non-tunable path already does (14 of 16, entry 69, different scope). Report
   the gap and re-open the architecture before training any policy.
 
+
+### OUTCOME, entry 71 (2026-09-02). **SCORED 2 OF 5. 8 of 16 -- and Q3, the prediction written to falsify D10, FAILED. For six of the eight served requests the knob is decoration.**
+
+    2 880 decks, 16.0 min; 2 117/2 880 points scorable (73.5 %)
+    artifacts: experiments/bank_sweep_results.json, bank_sweep_run.jsonl
+
+    request             corners served   distinct codes   1-code corners
+     4.0 dB @ 1.387       44/45                9              2
+     4.0 dB @ 1.627       45/45               13              0   ALL 45
+     4.0 dB @ 1.921       45/45               12              0   ALL 45
+     4.0 dB @ 2.253       45/45               10              0   ALL 45
+     6.0 dB @ 1.387       42/45               10              5
+     6.0 dB @ 1.627       45/45               14              0   ALL 45
+     6.0 dB @ 1.921       45/45               12              0   ALL 45
+     6.0 dB @ 2.253       45/45               10              0   ALL 45
+     8.0 dB @ 1.387       35/45                9              3
+     8.0 dB @ 1.627       41/45               11              4
+     8.0 dB @ 1.921       45/45               11              2   ALL 45
+     8.0 dB @ 2.253       45/45               11              0   ALL 45
+    10.0 dB @ 1.387       27/45                6              6
+    10.0 dB @ 1.627       37/45                7              6
+    10.0 dB @ 1.921       40/45               10              1
+    10.0 dB @ 2.253       40/45                9              1
+
+    REQUESTS SERVED AT ALL 45 MANDATED CORNERS: 8 of 16
+
+| | prediction | outcome | |
+|---|---|---|---|
+| **Q1** | 10-14 of 16, point estimate 12 | **8 of 16** | **MISS** |
+| **Q2** | unserved corners are a COMPRESSION story | **70.4 % are frequency rows**; zero are HD3/eye/power/noise | **MISS** |
+| **Q3** | no request served at 45 corners by a SINGLE code | **six of the eight are** | **MISS** |
+| **Q4** | 2 880 decks under 30 min | **16.0 min** | **HIT** |
+| **Q5** | some (request, corner) pair served by exactly one code | **30 pairs across 9 requests** | **HIT** |
+
+### Q3 is the result, and it is a negative one about this session's own architecture
+
+    served request        best SINGLE code       codes needed
+     4.0 dB @ 1.627       code 21 -> 45/45            13
+     4.0 dB @ 1.921       code 19 -> 45/45            12
+     4.0 dB @ 2.253       code 19 -> 45/45            10
+     6.0 dB @ 1.627       code 28 -> 45/45            14
+     6.0 dB @ 1.921       code 27 -> 45/45            12
+     6.0 dB @ 2.253       code 27 -> 45/45            10
+     8.0 dB @ 1.921       code 35 -> 38/45            11
+     8.0 dB @ 2.253       code 42 -> 37/45            11
+
+**For six of the eight served requests a single fixed code meets all 13 rows at
+all 45 mandated corners.** The knob is not doing the work there; a part frozen
+at code 21 would have passed. Only the two 8 dB requests genuinely need more
+than one code across PVT, and they need it for 7 and 8 corners respectively.
+
+**This does not contradict section 5z, and the distinction is the finding.**
+5z measured the base design *at its as-sized `(rs, cs)`* serving 0.0 % of S3's
+window across PVT. That was true, and it is now clear it said the base was sized
+at a poor point on the two tuned axes -- **not** that PVT drift needs a knob to
+absorb it. Separating the two:
+
+* **Across REQUESTS the knob is load-bearing.** Six distinct codes appear as
+  best-single across eight requests (19, 21, 27, 28, 35, 42). One part cannot
+  serve 4 dB @ 1.627 GHz and 8 dB @ 2.253 GHz from one code.
+* **Across PVT, at a fixed request, it mostly is not.** Six of eight served
+  requests need exactly one.
+
+**The consequence for the RL is direct and unwelcome.** The adaptation problem
+D10 framed -- *infer the code from eye measurements without knowing the
+corner* -- is only real where the right code depends on the **hidden** state.
+Here it depends almost entirely on the **request**, which is an input the policy
+is handed. A lookup from request to code is therefore near-optimal, which is
+this project's recurring result (entry 36, `POSITIONING.md` §1) arriving by a
+third road. **A policy trained on this artifact would be learning a 16-row
+table.**
+
+### Q2's miss points at the redesign, and it is measured
+
+Of the 54 unserved (request, corner) pairs, the binding row is:
+
+    S3_f_peak_match   34      S3_peaking_match   16      S3_f_peak_band    4
+    HD3 / eye / power / noise: ZERO
+
+I predicted compression. Compression is real -- **763 of 2 880 points (26.5 %)
+are unscorable and every sampled reason is output swing over the linear limit**
+-- but among the codes that *can* be scored, the bank fails because it **cannot
+reach the requested response at that corner**, not because it is non-linear
+there. Combined with entry 70's Q3 (18 of 64 codes fall outside S3's 3-12 dB
+range because a symmetric span overshoots downward), the redesign is arithmetic
+rather than a guess: **the code budget is misallocated -- spend fewer codes on
+boost and more on frequency resolution.**
+
+### Per the decision rule, written before the run
+
+Q1 < 10, so: *"report the gap and re-open the architecture before training any
+policy."* **No policy is trained on this artifact.** The controls in
+`exp_adapt_controls.py` and the environment in `rl/adapt_env.py` are committed
+**unrun**, because the bar they define is only meaningful once there is an
+adaptation problem worth having.
+
+**The gap, stated plainly.** One fixed part with a 6-bit code serves **8 of 16**
+requests at 45 mandated corners on `V6_SPECS`. The delivered per-request path
+serves **14 of 16** (entry 69). These are not the same measurement -- different
+evaluator, and this one scores `S4_hd3_nyq` at the operating point where entry
+69's scores S4's literal 100 MHz row, so this is the **stricter** set -- but no
+reading of them makes one fixed part competitive with sixteen bespoke designs.
+That was always the trade; it is now measured.
