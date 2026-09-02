@@ -13269,3 +13269,38 @@ Also this session: `reward_v1.request_rows()` factored out and `margins()` plus
 `exp_coverage._rescore` both delegate to it; 52 new tests across four files;
 three gates deliberately broken and watched go red before restoring.
 
+### 2026-09-02 - session 34 (entry 72). **The channel probe: the stage saturates on SHORT channels, and gain control is the missing knob.**
+
+Pre-registered and committed before the run. **Q4 failed, Q5 hit, Q3 missed, and
+Q1/Q2 were NOT read** under the rule committed with them.
+
+    2 880 decks x 7 channels (3.0 - 12.0 dB), 34.3 min
+    loss dB    3.0   4.5   6.0   7.5    9.0   10.5   12.0
+    scorable     0    18   128   485   1179   1823   2117   (of 2 117)
+
+**The premise was wrong and precisely where.** It is TRUE that the channel
+family's loss at DC is exactly 0, so `v_in_diff_pp_v` is identical at 3 dB and
+12 dB -- a passing test asserts it. It does NOT follow that compression is
+channel-independent: that is the drive at DC, the rejection is on the CTLE's
+OUTPUT swing, and a shorter channel delivers far more high-frequency content for
+the stage to amplify. Even the lowest-boost code over-drives by **1.43x** at
+3 dB; the top code by 1.86x. No bank code fixes it, because the binding quantity
+is TOTAL GAIN and not peaking.
+
+**The knob this part is missing is gain control, not equalisation.** A real PCIe
+receiver puts a VGA/AGC around the CTLE for exactly this reason. Invisible for
+the whole project because every number in this repository was measured at
+`FUNNEL_LOSS_DB = 12.0` -- the family's worst member and this stage's EASIEST.
+
+**Q1/Q2 are unmeasured, not refuted.** At five of seven channels almost nothing
+is scorable, so framing (b)'s "0 of 45 corners move" is an artifact of having no
+scorable codes to move between.
+
+**A test of mine committed G101/G106/G115's shape and is now G139.**
+`test_a_worse_channel_never_gives_a_taller_eye` filters `if ok` and asserts
+monotonicity over the survivors, so it compared the two high-loss points and
+PASSED while five of seven channels were rejected outright. It guarded the claim
+it was written for and missed the one that mattered.
+
+Suite green at **2 498 passed**, 13 deselected.
+

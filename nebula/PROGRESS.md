@@ -44,6 +44,7 @@ human in the loop. Deliverables that already exist and run:
 | **Mandated 45-corner coverage** | **14 of 16 ON THE DELIVERED PATH** (entry 69: `design.py --method auto`, verified end to end, 8 controls, none lost). Was 8 at the start of session 33. **The 135-point load grid stays 0 of 16** -- this project's own extra axis, which the brief does not mandate |
 | **Tunable-bank compliance (D10)** | **45 of 45 mandated corners served by at least one bank setting**, one request (7.5 dB @ 1.768 GHz), design load, `V5_SPECS` (section 5z; `experiments/tuning_bank_results.json`). S3 frequency window **100 %** covered against the same fixed design's **0.0 %**. Boost range reaches only **4.41-8.56 dB** of S3's mandated 3-12; two corners have **one** passing setting and therefore no tuning margin |
 | **Wide bank, one fixed part** | **8 of 16** requests served at all 45 mandated corners, `V6_SPECS`, 64 codes x 45 corners = 2 880 decks (section 5aa; entries 70-71). **Six of the eight need only ONE code**, so the knob is decoration across PVT and load-bearing only across REQUESTS. Not comparable with entry 69's 14 of 16 -- different evaluator and a stricter S4 row |
+| **Channel axis (NEW, entry 72)** | **The stage saturates on SHORT channels.** Scorable points fall 2 117 -> 0 as loss falls 12.0 -> 3.0 dB; even the lowest-boost code over-drives by **1.43x** at 3 dB. No bank code fixes it -- the binding quantity is **total gain**, not peaking. **Gain control (VGA/AGC) is the missing knob**, and every number in this repo was measured at `FUNNEL_LOSS_DB = 12.0`, the family's worst member and this stage's easiest (section 5ab) |
 | Deliverable output | `design.py --out` writes `design.json`, `design.cir` **and `design_schematic.png`** — a drawn schematic rendered FROM the deck, annotated with the sized values, marked **NOT DELIVERED** when the run did not pass (session 33) |
 | Report | `nebula/report/Nebula_CTLE_Report.pdf`, rebuilt from artifacts. **Its RL chapter stops at PPO and the budget ladder** — entries 34-54 have not reached it |
 
@@ -1904,6 +1905,65 @@ frequency resolution.**
 * **No policy has been trained.** Entry 71's pre-committed rule said Q1 < 10
   re-opens the architecture first. `rl/adapt_env.py` and
   `experiments/exp_adapt_controls.py` are committed **unrun**.
+
+---
+
+
+## 5ab. THE CHANNEL PROBE: **the stage saturates on SHORT channels, and gain control is the missing knob**
+
+**2026-09-02 (session 34), entry 72.** Pre-registered and committed before the
+run. **Q4 failed, Q5 hit, Q3 missed, and Q1/Q2 were NOT READ** under the rule
+committed with them.
+
+Entry 71 showed PVT is not the hidden variable adaptation needs. Entry 72 asked
+whether the **channel** is — the thing a receiver genuinely does not know.
+
+    2 880 decks x 7 channels (3.0 - 12.0 dB), 34.3 min
+    artifacts: experiments/channel_probe_results.json, channel_probe_run.jsonl
+
+    loss dB    3.0   4.5   6.0   7.5    9.0   10.5   12.0
+    scorable     0    18   128   485   1179   1823   2117   (of 2 117)
+
+### The premise was wrong, and precisely where
+
+Entry 72 was registered on: *the family's loss at DC is exactly 0, so
+`v_in_diff_pp_v` is identical at 3 dB and 12 dB, so compression is
+channel-independent and only the eye moves.*
+
+**The first clause is true** and a passing test asserts it. **The conclusion does
+not follow.** `v_in_diff_pp_v` is the drive at DC; the link rejection is on the
+CTLE's **output** swing, and a *shorter* channel delivers far more
+high-frequency content for the stage to amplify.
+
+    median output swing at 3 dB vs the measured linear limit, by boost row
+    R0  1480.0 mVpp / 1035.5  = 1.43x      R4  1696.1 / 1110.5 = 1.53x
+    R1  1518.0      / 1054.3  = 1.44x      R5  1738.9 / 1104.9 = 1.57x
+    R2  1577.8      / 1082.8  = 1.46x      R6  1737.8 / 1023.5 = 1.70x
+    R3  1638.0      / 1101.3  = 1.49x      R7  1548.0 /  832.9 = 1.86x
+
+**Even the lowest-boost code over-drives by 1.43x.** The bank worsens it
+(1.43x -> 1.86x) but did not cause it, and **no bank code fixes it**, because the
+binding quantity is the stage's **total gain**, not its peaking.
+
+> The delivered CTLE is sized for a 12 dB channel and **saturates on any channel
+> shorter than about 9 dB**. The knob it is missing is not equalisation, it is
+> **gain control**. A real PCIe receiver puts a VGA/AGC around the CTLE for
+> exactly this reason; this design has none.
+
+**This was invisible for the entire project** because every number in the
+repository was measured at `FUNNEL_LOSS_DB = 12.0` — the channel family's worst
+member and, for this stage, its **easiest** one.
+
+### What may NOT be said
+
+* **Q1 and Q2 are UNMEASURED, not refuted.** At five of the seven channels
+  almost nothing is scorable, so framing (b)'s printed *"0 of 45 corners move"*
+  is an artifact of having no scorable codes to move **between**. The rule
+  committed before the run forbids reading them, and they are not read.
+* **This is not a coverage retraction.** Every existing compliance number stands
+  at the channel it was measured on. What is new is that the channel was never
+  swept, and the axis is not benign.
+* **No policy has been trained**, on this artifact or entry 71's.
 
 ---
 
