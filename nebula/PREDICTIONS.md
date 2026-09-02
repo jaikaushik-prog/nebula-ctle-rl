@@ -12691,3 +12691,72 @@ That is the real price of the block and it is affordable here.
   compression number was taken at unity input gain, where the artefact does not
   bite, so **no committed result is invalidated**; but any future work that
   reduces input gain must scale the sweep or it will measure the instrument.
+
+### CORRECTION to entry 74, same session (2026-09-02). **"The spec undershot; the requirement is ~9.5 dB" was WRONG. The spec was right and conservative: the 3 dB channel clears at 4.61 dB.**
+
+Appended rather than edited — nothing above an outcome heading is changed.
+
+    artifact: experiments/atten_verify_results.json
+    reproduced by: python -m nebula.experiments.exp_atten_verify --run
+    9 points, 0.1 min, TT, one bank code, switches BYPASSED
+
+    code  design  realised   demand    limit  ratio   3dB  12dB   noise
+    None    0.00      0.00   1805.1   1110.5   1.63  fail    OK  0.2142
+       0   -0.00     -0.04   1858.9   1110.5   1.67  fail    OK  0.2719
+       1    1.14      1.12   1628.4   1110.2   1.47  fail    OK  0.3027
+       2    2.14      2.17   1442.8   1112.0   1.30  fail    OK  0.3339
+       3    3.05      3.08   1298.7   1111.6   1.17  fail    OK  0.3647
+       4    3.86      4.04   1162.4   1109.8   1.05  fail    OK  0.3981
+       5    4.61      4.78        -        -      -    OK    OK  0.4289
+       6    5.30      5.48        -        -      -    OK    OK  0.4603
+       7    5.93      6.12        -        -      -    OK    OK  0.4911
+
+### What was actually wrong: MY diagnostic, not the sizing
+
+Entry 74's *"the realised attenuation is smaller than the divider ratio implies
+(`g_dc_db` moved 3.43 dB for a nominal 5.93 dB divider) and why is unresolved"*
+is now resolved, and the cause was in the ad-hoc fixed divider I substituted to
+isolate the physics, **not** in the bank.
+
+`resistor_geometry` returns an `m` multiplier when a target needs parallel
+instances. My throwaway block emitted `w` and `l` and **dropped `m`**. It asked
+for a 153.1 ohm shunt, which needs `m = 2`, and emitted one **306.2 ohm**
+instance. That gives `A = 306.2 / (150 + 306.2) = 0.671`, i.e. **3.47 dB** —
+against the 3.43 dB measured. The discrepancy was mine, to within 0.04 dB.
+
+**The bank's own legs were never affected**: all three are `m = 1` and realise
+their design values to 0.01 dB (1054.92 / 519.23 / 251.33 ohm against
+1054.93 / 519.21 / 251.35 asked). The realised-vs-design column above tracks to
+within 0.2 dB at every code.
+
+`attenuator_block` now emits `_m_suffix(geo.m)` — the repo's ONE definition of
+this, ` m=` and never `mult=` (G56) — and three tests gate it, including one
+that parses the emitted text back and checks the ohms.
+
+### What the corrected measurement says
+
+* **The requirement is 4.61 dB, not 9.5 dB.** Code 5 is the first that clears
+  3 dB while holding 12 dB. **The derived spec of 5.94 dB was correct and
+  carried ~1.3 dB of margin** — the opposite of undershooting.
+* **The limit is constant: 1109.8 - 1112.0 mVpp across every code**, a spread of
+  0.2 %. This is entry 73's mechanism confirmed by its converse, now on eight
+  points rather than two: trimming `RL` scales demand *and* capability together;
+  attenuating the input scales **demand alone**.
+* **Noise 0.2142 -> 0.4911 mVrms** at the top code (2.29x), against S5's
+  1.5 mVrms — 3.1x margin retained.
+* Code 0 is very slightly *worse* than no attenuator at all (demand 1858.9 vs
+  1805.1, `g_dc` +0.04 dB). The series arm is present with no shunt, so it
+  attenuates nothing and adds a small pole. Recorded, not chased: it is 3 % and
+  code 0 is not a setting anyone would select on a short channel.
+
+### What still stands from entry 74, unchanged
+
+* **Defect 1 is unresolved.** The NMOS shunt switches are off at `VCM = 1.5 V`
+  (`Vgs = 0.3 V`). Everything above is measured with `switched=False`, the legs
+  wired straight to `cm`. **That is an instrument, not a deliverable** — a fixed
+  pad cannot adapt, and the variable block still needs a switch that works.
+* **G140 stands and is reinforced.** Every row above uses
+  `vid_max = 0.8 / A`. Without it the limit collapses with the attenuation and
+  the ratio pins near 1.13, which is what produced entry 74's wrong conclusion
+  in the first place.
+* **No coverage number.** One bank code, TT, one load.

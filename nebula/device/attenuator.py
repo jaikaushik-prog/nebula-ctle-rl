@@ -146,10 +146,32 @@ def code_for(required_x: float) -> int:
 
 
 def attenuator_block(code: int, node_p: str = "inx", node_n: str = "iny",
-                     gate_p: str = "inp", gate_n: str = "inn") -> str:
-    """The SPICE text for one code. **All legs emitted, enabled ones switched on.**"""
+                     gate_p: str = "inp", gate_n: str = "inn",
+                     switched: bool = True) -> str:
+    """The SPICE text for one code. **All legs emitted, enabled ones switched on.**
+
+    `switched=False` wires the ENABLED legs straight to `cm` and omits the
+    disabled ones and every switch. That is the divider with an ideal switch --
+    a fixed pad at this code's attenuation.
+
+    **It exists because the switch does not work** (entry 74 defect 1: the NMOS
+    sits at `Vgs = 0.3 V` at `VCM = 1.5 V` and never turns on). Separating the
+    two lets the *attenuation* be measured while the *switching* is still
+    unsolved, instead of one unknown hiding behind the other. It is a
+    measurement instrument, not a deliverable: a fixed pad cannot adapt.
+    """
     if not 0 <= code < N_CODES:
         raise ValueError(f"code {code} outside 0..{N_CODES - 1}")
+    # **The multiplier is NOT optional.** `resistor_geometry` returns `m > 1`
+    # whenever the target needs parallel instances, and dropping it emits a
+    # resistor `m` times too large. That is exactly what happened on the first
+    # build: a 153.1 ohm shunt asked for `m = 2`, was emitted as one 306.2 ohm
+    # instance, and the divider realised 3.47 dB where 5.93 dB was designed --
+    # which read as "the sizing model is wrong" until the geometry was printed.
+    # `_m_suffix` is the ONE definition of this (rule 9); it emits ` m=`, never
+    # `mult=` (G56), and `netlist_gates` enforces that on the assembled text.
+    # Imported inside the function because `sky130_runner` imports this module.
+    from nebula.device.sky130_runner import _m_suffix
     ser = resistor_geometry(RSER_OHM, RES_HIGH_PO)
     lines = [
         f"* Input attenuator (D11), code {code} of {N_CODES - 1}: "
@@ -158,19 +180,23 @@ def attenuator_block(code: int, node_p: str = "inx", node_n: str = "iny",
         "* channel (1.98x). Entry 73 measured why a load trim cannot do this:",
         "* RL scales the signal and the headroom together.",
         f"Xatt_sp {node_p} {gate_p} 0 {ser.subckt} "
-        f"w={ser.w_um:g} l={ser.l_um:g}",
+        f"w={ser.w_um:g} l={ser.l_um:g}{_m_suffix(ser.m)}",
         f"Xatt_sn {node_n} {gate_n} 0 {ser.subckt} "
-        f"w={ser.w_um:g} l={ser.l_um:g}",
+        f"w={ser.w_um:g} l={ser.l_um:g}{_m_suffix(ser.m)}",
     ]
     for bit in range(N_BITS):
         on = bool(code & (1 << bit))
         g = "vdd" if on else "0"
+        if not switched and not on:
+            continue                       # ideal switch: an off leg is absent
         geo = resistor_geometry(leg_resistance_ohm(bit), RES_HIGH_PO)
         for side, gate in (("p", gate_p), ("n", gate_n)):
-            mid = f"att_{side}{bit}"
+            mid = f"att_{side}{bit}" if switched else "cm"
             lines.append(
                 f"Xatt_r{side}{bit} {gate} {mid} 0 {geo.subckt} "
-                f"w={geo.w_um:g} l={geo.l_um:g}")
+                f"w={geo.w_um:g} l={geo.l_um:g}{_m_suffix(geo.m)}")
+            if not switched:
+                continue
             # Emitted whether or not it is on, so a disabled leg still presents
             # its switch capacitance to the input node.
             lines.append(
@@ -179,12 +205,12 @@ def attenuator_block(code: int, node_p: str = "inx", node_n: str = "iny",
     return "\n".join(lines)
 
 
-def netlist_fields(code: Optional[int]) -> dict:
+def netlist_fields(code: Optional[int], switched: bool = True) -> dict:
     """What `assemble_netlist` needs. `None` -> the historical deck, unchanged."""
     if code is None:
         return {"in_p": "inp", "in_n": "inn", "atten_block": ""}
     return {"in_p": "inx", "in_n": "iny",
-            "atten_block": attenuator_block(int(code))}
+            "atten_block": attenuator_block(int(code), switched=switched)}
 
 
 #: The measured requirement per channel, and what each code delivers. Recorded

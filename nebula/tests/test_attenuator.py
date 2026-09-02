@@ -150,3 +150,56 @@ def test_an_out_of_range_code_raises():
         A.attenuator_block(A.N_CODES)
     with pytest.raises(ValueError):
         A.attenuation(-1)
+
+
+# ── the multiplier gate ──────────────────────────────────────────────────────
+
+
+def test_a_geometry_needing_a_multiplier_EMITS_it(monkeypatch):
+    """**The gate for entry 74's second slip.**
+
+    `resistor_geometry` returns `m > 1` whenever a target needs parallel
+    instances. Dropping it emits a resistor `m` times too large, and the deck
+    still simulates — the divider just realises the wrong ratio. That happened
+    once: a 153.1 ohm arm needing `m = 2` was emitted as one 306.2 ohm instance,
+    so a nominal 5.93 dB divider delivered 3.47 dB, and it read as "the sizing
+    model is wrong" until the geometry was printed.
+
+    153.1 ohm is chosen because it is exactly the value that did it.
+    """
+    from nebula.device.passives import RES_HIGH_PO, resistor_geometry
+    assert resistor_geometry(153.1, RES_HIGH_PO).m == 2, (
+        "153.1 ohm no longer needs m=2; pick another value that does")
+    monkeypatch.setattr(A, "RSER_OHM", 153.1)
+    txt = A.attenuator_block(0)
+    series = [l for l in txt.splitlines() if l.startswith("Xatt_sp ")]
+    assert series and " m=2" in series[0], series
+
+
+def test_the_multiplier_is_m_not_mult(monkeypatch):
+    """`m=`, never `mult=` — SKY130 accepts `mult` and ignores it (G56)."""
+    monkeypatch.setattr(A, "RSER_OHM", 153.1)
+    txt = A.attenuator_block(3)
+    assert "mult" not in txt and "mf=" not in txt
+    assert " m=2" in txt
+
+
+def test_every_emitted_resistor_realises_its_designed_value(monkeypatch):
+    """End to end: parse the emitted geometry back and check the ohms.
+
+    This is the invariant the multiplier gate protects — stated on the text
+    that actually reaches ngspice rather than on the geometry object.
+    """
+    from nebula.device.passives import RES_HIGH_PO, resistor_geometry
+    txt = A.attenuator_block(7)
+    for line in txt.splitlines():
+        if not line.startswith("Xatt_r"):
+            continue
+        parts = dict(p.split("=") for p in line.split() if "=" in p)
+        m = int(parts.get("m", 1))
+        bit = int(line[7])   # Xatt_r<side><bit>
+        want = A.leg_resistance_ohm(bit)
+        geo = resistor_geometry(want, RES_HIGH_PO)
+        assert float(parts["w"]) == pytest.approx(geo.w_um)
+        assert float(parts["l"]) == pytest.approx(geo.l_um)
+        assert m == geo.m, f"multiplier dropped on {line}"
