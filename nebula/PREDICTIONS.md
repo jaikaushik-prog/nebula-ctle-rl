@@ -11754,3 +11754,55 @@ exactly where entry 53 measured conversion dropping to 50 %.
   more useful statement than "idx 14 is hard", and it closes the coverage chase
   honestly: the next real improvement would be a fit-quality predictor, which
   does not exist and is not built here.
+
+### OUTCOME, entry 68 (2026-09-02). **Accepted at rank 39 and it VERIFIES 45/45 -- but `AUTO_K` is 5, so the shipped tool does not find it.**
+
+    idx 14, 10 dB @ 1.921 GHz, k=40 analytic scan, 160 decks
+    accepted at rank 39; verified 45/45, worst +14.0758
+    artifact: experiments/idx14_deep_results.json
+
+    rejections among the 38 tried before it:
+      16 (42.1 %)  swing compression
+      13 (34.2 %)  pole-zero FIT rejected
+       7 (18.4 %)  S3_peaking_match
+       2 ( 5.3 %)  S3_f_peak_match
+
+| | prediction | outcome | |
+|---|---|---|---|
+| **Q1** | some candidate in the top 40 passes the screen | **rank 39** | **HIT** |
+| **Q2** | fit rejection stays above 25 % of rejections | **34.2 %** | **HIT** |
+| **Q3** | any acceptance is verified before it counts | honoured; **45/45** | **HELD** |
+
+### The number, and the reason it is not yet a shipped number
+
+**A design meeting 10 dB @ 1.921 GHz at all 45 mandated corners EXISTS and is
+verified.** Measured coverage is therefore **14 of 16**.
+
+**`design.py` still delivers 13.** `AUTO_K` is **5**, and this candidate is at
+**rank 39**. Raising `AUTO_K` to 40 is exactly what **entry 53 forbade** -- it
+measured deep acceptances (ranks 17-26) converting at **50 %** against shallow
+ones at 83 %, and one deep proposal made a request *worse* (44/45 -> 37/45). One
+deep acceptance converting here is `n = 1` and does not overturn that.
+
+### The honest options, none taken here
+
+* **Leave `AUTO_K` at 5.** Coverage stays 13 shipped, 14 measured. Safe, and the
+  gap is stated.
+* **Escalate depth only on failure** -- try k=5, and if nothing is accepted go
+  to k=40 *before* falling back to the ~1 085-deck search. It costs 160 decks on
+  exactly the requests that would otherwise pay 1 085, and it cannot make a
+  shallow acceptance worse because it only runs when there is none. **This is
+  the promising one and it is NOT done here**: it changes the delivered path and
+  needs its own pre-registered end-to-end measurement, as rows 4r and 4y did.
+* **Raise `AUTO_K` globally.** Rejected: 8x the proposal cost on every request,
+  against entry 53's measured conversion penalty.
+
+### What entry 68 establishes independently of coverage
+
+**The proposer's largest single failure mode is the validity of its own model.**
+Across entry 64 it was 29.8 % of rejections; here, over 38 candidates, **34.2 %**
+-- `pole-zero fit rejected`, residuals 0.506 to 0.990 dB against a 0.50 dB gate.
+The inversion assumes a one-zero/two-pole circuit and roughly a third of what it
+proposes is not one in SPICE, which it has no way to detect from inside the
+model. A **fit-quality predictor** would attack that directly; none exists, and
+none is built here.
