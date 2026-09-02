@@ -17,12 +17,12 @@
 > decisions that are OPEN and human-only, and what to do next. It supersedes
 > `nebula/NEXT_STEPS.md`. This file remains the full state of record.
 
-Last updated: **2026-09-02** (session 36, entry 83 implementation: the owner's
+Last updated: **2026-09-02** (session 36, entry 83 pre-SPICE repair: the owner's
 approved **focused 7.0 dB top-code diagnostic** is built and tested but has not
-run. The range is opt-in through the physical divider and G140 swing scaling;
-D11's default code-7 deck is pinned to its pre-change SHA-256. Exactly 16
-real-PMOS invocations and six outcome gates remain fixed. Focused 73 passed;
-full non-slow 2,582 passed, 13 deselected, 2 warnings. D11 remains 5.933 dB.)
+run. Its first command stopped before any simulator call on a validator that
+mistook a request ID repeated across corners for a duplicate. Identity is now
+`(corner, request_id)` and the regression suite is **2,583 passed**. The fixed
+16 real-PMOS invocations and six gates are unchanged; D11 remains 5.933 dB.)
 
 Earlier session 22p: (**THE REPORT EXISTS** --
 `nebula/report/Nebula_CTLE_Report.pdf`, **10 pages, 9 figures, 598 KB**,
@@ -1622,7 +1622,7 @@ Plus: git init, .gitignore, 28 tests, Wilson-bound BER reporting.
   5.933 dB until this focused probe and a later full-bank/PVT adoption
   experiment both pass.
 
-- Tests: **2582 passing, 13 deselected, 2 warnings** (session 36, entry 83) —
+- Tests: **2583 passing, 13 deselected, 2 warnings** (session 36, entry 83) —
   `python -m pytest tests nebula/tests -q -m "not slow"`.
   (Was 65 + 267 = 332 at the start of session 9; 430 at the end of it; 444
   after 10b; 528 after 11; 618 after 12b; 679 after 13; 1007 after 16; 1246
@@ -13917,3 +13917,17 @@ regression. Seven new tests plus the G146 retry gate raise the suite from 2,574
 to **2,582 passed, 13 deselected, 2 warnings in 382.17 s**. The focused set is
 **73 passed**. Commit this implementation before launching the unchanged
 16-invocation command.
+
+### 2026-09-02 - session 36 (entry 83 pre-SPICE plumbing correction). **The first command launched zero simulations; request identity is corner-qualified.**
+
+The first `--run` stopped in `critical_tasks()` before the timer, measurement
+loop or artifact write. It rejected request ID 12 as a duplicate because that
+ID legitimately appears at several PVT corners. A new test reproduced the
+failure. Identity is now `(corner, request_id)`, while physical simulations
+still collapse by `(corner, setting)` exactly as registered.
+
+No measurement exists to tune against: zero SPICE invocations ran and
+`atten_range_probe_results.json` does not exist. The 7.0 dB value, 14 critical
+points, 16 request pairs, two controls and all six thresholds are unchanged.
+The post-repair complete non-slow suite is **2,583 passed, 13 deselected, 2
+warnings in 312.93 s**. Commit this repair, then rerun the same command.

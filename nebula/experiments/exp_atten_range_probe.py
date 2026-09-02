@@ -70,9 +70,10 @@ def critical_tasks(diagnosis: dict) -> list[CriticalTask]:
     seen_requests = set()
     for row in diagnosis.get("unserved", []):
         request_id = int(row["request_id"])
-        if request_id in seen_requests:
-            raise ValueError(f"duplicate diagnosis request_id {request_id}")
-        seen_requests.add(request_id)
+        request_key = (str(row["corner"]), request_id)
+        if request_key in seen_requests:
+            raise ValueError(f"duplicate diagnosis corner/request {request_key}")
+        seen_requests.add(request_key)
         setting = int(row["least_extra_setting"])
         atten_code, bank_code = J.split_setting(setting)
         if int(row["least_extra_atten_code"]) != atten_code:

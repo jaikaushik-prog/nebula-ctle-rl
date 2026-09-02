@@ -63,6 +63,18 @@ def test_diagnosis_collapses_requests_to_unique_physical_points():
     assert all(t.atten_code == 7 for t in tasks)
 
 
+def test_request_ids_may_repeat_at_different_corners():
+    diagnosis = _diagnosis()
+    diagnosis["unserved"].append({
+        "corner": "ff/0.95/0C", "request_id": 12,
+        "target_peaking_db": 10.0, "target_f_peak_hz": 1.4e9,
+        "least_extra_setting": 490, "least_extra_atten_code": 7,
+    })
+    tasks = P.critical_tasks(diagnosis)
+    assert len(tasks) == 3
+    assert sum(len(task.request_ids) for task in tasks) == 4
+
+
 def test_analysis_scores_every_registered_gate():
     rows = [
         _critical(35, [8]), _critical(43, [12, 13]),

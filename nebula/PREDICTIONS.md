@@ -13462,3 +13462,11 @@ analysis gate was watched fail on a request miss and a 12 dB regression.
 Focused tests are **73 passed**; the complete non-slow suite is **2,582 passed,
 13 deselected, 2 warnings in 382.17 s**, against entry 82's unchanged baseline
 of 2,574. No entry-83 SPICE point has run yet.
+
+**Pre-SPICE plumbing correction.** The first command stopped before its timer,
+loop or any simulator call because the validator treated request ID 12 at two
+different corners as a duplicate. Request identity is `(corner, request_id)`;
+the one-line correction and a cross-corner repeated-ID regression test are now
+green. The predictions, 7.0 dB circuit, 14 tasks and 16-invocation membership
+are unchanged. Complete suite: **2,583 passed, 13 deselected, 2 warnings in
+312.93 s**. No result artifact exists and no entry-83 SPICE point has run.
