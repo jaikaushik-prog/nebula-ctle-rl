@@ -1130,6 +1130,10 @@ signaling, ADC-based DSP receiver, 28 nm CMOS reference parameters).
 │   │                       test goes red until someone reruns the module
 │   │                       (rule 9, and the answer to G32). `--write` to
 │   │                       regenerate; no argument to report and check.
+│   │                       D11 adds a generated PFET-only derivative: 25
+│   │                       one-section libraries plus dependency-closed
+│   │                       `pfet_lod` and `pfet_invariant` supplements. The
+│   │                       ordinary trim remains byte-identical (entry 78).
 │   ├── experiments/lib_cost.py  NEW (2026-08-12, session 19). What the trim
 │   │                       bought, on 50 real designs through run_point, with
 │   │                       G71's full protocol (discarded warm-up, arm order
@@ -1863,6 +1867,13 @@ Plus: git init, .gitignore, 28 tests, Wilson-bound BER reporting.
   not need). **Prerequisite finding: the §6 design equations over-predict the
   Nyquist boost by +0.77 to +1.47 dB** (they neglect `r_o`), which put the first
   version of that table 28% high — see G60.
+- **(nebula) D11 input attenuator is COMPLETE at TT, one load, one CTLE bank
+  code (entry 78; no coverage number).** The opt-in 3-bit bank uses real
+  `pfet_01v8` switches with measured `Ron*W = 4086.824988 ohm.um` and W/nf
+  40/1, 80/2, 160/4. All nine members instantiate. Code 5 is first to clear
+  the 3 dB channel while the 12 dB channel stays scorable; rejected-row limits
+  span 1110.5-1114.4 mVpp and the switchless reproduction gate passes. PFET
+  model cost is paid only when `atten_code` is present.
 - Reference operating point: 3 cm (9 dB) channel, SNR 26 dB, CTLE 6 dB,
   Alexander: BER ≈ 1e-4; SNR 28: 0 errors (bound ~1e-4→ 8.7e-5 at 30k syms).
 - Loss sweep (SNR 28, CTLE 6 dB): clean ≤12 dB; ~1e-2 at 24 dB; lock lost
@@ -1945,6 +1956,10 @@ Plus: git init, .gitignore, 28 tests, Wilson-bound BER reporting.
   Real PCIe traffic is 8b/10b-coded and run-length-limited, so the true peak
   excursion is smaller. Convention C is the right bound; the gap to typical
   traffic is unmeasured.
+- **(nebula) The real-PMOS input attenuator has no coverage result.** Entry 78
+  verifies one TT load and one CTLE bank code only. It may not be described as
+  PVT-qualified, added to entry 69's 14-of-16 delivered coverage, or compared
+  with entry 71's 8-of-16 wide-bank result.
 - JTOL amplitude grid is coarse (0.05/0.1/0.2/0.4/0.7/1.0 UI).
 - Power numbers are PLACEHOLDERS (literature-based), never simulated.
 - rtl/, verification/, veriloga_models/, matlab_models/, optical_dsp.py,
@@ -1955,6 +1970,13 @@ Plus: git init, .gitignore, 28 tests, Wilson-bound BER reporting.
 
 **-1. NEBULA competition track (ACTIVE, started 2026-08-03).** Separate
    project, own contract (`CLAUDEwa.md`), hard deadline 15 Sept 2026.
+   **CURRENT 2026-09-02:** D11 is complete at its registered TT/one-load scope
+   (entry 78, 7 of 7). Do not expand that into a coverage statement without a
+   separately authorised preregistration. The standing owner item is now
+   urgent: `nebula/report/Nebula_CTLE_Report.pdf` is about three weeks behind,
+   still says one simulation / under five seconds rather than 17 / ~22 s,
+   contains one stale 8-of-16 statement, says SAC zero times, and reports two
+   test counts. It has been deferred twice; 13 days remain.
    DONE: layer interfaces + mocks + 251 tests; **G0 PASSED**
    (`nebula/G0_RESULTS.md`); NRZ retarget audit written
    (`nebula/NRZ_RETARGET_AUDIT.md`); bounds re-derived; robust geometry
@@ -13541,3 +13563,42 @@ focused tests pass**, including the real PMOS instantiation probe.
 No `Ron`, switch width/finger count, resistor geometry, topology, G140 sweep,
 or verification threshold changed. The nine-point entry-78 SPICE run has not
 run yet; run it next and report any miss without tuning.
+
+### G141. A model-card include is not an instantiation-complete library; carry its parameter context too
+
+Entry 77 added the correct `pfet_01v8` corner and mismatch cards, so the
+library parsed, but the first PMOS instance failed on
+`sky130_fd_pr__pfet_01v8__wlod_diff`. The full SKY130 corner supplies that
+context indirectly; the hand-trimmed library did not. An include-count test
+therefore proves only card presence, not instantiability.
+
+**Rule:** when adding a device family to a trimmed PDK library, derive the
+parameter definitions reached by that family's model files, close them over
+right-hand-side dependencies, and run a minimal real-device instantiation
+gate. The gate must inspect simulator text, not exit status. Keep the context
+off ordinary paths until its parse cost is measured.
+
+### 2026-09-02 - session 35 (entry 78 outcome). **D11 COMPLETE: 7 of 7 predictions hit and the real-PMOS reproduction gate passes.**
+
+The unchanged nine-point command completed in **3.7357 s** and exited zero.
+Every requested member (`None`, codes 0-7) is present with `device_ok=True`.
+Code **5** is again the first that clears the 3 dB channel while holding the
+12 dB channel: 4.60898 dB designed, **4.58218 dB realised**. Rejected-row
+limits span **1110.5-1114.4 mVpp**, a 3.9 mV spread. The maximum absolute
+realised-attenuation delta from the preserved switchless table is **0.206880
+dB**, inside the committed 0.25 dB gate; all nine long-channel rows are
+scorable. The ordinary generated trims have zero diffs, so no-attenuator runs
+retain their byte-identical path and avoid entry 76's measured +25.4% cost.
+
+Artifact: `experiments/atten_verify_switched_results.json`. Entry 77's failed
+version of that path remains in commit `666b322`; the live artifact is the
+successful entry-78 result.
+
+Verification after the change: `test_pdk_trim.py` including slow full-library
+equivalence checks, **24 passed in 107.57 s**; full system-Python non-slow
+suite, **2,549 passed, 13 deselected in 279.39 s**. Pre-change baseline was
+2,522 passed, 13 deselected.
+
+Honest scope: **TT, one load, one CTLE bank code. No coverage number.** No PVT
+or 135-point attenuator sweep was run, and this result may not be combined with
+entry 69 or entry 71.

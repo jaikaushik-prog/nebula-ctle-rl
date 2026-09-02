@@ -8,15 +8,15 @@ that a reader can reconstruct from the code.
 **Read `CONTINUE_HERE.md` §§4, 5 and `HANDOFF.md` §9 gotchas before touching
 anything.** This file does not replace them.
 
-**FRESH CHAT? READ `nebula/SESSION_27_HANDOFF.md` FIRST** — it is where
-session 27 stopped, mid-experiment, and it names the one command to run next.
+**FRESH CHAT? READ `nebula/SESSION_34_HANDOFF.md` FIRST** — it is the map of
+the tuning-bank and input-attenuator line through decision D11.
 
 **If you are here to build the SAC + CMA-ES hybrid, read
 `nebula/NEXT_AGENT_SAC.md`** — it is the implementation brief, and its §2
 carries three design traps found by measurement that will otherwise cost a day
 each.
 
-**Updated 2026-08-22, session 26c.** 24 days to the 15 Sept deadline.
+**Updated 2026-09-02, session 35.** 13 days to the 15 Sept deadline.
 
 ---
 
@@ -36,7 +36,7 @@ human in the loop. Deliverables that already exist and run:
 
 | | state |
 |---|---|
-| Test suite | **2433 passed**, 13 deselected, 346 s, measured 2026-09-02 (session 33); one timing-flaky test, **G136** (`python -m pytest tests nebula/tests -q -m "not slow"`). The **system** interpreter, not the conda env — that env has no `torch`, and `ngspice_con.exe` is found by absolute path anyway (G69) |
+| Test suite | **2549 passed**, 13 deselected, 279.39 s, measured 2026-09-02 (session 35); one timing-flaky test, **G136** (`python -m pytest tests nebula/tests -q -m "not slow"`). The **system** interpreter, not the conda env — that env has no `torch`, and `ngspice_con.exe` is found by absolute path anyway (G69) |
 | Gates G0–G2 | passed |
 | G3 (RL beats random + grid) | **fails one clause** — RL is indistinguishable from random at every budget |
 | G4 (corner-robust design) | met on `V1_SPECS` (7 rows); **not** on the 11 competition rows |
@@ -46,8 +46,9 @@ human in the loop. Deliverables that already exist and run:
 | **Wide bank, one fixed part** | **8 of 16** requests served at all 45 mandated corners, `V6_SPECS`, 64 codes x 45 corners = 2 880 decks (section 5aa; entries 70-71). **Six of the eight need only ONE code**, so the knob is decoration across PVT and load-bearing only across REQUESTS. Not comparable with entry 69's 14 of 16 -- different evaluator and a stricter S4 row |
 | **Channel axis (NEW, entry 72)** | **The stage saturates on SHORT channels.** Scorable points fall 2 117 -> 0 as loss falls 12.0 -> 3.0 dB; even the lowest-boost code over-drives by **1.43x** at 3 dB. No bank code fixes it -- the binding quantity is **total gain**, not peaking. **Gain control (VGA/AGC) is the missing knob**, and every number in this repo was measured at `FUNNEL_LOSS_DB = 12.0`, the family's worst member and this stage's easiest (section 5ab) |
 | **The AGC question (entry 73)** | **The load is NOT a gain knob.** Cutting `rl` to 0.29x of base cut demand AND capability by ~69 %, leaving the compression ratio invariant at **1.48x -> 1.46x**. The missing block is **INPUT attenuation ahead of the CTLE**, not a load trim (section 5ac). No VGA built -- a topology decision for the owner; the requirement is now one number, **1.44-1.52x at 3 dB** |
+| **Input attenuator (D11)** | **COMPLETE at TT, one load, one CTLE bank code; no coverage number.** A 3-bit real-PMOS bank spans 0-5.93 dB; code **5** (4.61 dB design, 4.58 dB realised) is first to clear the 3 dB channel while the 12 dB channel stays scorable. All nine members instantiate, limits span 1110.5-1114.4 mVpp, and the switchless reproduction gate passes. PFET parse cost is isolated to attenuator runs (sections 5ad-5ae, entries 75-78). |
 | Deliverable output | `design.py --out` writes `design.json`, `design.cir` **and `design_schematic.png`** — a drawn schematic rendered FROM the deck, annotated with the sized values, marked **NOT DELIVERED** when the run did not pass (session 33) |
-| Report | `nebula/report/Nebula_CTLE_Report.pdf`, rebuilt from artifacts. **Its RL chapter stops at PPO and the budget ladder** — entries 34-54 have not reached it |
+| Report | `nebula/report/Nebula_CTLE_Report.pdf` is about **three weeks behind the code**. It still says one simulation / under five seconds instead of 17 / ~22 s, says 8 of 16 once where the delivered path is 14 of 16, never says SAC, and gives two test counts. **Owner has deferred this twice; 15 Sept is 13 days away.** |
 
 ### The two candidate designs
 
@@ -74,7 +75,7 @@ human in the loop. Deliverables that already exist and run:
 | **D8** | **Search on the MANDATED 45-corner grid; report the 135-point load sweep separately** | The slide mandates PVT (5 process × VDD±5% × 0–125 °C = 45) and says nothing about load. See §5 |
 | **D9** | **The competition mentor approved the SAC + CMA-ES hybrid — CONDITIONALLY** (2026-08-26): the approach is fine enough **if the SAC contributes as RL** | **Unblocks `NEXT_AGENT_SAC.md` stages 1–3**, which its §8 item 1 had gated on exactly this answer. **The condition is the deliverable, not a formality** — it does not approve a hybrid in which the policy is decoration and CMA-ES does the work, which is what today's numbers describe. Discharged by `exp_hybrid`'s **accept rate** against the non-RL baseline of **6 of 16 accepted / 35.6 % fewer decks** (entry 32). A SAC proposer that does not beat that has **not** contributed as RL, and reporting that is the honest outcome |
 | **D10** | **Build the tunable bank as the delivered topology, and put the RL on the ADAPTATION problem** (owner, 2026-09-02, session 34). Reading (B) of S3: one sized part plus a switched `Rs`/`Cs` code, chosen per part. **This is a topology change and therefore required a human decision (CLAUDEwa.md sec 8 rule 5).** | Unblocks `exp_tuning_bank` (measured, section 5z) and the adaptation environment. The RL is scored on **trials-to-lock with an asymmetric false-lock penalty**, against an exhaustive control AND a hand-written bisection heuristic -- the matched control entry 47 established as mandatory. Architecture chosen: **wide bank on ONE fixed part**, not a per-request trim bank |
-| **D11** | **Size and build the input attenuator** (owner, 2026-09-02, session 34), as a **parallel** experiment. Entry 73 measured that a load trim cannot fix compression because `RL` scales signal and headroom together; the block must therefore sit **ahead** of the pair | `device/attenuator.py`, opt-in, deck byte-identical when off. Entry 74: **input attenuation works** (3 dB channel scorable at 9.54 dB, 12 dB still OK, noise 0.21 -> 0.48 mVrms), but the derived 6 dB spec **undershot** and the **switched** implementation does not work at `VCM = 1.5 V` (NMOS `Vgs = 0.3 V`). Both stated, neither worked around |
+| **D11** | **Size and build the input attenuator** (owner, 2026-09-02, session 34), as a **parallel** experiment. Entry 73 measured that a load trim cannot fix compression because `RL` scales signal and headroom together; the block must therefore sit **ahead** of the pair | **COMPLETE, entry 78.** `device/attenuator.py` is opt-in and byte-identical when off. The corrected bank uses measured PMOS `Ron*W = 4086.824988 ohm.um`, W/nf 40/1, 80/2, 160/4. Code 5 is first to clear; all nine rows instantiate and the switchless gate passes. Verified only at TT, one load, one CTLE bank code — **no coverage number**. |
 
 ---
 
@@ -2217,17 +2218,31 @@ mutation test removes one section marker and proves the 25-section completeness
 gate fails. **22 focused tests pass. The nine-point entry-78 run has not run
 yet; no circuit value or result threshold changed.**
 
+**Entry 78 outcome -- D11 COMPLETE:** **7 of 7 predictions hit.** All nine
+requested members (`None`, codes 0-7) are present and device-valid. Code **5**
+is the first that clears the 3 dB channel while holding the 12 dB channel:
+4.61 dB designed, **4.58 dB realised**. Every rejected-row limit lies at
+1110.5-1114.4 mVpp, a **3.9 mV** spread. The largest realised-attenuation
+difference from the preserved switchless table is **0.2069 dB**, inside the
+registered 0.25 dB gate; every long-channel row is scorable. Wall clock was
+**3.736 s** and the reproduction gate passed.
+
+The result is deliberately narrow: **TT, one load, one CTLE bank code. It is
+not a coverage number.** The final non-slow suite is **2,549 passed, 13
+deselected** in 279.39 s; the PDK trim suite including its slow full-library
+equivalence checks is **24 passed** in 107.57 s.
+
 ## 6. Next steps, in order
 
-**2026-09-02, session 35 / entry 76:** parse cost is measured **material** at
-+41.4 ms / +25.4%, with exact equivalence and a clean control. Build the
-attenuator-only PFET-capable variant, then emit the measured binary-weighted
-PMOS switches and reproduce entry 74's switchless verification table.
+**2026-09-02, session 35 / entry 78:** D11 is complete at its registered
+TT/one-load scope. Do not turn it into a coverage claim without a separately
+authorised, pre-registered PVT experiment.
 
-**Entry 78 is now the active gate:** add only the missing generated PFET
-parameter context, keeping the ordinary trim unchanged, then rerun the same
-nine-point table. The code-5/limit/attenuation/long-channel thresholds are
-unchanged from entry 77. A miss is reported without tuning.
+**Standing owner item, deferred twice:** refresh
+`report/Nebula_CTLE_Report.pdf`. It is about three weeks behind the code and
+the 15 Sept deadline is 13 days away. It still contains the superseded
+one-simulation/under-five-second claim, one stale 8-of-16 statement, no SAC,
+and inconsistent test counts.
 
 | # | Task | Cost | Status |
 |---|---|---|---|

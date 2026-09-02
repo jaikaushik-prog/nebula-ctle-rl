@@ -13087,3 +13087,37 @@ first failed on the missing supplement and the exact entry-77 undefined
 parameter, then a real ngspice PMOS probe passed after regeneration. **22 focused
 tests pass.** The nine-point production command has not run yet, and no circuit
 constant or registered threshold changed.
+
+### OUTCOME, entry 78 (2026-09-02). **SCORED 7 OF 7. D11 IS INSTANTIABLE AND THE SWITCHLESS REPRODUCTION GATE PASSES.**
+
+    artifact: experiments/atten_verify_switched_results.json
+    scope: TT, one load, one CTLE bank code -- NOT a coverage number
+    membership/device gate: None and codes 0..7, all device_ok=True
+    first clearing code: 5 (4.60898 dB design, 4.58218 dB realised)
+    rejected-row limits: 1110.5..1114.4 mVpp, 3.9 mV spread
+    max |attenuation - switchless|: 0.206880 dB
+    long channel: 9 of 9 scorable
+    ordinary generated-file diffs: zero
+    wall clock: 3.7357 s
+    command exit: 0, reproduction gate PASS
+
+| | prediction | outcome | |
+|---|---|---|---|
+| **Q1** | all nine members device-valid | **all nine present and valid** | **HIT** |
+| **Q2** | first clearing code 5 | **code 5** | **HIT** |
+| **Q3** | 1105-1115 mVpp, spread <=5 mV | **1110.5-1114.4, spread 3.9** | **HIT** |
+| **Q4** | every attenuation delta <=0.25 dB | **maximum 0.206880 dB** | **HIT** |
+| **Q5** | long channel scorable at all nine | **9 of 9** | **HIT** |
+| **Q6** | ordinary trim byte-identical; supplements PFET-only | **zero ordinary diffs; both includes PFET-only** | **HIT** |
+| **Q7** | under 120 s | **3.7357 s** | **HIT** |
+
+The repair was exactly the registered plumbing change: two dependency-closed
+parameter supplements, no circuit-value or threshold change. The real bank
+does not reproduce every analog number bit-for-bit -- that was never the gate
+and switch parasitics are real -- but it reproduces the decision table within
+the committed attenuation tolerance and preserves the constant-limit result.
+The failed entry-77 JSON remains recoverable at commit `666b322`; the current
+artifact path now holds this successful rerun.
+
+**D11 is complete only at the scope above.** No 45-corner or 135-point run was
+performed, and the attenuator still has **no coverage number**.
