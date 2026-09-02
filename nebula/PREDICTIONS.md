@@ -13583,3 +13583,17 @@ time is 15 s or more.**
   can serve all 16 previously unsolved cases. This authorises a separately
   registered full-bank/45-corner verification; it still does not by itself
   replace D11's production range or authorise RL training.
+
+**Pre-run implementation certificate.** `exp_atten_cs_probe.py` reads the
+hash-pinned entry-83 artifact, derives only its three frequency-only misses,
+requires C1 and moves exactly one step to C2. It refuses overwrite and scores
+all six gates without a second measurement path. The new fail-capable tests
+were watched fail before the module existed; **6/6 pass**, and the combined
+attenuator/CTLE focused group is **80/80**.
+
+The complete non-slow run produced **2,588 passes, one timing-only failure, 13
+deselected and 2 warnings**. The failure was the existing `ll` trimmed-library
+speed assertion: identical circuit values, but one loaded run measured 4.22 s
+trimmed versus 3.79 s untrimmed. The exact node passed alone in **4.25 s**.
+This is the same cache/load class already recorded for `ss_hh`; no PDK, trim or
+simulator code changed. No entry-84 SPICE point has run.

@@ -17,13 +17,13 @@
 > decisions that are OPEN and human-only, and what to do next. It supersedes
 > `nebula/NEXT_STEPS.md`. This file remains the full state of record.
 
-Last updated: **2026-09-03** (session 37, entry 84 pre-registration: the owner
-clarified entry 83's scope and approved exactly three adjacent-C2 measurements.
-Entry 83's 13/16 full-system Q4 stays a recorded miss, while 7 dB is retained
-as the successful compression candidate because it made all 14/14 physical
-points scorable with noise, eye and 12 dB controls intact. The new probe keeps
-7 dB fixed and tests R6C2/R5C2/R6C2 at the three high-frequency misses. D11's
-production range remains unchanged pending later full verification.)
+Last updated: **2026-09-03** (session 37, entry 84 implementation: the owner's
+three-row adjacent-C2 probe is built and tested but has not run. It reads the
+hash-pinned entry-83 artifact, keeps 7 dB fixed and permits only C1-to-C2 at
+R6/R5/R6. Focused 6/6 and combined 80/80 pass. The full suite had one known
+timing-only `ll` trim-speed reversal with identical values; that exact node
+passed alone. D11's production range remains unchanged pending full
+verification.)
 
 Earlier session 22p: (**THE REPORT EXISTS** --
 `nebula/report/Nebula_CTLE_Report.pdf`, **10 pages, 9 figures, 598 KB**,
@@ -1424,6 +1424,9 @@ signaling, ADC-based DSP receiver, 28 nm CMOS reference parameters).
 │   │                       diagnostic: 14 critical circuit/corner points plus
 │   │                       two TT controls, full V6/noise/3 dB/12 dB gates.
 │   │                       Passing makes a candidate; it does not adopt one.
+│   ├── experiments/exp_atten_cs_probe.py  Entry 84's three-row closure test:
+│   │                       keeps 7 dB fixed and moves only the three measured
+│   │                       high-side frequency misses from C1 to C2.
 │   │                       NOTE: this tree lags for the session 23-25 files —
 │   │                       exp_coverage.py, adaptive_screen.py, search_score.py
 │   │                       and runlock.py are documented in §9 and §12 but are
@@ -1626,10 +1629,13 @@ Plus: git init, .gitignore, 28 tests, Wilson-bound BER reporting.
   verification.
 - **Nebula adjacent-Cs probe (D13, entry 84):** the owner approved exactly
   three rows, keeping 7 dB and moving R6C1/R5C1/R6C1 to R6C2/R5C2/R6C2 at the
-  three remaining high-side frequency misses. Registered before implementation
-  or SPICE; not yet run.
+  three remaining high-side frequency misses. The hash-pinned, anti-overwrite
+  instrument is implemented; focused 6/6 and combined 80/80 tests pass. It has
+  not run.
 
-- Tests: **2583 passing, 13 deselected, 2 warnings** (session 36, entry 83) —
+- Tests: **2589 non-slow collected** (entry 84): latest full run **2588 passed
+  plus one timing-only `ll` failure**, 13 deselected, 2 warnings; the exact
+  failed node passed alone. Entry-83 clean baseline: 2583 passed. —
   `python -m pytest tests nebula/tests -q -m "not slow"`.
   (Was 65 + 267 = 332 at the start of session 9; 430 at the end of it; 444
   after 10b; 528 after 11; 618 after 12b; 679 after 13; 1007 after 16; 1246
@@ -13986,3 +13992,21 @@ controls are fully scorable and miss only `S3_f_peak_match` on the high side by
 movement, 3/3 full V6 compliance at 3 dB, 3/3 12 dB scorability, the 1.5 mV_rms
 noise limit and a 15 s cost ceiling. Source artifact SHA-256:
 `9A06AA65D71B463D4F75CC2072D82BC845799BAF6FE073F66C25C069ED2F358B`.
+
+### 2026-09-03 - session 37 (entry 84 implementation, before measurement). **The three-row C2 probe is built; no entry-84 SPICE point has run.**
+
+`exp_atten_cs_probe.py` verifies entry 83's exact file SHA-256, derives only its
+three scorable frequency-only failures, requires each old code to be C1, and
+allows exactly one move to C2. It reuses entry 83's single measurement path,
+including the 7.0 dB physical divider and G140 scaling, and writes a distinct
+anti-overwrite artifact. Its analysis independently gates membership, downward
+frequency movement, 3/3 full V6 recovery, 3/3 12 dB scorability, noise and
+cost. Six tests were red before the module existed and now pass; the combined
+focused attenuator/CTLE group is **80 passed**.
+
+The full non-slow invocation produced **2,588 passed, one timing-only failure,
+13 deselected and 2 warnings in 720.98 s**. The failing `ll` PDK-trim check
+produced identical circuit values but timed trimmed 4.22 s versus untrimmed
+3.79 s under load. Its exact isolated rerun passed in 4.25 s. This is the known
+machine-cache timing class previously seen at `ss_hh`; no PDK, trim or runner
+code changed. Commit the implementation before launching the fixed three rows.
