@@ -12424,3 +12424,84 @@ problem D10 framed remains **unmeasured** rather than refuted on the channel
 axis — but it cannot be measured on a stage that saturates across most of the
 channel family. **Gain control is now upstream of the RL question**, not
 downstream of it.
+
+## 73. Session 34 -- **the AGC gate: is gain control a THIRD BANK AXIS, or does it really need a new stage?**
+
+**Written 2026-09-02 BEFORE the run.** Authorised by the owner as a **parallel**
+experiment: additive, opt-in, and it changes no committed number. The delivered
+path is untouched.
+
+### Why a switched load before a VGA
+
+Entry 72 measured the stage saturating on every channel shorter than ~9 dB, at
+**every** code including the lowest-boost one (1.43x over the linear limit), and
+concluded the missing knob is **gain**, not equalisation. The textbook answer is
+a VGA/AGC -- a new topology block, new devices, and every number in this
+repository re-verified.
+
+The design equations say something much cheaper may work first:
+
+    peaking   ~ 20 log10(1 + (gm + gmbs) Rs / 2)      <- RL does NOT appear
+    DC gain   ~ gm RL / (1 + (gm + gmbs) Rs / 2)      <- proportional to RL
+    output    ~ I_d * RL                               <- proportional to RL
+    pole      = 1 / (2 pi RL CL)                       <- inversely proportional
+
+**`rl` is already an axis of the box** (50-800 ohm, base **254.63 ohm**), and
+the bank already switches passives. So gain control may be a **third bank axis**
+-- a switched load resistor -- rather than a new stage, which is also how coarse
+RX gain is done in real parts.
+
+This is a **gate**: TT only, one load, three boost codes (R0C3, R4C3, R7C3), the
+`rl` axis swept down 0.45 box units in 10 steps. 30 points. Binary question: at
+3 dB of channel loss, is there **any** `rl` at which the link becomes scorable?
+
+### The two numbers in a rejection, and why the ratio is measured not assumed
+
+`bridge.py` rejects with *"output swing 1480.0 mVpp exceeds the linear limit
+1035.5 mVpp"* -- **demand** and **capability**. Demand falls with `rl` because
+the gain does. **Capability also moves with `rl`**, through the output operating
+point, and entry 72 already measured it varying 832.9-1110.5 mVpp across the
+boost axis alone. So the flip point is measured, not predicted from demand.
+
+### Predictions
+
+**Q1 -- THE GATE. At least 2 of the 3 codes become scorable at 3 dB at some
+`rl`.** Confidence **0.8**: demand is directly proportional to `rl` and the
+over-drive is only 1.43-1.86x, so a 30-50 % cut should clear it unless
+capability falls just as fast. **Falsifier: fewer than 2 rescued.**
+
+**Q2 -- the flip needs `rl` between 0.50x and 0.75x of base.** Confidence
+**0.6**. Straight proportionality on demand alone predicts 0.54-0.70x; the
+capability term is what makes this uncertain in both directions. **Falsifier:
+any rescued code flipping outside 0.45x-0.85x.**
+
+**Q3 -- SEPARABILITY, and it is what decides whether a 3-axis bank is even
+coherent. Peaking drifts less than 1.5 dB across the whole `rl` sweep** at fixed
+`Rs`, `Cs`. Confidence **0.7**: `RL` does not appear in the peaking expression,
+but it moves the operating point and therefore `gm`, which does. 1.5 dB is
+`TOL["S3_peaking_match"]`, so a drift under it means the gain axis does not
+disturb what the boost axis was set to. **Falsifier: over 1.5 dB on any code.**
+
+**Q4 -- `f_peak` RISES monotonically as `rl` falls**, since the pole goes as
+1/(RL CL). Confidence **0.85**. Registered because it says the `Cs` axis has to
+compensate the gain axis, which is a real cost of the third knob rather than a
+free one. **Falsifier: non-monotone, or falling.**
+
+**Q5 -- the LONG channel is not broken by the rescue.** At each code's flip
+point the 12 dB link is still scorable. Confidence **0.55** -- this is the one I
+expect to be tight, because cutting gain cuts the eye, and 12 dB is where the
+signal is already weakest. **Falsifier: long channel unscorable at the flip
+point on any rescued code.**
+
+### The decision rule, before the result
+
+* **Q1 fails** -> a switched load does not rescue the short channel. Gain
+  control then genuinely needs a separate VGA stage, which is a topology
+  decision for the owner and NOT taken here.
+* **Q1 holds and Q3 holds** -> the AGC is a third bank axis. Next is a 3-axis
+  (RL x Rs x Cs) sweep and a re-run of entry 72's channel probe.
+* **Q1 holds and Q3 FAILS** -> the axes are not separable; a 3-axis bank is
+  still possible but must be re-parameterised, and the `Rs` codes cannot be
+  reused as they stand.
+* **Q5 fails** -> the knob trades the short channel for the long one, which is
+  not a rescue but a relocation. Report it that way.
