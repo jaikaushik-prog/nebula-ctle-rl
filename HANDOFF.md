@@ -17,13 +17,13 @@
 > decisions that are OPEN and human-only, and what to do next. It supersedes
 > `nebula/NEXT_STEPS.md`. This file remains the full state of record.
 
-Last updated: **2026-09-03** (session 37, entry 85 outcome: the one authorised
-7.3 dB boundary measurement passes **Q1-Q6** and closes the focused diagnosis
-at **16/16**. At `sf/0.95/125C`, request 12, R6C2, measured DC gain falls by
-0.293754 dB, both 3 dB and 12 dB links are scorable, and noise is 0.7367804
-mV_rms. This authorises proposing a separately preregistered full-bank,
-45-corner verification; it does **not** adopt 7.3 dB or authorise that run.
-D11's production range remains unchanged.)
+Last updated: **2026-09-03** (session 38, entry 86 pre-registration: after
+entry 85 closed the focused set at 16/16, the owner approved the distinct full
+7.3 dB verification. Before implementation or SPICE, Entry 86 fixes one
+physical change, two source hashes, exact 23,040-row membership, an embedded
+entry-85 control, coverage/no-regression/scorable-population gates, honest
+resume timing and all-loss reporting. No entry-86 SPICE row exists yet. A pass
+supports recommending adoption; it does not make that human decision.)
 
 Earlier session 22p: (**THE REPORT EXISTS** --
 `nebula/report/Nebula_CTLE_Report.pdf`, **10 pages, 9 figures, 598 KB**,
@@ -2095,10 +2095,10 @@ explicit scope.
    of the three remaining rows; combined closure is 15/16. The last point has
    correct frequency/peaking and is only 3.076% above the measured compression
    limit. D14's one 7.3 dB measurement now passes all six gates and closes the
-   focused set at 16/16. The next hardware step is **not automatic**: propose
-   and preregister a full eight-attenuator x 64-CTLE x 45-corner verification,
-   then obtain owner authority before running it. Do not describe the focused
-   result as production adoption or full-PVT coverage. The
+   focused set at 16/16. The owner approved the next step as D15 and Entry 86
+   is preregistered: implement and commit a distinct resumable 23,040-row
+   runner, then launch it without changing the registered circuit or gates.
+   Production adoption remains a post-result human decision. The
    standing owner item is also urgent: `nebula/report/Nebula_CTLE_Report.pdf`
    is about three weeks behind,
    still says one simulation / under five seconds rather than 17 / ~22 s,
@@ -14151,3 +14151,26 @@ authorise the large run or RL training. Post-result verification is green:
 the focused attenuator/joint-bank group passes **83/83**, and the complete
 non-slow suite passes **2,596/2,596**, with 13 deselected and 2 warnings in
 295.93 s.
+
+### 2026-09-03 - session 38 (entry 86 pre-registration, decision D15). **The owner authorises full 7.3 dB bank/PVT verification; adoption remains separate.**
+
+Entry 86 changes only the opt-in divider maximum from D11's 1.98x to Entry
+85's measured `10**(7.3/20) = 2.31739464996848`. The base transistor design,
+eight attenuator codes, 64 CTLE codes, 45 mandated corners, one design load,
+seven constructed channels, 16 requests, `V6_SPECS` and every tolerance stay
+fixed. Exactly **23,040 real-PMOS invocations** are authorised before internal
+G54 retries, using distinct anti-overwrite/resumable artifacts.
+
+Before implementation or SPICE, Q1-Q7 fix membership and device validity, an
+entry-85 reproduction row, 16/16 all-corner coverage at 3 dB, no regression
+from entry 81's longer-channel coverage, more than 7,519 scorable short-channel
+rows, truthful timing under a 180-minute uninterrupted ceiling and complete
+all-loss/control reporting. Entry 85's artifact SHA-256 and entry 81's decoded
+journal SHA-256 are pinned. A Q1-Q5 pass supports recommending 7.3 dB adoption
+at this one-load/45-corner scope; only the owner may adopt it afterward. No RL
+training is authorised.
+
+The entry-86 baseline is **2,595 passed plus one known timing-only `hl`
+trim-speed reversal**, 13 deselected and 2 warnings in 416.51 s; the exact
+node passes alone in 3.94 s. The preceding clean count is 2,596/2,596. No
+entry-86 implementation, journal, result or SPICE row exists.

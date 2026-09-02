@@ -13747,3 +13747,96 @@ adopt 7.3 dB, change D11's 5.933 dB production range, authorise that large run
 or authorise RL training. Post-result verification is green: **83/83 focused
 tests** and the complete non-slow suite **2,596/2,596**, with 13 deselected and
 2 warnings in 295.93 s.
+
+## 86. Session 38 -- **full 7.3 dB attenuator x CTLE-bank verification over all 45 mandated corners.**
+
+**Written 2026-09-03 BEFORE implementation or any entry-86 SPICE row.** Entry
+85 closed the focused diagnosis at 16/16, and the owner has now approved the
+full verification. This experiment changes exactly one physical variable from
+entry 81: the opt-in maximum divider ratio is `10**(7.3/20) =
+2.31739464996848` instead of D11's 1.98. The transistor design, eight codes,
+64 Rs/Cs settings, 45 mandated corners, design load, seven constructed 3-12 dB
+channels, `V6_SPECS`, request grid and tolerances remain fixed.
+
+The run is exactly **8 x 64 x 45 = 23,040 real-PMOS SPICE invocations** before
+any internal G54 retries. It writes a new crash-resumable journal
+`experiments/joint_bank_73_run.jsonl` and a new result
+`experiments/joint_bank_73_results.json`; neither entry 81 artifact may be
+overwritten. Entry 85 is pinned by SHA-256
+`352D8589CCF0D0874F1C8359E6F9B4122A802B418EDCD82E41A64A3A0102E1BF`.
+The entry-81 comparison journal is pinned by decoded SHA-256
+`A205303614ABCC5F76D6EA78CFA1C9687E49A3817FA1E9FA9EC314336E20CA33`.
+
+This is one load, not the optional 135-point load sweep. The channels are
+constructed models, not measured boards. A pass can support recommending 7.3
+dB for production adoption at this registered scope; the human adoption
+decision remains separate. No RL training is authorised by this run.
+
+### Predictions
+
+**Q1 -- source/membership/device gate.** Both source hashes match; the completed
+journal has exactly **23,040 rows** and 23,040 unique expected
+`(setting, corner)` keys; and there are zero hard device failures. Confidence
+**0.95**, because entry 81 completed the identical geometry with zero hard
+failures. **Falsifier:** any hash change, missing/duplicate/extra/truncated row
+or device failure.
+
+**Q2 -- embedded entry-85 reproduction control.** The top-code/R6C2 row at
+`sf/0.95/125C` uses the 7.3 dB range and reproduces entry 85: DC gain within
+**0.02 dB** of -11.002473 dB, peaking within **0.02 dB** of 9.879560 dB,
+peak frequency within **1%** of 1.565786 GHz, and both 3 dB and 12 dB links
+remain scorable. Confidence **0.95**. **Falsifier:** any bound or link check
+fails.
+
+**Q3 -- full short-channel coverage.** At 3 dB, every one of the **16/16**
+requests has at least one fully `V6_SPECS`-compliant setting at every one of
+the 45 corners. Confidence **0.75**: entries 83-85 measured one recovery for
+each of entry 81's 16 missing corner/request pairs, but the complete table can
+expose interactions or losses among the previously passing 704 pairs.
+**Falsifier:** coverage is below 16/16 or any of 720 pairs is unsolved.
+
+**Q4 -- no longer-channel regression.** All-corner request coverage at losses
+4.5, 6.0, 7.5, 9.0, 10.5 and 12.0 dB is at least entry 81's measured
+**15, 16, 16, 16, 16 and 16 of 16**, respectively. Confidence **0.9**: the
+bank retains low-attenuation codes, but all disabled-leg resistor geometries
+do change with the approved range and are therefore re-measured rather than
+assumed invariant. **Falsifier:** any loss falls below its registered floor.
+
+**Q5 -- scorable-population guard.** The number of scorable 3 dB rows is
+strictly greater than entry 81's **7,519**, and every corner has at least one
+scorable setting. Confidence **0.9**: the larger range directly targets
+compression, but added attenuation also changes noise, parasitics and eye
+height. **Falsifier:** the global count does not increase or any corner has
+zero scorable settings.
+
+**Q6 -- cost and timing truthfulness.** Eight workers complete an uninterrupted
+table in under **180 minutes**. If interrupted, each artifact reports only its
+resume-segment time, rows present before the segment and invocations performed
+in that segment; no downtime or false total is constructed. Confidence **0.85**
+from entry 81's 96.65-minute final 14,980-row segment. **Falsifier:** a complete
+uninterrupted run reaches 180 minutes, or resume metadata misstates its scope.
+
+**Q7 -- reporting guard.** Report all seven loss rows, the exact changes from
+entry 81, per-code scorable counts, the number of corner/request pairs solvable
+on every channel, the compliance-adaptation count and the best-eye movement
+count. No monotonic trend is assumed and no favourable channel is selected
+after measurement.
+
+### Decision rule, before the run
+
+* Q1 or Q2 fails -> stop interpretation, repair only plumbing/integrity and
+  resume without changing a circuit value or threshold.
+* Q3 fails -> the focused closure does not generalise to the full bank; do not
+  recommend 7.3 dB adoption and report every remaining corner/request.
+* Q4 fails -> the wider range trades short-channel recovery for a longer-link
+  regression; do not recommend adoption.
+* Q1-Q5 all hold -> the full one-load/45-corner evidence supports recommending
+  7.3 dB adoption, but the owner must make that production-range decision
+  explicitly. It is still not a 135-point load-grid or measured-channel claim.
+* Q6 is a cost result, not permission to move any engineering gate. Q7 is
+  mandatory reporting. No outcome here authorises RL training.
+
+Baseline before any entry-86 change: **2,595 passed plus one known timing-only
+`hl` trimmed-library speed reversal**, 13 deselected and 2 warnings in 416.51
+s. The exact `hl` node passed alone in 3.94 s. The preceding clean entry-85
+suite was 2,596/2,596. No entry-86 implementation, journal or SPICE row exists.
