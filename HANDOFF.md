@@ -17,13 +17,12 @@
 > decisions that are OPEN and human-only, and what to do next. It supersedes
 > `nebula/NEXT_STEPS.md`. This file remains the full state of record.
 
-Last updated: **2026-09-03** (session 37, entry 84 outcome: C2 lowers frequency
-at all 3 registered points and closes 2, taking the combined result from 13/16
-to **15/16**. The last `sf/0.95/125C` request-12 row has the correct frequency
-and peaking but compresses at 754.0 mVpp demand versus 731.5 mVpp limit. Entry
-84 scores 5/6, overall fail. The residual is a 0.263140 dB input-reduction
-lower bound, not permission to choose a new attenuator range. D11's production
-range remains unchanged.)
+Last updated: **2026-09-03** (session 37, entry 85 pre-registration: after
+entry 84 reached 15/16, the owner approved exactly one 7.3 dB top-code
+diagnostic at the final `sf/0.95/125C`, request-12, R6C2 compression boundary.
+The source hash, divider ratio, one-row membership and six gates are fixed
+before implementation or SPICE. This is measurement permission only; D11's
+production range and the full table remain unchanged.)
 
 Earlier session 22p: (**THE REPORT EXISTS** --
 `nebula/report/Nebula_CTLE_Report.pdf`, **10 pages, 9 figures, 598 KB**,
@@ -1634,6 +1633,11 @@ Plus: git init, .gitignore, 28 tests, Wilson-bound BER reporting.
   link compresses at 754.0 mVpp demand versus 731.5 mVpp limit. Q1, Q2 and
   Q4-Q6 hit; Q3 misses at 2/3, so overall 5/6 fail. Artifact SHA-256:
   `BAECB4621818D80B71BFC9CF1977EF81E71A02BB3026CF67211123FCFFA204C5`.
+- **Nebula final-boundary probe (D14, entry 85):** the owner approved exactly
+  7.3 dB nominal maximum at the one remaining R6C2 row. The registered divider
+  maximum is 2.31739464996848. One real-PMOS invocation will score 3 dB full
+  compliance, 12 dB scorability, physical gain movement, noise and cost. It is
+  not implemented and no entry-85 SPICE point has run.
 
 - Tests: **2589 non-slow collected** (entry 84): pre-run **2588 passed plus one
   timing-only `ll` failure**; the exact failed node passed alone. Post-result,
@@ -2076,8 +2080,9 @@ explicit scope.
    the owner's D13 scope clarification. Entry 84's adjacent-C2 probe closes two
    of the three remaining rows; combined closure is 15/16. The last point has
    correct frequency/peaking and is only 3.076% above the measured compression
-   limit. Do not choose a new attenuator range from its 0.263140 dB lower bound;
-   that is the next human decision. The
+   limit. The owner has now made the next human decision as D14: pre-register,
+   implement and run exactly one 7.3 dB measurement at that row. Do not expand
+   it into production adoption or a full-table run. The
    standing owner item is also urgent: `nebula/report/Nebula_CTLE_Report.pdf`
    is about three weeks behind,
    still says one simulation / under five seconds rather than 17 / ~22 s,
@@ -14060,3 +14065,22 @@ Post-result checks are green: the focused entry-84 file passes **6/6** and the
 complete non-slow suite passes **2,589/2,589**, with 13 deselected and 2
 warnings in 287.79 s. This replaces the pre-run suite's timing-only `ll`
 reversal with a clean complete run.
+
+### 2026-09-03 - session 37 (entry 85 pre-registration, decision D14). **The owner approves one exact 7.3 dB measurement at the final boundary.**
+
+The approval is scoped to the remaining `sf/0.95/125C`, request-12, R6C2 row.
+Entry 85 fixes the nominal top-code maximum at **7.3 dB**, divider ratio
+2.31739464996848, attenuator code 7 and bank code 50. The committed entry-84
+artifact is the only source, pinned by SHA-256
+`BAECB4621818D80B71BFC9CF1977EF81E71A02BB3026CF67211123FCFFA204C5`.
+Exactly one real-PMOS invocation is allowed and its distinct result file must
+not overwrite entries 83 or 84.
+
+Six gates cover exact membership/device validity, a 0.20-0.40 dB measured DC
+gain reduction, full request compliance at 3 dB, 12 dB scorability, the 1.5
+mV_rms noise limit and a 10 s cost ceiling. Q3 confidence is only 0.65: ideal
+0.3 dB demand scaling predicts 728.402 mVpp against the old 731.5 mVpp limit,
+just 0.42% margin. A miss does not authorise another increase. An all-six pass
+only authorises proposing a separately registered full-bank/45-corner run;
+D11 is unchanged. Pre-change baseline: **2,589 passed, 13 deselected, 2
+warnings in 287.79 s**. No entry-85 implementation or SPICE exists yet.

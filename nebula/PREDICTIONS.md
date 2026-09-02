@@ -13639,3 +13639,69 @@ R5C2 at this corner lowers boost to 8.077 dB, below request 12's 8.5 dB lower
 match limit; it merely trades the compression problem for a peaking problem.
 Post-result verification is green: **6/6 focused tests** and the complete
 non-slow suite **2,589 passed, 13 deselected, 2 warnings in 287.79 s**.
+
+## 85. Session 37 -- **one exact 7.3 dB measurement at the final compression boundary.**
+
+**Written 2026-09-03 BEFORE implementation or new SPICE.** After entry 84
+closed two of the three adjacent-C2 rows, the owner approved the recommended
+**7.3 dB nominal top-code diagnostic** for only the remaining
+`sf/0.95/125C`, request-12, R6C2 point. This is a human range decision under
+`CLAUDEwa.md` rule 6. It authorises one measurement, not production adoption
+or a full-table run.
+
+The source is the committed `atten_cs_probe_results.json`, fixed by SHA-256
+`BAECB4621818D80B71BFC9CF1977EF81E71A02BB3026CF67211123FCFFA204C5`.
+The new maximum divider ratio is exactly `10**(7.3/20) =
+2.31739464996848`; attenuator code 7, bank code 50 and every circuit, corner,
+request, tolerance and channel value remain fixed. Exactly **one real-PMOS
+SPICE invocation** is allowed. It is scored at both 3 and 12 dB and written to
+the distinct anti-overwrite artifact `experiments/atten_final_probe_results.json`.
+
+At entry 84's 7.0 dB candidate, this row demanded 754.0 mVpp against a 731.5
+mVpp limit. If the designed 0.3 dB increment scaled demand alone, the demand
+would become 728.402 mVpp, leaving only 3.098 mVpp (0.42%) margin. Therefore
+the primary prediction is deliberately lower confidence: G145 says the
+calculation is a lower bound, not a result.
+
+### Predictions
+
+**Q1 -- source/membership/device gate.** The source hash matches; exactly the
+single registered corner/request/bank row appears; and the device result is
+valid. Confidence **0.99**. **Falsifier:** any hash change, missing/extra row,
+different member or device failure.
+
+**Q2 -- physical attenuation movement.** Holding R6C2 and the corner fixed,
+the measured DC gain becomes **0.20-0.40 dB lower** than entry 84's
+-10.708719 dB. Confidence **0.9**. **Falsifier:** the reduction lies outside
+that interval.
+
+**Q3 -- final 3 dB closure.** The 3 dB link is scorable and request 12 is fully
+compliant with all 13 `V6_SPECS` rows. Confidence **0.65** because the ideal
+demand estimate leaves only 0.42% swing margin. **Falsifier:** compression,
+another unscorable result or any spec violation.
+
+**Q4 -- long-channel guard.** The 12 dB link remains scorable. Confidence
+**0.99**; it passed at 7.0 dB with a 127.380 mV, 0.8125 UI eye. **Falsifier:**
+the 12 dB link is unscorable.
+
+**Q5 -- noise guard.** Input-referred noise remains below **1.5 mV_rms**.
+Confidence **0.99**; the 7.0 dB value was 0.715111 mV_rms. **Falsifier:** noise
+is unavailable or at/above the spec limit.
+
+**Q6 -- cost.** The one serial invocation finishes in under **10 seconds**.
+Confidence **0.99** from entry 84's three calls in 2.022 s. **Falsifier:** wall
+clock is 10 s or more.
+
+### Decision rule, before the run
+
+* Q1 fails -> stop and do not interpret the measurement.
+* Any of Q2-Q5 fails -> record the exact failure; do not increase attenuation
+  again from the same result and do not claim 16/16 closure.
+* Q1-Q6 all hold -> the focused evidence closes the original 16 diagnosed
+  request/corner pairs and authorises proposing a separately pre-registered
+  full eight-attenuator x 64-CTLE x 45-corner verification. It still does not
+  change D11's production range or authorise that full run automatically.
+
+Pre-change baseline: complete non-slow suite **2,589 passed, 13 deselected, 2
+warnings in 287.79 s**. No entry-85 code exists and no 7.3 dB SPICE point has
+run.
