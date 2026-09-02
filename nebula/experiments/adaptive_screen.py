@@ -223,6 +223,14 @@ class PointResult:
     hd3_nyq_dbc: Optional[float] = None
     eye_h_v: Optional[float] = None
     eye_w_ui: Optional[float] = None
+    #: `{channel_loss_db: {"ok", "eye_h_v", "eye_w_ui"}}`, present ONLY when
+    #: `evaluate_at_points(link_losses_db=...)` asked for it. The device is
+    #: simulated once and the link re-evaluated per channel in Python, which is
+    #: sound because the CTLE's input drive is channel-INDEPENDENT: the family's
+    #: loss at DC is exactly 0 by construction (`CHANNEL_MODEL.md`), so
+    #: `LinkConfig.v_in_diff_pp_v` is identical at 3 dB and 12 dB. Only the eye
+    #: moves. Default None, so nothing that does not ask for it can see it.
+    links_by_loss: Optional[dict] = None
 
 
 @dataclass
@@ -261,7 +269,9 @@ def evaluate_at_points(u: Sequence[float],
                        specs: Sequence[str] = R.V5_SPECS,
                        ac_only: bool = False,
                        ac_peak_interp: bool = True,
-                       validity_gate: bool = False) -> DesignEval:
+                       validity_gate: bool = False,
+                       link_losses_db: Optional[Sequence[float]] = None
+                       ) -> DesignEval:
     """Score one sizing at an explicit list of (corner, load) pairs.
 
     **The score is the WORST point**, which is CLAUDEwa.md §12's first named
@@ -447,6 +457,21 @@ def evaluate_at_points(u: Sequence[float],
             eye_h_v=(lr.eye_h_v if lr.ok else None),
             eye_w_ui=(lr.eye_w_ui if lr.ok else None),
             reason=(None if lr.ok else lr.fail_reason))
+        # **The channel axis, for one SPICE run.** Asked for explicitly or not
+        # computed at all, so no existing caller changes behaviour or pays for
+        # it. Scoring still uses `lr` at `FUNNEL_LOSS_DB`; these are recorded
+        # beside it, never instead of it.
+        if link_losses_db is not None:
+            by = {}
+            for loss in link_losses_db:
+                lcfg = LinkConfig(channel_loss_db_at_nyquist=float(loss))
+                lx = evaluate_link(dev, lcfg)
+                by[float(loss)] = {
+                    "ok": bool(lx.ok),
+                    "eye_h_v": (float(lx.eye_h_v) if lx.ok else None),
+                    "eye_w_ui": (float(lx.eye_w_ui) if lx.ok else None),
+                    "reason": (None if lx.ok else lx.fail_reason)}
+            pr.links_by_loss = by
         results.append(pr)
         if worst is None or pr.reward < worst.reward:
             worst = pr

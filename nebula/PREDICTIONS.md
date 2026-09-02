@@ -12238,3 +12238,94 @@ evaluator, and this one scores `S4_hd3_nyq` at the operating point where entry
 69's scores S4's literal 100 MHz row, so this is the **stricter** set -- but no
 reading of them makes one fixed part competitive with sixteen bespoke designs.
 That was always the trade; it is now measured.
+
+## 72. Session 34 -- **was PVT simply the wrong hidden variable? The channel is what a receiver actually does not know.**
+
+**Written 2026-09-02 BEFORE the run.**
+
+### Why there is a second attempt at all
+
+Entry 71 killed D10's first framing. Across PVT, **six of the eight served
+requests are met at all 45 mandated corners by a single code**, so the right
+code depends on the *request* -- handed to the policy -- and not on the hidden
+corner. A policy trained there learns a 16-row lookup table.
+
+That is a result about **PVT**, not about adaptation. A PCIe receiver does not
+know its process corner and, per entry 71, barely needs to. What it genuinely
+does not know is **the channel it is plugged into**, and that is what a real RX
+equalisation loop adapts to during link training.
+
+### A correction to this session's own claim, made before it can be quoted
+
+I said the channel axis was **free**. It is not, and the reason matters.
+`bank_sweep_run.jsonl` stored the eye at **one** channel (`FUNNEL_LOSS_DB`
+= 12.0 dB, the family's worst member) and did **not** store the device result,
+so the seven channels require the 2 880 decks to be **re-run**. What is free is
+the seventh channel *given* the first, not the sweep. Cost is therefore
+~2 880 decks again plus the per-channel link evaluations in Python.
+
+**Why one SPICE run does cover seven channels.** The family's insertion loss at
+DC is exactly 0 by construction (`CHANNEL_MODEL.md`), so
+`LinkConfig.v_in_diff_pp_v` is **identical at 3 dB and 12 dB** -- asserted in
+`test_channel_axis.py`. The CTLE sees the same input amplitude on every channel,
+so the compression rejections are channel-independent and **only the eye moves**.
+
+### The two framings, and the difference between them is the question
+
+**(a) REQUEST framing** -- `V6_SPECS`, exactly as entry 71 scored it. A judge
+names a peaking and a frequency; `S3_peaking_match` / `S3_f_peak_match` pin the
+code to whatever delivers them, and the channel can only prune that set through
+S8.
+
+**(b) LINK framing** -- `V6_LINK` (11 rows): every mandated row **except** the
+two request-match rows. `S3_peaking` and `S3_f_peak_band` stay, because the
+spec's 3-12 dB and 1.25-2.5 GHz windows hold whether or not anybody named a
+number. Nobody names a peaking; the part is asked to make the link work, and the
+boost it needs **is** a function of the channel. **This is a reporting axis, not
+a new compliance set (rule 6): no coverage claim is made on it.**
+
+### Predictions
+
+**Q1 -- THE HEADLINE. Under framing (b) the best code MOVES with the channel at
+most corners**: for **>= 30 of the 45** corners, the tallest-eye compliant code
+at 3 dB differs from the one at 12 dB. Confidence **0.75**. A 9 dB swing in
+Nyquist loss is ~6 steps of the boost axis, which moves 1.52 dB per step.
+**Falsifier: fewer than 30 corners move.**
+
+**Q2 -- and under framing (a) it MOSTLY DOES NOT**: fewer than 6 of the 16
+requests change their best-single code between 3 dB and 12 dB. Confidence
+**0.7** -- the request already pins peaking and frequency, so the channel can
+only prune. **Falsifier: 6 or more move.** Q1 and Q2 together are the claim; Q1
+alone is not, because a code that moves under both framings would say the
+channel is just an easier/harder axis rather than a hidden variable the request
+fails to capture.
+
+**Q3 -- coverage under framing (a) rises monotonically as loss falls**, and at
+3 dB it is strictly greater than entry 71's 8 of 16 at 12 dB. Confidence
+**0.85**: less ISI is a strictly taller eye, measured monotone in
+`test_channel_axis.py`. **Falsifier: 3 dB not strictly above 8, or any
+non-monotone step.**
+
+**Q4 -- the compression rejections do NOT move with the channel.** The scorable
+count is identical to entry 71's **2 117 of 2 880** at every loss. Confidence
+**0.9**; this is a consequence of the 0 dB-at-DC property and it is really a
+check that the plumbing does what the docstring says. **Falsifier: any loss
+giving a different scorable count.**
+
+**Q5 -- COST. Under 45 minutes.** 2 880 decks took 16.0 min in entry 71; seven
+link evaluations per scorable point add Python time only. **Falsifier: over
+70 min.**
+
+### The decision rule, before the result
+
+* **Q1 holds and Q2 holds** -> the adaptation problem is real and entry 71 aimed
+  it at the wrong variable. Rebuild `AdaptEnv` on the channel as hidden state,
+  run `exp_adapt_controls`, and only then train a policy.
+* **Q1 fails** -> the best code does not depend on the channel either. Then this
+  circuit does not need a learned adapter, that is the third independent road to
+  the same answer, and it gets written up as a measured negative alongside
+  entries 36 and 71. **No policy is trained.**
+* **Q1 holds but Q2 also holds in the strong direction** (>= 6 requests move) ->
+  the channel is an easier/harder axis rather than a hidden one; report and stop.
+* **Q4 fails** -> the free-channel argument is wrong somewhere; fix the plumbing
+  before reading Q1 at all.
