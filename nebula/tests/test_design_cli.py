@@ -329,7 +329,9 @@ def test_auto_says_when_the_PROPOSAL_FAILED_and_the_search_answered(monkeypatch)
         "screened_on": ["a", "b", "c", "d"]})
     monkeypatch.setattr(D, "measure", lambda *a, **k: _fake_nominal())
     text = D.report(D.design(9.0, 1.9e9, method="auto"))
-    assert "no retrieved candidate passed the screen" in text
+    # Wording widened by row 4y: the proposer is no longer only
+    # retrieval, so the sentence says "proposed" (G138).
+    assert "no proposed candidate passed the screen" in text
 
 
 def test_the_word_FEASIBLE_states_which_rows_and_which_corner(monkeypatch):
@@ -371,3 +373,131 @@ def test_an_unjustified_BOX_EDGE_cannot_be_committed():
 
     with pytest.raises(ValueError, match="provenance"):
         ActionDim("bogus", 1.0, 2.0, False, "V", "   ")
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# The three defects an independent review found on the delivered path
+# ─────────────────────────────────────────────────────────────────────────────
+
+def test_the_request_miss_is_measured_against_the_LIVE_tolerances():
+    """D6, enforced. `feasible` is V1_SPECS and carries no request row, so a
+    design can meet every device spec and be nowhere near what was asked.
+
+    Measured before this existed: `--peaking 12 --f-peak 1.4e9` returned
+    9.10 dB @ 1.774 GHz -- 2.90 dB and 0.341 oct out against 1.5 and 0.3 --
+    with `feasible: True` and nothing flagged.
+    """
+    import math
+
+    from nebula.rl import reward_v1 as R
+
+    d = {"request": {"peaking_db": 12.0, "f_peak_hz": 1.4e9,
+                     "f_peak_ghz": 1.4},
+         "nominal": {"meas": {"peaking_db": 9.10, "_f_peak_ghz": 1.7735}}}
+    rm = D.request_miss(d)
+    assert rm["peaking_missed"] and rm["f_peak_missed"]
+    assert rm["request_met"] is False
+    assert rm["peaking_err_db"] == pytest.approx(-2.90, abs=0.01)
+    assert rm["f_peak_err_oct"] == pytest.approx(
+        math.log2(1.7735 / 1.4), abs=1e-6)
+    # The tolerances are READ from reward_v1, never restated here.
+    assert rm["tol_peaking_db"] == R.TOL["S3_peaking_match"]
+    assert rm["tol_f_peak_oct"] == R.TOL["S3_f_peak_match"]
+
+
+def test_a_request_that_IS_met_is_reported_as_met():
+    d = {"request": {"peaking_db": 8.0, "f_peak_hz": 1.9e9, "f_peak_ghz": 1.9},
+         "nominal": {"meas": {"peaking_db": 8.2, "_f_peak_ghz": 1.93}}}
+    assert D.request_miss(d)["request_met"] is True
+
+
+def test_an_unmeasurable_run_reports_no_request_match_rather_than_a_fake_one():
+    assert D.request_miss({"request": {"peaking_db": 8.0, "f_peak_hz": 1.9e9,
+                                       "f_peak_ghz": 1.9},
+                           "nominal": {}}) is None
+
+
+def test_the_report_SHOUTS_when_the_request_is_not_met():
+    d = {"request": {"peaking_db": 12.0, "f_peak_hz": 1.4e9, "f_peak_ghz": 1.4},
+         "method": "library", "robust_search": False,
+         "nominal": {"ok": True, "feasible": True, "reward": 8.3,
+                     "worst_spec": None, "params": {"w_in": 6e-5, "l_in": 5e-7, "nf_in": 4, "i_bias": 2e-3,
+                       "rs": 300.0, "cs": 1e-12, "rl": 400.0,
+                       "cl": 32.6e-15, "vcm_in": 1.35},
+                     "meas": {"peaking_db": 9.10, "_f_peak_ghz": 1.7735,
+                     "nyq_boost_db": 1.0, "_noise_mv": 0.4,
+                     "_power_mw": 2.0, "g_dc_db": 1.0,
+                     "pair_margin_v": 0.2, "tail_margin_v": 0.2,
+                     "f_peak_oct": 0.0, "inoise_vrms": 4e-4,
+                     "power_w": 2e-3}},
+         "simulations": {"total": 829, "search": 828, "measure": 1},
+         "wall_s": 1.0,
+         "peaking_is_a_band_not_a_target": "x"}
+    d["request_match"] = D.request_miss(d)
+    text = D.report(d)
+    assert "REQUEST NOT MET" in text
+    assert "2.90" in text and "0.341" in text
+
+
+def test_the_proposer_SOURCE_is_named_not_always_called_retrieval():
+    """It printed "retrieval" for every accepted proposal regardless of source.
+    Since row 4y the analytic solve answers 12 of the 13 proposal-answered
+    requests, so the tool was crediting retrieval for its own best feature."""
+    from nebula.experiments.exp_invert_screen import K
+
+    base = {"request": {"peaking_db": 8.0, "f_peak_hz": 1.9e9,
+                        "f_peak_ghz": 1.9},
+            "method": "auto", "robust_search": True,
+            "nominal": {"ok": False, "verdict": "x", "reason": "y"},
+            "simulations": {"total": 1}, "wall_s": 1.0,
+            "peaking_is_a_band_not_a_target": "x"}
+    shallow = D.report({**base, "search": {"which_path": "proposal",
+                                           "proposal_rank": 2,
+                                           "n_candidates": 45,
+                                           "screened_on": [1, 2, 3, 4]}})
+    assert "ANALYTIC" in shallow and "retrieval" not in shallow.lower()
+
+    lib = D.report({**base, "search": {"which_path": "proposal",
+                                       "proposal_rank": K + 2,
+                                       "n_candidates": 45,
+                                       "screened_on": [1, 2, 3, 4]}})
+    assert "RETRIEVAL" in lib
+
+    deep = D.report({**base, "search": {"which_path": "proposal",
+                                        "proposal_rank": 2 * K + 5,
+                                        "n_candidates": 45,
+                                        "screened_on": [1, 2, 3, 4]}})
+    assert "ANALYTIC" in deep and "deep tail" in deep
+
+
+def test_verify_reports_the_MANDATED_45_separately_from_the_load_sweep():
+    """The brief mandates PVT only. Reporting just the 135-point verdict meant
+    `--verify` printed FAILS on a design meeting every mandated corner, and the
+    number the project claims coverage on could not be produced by the tool."""
+    d = {"request": {"peaking_db": 8.0, "f_peak_hz": 1.9e9, "f_peak_ghz": 1.9},
+         "method": "auto", "robust_search": True,
+         "nominal": {"ok": True, "feasible": True, "reward": 8.3,
+                     "worst_spec": None, "params": {"w_in": 6e-5, "l_in": 5e-7, "nf_in": 4, "i_bias": 2e-3,
+                       "rs": 300.0, "cs": 1e-12, "rl": 400.0,
+                       "cl": 32.6e-15, "vcm_in": 1.35},
+                     "meas": {"peaking_db": 9.10, "_f_peak_ghz": 1.7735,
+                     "nyq_boost_db": 1.0, "_noise_mv": 0.4,
+                     "_power_mw": 2.0, "g_dc_db": 1.0,
+                     "pair_margin_v": 0.2, "tail_margin_v": 0.2,
+                     "f_peak_oct": 0.0, "inoise_vrms": 4e-4,
+                     "power_w": 2e-3}},
+         "simulations": {"total": 149, "search": 8, "measure": 1,
+                         "verify": 140}, "wall_s": 1.0,
+         "peaking_is_a_band_not_a_target": "x",
+         "verification": {"n_corners": 45, "n_loads": 3, "n_points": 135,
+                          "n_failed": 90, "n_failed_outside_the_screen": 84,
+                          "all_points_pass": False, "worst_reward": -10.0,
+                          "worst_point": "tt", "worst_spec": None,
+                          "worst_is_a_screen_corner": False,
+                          "n_mandated_points": 45, "n_mandated_pass": 45,
+                          "mandated_all_pass": True,
+                          "design_load_f": 32.6e-15}}
+    text = D.report(d)
+    assert "MANDATED PVT (S9): 45 / 45" in text and "PASS" in text
+    # ...and the 135-point result is still shown, not hidden behind it.
+    assert "135 points" in text and "90 failed" in text

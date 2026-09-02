@@ -13175,3 +13175,51 @@ Next: rows **4aa** (the wide bank, pre-registered as entry 70), **4ab** (the
 adaptation environment plus an exhaustive control and a bisection control), and
 **4ac** (the discrete-action policy -- neither PPO nor SAC has a discrete head
 today, both are Gaussian).
+
+
+---
+
+### 2026-09-02 - session 33. **An independent review found three defects on the delivered path. All three fixed.**
+
+An independent agent judged the project against the brief (66/100) and found
+three things wrong with `design.py` itself. Each was reproduced before it was
+fixed.
+
+**1. The tool reported `feasible=True` on a design that missed the request by
+2x its own tolerance.** Reproduced: `--peaking 12 --f-peak 1.4e9` returns
+**9.10 dB @ 1.774 GHz** -- **2.90 dB** and **0.341 oct** out against tolerances
+of 1.5 and 0.3 -- with `feasible: True` and no warning key anywhere in the JSON.
+`feasible` is scored on `V1_SPECS`, which carries **no request rows**. This
+violated the project's own **decision D6** (*"a judge asking for 11 dB must not
+be handed 6.4 dB with a PASS beside it"*) on the delivered path.
+**Fixed:** `design.request_miss()` measures both errors against the live `TOL`
+values, attaches them to every result as `request_match`, and `report()` prints
+**"*** REQUEST NOT MET ***"** with the specific misses.
+
+**Why 69 pre-registered entries missed it:** every one tested the 16-request
+grid, and that grid stops at **10 dB**. Worse, `exp_coverage.PEAKING_REQUESTS`'
+own docstring says the endpoints are S3's band *"inset by half a tolerance"* --
+which is **3.75 and 11.25** -- while the code reads `(4.0, 6.0, 8.0, 10.0)`.
+**The stated rationale does not produce the actual grid**, and the untested top
+of the band is exactly where the tool fails.
+
+**2. The tool credited retrieval for the analytic solver's work.**
+`report()` printed `"retrieval, accepted at rank N"` for every accepted
+proposal regardless of source. Since row 4y the analytic solve answers **12 of
+the 13** proposal-answered requests. **Fixed:** the source is named from the
+rank (analytic / retrieval / analytic deep tail).
+
+**3. `--verify` could not print the project's own headline number.** It
+reported only the 135-point verdict, so a design meeting every mandated corner
+printed **"FAILS 90 failed"**. The 45-corner figure existed only inside
+experiment scripts. **Fixed:** the mandated 45 are broken out at the design
+load and printed first, with the 135-point load sweep still shown beside them --
+`MANDATED PVT (S9): 45 / 45 PASS`.
+
+**Six tests added.** One PRE-EXISTING test went red on the wording change -
+**G138 firing a second time**, and again for the right reason.
+
+**Tests: 2433 before; 2438 passed / 1 failed after**, the failure being
+`test_pdk_trim...[hh]` on its **wall-clock** assertion (*"the trimmed library
+(2.70 s) is not faster"*) - **G136**, second occurrence. Re-run alone: **24 of
+24 in 229 s**.

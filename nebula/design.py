@@ -321,6 +321,38 @@ def _schematic_panel(d: dict) -> dict:
     return panel
 
 
+
+def request_miss(d: dict) -> Optional[dict]:
+    """How far the DELIVERED design is from the REQUEST, against `TOL`.
+
+    **Decision D6 exists because of exactly this** -- *"a judge asking for 11 dB
+    must not be handed 6.4 dB with a PASS beside it"* -- and until now the
+    delivered path could do that. `nominal.feasible` is scored on `V1_SPECS`,
+    which carries **no request rows**: it means "meets the seven device specs at
+    TT", not "matches what you asked for". Measured: `--peaking 12 --f-peak
+    1.4e9` returns 9.10 dB @ 1.774 GHz -- **2.90 dB and 0.341 octaves out,
+    against tolerances of 1.5 dB and 0.3 oct** -- with `feasible: True` and
+    nothing flagged.
+
+    Returns None when the request cannot be scored (no measurement), else the
+    two misses and whether either exceeds its own tolerance. The caller decides
+    what to do; this only measures.
+    """
+    m = (d.get("nominal") or {}).get("meas") or {}
+    req = d.get("request") or {}
+    if "peaking_db" not in m or "_f_peak_ghz" not in m:
+        return None
+    d_db = float(m["peaking_db"]) - float(req["peaking_db"])
+    d_oct = math.log2(float(m["_f_peak_ghz"]) / float(req["f_peak_ghz"]))
+    tol_db = float(R.TOL["S3_peaking_match"])
+    tol_oct = float(R.TOL["S3_f_peak_match"])
+    return {"peaking_err_db": d_db, "f_peak_err_oct": d_oct,
+            "tol_peaking_db": tol_db, "tol_f_peak_oct": tol_oct,
+            "peaking_missed": abs(d_db) > tol_db,
+            "f_peak_missed": abs(d_oct) > tol_oct,
+            "request_met": abs(d_db) <= tol_db and abs(d_oct) <= tol_oct}
+
+
 def netlist_for(u: Sequence[float], cl_f: float) -> Optional[str]:
     """The deck that RAN, captured rather than re-rendered (rule 9, G32)."""
     sizing = sizing_from_u(np.asarray(u, dtype=float), cl_f=cl_f)
@@ -385,6 +417,10 @@ def design(peaking_db: float, f_peak_hz: float, method: str = "auto",
             "--method auto uses them."),
         "wall_s": time.perf_counter() - t0,
     }
+    # **D6, enforced on the delivered path.** Measured and attached to every
+    # run, so a request the tool could not reach is visible in the JSON as well
+    # as on the console.
+    out["request_match"] = request_miss(out)
 
     if verify:
         from nebula.experiments.exp_g4_verify import Candidate, verify as g4_verify
@@ -395,6 +431,25 @@ def design(peaking_db: float, f_peak_hz: float, method: str = "auto",
                          claimed_worst_point=None)
         vb = SpiceBudget()
         v = g4_verify(cand, vb)
+        # **BREAK OUT THE 45 MANDATED CORNERS BEFORE DISCARDING THE POINTS.**
+        # The brief mandates PVT only -- 5 process x 3 VDD x 3 temp = 45 -- and
+        # the third axis (load) is this project's own addition. Reporting only
+        # the 135-point verdict meant `--verify` could print "FAILS" on a design
+        # that meets every mandated corner, and the number the project actually
+        # claims coverage on could not be produced by the tool at all. It could
+        # only be recovered from an experiment script, which is exactly the
+        # measured-versus-shipped gap rows 4r and 4y were about.
+        pts = v.get("points") or []
+        if pts:
+            loads = sorted({round(float(q["cl_f"]), 20) for q in pts})
+            design_load = loads[len(loads) // 2]
+            mand = [q for q in pts
+                    if abs(float(q["cl_f"]) - design_load) < 1e-20]
+            v["n_mandated_points"] = len(mand)
+            v["n_mandated_pass"] = sum(1 for q in mand if q.get("feasible"))
+            v["mandated_all_pass"] = (v["n_mandated_pass"] == len(mand)
+                                      and bool(mand))
+            v["design_load_f"] = float(design_load)
         v.pop("points", None)
         out["verification"] = v
         out["simulations"]["verify"] = vb.calls
@@ -418,9 +473,24 @@ def report(d: dict) -> str:
     # early-failure path, neither of which carries a search record.
     sr = d.get("search") or {}
     if d["method"] == "auto":
-        how = (f"retrieval, accepted at rank {sr.get('proposal_rank')} of "
-               f"{sr.get('n_candidates')}" if sr.get("which_path") == "proposal"
-               else "the search -- no retrieved candidate passed the screen")
+        # **Name the SOURCE, not just "a proposal".** This printed
+        # "retrieval" for every accepted proposal regardless of where the
+        # candidate came from -- and since row 4y the analytic solver answers
+        # 12 of the 13 proposal-answered requests, so the tool was crediting
+        # retrieval for its own best feature. The ordering is
+        # analytic[1..K] -> library[1..K] -> analytic-deep[K+1..DEEP_K], so the
+        # rank says which source answered.
+        rank = sr.get("proposal_rank")
+        if sr.get("which_path") == "proposal" and rank:
+            from nebula.experiments.exp_invert_screen import K as _K
+            src = ("the closed-form ANALYTIC solve" if rank <= _K
+                   else "RETRIEVAL from the library" if rank <= 2 * _K
+                   else "the closed-form ANALYTIC solve (deep tail)")
+            how = f"{src}, accepted at rank {rank} of {sr.get('n_candidates')}"
+        elif sr.get("which_path") == "proposal":
+            how = f"a proposal at rank {rank} of {sr.get('n_candidates')}"
+        else:
+            how = "the search -- no proposed candidate passed the screen"
         L.append("  METHOD      auto   (no strategy was chosen by a human)")
         L.append(f"              answered by {how}")
         L.append(f"              screened on {len(sr.get('screened_on', []))} "
@@ -466,11 +536,44 @@ def report(d: dict) -> str:
     L.append(f"      those need the link bridge and the 45-corner checklist "
              f"({len(R.V6V_SPECS)} rows) -- see --verify.")
 
+    # **DID IT ANSWER THE QUESTION THAT WAS ASKED?** (decision D6.) `feasible`
+    # above is V1_SPECS, which has no request rows, so a design can meet every
+    # device spec and still be nowhere near what was requested. Measured before
+    # this was added: `--peaking 12 --f-peak 1.4e9` returned 9.10 dB @
+    # 1.774 GHz -- 2.90 dB and 0.341 oct out, against 1.5 and 0.3 -- and said
+    # `feasible=True` with nothing flagged.
+    rm = d.get("request_match")
+    if rm:
+        L.append("")
+        if rm["request_met"]:
+            L.append(f"  REQUEST MET   peaking {rm['peaking_err_db']:+.2f} dB "
+                     f"(tol {rm['tol_peaking_db']:.2f}), "
+                     f"f_peak {rm['f_peak_err_oct']:+.3f} oct "
+                     f"(tol {rm['tol_f_peak_oct']:.2f})")
+        else:
+            L.append("  *** REQUEST NOT MET -- the delivered design does not "
+                     "match what was asked for ***")
+            if rm["peaking_missed"]:
+                L.append(f"      peaking off by {rm['peaking_err_db']:+.2f} dB"
+                         f"   (tolerance {rm['tol_peaking_db']:.2f} dB)")
+            if rm["f_peak_missed"]:
+                L.append(f"      f_peak  off by {rm['f_peak_err_oct']:+.3f} oct"
+                         f"  (tolerance {rm['tol_f_peak_oct']:.2f} oct)")
+            L.append("      `feasible` above is V1_SPECS (device rows at TT) "
+                     "and does NOT include the request.")
+
     v = d.get("verification")
     if v:
         L.append("")
-        L.append(f"  CORNER VERIFICATION  {v['n_corners']} corners x "
-                 f"{v['n_loads']} loads = {v['n_points']} points")
+        L.append(f"  CORNER VERIFICATION")
+        if "n_mandated_pass" in v:
+            L.append(f"    MANDATED PVT (S9): "
+                     f"{v['n_mandated_pass']} / {v['n_mandated_points']}"
+                     f"   {'PASS' if v['mandated_all_pass'] else 'FAIL'}"
+                     f"   <- the brief's own grid, at the design load")
+        L.append(f"    load sweep (this project's extra axis): "
+                 f"{v['n_corners']} corners x {v['n_loads']} loads = "
+                 f"{v['n_points']} points")
         L.append(f"    {'ALL POINTS PASS' if v['all_points_pass'] else 'FAILS'}"
                  f"   {v['n_failed']} failed"
                  f"   ({v['n_failed_outside_the_screen']} of them at corners "
