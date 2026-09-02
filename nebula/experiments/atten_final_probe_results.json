@@ -1,0 +1,84 @@
+{
+ "task": "entry 85 final 7.3 dB compression-boundary probe",
+ "source": "atten_cs_probe_results.json",
+ "source_sha256": "BAECB4621818D80B71BFC9CF1977EF81E71A02BB3026CF67211123FCFFA204C5",
+ "root_source": "atten_range_probe_results.json",
+ "root_source_sha256": "9A06AA65D71B463D4F75CC2072D82BC845799BAF6FE073F66C25C069ED2F358B",
+ "probe_top_db": 7.3,
+ "probe_max_x": 2.3173946499684783,
+ "production_atten_max_x_unchanged": 1.98,
+ "production_top_db_unchanged": 5.933303805230622,
+ "spice_invocations": 1,
+ "rows": [
+  {
+   "kind": "final_probe",
+   "corner": "sf/0.95/125C",
+   "bank_code": 50,
+   "atten_code": 7,
+   "device_ok": true,
+   "reason": null,
+   "g_dc_db": -11.002473381707903,
+   "noise_mvrms": 0.7367804,
+   "peaking_db": 9.879560171693162,
+   "f_peak_hz": 1565785667.344873,
+   "links": {
+    "3.0": {
+     "ok": true,
+     "eye_h_v": 0.29613997555708843,
+     "eye_w_ui": 0.859375
+    },
+    "12.0": {
+     "ok": true,
+     "eye_h_v": 0.12346360000231471,
+     "eye_w_ui": 0.8125
+    }
+   },
+   "requests": [
+    {
+     "request_id": 12,
+     "scorable": true,
+     "compliant": true,
+     "violations": [],
+     "margins": {
+      "S3_f_peak_band": 0.32495864786850315,
+      "S3_f_peak_match": 0.12504135213149686,
+      "S3_peaking": 2.1204398283068375,
+      "S3_peaking_match": 1.3795601716931625,
+      "S3_nyq_boost": 9.695041,
+      "S5_noise": 0.0007632196000000001,
+      "S6_power": 0.008565201599999999,
+      "saturation": 0.4356799,
+      "tail_saturation": 0.3533552,
+      "S8_eye_h": 0.19613997555708843,
+      "S8_eye_w": 0.459375,
+      "S7_area": 0.047907615975000005,
+      "S4_hd3_nyq": 24.490241118253934
+     }
+    }
+   ],
+   "request_id": 12,
+   "old_g_dc_db": -10.708719157811116
+  }
+ ],
+ "summary": {
+  "membership_ok": true,
+  "all_device_ok": true,
+  "n_rows": 1,
+  "dc_gain_reduction_db": 0.2937542238967872,
+  "short_channel_scorable": true,
+  "request_compliant": true,
+  "long_channel_scorable": true,
+  "noise_mvrms": 0.7367804,
+  "wall_clock_s": 0.8048000000017055,
+  "checks": {
+   "Q1": true,
+   "Q2": true,
+   "Q3": true,
+   "Q4": true,
+   "Q5": true,
+   "Q6": true
+  },
+  "passed": true
+ },
+ "scope": "one focused diagnostic; no production-range change, full-PVT coverage claim, full-table run or RL training"
+}

@@ -13715,3 +13715,35 @@ red-first collection error was observed before implementation; afterward,
 **13/13 direct tests** and the complete attenuator/joint-bank focused group
 **83/83** pass. The complete non-slow suite is also green at **2,596 passed,
 13 deselected and 2 warnings in 490.86 s**. No entry-85 SPICE point has run.
+
+### Outcome -- run 2026-09-03
+
+The fixed command completed exactly **one real-PMOS SPICE invocation** and
+wrote `experiments/atten_final_probe_results.json`, SHA-256
+`352D8589CCF0D0874F1C8359E6F9B4122A802B418EDCD82E41A64A3A0102E1BF`.
+
+**Q1 HIT.** The entry-84 and entry-83 hashes match, exactly the registered
+`sf/0.95/125C`, request-12, bank-50/code-7 row appears, and the device result
+is valid.
+
+**Q2 HIT.** DC gain moved from -10.708719 to -11.002473 dB, a **0.293754 dB**
+reduction inside the registered 0.20-0.40 dB band.
+
+**Q3 HIT.** The 3 dB link is scorable and request 12 is fully compliant. Its
+eye is **296.140 mV high and 0.859375 UI wide**; all 13 V6 margins are positive.
+
+**Q4 HIT.** The 12 dB link remains scorable, with a **123.464 mV, 0.8125 UI**
+eye.
+
+**Q5 HIT.** Input-referred noise is **0.7367804 mV_rms**, below 1.5 mV_rms.
+
+**Q6 HIT.** Wall clock is **0.8048 s**, below 10 s.
+
+**Score: 6 of 6 predictions hit; OVERALL PASS.** Combined with entries 83 and
+84, the focused recovery is now **16 of the original 16** diagnosed
+corner/request pairs. Per the registered decision, this authorises proposing a
+separate full eight-attenuator x 64-CTLE x 45-corner verification. It does not
+adopt 7.3 dB, change D11's 5.933 dB production range, authorise that large run
+or authorise RL training. Post-result verification is green: **83/83 focused
+tests** and the complete non-slow suite **2,596/2,596**, with 13 deselected and
+2 warnings in 295.93 s.

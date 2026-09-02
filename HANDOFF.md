@@ -17,13 +17,13 @@
 > decisions that are OPEN and human-only, and what to do next. It supersedes
 > `nebula/NEXT_STEPS.md`. This file remains the full state of record.
 
-Last updated: **2026-09-03** (session 37, entry 85 implementation: the one-row
-7.3 dB boundary driver is built and its fail-capable gates are green. It
-hash-checks entry 84, forwards the opt-in divider ratio through the existing
-measurement path, and refuses overwrite. **No entry-85 SPICE point has run.**
-The next action is to commit this implementation, then run exactly the one
-authorised `sf/0.95/125C`, request-12, R6C2 measurement. D11's production
-range and the full table remain unchanged.)
+Last updated: **2026-09-03** (session 37, entry 85 outcome: the one authorised
+7.3 dB boundary measurement passes **Q1-Q6** and closes the focused diagnosis
+at **16/16**. At `sf/0.95/125C`, request 12, R6C2, measured DC gain falls by
+0.293754 dB, both 3 dB and 12 dB links are scorable, and noise is 0.7367804
+mV_rms. This authorises proposing a separately preregistered full-bank,
+45-corner verification; it does **not** adopt 7.3 dB or authorise that run.
+D11's production range remains unchanged.)
 
 Earlier session 22p: (**THE REPORT EXISTS** --
 `nebula/report/Nebula_CTLE_Report.pdf`, **10 pages, 9 figures, 598 KB**,
@@ -1430,6 +1430,8 @@ signaling, ADC-based DSP receiver, 28 nm CMOS reference parameters).
 │   ├── experiments/exp_atten_final_probe.py  Entry 85's one-row 7.3 dB
 │   │                       boundary diagnostic. Hash-pinned, anti-overwrite,
 │   │                       six-gate analysis; no production-range adoption.
+│   ├── experiments/atten_final_probe_results.json  Entry 85's single-row
+│   │                       result: 6/6 pass and focused 16/16 closure.
 │   ├── NEXT_AGENT_ENTRY85.md  Self-contained continuation prompt for the
 │   │                       preregistered one-point 7.3 dB boundary probe.
 │   │                       NOTE: this tree lags for the session 23-25 files —
@@ -1641,16 +1643,20 @@ Plus: git init, .gitignore, 28 tests, Wilson-bound BER reporting.
   `BAECB4621818D80B71BFC9CF1977EF81E71A02BB3026CF67211123FCFFA204C5`.
 - **Nebula final-boundary probe (D14, entry 85):** the owner approved exactly
   7.3 dB nominal maximum at the one remaining R6C2 row. The registered divider
-  maximum is 2.31739464996848. One real-PMOS invocation will score 3 dB full
-  compliance, 12 dB scorability, physical gain movement, noise and cost. The
-  driver and fail-capable gates are implemented; **no entry-85 SPICE point has
-  run**.
+  maximum is 2.31739464996848. Exactly one real-PMOS invocation ran and **all
+  six gates pass**: 0.293754 dB measured DC-gain reduction, full request-12
+  compliance at 3 dB, a scorable 12 dB link, 0.7367804 mV_rms noise and 0.805 s
+  measured cost. Focused closure is now **16/16**. Artifact SHA-256:
+  `352D8589CCF0D0874F1C8359E6F9B4122A802B418EDCD82E41A64A3A0102E1BF`.
+  D11 is unchanged; full-bank/45-corner verification still needs a separate
+  preregistration and owner authority.
 
 - Tests: **2589 non-slow collected** (entry 84): pre-run **2588 passed plus one
   timing-only `ll` failure**; the exact failed node passed alone. Post-result,
   **all 2589 passed**, 13 deselected, 2 warnings in 287.79 s. Entry-83 clean
   baseline: 2583 passed. Entry-85 pre-SPICE implementation: **2596 passed**, 13
-  deselected, 2 warnings in 490.86 s. —
+  deselected, 2 warnings in 490.86 s; post-result: **2596 passed**, 13
+  deselected, 2 warnings in 295.93 s. —
   `python -m pytest tests nebula/tests -q -m "not slow"`.
   (Was 65 + 267 = 332 at the start of session 9; 430 at the end of it; 444
   after 10b; 528 after 11; 618 after 12b; 679 after 13; 1007 after 16; 1246
@@ -2088,10 +2094,11 @@ explicit scope.
    the owner's D13 scope clarification. Entry 84's adjacent-C2 probe closes two
    of the three remaining rows; combined closure is 15/16. The last point has
    correct frequency/peaking and is only 3.076% above the measured compression
-   limit. The owner has now made the next human decision as D14: pre-register,
-   implement and run exactly one 7.3 dB measurement at that row. Do not expand
-   it into production adoption or a full-table run. The driver is now built and
-   must be committed before the one authorised measurement is launched. The
+   limit. D14's one 7.3 dB measurement now passes all six gates and closes the
+   focused set at 16/16. The next hardware step is **not automatic**: propose
+   and preregister a full eight-attenuator x 64-CTLE x 45-corner verification,
+   then obtain owner authority before running it. Do not describe the focused
+   result as production adoption or full-PVT coverage. The
    standing owner item is also urgent: `nebula/report/Nebula_CTLE_Report.pdf`
    is about three weeks behind,
    still says one simulation / under five seconds rather than 17 / ~22 s,
@@ -14121,3 +14128,26 @@ and the full attenuator/joint-bank focused group (**83/83**) pass. No simulator
 was invoked. The complete non-slow suite passes **2,596/2,596**, with 13
 deselected and 2 warnings in 490.86 s. Commit the implementation before running exactly
 `py -3.13 -m nebula.experiments.exp_atten_final_probe --run` once.
+
+### 2026-09-03 - session 37 (entry 85 outcome). **The final boundary closes: 6/6 pass and focused recovery reaches 16/16.**
+
+Commit `57becb0` locked the driver and tests before measurement. The unchanged
+command then ran exactly **one real-PMOS SPICE invocation** and wrote
+`experiments/atten_final_probe_results.json` (SHA-256
+`352D8589CCF0D0874F1C8359E6F9B4122A802B418EDCD82E41A64A3A0102E1BF`).
+
+Q1-Q6 all pass. Source identity, one-row membership and device validity hold.
+The measured DC gain changed from -10.708719 to -11.002473 dB, a **0.293754
+dB** reduction inside the registered 0.20-0.40 dB band. The 3 dB link is now
+scorable and request 12 passes all V6 rows with a 296.140 mV, 0.859375 UI eye.
+The 12 dB guard remains scorable with a 123.464 mV, 0.8125 UI eye. Noise is
+**0.7367804 mV_rms**, and elapsed time is **0.8048 s**. Thus the focused
+diagnosed set reaches **16/16**.
+
+Per the decision written before the run, this result authorises only proposing
+a separately preregistered full eight-code x 64-CTLE x 45-corner verification.
+It does not change D11's 5.933 dB production range, claim full-PVT coverage or
+authorise the large run or RL training. Post-result verification is green:
+the focused attenuator/joint-bank group passes **83/83**, and the complete
+non-slow suite passes **2,596/2,596**, with 13 deselected and 2 warnings in
+295.93 s.

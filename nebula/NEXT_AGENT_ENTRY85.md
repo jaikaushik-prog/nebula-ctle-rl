@@ -1,5 +1,10 @@
 # Next-session prompt: continue Nebula Entry 85
 
+> **COMPLETED 2026-09-03.** Implementation commit `57becb0` preceded the one
+> authorised measurement. Entry 85 passed Q1-Q6 and focused closure reached
+> 16/16. Do not rerun this prompt; continue from `HANDOFF.md`. The result does
+> not adopt 7.3 dB or authorise the full 45-corner experiment.
+
 Continue the Nebula project in:
 
 `C:\Users\DELL\Desktop\serdes-dsp-framework-main`
