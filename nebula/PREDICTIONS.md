@@ -12838,3 +12838,59 @@ divider. Total added PMOS: 280 um per side, 560 um differential.
   when the attenuator is on is the fallback if it is material.
 * **Nothing is re-verified.** No corner sweep, no coverage number, and the
   attenuator's own `SWITCH_RON_OHM = 16.50` still holds the nfet value.
+
+## 76. Session 35 -- **does adding PFET model support materially slow the one-section CTLE library?**
+
+**Written 2026-09-02 BEFORE the run.** Decision **D11** already fixes the
+attenuator topology and entry 75 already measured the PMOS switch. This entry
+only decides how that device family is plumbed into the trimmed PDK library.
+
+### Measurement, fixed before seeing the result
+
+Extend `experiments/lib_cost.py` with two arms that run the **same drawn-passive
+CTLE netlist** through the same `run_point` path and differ in exactly one
+thing: the one-section library either has the present NFET-only MOS includes or
+also has the matching `pfet_01v8` corner and mismatch includes. No PMOS is
+instantiated, so the difference is the parse/load cost of making the model
+available, not the cost of the attenuator circuit.
+
+Use **50 designs**, seed **20260808**, TT, one process, with the instrument's
+discarded warm-up, per-design shuffled arm order, final control rerun, exact
+measurement equivalence check, and no concurrent SPICE work (G70/G71).
+
+For this decision, **immaterial** means the PFET-capable arm adds both no more
+than **0.010 s absolute** and no more than **5% relative** to the median
+end-to-end evaluation. The prior recorded median for the one-section extended
+path is 0.222 s, so either limit is deliberately small compared with one SPICE
+evaluation.
+
+### Predictions
+
+**Q1 -- THE DECISION. The PFET-capable section is immaterial by both registered
+limits:** added median <= 0.010 s and ratio <= 1.05. Confidence **0.75**. The
+section already loads the large NFET and passive families; one unused same-voltage
+MOS family should be a small increment. **Falsifier: either limit exceeded.**
+
+**Q2 -- correctness. All compared parsed values are bit-identical** between
+the two arms (`n_diff = 0`, exact comparison). Confidence **0.99** because the
+netlist instantiates no PFET. **Falsifier: any differing field on any shared
+successful design.**
+
+**Q3 -- robustness. Both arms complete all 50 measured designs with zero
+failures, and the order control is uncontaminated** (ratio in [0.8, 1.25]).
+Confidence **0.95**. **Falsifier: any arm failure or a contaminated control.**
+
+**Q4 -- cost of the measurement. The isolated two-arm run completes in under
+90 seconds.** Confidence **0.8**, based on the prior 0.222 s median plus one
+final control pass. **Falsifier: wall clock over 90 seconds.**
+
+### Decision rule, before the result
+
+* Q2 or Q3 fails -> the timing numbers are void; fix the instrument or run
+  conditions and do not choose a library path.
+* Q1 holds -> add PFET includes corner-for-corner to the shared 25-section
+  `sky130_ctle.lib.spice`, regenerate the trim, and keep the ordinary delivered
+  path on the same library.
+* Q1 fails -> build a PFET-capable library variant selected **only** when
+  `atten_code is not None`, preserving the existing delivered path byte-for-byte
+  and without its measured slowdown.

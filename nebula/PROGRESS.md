@@ -2148,6 +2148,13 @@ Cost, measured: input-referred noise **0.2142 -> 0.4836 mVrms** at 9.54 dB, a
 
 ## 6. Next steps, in order
 
+**2026-09-02, session 35 / entry 76 (pre-registered, not yet run):** finish D11
+by measuring the parse cost of adding `pfet_01v8` support before changing the
+trim. The committed decision rule calls the cost immaterial only if the added
+median is <= 0.010 s and <= 5%, with exact result equivalence and the G71 order
+control both passing. Immaterial selects the shared trim; material selects an
+attenuator-only PFET-capable variant. No measurement exists yet.
+
 | # | Task | Cost | Status |
 |---|---|---|---|
 | 1 | Pre-register `PREDICTIONS.md` entry 24 | — | **DONE**, committed before the run |

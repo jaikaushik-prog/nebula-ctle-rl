@@ -13434,3 +13434,17 @@ is still **no coverage number**.
 
 Suite green at **2 522 passed**, 13 deselected.
 
+### 2026-09-02 - session 35 (entry 76 pre-registration). **D11 PFET plumbing: parse-cost decision registered before measurement.**
+
+Baseline suite: **2 522 passed, 13 deselected** in 273.26 s with system Python
+3.13. The working tree also contains the pre-existing untracked `gmcmp.pkl` and
+`nebula/.claude/`; neither is touched.
+
+Entry 76 fixes the measurement before adding PFET support: 50 TT designs through
+the real drawn-passive `run_point` path, current one-section trim versus the
+same section with matching PFET corner/mismatch includes, shuffled per design,
+warm-up discarded, final order control, and exact parsed-value equivalence.
+"Immaterial" is pre-defined as <= 0.010 s absolute **and** <= 5% relative
+median overhead. If both hold, PFET goes in the shared trim; otherwise an
+attenuator-only library variant preserves the delivered path. **No timing has
+been run yet.**
