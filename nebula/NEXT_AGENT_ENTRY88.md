@@ -111,3 +111,14 @@ not permission to change D18. Artifact SHA-256:
 
 Commit Stage 1 before adding masked PPO. Then implement five one-seed durable
 training runs exactly as registered; never score FINAL TEST early.
+
+## Stage 2 implementation -- before registered training
+
+Stage 1 is frozen in commit `6e3231e`. New `masked_discrete_ppo.py` stores the
+exact action mask with every rollout transition and reapplies it during PPO
+updates. `exp_margin_improve_ppo.py` trains one registered seed per invocation,
+refuses overwrite, and validates all five checkpoints before any FINAL TEST
+control or policy can run. The combined Entry 88 group passes 30/30 and the
+complete non-slow suite passes 2,661/2,661. No registered step, checkpoint,
+summary or FINAL TEST score exists. Commit this implementation, then start
+seed `2026090400` alone.

@@ -17,11 +17,11 @@
 > decisions that are OPEN and human-only, and what to do next. It supersedes
 > `nebula/NEXT_STEPS.md`. This file remains the full state of record.
 
-Last updated: **2026-09-03** (session 39, Entry 88 Stage 1: the new masked
-improvement environment and TRAIN-only controls pass 16 focused and 2,647 full
-tests. Fixed q=0.6906; the seven-move reachable oracle q=0.9890, so +0.2984
-headroom exists. FINAL TEST remains `DEFINED_NOT_SCORED`. Commit Stage 1 before
-adding any masked-PPO policy code.)
+Last updated: **2026-09-03** (session 39, Entry 88 policy implementation:
+controls-first commit `6e3231e` is frozen. Masked categorical PPO and the
+five-seed crash-safe evaluator pass 30 focused and 2,661 full tests. No
+registered step, checkpoint, summary or FINAL TEST score exists. Commit policy
+implementation, then train seed `2026090400` alone.)
 
 Earlier session 22p: (**THE REPORT EXISTS** --
 `nebula/report/Nebula_CTLE_Report.pdf`, **10 pages, 9 figures, 598 KB**,
@@ -1451,6 +1451,10 @@ signaling, ADC-based DSP receiver, 28 nm CMOS reference parameters).
 │   │                       hill/exhaustive/global/reachable controls.
 │   ├── experiments/margin_improve_controls_results.json  Entry 88 Stage 1
 │   │                       evidence; FINAL TEST explicitly unscored.
+│   ├── rl/masked_discrete_ppo.py  Entry 88's mask-correct categorical PPO;
+│   │                       Entry 87's unmasked learner remains immutable.
+│   ├── experiments/exp_margin_improve_ppo.py  One-seed durable training and
+│   │                       post-five-checkpoint FINAL TEST evaluator.
 │   ├── rl/margin_adapt_env.py  Entry 87's separate 512-code hidden PVT/channel
 │   │                       episode; request + ordered eye history only.
 │   ├── experiments/exp_margin_adapt_controls.py  Fixed, random, local
@@ -2122,11 +2126,12 @@ The owner has now approved that second attempt as D18 / Entry 88. TRAIN is the
 policy-untouched complement and must not be scored before all five policies are
 frozen. The scale-free move reward is `q_new-q_previous`; compliant LOCK is 0;
 false LOCK is `-1-q_current`. Invalid moves are masked and LOCK requires one
-real move. Stage 1 now passes 16 focused and 2,647 complete tests. TRAIN-only
-fixed q is 0.6906 and the seven-move reachable-oracle q is 0.9890 (+0.2984),
-while FINAL TEST remains unscored. Commit Stage 1 before any masked-PPO code.
-Full immutable contract: `nebula/NEXT_AGENT_ENTRY88.md` and `PREDICTIONS.md`
-Entry 88.
+real move. Stage 1 is frozen as commit `6e3231e`; TRAIN-only fixed q is 0.6906
+and the seven-move reachable-oracle q is 0.9890 (+0.2984). Masked PPO and its
+five-seed runner now pass 30 focused and 2,661 complete tests, but are not yet
+committed and have executed zero registered steps. Commit policy code next,
+then train seed `2026090400` alone. FINAL TEST remains unscored. Full immutable
+contract: `nebula/NEXT_AGENT_ENTRY88.md` and `PREDICTIONS.md` Entry 88.
 
 **Entry-81 artifacts:** preserve `joint_bank_results.json` and the byte-verified
 compressed journal `joint_bank_run.jsonl.gz`. The local raw journal remains the
@@ -14488,3 +14493,22 @@ is exactly `DEFINED_NOT_SCORED`, identity hash
 Controls artifact SHA-256:
 `7EE4650145E1603E1A90282A0F9B69C33E8070C8A4E52AF73156F3B8AC1497B6`.
 Commit this state before implementing masked PPO.
+
+### 2026-09-03 - session 39 (Entry 88 Stage 2 implementation, before training). **Masked PPO is green; zero registered steps and zero FINAL TEST scores exist.**
+
+Stage 1 commit `6e3231e` permanently precedes policy code. Fourteen additional
+fail-first tests cover zero-probability action masking in rollout and PPO
+recomputation, masked deterministic argmax, invalid-mask rejection, exact and
+reproducible training, unchanged optimizer defaults, frozen seeds/paths,
+structured exact request keys, bootstrap determinism, Q1-Q8 failure paths,
+anti-overwrite behavior, ASCII output, and validation of all five checkpoints
+before any final scoring. The combined Entry 88 group passes **30/30**. The
+complete non-slow suite passes **2,661/2,661**, with 13 deselected and 2 known
+warnings in 307.54 s.
+
+`masked_discrete_ppo.py` is separate from Entry 87 and stores each transition's
+mask for the PPO update. `exp_margin_improve_ppo.py` trains exactly one
+registered seed per durable invocation and pins the source, controls, TRAIN
+and FINAL TEST hashes in every artifact. No checkpoint or summary exists yet.
+Commit this implementation before starting seed `2026090400`; never run two
+seeds concurrently and never invoke final evaluation before all five validate.

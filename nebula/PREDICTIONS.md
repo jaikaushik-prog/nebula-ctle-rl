@@ -14180,3 +14180,20 @@ confirm prediction 4's safety risk: visible eye alone is not a reliable proxy
 for hidden compliance. This does not alter any reward, seed, split, optimizer
 or gate. Artifact SHA-256:
 `7EE4650145E1603E1A90282A0F9B69C33E8070C8A4E52AF73156F3B8AC1497B6`.
+
+### Entry 88 masked-PPO implementation -- before registered training
+
+Controls-first commit `6e3231e` permanently precedes policy code. Fourteen new
+fail-capable Stage 2 tests first failed on absent modules and then pass. With
+the 16 Stage 1 tests, the Entry 88 focused group passes **30/30**; the complete
+non-slow suite passes **2,661/2,661**, with 13 deselected and 2 known warnings
+in 307.54 s.
+
+The masked Categorical distribution assigns exactly zero probability to
+unavailable actions during both rollout collection and PPO recomputation.
+Deterministic deployment is masked argmax. The one-seed runner pins the source,
+controls and both split hashes; refuses unregistered seeds and existing files;
+records exact steps, finite telemetry and before/after tensor hashes; and loads
+and validates every checkpoint before the single final evaluator can score any
+control or policy. The optimizer defaults, reward, split, seeds and Q1-Q8 gates
+remain exactly D18. No registered training step or FINAL TEST score exists.
