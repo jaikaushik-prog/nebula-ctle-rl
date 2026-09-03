@@ -28,6 +28,19 @@ def test_checkpoint_and_summary_paths_are_distinct_and_nonhistorical():
     assert P.RESULTS not in checkpoints and P.RESULTS not in summaries
 
 
+def test_control_start_map_restores_exact_registered_request_keys():
+    encoded = {
+        "start_by_request": {
+            f"{pk:g}/{freq:g}": index
+            for index, (pk, freq) in enumerate(P.C.REQUESTS)
+        }
+    }
+    restored = P._start_map(encoded)
+    assert set(restored) == set(P.C.REQUESTS)
+    for index, request in enumerate(P.C.REQUESTS):
+        assert restored[request] == index
+
+
 def test_paired_bootstrap_is_deterministic_and_detects_positive_delta():
     delta = np.linspace(0.01, 0.05, 864)
     one = P.paired_bootstrap_ci(delta)

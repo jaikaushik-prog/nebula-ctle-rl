@@ -14041,3 +14041,20 @@ per invocation, requires all five before evaluation, preselects deployment
 seed 00, aligns all 864 paired episodes and uses the registered deterministic
 10,000-resample bootstrap. No registered training step or TEST evaluation has
 run at this point.
+
+### Pre-training request-key repair -- 2026-09-03
+
+The first seed-00 launch stopped before `env.reset()` completed and therefore
+before any environment or gradient step. The committed control artifact stored
+request frequencies with Python's `:g` formatting (six significant digits),
+whereas the registered `FREQ_REQUESTS` values retain full precision. Re-parsing
+the displayed value as a dictionary key produced a `KeyError`; no checkpoint
+or training summary was written.
+
+A fail-first gate now requires the reader to map each displayed frequency back
+to exactly one registered request within the formatting precision and to use
+the exact registered tuple as the key. The control artifact/hash, split,
+reward and every experiment gate remain unchanged. The focused PPO group passes
+10/10 and the complete non-slow suite passes **2,631/2,631**, with 13
+deselected and 2 warnings in 315.48 s. Commit this plumbing repair before
+retrying seed 00.

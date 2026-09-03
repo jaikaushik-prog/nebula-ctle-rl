@@ -60,10 +60,21 @@ def _load_controls() -> dict:
 
 
 def _start_map(controls: dict) -> dict:
-    out = {}
+    encoded = []
     for key, setting in controls["start_by_request"].items():
         pk, freq = key.split("/", 1)
-        out[(float(pk), float(freq))] = int(setting)
+        encoded.append((float(pk), float(freq), int(setting)))
+    out = {}
+    for exact_pk, exact_freq in C.REQUESTS:
+        candidates = [(abs(freq - exact_freq), setting, freq)
+                      for pk, freq, setting in encoded if pk == exact_pk]
+        if not candidates:
+            raise ValueError(f"missing start code for request {(exact_pk, exact_freq)}")
+        _, setting, stored_freq = min(candidates)
+        if not math.isclose(stored_freq, exact_freq, rel_tol=1e-5, abs_tol=0.0):
+            raise ValueError(
+                f"stored request frequency {stored_freq} does not identify {exact_freq}")
+        out[(exact_pk, exact_freq)] = setting
     return out
 
 

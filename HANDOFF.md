@@ -17,11 +17,11 @@
 > decisions that are OPEN and human-only, and what to do next. It supersedes
 > `nebula/NEXT_STEPS.md`. This file remains the full state of record.
 
-Last updated: **2026-09-03** (session 39, Entry 87 PPO implementation: controls
-are frozen in earlier commit `52dabac`; categorical PPO and the crash-safe
-five-seed evaluator now pass 23 focused and 2,630 complete tests. No registered
-training step or TEST evaluation exists. Commit this implementation, then run
-seeds `2026090300..04` one durable invocation at a time.)
+Last updated: **2026-09-03** (session 39, Entry 87 pre-training repair: policy
+commit `c1e0791` is frozen. Seed 00 stopped before reset/step zero because the
+control artifact's display-formatted frequency was not an exact float key. A
+fail-first exact-request reader repair passes 2,631 tests; commit it, then retry
+seed 00. No checkpoint, summary, TEST result or experiment gate changed.)
 
 Earlier session 22p: (**THE REPORT EXISTS** --
 `nebula/report/Nebula_CTLE_Report.pdf`, **10 pages, 9 figures, 598 KB**,
@@ -13996,6 +13996,18 @@ signature is a link rejection; only a non-compression false row is a hard
 device/measurement failure. Preserve the first artifact, repair the analysis
 with a red-first test and re-score the frozen journal with zero SPICE.
 
+### G148. A display-formatted float is not an identity key
+
+Entry 87's control artifact used `:g` labels for readable request frequencies.
+That keeps six significant digits, so parsing `1.92109e+09` cannot reproduce
+the exact registered `1921093976.6100154` tuple. Seed 00 then failed before its
+first reset with a dictionary `KeyError` even though the request was present.
+
+**Rule:** serialized display labels are presentation, not identity. When a
+committed artifact predates an exact machine-key field, resolve its label
+uniquely against the canonical registered values and store the canonical value
+in memory. Gate that mapping fail-first; do not rewrite the frozen artifact.
+
 ### 2026-09-02 - session 36 (entry 83 implementation, before measurement). **The focused probe is built and green; no entry-83 SPICE point has run.**
 
 `attenuator.py` now accepts an explicit optional maximum ratio through its one
@@ -14347,3 +14359,15 @@ and evaluates only after all five checkpoint/summary pairs exist. It validates
 the frozen source and control hashes and records zero simulations. Commit this
 implementation before starting seed `2026090300`; never choose a deployment
 seed after observing TEST results.
+
+### 2026-09-03 - session 39 (Entry 87 pre-training request-key repair). **Seed 00 executed zero steps and wrote no artifact.**
+
+The first launch reached the initial `env.reset()` and failed on a request-key
+lookup before the environment or optimiser took a step. `:g` formatting in the
+committed controls artifact had rounded each frequency label; parsing that
+label could not equal the full-precision `FREQ_REQUESTS` tuple. New G148 records
+the general trap. A fail-first test now requires unique matching back to the
+canonical request and exact in-memory keys. The controls artifact and its
+SHA-256 remain unchanged. The focused PPO group passes 10/10 and the complete
+non-slow suite passes **2,631/2,631**, with 13 deselected and 2 warnings in
+315.48 s. Commit this repair before retrying seed `2026090300`.

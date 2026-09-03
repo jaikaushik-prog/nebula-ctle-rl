@@ -41,8 +41,13 @@ mean q >=0.6996 plus the registered CI/reproducibility gates.
 
 Categorical PPO and the five-seed runner are now implemented but not yet
 trained. The full Entry 87 focused group passes 23/23 and the complete suite
-passes 2,630/2,630. Commit the implementation before running exactly one seed
-per command, starting with:
+passes 2,630/2,630. Implementation commit: `c1e0791`.
+
+The first seed-00 launch stopped before reset/step zero because the committed
+control artifact's `:g` frequency labels are display precision, not exact float
+keys. A fail-first reader repair reconstructs exact `REQUESTS`; 2,631 full
+tests pass. Commit that repair, then run exactly one seed per command, starting
+with:
 
 ```text
 py -3.13 -m nebula.experiments.exp_margin_adapt_ppo --train-seed 2026090300
