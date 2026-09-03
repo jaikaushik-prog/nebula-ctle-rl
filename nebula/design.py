@@ -228,6 +228,13 @@ def solve_auto(target: SpecTarget, budget: int, seed: int,
             "screened_on": [p.label for p in screen.points]}
 
 
+def solve_rl_hybrid(target: SpecTarget, channel_loss_db: float) -> dict:
+    """Frozen RL proposer + simulator shield + measured-bank fallback."""
+    from nebula.rl.hybrid_designer import solve
+
+    return solve(target.peaking_db, target.f_peak_hz, channel_loss_db)
+
+
 def solve_search(target: SpecTarget, method: str, budget: int, seed: int,
                  robust: bool, peaking_tiebreak: bool = True) -> dict:
     """Run one of the benchmarked search methods against this target."""
@@ -286,7 +293,8 @@ def _schematic_panel(d: dict) -> dict:
     that states a corner count nobody ran would be the worst instance of rule 4
     in the repository, because a picture is believed on sight.
     """
-    panel: dict[str, str] = {"method": str(d.get("method", "?"))}
+    method = str(d.get("method", "?"))
+    panel: dict[str, str] = {"method": method}
     nom = d.get("nominal") or {}
     # The verdict leads, because every row under it is only as meaningful as
     # this one. `library`/`cmaes` runs that fail still produce a netlist.
@@ -294,29 +302,45 @@ def _schematic_panel(d: dict) -> dict:
                        else str(nom.get("verdict") or "no measurement"))
     if nom.get("design_id"):
         panel["design id"] = str(nom["design_id"])
-    panel["PDK"] = "SKY130 nfet_01v8"
+    panel["PDK"] = ("SKY130 nfet+pfet" if method == "rl-hybrid"
+                    else "SKY130 nfet_01v8")
+    if method == "rl-hybrid":
+        search = d.get("search") or {}
+        if "atten_code" in search and "bank_code" in search:
+            panel["TT tuning code"] = (
+                f"A{int(search['atten_code'])} / B{int(search['bank_code'])}")
+        panel["PVT mode"] = "adaptive code map"
+        v = d.get("verification") or {}
+        if "n_points" in v and "n_failed" in v:
+            n, f = int(v["n_points"]), int(v["n_failed"])
+            panel["PVT verified"] = f"{n - f}/{n} PASS (adaptive)"
+        if "policy_seed" in search:
+            panel["policy seed"] = str(int(search["policy_seed"]))
+        if "channel_loss_db" in search:
+            panel["channel loss"] = f"{float(search['channel_loss_db']):g} dB"
     m = nom.get("meas") or {}
-    if "peaking_db" in m:
+    if method != "rl-hybrid" and "peaking_db" in m:
         panel["peaking (TT)"] = f"{float(m['peaking_db']):.2f} dB"
-    if "_f_peak_ghz" in m:
+    if method != "rl-hybrid" and "_f_peak_ghz" in m:
         panel["f_peak (TT)"] = f"{float(m['_f_peak_ghz']):.3f} GHz"
-    if "_power_mw" in m:
+    if method != "rl-hybrid" and "_power_mw" in m:
         panel["power (TT)"] = f"{float(m['_power_mw']):.2f} mW"
-    if "_noise_mv" in m:
+    if method != "rl-hybrid" and "_noise_mv" in m:
         panel["input noise"] = f"{float(m['_noise_mv']):.3f} mVrms"
     v = d.get("verification") or {}
     # **Stated only when --verify actually ran.** Without it this design has
     # been measured at ONE corner, and a panel implying 45 would be a claim the
     # run never made.
-    if "n_points" in v and "n_failed" in v:
+    if method != "rl-hybrid" and "n_points" in v and "n_failed" in v:
         n, f = int(v["n_points"]), int(v["n_failed"])
         grid = (f" ({int(v['n_corners'])}x{int(v['n_loads'])})"
                 if "n_corners" in v and "n_loads" in v else "")
-        panel["verified points"] = f"{n - f} / {n} PASS{grid}"
-    else:
+        suffix = " (adaptive code)" if method == "rl-hybrid" else grid
+        panel["verified points"] = f"{n - f} / {n} PASS{suffix}"
+    elif method != "rl-hybrid":
         panel["verified points"] = "not verified (--verify)"
     sims = d.get("simulations") or {}
-    if "total" in sims:
+    if method != "rl-hybrid" and "total" in sims:
         panel["simulations"] = str(sims["total"])
     return panel
 
@@ -353,23 +377,31 @@ def request_miss(d: dict) -> Optional[dict]:
             "request_met": abs(d_db) <= tol_db and abs(d_oct) <= tol_oct}
 
 
-def netlist_for(u: Sequence[float], cl_f: float) -> Optional[str]:
+def netlist_for(u: Sequence[float], cl_f: float,
+                atten_code: Optional[int] = None,
+                atten_max_x: Optional[float] = None) -> Optional[str]:
     """The deck that RAN, captured rather than re-rendered (rule 9, G32)."""
+    from nebula.experiments.adaptive_screen import _attenuation_run_args
+
     sizing = sizing_from_u(np.asarray(u, dtype=float), cl_f=cl_f)
     point, _ = build_point(sizing, corner="tt", vdd_scale=1.0)
     pt = run_point(point, corner="tt", temp_c=27.0, swing=False,
-                   ac_peak_interp=True, keep_netlist=True)
+                   ac_peak_interp=True, keep_netlist=True,
+                   **_attenuation_run_args(atten_code, atten_max_x))
     return pt.netlist
 
 
 def design(peaking_db: float, f_peak_hz: float, method: str = "auto",
            budget: int = 150, seed: int = 0, robust: bool = False,
-           verify: bool = False, peaking_tiebreak: bool = True) -> dict:
+           verify: bool = False, peaking_tiebreak: bool = True,
+           channel_loss_db: float = 7.5) -> dict:
     """Target specs in; a sized schematic and its measured specs out."""
     target = SpecTarget(peaking_db=float(peaking_db), f_peak_hz=float(f_peak_hz))
     t0 = time.perf_counter()
     if method == "auto":
         sol = solve_auto(target, budget, seed)
+    elif method == "rl-hybrid":
+        sol = solve_rl_hybrid(target, float(channel_loss_db))
     elif method == "library":
         sol = solve_library(target, peaking_tiebreak)
     else:
@@ -380,7 +412,12 @@ def design(peaking_db: float, f_peak_hz: float, method: str = "auto",
 
     cl_mid = committed_cl_range().cl_mid_f
     budget_obj = SpiceBudget()
-    nominal = measure(sol["u"], cl_mid, budget_obj, target)
+    if method == "rl-hybrid":
+        nominal = sol.pop("_nominal")
+        bank_verification = sol.pop("_verification")
+    else:
+        nominal = measure(sol["u"], cl_mid, budget_obj, target)
+        bank_verification = None
 
     out = {
         "request": {"peaking_db": target.peaking_db,
@@ -392,7 +429,7 @@ def design(peaking_db: float, f_peak_hz: float, method: str = "auto",
         # understate it, and reporting it as 45-corner verified would overstate
         # it -- it is neither, and `--verify` is still what buys the 45.
         "method": method,
-        "robust_search": bool(robust) or method == "auto",
+        "robust_search": bool(robust) or method in ("auto", "rl-hybrid"),
         "search": sol, "nominal": nominal,
         "simulations": {"search": sol["sims"],
                         "measure": budget_obj.calls},
@@ -410,6 +447,11 @@ def design(peaking_db: float, f_peak_hz: float, method: str = "auto",
             "still scored on V1_SPECS (7 device rows at TT), where the request "
             "is a tie-break only."
             if method == "auto" else
+            "the rl-hybrid safety shield scores V6_SPECS, including both "
+            "S3_peaking_match and S3_f_peak_match, at every mandated PVT "
+            "corner. The requested peaking and frequency are therefore IN "
+            "the acceptance test."
+            if method == "rl-hybrid" else
             "reward_v1's DEFAULT spec set, V1_SPECS, has no S3_peaking_match "
             "row, so on this path target_peaking_db is honoured as a TIE-BREAK "
             "outside the objective. NOTE this is a property of V1_SPECS, not "
@@ -422,7 +464,14 @@ def design(peaking_db: float, f_peak_hz: float, method: str = "auto",
     # as on the console.
     out["request_match"] = request_miss(out)
 
-    if verify:
+    if bank_verification is not None:
+        # The RL product path always verifies its code map before delivery.
+        # ``--verify`` is therefore already satisfied and must not invoke the
+        # fixed-CTLE checker, which has no attenuator/code-map interface.
+        bank_verification["requested_by_flag"] = bool(verify)
+        out["verification"] = bank_verification
+
+    if verify and method != "rl-hybrid":
         from nebula.experiments.exp_g4_verify import Candidate, verify as g4_verify
 
         cand = Candidate(design_id=str(nominal.get("design_id", "?")),
@@ -472,7 +521,15 @@ def report(d: dict) -> str:
     # `.get`: `report()` is called on hand-built dicts in tests and on the
     # early-failure path, neither of which carries a search record.
     sr = d.get("search") or {}
-    if d["method"] == "auto":
+    if d["method"] == "rl-hybrid":
+        L.append("  METHOD      rl-hybrid   (frozen RL PROPOSER + safety shield)")
+        L.append(f"              deployment policy seed {sr.get('policy_seed')}; "
+                 f"at most 8 eye measurements per PVT corner")
+        L.append(f"              {sr.get('rl_proposals', 0)} proposals checked; "
+                 f"classical bank fallback used at "
+                 f"{sr.get('shield_fallbacks', 0)} of 45 corners")
+        L.append(f"              channel loss {sr.get('channel_loss_db')} dB")
+    elif d["method"] == "auto":
         # **Name the SOURCE, not just "a proposal".** This printed
         # "retrieval" for every accepted proposal regardless of where the
         # candidate came from -- and since row 4y the analytic solver answers
@@ -531,10 +588,16 @@ def report(d: dict) -> str:
     # checklist score. A reader who takes `feasible=True` for "meets the
     # specification" would be reading three specs that were never measured
     # here, so the scope is stated rather than left to be discovered.
-    L.append(f"    ^ feasible = {len(R.V1_SPECS)} device rows at TT/1.00/27C. "
-             f"NOT S4 (linearity), S7 (area) or S8 (eye):")
-    L.append(f"      those need the link bridge and the 45-corner checklist "
-             f"({len(R.V6V_SPECS)} rows) -- see --verify.")
+    if d["method"] == "rl-hybrid":
+        L.append(f"    ^ feasible = {len(R.V6_SPECS)} V6 rows, including the "
+                 "request, operating-point linearity, area and eye.")
+        L.append("      The same rows are checked by the simulator-backed "
+                 "shield at all 45 PVT corners below.")
+    else:
+        L.append(f"    ^ feasible = {len(R.V1_SPECS)} device rows at "
+                 f"TT/1.00/27C. NOT S4 (linearity), S7 (area) or S8 (eye):")
+        L.append(f"      those need the link bridge and the 45-corner checklist "
+                 f"({len(R.V6V_SPECS)} rows) -- see --verify.")
 
     # **DID IT ANSWER THE QUESTION THAT WAS ASKED?** (decision D6.) `feasible`
     # above is V1_SPECS, which has no request rows, so a design can meet every
@@ -563,7 +626,26 @@ def report(d: dict) -> str:
                      "and does NOT include the request.")
 
     v = d.get("verification")
-    if v:
+    if v and d["method"] == "rl-hybrid":
+        n_pass = int(v.get("n_mandated_pass", v.get("n_pass", 0)))
+        n_points = int(v.get("n_mandated_points", v.get("n_points", 0)))
+        passed = bool(v.get("mandated_all_pass", v.get(
+            "all_points_pass", False)))
+        L.append("")
+        L.append("  SIMULATOR SAFETY SHIELD")
+        L.append(f"    MANDATED PVT (S9): {n_pass} / {n_points}   "
+                 f"{'PASS' if passed else 'FAIL'}")
+        L.append(f"    one tunable circuit; the verified code may change by "
+                 f"corner at {float(v.get('channel_loss_db', sr.get('channel_loss_db', 0.0))):.1f} "
+                 f"dB channel loss")
+        L.append(f"    scored on {v.get('spec_set', 'the registered spec set')}")
+        if "export" in d.get("simulations", {}):
+            L.append("    selection reused the immutable 512 x 45 ngspice "
+                     "bank; output export ran 1 new nominal deck")
+        else:
+            L.append("    values come from the immutable 512 x 45 ngspice "
+                     "bank; this request ran no new SPICE decks")
+    elif v:
         L.append("")
         L.append(f"  CORNER VERIFICATION")
         if "n_mandated_pass" in v:
@@ -606,7 +688,12 @@ def report(d: dict) -> str:
     L.append(f"  COST  {s['total']} SPICE simulations "
              f"(search {s['search']}, measure {s['measure']}"
              + (f", verify {s['verify']}" if "verify" in s else "")
+             + (f", export {s['export']}" if "export" in s else "")
              + f")   {d['wall_s']:.1f} s")
+    if d["method"] == "rl-hybrid":
+        L.append(f"        reused {sr.get('offline_spice_rows', 0)} offline "
+                 f"ngspice rows; {sr.get('table_rows_checked', 0)} classical "
+                 f"table lookups after RL shield misses")
     L.append("")
     L.append("  NOTE ON --peaking: " + d["peaking_is_a_band_not_a_target"])
     L.append("=" * 74)
@@ -665,8 +752,8 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
                          f"is {lo_hz/1e9:.2f}-{hi_hz/1e9:.2f} GHz. This IS the "
                          f"reward's target.")
     ap.add_argument("--method", default="auto",
-                    choices=("auto", "library", "uniform", "lhs", "grid",
-                             "cmaes", "gp_bo", "ppo"),
+                    choices=("auto", "rl-hybrid", "library", "uniform",
+                             "lhs", "grid", "cmaes", "gp_bo", "ppo"),
                     help="auto = THE DEFAULT and the deliverable: the "
                          "passives are SOLVED in closed form and proposed "
                          "first, retrieval proposes next, the 4-corner screen "
@@ -674,7 +761,16 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
                          "no human picks a strategy. "
                          "library = 0 simulations, no corner screen; "
                          "cmaes = the best SEARCHER; ppo = the RL policy, "
-                         "measured indistinguishable from uniform random")
+                         "measured indistinguishable from uniform random; "
+                         "rl-hybrid = the improved frozen RL proposer, an "
+                         "ngspice-backed safety shield, then a classical "
+                         "measured-bank fallback")
+    from nebula.link.channel import FAMILY_IL_DB
+    ap.add_argument("--channel-loss", type=float, default=7.5,
+                    choices=tuple(float(value) for value in FAMILY_IL_DB),
+                    help="channel insertion loss in dB for rl-hybrid; must be "
+                         "one of the seven ngspice-bank characterisation "
+                         "points (default: 7.5)")
     ap.add_argument("--budget", type=int, default=150,
                     help="simulation budget for search methods")
     ap.add_argument("--seed", type=int, default=0)
@@ -706,10 +802,27 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         d = design(args.peaking, f_peak, method=args.method,
                    budget=args.budget, seed=args.seed, robust=args.robust,
                    verify=args.verify,
-                   peaking_tiebreak=not args.no_peaking_tiebreak)
+                   peaking_tiebreak=not args.no_peaking_tiebreak,
+                   channel_loss_db=args.channel_loss)
     except ValueError as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 2
+
+    deck = None
+    if args.out:
+        from nebula.experiments.cl_range import committed_cl_range
+
+        export_started = time.perf_counter()
+        deck = netlist_for(
+            d["search"]["u"], committed_cl_range().cl_mid_f,
+            atten_code=d["search"].get("atten_code"),
+            atten_max_x=d["search"].get("atten_max_x"))
+        export_elapsed = time.perf_counter() - export_started
+        if deck:
+            d["simulations"]["export"] = 1
+            d["simulations"]["total"] += 1
+            d["export_wall_s"] = export_elapsed
+            d["wall_s"] += export_elapsed
 
     print(json.dumps(d, indent=1, default=str) if args.json else report(d))
 
@@ -717,9 +830,6 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         args.out.mkdir(parents=True, exist_ok=True)
         (args.out / "design.json").write_text(
             json.dumps(d, indent=1, default=str), encoding="utf-8")
-        from nebula.experiments.cl_range import committed_cl_range
-
-        deck = netlist_for(d["search"]["u"], committed_cl_range().cl_mid_f)
         written = [args.out / "design.json"]
         if deck:
             (args.out / "design.cir").write_text(deck, encoding="utf-8")
@@ -740,11 +850,17 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
                 warn = None
                 if not nom.get("ok", False):
                     warn = str(nom.get("verdict") or "no valid measurement")
+                search = d.get("search") or {}
+                code_note = (f"  -  TT configuration A"
+                             f"{search.get('atten_code')}/B"
+                             f"{search.get('bank_code')}; PVT code map in "
+                             f"design.json" if d.get("method") == "rl-hybrid"
+                             else "  -  values parsed from the netlist beside it")
                 written.append(draw_schematic(
                     deck, args.out / "design_schematic.png",
                     subtitle=f"target {d['request']['peaking_db']:.1f} dB @ "
                              f"{d['request']['f_peak_hz'] / 1e9:.3f} GHz"
-                             f"  -  values parsed from the netlist beside it",
+                             f"{code_note}",
                     extra=_schematic_panel(d), warning=warn))
             except Exception as exc:                        # noqa: BLE001
                 print(f"\nwarning: the schematic could not be drawn ({exc}). "

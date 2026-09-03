@@ -212,6 +212,99 @@ def test_the_default_method_is_not_RL_and_the_choices_say_why():
     assert "indistinguishable from uniform random search" in parser_help
 
 
+def test_cli_exposes_the_shielded_RL_product_path():
+    text = " ".join(_help_text().split())
+    assert "rl-hybrid" in text
+    assert "--channel-loss" in text
+    assert "safety shield" in text.lower()
+
+
+def test_rl_hybrid_dispatch_does_not_remeasure_without_the_attenuator(monkeypatch):
+    """Its table row includes the PMOS attenuator; plain ``measure(u)`` does not."""
+    stub = {
+        "u": [0.5] * N_ACTIONS, "reward": None, "sims": 0,
+        "n_candidates": 512, "n_tied_at_best": 1, "design_id": "bank",
+        "atten_code": 3, "atten_max_x": 2.0, "bank_code": 4,
+        "which_path": "rl-bank", "_nominal": _fake_nominal(),
+        "_verification": {"n_corners": 45, "n_points": 45,
+                          "n_pass": 45, "n_failed": 0,
+                          "all_points_pass": True},
+        "policy_seed": 2026090500, "channel_loss_db": 7.5,
+        "rl_proposals": 100, "shield_fallbacks": 4,
+        "table_rows_checked": 2048,
+    }
+    monkeypatch.setattr(D, "solve_rl_hybrid", lambda target, loss: dict(stub))
+    monkeypatch.setattr(D, "measure", lambda *a, **k: (_ for _ in ()).throw(
+        AssertionError("rl-hybrid must use its attenuator-aware measured row")))
+    out = D.design(9.0, 1.9e9, method="rl-hybrid", channel_loss_db=7.5)
+    assert out["verification"]["all_points_pass"]
+    assert out["nominal"]["design_id"] == "stub"
+    assert out["simulations"]["total"] == 0
+    report = D.report(out)
+    assert "RL PROPOSER" in report
+    assert "45 / 45" in report
+    assert "classical bank fallback" in report
+
+
+def test_netlist_forwards_the_exact_attenuator_range(monkeypatch):
+    seen = {}
+
+    class _Point:
+        netlist = "deck"
+
+    monkeypatch.setattr(D, "build_point", lambda sizing, **kw: (object(), None))
+
+    def run(point, **kwargs):
+        seen.update(kwargs)
+        return _Point()
+
+    monkeypatch.setattr(D, "run_point", run)
+    deck = D.netlist_for([0.5] * N_ACTIONS, 32.6e-15,
+                         atten_code=7, atten_max_x=2.3)
+    assert deck == "deck"
+    assert seen["atten_code"] == 7
+    assert seen["atten_max_x"] == 2.3
+    assert seen["vid_max"] > 0.8
+
+
+def test_rl_hybrid_schematic_panel_cannot_look_like_one_fixed_code_passed():
+    panel = D._schematic_panel({
+        "method": "rl-hybrid",
+        "search": {"atten_code": 1, "bank_code": 40,
+                   "policy_seed": 2026090500, "channel_loss_db": 7.5},
+        "nominal": _fake_nominal(),
+        "verification": {"n_points": 45, "n_failed": 0,
+                         "n_corners": 45, "n_loads": 1},
+        "simulations": {"total": 0},
+    })
+    assert panel["PDK"] == "SKY130 nfet+pfet"
+    assert panel["TT tuning code"] == "A1 / B40"
+    assert panel["PVT mode"] == "adaptive code map"
+    assert panel["PVT verified"] == "45/45 PASS (adaptive)"
+
+
+def test_rl_hybrid_report_counts_the_extra_deck_used_by_output_export(monkeypatch):
+    stub = {
+        "u": [0.5] * N_ACTIONS, "reward": None, "sims": 0,
+        "n_candidates": 512, "n_tied_at_best": 1, "design_id": "bank",
+        "atten_code": 1, "atten_max_x": 2.3, "bank_code": 40,
+        "which_path": "rl-bank", "_nominal": _fake_nominal(),
+        "_verification": {"n_corners": 45, "n_points": 45,
+                          "n_pass": 45, "n_failed": 0,
+                          "all_points_pass": True},
+        "policy_seed": 2026090500, "channel_loss_db": 7.5,
+        "rl_proposals": 100, "shield_fallbacks": 4,
+        "table_rows_checked": 2048, "offline_spice_rows": 23040,
+    }
+    monkeypatch.setattr(D, "solve_rl_hybrid", lambda target, loss: dict(stub))
+    out = D.design(9.0, 1.9e9, method="rl-hybrid")
+    out["simulations"]["export"] = 1
+    out["simulations"]["total"] += 1
+    text = D.report(out)
+    assert "export 1" in text
+    assert "output export ran 1 new nominal deck" in text
+
+
 # ─────────────────────────────────────────────────────────────────────────────
 # SESSION 31 — the default stopped being a question put to the operator.
 #

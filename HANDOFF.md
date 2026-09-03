@@ -17,14 +17,17 @@
 > decisions that are OPEN and human-only, and what to do next. It supersedes
 > `nebula/NEXT_STEPS.md`. This file remains the full state of record.
 
-Last updated: **2026-09-04** (session 41, Entry 89 FINAL PASS: the one-time
+Last updated: **2026-09-04** (session 42, Entry 89 product integration: the one-time
 2,430-identity fresh evaluation ran only after policy commit `a84082e`, data
 commit `51a1146` and evaluator commit `6ec86bd`. Fixed compliance/q is
 0.8226/0.5619; shielded RL mean is 0.8388/0.7169 at 5.579 measurements, delta
 +0.1550 with paired 95% CI [+0.1508,+0.1593]. All five seeds improve and R1-R10
-pass. Pure raw RL remains unsafe; integrate the frozen proposer + simulator
-shield + classical fallback into the front-door product. Post-FINAL suite:
-2,696/2,696.)
+pass. Pure raw RL remains unsafe. `design.py --method rl-hybrid` now runs the
+frozen deployment proposer at all 45 PVT corners, applies the simulator shield,
+uses an exhaustive measured-bank fallback on RL misses, and emits the code map,
+attenuator-correct deck and honestly labelled schematic. A 9 dB / 1.9 GHz /
+7.5 dB smoke passed 45/45; RL supplied 38 corners and fallback supplied 7.
+Post-integration suite: 2,706/2,706.)
 
 Earlier session 22p: (**THE REPORT EXISTS** --
 `nebula/report/Nebula_CTLE_Report.pdf`, **10 pages, 9 figures, 598 KB**,
@@ -1454,6 +1457,9 @@ signaling, ADC-based DSP receiver, 28 nm CMOS reference parameters).
 │   │                       shield, fresh midpoint data and R1-R10 contract.
 │   ├── rl/safety_shield.py  Entry 89 simulator-verifier selection of the best
 │   │                       compliant visible eye among measured settings.
+│   ├── rl/hybrid_designer.py  Production Entry 89 inference: exact actor
+│   │                       observation/mask, eight-visit trace, shield and
+│   │                       exhaustive measured-bank fallback over 45 PVT.
 │   ├── rl/oracle_imitation.py  DEVELOPMENT-only reachable teacher targets and
 │   │                       shortest-path actor samples without hidden fields.
 │   ├── rl/oracle_warmstart.py  Entry 89 actor-only soft-label imitation:
@@ -1497,6 +1503,8 @@ signaling, ADC-based DSP receiver, 28 nm CMOS reference parameters).
 │   │                       attribution, limitations and integration plan.
 │   ├── tests/test_shielded_final.py  Fail-capable identity, start mapping,
 │   │                       R1-R10, provenance and no-overwrite gates.
+│   ├── tests/test_rl_hybrid_designer.py  Production no-hidden-input,
+│   │                       eight-measurement and fallback boundary gates.
 │   ├── rl/margin_improve_env.py  Entry 88's masked local episode and exact
 │   │                       scale-free telescoping improvement reward.
 │   ├── experiments/exp_margin_improve_controls.py  TRAIN-only fixed/random/
@@ -1770,6 +1778,19 @@ Plus: git init, .gitignore, 28 tests, Wilson-bound BER reporting.
   is essential. The old Entry 88 policy with the same shield is 0.8272/0.6986,
   so new training adds +0.0117 compliance and +0.0183 q. Global oracle is
   1.0000/1.0000, leaving a real fallback gap. Result SHA-256 `942CDD...9FEA`.
+- **Nebula Entry 89 is integrated into the product front door:**
+  `python -m nebula.design --peaking 9 --f-peak 1.9 --channel-loss 7.5
+  --method rl-hybrid --out out` loads the hash-checked deployment seed
+  `2026090500`, preserves the exact 62-field actor observation and action mask,
+  proposes at most eight settings independently at each of the 45 PVT corners,
+  shields every trace with V6 compliance, and searches the already-measured
+  512-code bank when RL visits none. The first real smoke produced **45/45
+  PASS**: RL supplied 38 corner codes and classical fallback supplied 7, from
+  354 proposed measurements and 3,584 fallback table lookups. It reused the
+  existing 23,040 ngspice rows (zero new SPICE for the request) and emitted an
+  attenuator-aware deck plus schematic. The picture says `adaptive code map`;
+  it does not imply one fixed code passed 45 corners. Full suite:
+  **2,706/2,706**, 13 deselected, 2 known warnings in 333.60 s.
 - **Nebula Entry 88 masked-PPO result:** FINAL TEST fixed compliance/q is
   0.9865/0.6824. Five-seed PPO mean is 0.9274/0.7690 at 3.797 trials; q delta
   is +0.0866 with paired 95% CI `[+0.0772,+0.0956]`, and 5/5 seeds are
@@ -2290,11 +2311,16 @@ pass, while the unshielded comparison remains unsafe. The five-policy freeze is
 commit `a84082e`; the subsequent 23,040-row midpoint journal is now complete,
 structurally validated and frozen as `51a1146`; the evaluator is `6ec86bd`.
 The subsequent one-time FINAL run passed R1-R10: primary compliance/q
-0.8388/0.7169 versus fixed 0.8226/0.5619 at 5.579 measurements. **Next:**
-integrate the frozen Entry 89 proposer and simulator shield into the user-facing
-specification-to-schematic command, with the existing analytic/library/CMA-ES
-path as fallback whenever no compliant setting was visited. Do not rerun, tune
-or replace FINAL. Full immutable sequence and R1-R10:
+0.8388/0.7169 versus fixed 0.8226/0.5619 at 5.579 measurements. Product
+integration is now complete: `--method rl-hybrid` uses the frozen deployment
+seed, simulator shield and an exhaustive lookup over the already-measured bank
+when no compliant setting was visited, then writes the 45-corner code map,
+attenuator-correct nominal deck and adaptive-code-labelled schematic. **Next:**
+predeclare and run a small request/loss demo matrix, save representative output,
+then update the report/slides. Also document or draw the complete switched Rs/Cs
+implementation: today's deck is the selected nominal configuration and the JSON
+is the source of truth for the PVT code map. Do not rerun, tune or replace FINAL.
+Full immutable sequence and R1-R10:
 `nebula/NEXT_AGENT_ENTRY89.md` and `PREDICTIONS.md` Entry 89.
 
 **Entry-81 artifacts:** preserve `joint_bank_results.json` and the byte-verified
@@ -5262,6 +5288,19 @@ layer, especially because the candidate set includes the fixed start.
 the fixed-start comparator, count interventions and failures, and bill every
 verifier call. Claim the combined system only; use improvement beyond the
 included start to establish that the proposer contributed candidates.
+
+### G155. An adaptive 45-corner pass is not one fixed netlist passing 45 corners
+
+The integrated RL path emits one nominal configuration deck, while its verified
+product is a tunable bank whose attenuator/Rs/Cs code changes with PVT. The
+first rendered picture initially showed `45 / 45 PASS (45x1)` beside the TT
+values. Every number was true, but the composition made the false fixed-code
+interpretation almost unavoidable.
+
+**Rule:** whenever verification changes configuration by condition, the code
+map is a first-class output and every summary/picture must say `adaptive code`.
+Label the configuration represented by a single deck. Never place an aggregate
+adaptive pass count beside one configuration without naming that boundary.
 
 ## 10. Environment
 
@@ -14999,3 +15038,41 @@ synthesis or silicon validation. FINAL must never be rerun or used for tuning.
 
 The post-FINAL non-slow suite passes **2,696/2,696**, with 13 deselected and
 the same two known warnings in 298.87 s.
+
+### 2026-09-04 - session 42 (Entry 89 product integration). **The frozen RL result now reaches the user-facing netlist/schematic flow with a safe automatic fallback.**
+
+Ten fail-first gates were added at the production boundary. Eight initially
+failed because `rl/hybrid_designer.py`, CLI dispatch and attenuator-aware export
+did not exist; the ninth caught a truthful but misleading schematic label that
+made an adaptive 45-corner result look like one fixed code had passed. The
+tenth caught `--out` reporting zero new SPICE decks even though exact-netlist
+capture runs one nominal deck. All ten now pass.
+
+`rl/hybrid_designer.py` rebuilds the frozen policy's exact 62-field observation
+and mask without importing the training environment or FINAL evaluator. The
+actor receives only request, code and eye history: no PVT label, compliance,
+reward, quality or oracle. Deployment seed `2026090500` proposes at most eight
+settings for each PVT corner. The existing V6 simulator predicate checks every
+visited setting; if none passes, a deterministic classical lookup selects the
+largest-eye compliant setting from the already-measured 512-code bank. A bank
+miss raises instead of emitting an unverified circuit.
+
+`design.py --method rl-hybrid --channel-loss` now runs that flow and reports
+the policy, proposals, shield calls, fallbacks, table lookups, per-corner code
+map and offline-versus-online cost. It does not call the old unattenuated
+nominal measurement path. `netlist_for()` forwards the exact 7.3 dB attenuator
+range and adjusts the swing stimulus through the existing single-definition
+helper. `--out` writes the exact nominal SKY130 nfet+pfet deck and schematic;
+the schematic names the TT code and says the PVT result uses an adaptive map.
+
+The real 9 dB / 1.9 GHz / 7.5 dB smoke completed in about four seconds with
+**45/45 V6 PVT points passing**. RL supplied compliant visited settings at 38
+corners; the classical measured-bank fallback supplied 7. It used 354 policy
+measurements and 3,584 table lookups, reusing 23,040 offline ngspice rows and
+running zero new SPICE decks for the request. Output generation separately ran
+one nominal attenuator-aware deck and produced JSON, CIR and PNG successfully;
+the temporary files were visually inspected and removed.
+
+Baseline was the post-FINAL **2,696/2,696** suite. The post-integration non-slow
+suite passes **2,706/2,706**, with 13 deselected and the same two known warnings
+in 333.60 s. FINAL was neither loaded for scoring, rerun nor used for tuning.

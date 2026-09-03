@@ -7,7 +7,8 @@ Date: 2026-09-04
 The competition asks us to build an automated framework that designs an
 equalizer for a 5 Gbps PCIe Gen2 receiver.
 
-The user should provide target specifications, such as:
+The user provides target specifications and a characterised channel loss, such
+as:
 
 > I need 7 dB of high-frequency peaking near 1.8 GHz.
 
@@ -26,7 +27,7 @@ Our project is a simulator-backed automatic CTLE design and tuning system.
 
 The complete flow is:
 
-1. The user enters the requested peaking and peak frequency.
+1. The user enters the requested peaking, peak frequency and channel loss.
 2. The framework selects transistor and circuit values for a SKY130 CTLE.
 3. The exact transistor-level circuit is simulated using ngspice.
 4. The framework checks gain, peak frequency, Nyquist boost, noise, power,
@@ -63,7 +64,20 @@ The latest RL method, Entry 89, has two parts:
 This separation is important. The RL policy proposes useful candidates; the
 verifier and shield prevent an unsafe final selection. Every measurement and
 verifier call is counted, and the controller is still limited to eight
-measurements.
+measurements per operating condition.
+
+Entry 89 is now connected to the product command:
+
+```powershell
+python -m nebula.design --peaking 9 --f-peak 1.9 --channel-loss 7.5 --method rl-hybrid --out out
+```
+
+For each of the 45 PVT corners, the frozen deployment policy proposes at most
+eight codes. The safety shield checks those codes against the immutable
+ngspice characterisation. If none is compliant, a classical lookup searches
+the 512 measured bank settings for that corner. The output is one tunable CTLE,
+its per-corner code map, the nominal configuration's exact SPICE deck, its
+measured specifications and a schematic labelled as an adaptive-code result.
 
 ## Does the project cover the problem statement?
 
@@ -85,7 +99,7 @@ measurements.
 | Lower online design effort than exhaustive search | Covered experimentally: 5.579 mean measured settings instead of 512 |
 | Zero human intervention during a design run | Covered |
 | Optional LLM-based interaction | Covered |
-| A useful and safe RL result on unseen conditions | Covered at experiment level: Entry 89 passed all R1-R10 gates |
+| A useful and safe RL result on unseen conditions | Covered: Entry 89 passed all R1-R10 gates and is integrated as `--method rl-hybrid` |
 | Fabricated-silicon validation | Not covered; present evidence is simulator-backed |
 
 ## What is already strong?
@@ -128,15 +142,17 @@ Pure unshielded RL is still unsafe: its mean compliance was only 0.6444. The
 validated contribution is therefore the combined RL proposer plus simulator
 shield, not the neural policy by itself.
 
-### 2. The strongest existing product path is not RL
+### 2. The RL system is integrated, but it is not the whole solver
 
-The current user-facing automatic design command is strongest when it uses
-analytic design, library retrieval and classical search. That path works, but
-it is not the RL contribution requested by the problem statement.
+The user-facing command now exposes `--method rl-hybrid`. RL proposes the
+short candidate path; the simulator-backed shield decides what is safe; and a
+classical measured-bank lookup fills any corner where RL did not visit a safe
+setting. This division must remain visible. Pure RL is not safe enough, and
+the product never claims otherwise.
 
-Entry 89 has passed, so its frozen controller must now be integrated into the
-same user-facing design command so that the demonstration clearly shows target
-specifications entering an RL-based flow and a verified design coming out.
+The original `--method auto` path remains the stronger route for continuous
+transistor sizing. It uses analytic design, library retrieval and classical
+search. The RL-hybrid route configures the already designed tunable bank.
 
 ### 3. The new RL controller tunes a pre-designed circuit bank
 
@@ -182,11 +198,10 @@ The judge's main question will be:
 > verified design, or is RL an experiment attached to a stronger classical
 > design flow?
 
-The fresh test now proves that the RL proposer contributes useful candidates
-when combined with the simulator shield. The remaining product question is
-whether that frozen controller is connected to the front-door design command
-and backed by a classical fallback when its eight visits contain no compliant
-setting.
+The fresh test proves that the RL proposer contributes useful candidates when
+combined with the simulator shield. That frozen controller and its classical
+fallback are now connected to the front-door design command, with their
+separate costs and decisions written into `design.json`.
 
 The judge may also ask whether choosing a tuning-bank setting counts as device
 sizing. Our honest answer should be that the system contains both continuous
@@ -200,23 +215,22 @@ working specification-to-netlist flow, transistor-level simulation, PVT
 verification, link and eye analysis, schematic generation, classical
 baselines and an optional natural-language interface.
 
-As a proven RL-assisted tuning product, the core experiment is successful. It
-is not yet a finished RL-driven device-sizing product. The remaining decisive
-work is:
+As a proven RL-assisted tuning product, the core experiment and product
+integration are successful. It is not a fully RL-driven device-sizing product.
+The remaining decisive work is:
 
-1. Integrate the frozen RL controller and simulator shield into the
-   user-facing specification-to-schematic command.
-2. Invoke an analytic/library/CMA-ES fallback whenever the shield finds no
-   compliant visited setting; final-test RL compliance was 0.8388 even though
-   the global bank oracle proves all 2,430 cases have a compliant setting.
-3. Demonstrate one complete input-to-netlist/schematic run and report both the
-   common RL path and fallback cost honestly.
+1. Exercise the integrated command over a small predeclared request/loss demo
+   matrix and save representative outputs for the presentation.
+2. Update the final report and slides with Entry 89 and the product smoke test.
+3. Draw or document the complete switched Rs/Cs implementation; the emitted
+   deck is the selected nominal configuration, while `design.json` carries the
+   45-corner code map.
 4. Keep continuous transistor sizing in the analytic/classical front end and
    describe Entry 89 accurately as RL-driven configuration search.
 
 ## One-sentence summary
 
 > We built a simulator-backed CTLE automation framework whose frozen RL
-> proposer plus safety shield selected better compliant tuning configurations
-> in 5.579 measurements on fresh conditions; the remaining work is integrating
-> it with the schematic-output flow and a classical fallback for unsolved cases.
+> proposer, safety shield and classical measured-bank fallback now turn target
+> specifications into a 45-corner-verified tuning map, exact SKY130 netlist,
+> measured specifications and schematic with no human choosing the codes.
