@@ -14271,3 +14271,18 @@ labels, valid masks, zero-distance handling and the absence of hidden identity
 or verdict fields from actor samples. No prediction has been scored; no policy
 or midpoint row exists. The complete non-slow suite passes 2,670/2,670, with
 13 deselected and 2 known warnings in 537.99 s.
+
+### Entry 89 exposed-DEVELOPMENT shield outcome -- before new policy code
+
+Prediction 1 is confirmed strongly on exposed data. Fixed compliance/q is
+0.9925/0.6703. The five frozen Entry 88 policies without shielding remain
+unsafe at compliance 0.8677-0.9421; applying the shield to the identical traces
+raises compliance to 0.9946-0.9982 and retains q deltas +0.1347 to +0.1535.
+Both DEVELOPMENT gates pass. The seven-move teacher has q=0.9835, mean distance
+4.677 and a nonzero-distance target on 98.06% of identities.
+
+This does not score predictions 2-6. It is the now-exposed 5,040-identity
+development set, zero SPICE, and FINAL is `NOT_GENERATED_NOT_SCORED`. Artifact
+SHA-256 `82F868B94A6D80C790C104ABF7383DC2257E919DC8E2441D9509D44AC066FF45`.
+The complete non-slow suite passes 2,675/2,675, with 13 deselected and 2 known
+warnings in 540.51 s.

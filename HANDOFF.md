@@ -17,12 +17,12 @@
 > decisions that are OPEN and human-only, and what to do next. It supersedes
 > `nebula/NEXT_STEPS.md`. This file remains the full state of record.
 
-Last updated: **2026-09-03** (session 40, Entry 89 Stage 1 core: the
-simulator-backed shield and DEVELOPMENT-only oracle trajectory builder pass
-8/8 fail-capable tests. Actor samples contain no hidden identity or verifier
-verdict. No BC epoch, Entry 89 PPO step, midpoint SPICE row or FINAL score
-exists. Full suite: 2,670 passes. Commit this boundary, then implement training
-and DEVELOPMENT controls.)
+Last updated: **2026-09-03** (session 40, Entry 89 exposed-DEVELOPMENT shield
+control: fixed is compliance/q 0.9925/0.6703; all five frozen Entry 88 policies
+with the structural shield reach 0.9946-0.9982 compliance and +0.1347 to
++0.1535 q. D1/D2 pass. This is exposed zero-SPICE evidence; no Entry 89 policy,
+midpoint row or FINAL score exists. Full suite: 2,675 passes. Commit controls
+before training code.)
 
 Earlier session 22p: (**THE REPORT EXISTS** --
 `nebula/report/Nebula_CTLE_Report.pdf`, **10 pages, 9 figures, 598 KB**,
@@ -1454,6 +1454,12 @@ signaling, ADC-based DSP receiver, 28 nm CMOS reference parameters).
 │   │                       compliant visible eye among measured settings.
 │   ├── rl/oracle_imitation.py  DEVELOPMENT-only reachable teacher targets and
 │   │                       shortest-path actor samples without hidden fields.
+│   ├── experiments/exp_shielded_controls.py  Replays all five frozen Entry 88
+│   │                       policies with/without shield on exposed DEVELOPMENT.
+│   ├── experiments/shielded_controls_results.json  Entry 89 DEVELOPMENT-only
+│   │                       D1/D2 evidence; FINAL explicitly nonexistent.
+│   ├── SHIELDED_RL_CONTROLS.md  Professor-ready shield-control result and
+│   │                       proposer/verifier attribution boundary.
 │   ├── rl/margin_improve_env.py  Entry 88's masked local episode and exact
 │   │                       scale-free telescoping improvement reward.
 │   ├── experiments/exp_margin_improve_controls.py  TRAIN-only fixed/random/
@@ -1673,14 +1679,18 @@ Plus: git init, .gitignore, 28 tests, Wilson-bound BER reporting.
   identities with zero request/loss overlap with development.
 - The allowed claim is simulator-backed safety, not receiver-only calibration.
   R1-R10 require no compliance loss and the unchanged +0.020 quality gain.
+- Before new policy code, the frozen Entry 88 policies were replayed on all
+  5,040 exposed identities. Shielded compliance is 0.9946-0.9982 versus fixed
+  0.9925, while all five retain +0.1347 to +0.1535 q. This clears the
+  DEVELOPMENT go/no-go without touching fresh data.
 
 ## 6. Key numbers & validated behavior (current state)
 
-- **Nebula Entry 89 Stage 1 core is implemented:** eight fail-first tests cover
-  the structural shield and DEVELOPMENT-only oracle teacher. Zero BC epochs,
-  PPO steps, midpoint SPICE rows and FINAL scores exist. Five seeds
-  `2026090500..04` still require 50 BC epochs plus 200,000 unchanged-reward PPO
-  steps before the 23,040-row midpoint journal may exist.
+- **Nebula Entry 89 DEVELOPMENT shield control passes:** fixed is compliance/q
+  0.9925/0.6703. Applying the structural shield to the identical traces of the
+  five frozen Entry 88 policies yields compliance 0.9946-0.9982 and q delta
+  +0.1347 to +0.1535 at 3.612-3.895 measurements. D1/D2 pass on exposed data;
+  zero BC epochs, new PPO steps, midpoint rows and FINAL scores exist.
 - **Nebula Entry 88 masked-PPO result:** FINAL TEST fixed compliance/q is
   0.9865/0.6824. Five-seed PPO mean is 0.9274/0.7690 at 3.797 trials; q delta
   is +0.0866 with paired 95% CI `[+0.0772,+0.0956]`, and 5/5 seeds are
@@ -2192,12 +2202,13 @@ do not tune or rerun on these identities, and deploy only the fixed lookup.
 
 The owner approved that deadline-safe rescue as D19 / Entry 89. Preregistration
 commit `8af0485` precedes all code. The shield and oracle-trajectory builder now
-pass 8/8 focused gates. **Next:** commit this Stage 1 boundary, then fail-first
-implement the BC warm start, unchanged-reward PPO runner, exposed DEVELOPMENT
-diagnostics and midpoint-bank generator. Train and commit all five seeds before
-generating any fresh row. Next generate and hash the complete 23,040-row
-midpoint journal without request scoring. Only then run the single 2,430-
-identity FINAL evaluator. Full immutable sequence and R1-R10:
+pass 8/8 focused gates. The exposed-DEVELOPMENT replay also passes D1/D2:
+shielded q gains are +0.1347 to +0.1535 with no compliance loss. **Next:**
+commit this controls-first state, then fail-first implement the BC warm start,
+unchanged-reward PPO runner and midpoint-bank generator. Train and commit all
+five seeds before generating any fresh row. Next generate and hash the complete
+23,040-row midpoint journal without request scoring. Only then run the single
+2,430-identity FINAL evaluator. Full immutable sequence and R1-R10:
 `nebula/NEXT_AGENT_ENTRY89.md` and `PREDICTIONS.md` Entry 89.
 
 **Entry-81 artifacts:** preserve `joint_bank_results.json` and the byte-verified
@@ -5151,6 +5162,20 @@ saturation and PVT truth merely because the neural policy cannot see them.
 only in the system that can actually compute its predicate. Never translate a
 simulator-verifier result into an on-silicon calibration claim without
 validated monitors for the same constraints.
+
+### G154. A best-of-visited shield is a selector; attribute its gain separately from the proposer
+
+On Entry 89 DEVELOPMENT, the frozen Entry 88 traces are unsafe when scored at
+their final LOCK (0.8677-0.9421 compliance) and safe after the verifier selects
+the best compliant visit (0.9946-0.9982). The policy generated the candidate
+path; the verifier supplied hidden compliance; the shield chose the output.
+Calling the combined number "the policy" would repeat G132 at a different
+layer, especially because the candidate set includes the fixed start.
+
+**Rule:** report unshielded and shielded results on identical traces, include
+the fixed-start comparator, count interventions and failures, and bill every
+verifier call. Claim the combined system only; use improvement beyond the
+included start to establish that the proposer contributed candidates.
 
 ## 10. Environment
 
@@ -14690,3 +14715,29 @@ pass **8/8**. The complete non-slow suite passes **2,670/2,670**, with 13
 deselected and 2 known warnings in 537.99 s. No BC epoch, Entry 89 PPO step,
 midpoint SPICE row or FINAL score exists. Commit this layer before adding the
 trainer or sweep generalization.
+
+### 2026-09-03 - session 40 (Entry 89 exposed-DEVELOPMENT controls). **The shield restores safety and retains large RL gains on exposed data; FINAL still does not exist.**
+
+Five fail-capable control tests first failed because the runner was absent and
+then pass 5/5. The runner loads all five immutable Entry 88 checkpoints before
+scoring and replays them on the exact 5,040-identity exposed union. It applies
+the shield to the same traces, so unshielded-vs-shielded attribution does not
+hide extra proposals. Every compliance-verifier call is billed as a measured
+setting. Zero SPICE ran and midpoint-journal existence is an explicit refusal.
+
+Fixed is compliance 0.9925, q=0.6703 and one measurement. Unshielded frozen
+policies remain unsafe: compliance 0.8677-0.9421, q delta +0.0215 to +0.0973.
+The shield raises the same traces to compliance **0.9946-0.9982** and q delta
+**+0.1347 to +0.1535** at 3.612-3.895 measurements; D1 safety and D2 quality
+both pass. It can improve compliance above fixed because some policies visit a
+compliant code for one of fixed's 38 failures. The teacher ceiling is q=0.9835
+at mean distance 4.677; 98.06% of identities have a nonzero-distance target.
+
+This is a go/no-go result, not final evidence: all identities were exposed by
+Entries 87/88. FINAL remains exactly `NOT_GENERATED_NOT_SCORED`; no Entry 89
+model exists. Artifact SHA-256:
+`82F868B94A6D80C790C104ABF7383DC2257E919DC8E2441D9509D44AC066FF45`.
+New G154 requires reporting the policy proposer and shield selector separately.
+Commit the runner, artifact, tests and `SHIELDED_RL_CONTROLS.md` before any
+BC/PPO policy implementation. The complete non-slow suite passes
+**2,675/2,675**, with 13 deselected and 2 known warnings in 540.51 s.

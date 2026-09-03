@@ -150,3 +150,18 @@ implementing the training runner or generalizing the bank sweep.
 
 The complete non-slow suite passes 2,670/2,670, with 13 deselected and 2 known
 warnings in 537.99 s.
+
+## Stage 2 exposed-DEVELOPMENT shield control -- before Entry 89 policy code
+
+The control runner replays all five immutable Entry 88 policies over the full
+5,040 exposed identities and applies the registered shield to the same measured
+traces. Fixed compliance/q is 0.9925/0.6703. Shielded policy compliance is
+0.9946-0.9982 and every seed retains q delta +0.1347 to +0.1535 at 3.612-3.895
+measurements. D1 safety and D2 quality pass. The teacher ceiling is q=0.9835 at
+mean distance 4.677. Artifact SHA-256:
+`82F868B94A6D80C790C104ABF7383DC2257E919DC8E2441D9509D44AC066FF45`.
+
+This is exposed diagnostic evidence only. FINAL remains
+`NOT_GENERATED_NOT_SCORED`; zero new SPICE ran. Commit the runner, artifact,
+tests and report before implementing the BC/PPO trainer. The complete non-slow
+suite passes 2,675/2,675, with 13 deselected and 2 known warnings in 540.51 s.
