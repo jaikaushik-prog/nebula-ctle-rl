@@ -17,11 +17,11 @@
 > decisions that are OPEN and human-only, and what to do next. It supersedes
 > `nebula/NEXT_STEPS.md`. This file remains the full state of record.
 
-Last updated: **2026-09-03** (session 39, decision D17 / Entry 87
-preregistration: the owner approved the exact 512-code margin-adaptation RL
-contract. Frozen 7.3 dB table, hidden PVT/channel, D10 `-1/-60/+20q` reward,
-8 trials, controls first, five 200k-step categorical-PPO seeds and Q1-Q8 are
-fixed before implementation or training. Commit this registration next.)
+Last updated: **2026-09-03** (session 39, Entry 87 Stage 1: the new 512-code
+hidden-state environment and zero-SPICE controls are built and measured behind
+14 fail-capable tests. The TRAIN-only fixed lookup is the registered comparator
+at 99.31% compliance, q=0.6796 and one trial. Commit Stage 1 and its artifact
+before adding categorical-PPO code or training.)
 
 Earlier session 22p: (**THE REPORT EXISTS** --
 `nebula/report/Nebula_CTLE_Report.pdf`, **10 pages, 9 figures, 598 KB**,
@@ -1441,6 +1441,10 @@ signaling, ADC-based DSP receiver, 28 nm CMOS reference parameters).
 │   │                       preregistered one-point 7.3 dB boundary probe.
 │   ├── NEXT_AGENT_ENTRY87.md  Exact D17 margin-adaptation RL contract,
 │   │                       controls-first sequence and immutable source hash.
+│   ├── rl/margin_adapt_env.py  Entry 87's separate 512-code hidden PVT/channel
+│   │                       episode; request + ordered eye history only.
+│   ├── experiments/exp_margin_adapt_controls.py  Fixed, random, local
+│   │                       hill-climb, exhaustive-eye and oracle controls.
 │   │                       NOTE: this tree lags for the session 23-25 files —
 │   │                       exp_coverage.py, adaptive_screen.py, search_score.py
 │   │                       and runlock.py are documented in §9 and §12 but are
@@ -2090,11 +2094,12 @@ codes merely to pass. A future RL experiment must instead preregister
 eye/margin optimization and beat the qualified controls; best-eye code changes
 with channel loss in 580/720 cases.
 
-Entry 87 is now preregistered under D17 but not implemented. It uses a new
-512-code environment rather than mutating the historical 64-code compliance
-environment. Commit the registration, then build fail-first environment and
-control gates; commit the zero-SPICE controls before adding categorical PPO or
-training any of the five registered seeds.
+Entry 87 Stage 1 is built and measured without touching the historical 64-code
+compliance environment. The primary comparator is the request-conditioned
+TRAIN-only fixed lookup: **99.31% compliance, q=0.6796, one trial**. RL must
+reach at least 98.31% compliance and q=0.6996 plus the registered paired-CI and
+reproducibility gates. Commit the environment, controls and artifact before
+adding categorical PPO or training any of the five registered seeds.
 
 **Entry-81 artifacts:** preserve `joint_bank_results.json` and the byte-verified
 compressed journal `joint_bank_run.jsonl.gz`. The local raw journal remains the
@@ -14303,3 +14308,21 @@ leak, controls-first provenance, five healthy runs, comparator-matched safety,
 at least +0.02 mean eye quality with positive paired 95% CI, 4/5 positive
 seeds and bounded cost/reporting. Full registration: `PREDICTIONS.md` Entry 87
 and `NEXT_AGENT_ENTRY87.md`.
+
+### 2026-09-03 - session 39 (Entry 87 Stage 1). **The 512-code environment and controls are measured before policy code.**
+
+Fourteen fail-capable tests first failed on the absent modules, then passed.
+They gate the 62-value receiver-visible observation, hidden compliance/corner/
+loss, six one-axis moves plus LOCK, repeated boundary measurements, exact
+`-1/-60/+20q` reward, eight-trial auto-lock, TRAIN-only start lookup, stable
+random streams, comparator selection and ASCII output.
+
+The complete suite produced **2,620 passes plus one timing-only** `ss_hh` PDK
+trim-speed failure; its electrical equality held and the exact node passed
+alone in 10.13 s. The zero-SPICE controls then scored all 864 held-out
+identities. Fixed is the registered comparator at compliance 0.9931, mean q
+0.6796 and one trial. Hill-climb is 0.4722/0.4222/7.405; 20-seed random mean is
+0.5090/0.3487/4.968; exhaustive maximum-eye is 0/0/512; hidden oracle is
+1/1/1. The result artifact SHA-256 is
+`4E7930C6EF353B81949F7D8C6562D6E4027F7B164F3B0099AD79FE652E09501D`.
+Commit this Stage 1 state before any categorical-PPO implementation/training.

@@ -13994,3 +13994,33 @@ circuit, source row or historical 64-code adaptation result.
 All Q1-Q8 must pass to claim that RL contributes. A miss is an honest negative
 result: ship the strongest measured non-RL controller and preserve the RL arm.
 No post-result reward, split, seed, gate or comparator change is permitted.
+
+### Controls-first outcome -- 2026-09-03, before policy implementation
+
+The new environment and controls were written behind **14 fail-capable tests**;
+they failed first because both modules were absent and then passed 14/14. The
+complete suite reached 2,620 passes plus one known timing-only PDK trim-speed
+failure (`ss_hh`, 5.39 s trimmed versus 3.35 s untrimmed); that exact node
+passed alone in 10.13 s. No Entry 87 functional test failed.
+
+The zero-SPICE controls then measured all 864 held-out identities:
+
+| arm | compliance | mean q | mean trials |
+|---|---:|---:|---:|
+| request-conditioned TRAIN-only fixed | **0.9931** | **0.6796** | **1.000** |
+| coordinate hill-climb | 0.4722 | 0.4222 | 7.405 |
+| random local moves, 20-seed mean | 0.5090 | 0.3487 | 4.968 |
+| exhaustive maximum observed eye | 0.0000 | 0.0000 | 512.000 |
+| hidden oracle ceiling | 1.0000 | 1.0000 | 1.000 |
+
+The registered comparator is therefore the fixed arm. Q5's safety floor is
+`0.9931 - 0.01 = 0.9831`; Q6's effect-size floor is
+`0.6796 + 0.02 = 0.6996`, in addition to its positive paired-CI condition.
+The exhaustive result is not a parser failure: maximizing visible eye alone
+selects settings that violate hidden non-eye constraints on every episode.
+
+Artifact: `margin_adapt_controls_results.json`, SHA-256
+`4E7930C6EF353B81949F7D8C6562D6E4027F7B164F3B0099AD79FE652E09501D`.
+It records 1,728 TRAIN and 864 TEST identities, zero overlap, 512 settings and
+`simulations_run=0`. Committing the environment, controls, artifact, tests and
+handoff together completes Q1-Q3 provenance before categorical-PPO code exists.
