@@ -6,17 +6,14 @@ assembled deck changed by so much as a blank line when `atten_code=None`, every
 committed result would silently be describing a different circuit from the one
 that produced it.
 
-The sizing itself is pinned too, because it is DERIVED from a measurement
-(`ATTEN_MAX_X = 1.98`, the worst-case over-drive at the shortest channel, from
-entry 72) rather than chosen. A test that only checked the code ran would not
-notice the spec drifting.
+The sizing itself is pinned too. D16 adopts the 7.3 dB range that Entry 86
+verified across the complete bank/PVT table; the older 1.98x D11 range remains
+explicitly reproducible for historical artifacts.
 """
 
 from __future__ import annotations
 
 import math
-import hashlib
-
 import pytest
 
 from nebula.device import attenuator as A
@@ -70,22 +67,31 @@ def test_code_zero_is_still_a_real_divider_not_a_bypass():
 # ── the sizing, which is derived from a measurement ──────────────────────────
 
 
-def test_the_spec_constant_is_the_measured_worst_case():
-    assert A.ATTEN_MAX_X == pytest.approx(1.98)
-    assert A.REQUIREMENT_BY_LOSS_DB[3.0] == pytest.approx(A.ATTEN_MAX_X)
+def test_the_production_constant_is_the_entry86_verified_range():
+    assert A.ATTEN_MAX_X == pytest.approx(10.0 ** (7.3 / 20.0))
+    assert A.REQUIREMENT_BY_LOSS_DB[3.0] == pytest.approx(1.98)
+    assert A.ATTEN_MAX_X > A.REQUIREMENT_BY_LOSS_DB[3.0]
     assert A.REQUIREMENT_BY_LOSS_DB[12.0] == pytest.approx(1.0)
 
 
-def test_the_top_code_reaches_the_measured_worst_case_exactly():
+def test_the_top_code_reaches_the_verified_production_range_exactly():
     assert 1.0 / A.attenuation(A.N_CODES - 1) == pytest.approx(A.ATTEN_MAX_X)
 
 
-def test_the_default_D11_block_is_BYTE_IDENTICAL_to_the_registered_circuit():
-    digest = hashlib.sha256(A.attenuator_block(7).encode("ascii")).hexdigest()
-    assert digest == "c8aa0ecf291adbb3ce7d0b0321468d08be9703ca5de3e725b39feb698e286429"
+def test_the_adopted_default_is_the_entry86_physical_circuit():
+    def physical(text):
+        return [line for line in text.splitlines() if not line.startswith("*")]
+
+    assert physical(A.attenuator_block(7)) == physical(
+        A.attenuator_block(7, atten_max_x=10.0 ** (7.3 / 20.0)))
 
 
-def test_an_opt_in_range_changes_the_top_code_without_changing_D11():
+def test_the_historical_D11_range_remains_explicitly_reproducible():
+    assert A.attenuation_db(7, atten_max_x=1.98) == pytest.approx(
+        20.0 * math.log10(1.98))
+
+
+def test_an_opt_in_range_changes_the_top_code_without_changing_production():
     candidate_x = 10.0 ** (7.0 / 20.0)
     assert A.attenuation_db(7, atten_max_x=candidate_x) == pytest.approx(7.0)
     assert 1.0 / A.attenuation(7, atten_max_x=candidate_x) == pytest.approx(

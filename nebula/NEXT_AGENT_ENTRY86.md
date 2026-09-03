@@ -14,7 +14,8 @@ Q1-Q7 and the adoption-recommendation gate pass: zero hard device failures,
 16/16 all-corner coverage at every loss, and 10,378 scorable rows at 3 dB.
 The original false-Q1 artifact remains preserved beside the corrected result.
 
-Do not rerun SPICE. Do not silently adopt 7.3 dB: the evidence supports the
-change, but the owner makes the production-range decision separately. No RL
-was trained here. A future RL experiment should optimize eye/margin rather
-than compliance and requires a new preregistration and owner authority.
+Do not rerun SPICE. The owner subsequently adopted 7.3 dB as D16; the default
+now matches Entry 86's verified physical range, while 1.98x remains explicitly
+reproducible for historical artifacts. No RL was trained here. A future RL
+experiment should optimize eye/margin rather than compliance and requires a
+new preregistration with its reward definition fixed before training.

@@ -13889,3 +13889,11 @@ The compressed journal decodes to SHA-256
 `1B5F941DF4B34F3C90F6DD050F264D8A77C7BB2E5CE4D9EED8CC29EBD9F9843F`.
 This recommends 7.3 dB for a separate owner adoption decision; it does not
 change production D11 or authorise an RL claim.
+
+### Post-outcome decision D16 -- 2026-09-03
+
+The owner accepted Entry 86's recommendation and authorised 7.3 dB as the
+production attenuator range. This is a post-result design decision, not a new
+experiment: no artifact, threshold or measured row changes. The default is
+the exact measured ratio 2.3173946499684783; the former 1.98x D11 circuit
+remains reproducible through the explicit range argument.

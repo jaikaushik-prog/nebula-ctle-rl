@@ -50,6 +50,13 @@ The preregistered recommendation gate therefore **passes**. This supports
 adopting the 7.3 dB range; it does not itself make that human-controlled
 production decision.
 
+## Post-result decision
+
+On 2026-09-03 the owner approved that recommendation as decision **D16**.
+The production `ATTEN_MAX_X` is now the exact verified value
+2.3173946499684783. The historical D11 1.98x range remains available through
+the explicit range argument; no measurement artifact was rewritten.
+
 ## Q1 audit
 
 The first result artifact incorrectly counted all `ok=false` rows as hard

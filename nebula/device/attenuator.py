@@ -26,8 +26,15 @@ THE SPEC, AND IT IS MEASURED RATHER THAN CHOSEN
     attenuation dB    5.94  5.06  4.17  3.20  2.16  1.05  0.00
 
 which is close to linear: **~0.66 dB of attenuation per dB of channel loss
-removed.** So the requirement is **6 dB of range**, and `ATTEN_MAX_X` below is
-the measured 1.98x rather than a round number.
+removed.** So the original D11 requirement was **6 dB of range**, derived as
+1.98x rather than chosen as a round number.
+
+Entry 86 then measured the adjacent 7.3 dB candidate over the complete
+8-attenuator x 64-CTLE x 45-corner table. It closed all 16 requests at every
+tested channel loss with zero hard device failures. Owner decision D16 adopts
+that verified 2.3173946499684783x range as the production default. The measured
+1.98x requirement remains in `REQUIREMENT_BY_LOSS_DB`; it is evidence for the
+minimum need, not the adopted guard margin.
 
 THE TOPOLOGY
 --------------
@@ -86,14 +93,13 @@ from typing import Optional
 
 from nebula.device.passives import RES_HIGH_PO, resistor_geometry
 
-#: **Measured, not chosen.** The worst-case over-drive over all 2 117 scorable
-#: (code, corner) points at the shortest channel in the family, from
-#: `experiments/channel_probe_run.jsonl` (entry 72).
-ATTEN_MAX_X: float = 1.98
+#: **Verified, then owner-adopted (D16).** Entry 86 measured this exact range
+#: across 23,040 real-PMOS bank/PVT points. It is `10 ** (7.3 / 20)`; the
+#: literal below is the exact value stored in that result artifact.
+ATTEN_MAX_X: float = 2.3173946499684783
 
-#: Series arm. Small enough that the divider's pole stays far above Nyquist —
-#: the worst-case `RSER || RSH` is 131.6 ohm, which is 12.1 GHz into a 100 fF
-#: gate, against a 2.5 GHz Nyquist.
+#: Series arm. Entry 86's complete AC measurements include the adopted divider
+#: geometry and verify the response against the 2.5 GHz Nyquist requirements.
 RSER_OHM: float = 150.0
 
 #: 3 bits = 8 settings. The requirement is 6 dB and the channel family has seven
@@ -114,7 +120,7 @@ SWITCH_RON_OHM: float = SWITCH_RON_W_OHM_UM / SWITCH_W_UM
 
 
 def _unit_conductance_s(atten_max_x: Optional[float] = None) -> float:
-    """Resolve an opt-in range without changing D11's registered default."""
+    """Resolve an explicit diagnostic/historical range or D16's default."""
     if atten_max_x is None:
         return G0_S
     value = float(atten_max_x)
@@ -187,21 +193,22 @@ def attenuator_block(code: int, node_p: str = "inx", node_n: str = "iny",
     from nebula.device.sky130_runner import _m_suffix
     ser = resistor_geometry(RSER_OHM, RES_HIGH_PO)
     lines = [
-        f"* Input attenuator (D11), code {code} of {N_CODES - 1}: "
+        f"* Input attenuator (D16), code {code} of {N_CODES - 1}: "
         f"A = {attenuation(code, atten_max_x=atten_max_x):.4f} "
         f"({attenuation_db(code, atten_max_x=atten_max_x):.2f} dB).",
     ]
     if atten_max_x is None:
-        # These exact lines and their order are part of D11's registered deck.
+        # Production default: the exact range verified by Entry 86 and adopted
+        # by owner decision D16.
         lines += [
-            "* Sized to the worst-case over-drive entry 72 measured at the shortest",
-            "* channel (1.98x). Entry 73 measured why a load trim cannot do this:",
-            "* RL scales the signal and the headroom together.",
+            "* 7.3 dB range verified over 23,040 bank/PVT points by Entry 86.",
+            "* D11's measured 1.98x minimum requirement remains reproducible",
+            "* through the explicit atten_max_x argument.",
         ]
     else:
         lines += [
-            f"* Opt-in diagnostic range: {float(atten_max_x):.6g}x maximum.",
-            "* D11's registered 1.98x default is unchanged.",
+            f"* Explicit diagnostic/historical range: {float(atten_max_x):.6g}x.",
+            f"* Production D16 default: {ATTEN_MAX_X:.6g}x maximum.",
         ]
     lines += [
         f"Xatt_sp {node_p} {gate_p} 0 {ser.subckt} "

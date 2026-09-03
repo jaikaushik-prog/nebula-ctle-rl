@@ -17,12 +17,11 @@
 > decisions that are OPEN and human-only, and what to do next. It supersedes
 > `nebula/NEXT_STEPS.md`. This file remains the full state of record.
 
-Last updated: **2026-09-03** (session 38, entry 86 complete: all 23,040 rows
-completed uninterrupted in 131.27 min. The frozen-journal Q1 correction used
-zero additional SPICE calls; Q1-Q7 and the adoption-recommendation gate all
-pass. Coverage is 16/16 at every loss. Production D11 remains unchanged until
-the owner explicitly decides whether to adopt 7.3 dB. This is analog evidence,
-not a new RL result.)
+Last updated: **2026-09-03** (session 39, decision D16: the owner adopted Entry
+86's verified 7.3 dB attenuator range. The production default is now the exact
+measured ratio 2.3173946499684783; the old 1.98x D11 range remains explicitly
+reproducible. This is an analog decision, not an RL result. Entry 87 still
+needs an exact human-approved reward contract before implementation/training.)
 
 Earlier session 22p: (**THE REPORT EXISTS** --
 `nebula/report/Nebula_CTLE_Report.pdf`, **10 pages, 9 figures, 598 KB**,
@@ -1661,8 +1660,8 @@ Plus: git init, .gitignore, 28 tests, Wilson-bound BER reporting.
   failures. All seven losses now serve **16/16** requests at all 45 corners;
   the 3 dB table improves from 7,519 to 10,378 scorable rows and every corner
   has at least 114. Q1-Q7 pass after a zero-SPICE classification correction
-  preserved the original artifact. The recommendation gate passes; D11 still
-  requires an explicit owner adoption decision. Full result:
+  preserved the original artifact. The recommendation gate passed and the
+  owner adopted the exact verified range as D16. Full result:
   `nebula/JOINT_BANK_73_RESULTS.md`.
 
 - Tests: **2589 non-slow collected** (entry 84): pre-run **2588 passed plus one
@@ -2080,11 +2079,10 @@ Plus: git init, .gitignore, 28 tests, Wilson-bound BER reporting.
 
 ## 8. Next steps (prioritized backlog with context)
 
-**Session-38 ordering:** entries 80 through 86 are complete. The non-RL
+**Session-39 ordering:** entries 80 through 86 are complete. The non-RL
 controls are qualified and the 7.3 dB combined bank has been measured across
 all 23,040 bank/PVT rows. Q1-Q7 pass, coverage is 16/16 at every channel loss,
-and the recommendation gate supports adopting 7.3 dB. D11 remains unchanged
-until the owner makes that explicit production decision. The old compliance
+and the owner adopted 7.3 dB as production decision D16. The old compliance
 RL gate remains correctly failed: **0/720** cases require channel-specific
 codes merely to pass. A future RL experiment must instead preregister
 eye/margin optimization and beat the qualified controls; best-eye code changes
@@ -2109,7 +2107,7 @@ explicit scope.
    focused set at 16/16. D15/entry 86 is now complete: 23,040/23,040 rows,
    zero hard failures, 16/16 all-corner coverage at all seven losses, and all
    Q1-Q7 gates pass after a documented zero-SPICE classification correction.
-   Production adoption remains a human decision. The next RL proposal must
+   Production adoption is complete as D16. The next RL proposal must
    optimize eye/margin and beat the qualified controls; binary compliance is
    already solvable without adaptation. The
    standing owner item is also urgent: `nebula/report/Nebula_CTLE_Report.pdf`
@@ -14258,3 +14256,22 @@ The committed gzip's decoded journal SHA-256 is
 until the owner adopts the candidate; this experiment does not train RL. The
 final complete non-slow suite passes **2,606/2,606**, with 13 deselected and 2
 warnings in 343.54 s.
+
+### 2026-09-03 - session 39 (decision D16). **The owner adopts Entry 86's verified 7.3 dB attenuator range.**
+
+The clean pre-change non-slow suite passed **2,606/2,606**, with 13 deselected
+and 2 warnings in 302.26 s. Red-first attenuator gates then rejected the old
+1.98x default and proved its emitted resistor geometry differed from Entry
+86's circuit. `ATTEN_MAX_X` now equals the artifact's exact
+2.3173946499684783 ratio. A physical-line equality gate proves the default
+deck matches the already-measured explicit 7.3 dB circuit; the old D11 1.98x
+range remains available explicitly. The focused attenuator/joint-bank group
+passes **66/66**. The complete post-change non-slow suite passes
+**2,607/2,607**, with 13 deselected and 2 warnings in 278.92 s. No new SPICE
+run or result rewrite is part of this adoption.
+
+The owner's approval also starts planning for Entry 87's margin-optimizing
+adaptation RL. It does not choose the scalar reward weights forbidden to an
+agent by `CLAUDEwa.md` rule 6. Freeze those with the owner before implementing
+or training the new policy; do not mutate the historical 64-code compliance
+environment or its published negative controls.
