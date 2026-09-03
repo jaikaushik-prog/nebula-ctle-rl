@@ -17,11 +17,11 @@
 > decisions that are OPEN and human-only, and what to do next. It supersedes
 > `nebula/NEXT_STEPS.md`. This file remains the full state of record.
 
-Last updated: **2026-09-03** (session 39, decision D16: the owner adopted Entry
-86's verified 7.3 dB attenuator range. The production default is now the exact
-measured ratio 2.3173946499684783; the old 1.98x D11 range remains explicitly
-reproducible. This is an analog decision, not an RL result. Entry 87 still
-needs an exact human-approved reward contract before implementation/training.)
+Last updated: **2026-09-03** (session 39, decision D17 / Entry 87
+preregistration: the owner approved the exact 512-code margin-adaptation RL
+contract. Frozen 7.3 dB table, hidden PVT/channel, D10 `-1/-60/+20q` reward,
+8 trials, controls first, five 200k-step categorical-PPO seeds and Q1-Q8 are
+fixed before implementation or training. Commit this registration next.)
 
 Earlier session 22p: (**THE REPORT EXISTS** --
 `nebula/report/Nebula_CTLE_Report.pdf`, **10 pages, 9 figures, 598 KB**,
@@ -1439,6 +1439,8 @@ signaling, ADC-based DSP receiver, 28 nm CMOS reference parameters).
 │   │                       result: 6/6 pass and focused 16/16 closure.
 │   ├── NEXT_AGENT_ENTRY85.md  Self-contained continuation prompt for the
 │   │                       preregistered one-point 7.3 dB boundary probe.
+│   ├── NEXT_AGENT_ENTRY87.md  Exact D17 margin-adaptation RL contract,
+│   │                       controls-first sequence and immutable source hash.
 │   │                       NOTE: this tree lags for the session 23-25 files —
 │   │                       exp_coverage.py, adaptive_screen.py, search_score.py
 │   │                       and runlock.py are documented in §9 and §12 but are
@@ -2087,6 +2089,12 @@ RL gate remains correctly failed: **0/720** cases require channel-specific
 codes merely to pass. A future RL experiment must instead preregister
 eye/margin optimization and beat the qualified controls; best-eye code changes
 with channel loss in 580/720 cases.
+
+Entry 87 is now preregistered under D17 but not implemented. It uses a new
+512-code environment rather than mutating the historical 64-code compliance
+environment. Commit the registration, then build fail-first environment and
+control gates; commit the zero-SPICE controls before adding categorical PPO or
+training any of the five registered seeds.
 
 **Entry-81 artifacts:** preserve `joint_bank_results.json` and the byte-verified
 compressed journal `joint_bank_run.jsonl.gz`. The local raw journal remains the
@@ -14275,3 +14283,23 @@ adaptation RL. It does not choose the scalar reward weights forbidden to an
 agent by `CLAUDEwa.md` rule 6. Freeze those with the owner before implementing
 or training the new policy; do not mutate the historical 64-code compliance
 environment or its published negative controls.
+
+### 2026-09-03 - session 39 (decision D17 / Entry 87 preregistration). **The exact margin-RL contract is human-approved; no policy code or training exists yet.**
+
+The owner approved a new 512-code hidden-state episode using the immutable
+Entry 86 journal. PVT and channel loss are hidden; the request and ordered eye
+measurements are visible. D10's existing weights become `-1` per measurement,
+`-60` for a false lock and `+20q` for a compliant lock, where `q` is the
+dimensionless compliant eye-area ratio to the hidden oracle. The horizon is
+eight measured settings and the action space is six local code moves plus
+LOCK. TRAIN is `tt/ss/ff` at 3/6/9/12 dB; TEST is `sf/fs` at
+4.5/7.5/10.5 dB.
+
+Controls must be implemented, measured with zero SPICE and committed before
+policy code. Categorical PPO then uses unchanged published defaults for exactly
+200,000 steps on each seed `2026090300..04`; seed 00 is the preselected
+deployment candidate. Q1-Q8 require source/split integrity, no observation
+leak, controls-first provenance, five healthy runs, comparator-matched safety,
+at least +0.02 mean eye quality with positive paired 95% CI, 4/5 positive
+seeds and bounded cost/reporting. Full registration: `PREDICTIONS.md` Entry 87
+and `NEXT_AGENT_ENTRY87.md`.

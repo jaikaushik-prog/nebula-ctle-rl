@@ -13897,3 +13897,100 @@ production attenuator range. This is a post-result design decision, not a new
 experiment: no artifact, threshold or measured row changes. The default is
 the exact measured ratio 2.3173946499684783; the former 1.98x D11 circuit
 remains reproducible through the explicit range argument.
+
+## Entry 87 -- 512-code hidden-state margin-adaptation PPO (pre-registered 2026-09-03, before implementation or training)
+
+### Owner decision and question
+
+Owner decision **D17** approves the exact contract below. Entry 81/86 falsified
+binary compliance adaptation: 0/720 corner/request cases need different codes
+across channels merely to pass. However, the maximum-eye setting moves in
+580/720 cases. Entry 87 therefore asks whether RL can use receiver-visible eye
+measurements to improve **compliant eye quality** under hidden PVT/channel
+conditions, at a bounded number of tuning trials.
+
+This does not reopen device sizing and does not alter any spec, tolerance,
+circuit, source row or historical 64-code adaptation result.
+
+### Immutable source and zero-SPICE scope
+
+- Source: `experiments/joint_bank_73_run.jsonl.gz`, exactly 23,040 real-PMOS
+  `(8 attenuator x 64 CTLE x 45 corner)` rows with seven stored channel views.
+- Decoded SHA-256:
+  `1B5F941DF4B34F3C90F6DD050F264D8A77C7BB2E5CE4D9EED8CC29EBD9F9843F`.
+- Corrected summary SHA-256:
+  `D86CCC9E939C213AB18CE91CE41627D6D7DF5A67892198EB92299325FA8F591C`.
+- Entry 87 runs **zero SPICE**. Training and evaluation are table lookups.
+- The historical `rl/adapt_env.py` and `exp_adapt_controls.py` remain unchanged.
+
+### Episode contract
+
+- Hidden state: exact PVT corner and channel loss.
+- Visible: requested peaking/frequency, trial fraction, current attenuator/Rs/Cs
+  indices, and ordered tried-code history containing code indices, link-valid
+  flag, eye height and eye width. No PVT/channel label, AC metric, other spec
+  margin or compliance bit enters the observation.
+- There are 512 physical settings. An episode begins by measuring the
+  request-conditioned fixed code selected on TRAIN only; that counts as trial
+  1. Actions are attenuator -/+, Rs -/+, Cs -/+ and LOCK. A boundary move
+  repeats the current measurement and still costs one trial; there is no action
+  mask that can leak state. LOCK costs no additional measurement.
+- Budget: at most **8 measured codes**. Reaching the budget auto-locks the
+  last code. Every arm uses the same start and accounting.
+- Eye quality `q` is zero for a noncompliant lock. For a compliant lock it is
+  `locked eye area / maximum eye area among compliant codes in that exact
+  hidden episode`, clipped to `[0,1]`. The denominator is reward/evaluation
+  ground truth and is never observed by the policy.
+- Human-approved reward reuses D10's weights: each measured move is `-1`, a
+  noncompliant lock is `-60`, and a compliant lock is `+20*q`. The initial
+  measurement is recorded as one trial and `-1` in episode return; as a
+  policy-independent reset constant it is not injected into PPO's first
+  transition. No additional reward weight or spec-tightness tolerance exists.
+
+### Split, controls and sequence
+
+- TRAIN processes: `tt, ss, ff`; TRAIN losses: `3.0, 6.0, 9.0, 12.0` dB.
+  This is 27 corners x 4 losses x 16 requests = 1,728 episode identities.
+- TEST processes: `sf, fs`; TEST losses: `4.5, 7.5, 10.5` dB. This is 18
+  corners x 3 losses x 16 requests = 864 identities, evaluated once.
+- No random row split, no test-conditioned checkpoint or hyperparameter choice.
+- Controls, measured and committed before policy code: request-conditioned
+  TRAIN-only fixed lookup; matched random local moves over 20 explicit seeds
+  `2026090310..2026090329`; coordinate hill-climb; exhaustive 512-code observed
+  eye search; hidden-ground-truth oracle ceiling.
+- The primary practical comparator is selected deterministically from fixed,
+  random-mean and hill-climb: highest mean quality among controls whose
+  compliance is within 1 percentage point of the best practical control;
+  break an exact tie by fewer mean trials and then arm name. Exhaustive and
+  oracle are reported ceilings, not practical comparators.
+
+### Categorical PPO, fixed before training
+
+- Exactly **200,000 environment steps** for each seed
+  `2026090300..2026090304`; deployment seed is preselected as `2026090300`.
+- Categorical actor, separate actor/value `(64,64)` tanh trunks.
+- `rollout_steps=64`, `epochs=10`, `n_minibatches=4`, `lr=3e-4`,
+  `gamma=0.99`, `gae_lambda=0.95`, `clip_eps=0.2`, `vf_coef=0.5`,
+  `ent_coef=0.0`, `max_grad_norm=0.5` -- the existing PPO defaults, not tuned.
+- Training samples TRAIN identities only. Final deterministic argmax policies
+  are evaluated on all 864 TEST identities once. Save and report all five;
+  never select the best test seed.
+- Paired quality confidence interval: 10,000 bootstrap resamples over the 864
+  episode identities, fixed analysis seed `2026090387`, percentile 95% CI.
+
+### Pre-registered gates
+
+| Gate | PASS condition |
+|---|---|
+| **Q1 source/split** | Decoded source hash matches; exact 1,728 TRAIN and 864 TEST identities, no overlap |
+| **Q2 environment** | Fail-first gates prove observation non-leakage, seven actions, boundary/trial/auto-lock accounting and exact reward |
+| **Q3 controls first** | All five controls are reported from zero SPICE and the control artifact is committed before policy implementation/training |
+| **Q4 training integrity** | All five registered seeds complete exactly 200,000 finite steps; weights change; all artifacts/checkpoints are distinct and non-overwriting |
+| **Q5 safety** | Mean RL TEST compliance is no more than 1 percentage point below the primary practical comparator; deployment seed also meets this floor |
+| **Q6 quality** | Mean RL TEST `q` exceeds the comparator by at least 0.02 and the paired 95% bootstrap CI lower bound is greater than 0 |
+| **Q7 reproducibility** | At least 4/5 seeds have positive paired mean `q` delta; the preselected deployment seed has positive delta |
+| **Q8 cost/reporting** | Mean RL trials are <=8 and below exhaustive; per-seed compliance, quality, trials, returns, false locks and all control/oracle values are reported |
+
+All Q1-Q8 must pass to claim that RL contributes. A miss is an honest negative
+result: ship the strongest measured non-RL controller and preserve the RL arm.
+No post-result reward, split, seed, gate or comparator change is permitted.
