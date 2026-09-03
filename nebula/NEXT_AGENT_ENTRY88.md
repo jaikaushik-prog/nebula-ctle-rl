@@ -98,3 +98,16 @@ FINAL TEST comparator and oracles are not scored until final evaluation.
 All eight must pass to claim a useful RL contribution. Any miss is preserved
 as an honest result. Never tune or replace a seed after FINAL TEST exposure.
 
+## Stage 1 outcome -- before policy code
+
+The fail-first environment/control group passes 16/16 and the complete
+non-slow suite passes 2,647/2,647. TRAIN-only controls ran with zero SPICE;
+FINAL TEST remains `DEFINED_NOT_SCORED`. Fixed is 0.9931 compliance/q=0.6906.
+The seven-move reachable hidden oracle is 1.0000 compliance/q=0.9890, giving
++0.2984 mean reachable headroom at 5.336 measured settings. Random, visible-eye
+hill-climb and exhaustive visible eye are unsafe; that is a learning challenge,
+not permission to change D18. Artifact SHA-256:
+`7EE4650145E1603E1A90282A0F9B69C33E8070C8A4E52AF73156F3B8AC1497B6`.
+
+Commit Stage 1 before adding masked PPO. Then implement five one-seed durable
+training runs exactly as registered; never score FINAL TEST early.

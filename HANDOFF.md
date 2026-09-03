@@ -17,11 +17,11 @@
 > decisions that are OPEN and human-only, and what to do next. It supersedes
 > `nebula/NEXT_STEPS.md`. This file remains the full state of record.
 
-Last updated: **2026-09-03** (session 39, decision D18 / Entry 88
-preregistration: the owner approved a separate improvement-reward masked-PPO
-experiment after Entry 87's honest negative. TRAIN is the 2,592 exposed union;
-FINAL TEST is the policy-untouched 2,448-identity complement. Freeze and commit
-the exact contract before any Entry 88 environment/control/policy code.)
+Last updated: **2026-09-03** (session 39, Entry 88 Stage 1: the new masked
+improvement environment and TRAIN-only controls pass 16 focused and 2,647 full
+tests. Fixed q=0.6906; the seven-move reachable oracle q=0.9890, so +0.2984
+headroom exists. FINAL TEST remains `DEFINED_NOT_SCORED`. Commit Stage 1 before
+adding any masked-PPO policy code.)
 
 Earlier session 22p: (**THE REPORT EXISTS** --
 `nebula/report/Nebula_CTLE_Report.pdf`, **10 pages, 9 figures, 598 KB**,
@@ -1445,6 +1445,12 @@ signaling, ADC-based DSP receiver, 28 nm CMOS reference parameters).
 │   │                       controls-first sequence and immutable source hash.
 │   ├── NEXT_AGENT_ENTRY88.md  Exact D18 improvement-reward RL contract,
 │   │                       fresh split, masks, reward and Q1-Q8 gates.
+│   ├── rl/margin_improve_env.py  Entry 88's masked local episode and exact
+│   │                       scale-free telescoping improvement reward.
+│   ├── experiments/exp_margin_improve_controls.py  TRAIN-only fixed/random/
+│   │                       hill/exhaustive/global/reachable controls.
+│   ├── experiments/margin_improve_controls_results.json  Entry 88 Stage 1
+│   │                       evidence; FINAL TEST explicitly unscored.
 │   ├── rl/margin_adapt_env.py  Entry 87's separate 512-code hidden PVT/channel
 │   │                       episode; request + ordered eye history only.
 │   ├── experiments/exp_margin_adapt_controls.py  Fixed, random, local
@@ -2116,9 +2122,11 @@ The owner has now approved that second attempt as D18 / Entry 88. TRAIN is the
 policy-untouched complement and must not be scored before all five policies are
 frozen. The scale-free move reward is `q_new-q_previous`; compliant LOCK is 0;
 false LOCK is `-1-q_current`. Invalid moves are masked and LOCK requires one
-real move. First implement fail-first environment/controls, score TRAIN only,
-and commit that stage before any masked-PPO code. Full immutable contract:
-`nebula/NEXT_AGENT_ENTRY88.md` and `PREDICTIONS.md` Entry 88.
+real move. Stage 1 now passes 16 focused and 2,647 complete tests. TRAIN-only
+fixed q is 0.6906 and the seven-move reachable-oracle q is 0.9890 (+0.2984),
+while FINAL TEST remains unscored. Commit Stage 1 before any masked-PPO code.
+Full immutable contract: `nebula/NEXT_AGENT_ENTRY88.md` and `PREDICTIONS.md`
+Entry 88.
 
 **Entry-81 artifacts:** preserve `joint_bank_results.json` and the byte-verified
 compressed journal `joint_bank_run.jsonl.gz`. The local raw journal remains the
@@ -14036,6 +14044,19 @@ unattractive. Treat that causal explanation as an inference unless separately
 tested. After TEST exposure, do not repair the reward on the same split; a new
 attempt requires a new preregistration and untouched validation identities.
 
+### G150. Reachable oracle headroom does not make an eye-only heuristic safe
+
+Entry 88's TRAIN start has q=0.6906 and a seven-move hidden oracle reaches
+q=0.9890 at 100% compliance, so the hardware/action radius leaves ample
+headroom. Yet visible-eye hill-climb falls to 43.79% compliance, masked random
+to 40.52%, and exhaustive maximum visible eye to 2.24%.
+
+**Rule:** use the reachable oracle to establish feasibility, not learnability.
+Eye area is observable but does not encode every non-eye constraint. Preserve
+the compliance gate and hidden reward truth; never promote an eye-only control
+because it moves toward larger eyes. Do not inspect FINAL TEST to choose a
+safer heuristic or policy.
+
 ### 2026-09-02 - session 36 (entry 83 implementation, before measurement). **The focused probe is built and green; no entry-83 SPICE point has run.**
 
 `attenuator.py` now accepts an explicit optional maximum ratio through its one
@@ -14444,3 +14465,26 @@ opened once after all five. Q1-Q8 retain the 1 percentage-point safety floor,
 The preregistration-only non-slow baseline passes **2,631/2,631**, with 13
 deselected and 2 known warnings in 405.41 s. Full contract:
 `nebula/NEXT_AGENT_ENTRY88.md` and `PREDICTIONS.md` Entry 88.
+
+### 2026-09-03 - session 39 (Entry 88 Stage 1). **TRAIN-only controls prove large reachable headroom; FINAL TEST is still unopened.**
+
+Sixteen fail-capable tests first failed because both new modules were absent,
+then passed. They gate the 2,592/2,448 disjoint complete split, exact action
+masks, one-real-move-before-LOCK rule, observation non-leakage, telescoping
+compliant and false-lock returns, auto-lock, TRAIN-only start selection,
+Manhattan reachability and fractional multiseed accounting. The complete
+non-slow suite passes **2,647/2,647**, with 13 deselected and 2 known warnings
+in 301.60 s.
+
+The zero-SPICE runner scored TRAIN only. Fixed is 0.9931 compliance/q=0.6906/
+1.000 trial. Hill-climb is 0.4379/0.3516/8.000; 20-seed masked random is
+0.4052/0.2803/5.420; exhaustive visible eye is 0.0224/0.0224/512. The global
+hidden oracle is 1.0000/1.0000, and the seven-move reachable hidden oracle is
+1.0000/q=0.9890 at 5.336 trials: **+0.2984 reachable q headroom** versus the
++0.0200 policy gate. This establishes feasibility but not learnability; new
+G150 records why the observable-eye controls remain unsafe. FINAL TEST status
+is exactly `DEFINED_NOT_SCORED`, identity hash
+`826CDC16622D7CC3A390D01040486D8B4B568A0C146D369D9D347F1F93D77FA9`.
+Controls artifact SHA-256:
+`7EE4650145E1603E1A90282A0F9B69C33E8070C8A4E52AF73156F3B8AC1497B6`.
+Commit this state before implementing masked PPO.

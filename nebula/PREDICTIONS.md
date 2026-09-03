@@ -14155,3 +14155,28 @@ controls-first, five healthy seeds, paired fixed-comparator safety, at least
 bounded cost/full reporting. All must pass. No post-TEST tuning is allowed.
 The preregistration-only non-slow baseline passes **2,631/2,631**, with 13
 deselected and 2 known warnings in 405.41 s.
+
+### Entry 88 Stage 1 controls outcome -- before policy code
+
+Sixteen fail-capable environment/control tests failed first on absent modules,
+then pass 16/16. The full non-slow suite passes **2,647/2,647**, with 13
+deselected and 2 known warnings in 301.60 s. The controls runner used only the
+2,592 TRAIN identities, recorded zero simulations, and left FINAL TEST as
+`DEFINED_NOT_SCORED` with identity SHA-256
+`826CDC16622D7CC3A390D01040486D8B4B568A0C146D369D9D347F1F93D77FA9`.
+
+| TRAIN-only arm | compliance | mean q | q improvement | trials |
+|---|---:|---:|---:|---:|
+| fixed comparator | 0.9931 | 0.6906 | 0.0000 | 1.000 |
+| visible-eye hill-climb | 0.4379 | 0.3516 | -0.3391 | 8.000 |
+| masked random, 20-seed mean | 0.4052 | 0.2803 | -0.4103 | 5.420 |
+| exhaustive maximum visible eye | 0.0224 | 0.0224 | -0.6683 | 512.000 |
+| global hidden oracle | 1.0000 | 1.0000 | +0.3094 | 1.000 |
+| seven-move reachable hidden oracle | **1.0000** | **0.9890** | **+0.2984** | **5.336** |
+
+Prediction 1 is confirmed: reachable headroom is large relative to the frozen
++0.0200 gate. Prediction 2 is enforced by tests. The practical controls also
+confirm prediction 4's safety risk: visible eye alone is not a reliable proxy
+for hidden compliance. This does not alter any reward, seed, split, optimizer
+or gate. Artifact SHA-256:
+`7EE4650145E1603E1A90282A0F9B69C33E8070C8A4E52AF73156F3B8AC1497B6`.
