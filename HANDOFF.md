@@ -17,12 +17,13 @@
 > decisions that are OPEN and human-only, and what to do next. It supersedes
 > `nebula/NEXT_STEPS.md`. This file remains the full state of record.
 
-Last updated: **2026-09-03** (session 40, Entry 89 five-policy freeze: all five
-seeds completed 50 BC epochs plus 200,000 PPO steps. Exposed DEVELOPMENT
-shielded compliance is 0.9980-0.9986 and q delta is +0.1507 to +0.2214; D3-D5
-pass. The exact artifact manifest exists, but no midpoint row or FINAL score
-exists. Full suite: 2,690 passes. Commit the complete freeze before generating
-fresh data.)
+Last updated: **2026-09-04** (session 41, Entry 89 fresh midpoint evidence:
+after the five-policy freeze commit `a84082e`, all 23,040 registered real-PMOS
+ngspice rows completed in 130.99 min. Structural validation confirms 512
+settings x 45 corners and byte-identical raw/decoded hashes. Metadata is
+`GENERATED_NOT_SCORED`; no FINAL request has been evaluated. Commit this data
+boundary before implementing or running the one-time FINAL evaluator. Full
+suite: 2,690/2,690.)
 
 Earlier session 22p: (**THE REPORT EXISTS** --
 `nebula/report/Nebula_CTLE_Report.pdf`, **10 pages, 9 figures, 598 KB**,
@@ -1473,6 +1474,10 @@ signaling, ADC-based DSP receiver, 28 nm CMOS reference parameters).
 │   │                       gate required before midpoint generation.
 │   ├── experiments/exp_joint_bank_midpoint.py  Hash-manifest-gated,
 │   │                       crash-resumable fresh midpoint journal generator.
+│   ├── experiments/joint_bank_midpoint_run.jsonl.gz  Byte-verified 23,040-row
+│   │                       fresh midpoint bank; FINAL requests not scored.
+│   ├── experiments/joint_bank_midpoint_metadata.json  Freeze provenance,
+│   │                       membership, hashes and GENERATED_NOT_SCORED seal.
 │   ├── experiments/shielded_controls_results.json  Entry 89 DEVELOPMENT-only
 │   │                       D1/D2 evidence; FINAL explicitly nonexistent.
 │   ├── SHIELDED_RL_CONTROLS.md  Professor-ready shield-control result and
@@ -1481,6 +1486,8 @@ signaling, ADC-based DSP receiver, 28 nm CMOS reference parameters).
 │   │                       problem statement to the product, gaps and judge view.
 │   ├── ENTRY89_DEVELOPMENT_RESULTS.md  Five-seed training integrity and exposed
 │   │                       raw-versus-shielded mechanism result; not FINAL.
+│   ├── ENTRY89_MIDPOINT_DATA.md  Fresh-data provenance and the explicit
+│   │                       boundary before one-time FINAL scoring.
 │   ├── rl/margin_improve_env.py  Entry 88's masked local episode and exact
 │   │                       scale-free telescoping improvement reward.
 │   ├── experiments/exp_margin_improve_controls.py  TRAIN-only fixed/random/
@@ -1719,18 +1726,24 @@ Plus: git init, .gitignore, 28 tests, Wilson-bound BER reporting.
   compliance is 0.7657-0.9631, while the shield raises it to 0.9980-0.9986 and
   raises q by +0.1507 to +0.2214 over fixed. D3-D5 pass. The five-policy
   SHA-256 manifest now freezes every artifact before fresh data generation.
+- After freeze commit `a84082e`, the exact midpoint generator completed 23,040
+  real-PMOS rows (512 settings x 45 corners) in 7,859.41 s. The raw and decoded
+  gzip share SHA-256 `99B6...9E2`; all pairs are unique. Metadata remains
+  `GENERATED_NOT_SCORED`, so none of the 2,430 FINAL identities is exposed.
 
 ## 6. Key numbers & validated behavior (current state)
 
-- **Nebula Entry 89 policies are trained and frozen before fresh data:** all
+- **Nebula Entry 89 policies and fresh data are separately frozen:** all
   five seeds `2026090500..04` completed 50 BC epochs plus 200,000 PPO steps,
   one million PPO steps total, with finite and distinct artifacts. Exposed
   DEVELOPMENT fixed is compliance/q 0.9925/0.6703. New-policy raw compliance
   is 0.7657-0.9631; the structural shield raises it to 0.9980-0.9986 while q
   improves +0.1507 to +0.2214 at 4.669-7.465 billed measurements. Every
   compliant fixed start is retained; D3-D5 pass. This is exposed diagnostic
-  evidence only. The exact manifest exists, but zero midpoint rows and FINAL
-  scores exist. Full suite: 2,690/2,690.
+  evidence only. After commit `a84082e`, the midpoint run completed exactly
+  23,040 rows in 130.99 min; raw and decoded SHA-256 are identical and metadata
+  is `GENERATED_NOT_SCORED`. Zero FINAL scores exist. Pre-generation full suite:
+  2,690/2,690; post-generation full suite: 2,690/2,690.
 - **Nebula Entry 88 masked-PPO result:** FINAL TEST fixed compliance/q is
   0.9865/0.6824. Five-seed PPO mean is 0.9274/0.7690 at 3.797 trials; q delta
   is +0.0866 with paired 95% CI `[+0.0772,+0.0956]`, and 5/5 seeds are
@@ -2244,10 +2257,12 @@ The owner approved that deadline-safe rescue as D19 / Entry 89. Preregistration
 commit `8af0485` precedes all code. All five registered policies are now trained,
 DEVELOPMENT-scored and frozen by exact artifact hashes. The new shielded q gains
 are +0.1507 to +0.2214 with 0.9980-0.9986 compliance on exposed data; D3-D5
-pass, while the unshielded comparison remains unsafe. **Next:** commit the full
-five-policy freeze, then generate and hash the complete 23,040-row midpoint
-journal without request scoring. Only after that separate evidence commit may
-the single 2,430-identity FINAL evaluator run. Full immutable sequence and R1-R10:
+pass, while the unshielded comparison remains unsafe. The five-policy freeze is
+commit `a84082e`; the subsequent 23,040-row midpoint journal is now complete,
+structurally validated and still `GENERATED_NOT_SCORED`. **Next:** commit this
+fresh-data boundary, then implement the fail-first FINAL evaluator. Only after
+that evaluator passes the complete suite may the single 2,430-identity FINAL
+run occur. Full immutable sequence and R1-R10:
 `nebula/NEXT_AGENT_ENTRY89.md` and `PREDICTIONS.md` Entry 89.
 
 **Entry-81 artifacts:** preserve `joint_bank_results.json` and the byte-verified
@@ -14853,3 +14868,29 @@ turn was interrupted before pytest printed the node or traceback. A complete
 warnings in 460.59 s; the failure did not reproduce. Record this as an
 unidentified transient, not a diagnosed defect. No fresh-data command ran
 during either suite.
+
+### 2026-09-04 - session 41 (Entry 89 fresh midpoint generation). **All 23,040 fresh real-PMOS rows exist; FINAL remains unopened.**
+
+The five-policy freeze was committed first as `a84082e`. The registered command
+then ran the 512 attenuator/Rs/Cs settings across all 45 PVT corners at the six
+midpoint channel losses. It completed **23,040/23,040** rows in **7,859.41 s
+(130.99 min)** with a clean exit.
+
+Structural validation found 512 settings, 45 corners and 23,040 unique
+setting/corner pairs. The raw journal SHA-256 and decoded-gzip SHA-256 are both
+`99B6BF526EE610CF39EBC921A2B8BEA2EA482A610354056569B2A176AA1169E2`;
+gzip SHA-256 is
+`AE57F93E9636DC135C9E3B86DD37B9B59BE14C3A5DA511EAC4202101E529E9C4`;
+metadata SHA-256 is
+`1C5C9527A1A982BD8C82373F98CE3AFDFD021C1AC542D04CF4FAB9D0C2612D65`.
+The raw crash-resume journal is local-only; `.gitignore` now follows the prior
+Entry 81/86 policy and retains only the byte-verified gzip in Git.
+
+This was membership/hash validation, not request scoring. Metadata is exactly
+`GENERATED_NOT_SCORED`; none of the nine FINAL requests or 2,430 identities has
+been evaluated. `ENTRY89_MIDPOINT_DATA.md` records the boundary. Next: commit
+the data evidence separately, implement the FINAL evaluator fail-first, run the
+complete suite, then execute the registered FINAL evaluation exactly once.
+
+The post-generation non-slow suite passes **2,690/2,690**, with 13 deselected
+and the same two known warnings in 374.79 s.

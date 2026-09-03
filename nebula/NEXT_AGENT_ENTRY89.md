@@ -186,3 +186,24 @@ The exact five-policy freeze manifest SHA-256 is
 FINAL remains `NOT_GENERATED_NOT_SCORED`; no midpoint row exists. Commit this
 entire stage before running the midpoint generator. Then generate, validate,
 compress, hash and commit all 23,040 rows without scoring any FINAL request.
+
+## Stage 4 fresh midpoint evidence -- before FINAL evaluator
+
+The five-policy freeze commit is `a84082e`. Only after that commit, the exact
+midpoint generator completed all 23,040 real-PMOS ngspice setting/corner rows
+in 7,859.41 s (130.99 min). Structural validation finds all 512 settings, all
+45 corners and 23,040 unique pairs. The raw SHA-256 and the decoded-gzip
+SHA-256 are both
+`99B6BF526EE610CF39EBC921A2B8BEA2EA482A610354056569B2A176AA1169E2`;
+the gzip SHA-256 is
+`AE57F93E9636DC135C9E3B86DD37B9B59BE14C3A5DA511EAC4202101E529E9C4`.
+Metadata SHA-256 is
+`1C5C9527A1A982BD8C82373F98CE3AFDFD021C1AC542D04CF4FAB9D0C2612D65`.
+
+The metadata status is exactly `GENERATED_NOT_SCORED`. None of the nine FINAL
+requests or 2,430 FINAL identities has been evaluated. Commit the gzip,
+metadata and this evidence boundary before implementing the fail-first FINAL
+evaluator. After that commit, implement the evaluator exactly as registered in
+the FINAL TEST section above, run the complete suite, and execute FINAL once.
+The post-generation non-slow suite passes 2,690/2,690, with 13 deselected and
+the two known warnings in 374.79 s.

@@ -14309,3 +14309,20 @@ manifest SHA-256:
 `3E910DECEFD7CAAA5D401655E77C310F8BE4A645DD48538EEE4E1531199734DB`.
 No midpoint row or FINAL score exists. The complete non-slow suite passes
 2,690/2,690, with 13 deselected and 2 known warnings in 304.14 s.
+
+### Entry 89 fresh midpoint data boundary -- before FINAL scoring
+
+After the five-policy freeze commit `a84082e`, the registered generator ran all
+23,040 real-PMOS setting/corner evaluations in 7,859.41 s. Structural
+validation confirms exactly 512 settings x 45 corners with no duplicate or
+missing pair. The raw and decoded-gzip SHA-256 are identically
+`99B6BF526EE610CF39EBC921A2B8BEA2EA482A610354056569B2A176AA1169E2`;
+the gzip SHA-256 is
+`AE57F93E9636DC135C9E3B86DD37B9B59BE14C3A5DA511EAC4202101E529E9C4`.
+
+This generation step does not score predictions 4-6. Metadata remains
+`GENERATED_NOT_SCORED`: the nine registered FINAL requests and 2,430 identities
+are defined but unopened. Freeze this data artifact in a separate commit before
+the fail-first FINAL evaluator is implemented or run. The post-generation
+non-slow suite passes 2,690/2,690, with 13 deselected and the two known warnings
+in 374.79 s.
