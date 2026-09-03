@@ -48,6 +48,16 @@ def training_path(seed: int) -> Path:
     return HERE / f"margin_improve_train_{int(seed)}.json"
 
 
+def results_path() -> Path:
+    """Return the result path relative to the current experiment directory.
+
+    Tests redirect ``HERE`` to a temporary directory.  Computing this path at
+    call time keeps the anti-overwrite guard in that same isolated directory,
+    even after the real result artifact exists in the repository.
+    """
+    return HERE / RESULTS.name
+
+
 def _file_sha256(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest().upper()
 
@@ -229,8 +239,9 @@ def score_checks(source_ok: bool, split_ok: bool, controls_ok: bool,
 
 
 def evaluate() -> dict:
-    if RESULTS.exists():
-        raise FileExistsError(f"refusing to overwrite {RESULTS.name}")
+    result = results_path()
+    if result.exists():
+        raise FileExistsError(f"refusing to overwrite {result.name}")
     missing = [path.name for seed in TRAIN_SEEDS
                for path in (checkpoint_path(seed), training_path(seed))
                if not path.exists()]
@@ -309,7 +320,7 @@ def evaluate() -> dict:
         "checks": checks, "passed": all(checks.values()),
         "simulations_run": 0,
     }
-    RESULTS.write_text(json.dumps(out, indent=1), encoding="utf-8")
+    result.write_text(json.dumps(out, indent=1), encoding="utf-8")
     return out
 
 
@@ -353,9 +364,10 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     elif args.evaluate:
         report(evaluate())
     else:
-        if not RESULTS.exists():
-            raise SystemExit(f"missing {RESULTS.name}; train and evaluate first")
-        report(json.loads(RESULTS.read_text(encoding="utf-8")))
+        result = results_path()
+        if not result.exists():
+            raise SystemExit(f"missing {result.name}; train and evaluate first")
+        report(json.loads(result.read_text(encoding="utf-8")))
     return 0
 
 

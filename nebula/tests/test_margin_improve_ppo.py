@@ -31,6 +31,12 @@ def test_artifact_paths_are_distinct_and_do_not_clobber_entry87():
     assert P.RESULTS.name == "margin_improve_rl_results.json"
 
 
+def test_result_path_follows_redirected_experiment_directory(tmp_path,
+                                                              monkeypatch):
+    monkeypatch.setattr(P, "HERE", tmp_path)
+    assert P.results_path() == tmp_path / P.RESULTS.name
+
+
 def test_structured_control_start_map_keeps_exact_request_values():
     rows = [{"target_peaking_db": pk, "target_f_peak_hz": freq,
              "setting": index}

@@ -17,11 +17,12 @@
 > decisions that are OPEN and human-only, and what to do next. It supersedes
 > `nebula/NEXT_STEPS.md`. This file remains the full state of record.
 
-Last updated: **2026-09-03** (session 39, Entry 88 policy implementation:
-controls-first commit `6e3231e` is frozen. Masked categorical PPO and the
-five-seed crash-safe evaluator pass 30 focused and 2,661 full tests. No
-registered step, checkpoint, summary or FINAL TEST score exists. Commit policy
-implementation, then train seed `2026090400` alone.)
+Last updated: **2026-09-03** (session 39, Entry 88 registered result: all five
+200,000-step masked-PPO seeds completed before the single FINAL TEST exposure.
+Quality improves 0.6824 -> 0.7690, delta +0.0866 with positive CI, but
+compliance falls 98.65% -> 92.74%. Q5 and OVERALL fail; no checkpoint is
+deployable. A post-result path-isolation repair raises the full suite to 2,662
+passes. Preserve the fixed lookup and do not tune on exposed identities.)
 
 Earlier session 22p: (**THE REPORT EXISTS** --
 `nebula/report/Nebula_CTLE_Report.pdf`, **10 pages, 9 figures, 598 KB**,
@@ -1425,6 +1426,8 @@ signaling, ADC-based DSP receiver, 28 nm CMOS reference parameters).
 │   │                       evidence hashes and RL implication.
 │   ├── MARGIN_ADAPT_RL_RESULTS.md  Entry 87's complete five-seed held-out
 │   │                       result, Q1-Q8 audit and evidence hashes.
+│   ├── MARGIN_IMPROVE_RL_RESULTS.md  Entry 88's complete masked-PPO result:
+│   │                       quality passes, safety and overall fail.
 │   ├── experiments/joint_bank_73_run.jsonl.gz  Entry 86's complete compressed
 │   │                       23,040-row journal; decoded hash pinned in result.
 │   ├── experiments/exp_atten_range_probe.py  Entry 83's focused 7.0 dB
@@ -1455,6 +1458,12 @@ signaling, ADC-based DSP receiver, 28 nm CMOS reference parameters).
 │   │                       Entry 87's unmasked learner remains immutable.
 │   ├── experiments/exp_margin_improve_ppo.py  One-seed durable training and
 │   │                       post-five-checkpoint FINAL TEST evaluator.
+│   ├── experiments/margin_improve_policy_*.pth  Five frozen Entry 88
+│   │                       checkpoints; evidence only, none deployable.
+│   ├── experiments/margin_improve_train_*.json  Five 200,000-step training
+│   │                       summaries; FINAL TEST unscored during training.
+│   ├── experiments/margin_improve_rl_results.json  The one immutable
+│   │                       2,448-identity FINAL TEST evaluation and verdict.
 │   ├── rl/margin_adapt_env.py  Entry 87's separate 512-code hidden PVT/channel
 │   │                       episode; request + ordered eye history only.
 │   ├── experiments/exp_margin_adapt_controls.py  Fixed, random, local
@@ -1635,8 +1644,25 @@ Plus: git init, .gitignore, 28 tests, Wilson-bound BER reporting.
 - Report figures 1–8 generated (`make_report_figures.py`); figs explained to
   the owner in plain language for professor communication.
 
+### Nebula Entry 88 (2026-09-03)
+
+- Entry 87's immediate-LOCK failure motivated an owner-approved, separately
+  preregistered masked-PPO experiment with a telescoping improvement reward.
+- TRAIN-only controls were frozen first; a seven-move hidden oracle proved
+  +0.2984 reachable q headroom. Five seeds then completed exactly 200,000 steps
+  each before FINAL TEST was opened once.
+- RL raised held-out q by +0.0866 with a strictly positive CI and all five
+  seeds positive, but reduced compliance by 5.91 percentage points. The hard
+  Q5 safety gate therefore rejects every checkpoint. The fixed lookup remains
+  the deliverable; the exposed test set may not be used for tuning.
+
 ## 6. Key numbers & validated behavior (current state)
 
+- **Nebula Entry 88 masked-PPO result:** FINAL TEST fixed compliance/q is
+  0.9865/0.6824. Five-seed PPO mean is 0.9274/0.7690 at 3.797 trials; q delta
+  is +0.0866 with paired 95% CI `[+0.0772,+0.0956]`, and 5/5 seeds are
+  positive. Q6-Q8 pass, but Q5's 0.9765 compliance floor fails for both the
+  mean and deployment seed. Overall FAIL; no policy is promoted.
 - **Nebula adaptation controls (entries 79-80, old table only):** of 262
   solvable held-out `(corner, request)` cases, TRAIN-selected fixed code 20
   reaches 69 in one trial and is the sole non-RL Pareto arm. The qualified
@@ -2090,6 +2116,12 @@ Plus: git init, .gitignore, 28 tests, Wilson-bound BER reporting.
   at one channel. Entry 80 repaired the random seeding and last-code accounting
   and found TRAIN-selected fixed code 20 to be the sole non-RL Pareto arm; the
   old table remains forbidden for policy training.
+- **(nebula) Entry 88 is an offline frozen-table adaptation result, not a
+  deployed hardware controller.** Its underlying rows are real ngspice data,
+  but no new SPICE ran and the identities are policy-untouched combinations,
+  not wholly unseen silicon measurements. Its quality result is real within
+  that table; its 92.74% compliance makes it non-deployable. Do not report the
+  +0.0866 q gain without the 5.91-point compliance loss.
 - **(nebula) The completed combined-bank experiment still uses the constructed
   channel, modeled eye and one design load.** Seven loss values do not add
   measured reflections, crosstalk or termination interaction. Entry 81's
@@ -2121,17 +2153,21 @@ immediately on 861/864 cases. Preserve the fixed lookup as the deliverable;
 do not tune or rerun Entry 87 on its exposed TEST set. A second attempt needs
 an owner-approved preregistration and fresh untouched validation identities.
 
-The owner has now approved that second attempt as D18 / Entry 88. TRAIN is the
-2,592-identity union already exposed by Entry 87; FINAL TEST is the exact 2,448
-policy-untouched complement and must not be scored before all five policies are
-frozen. The scale-free move reward is `q_new-q_previous`; compliant LOCK is 0;
-false LOCK is `-1-q_current`. Invalid moves are masked and LOCK requires one
-real move. Stage 1 is frozen as commit `6e3231e`; TRAIN-only fixed q is 0.6906
-and the seven-move reachable-oracle q is 0.9890 (+0.2984). Masked PPO and its
-five-seed runner now pass 30 focused and 2,661 complete tests, but are not yet
-committed and have executed zero registered steps. Commit policy code next,
-then train seed `2026090400` alone. FINAL TEST remains unscored. Full immutable
-contract: `nebula/NEXT_AGENT_ENTRY88.md` and `PREDICTIONS.md` Entry 88.
+Entry 88 is now complete and immutable. All five seeds trained for 200,000
+steps before the single 2,448-identity FINAL TEST exposure. The reward/mask
+change solved Entry 87's movement problem: mean q improves +0.0866, its CI is
+strictly positive, all five seeds improve and mean cost is 3.797 settings.
+But compliance falls from 0.9865 to 0.9274, below Q5's 0.9765 floor; deployment
+seed 00 is also below it at 0.9461. Q5 and OVERALL fail. Preserve all artifacts,
+do not tune or rerun on these identities, and deploy only the fixed lookup.
+
+**Next RL decision is human-owned.** If the owner authorizes one deadline-safe
+rescue, preregister a safety-constrained architecture on genuinely new held-out
+data. The evidence supports oracle-imitation/action ranking plus a separate
+best-compliant-so-far deployment shield; it does not authorize changing the
+reward penalty or safety gate after seeing Entry 88. Otherwise close the RL
+line honestly and finish the competition report with the fixed controller.
+Full result: `nebula/MARGIN_IMPROVE_RL_RESULTS.md`.
 
 **Entry-81 artifacts:** preserve `joint_bank_results.json` and the byte-verified
 compressed journal `joint_bank_run.jsonl.gz`. The local raw journal remains the
@@ -5048,6 +5084,29 @@ noise and 12 dB channel all passed.
 **Rule:** after changing an `Rs` or `Cs` code, rerun the link/scorability gate;
 never infer compliance from the AC peak alone. Report the new active constraint
 instead of calling the code "better" in the abstract.
+
+### G151. A false-lock penalty is not a hard safety constraint
+
+Entry 88's scalar return penalizes a noncompliant finish as `-1-q_start`, yet
+the learned policies still traded compliance for quality. Mean q rose 0.6824
+to 0.7690 while compliance fell 0.9865 to 0.9274. Expected-return optimization
+can accept a tail of failures when gains on successful episodes compensate;
+the magnitude of a penalty does not prove a probability constraint.
+
+**Rule:** keep safety as an independently scored gate or enforce it structurally
+with a shield/constrained method. Never call a controller safe because its
+reward contains a failure penalty.
+
+### G152. Redirecting a base directory does not update a derived module-level Path
+
+The first post-result suite exposed two tests that monkeypatched `HERE` to a
+temporary directory while `RESULTS = HERE / name` remained bound to the real
+repository path from import time. Once the genuine result existed, both tests
+hit its overwrite guard instead of their isolated directory.
+
+**Rule:** paths that must follow a redirected base are functions evaluated at
+call time (`results_path()`), or every derived constant must be patched too.
+Test isolation before and after the real artifact exists.
 
 ## 10. Environment
 
@@ -14512,3 +14571,31 @@ registered seed per durable invocation and pins the source, controls, TRAIN
 and FINAL TEST hashes in every artifact. No checkpoint or summary exists yet.
 Commit this implementation before starting seed `2026090400`; never run two
 seeds concurrently and never invoke final evaluation before all five validate.
+
+### 2026-09-03 - session 39 (Entry 88 registered result). **The policy learns the quality move; the hard safety gate rejects it.**
+
+Seeds `2026090400..04` each completed exactly 200,000 TRAIN steps with changed,
+finite and distinct checkpoints, 1,000,000 total steps and zero SPICE. Every
+training summary recorded `NOT_EVALUATED_DURING_TRAINING`. Only after all ten
+artifacts validated, the evaluator opened all 2,448 policy-untouched FINAL TEST
+identities exactly once.
+
+The fixed comparator is compliance 0.9865, q=0.6824 and 1.000 trial. Five-seed
+PPO mean is compliance 0.9274, q=0.7690 and 3.797 trials. The +0.0866 q delta
+has paired 95% CI `[+0.0772,+0.0956]`; all five seeds and deployment seed 00
+are positive. Q6-Q8 pass, as do Q1-Q4. Q5 fails decisively: its safety floor is
+0.9765 and deployment seed 00 reaches only 0.9461. Therefore OVERALL FAILS and
+no checkpoint is deployable. Entry 88 removes Entry 87's immediate-LOCK
+collapse (mean code-change rate 0.9699) but trades compliance for eye quality.
+New G151 records that a scalar false-lock penalty is not a safety guarantee.
+
+The first post-result full suite then failed 2 tests because their monkeypatch
+redirected `HERE` but not a derived module-level `RESULTS` path. No score was
+recomputed. A fail-capable `results_path()` regression now resolves at call
+time; focused tests pass 10/10 and the complete non-slow suite passes
+**2,662/2,662**, with 13 deselected and 2 known warnings in 466.52 s. New G152
+records the isolation trap. Result JSON SHA-256:
+`1A274CAABC768610979F4DBC5DAEBC43E13C8AF10CB99D5FAD513ECC4E69C13C`.
+Full audit: `nebula/MARGIN_IMPROVE_RL_RESULTS.md`. Preserve the fixed lookup,
+the failed policy evidence and the exposed split; any rescue needs owner
+approval, a new preregistration and genuinely new held-out data.

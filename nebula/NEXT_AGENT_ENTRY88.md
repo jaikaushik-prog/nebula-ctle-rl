@@ -122,3 +122,18 @@ control or policy can run. The combined Entry 88 group passes 30/30 and the
 complete non-slow suite passes 2,661/2,661. No registered step, checkpoint,
 summary or FINAL TEST score exists. Commit this implementation, then start
 seed `2026090400` alone.
+
+## Registered result -- immutable
+
+All five seeds completed exactly 200,000 steps with changed, finite and
+distinct checkpoints. Only then was FINAL TEST opened once. Mean q improves
+from 0.6824 to 0.7690: delta `+0.0866`, paired 95% CI
+`[+0.0772, +0.0956]`. All five seeds are positive and mean cost is 3.797
+settings. Q6-Q8 therefore pass.
+
+Compliance falls from 0.9865 to 0.9274. The registered floor is 0.9765; the
+preselected deployment seed reaches 0.9461. Q5 and OVERALL therefore **FAIL**.
+Q1-Q4 and Q6-Q8 pass. Do not tune or rerun Entry 88 on the exposed FINAL TEST,
+and do not deploy any checkpoint. The fixed request-conditioned lookup remains
+the safe controller. Full audit: `MARGIN_IMPROVE_RL_RESULTS.md`; result JSON
+SHA-256 `1A274CAABC768610979F4DBC5DAEBC43E13C8AF10CB99D5FAD513ECC4E69C13C`.

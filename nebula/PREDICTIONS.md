@@ -14197,3 +14197,23 @@ records exact steps, finite telemetry and before/after tensor hashes; and loads
 and validates every checkpoint before the single final evaluator can score any
 control or policy. The optimizer defaults, reward, split, seeds and Q1-Q8 gates
 remain exactly D18. No registered training step or FINAL TEST score exists.
+
+### Entry 88 registered outcome -- 2026-09-03
+
+All five registered seeds completed 200,000 steps with distinct changed and
+finite checkpoints before FINAL TEST was opened once. Prediction 2 held by
+construction and prediction 3 was confirmed: mean code-change rate is 0.9699,
+so the Entry 87 immediate-LOCK collapse is gone.
+
+The quality mechanism works strongly. Fixed q is 0.6824; five-seed PPO q is
+0.7690, delta `+0.0866`, paired-bootstrap 95% CI
+`[+0.0772, +0.0956]`. All 5/5 seeds are positive and mean trial count is
+3.797. Q6-Q8 pass.
+
+Prediction 4's primary risk fires. Fixed compliance is 0.9865, while mean PPO
+compliance is 0.9274 and deployment-seed compliance is 0.9461. Both are below
+the registered 0.9765 floor. Q5 and OVERALL **FAIL**; Q1-Q4 and Q6-Q8 pass.
+The reward change produced useful movement but did not provide a hard safety
+constraint. No checkpoint is promoted, and no post-TEST tuning is permitted.
+Full audit: `MARGIN_IMPROVE_RL_RESULTS.md`; result JSON SHA-256
+`1A274CAABC768610979F4DBC5DAEBC43E13C8AF10CB99D5FAD513ECC4E69C13C`.
