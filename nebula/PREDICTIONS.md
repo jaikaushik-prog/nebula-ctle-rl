@@ -14084,3 +14084,74 @@ deliverable and do not tune on the exposed TEST set. Full result:
 `18CC3C7E87251EBF4075992BCC4A7D621A2920F0323849886120C8B36B3B5696`.
 The final non-slow regression passes **2,631/2,631**, with 13 deselected and 2
 known warnings in 297.13 s.
+
+## Entry 88 -- improvement-reward masked PPO after Entry 87
+
+**Written:** 2026-09-03, session 39, after Entry 87's registered negative
+result but before any Entry 88 environment, control, policy code or artifact.
+**Owner approval:** D18, explicit approval of the exact proposal in chat.
+
+### Why this is a new experiment
+
+Entry 87 is frozen and its TEST set is exposed. It showed healthy training but
+almost-always immediate LOCK: only 3/864 identities received a move. Entry 88
+does not reinterpret or overwrite that result. It uses new modules, new seeds,
+a scale-free improvement reward, an action mask, and a policy-untouched final
+split.
+
+The immutable device source remains `joint_bank_73_run.jsonl.gz`, decoded
+SHA-256
+`1B5F941DF4B34F3C90F6DD050F264D8A77C7BB2E5CE4D9EED8CC29EBD9F9843F`.
+TRAIN is the 2,592-identity union already exposed by Entry 87. FINAL TEST is
+the exact 2,448-identity complement: `tt/ss/ff` at 4.5/7.5/10.5 dB plus
+`sf/fs` at 3/6/9/12 dB. The split has zero overlap and covers all 5,040
+corner/loss/request identities. These are policy-untouched combinations, not
+wholly unseen transistor rows; the underlying rows appeared in prior hardware
+coverage summaries.
+
+### Frozen reward and behavior
+
+The owner approved the same eight-measurement, six-local-move-plus-LOCK episode
+with two structural changes: invalid boundary moves are masked, and LOCK is
+masked until one real move has been measured. The request-conditioned start is
+selected from Entry 88 TRAIN only.
+
+Let hidden `q` retain Entry 87's exact compliant eye-area/oracle-area
+definition. A move earns `q_new-q_previous`; compliant LOCK earns 0; false
+LOCK earns `-1-q_current`; the eighth measurement auto-locks identically.
+Consequently undiscounted raw return telescopes to `q_final-q_start` for a
+compliant result and `-1-q_start` for a false result. No trial-cost or quality
+scale is introduced. PVT/channel/compliance/q remain hidden from observation.
+
+Controls are fail-first tested, measured on TRAIN only and committed before
+policy code. They include fixed, 20 masked-random seeds `20260904100..119`,
+visible-eye hill-climb, exhaustive visible eye, global hidden oracle, and the
+hidden oracle within seven Manhattan moves of the start. FINAL TEST controls
+are evaluated only alongside the frozen policies at the single final exposure.
+
+Masked categorical PPO retains Entry 87's optimizer defaults and trains exact
+200,000-step seeds `2026090400..04`; seed 00 is preselected for deployment.
+The single final evaluator uses deterministic masked argmax and a 10,000-pair
+bootstrap with seed `2026090488`.
+
+### Predictions before implementation
+
+1. TRAIN reachable-oracle analysis will show positive mean q headroom from the
+   fixed start; report the value without using it to alter the contract.
+2. Masking will eliminate repeated boundary actions and immediate LOCK by
+   construction; every policy episode will measure at least two distinct codes.
+3. The dense telescoping reward will produce broader movement than Entry 87's
+   3/864 behavior, but this is not itself a success claim.
+4. The primary risk is safety: a forced move can leave a start that was already
+   compliant. Q5 must remain unchanged even if quality improves.
+5. **Success prediction:** uncertain. The experiment is designed to test the
+   hypothesized lock-collapse cause, not to guarantee a favorable result.
+
+### Pre-registered gates
+
+Q1-Q8 are frozen in `NEXT_AGENT_ENTRY88.md`: exact source/split, environment,
+controls-first, five healthy seeds, paired fixed-comparator safety, at least
++0.0200 mean q with positive paired-CI lower bound, 4/5 reproducibility, and
+bounded cost/full reporting. All must pass. No post-TEST tuning is allowed.
+The preregistration-only non-slow baseline passes **2,631/2,631**, with 13
+deselected and 2 known warnings in 405.41 s.

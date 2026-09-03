@@ -17,11 +17,11 @@
 > decisions that are OPEN and human-only, and what to do next. It supersedes
 > `nebula/NEXT_STEPS.md`. This file remains the full state of record.
 
-Last updated: **2026-09-03** (session 39, Entry 87 complete: all five
-predeclared categorical-PPO seeds completed 1,000,000 total frozen-table steps
-and the 864-identity TEST set was evaluated once. Q1-Q5/Q7-Q8 pass; Q6 fails.
-RL improves q only +0.00287 versus the registered +0.0200 minimum, so the
-fixed lookup remains the deliverable. TEST is exposed; do not tune or rerun.)
+Last updated: **2026-09-03** (session 39, decision D18 / Entry 88
+preregistration: the owner approved a separate improvement-reward masked-PPO
+experiment after Entry 87's honest negative. TRAIN is the 2,592 exposed union;
+FINAL TEST is the policy-untouched 2,448-identity complement. Freeze and commit
+the exact contract before any Entry 88 environment/control/policy code.)
 
 Earlier session 22p: (**THE REPORT EXISTS** --
 `nebula/report/Nebula_CTLE_Report.pdf`, **10 pages, 9 figures, 598 KB**,
@@ -1443,6 +1443,8 @@ signaling, ADC-based DSP receiver, 28 nm CMOS reference parameters).
 │   │                       preregistered one-point 7.3 dB boundary probe.
 │   ├── NEXT_AGENT_ENTRY87.md  Exact D17 margin-adaptation RL contract,
 │   │                       controls-first sequence and immutable source hash.
+│   ├── NEXT_AGENT_ENTRY88.md  Exact D18 improvement-reward RL contract,
+│   │                       fresh split, masks, reward and Q1-Q8 gates.
 │   ├── rl/margin_adapt_env.py  Entry 87's separate 512-code hidden PVT/channel
 │   │                       episode; request + ordered eye history only.
 │   ├── experiments/exp_margin_adapt_controls.py  Fixed, random, local
@@ -2108,6 +2110,15 @@ observed paired-CI lower bound is effectively zero. The policies lock
 immediately on 861/864 cases. Preserve the fixed lookup as the deliverable;
 do not tune or rerun Entry 87 on its exposed TEST set. A second attempt needs
 an owner-approved preregistration and fresh untouched validation identities.
+
+The owner has now approved that second attempt as D18 / Entry 88. TRAIN is the
+2,592-identity union already exposed by Entry 87; FINAL TEST is the exact 2,448
+policy-untouched complement and must not be scored before all five policies are
+frozen. The scale-free move reward is `q_new-q_previous`; compliant LOCK is 0;
+false LOCK is `-1-q_current`. Invalid moves are masked and LOCK requires one
+real move. First implement fail-first environment/controls, score TRAIN only,
+and commit that stage before any masked-PPO code. Full immutable contract:
+`nebula/NEXT_AGENT_ENTRY88.md` and `PREDICTIONS.md` Entry 88.
 
 **Entry-81 artifacts:** preserve `joint_bank_results.json` and the byte-verified
 compressed journal `joint_bank_run.jsonl.gz`. The local raw journal remains the
@@ -14410,3 +14421,26 @@ Preserve the fixed lookup as the deliverable and do not tune or rerun on the
 exposed TEST set. The final non-slow regression passes **2,631/2,631**, with 13
 deselected and 2 known warnings in 297.13 s. Full audit:
 `nebula/MARGIN_ADAPT_RL_RESULTS.md`.
+
+### 2026-09-03 - session 39 (decision D18 / Entry 88 preregistration). **A new improvement-reward experiment is human-approved; no Entry 88 code or score exists.**
+
+The owner explicitly approved the proposed response to Entry 87's lock
+collapse. The immutable Entry 86 device journal remains the source and no new
+SPICE is needed. TRAIN is all 2,592 identities exposed by Entry 87. FINAL TEST
+is its 2,448-identity policy-untouched complement: `tt/ss/ff` at the three
+midpoint losses plus `sf/fs` at the four former TRAIN losses. Their union is all
+5,040 identities and overlap must be zero.
+
+D18 replaces the absolute lock reward only in new Entry 88 modules with a
+scale-free telescoping improvement reward: each real move earns
+`q_new-q_previous`, compliant LOCK earns 0, and false LOCK earns
+`-1-q_current`. Invalid boundary moves are masked and LOCK is unavailable until
+one real move is measured. The eight-setting budget and hidden-state boundary
+remain. Controls and reachable-oracle headroom run on TRAIN and commit before
+policy code. Five unchanged-default masked-PPO runs use seeds
+`2026090400..04`, 200,000 steps each, with seed 00 preselected. FINAL TEST is
+opened once after all five. Q1-Q8 retain the 1 percentage-point safety floor,
++0.0200 quality effect, positive paired CI and 4/5 reproducibility requirement.
+The preregistration-only non-slow baseline passes **2,631/2,631**, with 13
+deselected and 2 known warnings in 405.41 s. Full contract:
+`nebula/NEXT_AGENT_ENTRY88.md` and `PREDICTIONS.md` Entry 88.
