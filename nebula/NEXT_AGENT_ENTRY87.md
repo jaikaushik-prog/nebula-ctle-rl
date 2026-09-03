@@ -32,10 +32,18 @@ retain the strongest non-RL fallback.
 
 ## Current state
 
-Stage 1 is implemented and measured, but must be committed before any policy
-code. Fourteen focused tests pass. The zero-SPICE control artifact SHA-256 is
+Stage 1 is committed as `52dabac`. Fourteen focused tests pass. The zero-SPICE
+control artifact SHA-256 is
 `4E7930C6EF353B81949F7D8C6562D6E4027F7B164F3B0099AD79FE652E09501D`.
 The primary comparator is the request-conditioned fixed lookup: compliance
 0.9931, mean q 0.6796, one trial. Therefore RL needs compliance >=0.9831 and
-mean q >=0.6996 plus the registered CI/reproducibility gates. Commit Stage 1,
-then and only then add categorical-PPO tests/code.
+mean q >=0.6996 plus the registered CI/reproducibility gates.
+
+Categorical PPO and the five-seed runner are now implemented but not yet
+trained. The full Entry 87 focused group passes 23/23 and the complete suite
+passes 2,630/2,630. Commit the implementation before running exactly one seed
+per command, starting with:
+
+```text
+py -3.13 -m nebula.experiments.exp_margin_adapt_ppo --train-seed 2026090300
+```

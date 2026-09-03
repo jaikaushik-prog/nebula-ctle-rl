@@ -14024,3 +14024,20 @@ Artifact: `margin_adapt_controls_results.json`, SHA-256
 It records 1,728 TRAIN and 864 TEST identities, zero overlap, 512 settings and
 `simulations_run=0`. Committing the environment, controls, artifact, tests and
 handoff together completes Q1-Q3 provenance before categorical-PPO code exists.
+
+### Categorical-PPO implementation -- 2026-09-03, before registered training
+
+The controls-first state is commit `52dabac`. Only after that commit, a separate
+categorical actor/value implementation and crash-safe one-seed training runner
+were added behind nine more fail-capable tests. The combined Entry 87 focused
+group passes **23/23**; the complete non-slow suite passes **2,630/2,630**, with
+13 deselected and 2 warnings in 325.54 s.
+
+`discrete_ppo.py` uses a Categorical distribution, separate `(64,64)` tanh
+policy/value trunks and the registered PPO defaults. It stores exact step
+counts, finite telemetry and stable before/after tensor hashes. The runner
+refuses unregistered seeds and existing checkpoints/summaries, trains one seed
+per invocation, requires all five before evaluation, preselects deployment
+seed 00, aligns all 864 paired episodes and uses the registered deterministic
+10,000-resample bootstrap. No registered training step or TEST evaluation has
+run at this point.

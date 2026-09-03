@@ -17,11 +17,11 @@
 > decisions that are OPEN and human-only, and what to do next. It supersedes
 > `nebula/NEXT_STEPS.md`. This file remains the full state of record.
 
-Last updated: **2026-09-03** (session 39, Entry 87 Stage 1: the new 512-code
-hidden-state environment and zero-SPICE controls are built and measured behind
-14 fail-capable tests. The TRAIN-only fixed lookup is the registered comparator
-at 99.31% compliance, q=0.6796 and one trial. Commit Stage 1 and its artifact
-before adding categorical-PPO code or training.)
+Last updated: **2026-09-03** (session 39, Entry 87 PPO implementation: controls
+are frozen in earlier commit `52dabac`; categorical PPO and the crash-safe
+five-seed evaluator now pass 23 focused and 2,630 complete tests. No registered
+training step or TEST evaluation exists. Commit this implementation, then run
+seeds `2026090300..04` one durable invocation at a time.)
 
 Earlier session 22p: (**THE REPORT EXISTS** --
 `nebula/report/Nebula_CTLE_Report.pdf`, **10 pages, 9 figures, 598 KB**,
@@ -1445,6 +1445,10 @@ signaling, ADC-based DSP receiver, 28 nm CMOS reference parameters).
 │   │                       episode; request + ordered eye history only.
 │   ├── experiments/exp_margin_adapt_controls.py  Fixed, random, local
 │   │                       hill-climb, exhaustive-eye and oracle controls.
+│   ├── rl/discrete_ppo.py  Entry 87's categorical PPO; historical Gaussian
+│   │                       PPO remains unchanged.
+│   ├── experiments/exp_margin_adapt_ppo.py  One-seed durable training,
+│   │                       five-seed held-out evaluation and Q1-Q8 scorer.
 │   │                       NOTE: this tree lags for the session 23-25 files —
 │   │                       exp_coverage.py, adaptive_screen.py, search_score.py
 │   │                       and runlock.py are documented in §9 and §12 but are
@@ -2094,12 +2098,13 @@ codes merely to pass. A future RL experiment must instead preregister
 eye/margin optimization and beat the qualified controls; best-eye code changes
 with channel loss in 580/720 cases.
 
-Entry 87 Stage 1 is built and measured without touching the historical 64-code
+Entry 87 Stage 1 is committed without touching the historical 64-code
 compliance environment. The primary comparator is the request-conditioned
 TRAIN-only fixed lookup: **99.31% compliance, q=0.6796, one trial**. RL must
 reach at least 98.31% compliance and q=0.6996 plus the registered paired-CI and
-reproducibility gates. Commit the environment, controls and artifact before
-adding categorical PPO or training any of the five registered seeds.
+reproducibility gates. Categorical PPO and the crash-safe evaluator are now
+green but uncommitted, and no registered training step has run. Commit the
+implementation next, then train seeds 00 through 04 separately.
 
 **Entry-81 artifacts:** preserve `joint_bank_results.json` and the byte-verified
 compressed journal `joint_bank_run.jsonl.gz`. The local raw journal remains the
@@ -14326,3 +14331,19 @@ identities. Fixed is the registered comparator at compliance 0.9931, mean q
 1/1/1. The result artifact SHA-256 is
 `4E7930C6EF353B81949F7D8C6562D6E4027F7B164F3B0099AD79FE652E09501D`.
 Commit this Stage 1 state before any categorical-PPO implementation/training.
+
+### 2026-09-03 - session 39 (Entry 87 PPO implementation, before training). **Categorical PPO is green; zero registered steps have run.**
+
+Commit `52dabac` permanently precedes the policy code and completes Q1-Q3's
+controls-first provenance. Nine additional fail-first gates cover the
+Categorical actor, separate value trunk, deterministic argmax deployment,
+exact/reproducible step accounting, weight changes, finite losses, registered
+defaults, distinct artifacts, fixed seeds, paired bootstrap and fail-capable
+Q4-Q8 scoring. The combined Entry 87 group passes 23/23. The complete non-slow
+suite passes **2,630/2,630**, with 13 deselected and 2 warnings in 325.54 s.
+
+`exp_margin_adapt_ppo` trains one registered seed per anti-overwrite invocation
+and evaluates only after all five checkpoint/summary pairs exist. It validates
+the frozen source and control hashes and records zero simulations. Commit this
+implementation before starting seed `2026090300`; never choose a deployment
+seed after observing TEST results.
