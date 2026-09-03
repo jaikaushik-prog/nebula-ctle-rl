@@ -165,3 +165,24 @@ This is exposed diagnostic evidence only. FINAL remains
 `NOT_GENERATED_NOT_SCORED`; zero new SPICE ran. Commit the runner, artifact,
 tests and report before implementing the BC/PPO trainer. The complete non-slow
 suite passes 2,675/2,675, with 13 deselected and 2 known warnings in 540.51 s.
+
+## Stage 3 five-policy freeze -- before fresh midpoint generation
+
+All seeds `2026090500..04` completed exactly 50 actor-only imitation epochs and
+200,000 unchanged-default PPO steps. All fifteen BC, final-policy and summary
+artifacts are finite, distinct and hash-frozen. The complete suite passes
+2,690/2,690 after the DEVELOPMENT evaluator and manifest gates were added.
+
+On all 5,040 exposed DEVELOPMENT identities, fixed compliance/q is
+0.9925/0.6703. Entry 89 unshielded compliance is 0.7657-0.9631. Applying the
+registered shield to the identical traces produces compliance 0.9980-0.9986
+and q delta +0.1507 to +0.2214 at 4.669-7.465 measurements. Every compliant
+fixed start is retained; D3-D5 pass. This is exposed mechanism evidence only.
+
+The DEVELOPMENT result SHA-256 is
+`9D462EE4F3FE97AFEF1FD372817A0672487A33AD3C46A794DCE3AB390C9EFFBF`.
+The exact five-policy freeze manifest SHA-256 is
+`3E910DECEFD7CAAA5D401655E77C310F8BE4A645DD48538EEE4E1531199734DB`.
+FINAL remains `NOT_GENERATED_NOT_SCORED`; no midpoint row exists. Commit this
+entire stage before running the midpoint generator. Then generate, validate,
+compress, hash and commit all 23,040 rows without scoring any FINAL request.

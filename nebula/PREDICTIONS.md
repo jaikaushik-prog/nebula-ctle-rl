@@ -14286,3 +14286,26 @@ development set, zero SPICE, and FINAL is `NOT_GENERATED_NOT_SCORED`. Artifact
 SHA-256 `82F868B94A6D80C790C104ABF7383DC2257E919DC8E2441D9509D44AC066FF45`.
 The complete non-slow suite passes 2,675/2,675, with 13 deselected and 2 known
 warnings in 540.51 s.
+
+### Entry 89 five-policy DEVELOPMENT outcome -- before fresh midpoint data
+
+All five registered seeds completed 50 imitation epochs and 200,000 PPO steps
+with finite, distinct artifacts. Prediction 2 is confirmed strongly: imitation
+support accuracy is 0.9188-0.9250, well above uniform action chance, and every
+actor changed while its value trunk remained unchanged during BC.
+
+Prediction 3 is also confirmed on exposed DEVELOPMENT. The fractions of 5,040
+identities on which the shield selected a compliant visited setting with
+strictly better q than fixed are 95.65%, 95.71%, 95.73%, 78.17% and 96.03% for
+seeds 00-04 respectively, all above the predicted 50% and far above the 25%
+falsifier. Shielded compliance is 0.9980-0.9986 and q delta is +0.1507 to
++0.2214; D3-D5 pass. The same policies unshielded remain unsafe at compliance
+0.7657-0.9631, so the proposer/shield attribution is material.
+
+This does not score predictions 4-6: the teacher was trained on these exposed
+identities. All policies are now hash-frozen. DEVELOPMENT result SHA-256:
+`9D462EE4F3FE97AFEF1FD372817A0672487A33AD3C46A794DCE3AB390C9EFFBF`;
+manifest SHA-256:
+`3E910DECEFD7CAAA5D401655E77C310F8BE4A645DD48538EEE4E1531199734DB`.
+No midpoint row or FINAL score exists. The complete non-slow suite passes
+2,690/2,690, with 13 deselected and 2 known warnings in 304.14 s.

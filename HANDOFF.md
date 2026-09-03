@@ -17,11 +17,12 @@
 > decisions that are OPEN and human-only, and what to do next. It supersedes
 > `nebula/NEXT_STEPS.md`. This file remains the full state of record.
 
-Last updated: **2026-09-03** (session 40, Entry 89 BC/PPO and fresh-midpoint
-generator implementation: 10/10 focused and 2,685/2,685 complete non-slow
-tests pass. The generator is locked behind a five-policy hash manifest. Zero
-Entry 89 training steps, midpoint rows and FINAL scores exist. Commit this
-implementation boundary before starting registered seed `2026090500`.)
+Last updated: **2026-09-03** (session 40, Entry 89 five-policy freeze: all five
+seeds completed 50 BC epochs plus 200,000 PPO steps. Exposed DEVELOPMENT
+shielded compliance is 0.9980-0.9986 and q delta is +0.1507 to +0.2214; D3-D5
+pass. The exact artifact manifest exists, but no midpoint row or FINAL score
+exists. Full suite: 2,690 passes. Commit the complete freeze before generating
+fresh data.)
 
 Earlier session 22p: (**THE REPORT EXISTS** --
 `nebula/report/Nebula_CTLE_Report.pdf`, **10 pages, 9 figures, 598 KB**,
@@ -1458,13 +1459,28 @@ signaling, ADC-based DSP receiver, 28 nm CMOS reference parameters).
 │   ├── experiments/exp_shielded_controls.py  Replays all five frozen Entry 88
 │   │                       policies with/without shield on exposed DEVELOPMENT.
 │   ├── experiments/exp_shielded_ppo.py  Durable one-seed Entry 89 BC plus
-│   │                       unchanged masked-PPO trainer; refuses fresh data.
+│   │                       unchanged masked-PPO trainer, DEVELOPMENT evaluator
+│   │                       and exact five-policy freeze-manifest writer.
+│   ├── experiments/shielded_bc_*.pth  Five frozen actor-only imitation
+│   │                       checkpoints, seeds 2026090500..04.
+│   ├── experiments/shielded_policy_*.pth  Five frozen BC-plus-PPO policies;
+│   │                       no policy was selected after DEVELOPMENT scoring.
+│   ├── experiments/shielded_train_*.json  Five exact 50-epoch/200k-step
+│   │                       training summaries with finite-health evidence.
+│   ├── experiments/shielded_policy_development_results.json  Exposed-only
+│   │                       Entry 89 raw/shielded policy diagnostics.
+│   ├── experiments/shielded_policy_manifest.json  Immutable SHA-256 freeze
+│   │                       gate required before midpoint generation.
 │   ├── experiments/exp_joint_bank_midpoint.py  Hash-manifest-gated,
 │   │                       crash-resumable fresh midpoint journal generator.
 │   ├── experiments/shielded_controls_results.json  Entry 89 DEVELOPMENT-only
 │   │                       D1/D2 evidence; FINAL explicitly nonexistent.
 │   ├── SHIELDED_RL_CONTROLS.md  Professor-ready shield-control result and
 │   │                       proposer/verifier attribution boundary.
+│   ├── PROJECT_SOLUTION_OVERVIEW.md  Plain-language mapping from the competition
+│   │                       problem statement to the product, gaps and judge view.
+│   ├── ENTRY89_DEVELOPMENT_RESULTS.md  Five-seed training integrity and exposed
+│   │                       raw-versus-shielded mechanism result; not FINAL.
 │   ├── rl/margin_improve_env.py  Entry 88's masked local episode and exact
 │   │                       scale-free telescoping improvement reward.
 │   ├── experiments/exp_margin_improve_controls.py  TRAIN-only fixed/random/
@@ -1693,16 +1709,28 @@ Plus: git init, .gitignore, 28 tests, Wilson-bound BER reporting.
   construction path remains the default. The fresh generator refuses to run
   without exact hashes for all five BC/policy/training artifacts. No registered
   Entry 89 step or fresh row has run at this boundary.
+- `PROJECT_SOLUTION_OVERVIEW.md` explains the product in beginner-friendly
+  language and maps every problem-statement requirement to covered, pending or
+  simulator-only status. It explicitly records the two judge-facing gaps: the
+  strongest current front door is classical rather than RL, and Entry 89 tunes
+  a pre-designed 512-setting bank rather than synthesizing every MOS geometry.
+- All five registered seeds completed exactly 50 imitation epochs and 200,000
+  PPO steps with finite, distinct artifacts. On exposed DEVELOPMENT, raw policy
+  compliance is 0.7657-0.9631, while the shield raises it to 0.9980-0.9986 and
+  raises q by +0.1507 to +0.2214 over fixed. D3-D5 pass. The five-policy
+  SHA-256 manifest now freezes every artifact before fresh data generation.
 
 ## 6. Key numbers & validated behavior (current state)
 
-- **Nebula Entry 89 implementation is ready for seed 00:** fixed is compliance/q
-  0.9925/0.6703. Applying the structural shield to the identical traces of the
-  five frozen Entry 88 policies yields compliance 0.9946-0.9982 and q delta
-  +0.1347 to +0.1535 at 3.612-3.895 measurements. D1/D2 pass on exposed data;
-  the BC/PPO runner and manifest-gated midpoint generator pass 10/10 focused
-  gates and the complete suite passes 2,685/2,685. Zero BC epochs, new PPO
-  steps, midpoint rows and FINAL scores exist.
+- **Nebula Entry 89 policies are trained and frozen before fresh data:** all
+  five seeds `2026090500..04` completed 50 BC epochs plus 200,000 PPO steps,
+  one million PPO steps total, with finite and distinct artifacts. Exposed
+  DEVELOPMENT fixed is compliance/q 0.9925/0.6703. New-policy raw compliance
+  is 0.7657-0.9631; the structural shield raises it to 0.9980-0.9986 while q
+  improves +0.1507 to +0.2214 at 4.669-7.465 billed measurements. Every
+  compliant fixed start is retained; D3-D5 pass. This is exposed diagnostic
+  evidence only. The exact manifest exists, but zero midpoint rows and FINAL
+  scores exist. Full suite: 2,690/2,690.
 - **Nebula Entry 88 masked-PPO result:** FINAL TEST fixed compliance/q is
   0.9865/0.6824. Five-seed PPO mean is 0.9274/0.7690 at 3.797 trials; q delta
   is +0.0866 with paired 95% CI `[+0.0772,+0.0956]`, and 5/5 seeds are
@@ -2213,15 +2241,13 @@ seed 00 is also below it at 0.9461. Q5 and OVERALL fail. Preserve all artifacts,
 do not tune or rerun on these identities, and deploy only the fixed lookup.
 
 The owner approved that deadline-safe rescue as D19 / Entry 89. Preregistration
-commit `8af0485` precedes all code. The shield and oracle-trajectory builder pass
-8/8 focused gates, and exposed-DEVELOPMENT replay passes D1/D2: shielded q gains
-are +0.1347 to +0.1535 with no compliance loss. The fail-first BC/PPO runner and
-midpoint generator implementation passes 10/10 focused gates and 2,685/2,685
-complete non-slow tests. **Next:** commit this no-training implementation state,
-then train registered seeds `2026090500..04` sequentially and commit all five
-before generating any fresh row. Next generate and hash the complete 23,040-row
-midpoint journal without request scoring. Only then run the single 2,430-identity
-FINAL evaluator. Full immutable sequence and R1-R10:
+commit `8af0485` precedes all code. All five registered policies are now trained,
+DEVELOPMENT-scored and frozen by exact artifact hashes. The new shielded q gains
+are +0.1507 to +0.2214 with 0.9980-0.9986 compliance on exposed data; D3-D5
+pass, while the unshielded comparison remains unsafe. **Next:** commit the full
+five-policy freeze, then generate and hash the complete 23,040-row midpoint
+journal without request scoring. Only after that separate evidence commit may
+the single 2,430-identity FINAL evaluator run. Full immutable sequence and R1-R10:
 `nebula/NEXT_AGENT_ENTRY89.md` and `PREDICTIONS.md` Entry 89.
 
 **Entry-81 artifacts:** preserve `joint_bank_results.json` and the byte-verified
@@ -14777,3 +14803,53 @@ FINAL score exists. The complete non-slow regression passes **2,685/2,685**,
 with 13 deselected and 2 known warnings in 338.69 s. Commit this boundary before
 starting registered seed `2026090500`; train all five seeds sequentially and
 freeze them before the generator may run.
+
+### 2026-09-03 - session 40 (plain-language product assessment). **The competition problem statement is now mapped to the actual product without hiding the RL gaps.**
+
+`nebula/PROJECT_SOLUTION_OVERVIEW.md` explains the specification-to-schematic
+flow, the 512-setting RL controller, oracle imitation, simulator-backed shield,
+PVT and eye verification, and optional natural-language front end in language
+the owner can present. Its coverage table separates implemented requirements
+from the still-pending fresh Entry 89 result and from silicon validation, which
+is out of scope. It also states the two questions a judge is most likely to
+ask: the current strongest front-door method is analytic/library/search rather
+than RL, and Entry 89 is RL-driven tuning of a pre-designed bank rather than
+from-scratch MOS geometry synthesis. No implementation, experiment protocol,
+policy or result is changed by this documentation-only addition.
+
+### 2026-09-03 - session 40 (Entry 89 five-seed training and DEVELOPMENT freeze). **All policies are immutable before fresh data; exposed diagnostics pass.**
+
+Seeds `2026090500..04` each completed the registered 50 actor-only imitation
+epochs and exactly 200,000 unchanged-default masked-PPO steps, for one million
+PPO steps total. Mean imitation support accuracy is 0.9212. Every actor changed,
+every value trunk was preserved during BC, every PPO run started from its BC
+checkpoint and changed the final weights, and all telemetry is finite. The
+fifteen BC/policy/summary files are distinct and record zero SPICE calls.
+
+Five new fail-first gates failed on the absent DEVELOPMENT/freeze interface and
+now pass. With the artifacts present, the pre-evaluator complete suite passes
+**2,685/2,685** and the post-implementation suite passes **2,690/2,690**, with
+13 deselected and the two known warnings; the latter took 304.14 s.
+
+The zero-SPICE exposed-DEVELOPMENT replay then scored all 5,040 identities.
+Fixed is compliance/q 0.9925/0.6703. Unshielded new-policy compliance spans
+0.7657-0.9631. The identical traces under the verifier shield reach
+0.9980-0.9986 compliance and q delta +0.1507 to +0.2214 at 4.669-7.465 billed
+measurements. Every compliant fixed start is retained for every seed; D3
+training, D4 safety and D5 quality all pass. This does not select a seed or
+constitute final evidence because DEVELOPMENT trained the teacher.
+
+The result SHA-256 is
+`9D462EE4F3FE97AFEF1FD372817A0672487A33AD3C46A794DCE3AB390C9EFFBF`.
+`shielded_policy_manifest.json` freezes all fifteen artifacts plus that result;
+its SHA-256 is
+`3E910DECEFD7CAAA5D401655E77C310F8BE4A645DD48538EEE4E1531199734DB`.
+FINAL remains `NOT_GENERATED_NOT_SCORED`, and no midpoint row exists. Commit
+this entire freeze before invoking `exp_joint_bank_midpoint --run`.
+
+The first final pre-commit suite displayed one failure marker near 56%, but the
+turn was interrupted before pytest printed the node or traceback. A complete
+`--maxfail=1` rerun passed **2,690/2,690**, with 13 deselected and the two known
+warnings in 460.59 s; the failure did not reproduce. Record this as an
+unidentified transient, not a diagnosed defect. No fresh-data command ran
+during either suite.
