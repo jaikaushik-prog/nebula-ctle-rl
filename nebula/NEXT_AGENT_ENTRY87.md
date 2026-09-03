@@ -12,13 +12,13 @@ SHA-256
 `1B5F941DF4B34F3C90F6DD050F264D8A77C7BB2E5CE4D9EED8CC29EBD9F9843F`.
 Never rerun or edit its 23,040 real-PMOS rows.
 
-Implement in two commits:
+The experiment was implemented in two ordered stages:
 
 1. fail-first tests, the new 512-code environment, and all non-RL controls;
-   run and commit `margin_adapt_controls_results.json` before policy code;
-2. fail-first categorical-PPO tests, train exactly five registered 200,000-
-   step seeds, evaluate the held-out set once, and preserve every result and
-   checkpoint.
+   `margin_adapt_controls_results.json` was committed before policy code;
+2. fail-first categorical-PPO tests, exactly five registered 200,000-step
+   seeds, and one held-out evaluation. Every result and checkpoint is now
+   preserved.
 
 Do not mutate `rl/adapt_env.py`, `exp_adapt_controls.py` or their artifacts;
 they are the historical 64-code compliance experiment. Do not tune on `sf/fs`
@@ -39,16 +39,18 @@ The primary comparator is the request-conditioned fixed lookup: compliance
 0.9931, mean q 0.6796, one trial. Therefore RL needs compliance >=0.9831 and
 mean q >=0.6996 plus the registered CI/reproducibility gates.
 
-Categorical PPO and the five-seed runner are now implemented but not yet
-trained. The full Entry 87 focused group passes 23/23 and the complete suite
-passes 2,630/2,630. Implementation commit: `c1e0791`.
+Categorical PPO and the five-seed runner were frozen in implementation commit
+`c1e0791`; the exact-key plumbing repair is `15c531d`. Before training, the
+Entry 87 focused group passed 23/23 and the complete suite passed 2,630/2,630.
 
-The first seed-00 launch stopped before reset/step zero because the committed
-control artifact's `:g` frequency labels are display precision, not exact float
-keys. A fail-first reader repair reconstructs exact `REQUESTS`; 2,631 full
-tests pass. Commit that repair, then run exactly one seed per command, starting
-with:
+The exact-key repair is commit `15c531d`. All five registered seeds then
+completed 200,000 steps with changed weights, finite telemetry and zero SPICE
+calls. The held-out set was evaluated once. Q1-Q5 and Q7-Q8 pass; **Q6 fails**:
+mean quality improved only 0.00287 against the required 0.0200, and the paired
+95% CI lower bound is effectively zero. Overall Entry 87 is an honest negative
+result. See `MARGIN_ADAPT_RL_RESULTS.md` and preserve all artifacts.
 
-```text
-py -3.13 -m nebula.experiments.exp_margin_adapt_ppo --train-seed 2026090300
-```
+Do not rerun, retune, replace a seed, change the reward/gates, or evaluate a
+new policy on this exposed TEST set. The current deployable controller is the
+request-conditioned fixed lookup. A future RL attempt requires an
+owner-approved new preregistration and an untouched validation set.

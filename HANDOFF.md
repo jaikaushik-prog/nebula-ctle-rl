@@ -17,11 +17,11 @@
 > decisions that are OPEN and human-only, and what to do next. It supersedes
 > `nebula/NEXT_STEPS.md`. This file remains the full state of record.
 
-Last updated: **2026-09-03** (session 39, Entry 87 pre-training repair: policy
-commit `c1e0791` is frozen. Seed 00 stopped before reset/step zero because the
-control artifact's display-formatted frequency was not an exact float key. A
-fail-first exact-request reader repair passes 2,631 tests; commit it, then retry
-seed 00. No checkpoint, summary, TEST result or experiment gate changed.)
+Last updated: **2026-09-03** (session 39, Entry 87 complete: all five
+predeclared categorical-PPO seeds completed 1,000,000 total frozen-table steps
+and the 864-identity TEST set was evaluated once. Q1-Q5/Q7-Q8 pass; Q6 fails.
+RL improves q only +0.00287 versus the registered +0.0200 minimum, so the
+fixed lookup remains the deliverable. TEST is exposed; do not tune or rerun.)
 
 Earlier session 22p: (**THE REPORT EXISTS** --
 `nebula/report/Nebula_CTLE_Report.pdf`, **10 pages, 9 figures, 598 KB**,
@@ -1423,6 +1423,8 @@ signaling, ADC-based DSP receiver, 28 nm CMOS reference parameters).
 │   │                       Reuses entry 81 machinery; scores Q1-Q7 and deltas.
 │   ├── JOINT_BANK_73_RESULTS.md  Entry 86's complete result, Q1 audit,
 │   │                       evidence hashes and RL implication.
+│   ├── MARGIN_ADAPT_RL_RESULTS.md  Entry 87's complete five-seed held-out
+│   │                       result, Q1-Q8 audit and evidence hashes.
 │   ├── experiments/joint_bank_73_run.jsonl.gz  Entry 86's complete compressed
 │   │                       23,040-row journal; decoded hash pinned in result.
 │   ├── experiments/exp_atten_range_probe.py  Entry 83's focused 7.0 dB
@@ -2094,17 +2096,18 @@ controls are qualified and the 7.3 dB combined bank has been measured across
 all 23,040 bank/PVT rows. Q1-Q7 pass, coverage is 16/16 at every channel loss,
 and the owner adopted 7.3 dB as production decision D16. The old compliance
 RL gate remains correctly failed: **0/720** cases require channel-specific
-codes merely to pass. A future RL experiment must instead preregister
-eye/margin optimization and beat the qualified controls; best-eye code changes
-with channel loss in 580/720 cases.
+codes merely to pass. Entry 87 therefore preregistered eye/margin optimization,
+but its PPO policies missed the material-quality gate after TEST exposure;
+best-eye code still changes with channel loss in 580/720 cases.
 
-Entry 87 Stage 1 is committed without touching the historical 64-code
-compliance environment. The primary comparator is the request-conditioned
-TRAIN-only fixed lookup: **99.31% compliance, q=0.6796, one trial**. RL must
-reach at least 98.31% compliance and q=0.6996 plus the registered paired-CI and
-reproducibility gates. Categorical PPO and the crash-safe evaluator are now
-green but uncommitted, and no registered training step has run. Commit the
-implementation next, then train seeds 00 through 04 separately.
+Entry 87 is complete. All five categorical-PPO seeds finished 200,000 steps
+and the held-out set was exposed exactly once. Q1-Q5 and Q7-Q8 pass, but Q6
+fails: RL improves compliance from 99.31% to 99.63% and q from 0.6796 to
+0.6825 at 1.003 trials, while the required quality gain was +0.0200 and the
+observed paired-CI lower bound is effectively zero. The policies lock
+immediately on 861/864 cases. Preserve the fixed lookup as the deliverable;
+do not tune or rerun Entry 87 on its exposed TEST set. A second attempt needs
+an owner-approved preregistration and fresh untouched validation identities.
 
 **Entry-81 artifacts:** preserve `joint_bank_results.json` and the byte-verified
 compressed journal `joint_bank_run.jsonl.gz`. The local raw journal remains the
@@ -14008,6 +14011,20 @@ committed artifact predates an exact machine-key field, resolve its label
 uniquely against the canonical registered values and store the canonical value
 in memory. Gate that mapping fail-first; do not rewrite the frozen artifact.
 
+### G149. A nearly compliant start can collapse a margin policy to LOCK
+
+Entry 87's fixed start already complies on 858/864 held-out identities. The
+five trained policies then locked immediately on 861/864 cases and made moves
+only for one request across three temperatures. Mean quality improved just
+0.00287 although the hidden oracle has `q=1.0`, so better codes do exist.
+
+**Rule:** qualify an adaptation task by observed policy behavior, not only by
+training health or oracle headroom. If immediate locking already earns a safe
+positive return, move cost and false-lock risk can make broad exploration
+unattractive. Treat that causal explanation as an inference unless separately
+tested. After TEST exposure, do not repair the reward on the same split; a new
+attempt requires a new preregistration and untouched validation identities.
+
 ### 2026-09-02 - session 36 (entry 83 implementation, before measurement). **The focused probe is built and green; no entry-83 SPICE point has run.**
 
 `attenuator.py` now accepts an explicit optional maximum ratio through its one
@@ -14371,3 +14388,25 @@ canonical request and exact in-memory keys. The controls artifact and its
 SHA-256 remain unchanged. The focused PPO group passes 10/10 and the complete
 non-slow suite passes **2,631/2,631**, with 13 deselected and 2 warnings in
 315.48 s. Commit this repair before retrying seed `2026090300`.
+
+### 2026-09-03 - session 39 (Entry 87 registered result). **Training is healthy; the RL contribution gate honestly fails.**
+
+After exact-key repair commit `15c531d`, seeds `2026090300..04` each completed
+exactly 200,000 steps with changed weights, finite PPO telemetry, 3,125 updates
+and zero SPICE simulations. All ten checkpoint/summary artifacts are distinct.
+Only after all five existed, the evaluator exposed each deterministic policy
+once to the 864 TEST identities.
+
+The fixed comparator is 0.9931 compliance, q=0.6796 and 1.000 trial. The PPO
+mean is 0.9963 compliance, q=0.6825 and 1.003 trials; paired q delta is
++0.00287 with 95% CI `[-1.93e-19, 0.00659]`. The preselected deployment seed
+is also positive. Q1-Q5 and Q7-Q8 pass, but Q6 requires +0.0200 quality and a
+strictly positive CI lower bound, so Q6 and OVERALL fail. The policies lock
+immediately on 861/864 identities and move only on one request over three
+temperatures. New G149 distinguishes this measured collapse from the inferred
+reward/start cause. Result JSON SHA-256:
+`18CC3C7E87251EBF4075992BCC4A7D621A2920F0323849886120C8B36B3B5696`.
+Preserve the fixed lookup as the deliverable and do not tune or rerun on the
+exposed TEST set. The final non-slow regression passes **2,631/2,631**, with 13
+deselected and 2 known warnings in 297.13 s. Full audit:
+`nebula/MARGIN_ADAPT_RL_RESULTS.md`.

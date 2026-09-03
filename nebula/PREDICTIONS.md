@@ -14058,3 +14058,29 @@ reward and every experiment gate remain unchanged. The focused PPO group passes
 10/10 and the complete non-slow suite passes **2,631/2,631**, with 13
 deselected and 2 warnings in 315.48 s. Commit this plumbing repair before
 retrying seed 00.
+
+### Registered result -- 2026-09-03
+
+All five predeclared seeds completed exactly 200,000 steps. Every run changed
+its weights, retained finite telemetry, wrote a distinct checkpoint/summary,
+and recorded zero SPICE simulations. Only after all five existed, the evaluator
+ran once across all 864 held-out TEST identities.
+
+The fixed comparator has compliance 0.9930556, mean q 0.6795891 and one trial.
+The five-seed PPO mean is compliance 0.9962963, q 0.6824586 and 1.0034722
+trials. Quality delta is +0.0028695 with the registered 10,000-resample paired
+95% CI `[-1.93e-19, 0.0065893]`. The preselected deployment seed has compliance
+0.9953704, q 0.6819039 and delta +0.0023148.
+
+Q1-Q5 and Q7-Q8 pass. **Q6 fails** because +0.0028695 is below the registered
++0.0200 minimum and the CI lower bound is not strictly positive. Therefore the
+overall result is FAIL and no RL contribution is claimed. All five policies
+lock immediately on 861/864 TEST identities; the only moves occur on one
+request across three temperatures. This measured behavior supports, but does
+not prove, the inference that the safe already-compliant start plus immediate
+lock reward made exploration unattractive. Preserve the fixed lookup as the
+deliverable and do not tune on the exposed TEST set. Full result:
+`MARGIN_ADAPT_RL_RESULTS.md`; result JSON SHA-256
+`18CC3C7E87251EBF4075992BCC4A7D621A2920F0323849886120C8B36B3B5696`.
+The final non-slow regression passes **2,631/2,631**, with 13 deselected and 2
+known warnings in 297.13 s.
