@@ -17,12 +17,12 @@
 > decisions that are OPEN and human-only, and what to do next. It supersedes
 > `nebula/NEXT_STEPS.md`. This file remains the full state of record.
 
-Last updated: **2026-09-03** (session 39, Entry 88 registered result: all five
-200,000-step masked-PPO seeds completed before the single FINAL TEST exposure.
-Quality improves 0.6824 -> 0.7690, delta +0.0866 with positive CI, but
-compliance falls 98.65% -> 92.74%. Q5 and OVERALL fail; no checkpoint is
-deployable. A post-result path-isolation repair raises the full suite to 2,662
-passes. Preserve the fixed lookup and do not tune on exposed identities.)
+Last updated: **2026-09-03** (session 40, decision D19 / Entry 89
+preregistration: the owner approved one safety-focused rescue using
+DEVELOPMENT-only oracle imitation, unchanged-reward masked PPO and a
+simulator-backed best-compliant-visited shield. All five policies must freeze
+before a new midpoint-channel journal is generated. No Entry 89 code, policy,
+fresh SPICE row or FINAL score exists.)
 
 Earlier session 22p: (**THE REPORT EXISTS** --
 `nebula/report/Nebula_CTLE_Report.pdf`, **10 pages, 9 figures, 598 KB**,
@@ -1448,6 +1448,8 @@ signaling, ADC-based DSP receiver, 28 nm CMOS reference parameters).
 │   │                       controls-first sequence and immutable source hash.
 │   ├── NEXT_AGENT_ENTRY88.md  Exact D18 improvement-reward RL contract,
 │   │                       fresh split, masks, reward and Q1-Q8 gates.
+│   ├── NEXT_AGENT_ENTRY89.md  Exact D19 oracle-warm-start PPO, structural
+│   │                       shield, fresh midpoint data and R1-R10 contract.
 │   ├── rl/margin_improve_env.py  Entry 88's masked local episode and exact
 │   │                       scale-free telescoping improvement reward.
 │   ├── experiments/exp_margin_improve_controls.py  TRAIN-only fixed/random/
@@ -1656,8 +1658,25 @@ Plus: git init, .gitignore, 28 tests, Wilson-bound BER reporting.
   Q5 safety gate therefore rejects every checkpoint. The fixed lookup remains
   the deliverable; the exposed test set may not be used for tuning.
 
+### Nebula Entry 89 decision D19 (2026-09-03)
+
+- The owner approved one final rescue that separates proposal from acceptance:
+  oracle imitation initializes masked PPO, while a simulator verifier shields
+  the output by retaining the best compliant visited setting.
+- The reward, specifications and device/channel ranges do not change. All five
+  policies must freeze before a new real-PMOS journal is run at the six exact
+  midpoint losses. FINAL also uses nine midpoint requests, giving 2,430 fresh
+  identities with zero request/loss overlap with development.
+- The allowed claim is simulator-backed safety, not receiver-only calibration.
+  R1-R10 require no compliance loss and the unchanged +0.020 quality gain.
+
 ## 6. Key numbers & validated behavior (current state)
 
+- **Nebula Entry 89 is preregistered, not implemented:** zero code, training
+  steps, midpoint SPICE rows and FINAL scores exist. Five seeds `2026090500..04`
+  will receive 50 epochs of DEVELOPMENT-only oracle imitation followed by the
+  unchanged 200,000-step PPO. Policies freeze before the 23,040-row midpoint
+  journal; FINAL has 2,430 identities and one exposure.
 - **Nebula Entry 88 masked-PPO result:** FINAL TEST fixed compliance/q is
   0.9865/0.6824. Five-seed PPO mean is 0.9274/0.7690 at 3.797 trials; q delta
   is +0.0866 with paired 95% CI `[+0.0772,+0.0956]`, and 5/5 seeds are
@@ -2122,6 +2141,12 @@ Plus: git init, .gitignore, 28 tests, Wilson-bound BER reporting.
   not wholly unseen silicon measurements. Its quality result is real within
   that table; its 92.74% compliance makes it non-deployable. Do not report the
   +0.0866 q gain without the 5.91-point compliance loss.
+- **(nebula) Entry 89's shield changes the system boundary.** The actor remains
+  receiver-visible, but acceptance uses the simulator's full compliance
+  verdict. A pass would validate a zero-human simulator-backed sizing flow,
+  not an on-silicon receiver calibration loop. The midpoint data reuse the
+  same transistor geometries/PVT lattice and are fresh channel/request views,
+  not independent silicon.
 - **(nebula) The completed combined-bank experiment still uses the constructed
   channel, modeled eye and one design load.** Seven loss values do not add
   measured reflections, crosstalk or termination interaction. Entry 81's
@@ -2161,13 +2186,14 @@ But compliance falls from 0.9865 to 0.9274, below Q5's 0.9765 floor; deployment
 seed 00 is also below it at 0.9461. Q5 and OVERALL fail. Preserve all artifacts,
 do not tune or rerun on these identities, and deploy only the fixed lookup.
 
-**Next RL decision is human-owned.** If the owner authorizes one deadline-safe
-rescue, preregister a safety-constrained architecture on genuinely new held-out
-data. The evidence supports oracle-imitation/action ranking plus a separate
-best-compliant-so-far deployment shield; it does not authorize changing the
-reward penalty or safety gate after seeing Entry 88. Otherwise close the RL
-line honestly and finish the competition report with the fixed controller.
-Full result: `nebula/MARGIN_IMPROVE_RL_RESULTS.md`.
+The owner approved that deadline-safe rescue as D19 / Entry 89. **Next:** commit
+the preregistration before writing code. Then fail-first implement the shield,
+oracle-trajectory builder, BC warm start, unchanged-reward PPO runner and the
+midpoint-bank generator. Run DEVELOPMENT diagnostics only; train and commit all
+five seeds before generating any fresh row. Next generate and hash the complete
+23,040-row midpoint journal without request scoring. Only then run the single
+2,430-identity FINAL evaluator. Full immutable sequence and R1-R10:
+`nebula/NEXT_AGENT_ENTRY89.md` and `PREDICTIONS.md` Entry 89.
 
 **Entry-81 artifacts:** preserve `joint_bank_results.json` and the byte-verified
 compressed journal `joint_bank_run.jsonl.gz`. The local raw journal remains the
@@ -5107,6 +5133,19 @@ hit its overwrite guard instead of their isolated directory.
 **Rule:** paths that must follow a redirected base are functions evaluated at
 call time (`results_path()`), or every derived constant must be patched too.
 Test isolation before and after the real artifact exists.
+
+### G153. A hidden-verifier shield is simulator-backed, not receiver-only
+
+Entry 89 keeps compliance out of the actor observation but lets the existing
+full device/link verifier tell a separate shield which visited settings are
+compliant. That is legitimate for the zero-human simulator sizing loop; a
+physical receiver does not automatically possess noise, power, HD3,
+saturation and PVT truth merely because the neural policy cannot see them.
+
+**Rule:** state who owns every signal. A shield can establish structural safety
+only in the system that can actually compute its predicate. Never translate a
+simulator-verifier result into an on-silicon calibration claim without
+validated monitors for the same constraints.
 
 ## 10. Environment
 
@@ -14599,3 +14638,30 @@ records the isolation trap. Result JSON SHA-256:
 Full audit: `nebula/MARGIN_IMPROVE_RL_RESULTS.md`. Preserve the fixed lookup,
 the failed policy evidence and the exposed split; any rescue needs owner
 approval, a new preregistration and genuinely new held-out data.
+
+### 2026-09-03 - session 40 (decision D19 / Entry 89 preregistration). **One final safety-focused RL rescue is approved; nothing has been implemented or measured.**
+
+The owner approved oracle imitation/action ranking, a hard
+best-compliant-setting shield and a fresh test set. Entry 89 freezes the exact
+interpretation before code: the 62-value actor remains blind to PVT, channel,
+compliance, q and oracle; DEVELOPMENT-only seven-move oracle trajectories
+pretrain it for 50 epochs; then the unchanged Entry 88 reward/PPO defaults run
+for 200,000 steps on each seed `2026090500..04`.
+
+The separate simulator-backed shield returns the largest visible-eye setting
+among verifier-compliant settings the policy actually visited, including the
+fixed start. Thus every compliant fixed start must remain compliant. This is a
+zero-human simulator-sizing claim, not receiver-only calibration; new G153
+records that boundary.
+
+All five policies must be frozen and committed before any fresh row exists.
+Then one crash-safe real-PMOS run measures 512 settings x 45 corners at channel
+midpoints `3.75/5.25/6.75/8.25/9.75/11.25` dB. FINAL uses nine midpoint
+requests, 2,430 identities with zero loss/request overlap with DEVELOPMENT,
+and opens once. R1-R10 retain Entry 88's +0.020 q/positive-CI requirement and
+strengthen safety to no compliance loss. No reward weight, spec, device range
+or channel range changes. Full contract: `nebula/NEXT_AGENT_ENTRY89.md` and
+`PREDICTIONS.md` Entry 89. At this preregistration point, Entry 89 has zero
+code, policies, fresh SPICE rows and FINAL scores. The latest complete baseline
+is **2,662/2,662** non-slow tests, 13 deselected and 2 known warnings in
+583.34 s.

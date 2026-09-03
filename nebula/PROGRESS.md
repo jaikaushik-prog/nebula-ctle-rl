@@ -16,7 +16,7 @@ the tuning-bank and input-attenuator line through decision D11.
 carries three design traps found by measurement that will otherwise cost a day
 each.
 
-**Updated 2026-09-03, session 39.** 12 days to the 15 Sept deadline.
+**Updated 2026-09-03, session 40.** 12 days to the 15 Sept deadline.
 
 ---
 
@@ -43,7 +43,8 @@ human in the loop. Deliverables that already exist and run:
 | **Full 7.3 dB bank verification (entry 86)** | **COMPLETE: Q1-Q7 PASS; ADOPTED AS D16.** All 23,040 rows completed uninterrupted in 131.27 min with zero hard device failures. Coverage is **16/16 at every loss from 3-12 dB**; 3 dB scorable rows improve 7,519 -> 10,378. See `JOINT_BANK_73_RESULTS.md`. |
 | **Margin-adaptation RL (entry 87)** | **COMPLETE; HONEST NEGATIVE (Q6 FAIL).** Five categorical-PPO seeds completed 1,000,000 frozen-table steps and one held-out evaluation. RL improves compliance 99.31% -> 99.63% and q 0.6796 -> 0.6825 at 1.003 trials, but +0.00287 misses the registered +0.0200 quality gate and its CI lower bound is effectively zero. Q1-Q5/Q7-Q8 pass. Ship the fixed lookup; see `MARGIN_ADAPT_RL_RESULTS.md`. |
 | **Improvement-reward RL (entry 88)** | **COMPLETE; QUALITY PASS, SAFETY FAIL.** Five masked-PPO seeds completed 1,000,000 frozen-table steps before the one FINAL TEST exposure. Mean q improves **0.6824 -> 0.7690** (`+0.0866`, 95% CI `[+0.0772,+0.0956]`) at 3.797 trials and all five seeds are positive, but compliance falls **98.65% -> 92.74%**, below the 97.65% floor. Q5 and OVERALL fail; no policy is deployable. See `MARGIN_IMPROVE_RL_RESULTS.md`. |
-| Test suite | Entry 88 final evidence state: **2662 passed**, 13 deselected, 2 warnings in 466.52 s. The first post-result run exposed and the repair closed a result-path isolation defect; focused tests pass 10/10. The **system** interpreter, not the conda env -- that env has no `torch`, and `ngspice_con.exe` is found by absolute path anyway (G69) |
+| **Safety-shielded RL rescue (entry 89)** | **PREREGISTERED; NO CODE, POLICY OR FRESH ROW EXISTS.** D19 approves DEVELOPMENT-only oracle imitation, unchanged-reward PPO and a simulator-backed best-compliant-visited shield. Five policies must freeze before a new 23,040-row midpoint-loss journal is generated; FINAL is 2,430 midpoint loss/request identities scored once. R1-R10 require no compliance loss and the unchanged +0.020 q gain. |
+| Test suite | Entry 89 preregistration baseline: **2662 passed**, 13 deselected, 2 warnings in 583.34 s. The Entry 88 result-path repair remains covered; focused tests pass 10/10. The **system** interpreter, not the conda env -- that env has no `torch`, and `ngspice_con.exe` is found by absolute path anyway (G69) |
 | Gates G0–G2 | passed |
 | G3 (RL beats random + grid) | **fails one clause** — RL is indistinguishable from random at every budget |
 | G4 (corner-robust design) | met on `V1_SPECS` (7 rows); **not** on the 11 competition rows |

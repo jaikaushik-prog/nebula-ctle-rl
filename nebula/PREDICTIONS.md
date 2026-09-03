@@ -14217,3 +14217,46 @@ The reward change produced useful movement but did not provide a hard safety
 constraint. No checkpoint is promoted, and no post-TEST tuning is permitted.
 Full audit: `MARGIN_IMPROVE_RL_RESULTS.md`; result JSON SHA-256
 `1A274CAABC768610979F4DBC5DAEBC43E13C8AF10CB99D5FAD513ECC4E69C13C`.
+
+## Entry 89 -- shielded oracle-warm-start RL after Entry 88
+
+**Written:** 2026-09-03, session 40, after Entry 88's immutable safety failure
+and before any Entry 89 code, policy, midpoint-bank row or result.
+**Owner approval:** D19, explicit approval in chat of oracle imitation/action
+ranking, a hard best-compliant-setting shield and a fresh test set.
+
+Entry 88 established both halves of the problem: five independent policies
+improved q by +0.0512 to +0.1070, while all five lost compliance. Entry 89 does
+not change that reward or reinterpret its result. It uses the reachable oracle
+only as a DEVELOPMENT teacher, fine-tunes the same masked PPO, and separates
+proposal from acceptance: the actor never sees compliance, while the existing
+simulator verifier makes the final selection safe relative to the fixed start.
+
+### Predictions before implementation
+
+1. Replaying the frozen Entry 88 policies with the shield on exposed
+   DEVELOPMENT will make compliance no worse than fixed for every seed, by
+   construction, while retaining at least +0.020 mean q for 4/5 seeds.
+2. Fifty epochs of shortest-path oracle imitation will produce changed finite
+   actor weights and action accuracy above uniform chance on DEVELOPMENT. This
+   is a mechanism check, not a final quality claim.
+3. Oracle-warm-started PPO will visit a compliant setting better than the
+   fixed start on at least half of exposed DEVELOPMENT identities. Falsifier:
+   <=25%; the actor is still not using the teacher in a useful way.
+4. On the fresh midpoint FINAL TEST, the structural shield will retain every
+   compliant fixed start. Any loss is an implementation defect, not variance.
+5. Primary FINAL q will beat fixed by at least the unchanged +0.0200 gate, with
+   a strictly positive paired-CI lower bound. Confidence **0.65**: Entry 88's
+   +0.0866 leaves room for the shield to reject unsafe endpoints, but the new
+   loss/request interpolation is unmeasured.
+6. At least 4/5 seeds and deployment seed `2026090500` will be positive.
+   Confidence **0.70**, based on Entry 88's 5/5 direction agreement.
+
+The new data are six midpoint channel losses and nine midpoint requests, 2,430
+identities, generated only after all policies freeze. The transistor/PVT
+lattice is the same, so the allowed claim is simulator-backed interpolation,
+not new silicon. Exact contract and R1-R10 gates:
+`NEXT_AGENT_ENTRY89.md`.
+
+The preregistration-only complete non-slow baseline passes 2,662/2,662, with
+13 deselected and 2 known warnings in 583.34 s.
