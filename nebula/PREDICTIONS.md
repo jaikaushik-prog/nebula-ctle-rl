@@ -14342,3 +14342,30 @@ evaluator boundary after the complete suite passes, then perform its one allowed
 
 The evaluator-boundary non-slow suite passes 2,696/2,696, with 13 deselected
 and the two known warnings in 294.19 s.
+
+### Entry 89 one-time FINAL outcome -- **predictions 4-6 HIT; R1-R10 PASS**
+
+The evaluator was committed as `6ec86bd` before its single invocation. Fixed
+compliance/q is 0.8226/0.5619. Shielded Entry 89 averages 0.8388/0.7169 at 5.579
+measurements, q delta +0.1550 with paired 95% CI [+0.1508,+0.1593].
+
+| Prediction | Outcome | Result |
+|---|---|---|
+| 4: retain every compliant fixed start | retained for all five seeds; mean and deployment compliance exceed fixed | **HIT** |
+| 5: q gain >=+0.0200 and CI lower bound >0 | +0.1550; lower bound +0.1508 | **HIT** |
+| 6: >=4/5 positive and deployment positive | 5/5 positive; deployment +0.1392 | **HIT** |
+
+All R1-R10 pass. Result SHA-256
+`942CDDD8B62FC862D81602AF87182D0841533505FB045CE04EB0DCADA8919FEA`.
+No rerun or post-FINAL tuning is permitted.
+
+The mechanism attribution is mixed but useful: unshielded Entry 89 averages
+only 0.6444 compliance and 0.5481 q, so it is not deployable alone. Entry 88
+deployment plus the same shield is 0.8272/0.6986; new training adds +0.0117
+compliance and +0.0183 q beyond that control. The registered claim is therefore
+the combined simulator-shielded RL system, not pure PPO. Global oracle reaches
+1.0000 compliance, so production integration still needs a classical fallback
+when the RL trajectory visits no compliant code.
+
+The post-FINAL non-slow suite passes 2,696/2,696, with 13 deselected and the
+two known warnings in 298.87 s.

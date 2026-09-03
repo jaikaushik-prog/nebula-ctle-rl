@@ -17,13 +17,14 @@
 > decisions that are OPEN and human-only, and what to do next. It supersedes
 > `nebula/NEXT_STEPS.md`. This file remains the full state of record.
 
-Last updated: **2026-09-04** (session 41, Entry 89 fresh midpoint evidence:
-after the five-policy freeze commit `a84082e`, all 23,040 registered real-PMOS
-ngspice rows completed in 130.99 min. Structural validation confirms 512
-settings x 45 corners and byte-identical raw/decoded hashes. Metadata is
-`GENERATED_NOT_SCORED`; no FINAL request has been evaluated. The fail-first
-FINAL evaluator is now implemented but has not run. Commit it separately, then
-execute FINAL exactly once. Evaluator-boundary suite: 2,696/2,696.)
+Last updated: **2026-09-04** (session 41, Entry 89 FINAL PASS: the one-time
+2,430-identity fresh evaluation ran only after policy commit `a84082e`, data
+commit `51a1146` and evaluator commit `6ec86bd`. Fixed compliance/q is
+0.8226/0.5619; shielded RL mean is 0.8388/0.7169 at 5.579 measurements, delta
++0.1550 with paired 95% CI [+0.1508,+0.1593]. All five seeds improve and R1-R10
+pass. Pure raw RL remains unsafe; integrate the frozen proposer + simulator
+shield + classical fallback into the front-door product. Post-FINAL suite:
+2,696/2,696.)
 
 Earlier session 22p: (**THE REPORT EXISTS** --
 `nebula/report/Nebula_CTLE_Report.pdf`, **10 pages, 9 figures, 598 KB**,
@@ -1476,6 +1477,8 @@ signaling, ADC-based DSP receiver, 28 nm CMOS reference parameters).
 │   │                       crash-resumable fresh midpoint journal generator.
 │   ├── experiments/exp_shielded_final.py  Hash-gated one-time 2,430-identity
 │   │                       Entry 89 FINAL evaluator; refuses overwrite.
+│   ├── experiments/shielded_policy_final_results.json  Immutable one-time
+│   │                       fresh FINAL result; Entry 89 R1-R10 PASS.
 │   ├── experiments/joint_bank_midpoint_run.jsonl.gz  Byte-verified 23,040-row
 │   │                       fresh midpoint bank; FINAL requests not scored.
 │   ├── experiments/joint_bank_midpoint_metadata.json  Freeze provenance,
@@ -1490,6 +1493,8 @@ signaling, ADC-based DSP receiver, 28 nm CMOS reference parameters).
 │   │                       raw-versus-shielded mechanism result; not FINAL.
 │   ├── ENTRY89_MIDPOINT_DATA.md  Fresh-data provenance and the explicit
 │   │                       boundary before one-time FINAL scoring.
+│   ├── ENTRY89_FINAL_RESULTS.md  Professor-ready one-time result,
+│   │                       attribution, limitations and integration plan.
 │   ├── tests/test_shielded_final.py  Fail-capable identity, start mapping,
 │   │                       R1-R10, provenance and no-overwrite gates.
 │   ├── rl/margin_improve_env.py  Entry 88's masked local episode and exact
@@ -1738,6 +1743,11 @@ Plus: git init, .gitignore, 28 tests, Wilson-bound BER reporting.
   focused tests failed first on the absent module and now pass, including the
   mathematically tied midpoint-start rule and overwrite refusal. It has not
   been executed; no FINAL result artifact exists.
+- The evaluator was committed as `6ec86bd` and invoked exactly once. On 2,430
+  fresh identities, fixed compliance/q is 0.8226/0.5619 and five-seed shielded
+  RL is 0.8388/0.7169 at 5.579 measurements. Delta is +0.1550, paired 95% CI
+  [+0.1508,+0.1593], 5/5 seeds positive; R1-R10 PASS. Raw RL is unsafe at mean
+  0.6444 compliance, so the valid method is the policy plus simulator shield.
 
 ## 6. Key numbers & validated behavior (current state)
 
@@ -1752,12 +1762,14 @@ Plus: git init, .gitignore, 28 tests, Wilson-bound BER reporting.
   23,040 rows in 130.99 min; raw and decoded SHA-256 are identical and metadata
   is `GENERATED_NOT_SCORED`. Zero FINAL scores exist. Pre-generation full suite:
   2,690/2,690; post-generation full suite: 2,690/2,690.
-- **Nebula Entry 89 FINAL evaluator is implemented but unopened:** it validates
-  both freezes, creates the exact 2,430 zero-overlap identities, chooses starts
-  from nearest DEVELOPMENT requests without FINAL data, reports every required
-  control and applies R1-R10 with the fixed 10,000-resample bootstrap. Six
-  focused gates pass. The complete suite passes 2,696/2,696.
-  `shielded_policy_final_results.json` does not exist.
+- **Nebula Entry 89 FINAL passes all registered gates:** on the exact 2,430
+  zero-overlap identities, fixed compliance/q is 0.8226/0.5619. Shielded RL
+  averages 0.8388/0.7169 at 5.579 billed measurements, +0.1550 q with paired
+  95% CI `[+0.1508,+0.1593]`; 5/5 seeds and deployment seed are positive.
+  R1-R10 PASS. Raw RL averages only 0.6444/0.5481, proving the simulator shield
+  is essential. The old Entry 88 policy with the same shield is 0.8272/0.6986,
+  so new training adds +0.0117 compliance and +0.0183 q. Global oracle is
+  1.0000/1.0000, leaving a real fallback gap. Result SHA-256 `942CDD...9FEA`.
 - **Nebula Entry 88 masked-PPO result:** FINAL TEST fixed compliance/q is
   0.9865/0.6824. Five-seed PPO mean is 0.9274/0.7690 at 3.797 trials; q delta
   is +0.0866 with paired 95% CI `[+0.0772,+0.0956]`, and 5/5 seeds are
@@ -2224,10 +2236,13 @@ Plus: git init, .gitignore, 28 tests, Wilson-bound BER reporting.
   +0.0866 q gain without the 5.91-point compliance loss.
 - **(nebula) Entry 89's shield changes the system boundary.** The actor remains
   receiver-visible, but acceptance uses the simulator's full compliance
-  verdict. A pass would validate a zero-human simulator-backed sizing flow,
-  not an on-silicon receiver calibration loop. The midpoint data reuse the
-  same transistor geometries/PVT lattice and are fresh channel/request views,
-  not independent silicon.
+  verdict. The FINAL pass validates a zero-human simulator-backed tuning flow,
+  not an on-silicon receiver calibration loop. Primary compliance is 0.8388,
+  not 1.0000, and raw policy compliance is 0.6444; the shield is essential and
+  a classical fallback is still required for a product that must always return
+  a compliant design. The midpoint data reuse the same transistor
+  geometries/PVT lattice and are fresh channel/request views, not independent
+  silicon.
 - **(nebula) The completed combined-bank experiment still uses the constructed
   channel, modeled eye and one design load.** Seven loss values do not add
   measured reflections, crosstalk or termination interaction. Entry 81's
@@ -2273,10 +2288,13 @@ DEVELOPMENT-scored and frozen by exact artifact hashes. The new shielded q gains
 are +0.1507 to +0.2214 with 0.9980-0.9986 compliance on exposed data; D3-D5
 pass, while the unshielded comparison remains unsafe. The five-policy freeze is
 commit `a84082e`; the subsequent 23,040-row midpoint journal is now complete,
-structurally validated and still `GENERATED_NOT_SCORED`. **Next:** commit this
-fresh-data boundary (complete as `51a1146`), then commit the now-green fail-first
-FINAL evaluator. Only after that evaluator passes the complete suite may the
-single 2,430-identity FINAL run occur. Full immutable sequence and R1-R10:
+structurally validated and frozen as `51a1146`; the evaluator is `6ec86bd`.
+The subsequent one-time FINAL run passed R1-R10: primary compliance/q
+0.8388/0.7169 versus fixed 0.8226/0.5619 at 5.579 measurements. **Next:**
+integrate the frozen Entry 89 proposer and simulator shield into the user-facing
+specification-to-schematic command, with the existing analytic/library/CMA-ES
+path as fallback whenever no compliant setting was visited. Do not rerun, tune
+or replace FINAL. Full immutable sequence and R1-R10:
 `nebula/NEXT_AGENT_ENTRY89.md` and `PREDICTIONS.md` Entry 89.
 
 **Entry-81 artifacts:** preserve `joint_bank_results.json` and the byte-verified
@@ -14258,6 +14276,20 @@ the compliance gate and hidden reward truth; never promote an eye-only control
 because it moves toward larger eyes. Do not inspect FINAL TEST to choose a
 safer heuristic or policy.
 
+### G151. A mathematically exact midpoint tie is not necessarily a binary-float tie
+
+Entry 89's FINAL request at 0.500 octaves is exactly halfway between the 0.38
+and 0.62 DEVELOPMENT requests. Direct squared-distance floats differed at
+roughly machine precision and selected 0.62, bypassing the registered tuple
+tie-break that must select 0.38. The fail-first nearest-request test caught it
+before FINAL was opened.
+
+**Rule:** when a protocol defines exact geometric midpoints and a deterministic
+secondary tie-break, quantize only the comparison distance at a precision far
+below any real grid separation, then apply the registered stable tuple key.
+Test the midpoint itself; do not assume algebraic equality survives floating
+point evaluation order.
+
 ### 2026-09-02 - session 36 (entry 83 implementation, before measurement). **The focused probe is built and green; no entry-83 SPICE point has run.**
 
 `attenuator.py` now accepts an explicit optional maximum ratio through its one
@@ -14933,3 +14965,37 @@ then invoke `exp_shielded_final --evaluate` exactly once.
 
 The evaluator-boundary non-slow suite passes **2,696/2,696**, with 13
 deselected and the same two known warnings in 294.19 s.
+
+### 2026-09-04 - session 41 (Entry 89 one-time FINAL). **All R1-R10 pass; preserve the result without rerun or tuning.**
+
+After the FINAL evaluator was frozen in commit `6ec86bd`, its one permitted
+`--evaluate` invocation scored the exact 2,430 fresh midpoint identities. It
+exited cleanly and wrote status
+`EVALUATED_ONCE_AFTER_FROZEN_POLICIES_AND_DATA`. The result SHA-256 is
+`942CDDD8B62FC862D81602AF87182D0841533505FB045CE04EB0DCADA8919FEA`.
+
+Fixed nearest-DEVELOPMENT start is compliance/q **0.8226/0.5619**. The five
+shielded Entry 89 seeds are compliance 0.8272/0.8272/0.8272/0.8597/0.8531 and
+q 0.7011/0.7048/0.7386/0.7162/0.7237. Their aggregate is **0.8388/0.7169** at
+**5.579** billed measurements, q delta **+0.1550**, with registered 10,000-draw
+paired 95% CI **[+0.1508,+0.1593]**. All five seeds and deployment seed are
+positive. Every compliant fixed start is retained, verifier calls equal trials,
+and **R1-R10 all PASS**.
+
+Attribution matters. Raw Entry 89 averages only compliance/q **0.6444/0.5481**,
+so pure RL is unsafe and slightly worse than fixed q. Entry 88 deployment with
+the same shield is 0.8272/0.6986; new training adds +0.0117 compliance and
++0.0183 q beyond that shielded old-policy control. The shield is therefore the
+main safety mechanism, while oracle imitation contributes a smaller consistent
+gain. Global oracle is 1.0000/1.0000 and seven-move reachable oracle is
+1.0000/0.9664, proving the bank has an answer even where RL visits none.
+
+`ENTRY89_FINAL_RESULTS.md` records the professor-ready result and limitations.
+The next product step is integration: frozen RL proposer, simulator verifier,
+then analytic/library/CMA-ES fallback for shield failures, followed by the
+existing netlist/schematic/spec-output path. This is simulator-backed tuning of
+a pre-designed bank, not receiver-only calibration, from-scratch topology
+synthesis or silicon validation. FINAL must never be rerun or used for tuning.
+
+The post-FINAL non-slow suite passes **2,696/2,696**, with 13 deselected and
+the same two known warnings in 298.87 s.

@@ -1,6 +1,6 @@
 # Nebula Project Solution Overview
 
-Date: 2026-09-03
+Date: 2026-09-04
 
 ## What problem are we trying to solve?
 
@@ -82,10 +82,10 @@ measurements.
 | Noise, power, linearity and area checks | Covered |
 | Horizontal and vertical eye opening | Covered by the statistical link model |
 | Process, voltage and temperature checks | Covered over the 45 required corners |
-| Lower online design effort than exhaustive search | Potentially covered: at most 8 measured settings instead of 512 |
+| Lower online design effort than exhaustive search | Covered experimentally: 5.579 mean measured settings instead of 512 |
 | Zero human intervention during a design run | Covered |
 | Optional LLM-based interaction | Covered |
-| A useful and safe RL result on unseen conditions | Final Entry 89 evaluation is still pending |
+| A useful and safe RL result on unseen conditions | Covered at experiment level: Entry 89 passed all R1-R10 gates |
 | Fabricated-silicon validation | Not covered; present evidence is simulator-backed |
 
 ## What is already strong?
@@ -110,20 +110,23 @@ neural network optimizes a synthetic formula.
 
 ## What is not completely solved yet?
 
-### 1. Useful RL is not yet proven
+### 1. Useful shielded RL is proven at experiment level
 
 The first RL approach produced only a very small improvement. The second
 approach learned useful eye-quality improvements, but it reduced compliance
 too much and was rejected by the registered safety gate.
 
-Entry 89 is designed to repair that exact failure using oracle imitation and a
-hard safety shield. All five training seeds are complete and frozen. On exposed
-development data, the shielded policies retain every compliant fixed start and
-improve mean quality by +0.1507 to +0.2214. The policies must still be evaluated
-once on genuinely fresh midpoint conditions.
+Entry 89 repaired that exact failure using oracle imitation and a hard safety
+shield. Its one-time test used 2,430 fresh midpoint identities after all five
+policies and the ngspice dataset were separately frozen. Fixed compliance/q was
+0.8226/0.5619; shielded RL averaged 0.8388/0.7169 in 5.579 measurements. The
+quality improvement was +0.1550 with a paired 95% interval of
+[+0.1508,+0.1593]. All five seeds and the deployment seed improved, and all
+registered R1-R10 gates passed.
 
-Until that final evaluation passes, we cannot honestly claim that RL is the
-best working part of the product.
+Pure unshielded RL is still unsafe: its mean compliance was only 0.6444. The
+validated contribution is therefore the combined RL proposer plus simulator
+shield, not the neural policy by itself.
 
 ### 2. The strongest existing product path is not RL
 
@@ -131,8 +134,8 @@ The current user-facing automatic design command is strongest when it uses
 analytic design, library retrieval and classical search. That path works, but
 it is not the RL contribution requested by the problem statement.
 
-If Entry 89 passes, its frozen controller must be integrated into the same
-user-facing design command so that the demonstration clearly shows target
+Entry 89 has passed, so its frozen controller must now be integrated into the
+same user-facing design command so that the demonstration clearly shows target
 specifications entering an RL-based flow and a verified design coming out.
 
 ### 3. The new RL controller tunes a pre-designed circuit bank
@@ -179,9 +182,11 @@ The judge's main question will be:
 > verified design, or is RL an experiment attached to a stronger classical
 > design flow?
 
-Today, that question is not completely resolved. The answer depends on Entry
-89's fresh final test and whether the successful frozen controller is connected
-to the front-door design command.
+The fresh test now proves that the RL proposer contributes useful candidates
+when combined with the simulator shield. The remaining product question is
+whether that frozen controller is connected to the front-door design command
+and backed by a classical fallback when its eight visits contain no compliant
+setting.
 
 The judge may also ask whether choosing a tuning-bank setting counts as device
 sizing. Our honest answer should be that the system contains both continuous
@@ -195,24 +200,23 @@ working specification-to-netlist flow, transistor-level simulation, PVT
 verification, link and eye analysis, schematic generation, classical
 baselines and an optional natural-language interface.
 
-As a proven RL-driven device-sizing product, it is not finished yet. The
-remaining decisive work is:
+As a proven RL-assisted tuning product, the core experiment is successful. It
+is not yet a finished RL-driven device-sizing product. The remaining decisive
+work is:
 
-1. Generate the fresh midpoint ngspice journal only after the frozen-policy
-   commit.
-2. Evaluate the frozen policies exactly once.
-3. Confirm that compliance does not fall and mean eye quality improves by at
-   least the registered amount.
-4. If all gates pass, integrate the frozen RL controller into the user-facing
-   design command and demonstrate the complete input-to-schematic flow.
-
-If Entry 89 fails, the project still remains a strong analog automation
-framework, but the report must present RL as an honest negative result and the
-analytic/lookup/search flow as the reliable product.
+1. Integrate the frozen RL controller and simulator shield into the
+   user-facing specification-to-schematic command.
+2. Invoke an analytic/library/CMA-ES fallback whenever the shield finds no
+   compliant visited setting; final-test RL compliance was 0.8388 even though
+   the global bank oracle proves all 2,430 cases have a compliant setting.
+3. Demonstrate one complete input-to-netlist/schematic run and report both the
+   common RL path and fallback cost honestly.
+4. Keep continuous transistor sizing in the analytic/classical front end and
+   describe Entry 89 accurately as RL-driven configuration search.
 
 ## One-sentence summary
 
-> We built a complete simulator-backed CTLE automation framework; the final
-> unanswered question is whether the new safety-shielded RL controller can
-> select a better compliant tuning configuration in fewer than eight
-> measurements on genuinely unseen conditions.
+> We built a simulator-backed CTLE automation framework whose frozen RL
+> proposer plus safety shield selected better compliant tuning configurations
+> in 5.579 measurements on fresh conditions; the remaining work is integrating
+> it with the schematic-output flow and a classical fallback for unsolved cases.

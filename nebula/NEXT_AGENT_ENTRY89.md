@@ -225,3 +225,23 @@ PASS or FAIL without rerunning or changing a gate.
 
 The evaluator-boundary non-slow suite passes 2,696/2,696, with 13 deselected
 and the two known warnings in 294.19 s.
+
+## Stage 6 one-time FINAL outcome -- immutable PASS
+
+Evaluator commit `6ec86bd` preceded the single `--evaluate` run. On all 2,430
+fresh identities, fixed compliance/q is 0.8226/0.5619. The five shielded Entry
+89 policies average 0.8388/0.7169 at 5.579 billed measurements, q delta +0.1550
+with paired 95% CI [+0.1508,+0.1593]. All five seeds and deployment seed are
+positive; R1-R10 all PASS. Result SHA-256:
+`942CDDD8B62FC862D81602AF87182D0841533505FB045CE04EB0DCADA8919FEA`.
+
+Do not invoke `--evaluate` again, tune on these identities, replace a seed or
+change a gate. Raw RL averages only 0.6444 compliance, so the accepted method is
+the frozen proposer plus simulator shield. Global oracle compliance is 1.0000
+while primary is 0.8388. Next work is product integration with the existing
+analytic/library/CMA-ES fallback for cases where no compliant setting is
+visited, then the existing netlist/schematic/results output path.
+
+The post-FINAL non-slow suite passes 2,696/2,696, with 13 deselected and the
+two known warnings in 298.87 s. Commit the immutable result and documentation;
+do not run the evaluator again.
