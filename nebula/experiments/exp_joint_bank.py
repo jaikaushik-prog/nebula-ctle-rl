@@ -104,22 +104,29 @@ def _compact_link(link: Optional[dict]) -> dict:
 
 
 def _measure(task: tuple) -> JointRow:
+    losses = LOSSES_DB
     if len(task) == 4:
         bank_code, st, atten_code, corner = task
         atten_max_x = None
     elif len(task) == 5:
         bank_code, st, atten_code, corner, atten_max_x = task
+    elif len(task) == 6:
+        bank_code, st, atten_code, corner, atten_max_x, losses = task
+        losses = tuple(float(value) for value in losses)
+        if not losses or len(losses) != len(set(losses)):
+            raise ValueError("custom link losses must be non-empty and unique")
     else:
-        raise ValueError(f"expected a 4- or 5-field joint-bank task, got {len(task)}")
+        raise ValueError(
+            f"expected a 4-, 5- or 6-field joint-bank task, got {len(task)}")
     ev = evaluate_at_points(
         st.u, [ScreenPoint(corner, CL_MID_F, "joint bank")],
         target_f_peak_hz=1.9e9, target_peaking_db=7.5, specs=SPECS,
-        link_losses_db=LOSSES_DB, atten_code=atten_code,
+        link_losses_db=losses, atten_code=atten_code,
         atten_max_x=atten_max_x)
     point = ev.points[0] if ev.points else None
     ok = bool(point and point.ok)
     links = ({str(loss): _compact_link((point.links_by_loss or {}).get(loss))
-              for loss in LOSSES_DB} if ok else {})
+              for loss in losses} if ok else {})
     return JointRow(
         setting=setting_id(atten_code, bank_code), atten_code=atten_code,
         bank_code=bank_code, i_rs=st.i_rs, i_cs=st.i_cs,
@@ -170,10 +177,17 @@ def _tasks(base_u: Sequence[float], corners: Sequence[Corner],
 def sweep(base_u: Sequence[float], corners: Optional[Sequence[Corner]] = None,
           atten_codes: Sequence[int] = ATTEN_CODES, workers: int = 1,
           resume: bool = False, log_path: Path = RUN_LOG,
-          atten_max_x: Optional[float] = None) -> list[JointRow]:
+          atten_max_x: Optional[float] = None,
+          losses_db: Optional[Sequence[float]] = None) -> list[JointRow]:
     """Run or resume the full table, journalling every completed SPICE call."""
     corners = list(corners if corners is not None else all_corners())
     tasks = _tasks(base_u, corners, atten_codes, atten_max_x=atten_max_x)
+    if losses_db is not None:
+        losses = tuple(float(value) for value in losses_db)
+        if not losses or len(losses) != len(set(losses)):
+            raise ValueError("custom link losses must be non-empty and unique")
+        tasks = [task + (losses,) if len(task) == 5
+                 else task + (None, losses) for task in tasks]
     old = _load_rows(log_path) if resume and log_path.exists() else []
     if log_path.exists() and not resume:
         raise FileExistsError(f"{log_path} exists; use --resume, never overwrite")

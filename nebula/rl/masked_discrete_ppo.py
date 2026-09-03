@@ -8,7 +8,7 @@ updates, so unavailable actions cannot silently re-enter the objective.
 from __future__ import annotations
 
 import time
-from typing import Sequence
+from typing import Optional, Sequence
 
 import numpy as np
 import torch
@@ -62,8 +62,9 @@ def deterministic_action(net: MaskedActorCritic, obs: np.ndarray,
         return int(torch.argmax(dist.logits, dim=-1).item())
 
 
-def train(env, cfg: DiscretePPOConfig) -> tuple[MaskedActorCritic,
-                                                DiscretePPOStats]:
+def train(env, cfg: DiscretePPOConfig,
+          initial_net: Optional[MaskedActorCritic] = None
+          ) -> tuple[MaskedActorCritic, DiscretePPOStats]:
     if cfg.total_steps <= 0 or cfg.rollout_steps <= 0:
         raise ValueError("step counts must be positive")
     if cfg.total_steps % cfg.rollout_steps:
@@ -72,7 +73,12 @@ def train(env, cfg: DiscretePPOConfig) -> tuple[MaskedActorCritic,
         raise ValueError("rollout_steps must be divisible by n_minibatches")
 
     torch.manual_seed(int(cfg.seed))
-    net = MaskedActorCritic(env.observation_dim, env.action_dim, cfg.hidden)
+    net = (MaskedActorCritic(env.observation_dim, env.action_dim, cfg.hidden)
+           if initial_net is None else initial_net)
+    probe = torch.zeros((1, env.observation_dim), dtype=torch.float32)
+    probe_mask = torch.ones((1, env.action_dim), dtype=torch.bool)
+    net.distribution(probe, probe_mask)
+    net.value(probe)
     optimiser = torch.optim.Adam(net.parameters(), lr=cfg.lr)
     stats = DiscretePPOStats(
         initial_weights_sha256=state_dict_sha256(net.state_dict()))
