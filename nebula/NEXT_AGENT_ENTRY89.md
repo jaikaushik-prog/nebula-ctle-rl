@@ -137,3 +137,16 @@ gate change or second midpoint evaluation is permitted.
 
 The preregistration-only complete non-slow baseline passes 2,662/2,662, with
 13 deselected and 2 known warnings in 583.34 s.
+
+## Stage 1 core boundary -- before BC/PPO runner
+
+`rl/safety_shield.py` implements the simulator-backed selection exactly as
+registered. `rl/oracle_imitation.py` builds DEVELOPMENT-only reachable-oracle
+targets and shortest-path soft action labels; the actor-facing sample contains
+only observation, action mask and target probabilities. Eight fail-capable
+tests failed first on absent modules and now pass 8/8. No BC epoch, Entry 89 PPO
+step, midpoint SPICE row or FINAL score exists. Commit this boundary before
+implementing the training runner or generalizing the bank sweep.
+
+The complete non-slow suite passes 2,670/2,670, with 13 deselected and 2 known
+warnings in 537.99 s.

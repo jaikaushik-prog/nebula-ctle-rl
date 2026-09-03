@@ -17,12 +17,12 @@
 > decisions that are OPEN and human-only, and what to do next. It supersedes
 > `nebula/NEXT_STEPS.md`. This file remains the full state of record.
 
-Last updated: **2026-09-03** (session 40, decision D19 / Entry 89
-preregistration: the owner approved one safety-focused rescue using
-DEVELOPMENT-only oracle imitation, unchanged-reward masked PPO and a
-simulator-backed best-compliant-visited shield. All five policies must freeze
-before a new midpoint-channel journal is generated. No Entry 89 code, policy,
-fresh SPICE row or FINAL score exists.)
+Last updated: **2026-09-03** (session 40, Entry 89 Stage 1 core: the
+simulator-backed shield and DEVELOPMENT-only oracle trajectory builder pass
+8/8 fail-capable tests. Actor samples contain no hidden identity or verifier
+verdict. No BC epoch, Entry 89 PPO step, midpoint SPICE row or FINAL score
+exists. Full suite: 2,670 passes. Commit this boundary, then implement training
+and DEVELOPMENT controls.)
 
 Earlier session 22p: (**THE REPORT EXISTS** --
 `nebula/report/Nebula_CTLE_Report.pdf`, **10 pages, 9 figures, 598 KB**,
@@ -1450,6 +1450,10 @@ signaling, ADC-based DSP receiver, 28 nm CMOS reference parameters).
 │   │                       fresh split, masks, reward and Q1-Q8 gates.
 │   ├── NEXT_AGENT_ENTRY89.md  Exact D19 oracle-warm-start PPO, structural
 │   │                       shield, fresh midpoint data and R1-R10 contract.
+│   ├── rl/safety_shield.py  Entry 89 simulator-verifier selection of the best
+│   │                       compliant visible eye among measured settings.
+│   ├── rl/oracle_imitation.py  DEVELOPMENT-only reachable teacher targets and
+│   │                       shortest-path actor samples without hidden fields.
 │   ├── rl/margin_improve_env.py  Entry 88's masked local episode and exact
 │   │                       scale-free telescoping improvement reward.
 │   ├── experiments/exp_margin_improve_controls.py  TRAIN-only fixed/random/
@@ -1672,11 +1676,11 @@ Plus: git init, .gitignore, 28 tests, Wilson-bound BER reporting.
 
 ## 6. Key numbers & validated behavior (current state)
 
-- **Nebula Entry 89 is preregistered, not implemented:** zero code, training
-  steps, midpoint SPICE rows and FINAL scores exist. Five seeds `2026090500..04`
-  will receive 50 epochs of DEVELOPMENT-only oracle imitation followed by the
-  unchanged 200,000-step PPO. Policies freeze before the 23,040-row midpoint
-  journal; FINAL has 2,430 identities and one exposure.
+- **Nebula Entry 89 Stage 1 core is implemented:** eight fail-first tests cover
+  the structural shield and DEVELOPMENT-only oracle teacher. Zero BC epochs,
+  PPO steps, midpoint SPICE rows and FINAL scores exist. Five seeds
+  `2026090500..04` still require 50 BC epochs plus 200,000 unchanged-reward PPO
+  steps before the 23,040-row midpoint journal may exist.
 - **Nebula Entry 88 masked-PPO result:** FINAL TEST fixed compliance/q is
   0.9865/0.6824. Five-seed PPO mean is 0.9274/0.7690 at 3.797 trials; q delta
   is +0.0866 with paired 95% CI `[+0.0772,+0.0956]`, and 5/5 seeds are
@@ -2186,13 +2190,14 @@ But compliance falls from 0.9865 to 0.9274, below Q5's 0.9765 floor; deployment
 seed 00 is also below it at 0.9461. Q5 and OVERALL fail. Preserve all artifacts,
 do not tune or rerun on these identities, and deploy only the fixed lookup.
 
-The owner approved that deadline-safe rescue as D19 / Entry 89. **Next:** commit
-the preregistration before writing code. Then fail-first implement the shield,
-oracle-trajectory builder, BC warm start, unchanged-reward PPO runner and the
-midpoint-bank generator. Run DEVELOPMENT diagnostics only; train and commit all
-five seeds before generating any fresh row. Next generate and hash the complete
-23,040-row midpoint journal without request scoring. Only then run the single
-2,430-identity FINAL evaluator. Full immutable sequence and R1-R10:
+The owner approved that deadline-safe rescue as D19 / Entry 89. Preregistration
+commit `8af0485` precedes all code. The shield and oracle-trajectory builder now
+pass 8/8 focused gates. **Next:** commit this Stage 1 boundary, then fail-first
+implement the BC warm start, unchanged-reward PPO runner, exposed DEVELOPMENT
+diagnostics and midpoint-bank generator. Train and commit all five seeds before
+generating any fresh row. Next generate and hash the complete 23,040-row
+midpoint journal without request scoring. Only then run the single 2,430-
+identity FINAL evaluator. Full immutable sequence and R1-R10:
 `nebula/NEXT_AGENT_ENTRY89.md` and `PREDICTIONS.md` Entry 89.
 
 **Entry-81 artifacts:** preserve `joint_bank_results.json` and the byte-verified
@@ -14665,3 +14670,23 @@ or channel range changes. Full contract: `nebula/NEXT_AGENT_ENTRY89.md` and
 code, policies, fresh SPICE rows and FINAL scores. The latest complete baseline
 is **2,662/2,662** non-slow tests, 13 deselected and 2 known warnings in
 583.34 s.
+
+### 2026-09-03 - session 40 (Entry 89 Stage 1 core). **The shield and oracle-teacher boundary is fail-first gated; no model or fresh data exists.**
+
+Eight tests first failed at collection because both registered modules were
+absent. `safety_shield.select_best_compliant_visited` now bills every measured
+setting, includes the fixed start, selects maximum visible eye only among
+verifier-compliant visits, and falls back explicitly if none is compliant.
+This makes retention of a compliant fixed start structural rather than a
+learned probability.
+
+`oracle_imitation` chooses the best compliant DEVELOPMENT setting inside the
+seven-move radius, lower setting ID on an eye-area tie, and emits uniform soft
+labels over all valid distance-reducing moves. The lowest action ID advances
+the recorded shortest path; zero-distance identities emit no forbidden initial
+LOCK sample. The actor-facing dataclass has exactly observation, mask and target
+probabilities -- no corner, loss, compliance, q or oracle field. Focused tests
+pass **8/8**. The complete non-slow suite passes **2,670/2,670**, with 13
+deselected and 2 known warnings in 537.99 s. No BC epoch, Entry 89 PPO step,
+midpoint SPICE row or FINAL score exists. Commit this layer before adding the
+trainer or sweep generalization.

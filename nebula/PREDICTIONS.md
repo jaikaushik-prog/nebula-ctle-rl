@@ -14260,3 +14260,14 @@ not new silicon. Exact contract and R1-R10 gates:
 
 The preregistration-only complete non-slow baseline passes 2,662/2,662, with
 13 deselected and 2 known warnings in 583.34 s.
+
+### Entry 89 Stage 1 core boundary -- before training code
+
+Eight fail-capable tests failed first because `oracle_imitation` and
+`safety_shield` did not exist, then pass 8/8. They prove per-identity retention
+of a compliant start, best-compliant-visible-eye selection, no free verifier
+calls, fallback accounting, reachable/tie-broken teachers, shortest-path soft
+labels, valid masks, zero-distance handling and the absence of hidden identity
+or verdict fields from actor samples. No prediction has been scored; no policy
+or midpoint row exists. The complete non-slow suite passes 2,670/2,670, with
+13 deselected and 2 known warnings in 537.99 s.
