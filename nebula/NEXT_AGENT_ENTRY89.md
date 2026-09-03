@@ -207,3 +207,21 @@ evaluator. After that commit, implement the evaluator exactly as registered in
 the FINAL TEST section above, run the complete suite, and execute FINAL once.
 The post-generation non-slow suite passes 2,690/2,690, with 13 deselected and
 the two known warnings in 374.79 s.
+
+## Stage 5 FINAL evaluator implementation -- before its one allowed run
+
+Fresh evidence is frozen separately in commit `51a1146`. The one-time evaluator
+is implemented in `experiments/exp_shielded_final.py`, with exact provenance,
+identity, nearest-DEVELOPMENT-start, reporting, R1-R10 and no-overwrite gates.
+Its six tests first failed because the module was absent and now pass 6/6. The
+tests caught a binary-floating-point perturbation of the exact 0.500-octave tie;
+the comparison now quantizes the distance before the required tuple-order tie
+break.
+
+No FINAL result exists and the evaluator has not run. Run the complete non-slow
+suite and commit code, tests and handoff together. Only after that commit invoke
+`python -m nebula.experiments.exp_shielded_final --evaluate` once. Preserve any
+PASS or FAIL without rerunning or changing a gate.
+
+The evaluator-boundary non-slow suite passes 2,696/2,696, with 13 deselected
+and the two known warnings in 294.19 s.

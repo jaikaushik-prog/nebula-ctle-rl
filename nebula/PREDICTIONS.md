@@ -14326,3 +14326,19 @@ are defined but unopened. Freeze this data artifact in a separate commit before
 the fail-first FINAL evaluator is implemented or run. The post-generation
 non-slow suite passes 2,690/2,690, with 13 deselected and the two known warnings
 in 374.79 s.
+
+### Entry 89 FINAL evaluator boundary -- before one-time exposure
+
+The midpoint evidence is frozen in commit `51a1146`. The exact-hash-gated FINAL
+evaluator and six fail-capable tests now exist. Tests failed first on the absent
+module and now pass 6/6; they cover exact 2,430-identity membership and zero
+overlap, normalized nearest-request starts with tuple ties, real frozen-input
+validation, R1-R10 safety/quality/cost/reporting falsifiers and result overwrite
+refusal.
+
+No FINAL result artifact exists. Predictions 4-6 remain unscored. Commit this
+evaluator boundary after the complete suite passes, then perform its one allowed
+`--evaluate` invocation and preserve the outcome without tuning or rerunning.
+
+The evaluator-boundary non-slow suite passes 2,696/2,696, with 13 deselected
+and the two known warnings in 294.19 s.

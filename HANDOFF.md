@@ -21,9 +21,9 @@ Last updated: **2026-09-04** (session 41, Entry 89 fresh midpoint evidence:
 after the five-policy freeze commit `a84082e`, all 23,040 registered real-PMOS
 ngspice rows completed in 130.99 min. Structural validation confirms 512
 settings x 45 corners and byte-identical raw/decoded hashes. Metadata is
-`GENERATED_NOT_SCORED`; no FINAL request has been evaluated. Commit this data
-boundary before implementing or running the one-time FINAL evaluator. Full
-suite: 2,690/2,690.)
+`GENERATED_NOT_SCORED`; no FINAL request has been evaluated. The fail-first
+FINAL evaluator is now implemented but has not run. Commit it separately, then
+execute FINAL exactly once. Evaluator-boundary suite: 2,696/2,696.)
 
 Earlier session 22p: (**THE REPORT EXISTS** --
 `nebula/report/Nebula_CTLE_Report.pdf`, **10 pages, 9 figures, 598 KB**,
@@ -1474,6 +1474,8 @@ signaling, ADC-based DSP receiver, 28 nm CMOS reference parameters).
 │   │                       gate required before midpoint generation.
 │   ├── experiments/exp_joint_bank_midpoint.py  Hash-manifest-gated,
 │   │                       crash-resumable fresh midpoint journal generator.
+│   ├── experiments/exp_shielded_final.py  Hash-gated one-time 2,430-identity
+│   │                       Entry 89 FINAL evaluator; refuses overwrite.
 │   ├── experiments/joint_bank_midpoint_run.jsonl.gz  Byte-verified 23,040-row
 │   │                       fresh midpoint bank; FINAL requests not scored.
 │   ├── experiments/joint_bank_midpoint_metadata.json  Freeze provenance,
@@ -1488,6 +1490,8 @@ signaling, ADC-based DSP receiver, 28 nm CMOS reference parameters).
 │   │                       raw-versus-shielded mechanism result; not FINAL.
 │   ├── ENTRY89_MIDPOINT_DATA.md  Fresh-data provenance and the explicit
 │   │                       boundary before one-time FINAL scoring.
+│   ├── tests/test_shielded_final.py  Fail-capable identity, start mapping,
+│   │                       R1-R10, provenance and no-overwrite gates.
 │   ├── rl/margin_improve_env.py  Entry 88's masked local episode and exact
 │   │                       scale-free telescoping improvement reward.
 │   ├── experiments/exp_margin_improve_controls.py  TRAIN-only fixed/random/
@@ -1730,6 +1734,10 @@ Plus: git init, .gitignore, 28 tests, Wilson-bound BER reporting.
   real-PMOS rows (512 settings x 45 corners) in 7,859.41 s. The raw and decoded
   gzip share SHA-256 `99B6...9E2`; all pairs are unique. Metadata remains
   `GENERATED_NOT_SCORED`, so none of the 2,430 FINAL identities is exposed.
+- The FINAL evaluator now exists behind exact hash/membership/status gates. Six
+  focused tests failed first on the absent module and now pass, including the
+  mathematically tied midpoint-start rule and overwrite refusal. It has not
+  been executed; no FINAL result artifact exists.
 
 ## 6. Key numbers & validated behavior (current state)
 
@@ -1744,6 +1752,12 @@ Plus: git init, .gitignore, 28 tests, Wilson-bound BER reporting.
   23,040 rows in 130.99 min; raw and decoded SHA-256 are identical and metadata
   is `GENERATED_NOT_SCORED`. Zero FINAL scores exist. Pre-generation full suite:
   2,690/2,690; post-generation full suite: 2,690/2,690.
+- **Nebula Entry 89 FINAL evaluator is implemented but unopened:** it validates
+  both freezes, creates the exact 2,430 zero-overlap identities, chooses starts
+  from nearest DEVELOPMENT requests without FINAL data, reports every required
+  control and applies R1-R10 with the fixed 10,000-resample bootstrap. Six
+  focused gates pass. The complete suite passes 2,696/2,696.
+  `shielded_policy_final_results.json` does not exist.
 - **Nebula Entry 88 masked-PPO result:** FINAL TEST fixed compliance/q is
   0.9865/0.6824. Five-seed PPO mean is 0.9274/0.7690 at 3.797 trials; q delta
   is +0.0866 with paired 95% CI `[+0.0772,+0.0956]`, and 5/5 seeds are
@@ -2260,9 +2274,9 @@ are +0.1507 to +0.2214 with 0.9980-0.9986 compliance on exposed data; D3-D5
 pass, while the unshielded comparison remains unsafe. The five-policy freeze is
 commit `a84082e`; the subsequent 23,040-row midpoint journal is now complete,
 structurally validated and still `GENERATED_NOT_SCORED`. **Next:** commit this
-fresh-data boundary, then implement the fail-first FINAL evaluator. Only after
-that evaluator passes the complete suite may the single 2,430-identity FINAL
-run occur. Full immutable sequence and R1-R10:
+fresh-data boundary (complete as `51a1146`), then commit the now-green fail-first
+FINAL evaluator. Only after that evaluator passes the complete suite may the
+single 2,430-identity FINAL run occur. Full immutable sequence and R1-R10:
 `nebula/NEXT_AGENT_ENTRY89.md` and `PREDICTIONS.md` Entry 89.
 
 **Entry-81 artifacts:** preserve `joint_bank_results.json` and the byte-verified
@@ -14894,3 +14908,28 @@ complete suite, then execute the registered FINAL evaluation exactly once.
 
 The post-generation non-slow suite passes **2,690/2,690**, with 13 deselected
 and the same two known warnings in 374.79 s.
+
+### 2026-09-04 - session 41 (Entry 89 FINAL evaluator implementation boundary). **The evaluator is fail-first gated; FINAL has not run.**
+
+Fresh midpoint evidence was committed separately as `51a1146`. A new
+`exp_shielded_final.py` now validates the exact DEVELOPMENT, policy-manifest,
+midpoint-metadata, gzip and decoded hashes before any score; builds the exact
+2,430 identities with zero DEVELOPMENT overlap; maps every new request to its
+nearest frozen DEVELOPMENT request in normalized peaking/log-frequency space;
+loads the frozen Entry 88 deployment policy and all five frozen Entry 89
+policies; and implements fixed, old-policy shield, new-policy raw/shielded and
+global/reachable-oracle reporting plus the registered R1-R10 gates.
+
+Six fail-capable tests first failed at import because the module was absent and
+now pass 6/6. They exposed and fixed a genuine floating-point midpoint issue:
+the 0.500-octave request is mathematically tied between 0.38 and 0.62, so the
+distance key is quantized before the registered tuple-order tie break. The
+tests also force safety, quality, cost and attribution failures, validate all
+real frozen inputs without scoring, and prove result overwrite refusal.
+
+No `shielded_policy_final_results.json` exists and no FINAL identity has been
+scored. Next: run the complete non-slow suite, commit this evaluator boundary,
+then invoke `exp_shielded_final --evaluate` exactly once.
+
+The evaluator-boundary non-slow suite passes **2,696/2,696**, with 13
+deselected and the same two known warnings in 294.19 s.
