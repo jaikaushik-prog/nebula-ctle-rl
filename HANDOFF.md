@@ -17,7 +17,12 @@
 > decisions that are OPEN and human-only, and what to do next. It supersedes
 > `nebula/NEXT_STEPS.md`. This file remains the full state of record.
 
-Last updated: **2026-09-04** (session 44, Entry 93 programmable architecture:
+Last updated: **2026-09-04** (session 44, Entry 94 real-channel intake: Nebula
+now parses Touchstone 1.x `.sNp` files without scikit-rf and writes a
+hash-grounded JSON/PNG profile. It refuses malformed records, invalid port maps
+and missing Nyquist coverage, and labels every upload
+`PROFILED_NOT_RL_VERIFIED` because the frozen eye bank was not regenerated for
+that file. Earlier Entry 93 programmable architecture:
 every RL product now carries the exact 8 x 8 x 8 code manifest and emits a
 judge-facing hardware/status drawing. It shows the real netlisted/measured PMOS
 input attenuator and explicitly marks the Rs/Cs selector switches and their
@@ -1528,10 +1533,14 @@ signaling, ADC-based DSP receiver, 28 nm CMOS reference parameters).
 │   │                       draws RL/fallback provenance plus a real eye trace.
 │   ├── report/programmable_architecture.py  Validates and draws the 512-code
 │   │                       A/R/C architecture plus its evidence boundary.
+│   ├── channel_upload.py   Dependency-free real `.sNp` intake, provenance,
+│   │                       reduced-model fit and measured-vs-fit PNG.
 │   ├── tests/test_rl_dashboard.py  Five fail-first completeness, trace,
 │   │                       rendering and product-output gates.
 │   ├── tests/test_programmable_architecture.py  Five manifest, code-order,
 │   │                       evidence-boundary and render/output gates.
+│   ├── tests/test_touchstone_upload.py  RI/MA/DB, port order, truncation,
+│   │                       Nyquist, provenance, render and CLI gates.
 │   ├── tests/test_llm_product.py  Five fail-first gates connecting the safe
 │   │                       language wrapper to the shielded-RL/export path.
 │   ├── ENTRY89_DEVELOPMENT_RESULTS.md  Five-seed training integrity and exposed
@@ -1806,6 +1815,16 @@ Plus: git init, .gitignore, 28 tests, Wilson-bound BER reporting.
 
 ## 6. Key numbers & validated behavior (current state)
 
+- **Nebula Entry 94 makes real Touchstone input usable without borrowing the
+  frozen result:** `link/channel.py` now parses Touchstone 1.x RI, MA and DB
+  S-parameter data locally, including continuation lines, row-wise 3+-port
+  order and the historical two-port exception. `python -m
+  nebula.channel_upload FILE --ports OUT IN --out DIR` writes a SHA-256-grounded
+  profile and measured-versus-two-term-fit plot. It fails on malformed data,
+  bad ports or a span that misses 2.5 GHz. Every report says
+  `PROFILED_NOT_RL_VERIFIED`: the upload is real, but its phase/reflections were
+  not used to regenerate the frozen 512-setting eye table. Nine new focused
+  cases plus the existing channel gates pass 128/128.
 - **Nebula Entry 93 makes all 512 programmable choices visible without
   overstating hardware maturity:** `rl/hybrid_designer.py` derives the exact
   8 attenuation, 8 Rs and 8 Cs code values from the same production constants
@@ -2421,10 +2440,12 @@ complete: the high 12 dB edge closes, the low edge reaches 314/315 and the
 overall registered verdict is FAIL. The owner-requested RL adaptation dashboard
 is now integrated and validated against the real 315-condition demo. The
 natural-language wrapper is also connected to that same product and exporter.
-**Next action:** add the real Touchstone upload path. The logical 512-code
-architecture/status drawing is complete, but selecting a transistor topology
-for the Rs/Cs switches remains a physical design decision and is not silently
-assumed. Separately, the remaining physical decisions are whether to
+**Next action:** run Entry 94's intake on a genuinely measured `.s4p` when one
+is supplied, then decide whether its full phase/reflection response warrants a
+new 512-setting link re-characterisation. Do not attach the existing 315/315
+claim to it. The logical architecture drawing is complete, but selecting a
+transistor topology for the Rs/Cs switches remains a physical design decision
+and is not silently assumed. Separately, the remaining decisions are whether to
 preregister an isolated 8.4 dB one-point diagnostic and whether to adopt Entry
 90's successful Cs/Rs candidates into the production map.
 Do not rerun, tune or replace FINAL.
@@ -2895,8 +2916,10 @@ explicit scope.
 - **G14 — `Channel.pulse_response` uses argmax cursor + trimming; the
   waveform path avoids `np.convolve(mode='same')` deliberately.** Keep
   explicit alignment; never reintroduce 'same'-mode shortcuts.
-- **G15 — scikit-rf not installed** (S-param import raises); matplotlib may
-  need `MPLBACKEND=Agg` for headless runs.
+- **G15 — scikit-rf not installed** (the original SerDes project's
+  `python_models/channel.py` S-param import raises). Nebula's separate
+  Touchstone 1.x intake no longer needs it as of Entry 94; matplotlib may need
+  `MPLBACKEND=Agg` for headless runs.
 - **G16 — (nebula) `nebula/device/mock.py` and `nebula/link/mock.py` produce
   FAKE numbers.** They exist so three people can build three layers in
   parallel before ngspice exists. No value from either may reach the abstract,
@@ -5485,6 +5508,21 @@ implementation status. The attenuator may say `netlisted-and-measured`; Rs and
 Cs must say `not-netlisted` until one approved selector topology, including
 disabled-device parasitics, is built and re-characterised. A plot or policy
 code cannot upgrade that evidence status.
+
+### G162. Touchstone port ordering changes at three ports, and ingestion is not verification
+
+The first dependency-free parser draft treated every N-port file like the
+special two-port order (`S11,S21,S12,S22`). The official Touchstone rule is
+different: 3+-port matrices are row-wise, while two-port files keep that
+historical exception. A wrong transpose still returns a finite, plausible
+insertion loss from the wrong path. Separately, fitting uploaded magnitude to
+`A*sqrt(f)+B*f` does not preserve phase, reflections, mode conversion or
+crosstalk, and the frozen eye bank still belongs to the constructed family.
+
+**Rule:** test S13 and S21 orientation separately; require the caller to state
+the `(output,input)` ports; hash the source; refuse files that miss Nyquist.
+Every intake artifact must say `PROFILED_NOT_RL_VERIFIED` until the CTLE bank is
+re-evaluated using that exact file's full response.
 
 ## 10. Environment
 
@@ -15456,3 +15494,32 @@ measurements, 266 RL-shield selections and 49 measured-bank fallbacks. Each now
 contains the exact 8 x 8 x 8 code/status image and JSON manifest. The focused
 feature gates pass **5/5**. The complete post-change non-slow suite passes
 **2,733/2,733**, with 13 deselected and the same two known warnings in 437.49 s.
+
+### 2026-09-04 - session 44 (Entry 94 Touchstone intake). **A real `.s4p` can now enter the project without an optional RF package, while the frozen RL result remains correctly attributed to its constructed channels.**
+
+Nine fail-first cases initially failed because Nebula's existing ingestion
+seam stopped at an uninstalled `scikit-rf` import and no product report existed.
+`link/channel.py` now directly parses ASCII Touchstone 1.x RI, MA and DB data,
+wrapped records, frequency units and N-port suffixes. It rejects truncation,
+non-S data, invalid port maps, non-monotonic frequencies and Touchstone 2.x
+sections instead of guessing. An official-spec check caught and corrected the
+first draft's most dangerous mistake before acceptance: 3+-port matrices are
+row-wise, while two-port files retain `S11,S21,S12,S22` order (G162).
+
+`python -m nebula.channel_upload FILE --ports OUT IN --out DIR` now writes a
+source-basename/SHA-256-grounded `channel_profile.json` and a visually checked
+measured-versus-fit `channel_profile.png`. It reports the measured 2.5 GHz loss,
+two-term coefficients, skin fraction, residual and nearest characterised loss.
+It always labels the result `PROFILED_NOT_RL_VERIFIED`, because reducing an
+upload to magnitude does not preserve phase/reflections and the frozen
+512-setting bank was not regenerated for it. The committed demo is explicitly
+named/commented synthetic and is not evidence about a real board.
+
+The nine new cases and the existing channel suite pass **128/128**. The first
+complete non-slow run reached **2,741 passed** with one unrelated timing-only
+failure: the `hl` PDK trim comparison measured 5.99 s trimmed versus 5.07 s
+untrimmed on that invocation; its bit-identity gates had already passed. The
+exact failed case then passed alone in 5.43 s. The owner explicitly declined a
+second complete run after that isolated pass. There were 13 deselected and the
+same two known warnings; no RL policy, reward, range, topology, frozen artifact
+or simulator result changed.

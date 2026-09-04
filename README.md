@@ -20,6 +20,9 @@ the measured PMOS attenuator from the not-yet-netlisted Rs/Cs selector
 switches. The 9 dB / 1.9 GHz demo passes 315/315 conditions. A
 separate diagnostic closes the high-frequency 12 dB edge and reaches 314/315
 at the low-frequency edge; those candidates are not yet in the shipping bank.
+Nebula can also ingest a real Touchstone 1.x `.s4p` without optional RF
+packages and produce a hash-grounded channel profile; that profile is clearly
+separated from the frozen bank's RL compliance evidence.
 See
 [`nebula/PROJECT_SOLUTION_OVERVIEW.md`](nebula/PROJECT_SOLUTION_OVERVIEW.md).
 

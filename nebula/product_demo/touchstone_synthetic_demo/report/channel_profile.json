@@ -1,0 +1,32 @@
+{
+ "status": "PROFILED_NOT_RL_VERIFIED",
+ "rl_product_verified": false,
+ "source_file": "synthetic_board.s4p",
+ "source_sha256": "8CB6A128E1F53C7C71719948601183D094E305CF84A089CD512C8A9B29B29A1A",
+ "ports": {
+  "output": 1,
+  "input": 3
+ },
+ "n_points": 5,
+ "frequency_span_hz": [
+  100000000.0,
+  10000000000.0
+ ],
+ "nyquist_hz": 2500000000.0,
+ "measured_loss_at_nyquist_db": 6.020599913279624,
+ "fit": {
+  "model": "IL_dB(f) = A*sqrt(f_GHz) + B*f_GHz",
+  "loss_at_nyquist_db": 6.052571766940169,
+  "skin_fraction_at_nyquist": 0.3129844343863989,
+  "a_db_per_sqrt_ghz": 1.1980989366746422,
+  "b_db_per_ghz": 1.6632844063525252,
+  "rms_residual_db": 0.6533802007293554,
+  "max_residual_db": 1.0457471286219064
+ },
+ "nearest_characterised_loss_db": 6.0,
+ "characterised_loss_range_db": [
+  3.0,
+  12.0
+ ],
+ "limitation": "The uploaded S-parameter file was parsed and fitted, but it was not used to regenerate the frozen 512-setting RL eye bank. This report is not an RL compliance or eye-opening claim for the uploaded channel."
+}

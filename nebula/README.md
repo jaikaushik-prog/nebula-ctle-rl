@@ -74,7 +74,7 @@ link/                  Device result -> eye.
                        (loss at Nyquist, skin/dielectric split). Minimum-phase
                        reconstruction, then causality / passivity / monotonicity GATES.
                        Equivalent length is reported from a stated stackup, never used
-                       to derive the loss. Touchstone ingestion for real data.
+                       to derive the loss. Dependency-free Touchstone 1.x parsing.
   tx.py                The PCIe Gen2 transmitter as the 2-tap FIR it actually is.
                        Supplies exactly -de_emphasis_dB of tilt at Nyquist.
   cursors.py           Pulse response -> UI sampling -> h_-2..h_4 -> residual ISI after
@@ -110,6 +110,10 @@ experiments/           One script per measurement. Each owns its assumptions and
                        them in every run's header. Data files are committed alongside.
 
 tests/                 606 tests. Those needing a simulator skip cleanly without one.
+
+channel_upload.py      Real .sNp intake: hash/provenance, chosen port path,
+                       measured Nyquist loss, reduced-model fit and diagnostic PNG.
+                       Explicitly not an RL verification of the uploaded channel.
 ```
 
 ---
@@ -150,6 +154,9 @@ python -m pytest nebula/tests -q
 python -m nebula.experiments.cl_range
 python -m nebula.experiments.tail_device --report
 python -m nebula.experiments.s9_yield --n 2000 --workers 8
+
+# Profile a real channel file (does not claim the frozen RL bank verified it)
+python -m nebula.channel_upload board.s4p --ports 1 3 --out channel_report
 ```
 
 Two environment facts that cost real time to discover:

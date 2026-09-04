@@ -21,6 +21,7 @@ from nebula.link.channel import (
     channel_family,
     fit_insertion_loss,
     fit_from_touchstone,
+    insertion_loss_from_touchstone,
 )
 from nebula.link.config import (
     DEFAULT_LOSS_SWEEP_DB,
@@ -60,6 +61,7 @@ __all__ = [
     "channel_family",
     "fit_insertion_loss",
     "fit_from_touchstone",
+    "insertion_loss_from_touchstone",
     "DEFAULT_LOSS_SWEEP_DB",
     "PCIE_GEN2_DE_EMPHASIS_DB",
     "PCIE_GEN2_DE_EMPHASIS_OPTION_DB",

@@ -395,16 +395,9 @@ class TestIngestion:
         with pytest.raises(ValueError, match="POSITIVE insertion loss"):
             fit_insertion_loss(f, -ChannelModel(8.0).il_db(f))
 
-    def test_touchstone_reading_fails_loudly_without_scikit_rf(self):
-        pytest.importorskip  # noqa: B018 - documented below
-        try:
-            import skrf  # noqa: F401
-        except ImportError:
-            with pytest.raises(RuntimeError, match="scikit-rf"):
-                insertion_loss_from_touchstone("nonexistent.s4p")
-        else:                                             # pragma: no cover - env
-            with pytest.raises(Exception):
-                insertion_loss_from_touchstone("nonexistent.s4p")
+    def test_touchstone_missing_file_fails_loudly_without_optional_dependency(self):
+        with pytest.raises(FileNotFoundError, match="does not exist"):
+            insertion_loss_from_touchstone("nonexistent.s4p")
 
 
 class TestGridConstants:

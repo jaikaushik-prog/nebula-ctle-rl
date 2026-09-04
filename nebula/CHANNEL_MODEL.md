@@ -581,9 +581,11 @@ insertion loss, and any frequency-dependent impedance.
 
 `fit_from_touchstone(path, ports)` → `insertion_loss_from_touchstone` →
 `fit_insertion_loss`. It extracts `IL(f)` from a supplied `.s4p`, least-squares
-fits `A` and `B` with non-negativity, and **reports the residual**. Everything
-downstream consumes a `ChannelModel`, so a measured channel replaces the
-analytic family without touching the link layer.
+fits `A` and `B` with non-negativity, and **reports the residual**. The fitted
+model can enter the existing link layer, but it preserves only the smooth
+insertion-loss trend: measured phase, reflections, mode conversion and
+crosstalk are not retained. It must not be described as the full measured
+channel.
 
 Verified two ways:
 
@@ -595,9 +597,27 @@ Verified two ways:
   *informative* — it is the signature of exactly the reflective structure §8
   says this form cannot represent.
 
-`scikit-rf` is not installed (G15). The Touchstone reader **raises with the pip
-hint** rather than falling back to the analytic family, because a run that
-believes it is using measured data must never silently use invented data.
+Entry 94 removes the optional-package blocker for Nebula. Its local Touchstone
+1.x parser accepts RI, MA and DB encodings, legal continuation lines, the
+special two-port order and the row-wise 3+-port order. It rejects malformed
+records, invalid port maps and Touchstone 2.x sections rather than partly
+interpreting them. The ordering follows the official
+[Touchstone 2.1 specification](https://ibis.org/touchstone_ver2.1/touchstone_ver2_1.pdf).
+(`python_models/channel.py` in the separate SerDes project
+still uses optional `scikit-rf`; G15 continues to apply there.)
+
+The product-facing intake command is:
+
+```powershell
+python -m nebula.channel_upload board.s4p --ports 1 3 --out channel_report
+```
+
+It writes the file basename and SHA-256, chosen port map, measured Nyquist
+loss, fit coefficients/residuals, JSON and a measured-versus-fit PNG. Its
+status is deliberately `PROFILED_NOT_RL_VERIFIED`: the frozen 512-setting bank
+was characterised on the constructed channel family, not on that uploaded
+file. A real channel needs link re-characterisation before its eye or
+compliance can be claimed.
 
 **Before trusting a supplied file, check its port map.** The default `(1, 3)`
 pairing is a common `.s4p` convention, and a wrong pair reads a *return* loss as

@@ -105,14 +105,18 @@ delays are STATED, not measured — they are a probe, not a channel — and ever
 number derived with reflections enabled must say so.
 
 Also absent: crosstalk, mode conversion, fibre-weave skew, the connector's own
-insertion loss, and any frequency-dependent impedance. `from_touchstone()` is
-the seam through which measured S-parameters replace all of this at once.
+insertion loss, and any frequency-dependent impedance. The Touchstone intake
+below profiles a real file and fits its insertion-loss trend, but it does not
+pretend that this two-term model preserves measured phase, reflections or mode
+conversion.
 """
 
 from __future__ import annotations
 
 import math
+import re
 from dataclasses import dataclass, field
+from pathlib import Path
 from typing import Optional, Sequence
 
 import numpy as np
@@ -770,8 +774,102 @@ def fit_insertion_loss(
     )
 
 
+_TOUCHSTONE_SUFFIX = re.compile(r"\.s([1-9][0-9]*)p$", re.IGNORECASE)
+_FREQUENCY_SCALE = {
+    "hz": 1.0, "khz": 1e3, "mhz": 1e6, "ghz": 1e9,
+}
+
+
+def _read_touchstone_1(path: str | Path) -> tuple[np.ndarray, np.ndarray]:
+    """Return frequency and ``S[f, out, in]`` from Touchstone 1.x ASCII."""
+    source = Path(path)
+    match = _TOUCHSTONE_SUFFIX.search(source.name)
+    if not match:
+        raise ValueError("Touchstone path must end in .sNp, for example .s4p")
+    n_ports = int(match.group(1))
+    if not source.is_file():
+        raise FileNotFoundError(f"Touchstone file does not exist: {source}")
+
+    unit, parameter, data_format = "ghz", "s", "ma"
+    numeric: list[float] = []
+    for lineno, raw in enumerate(
+            source.read_text(encoding="utf-8-sig").splitlines(), 1):
+        line = raw.split("!", 1)[0].strip()
+        if not line:
+            continue
+        if line.startswith("["):
+            raise ValueError(
+                f"{source.name}:{lineno}: Touchstone 2.x sections are not "
+                "supported; refusing a partial interpretation")
+        if line.startswith("#"):
+            if numeric:
+                raise ValueError(
+                    f"{source.name}:{lineno}: option line occurs after data")
+            tokens = line[1:].lower().split()
+            if len(tokens) < 3:
+                raise ValueError(f"{source.name}:{lineno}: incomplete option line")
+            unit, parameter, data_format = tokens[:3]
+            if unit not in _FREQUENCY_SCALE:
+                raise ValueError(f"unsupported Touchstone frequency unit {unit!r}")
+            if parameter != "s":
+                raise ValueError(
+                    f"Touchstone file contains {parameter.upper()} parameters, "
+                    "not S-parameters")
+            if data_format not in ("ri", "ma", "db"):
+                raise ValueError(
+                    f"unsupported Touchstone data format {data_format!r}")
+            if "r" in tokens:
+                r_index = tokens.index("r")
+                if r_index + 1 >= len(tokens):
+                    raise ValueError("Touchstone R option is missing its value")
+                try:
+                    reference = float(tokens[r_index + 1])
+                except ValueError as exc:
+                    raise ValueError(
+                        "Touchstone reference impedance is invalid") from exc
+                if not math.isfinite(reference) or reference <= 0.0:
+                    raise ValueError(
+                        "Touchstone reference impedance must be positive")
+            continue
+        for token in line.split():
+            try:
+                numeric.append(float(token.replace("D", "E").replace("d", "e")))
+            except ValueError as exc:
+                raise ValueError(
+                    f"{source.name}:{lineno}: non-numeric data token "
+                    f"{token!r}") from exc
+
+    fields_per_record = 1 + 2 * n_ports * n_ports
+    if not numeric or len(numeric) % fields_per_record:
+        raise ValueError(
+            f"Touchstone data are truncated: {len(numeric)} numeric values do "
+            f"not form {fields_per_record}-value records for {n_ports} ports")
+    records = np.asarray(numeric, dtype=float).reshape(-1, fields_per_record)
+    if not np.all(np.isfinite(records)):
+        raise ValueError("Touchstone data contain NaN or infinite values")
+    frequency = records[:, 0] * _FREQUENCY_SCALE[unit]
+    if np.any(frequency < 0.0) or np.any(np.diff(frequency) <= 0.0):
+        raise ValueError(
+            "Touchstone frequencies must be non-negative and increasing")
+
+    pairs = records[:, 1:].reshape(-1, n_ports * n_ports, 2)
+    first, second = pairs[:, :, 0], pairs[:, :, 1]
+    if data_format == "ri":
+        values = first + 1j * second
+    else:
+        magnitude = first if data_format == "ma" else 10.0 ** (first / 20.0)
+        values = magnitude * np.exp(1j * np.deg2rad(second))
+    # Touchstone 1.x uses row-wise matrix order for 3+ ports. Two-port files
+    # are the historical exception: S11,S21,S12,S22 (IBIS Touchstone 2.1,
+    # Network Data syntax). Keep that exception explicit and testable.
+    s = values.reshape(-1, n_ports, n_ports)
+    if n_ports == 2:
+        s = s.transpose(0, 2, 1)
+    return frequency, s
+
+
 def insertion_loss_from_touchstone(
-    path: str,
+    path: str | Path,
     ports: tuple[int, int] = (1, 3),
     f_max_hz: Optional[float] = None,
 ) -> tuple[np.ndarray, np.ndarray]:
@@ -783,29 +881,27 @@ def insertion_loss_from_touchstone(
     trusting it**, because a wrong pair reads a return loss as an insertion
     loss and every downstream number is nonsense while looking fine.
 
-    Needs `scikit-rf`, which is NOT installed in this environment (HANDOFF G15).
-    The absence is a clear error here rather than a silent fallback to the
-    analytic family, because a fallback would let a run that thought it was
-    using measured data quietly use invented data instead.
+    Touchstone 1.x S-parameter files are parsed locally, including RI, MA and
+    DB encodings and legal continuation lines. No optional RF package is
+    required. Touchstone 2.x bracketed sections are refused rather than partly
+    interpreted, because a partial parse is worse than a loud error.
     """
-    try:
-        import skrf                                   # noqa: F401
-    except ImportError as exc:                        # pragma: no cover - env
-        raise RuntimeError(
-            "reading a Touchstone file needs scikit-rf, which is not installed "
-            "(HANDOFF G15): pip install scikit-rf. Refusing to fall back to the "
-            "analytic family — a run that believes it is using measured data "
-            "must not silently use invented data."
-        ) from exc
-
-    net = skrf.Network(path)
-    i_out, i_in = ports[0] - 1, ports[1] - 1
-    s21 = net.s[:, i_out, i_in]
-    f = np.asarray(net.f, dtype=float)
+    f, s = _read_touchstone_1(path)
+    n_ports = s.shape[1]
+    if (len(ports) != 2 or any(isinstance(value, bool) for value in ports)
+            or any(int(value) != value for value in ports)):
+        raise ValueError("ports must be two integer, 1-based port numbers")
+    i_out, i_in = int(ports[0]) - 1, int(ports[1]) - 1
+    if not (0 <= i_out < n_ports and 0 <= i_in < n_ports):
+        raise ValueError(
+            f"port map {ports!r} is outside this {n_ports}-port file")
+    s21 = s[:, i_out, i_in]
     il = -20.0 * np.log10(np.abs(s21) + 1e-300)
     if f_max_hz is not None:
         keep = f <= float(f_max_hz)
         f, il = f[keep], il[keep]
+        if f.size == 0:
+            raise ValueError("f_max_hz removes every Touchstone sample")
     return f, il
 
 
@@ -817,9 +913,10 @@ def fit_from_touchstone(
 ) -> FitResult:
     """`insertion_loss_from_touchstone` -> `fit_insertion_loss`, in one call.
 
-    This is the whole ingestion path: if the professor supplies a real `.s4p`,
-    it enters here and the link layer above is unchanged, because everything
-    downstream consumes a `ChannelModel`.
+    This is the reduced-model ingestion path: a real `.s4p` supplies the
+    insertion-loss data, then the existing link consumes the fitted
+    ``ChannelModel``. Measured phase, reflections and mode conversion are not
+    retained; the residual reports magnitude structure the fit cannot follow.
     """
     f, il = insertion_loss_from_touchstone(path, ports, f_max_hz)
     return fit_insertion_loss(f, il, f_nyquist_hz=f_nyquist_hz)

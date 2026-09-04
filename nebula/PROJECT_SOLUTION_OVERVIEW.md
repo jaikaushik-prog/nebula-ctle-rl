@@ -51,6 +51,20 @@ circuit, widen the legal request range or invent measurement results. With
 `--out`, it uses the same exporter as the numeric front door and writes the
 netlist, schematic, dashboard, JSON record and grounded explanation.
 
+A separate real-channel intake accepts Touchstone 1.x `.sNp` files without an
+optional RF package:
+
+```powershell
+python -m nebula.channel_upload board.s4p --ports 1 3 --out channel_report
+```
+
+It hashes the exact file, validates the chosen port path and frequency span,
+measures loss at 2.5 GHz, fits the current two-term channel model, reports its
+residual and draws measured-versus-fit loss. It intentionally does not label
+the uploaded file RL-verified: the frozen 512-setting eye bank was generated
+for the constructed channel family, so arbitrary measured reflections and
+phase need a new link characterisation before compliance can be claimed.
+
 ## What is the RL system doing?
 
 The current configurable CTLE contains 512 possible tuning settings. Testing
@@ -120,6 +134,7 @@ when a developer intentionally wants to inspect one characterised channel.
 | Lower online design effort than exhaustive search | Covered experimentally: 5.579 mean measured settings instead of 512 |
 | Zero human intervention during a design run | Covered |
 | Natural-language interaction with optional LLM wording | Covered and connected to the shielded-RL product |
+| Real Touchstone file intake | Covered for validated parsing, provenance and loss-model fitting; uploaded-channel RL/eye compliance is not yet claimed |
 | A useful and safe RL result on unseen conditions | Covered: Entry 89 passed all R1-R10 gates and is integrated as `--method rl-hybrid` |
 | Fabricated-silicon validation | Not covered; present evidence is simulator-backed |
 
@@ -230,6 +245,16 @@ eight Rs and eight Cs values in one fabricated CTLE have not been designed or
 simulated. Their on-resistance and parasitic capacitance could shift the
 response. The product therefore emits a logical architecture/status drawing
 and labels this gap rather than presenting it as completed silicon hardware.
+
+### 8. Uploaded Touchstone data are profiled, not yet RL-verified
+
+The intake reads the real S-parameter file and exposes how well or badly its
+insertion loss matches the smooth channel model. The current RL table contains
+eyes for seven constructed balanced-loss channels, not arbitrary uploaded
+phase and reflection responses. Therefore, a channel upload produces a
+provenance/audit report and never reuses the old 315/315 result as though it
+belonged to the new file. Closing this gap requires re-evaluating the measured
+CTLE bank through the uploaded channel response.
 
 ## How is a judge likely to see the product?
 
