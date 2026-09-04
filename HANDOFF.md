@@ -17,12 +17,11 @@
 > decisions that are OPEN and human-only, and what to do next. It supersedes
 > `nebula/NEXT_STEPS.md`. This file remains the full state of record.
 
-Last updated: **2026-09-04** (session 45, Entry 96 preregistration: after Entry
-95 rejected both ordinary series-NMOS banks, the owner approved trying a new
-split-capacitor / floating-resistor binary topology. Its first gate is only a
-64-code TT two-terminal block comparison against real-passive controls; exact
-half-step accuracy and monotonicity are frozen before implementation, and no
-CTLE or RL claim may move unless all S1-S6 pass. Earlier Entry 95 outcome:
+Last updated: **2026-09-04** (session 45, Entry 96 outcome: the split-capacitor
+bank passes capacitance accuracy at 0.517849 pF error versus a 0.593954 pF
+limit, and both code axes remain ordered. It still fails overall because ON
+capacitor-switch loss adds 18.117350 mS versus the 0.913434 mS conductance-error
+limit. No CTLE insertion or RL change occurred. Earlier Entry 95 outcome:
 675/675 real-NMOS rows pass integrity, but both registered architectures fail.
 Exact one-hot has no width below both 2.02 ohm and 36.22 fF; the binary fallback
 has 320 um at 8.710 ohm / 149.09 fF and 640 um at 4.355 ohm / 298.03 fF, so its
@@ -898,7 +897,9 @@ Entry 96 additions (session 45): `nebula/device/split_tuning_bank.py` derives
 the hash-gated binary endpoints/branches, emits the same-deck switched and
 real-passive-control networks, parses differential admittance and scores S1-S6.
 `nebula/experiments/exp_split_tuning_bank.py` is its anti-clobber result writer;
-`nebula/tests/test_split_tuning_bank.py` holds eight fail-capable gates.
+`nebula/tests/test_split_tuning_bank.py` holds eight fail-capable gates. The
+exposed 64-row artifact is `nebula/experiments/split_tuning_bank_results.json`;
+`nebula/SPLIT_TUNING_BANK_RESULTS.md` is the readable failure audit.
 
 ```
 ├── .gitignore              ← sectioned BY REASON (copyright / redistribution /
@@ -1840,6 +1841,14 @@ Plus: git init, .gitignore, 28 tests, Wilson-bound BER reporting.
 
 ## 6. Key numbers & validated behavior (current state)
 
+- **Nebula Entry 96 proves the ground-referenced split capacitor gets the
+  value right but is far too lossy:** all 64 TT codes simulate, both axes are
+  monotonic and effective-C error passes (0.517849 <= 0.593954 pF). Total
+  conductance error grows with enabled Cs bits from 0.114/0.430 mS at C0 to
+  4.625/18.117 mS at C7 for 1.25/2.5 GHz; S4's limit is 0.913434 mS. This
+  isolates ON-switch series loss, not the floating resistor bank. Overall
+  fails and no CTLE run is authorised. Result:
+  `nebula/SPLIT_TUNING_BANK_RESULTS.md`.
 - **Nebula Entry 95 rejects the two ordinary series-NMOS Rs/Cs selector
   arrangements:** all 675 rows across five widths, three actual-node biases and
   45 PVT corners are valid and monotonic. Exact one-hot P3 and six-switch binary
@@ -2417,6 +2426,9 @@ Plus: git init, .gitignore, 28 tests, Wilson-bound BER reporting.
 - **(nebula) The Rs/Cs bank is still not a tapeout-ready switch matrix.** Entry
   95 measures why: neither an exact one-hot nor a uniform-width three-switch
   binary series-NMOS selector meets its predeclared Ron/OFF-capacitance limits.
+  Entry 96's ground-referenced split-C alternative passes capacitance accuracy
+  but fails its conductance-loss gate by 19.83x, so it also remains outside the
+  CTLE.
   The frozen 512 settings remain separately drawn geometries. The PMOS input
   attenuator is still the only netlisted-and-measured programmable block; do
   not upgrade the architecture manifest or reuse Entry 86/89 on a new topology.
@@ -2479,13 +2491,12 @@ complete: the high 12 dB edge closes, the low edge reaches 314/315 and the
 overall registered verdict is FAIL. The owner-requested RL adaptation dashboard
 is now integrated and validated against the real 315-condition demo. The
 natural-language wrapper is also connected to that same product and exporter.
-**Next action:** implement Entry 96's now-owner-approved, preregistered
-split-capacitor / floating-resistor 64-code TT block comparison.
-The capacitor between `s1`/`s2` can be represented by two symmetric capacitors
-to AC ground, moving its NMOS switches near ground where gate overdrive is much
-larger; the resistor requires a separate topology because grounding it would
-change DC bias. Entry 95's failed series-switch result cannot be retuned or
-silently widened. Only an S1-S6 pass permits insertion into the CTLE. Separately, run
+**Next action:** choose whether to investigate a fundamentally lower-Ron
+capacitor selector (a qualified SKY130 low-threshold device, a reliability-safe
+boosted gate, or a different tunable-capacitor topology). Entry 96 may not be
+inserted into the CTLE or resized against its exposed result: its capacitance
+value passes, but ON-switch loss is 19.83x the conductance-error limit.
+Separately, run
 Entry 94's intake on a genuinely measured `.s4p` when one is supplied and do
 not attach the existing 315/315 claim to it. The remaining decisions are whether to
 preregister an isolated 8.4 dB one-point diagnostic and whether to adopt Entry
@@ -5594,6 +5605,19 @@ special case, not a general `N-1` rule.
 **Rule:** use `ac lin 3 lo hi`, require low/mid/high exactly, and deliberately
 select the first and last rows when exactly the two endpoints are required.
 Never infer or generalise a simulator's emitted grid without inspecting it.
+
+### G165. A capacitor value can be correct while the capacitor bank is unusably lossy
+
+Entry 96's split-C bank passes effective-capacitance accuracy and code ordering,
+which would look like success if the parser reduced complex admittance to
+`C = Im(Y)/omega`. The same enabled NMOS switches add a real admittance that
+reaches 18.117 mS at C7/2.5 GHz, 19.83x the registered allowance. That loss
+would damp the CTLE even though the displayed capacitance says 9.939 pF versus
+the 10.000 pF control.
+
+**Rule:** characterise a switched reactive bank with complex admittance. Gate
+both its effective reactance and real loss before inserting it into an
+amplifier; a correct C/L value alone is not evidence of a usable element.
 
 ## 10. Environment
 
@@ -15737,3 +15761,35 @@ result artifact exists at this boundary.
 The complete implementation-boundary non-slow suite passes **2,759/2,759**,
 with 13 deselected and the same two warnings in 325.28 s. Commit this boundary
 before the first Entry 96 simulator invocation.
+
+### 2026-09-04 - session 45 (Entry 96 outcome). **The split capacitor reaches the intended capacitance, but ON-switch loss makes the bank fail.**
+
+The frozen runner completed all **64/64** registered TT block rows in 3.79 s.
+S1 exact membership, S2 resistor ordering, S3 capacitor ordering, S5
+capacitance accuracy and S6 isolation all pass. S4 conductance accuracy fails,
+so the registered overall result is FAIL and the stopping rule forbids CTLE
+insertion, reward measurement or policy retraining.
+
+Worst conductance error is **18.117350 mS**, versus the **0.913434 mS** limit
+(19.83x too large), at R-code 7, C-code 7 and 2.5 GHz. Worst capacitance error
+is **0.517849 pF**, inside the **0.593954 pF** limit. Conductance error grows
+with capacitor code and frequency: at 2.5 GHz it rises from 0.430 mS at C0 to
+18.117 mS at C7. This identifies the failure mechanism as real loss from the
+ON capacitor switches, not incorrect binary capacitance or the floating
+resistor bank.
+
+Predictions 1 and 3 are HIT; predictions 2 and 4 are MISS under the frozen
+whole-network S4 definition. The next experiment must use a fundamentally
+lower-Ron capacitor selector or a different tuning topology, not resize this
+exposed result. The production manifest, Entry 89 FINAL record and frozen RL
+policy remain unchanged.
+
+The complete audit is `nebula/SPLIT_TUNING_BANK_RESULTS.md`. Result-file
+SHA-256 is
+`70E73F1A8798AF957BDF36D5275D64218F76A78CF75D451A3354928F327D5582`;
+canonical-row SHA-256 is
+`050315CC0F81869FAEEA1746F3627F68B0B5F20FC84BD0E85483CC64E5B4CCDE`.
+The frozen runner commit is `f6f4c01a04fb7eeb4c35c03380a8da8b8c4b1db9`.
+
+The final post-result non-slow suite passes **2,759/2,759**, with 13 deselected
+and the same two warnings in 313.20 s.

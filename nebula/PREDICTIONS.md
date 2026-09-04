@@ -14746,3 +14746,27 @@ No Entry 96 SPICE deck or result exists at this boundary.
 The complete implementation-boundary non-slow suite passes 2,759/2,759, with
 13 deselected and the same two warnings in 325.28 s. Commit this boundary before
 the first Entry 96 simulator invocation.
+
+### Entry 96 outcome -- **split capacitance passes; switch loss makes overall FAIL**
+
+All 64 real-SKY130 rows pass S1 integrity, S2 resistor ordering, S3 capacitor
+ordering and S6 isolation. S5 also passes: maximum effective-capacitance error
+is 0.517849 pF against 0.593954 pF. Prediction 1 HIT and prediction 3 HIT.
+
+S4 fails by a large and diagnostic margin: maximum switched-minus-control
+conductance error is 18.117350 mS against 0.913434 mS (19.83x). It rises from
+0.114/0.430 mS at C0 to 4.625/18.117 mS at C7 for 1.25/2.5 GHz, nearly
+independent of R code. Thus the floating resistor bank is not the mechanism;
+the ON capacitor switches realise the capacitance but add a large real loss.
+Prediction 2 MISSES under its registered total-network S4 definition and
+prediction 4 MISSES. Overall is FAIL, so the stopping rule forbids CTLE
+insertion.
+
+Canonical-row SHA-256 is
+`050315CC0F81869FAEEA1746F3627F68B0B5F20FC84BD0E85483CC64E5B4CCDE`;
+result-file SHA-256 is
+`70E73F1A8798AF957BDF36D5275D64218F76A78CF75D451A3354928F327D5582`.
+Full audit: `SPLIT_TUNING_BANK_RESULTS.md`.
+
+The final post-result non-slow suite passes 2,759/2,759, with 13 deselected and
+the same two warnings in 313.20 s.
