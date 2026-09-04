@@ -540,6 +540,10 @@ def report(d: dict) -> str:
         L.append(f"              {sr.get('rl_proposals', 0)} proposals checked; "
                  f"classical bank fallback used at "
                  f"{sr.get('shield_fallbacks', 0)} of {n_conditions} conditions")
+        if "target_refinements" in sr:
+            L.append(f"              fallback reasons: "
+                     f"{sr.get('target_refinements', 0)} target refinements, "
+                     f"{sr.get('safety_fallbacks', 0)} safety fallbacks")
         losses = sr.get("channel_losses_db") or []
         if sr.get("channel_loss_mode") == "automatic-family" and losses:
             L.append(f"              channel loss is NOT a user target; "
@@ -728,7 +732,7 @@ def report(d: dict) -> str:
     if d["method"] == "rl-hybrid":
         L.append(f"        reused {sr.get('offline_spice_rows', 0)} offline "
                  f"ngspice rows; {sr.get('table_rows_checked', 0)} classical "
-                 f"table lookups after RL shield misses")
+                 f"table lookups for safety/target refinement")
     L.append("")
     L.append("  NOTE ON --peaking: " + d["peaking_is_a_band_not_a_target"])
     L.append("=" * 74)

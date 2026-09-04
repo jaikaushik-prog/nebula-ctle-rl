@@ -105,11 +105,14 @@ rl/                    THE LOOP. contract.py is the environment contract — the
                        runlog.py writes the tracked JSONL. reward.py is CLAUDEwa §9's
                        form; reward_v1.py is the shape that replaced it, scoring EVERY
                        violated constraint rather than only the worst.
+                       hybrid_designer.py keeps V6 compliance as a hard gate,
+                       then centres safe choices on requested peaking/frequency;
+                       an existing-bank refinement launches no new SPICE run.
 
 experiments/           One script per measurement. Each owns its assumptions and prints
                        them in every run's header. Data files are committed alongside.
 
-tests/                 2,775 non-slow tests across both projects. Simulator
+tests/                 2,777 non-slow tests across both projects. Simulator
                        cases skip cleanly when their required tool is absent.
 
 web/                   Local evidence-grounded dashboard. One background worker

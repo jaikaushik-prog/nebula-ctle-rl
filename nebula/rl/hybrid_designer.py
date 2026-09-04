@@ -28,7 +28,8 @@ from nebula.common.types import (
     SPEC_PEAKING_DB_RANGE,
 )
 from nebula.experiments import exp_joint_bank as J
-from nebula.rl.contract import design_id, sizing_from_u
+from nebula.rl import reward_v1 as R
+from nebula.rl.contract import design_id, f_peak_octaves, sizing_from_u
 from nebula.rl.margin_adapt_env import (
     A_ATTEN_DOWN, A_ATTEN_UP, A_CS_DOWN, A_CS_UP, A_LOCK, A_RS_DOWN,
     A_RS_UP, HISTORY_FIELDS, MAX_TRIALS, N_ACTIONS, N_OBS, MarginBankTable,
@@ -53,6 +54,14 @@ class HybridSelection:
     eye_area: float
     verifier_calls: int
     bank_rows_checked: int
+    reason: str
+
+
+# This is an internal centring trigger, not a tighter pass/fail promise.  One
+# third of the two measured PVT-aware request tolerances is 0.5 dB and 0.1
+# octave.  If the safe RL visits do not reach that central region, the already
+# measured bank is consulted; no new SPICE simulation is launched.
+CENTERING_TRIGGER_FRACTION = 1.0 / 3.0
 
 
 ACTION_NAMES = {
@@ -183,35 +192,85 @@ def trace_policy(
 def select_with_bank_fallback(
         table: MarginBankTable, identity: tuple[str, float, float, float],
         settings_tried: Sequence[int]) -> HybridSelection:
-    """Shield proposed settings, then search the measured bank if necessary."""
+    """Choose the closest safe response, using the measured bank if needed.
+
+    Compliance remains the first and non-negotiable gate.  Inside the safe
+    set, the selector minimises the worst normalised request error (peaking or
+    peak frequency), then total normalised error, then maximises eye area.  The
+    normalisers are the single measured PVT-aware tolerances already defined by
+    :mod:`reward_v1`; this function does not invent a second specification.
+
+    Safe RL visits are used directly when they enter the central third of both
+    request tolerances.  Otherwise the immutable 512-setting table is searched
+    for a better-centred safe code.  That refinement is an in-memory lookup,
+    not an additional circuit simulation.
+    """
     settings = [int(value) for value in settings_tried]
     if not settings:
         raise ValueError("the safety shield needs at least one proposal")
     corner, loss, peaking, frequency = identity
+
+    def accuracy(setting: int) -> tuple[float, float, float, int]:
+        row = table.row(setting, corner)
+        peaking_error = abs(float(row.peaking_db) - float(peaking))
+        frequency_error = abs(
+            float(row.f_peak_oct) - f_peak_octaves(float(frequency)))
+        peaking_norm = peaking_error / R.TOL["S3_peaking_match"]
+        frequency_norm = frequency_error / R.TOL["S3_f_peak_match"]
+        return (max(peaking_norm, frequency_norm),
+                peaking_norm + frequency_norm,
+                -table.eye_area(setting, corner, loss), int(setting))
+
+    def well_centered(setting: int) -> bool:
+        row = table.row(setting, corner)
+        return (
+            abs(float(row.peaking_db) - float(peaking))
+            <= CENTERING_TRIGGER_FRACTION * R.TOL["S3_peaking_match"]
+            and abs(float(row.f_peak_oct)
+                    - f_peak_octaves(float(frequency)))
+            <= CENTERING_TRIGGER_FRACTION * R.TOL["S3_f_peak_match"])
+
     good = []
-    for index, setting in enumerate(settings):
+    for setting in settings:
         if table.compliant(setting, corner, loss, peaking, frequency):
-            good.append((table.eye_area(setting, corner, loss), -index,
-                         -setting, setting))
+            good.append(setting)
     if good:
-        area, _, _, setting = max(good)
+        setting = min(good, key=accuracy)
+        if well_centered(setting):
+            return HybridSelection(
+                setting=int(setting), compliant=True, source="rl-shield",
+                eye_area=float(table.eye_area(setting, corner, loss)),
+                verifier_calls=len(settings), bank_rows_checked=0,
+                reason="safe-rl-proposal-well-centred")
+
+        # The RL trace is safe but only barely matches the requested response.
+        # Consult measurements that already exist instead of running more
+        # circuits.  Attribute a code outside the trace to the bank, not RL.
+        candidates = table.compliant_settings(
+            corner, loss, peaking, frequency)
+        refined = min(candidates, key=accuracy)
+        from_rl = refined in good
         return HybridSelection(
-            setting=int(setting), compliant=True, source="rl-shield",
-            eye_area=float(area), verifier_calls=len(settings),
-            bank_rows_checked=0)
+            setting=int(refined), compliant=True,
+            source="rl-shield" if from_rl else "bank-fallback",
+            eye_area=float(table.eye_area(refined, corner, loss)),
+            verifier_calls=len(settings), bank_rows_checked=len(table.settings),
+            reason=("target-refinement-kept-rl" if from_rl
+                    else "target-refinement"))
 
     candidates = table.compliant_settings(corner, loss, peaking, frequency)
     if not candidates:
         return HybridSelection(
             setting=settings[0], compliant=False, source="bank-miss",
             eye_area=float(table.eye_area(settings[0], corner, loss)),
-            verifier_calls=len(settings), bank_rows_checked=len(table.settings))
-    setting = max(candidates, key=lambda value: (
-        table.eye_area(value, corner, loss), -int(value)))
+            verifier_calls=len(settings), bank_rows_checked=len(table.settings),
+            reason="no-compliant-bank-setting")
+    setting = min(candidates, key=accuracy)
     return HybridSelection(
         setting=int(setting), compliant=True, source="bank-fallback",
         eye_area=float(table.eye_area(setting, corner, loss)),
-        verifier_calls=len(settings), bank_rows_checked=len(table.settings))
+        verifier_calls=len(settings), bank_rows_checked=len(table.settings),
+        reason="no-compliant-rl-proposal")
 
 
 def _sha256(path: Path) -> str:
@@ -430,6 +489,7 @@ def solve(peaking_db: float, f_peak_hz: float,
             "atten_code": J.split_setting(selected.setting)[0],
             "bank_code": J.split_setting(selected.setting)[1],
             "source": selected.source, "compliant": selected.compliant,
+            "selection_reason": selected.reason,
             "eye_area": selected.eye_area,
             "rl_measurements": len(trace.settings_tried),
             "verifier_calls": selected.verifier_calls,
@@ -462,6 +522,11 @@ def solve(peaking_db: float, f_peak_hz: float,
     nominal = _nominal_from_row(
         nominal_row, u, representative_loss, request)
     fallbacks = sum(row["source"] == "bank-fallback" for row in records)
+    target_refinements = sum(
+        row["selection_reason"] == "target-refinement" for row in records)
+    safety_fallbacks = sum(
+        row["selection_reason"] == "no-compliant-rl-proposal"
+        for row in records)
     verification = {
         "mode": "precharacterised-ngspice-bank-v6",
         "n_corners": len(table.corners),
@@ -499,6 +564,12 @@ def solve(peaking_db: float, f_peak_hz: float,
         "shield_verifier_calls": int(sum(
             row["verifier_calls"] for row in records)),
         "shield_fallbacks": int(fallbacks),
+        "target_refinements": int(target_refinements),
+        "safety_fallbacks": int(safety_fallbacks),
+        "selection_objective": (
+            "hard V6 compliance; minimax normalised peaking/frequency request "
+            "error; total request error; eye area"),
+        "centering_trigger_fraction": CENTERING_TRIGGER_FRACTION,
         "table_rows_checked": int(sum(
             row["bank_rows_checked"] for row in records)),
         "offline_spice_rows": len(table.settings) * len(table.corners),

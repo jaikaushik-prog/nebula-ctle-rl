@@ -3,7 +3,7 @@
 This directory was generated with:
 
 ```powershell
-python -m nebula.design --method rl-hybrid --peaking 9 --f-peak 1.9 --out nebula/product_demo/rl_hybrid_9db_1p9ghz
+py -3.13 -m nebula.design --method rl-hybrid --peaking 9 --f-peak 1.9 --verify --out nebula/product_demo/rl_hybrid_9db_1p9ghz
 ```
 
 The user supplied only the desired CTLE response: 9 dB peaking near 1.9 GHz.
@@ -11,10 +11,12 @@ Channel loss was not a target. The product automatically checked all seven
 characterised channel losses across all 45 PVT corners.
 
 Result: **315/315 channel/PVT conditions passed** the V6 simulator-backed
-acceptance set. The frozen policy proposed 2,406 measured settings; the
-classical safety fallback was used for 49 conditions. This is the combined
-RL-proposer + verifier + fallback product result, not a pure-RL compliance
-claim.
+acceptance set. The representative result is **8.633 dB at 1.896 GHz** for the
+9 dB / 1.9 GHz request. The frozen policy proposed 2,406 measured settings;
+the classical bank supplied 185 tighter target refinements and 49 safety
+fallbacks. Those refinements reuse existing measurements rather than launching
+new SPICE runs. This is the combined RL-proposer + verifier + fallback product
+result, not a pure-RL compliance claim.
 
 Files:
 

@@ -17,7 +17,13 @@
 > decisions that are OPEN and human-only, and what to do next. It supersedes
 > `nebula/NEXT_STEPS.md`. This file remains the full state of record.
 
-Last updated: **2026-09-04** (session 46, Entry 98: the local evidence-grounded
+Last updated: **2026-09-04** (session 47, Entry 99: target-centred selection now
+keeps V6 compliance hard, ranks safe settings by normalized peaking/frequency
+error before eye area, and consults the existing 512-setting table when the RL
+visits miss the central 0.5 dB / 0.1-octave region. The real 9 dB / 1.9 GHz
+product result improved from 7.990 dB at 1.634 GHz to 8.633 dB at 1.896 GHz,
+still passing 315/315 conditions, with zero new SPICE simulations. Earlier
+Entry 98: the local evidence-grounded
 web dashboard is implemented. It wraps the existing RL-hybrid design,
 natural-language, Touchstone and exporter paths; adds an interactive 315-point
 PVT view, generated-circuit comparison, failure-aware results, evidence ZIP
@@ -2344,6 +2350,13 @@ Plus: git init, .gitignore, 28 tests, Wilson-bound BER reporting.
   Judge mode is explicitly labelled as a preverified cached artifact, and the
   channel upload keeps `PROFILED_NOT_RL_VERIFIED`. Circuit comparison compares
   generated circuits only; no algorithm benchmark panel exists.
+- **(nebula) The delivered selector is now target-centred after safety.** V6
+  compliance remains the hard first gate. Safe choices are ranked by worst
+  normalized peaking/frequency error, then total target error, then eye area.
+  For 9 dB / 1.9 GHz this changes the representative code from 104 to 425 and
+  the measured response from 7.990 dB / 1.634 GHz to 8.633 dB / 1.896 GHz,
+  while retaining 315/315 channel/PVT compliance. The refinement reads the
+  already-measured table; it launches zero new ngspice simulations.
 - Reference operating point: 3 cm (9 dB) channel, SNR 26 dB, CTLE 6 dB,
   Alexander: BER ≈ 1e-4; SNR 28: 0 errors (bound ~1e-4→ 8.7e-5 at 30k syms).
 - Loss sweep (SNR 28, CTLE 6 dB): clean ≤12 dB; ~1e-2 at 24 dB; lock lost
@@ -2483,6 +2496,13 @@ Plus: git init, .gitignore, 28 tests, Wilson-bound BER reporting.
   server restart. Generated artifacts themselves remain on disk in the chosen
   `--run-root` (or a temporary directory by default). It is not a cloud service,
   does not train a policy, and does not make uploaded channels RL-verified.
+- **(nebula) Target centring is still limited by the frozen physical bank.**
+  Entry 99 can choose the closest safe code already among the 512 settings; it
+  cannot synthesize a value between codes. Exact agreement at every PVT corner
+  is neither promised nor physically meaningful because peaking and peak
+  frequency themselves move over PVT. A denser bank would require new circuit
+  measurements and, eventually, a selector topology that passes Entry 97's
+  unresolved loss/parasitic gates.
 - JTOL amplitude grid is coarse (0.05/0.1/0.2/0.4/0.7/1.0 UI).
 - Power numbers are PLACEHOLDERS (literature-based), never simulated.
 - rtl/, verification/, veriloga_models/, matlab_models/, optical_dsp.py,
@@ -2539,7 +2559,10 @@ is now integrated and validated against the real 315-condition demo. The
 natural-language wrapper is also connected to that same product and exporter.
 Entry 98 now exposes that same path through a tested local dashboard with the
 seven owner-selected views and no algorithm comparison panel. The next delivery
-action is a short human judge rehearsal using `py -3.13 -m nebula.web`; freeze
+action is a short human judge rehearsal using `py -3.13 -m nebula.web`; Entry
+99 removes the avoidable nominal target mismatch before that rehearsal by
+ranking only compliant choices for target centring, using the frozen measured
+bank rather than generating another sweep. Freeze
 the interface after any presentation-blocking fixes rather than adding more
 features. **Next analog action:** make a human choice between stopping the optional programmable-
 bank work and keeping the competition-valid per-request fixed-passive generator,
@@ -5682,11 +5705,26 @@ error rises monotonically from 0.550 to 4.472 pF.
 Measure the complete ON/OFF network across width, and require loss and reactive-
 value accuracy to pass at the same width before selecting anything.
 
+### G167. Passing a request tolerance is not the same as centring the response
+
+The Entry 89 product selected the largest eye among compliant RL visits. For a
+9 dB / 1.9 GHz request, code 104 therefore won with a very large eye even
+though it produced 7.990 dB at 1.634 GHz. Both errors were inside the honest
+PVT-aware pass tolerances, so every gate correctly said PASS; the selector was
+still leaving avoidable request accuracy on the table. Existing code 425 is
+also compliant and measures 8.633 dB at 1.896 GHz.
+
+**Rule:** keep compliance as a hard gate, then optimize target distance inside
+the safe set. Normalize unlike units by the one existing tolerance definition,
+record whether RL or the measured bank supplied the code, and never credit an
+in-memory table refinement as either a new simulation or an RL proposal.
+
 ## 10. Environment
 
 - Windows 11, PowerShell 5.1 (+ Git Bash available), Python 3.13.14,
-  numpy 2.2.6, scipy 1.15.3, pytest 9.1.1, matplotlib, pandas. No scikit-rf,
-  no torch verified in current env (ml_equalizer imports torch — untested).
+  numpy 2.2.6, scipy 1.15.3, pytest 9.1.1, matplotlib, pandas and PyTorch
+  2.9.1+cpu under `py -3.13`. No scikit-rf. Base Anaconda Python does not have
+  torch; do not let an old Anaconda dashboard process retain port 8765.
 - git 2.52 for Windows. **This checkout: `main`, initial commit 2026-08-04,
   pushing to `origin` = https://github.com/jaikaushik-prog/nebula-ctle-rl.git —
   a NEW, PRIVATE repo built from this clean history** (the decision session 14b
@@ -15959,3 +15997,34 @@ exact `PROFILED_NOT_RL_VERIFIED` status. The final full non-slow suite passes
 **2,775/2,775**, with 13 deselected and the same two warnings in 301.86 s
 after the final source cleanup (the immediately preceding full run also passed
 2,775/2,775 in 314.09 s).
+
+### 2026-09-04 - session 47 (Entry 99). **Safe selection now centres the delivered circuit on the user's request.**
+
+The owner noticed that the 9 dB / 1.9 GHz dashboard result was visibly loose:
+7.990 dB at 1.634 GHz. Inspection showed that this was not missing simulation
+coverage. The immutable bank already contains all 512 logical settings across
+45 PVT corners (23,040 SPICE rows), including safe code 425 at 8.633 dB /
+1.896 GHz. The old shield correctly enforced V6 but maximized eye area among
+passing choices, so broad honest PVT tolerances became the effective objective.
+
+`rl/hybrid_designer.py` now preserves compliance as the first hard gate, then
+minimizes worst normalized peaking/frequency request error, then total error,
+and uses eye area only after those. A safe RL visit is accepted without a bank
+scan when it lies in the central third of both existing match tolerances (0.5
+dB and 0.1 octave). Otherwise the already-measured 512-code table may refine
+the result. Provenance records why each condition used the RL trace or bank;
+the refinement is never counted as a new SPICE simulation or RL proposal.
+
+Two focused regression tests were added and the RL/frontend set passes 18/18.
+A real 9 dB / 1.9 GHz product run now selects code 425, measures 8.632696 dB at
+1.896053 GHz and still passes 315/315 channel/PVT conditions. It performs
+119,808 in-memory table checks, comprising 185 target refinements and 49 safety
+fallbacks, with zero new circuit simulations. The required pre-change suite
+passed **2,775/2,775** with 13 deselected and two known warnings in 357.18 s.
+The first post-change suite passed **2,777/2,777** in 566.40 s. The committed
+Judge bundle was then regenerated through the normal exporter, its README and
+CLI fallback provenance were corrected, and the three focused groups passed
+48/48. The final post-artifact suite passes **2,777/2,777**, with 13 deselected
+and the same warnings in 343.60 s. Both regenerated figures were visually
+inspected, and a live web-worker run returned the same 8.632696 dB /
+1.896053 GHz, 315/315 result.

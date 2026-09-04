@@ -88,6 +88,38 @@ def test_shield_uses_rl_when_it_found_a_safe_setting():
     assert selected.bank_rows_checked == 0
 
 
+def test_shield_prefers_request_accuracy_to_extra_eye_inside_safe_visits():
+    """A wide eye must not hide avoidable error in the user's target."""
+    from nebula.rl.hybrid_designer import select_with_bank_fallback
+
+    rows = [_row(setting, CORNERS[0], True, area)
+            for setting, area in ((0, 0.8), (8, 0.4))]
+    rows[0].peaking_db = 8.0  # safe, but farther from the 9 dB request
+    table = MarginBankTable(rows, losses=[LOSS])
+    selected = select_with_bank_fallback(
+        table, (CORNERS[0], LOSS, *REQ), [0, 8])
+    assert selected.setting == 8
+    assert selected.source == "rl-shield"
+    assert selected.reason == "safe-rl-proposal-well-centred"
+    assert selected.bank_rows_checked == 0
+
+
+def test_safe_but_poorly_centred_rl_visits_trigger_measured_bank_refinement():
+    """The 512-row lookup costs no new SPICE runs and can improve centring."""
+    from nebula.rl.hybrid_designer import select_with_bank_fallback
+
+    rows = [_row(setting, CORNERS[0], True, area)
+            for setting, area in ((0, 0.8), (8, 0.3))]
+    rows[0].peaking_db = 8.0   # compliant but outside the central 0.5 dB
+    table = MarginBankTable(rows, losses=[LOSS])
+    selected = select_with_bank_fallback(
+        table, (CORNERS[0], LOSS, *REQ), [0])
+    assert selected.setting == 8
+    assert selected.source == "bank-fallback"
+    assert selected.reason == "target-refinement"
+    assert selected.bank_rows_checked == 2
+
+
 def test_shield_falls_back_to_the_measured_bank_when_rl_found_none():
     from nebula.rl.hybrid_designer import select_with_bank_fallback
 
@@ -97,6 +129,7 @@ def test_shield_falls_back_to_the_measured_bank_when_rl_found_none():
     assert selected.source == "bank-fallback"
     assert selected.compliant
     assert selected.bank_rows_checked == 3
+    assert selected.reason == "no-compliant-rl-proposal"
 
 
 def test_production_inference_does_not_read_hidden_reward_or_final_data():

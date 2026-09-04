@@ -18,7 +18,11 @@ PVT corners, and outputs a code map, exact SPICE deck, schematic and RL
 adaptation dashboard. It also emits a 512-setting hardware map which separates
 the measured PMOS attenuator from the not-yet-netlisted Rs/Cs selector
 switches. The 9 dB / 1.9 GHz demo passes 315/315 conditions. A
-separate diagnostic closes the high-frequency 12 dB edge and reaches 314/315
+target-centred safety selector now keeps hard compliance first and uses the
+already-measured bank when safe RL proposals are needlessly far from the user
+request; the representative result is 8.633 dB at 1.896 GHz for that 9 dB /
+1.9 GHz request, with no new SPICE simulations. A separate diagnostic closes
+the high-frequency 12 dB edge and reaches 314/315
 at the low-frequency edge; those candidates are not yet in the shipping bank.
 Nebula can also ingest a real Touchstone 1.x `.s4p` without optional RF
 packages and produce a hash-grounded channel profile; that profile is clearly
