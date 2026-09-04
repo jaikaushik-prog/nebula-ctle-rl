@@ -17,7 +17,12 @@
 > decisions that are OPEN and human-only, and what to do next. It supersedes
 > `nebula/NEXT_STEPS.md`. This file remains the full state of record.
 
-Last updated: **2026-09-04** (session 45, Entry 95 physical-bank outcome:
+Last updated: **2026-09-04** (session 45, Entry 96 preregistration: after Entry
+95 rejected both ordinary series-NMOS banks, the owner approved trying a new
+split-capacitor / floating-resistor binary topology. Its first gate is only a
+64-code TT two-terminal block comparison against real-passive controls; exact
+half-step accuracy and monotonicity are frozen before implementation, and no
+CTLE or RL claim may move unless all S1-S6 pass. Earlier Entry 95 outcome:
 675/675 real-NMOS rows pass integrity, but both registered architectures fail.
 Exact one-hot has no width below both 2.02 ohm and 36.22 fF; the binary fallback
 has 320 um at 8.710 ohm / 149.09 fF and 640 um at 4.355 ohm / 298.03 fF, so its
@@ -2468,12 +2473,13 @@ complete: the high 12 dB edge closes, the low edge reaches 314/315 and the
 overall registered verdict is FAIL. The owner-requested RL adaptation dashboard
 is now integrated and validated against the real 315-condition demo. The
 natural-language wrapper is also connected to that same product and exporter.
-**Next action:** decide whether to preregister a new split-capacitor topology.
+**Next action:** implement Entry 96's now-owner-approved, preregistered
+split-capacitor / floating-resistor 64-code TT block comparison.
 The capacitor between `s1`/`s2` can be represented by two symmetric capacitors
 to AC ground, moving its NMOS switches near ground where gate overdrive is much
 larger; the resistor requires a separate topology because grounding it would
 change DC bias. Entry 95's failed series-switch result cannot be retuned or
-silently widened. Separately, run
+silently widened. Only an S1-S6 pass permits insertion into the CTLE. Separately, run
 Entry 94's intake on a genuinely measured `.s4p` when one is supplied and do
 not attach the existing 315/315 claim to it. The remaining decisions are whether to
 preregister an isolated 8.4 dB one-point diagnostic and whether to adopt Entry
@@ -15678,3 +15684,25 @@ Preserve the exposed artifact rather than rewriting that field.
 
 The final post-result non-slow suite passes **2,751/2,751**, with 13 deselected
 and the same two warnings in 282.61 s.
+
+### 2026-09-04 - session 45 (Entry 96 preregistration). **A new switch topology is authorised, but it must first pass as a 64-code passive block.**
+
+The owner approved trying the post-Entry-95 alternative. Entry 96 freezes a
+three-branch floating resistor bank and a split differential capacitor bank:
+each differential capacitance becomes two `2C` MIMs to AC ground, placing the
+NMOS selector source/body at ground instead of the measured 0.44--0.55 V CTLE
+source node. The binary R and C branches use widths proportional to their
+conductance/capacitance and keep every disabled device in the deck.
+
+Stage one is exactly 64 TT block measurements, each beside a separately drawn
+real-passive `R || C` control at both S3 band edges. S1-S6 require exact
+membership, strict ordering, <=0.913586 mS conductance error and <=0.593954 pF
+effective-capacitance error. Any failure stops before CTLE insertion or
+post-result resizing. Even a pass cannot inherit the old intermediate-code
+table or policy. Full registration: `nebula/PREDICTIONS.md` Entry 96.
+
+The required pre-change suite is Entry 95's final **2,751/2,751** pass, with 13
+deselected and two known warnings in 282.61 s. No Entry 96 code or result exists.
+
+The documentation-only post-registration suite also passes **2,751/2,751**,
+with 13 deselected and the same two warnings in 284.52 s.

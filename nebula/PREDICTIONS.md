@@ -14645,3 +14645,84 @@ Full audit: `TUNING_SWITCH_RESULTS.md`.
 
 The final post-result non-slow suite passes 2,751/2,751, with 13 deselected and
 the same two warnings in 282.61 s.
+
+## Entry 96 -- split-capacitor / floating-resistor binary bank
+
+**Written:** 2026-09-04, session 45, after Entry 95 exposed both registered
+series-selector failures and before any Entry 96 code or SPICE result.
+**Owner approval:** explicit "can try" in chat after the split-capacitor
+alternative was proposed. This permits a new diagnostic topology, not a
+production-map change or reuse of Entry 86/89 evidence.
+
+### Frozen topology
+
+The target endpoints remain the existing production-bank endpoints, derived
+from the exact Entry 81 base and bank generator:
+
+- `Rs = 70.173472--683.841986 ohm`; encode the eight values as one fixed
+  683.841986 ohm resistor plus three switchable parallel-conductance branches.
+  The branch totals are 547.385042, 273.692521 and 136.846261 ohm. Their NMOS
+  widths are 80, 160 and 320 um respectively, proportional to conductance.
+  Each drawn resistor removes the corresponding measured TT/1.0/27 C,
+  `Vsource=0.50 V` Entry 95 Ron before layout quantisation.
+- `Cs = 1.684649--10.000000 pF`; in differential mode, a capacitor `C` between
+  `s1` and `s2` is equivalent to two capacitors `2C`, one from each source to
+  AC ground. Use a fixed 3.369297 pF MIM per side plus switchable per-side MIM
+  branches 2.375815, 4.751629 and 9.503259 pF. Their NMOS widths are 160, 320
+  and 640 um, proportional to capacitance. The NMOS source/body are at ground,
+  so this removes Entry 95's 0.44--0.55 V body-effect/overdrive penalty.
+
+All R and C devices are real SKY130 geometries. All enabled and disabled NMOS
+devices remain in every deck. Gate controls are ideal static logic rails; the
+digital decoder is outside this analog-block diagnostic.
+
+### Frozen measurement and gates
+
+At TT, nominal 1.8 V, 27 C and 0.50 V source common mode, measure all 64
+`Rcode x Ccode` settings at 1.25 and 2.5 GHz. Each row contains the switched
+network and a separately drawn real-passive `R || C` control in the same deck.
+The source files are hash-gated:
+
+- Entry 81 base: `joint_bank_results.json`, SHA-256
+  `72B3C88551E0F2B8D4F0A25AB8D760CFDED3FFD36911AF1A51A534497E11AE9D`.
+- Entry 95 switch data: SHA-256
+  `E99F7CD8BAD788DF2F36CD4E3585E66110D30108D7AEBCB520498E7B6F339883`.
+
+- **S1 integrity:** exactly 64 unique codes, two exact frequency endpoints,
+  finite positive conductance/effective capacitance, zero silent failures.
+- **S2 resistor ordering:** for each Cs code and frequency, differential
+  conductance strictly decreases as logical Rs code moves 0 -> 7.
+- **S3 capacitor ordering:** for each Rs code and frequency, effective
+  differential capacitance strictly increases as Cs code moves 0 -> 7.
+- **S4 resistor accuracy:** absolute switched-minus-control conductance error
+  <= half one binary conductance step at every row/frequency. The step is
+  `(1/70.173472 - 1/683.841986)/7`; the fixed limit is 0.913586 mS.
+- **S5 capacitor accuracy:** absolute switched-minus-control effective-C error
+  <= half one binary capacitance step at every row/frequency. The fixed limit
+  is 0.593954 pF.
+- **S6 isolation:** no CTLE, link, eye, reward, policy or FINAL artifact may be
+  imported or changed by this stage.
+
+Only S1--S6 all-pass allows a separate 64-code TT CTLE comparison. Any failure
+is frozen before resizing a switch, compensating a capacitor or changing a
+limit. A later CTLE pass would still require new all-corner characterisation
+and RL training because the intermediate binary code values differ.
+
+### Predictions before implementation or measurement
+
+1. Moving the capacitor switches to ground will reduce their series-resistance
+   error enough that S5 passes. Confidence 0.65.
+2. The three floating resistor branches will pass S4 because their switch
+   widths scale with conductance and their nominal Ron is removed from the
+   drawn branch. Confidence 0.75.
+3. Both code axes will remain strictly ordered, so S2-S3 pass. Confidence 0.85.
+4. S1-S6 will all pass and authorise the TT CTLE comparison. Confidence 0.55;
+   disabled-device loading and MIM series behaviour are now included and can
+   still defeat the first-order equivalence.
+
+The required pre-change non-slow suite is the Entry 95 final run:
+2,751/2,751 passed, 13 deselected and two known warnings in 282.61 s.
+
+The documentation-only post-registration suite also passes 2,751/2,751, with
+13 deselected and the same two warnings in 284.52 s. Freeze this registration
+before adding the Entry 96 implementation.
