@@ -1,0 +1,248 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Nebula CTLE Designer - evidence-grounded SKY130 circuit sizing">
+  <title>Nebula CTLE Designer</title>
+  <link rel="stylesheet" href="/styles.css?v=1">
+</head>
+<body>
+  <a class="skip-link" href="#workspace">Skip to workspace</a>
+  <header class="topbar">
+    <a class="brand" href="/" aria-label="Nebula CTLE Designer home">
+      <svg class="brand-mark" viewBox="0 0 48 32" aria-hidden="true">
+        <path d="M2 22c7 0 7-17 14-17s7 22 14 22S37 10 46 10" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>
+        <circle cx="16" cy="5" r="2.4" fill="currentColor"/>
+        <circle cx="30" cy="27" r="2.4" fill="currentColor"/>
+      </svg>
+      <span>Nebula CTLE Designer</span>
+    </a>
+    <div class="top-actions">
+      <span class="truth-badge">Real SKY130 data</span>
+      <button id="judgeButton" class="button button-secondary" type="button">Enter judge mode</button>
+    </div>
+  </header>
+
+  <div id="judgeStrip" class="judge-strip" hidden>
+    <div><strong>Judge mode</strong><span>Preverified evidence is loaded instantly; this view does not rerun SPICE.</span></div>
+    <ol>
+      <li><button data-judge-target="results">See the result</button></li>
+      <li><button data-judge-target="pvt">Inspect all conditions</button></li>
+      <li><button data-judge-target="evidence">Download evidence</button></li>
+    </ol>
+    <button id="exitJudge" class="text-button" type="button">Exit</button>
+  </div>
+
+  <main id="workspace" class="workspace">
+    <aside class="target-panel" aria-labelledby="targetTitle">
+      <div class="panel-heading">
+        <h1 id="targetTitle">Describe the circuit</h1>
+        <p>Give the peaking and peak frequency. Nebula handles channel-loss verification automatically.</p>
+      </div>
+
+      <label for="requestText">Plain-language request</label>
+      <textarea id="requestText" rows="4">I need 9 dB of peaking with the peak near 1.9 GHz</textarea>
+      <button id="readRequest" class="text-button read-request" type="button">Read this request</button>
+
+      <div class="field-row">
+        <div>
+          <label for="peakingInput">Peaking</label>
+          <div class="unit-input"><input id="peakingInput" type="number" min="3" max="12" step="0.1" value="9"><span>dB</span></div>
+        </div>
+        <div>
+          <label for="frequencyInput">Peak frequency</label>
+          <div class="unit-input"><input id="frequencyInput" type="number" min="1.25" max="2.5" step="0.01" value="1.9"><span>GHz</span></div>
+        </div>
+      </div>
+      <p id="parseNote" class="field-note">Accepted range: 3-12 dB at 1.25-2.50 GHz.</p>
+
+      <button id="generateButton" class="button button-primary generate-button" type="button">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="2"/><circle cx="18" cy="5" r="2"/><circle cx="18" cy="19" r="2"/><path d="M7 11l9-5M7 13l9 5"/></svg>
+        Generate and verify
+      </button>
+
+      <section id="progressPanel" class="progress-panel" aria-live="polite" hidden>
+        <div class="progress-copy"><strong id="progressStage">Queued</strong><span id="progressValue">0%</span></div>
+        <div class="progress-track"><span id="progressBar"></span></div>
+        <p>One protected worker runs the engineering pipeline. You can continue using this page.</p>
+      </section>
+
+      <section class="method-note">
+        <h2>What runs</h2>
+        <p>The frozen RL policy proposes a setting. A simulator-backed safety shield checks it and uses the measured bank when needed.</p>
+        <p class="muted">Training never runs from this interface.</p>
+      </section>
+    </aside>
+
+    <section class="main-panel">
+      <nav class="tabs" aria-label="Design views">
+        <button class="tab active" data-tab="results" type="button">Design result</button>
+        <button class="tab" data-tab="pvt" type="button">PVT explorer</button>
+        <button class="tab" data-tab="compare" type="button">Compare circuits</button>
+        <button class="tab" data-tab="channel" type="button">Channel upload</button>
+        <button class="tab" data-tab="evidence" type="button">Evidence</button>
+      </nav>
+
+      <div id="message" class="message" hidden></div>
+
+      <section id="resultsView" class="view active" data-view="results">
+        <div class="section-intro">
+          <div>
+            <p id="resultContext" class="context-line">Preverified judge artifact</p>
+            <h2 id="resultTitle">Loading verified design</h2>
+          </div>
+          <span id="sourceBadge" class="source-badge">Loading</span>
+        </div>
+
+        <div class="signal-path" aria-label="Receiver signal path">
+          <div class="path-block">
+            <span>Channel</span>
+            <svg viewBox="0 0 110 50" aria-hidden="true"><path d="M5 36h18l8-25 10 34 10-22 9 13h45"/><path d="M8 42h96" class="faint"/></svg>
+          </div>
+          <span class="path-arrow">&#8594;</span>
+          <div class="path-block featured">
+            <span>CTLE</span>
+            <svg viewBox="0 0 110 50" aria-hidden="true"><path d="M7 37h17l8-23 10 23h14l8-23 10 23h28"/><path d="M18 14h76M56 14v-9" class="faint"/></svg>
+          </div>
+          <span class="path-arrow">&#8594;</span>
+          <div class="path-block">
+            <span>1-tap DFE</span>
+            <svg viewBox="0 0 110 50" aria-hidden="true"><circle cx="35" cy="25" r="14"/><path d="M49 25h20v17H35v-3M30 25h10M35 20v10M69 25h33"/></svg>
+          </div>
+          <span class="path-arrow">&#8594;</span>
+          <div class="path-block compact">
+            <span>Sampler</span>
+            <svg viewBox="0 0 70 50" aria-hidden="true"><rect x="9" y="13" width="48" height="25"/><path d="M19 31l8-12 8 12 8-12"/></svg>
+          </div>
+        </div>
+
+        <div class="result-grid">
+          <article class="schematic-card">
+            <div class="card-heading">
+              <div><h3>Generated circuit</h3><p>The drawing is parsed from the exact representative deck.</p></div>
+              <a id="openSchematic" class="text-button" href="#" target="_blank" rel="noopener">Open full size</a>
+            </div>
+            <div id="schematicFrame" class="schematic-frame">
+              <div class="loading-lines"><i></i><i></i><i></i></div>
+            </div>
+          </article>
+
+          <div class="metric-rail">
+            <article class="metric-card"><span>Measured peaking</span><strong id="metricPeaking">--</strong><small id="metricPeakingTarget">Not measured</small></article>
+            <article class="metric-card"><span>Peak frequency</span><strong id="metricFrequency">--</strong><small id="metricFrequencyTarget">Not measured</small></article>
+            <article class="metric-card"><span>Eye opening</span><strong id="metricEye">--</strong><small>Height / width</small></article>
+          </div>
+        </div>
+
+        <div class="table-card">
+          <div class="card-heading"><div><h3>Measured specifications</h3><p>Every number comes from the selected design artifact.</p></div></div>
+          <div class="table-scroll">
+            <table>
+              <thead><tr><th>Metric</th><th>Requirement</th><th>Measured</th><th>Status</th></tr></thead>
+              <tbody id="specTable"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <details class="details-card">
+          <summary>Circuit sizing and device values</summary>
+          <div id="sizingGrid" class="data-grid"></div>
+        </details>
+        <details class="details-card">
+          <summary>Hardware implementation boundary</summary>
+          <div id="hardwareTruth" class="truth-detail"></div>
+        </details>
+      </section>
+
+      <section id="pvtView" class="view" data-view="pvt">
+        <div class="section-intro">
+          <div><p class="context-line">Recorded operating conditions</p><h2>Interactive PVT explorer</h2><p>Select a channel loss, then inspect any process, voltage and temperature point.</p></div>
+          <label class="select-label" for="channelLossSelect">Channel loss<select id="channelLossSelect"></select></label>
+        </div>
+        <div class="pvt-summary">
+          <div><strong id="pvtPassCount">--</strong><span>conditions pass</span></div>
+          <div><strong id="pvtWorstEye">--</strong><span>smallest eye area</span></div>
+          <div><strong id="pvtSettings">--</strong><span>adaptive settings used</span></div>
+        </div>
+        <div class="pvt-card">
+          <div class="pvt-axis-note">Columns combine VDD and temperature. Rows are SKY130 process corners.</div>
+          <div id="pvtGrid" class="pvt-grid"></div>
+          <div class="legend"><span><i class="pass"></i>Pass</span><span><i class="fail"></i>Fail</span><span><i class="missing"></i>Not measured</span></div>
+        </div>
+        <div id="conditionDetail" class="condition-detail"><p>Select a cell to see its recorded values.</p></div>
+      </section>
+
+      <section id="compareView" class="view" data-view="compare">
+        <div class="section-intro"><div><p class="context-line">Generated designs only</p><h2>Compare two circuits</h2><p>Compare component values and measured outcomes, not design algorithms.</p></div></div>
+        <div class="compare-pickers">
+          <label>Circuit A<select id="compareA"></select></label>
+          <button id="swapCompare" class="swap-button" type="button" aria-label="Swap circuits">&#8646;</button>
+          <label>Circuit B<select id="compareB"></select></label>
+        </div>
+        <div id="compareEmpty" class="empty-state"><strong>Generate one more circuit to compare.</strong><span>The preverified demo is already available as Circuit A.</span></div>
+        <div id="compareTableWrap" class="table-card" hidden>
+          <table><thead><tr><th>Property</th><th id="compareAHead">Circuit A</th><th id="compareBHead">Circuit B</th></tr></thead><tbody id="compareTable"></tbody></table>
+        </div>
+      </section>
+
+      <section id="channelView" class="view" data-view="channel">
+        <div class="section-intro"><div><p class="context-line">Measured channel intake</p><h2>Upload a Touchstone channel</h2><p>Nebula profiles and fits the file. It does not silently claim the existing RL bank was verified on new data.</p></div></div>
+        <div class="upload-card">
+          <label id="dropZone" class="drop-zone" for="channelFile">
+            <input id="channelFile" type="file" accept=".s2p,.s3p,.s4p,.s8p">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4m0 0L7 9m5-5l5 5M5 15v4h14v-4"/></svg>
+            <strong>Choose a .sNp file</strong><span id="channelFilename">or drop it here</span>
+          </label>
+          <div class="port-fields">
+            <label>Output port<input id="outputPort" type="number" min="1" value="1"></label>
+            <label>Input port<input id="inputPort" type="number" min="1" value="3"></label>
+            <button id="profileChannel" class="button button-primary" type="button">Profile channel</button>
+          </div>
+        </div>
+        <div id="channelResult" class="channel-result" hidden></div>
+      </section>
+
+      <section id="evidenceView" class="view" data-view="evidence">
+        <div class="section-intro"><div><p class="context-line">Traceable output</p><h2>Evidence bundle</h2><p>Download the exact SPICE deck, JSON record, schematic and supporting views produced for this design.</p></div></div>
+        <div class="evidence-layout">
+          <div id="artifactList" class="artifact-list"></div>
+          <div class="download-panel">
+            <svg viewBox="0 0 48 48" aria-hidden="true"><path d="M24 5v25m0 0l-8-8m8 8l8-8M8 31v10h32V31"/></svg>
+            <h3>One review-ready archive</h3>
+            <p>The archive contains only files already written by the real pipeline.</p>
+            <a id="downloadEvidence" class="button button-primary" href="#">Download evidence bundle</a>
+          </div>
+        </div>
+      </section>
+    </section>
+
+    <aside class="verification-panel" aria-labelledby="verificationTitle">
+      <div id="outcomeCard" class="outcome-card pending">
+        <span id="outcomeIcon" class="outcome-icon">...</span>
+        <div><p id="verificationTitle">Verification</p><strong id="outcomeText">Loading</strong><span id="outcomeDetail">Reading the selected artifact</span></div>
+      </div>
+      <div id="failureBox" class="failure-box" hidden></div>
+
+      <section class="side-section">
+        <h2>Run truth</h2>
+        <dl id="runTruth" class="run-truth"><div><dt>Source</dt><dd>--</dd></div></dl>
+      </section>
+      <section class="side-section">
+        <h2>Verification coverage</h2>
+        <div class="coverage-line"><span id="coverageBar"></span></div>
+        <p id="coverageText">No verification loaded.</p>
+      </section>
+      <section class="side-section hardware-side">
+        <h2>Hardware status</h2>
+        <p id="hardwareNote">No hardware record loaded.</p>
+      </section>
+      <button class="button button-secondary side-button" data-open-tab="pvt" type="button">Explore PVT conditions</button>
+      <button class="button button-secondary side-button" data-open-tab="evidence" type="button">Open evidence</button>
+    </aside>
+  </main>
+
+  <template id="statusTemplate"><span class="status-dot"></span><span class="status-copy"></span></template>
+  <script src="/app.js?v=2" defer></script>
+</body>
+</html>

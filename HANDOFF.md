@@ -17,7 +17,15 @@
 > decisions that are OPEN and human-only, and what to do next. It supersedes
 > `nebula/NEXT_STEPS.md`. This file remains the full state of record.
 
-Last updated: **2026-09-04** (session 45, Entry 97 outcome: all 384 safe-LVT
+Last updated: **2026-09-04** (session 46, Entry 98: the local evidence-grounded
+web dashboard is implemented. It wraps the existing RL-hybrid design,
+natural-language, Touchstone and exporter paths; adds an interactive 315-point
+PVT view, generated-circuit comparison, failure-aware results, evidence ZIP
+and a clearly cached Judge mode; and deliberately contains no algorithm
+benchmark comparison. One real 8 dB / 2.0 GHz web-worker run passed 315/315
+and wrote six artifacts. The hardware view preserves Entry 97's boundary:
+the representative circuit is real, but the Rs/Cs selector is not tapeout-
+ready. Earlier Entry 97 outcome: all 384 safe-LVT
 rows pass integrity and ordering, but no width passes loss and capacitance
 together. Scale 1 alone passes C accuracy; scale 8 has the best G error at
 2.875972 mS, still 3.15x over the 0.913434 mS limit, and larger devices worsen
@@ -910,6 +918,14 @@ Entry 97 additions (session 45): `nebula/device/lvt_tuning_bank.py` batches all
 writer; `nebula/tests/test_lvt_tuning_bank.py` holds seven fail-capable gates.
 The exposed artifact is `nebula/experiments/lvt_tuning_bank_results.json` and
 `nebula/LVT_TUNING_BANK_RESULTS.md` is its readable failure audit.
+
+Entry 98 additions (session 46): `nebula/web/server.py` is a dependency-free
+local HTTP/API wrapper around the existing product functions, with one
+background engineering worker and isolated run directories. `nebula/web/static/`
+contains the selected clean scientific dashboard. `nebula/tests/test_web_app.py`
+gates evidence grounding, failure visibility, Judge-mode provenance, ZIP
+contents, upload refusal, the single-worker guard and the absence of an
+algorithm leaderboard. Run with `py -3.13 -m nebula.web`.
 
 ```
 ├── .gitignore              ← sectioned BY REASON (copyright / redistribution /
@@ -2320,6 +2336,14 @@ Plus: git init, .gitignore, 28 tests, Wilson-bound BER reporting.
   the 3 dB channel while the 12 dB channel stays scorable; rejected-row limits
   span 1110.5-1114.4 mVpp and the switchless reproduction gate passes. PFET
   model cost is paid only when `atten_code` is present.
+- **(nebula) The local dashboard is a real product front end, not a second
+  calculator.** It reads the same `design()` dictionary and artifacts as the
+  CLI, runs generation on one background worker, and renders all 315 recorded
+  conditions without browser-side spec calculations. A live 8 dB / 2.0 GHz
+  request passed 315/315 and wrote six artifacts during Entry 98 verification.
+  Judge mode is explicitly labelled as a preverified cached artifact, and the
+  channel upload keeps `PROFILED_NOT_RL_VERIFIED`. Circuit comparison compares
+  generated circuits only; no algorithm benchmark panel exists.
 - Reference operating point: 3 cm (9 dB) channel, SNR 26 dB, CTLE 6 dB,
   Alexander: BER ≈ 1e-4; SNR 28: 0 errors (bound ~1e-4→ 8.7e-5 at 30k syms).
 - Loss sweep (SNR 28, CTLE 6 dB): clean ≤12 dB; ~1e-2 at 24 dB; lock lost
@@ -2454,6 +2478,11 @@ Plus: git init, .gitignore, 28 tests, Wilson-bound BER reporting.
   measured reflections, crosstalk or termination interaction. Entry 81's
   11/16 to 16/16 coverage must travel with those boundaries and may not be
   added to the delivered path's 14/16 or the extra 135-load result.
+- **(nebula) The dashboard is local and single-process.** Its in-memory run
+  catalogue survives page refreshes while the server is running, but not a
+  server restart. Generated artifacts themselves remain on disk in the chosen
+  `--run-root` (or a temporary directory by default). It is not a cloud service,
+  does not train a policy, and does not make uploaded channels RL-verified.
 - JTOL amplitude grid is coarse (0.05/0.1/0.2/0.4/0.7/1.0 UI).
 - Power numbers are PLACEHOLDERS (literature-based), never simulated.
 - rtl/, verification/, veriloga_models/, matlab_models/, optical_dsp.py,
@@ -2508,7 +2537,11 @@ complete: the high 12 dB edge closes, the low edge reaches 314/315 and the
 overall registered verdict is FAIL. The owner-requested RL adaptation dashboard
 is now integrated and validated against the real 315-condition demo. The
 natural-language wrapper is also connected to that same product and exporter.
-**Next action:** make a human choice between stopping the optional programmable-
+Entry 98 now exposes that same path through a tested local dashboard with the
+seven owner-selected views and no algorithm comparison panel. The next delivery
+action is a short human judge rehearsal using `py -3.13 -m nebula.web`; freeze
+the interface after any presentation-blocking fixes rather than adding more
+features. **Next analog action:** make a human choice between stopping the optional programmable-
 bank work and keeping the competition-valid per-request fixed-passive generator,
 or preregistering a fundamentally different safe-bias tuning principle such as
 a PDK varactor plus DAC. Entry 97 stops the series-MOS selector path: none of
@@ -15894,3 +15927,35 @@ The frozen runner commit is `60f921581ff52c97255361bf9b17e75957c40d0d`.
 
 The final post-result non-slow suite passes **2,766/2,766**, with 13 deselected
 and the same two warnings in 332.73 s.
+
+### 2026-09-04 - session 46 (Entry 98). **The approved local dashboard is implemented and remains evidence-grounded.**
+
+The owner selected the clean scientific mockup and seven capabilities:
+natural-language input, interactive PVT, circuit comparison, channel upload,
+evidence bundle, failure-aware results and Judge mode. They explicitly rejected
+an algorithm benchmark comparison, so the comparison view contains generated
+circuits only. `nebula/web/` now supplies a dependency-free local HTTP server
+and responsive HTML/CSS/JavaScript workspace. It calls the existing parser,
+`design(..., method="rl-hybrid")`, shared exporter and Touchstone report writer;
+the browser performs no engineering calculations and contains no placeholder
+measurements.
+
+One background worker serialises expensive work, each job has its own output
+directory, and stage progress is reported without claiming a simulation
+percentage. Judge mode loads the committed 9 dB / 1.9 GHz artifact and labels
+it preverified/cached. The 5 x 3 x 3 PVT map consumes all 315 recorded conditions
+and can be filtered across seven channel losses. Failure results name why they
+were refused. The evidence endpoint ZIPs only files actually written by the
+pipeline. The hardware panel carries the exact current boundary: the PMOS
+attenuator is netlisted/measured; Rs/Cs selector switches are not.
+
+Verification: the required pre-change suite passed **2,766/2,766**, with 13
+deselected and the same two warnings in 333.99 s. Focused frontend gates pass
+**9/9**. Headless Edge screenshots at 1600 x 1000 verified the result, PVT and
+circuit-comparison layouts. A real web-worker request for 8 dB at 2.0 GHz
+completed successfully, passed 315/315 recorded conditions and wrote six
+artifacts. The real synthetic `.s4p` upload path produced two artifacts and the
+exact `PROFILED_NOT_RL_VERIFIED` status. The final full non-slow suite passes
+**2,775/2,775**, with 13 deselected and the same two warnings in 301.86 s
+after the final source cleanup (the immediately preceding full run also passed
+2,775/2,775 in 314.09 s).

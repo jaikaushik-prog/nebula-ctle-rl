@@ -109,7 +109,14 @@ rl/                    THE LOOP. contract.py is the environment contract — the
 experiments/           One script per measurement. Each owns its assumptions and prints
                        them in every run's header. Data files are committed alongside.
 
-tests/                 606 tests. Those needing a simulator skip cleanly without one.
+tests/                 2,775 non-slow tests across both projects. Simulator
+                       cases skip cleanly when their required tool is absent.
+
+web/                   Local evidence-grounded dashboard. One background worker
+                       calls the existing RL-hybrid product; the browser only
+                       presents recorded results. Includes PVT exploration,
+                       circuit-to-circuit comparison, channel intake, Judge mode
+                       and evidence ZIP download. No algorithm leaderboard.
 
 channel_upload.py      Real .sNp intake: hash/provenance, chosen port path,
                        measured Nyquist loss, reduced-model fit and diagnostic PNG.
@@ -157,6 +164,9 @@ python -m nebula.experiments.s9_yield --n 2000 --workers 8
 
 # Profile a real channel file (does not claim the frozen RL bank verified it)
 python -m nebula.channel_upload board.s4p --ports 1 3 --out channel_report
+
+# Open the local engineering dashboard (Python 3.13 on this Windows machine)
+py -3.13 -m nebula.web
 ```
 
 Two environment facts that cost real time to discover:
