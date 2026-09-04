@@ -10,6 +10,7 @@ from __future__ import annotations
 import math
 
 import numpy as np
+import pytest
 
 from nebula.experiments import exp_joint_bank as J
 from nebula.rl.margin_adapt_env import MarginBankTable
@@ -17,6 +18,7 @@ from nebula.rl.margin_improve_env import A_LOCK, A_RS_UP, MarginImproveEnv
 
 REQ = (9.0, 1.9e9)
 LOSS = 7.5
+OTHER_LOSS = 9.0
 CORNERS = ("tt/1.00/27C", "ss/0.95/125C")
 
 
@@ -107,3 +109,29 @@ def test_production_inference_does_not_read_hidden_reward_or_final_data():
     assert "exp_shielded_final" not in source
     assert ".quality(" not in source
     assert ".oracle" not in source
+
+
+def test_default_verification_uses_every_characterised_channel_loss():
+    """No channel choice is needed for the competition-facing product.
+
+    A scalar remains available only as an explicit diagnostic override.  This
+    boundary is important: channel loss is an external condition, not a third
+    target specification alongside peaking and peak frequency.
+    """
+    from nebula.rl.hybrid_designer import losses_to_verify
+
+    table = _table()
+    table.losses = (LOSS, OTHER_LOSS)
+    assert losses_to_verify(table, None) == (LOSS, OTHER_LOSS)
+    assert losses_to_verify(table, OTHER_LOSS) == (OTHER_LOSS,)
+    with pytest.raises(ValueError, match="characterised"):
+        losses_to_verify(table, 8.0)
+
+
+def test_condition_matrix_is_the_full_loss_by_pvt_cartesian_product():
+    from nebula.rl.hybrid_designer import verification_conditions
+
+    table = _table()
+    losses = (LOSS, OTHER_LOSS)
+    assert verification_conditions(table, losses) == tuple(
+        (loss, corner) for loss in losses for corner in table.corners)

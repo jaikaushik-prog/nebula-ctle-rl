@@ -1,11 +1,11 @@
 """Production inference for the frozen Entry-89 RL policy.
 
-The actor is only a proposer.  For each of the 45 mandated PVT corners it sees
-the same 62 values it saw during training (request, current code and measured
-eye history), and proposes at most eight settings.  A simulator-backed shield
-then checks the proposed settings against the immutable ngspice bank.  When no
-proposal is compliant, a deterministic exhaustive lookup over that same
-512-setting bank supplies the classical fallback.
+The actor is only a proposer.  For each characterised channel-loss/PVT
+condition it sees the same 62 values it saw during training (request, current
+code and measured eye history), and proposes at most eight settings.  A
+simulator-backed shield then checks the proposed settings against the immutable
+ngspice bank.  When no proposal is compliant, a deterministic exhaustive
+lookup over that same 512-setting bank supplies the classical fallback.
 
 This module deliberately contains no training environment and no FINAL-test
 loader.  Production inference must not obtain compliance, quality, PVT or an
@@ -235,6 +235,34 @@ def _load_assets():
     return table, nets[ENTRY89.DEPLOYMENT_SEED], starts, manifest
 
 
+def losses_to_verify(table: MarginBankTable,
+                     loss_db: Optional[float]) -> tuple[float, ...]:
+    """Return the automatic channel family or one diagnostic override.
+
+    Channel loss is an external operating condition, not part of the user's
+    requested CTLE response.  ``None`` is therefore the product default and
+    means every characterised channel.  A scalar remains available for a
+    deliberately narrower diagnostic run.
+    """
+    characterised = tuple(float(value) for value in table.losses)
+    if loss_db is None:
+        return characterised
+    requested = float(loss_db)
+    if requested not in characterised:
+        raise ValueError(
+            f"channel loss must be one of the characterised values "
+            f"{characterised}")
+    return (requested,)
+
+
+def verification_conditions(
+        table: MarginBankTable,
+        losses: Sequence[float]) -> tuple[tuple[float, str], ...]:
+    """The complete loss-by-PVT product, made explicit and testable."""
+    return tuple((float(loss), str(corner))
+                 for loss in losses for corner in table.corners)
+
+
 def _nominal_from_row(row: J.JointRow, u: Sequence[float], loss_db: float,
                       request: tuple[float, float]) -> dict:
     from nebula.rl import reward_v1 as R
@@ -275,28 +303,28 @@ def _nominal_from_row(row: J.JointRow, u: Sequence[float], loss_db: float,
     }
 
 
-def solve(peaking_db: float, f_peak_hz: float, loss_db: float = 7.5) -> dict:
-    """Produce and verify the tunable bank's complete 45-corner code map."""
+def solve(peaking_db: float, f_peak_hz: float,
+          loss_db: Optional[float] = None) -> dict:
+    """Produce the verified channel/PVT code map for a requested response."""
     from nebula.experiments import exp_joint_bank_73 as BANK73
     from nebula.experiments import exp_shielded_ppo as ENTRY89
 
     request = (float(peaking_db), float(f_peak_hz))
     table, net, starts, manifest = _load_assets()
-    if float(loss_db) not in table.losses:
-        raise ValueError(
-            f"channel loss must be one of the characterised values {table.losses}")
+    losses = losses_to_verify(table, loss_db)
     nearest = _nearest_request(request, tuple(starts))
     start = starts[nearest]
     records = []
-    for corner in table.corners:
-        identity = (corner, float(loss_db), *request)
+    for channel_loss, corner in verification_conditions(table, losses):
+        identity = (corner, channel_loss, *request)
         trace = trace_policy(
-            net, lambda setting, c=corner: table.observe(
-                setting, c, float(loss_db)), request, start)
+            net, lambda setting, c=corner, loss=channel_loss: table.observe(
+                setting, c, loss), request, start)
         selected = select_with_bank_fallback(
             table, identity, trace.settings_tried)
         records.append({
-            "corner": corner, "setting": selected.setting,
+            "channel_loss_db": channel_loss, "corner": corner,
+            "setting": selected.setting,
             "atten_code": J.split_setting(selected.setting)[0],
             "bank_code": J.split_setting(selected.setting)[1],
             "source": selected.source, "compliant": selected.compliant,
@@ -309,29 +337,43 @@ def solve(peaking_db: float, f_peak_hz: float, loss_db: float = 7.5) -> dict:
     if misses:
         raise RuntimeError(
             f"the characterised bank has no compliant setting at "
-            f"{len(misses)} of {len(records)} PVT corners; refusing to emit "
+            f"{len(misses)} of {len(records)} channel/PVT conditions; "
+            f"refusing to emit "
             f"an unverified RL design")
 
     _, _, base_u, _ = BANK73._load_sources()
     bank = J.bank(base_u, n_rs=J.N_RS, n_cs=J.N_CS,
                   rs_span=J.RS_SPAN, cs_span=J.CS_SPAN)
     nominal_corner = "tt/1.00/27C"
+    # For the automatic family this is its actual middle characterised point
+    # (7.5 dB for the registered seven-point grid), not a new design target.
+    # For a diagnostic override the sole requested loss is representative.
+    representative_loss = losses[len(losses) // 2]
     nominal_record = next(row for row in records
-                          if row["corner"] == nominal_corner)
+                          if row["corner"] == nominal_corner
+                          and row["channel_loss_db"] == representative_loss)
     atten_code, bank_code = J.split_setting(nominal_record["setting"])
     u = bank[bank_code].u
     nominal_row = table.row(nominal_record["setting"], nominal_corner)
-    nominal = _nominal_from_row(nominal_row, u, float(loss_db), request)
+    nominal = _nominal_from_row(
+        nominal_row, u, representative_loss, request)
     fallbacks = sum(row["source"] == "bank-fallback" for row in records)
     verification = {
         "mode": "precharacterised-ngspice-bank-v6",
-        "n_corners": len(records), "n_points": len(records),
+        "n_corners": len(table.corners),
+        "n_channel_losses": len(losses), "n_points": len(records),
         "n_pass": len(records), "n_failed": 0, "all_points_pass": True,
-        "n_mandated_points": len(records),
-        "n_mandated_pass": len(records), "mandated_all_pass": True,
-        "n_loads": 1, "channel_loss_db": float(loss_db),
+        # S9 mandates the 45-corner PVT grid.  The seven-channel sweep is an
+        # additional robustness axis, so keep the two counts distinct.
+        "n_mandated_points": len(table.corners),
+        "n_mandated_pass": len(table.corners), "mandated_all_pass": True,
+        "all_pvt_pass_at_every_channel_loss": True,
+        "channel_loss_mode": ("automatic-family" if loss_db is None
+                              else "diagnostic-override"),
+        "channel_losses_db": list(losses),
+        "representative_channel_loss_db": representative_loss,
         "spec_set": "V6_SPECS (13 rows, operating-point HD3)",
-        "per_corner": records,
+        "per_condition": records,
     }
     return {
         "u": list(u), "reward": nominal["reward"], "sims": 0,
@@ -340,7 +382,10 @@ def solve(peaking_db: float, f_peak_hz: float, loss_db: float = 7.5) -> dict:
         "policy_seed": int(ENTRY89.DEPLOYMENT_SEED),
         "policy_file": next(row["policy_file"] for row in manifest["policies"]
                             if int(row["seed"]) == ENTRY89.DEPLOYMENT_SEED),
-        "channel_loss_db": float(loss_db),
+        "channel_loss_mode": ("automatic-family" if loss_db is None
+                              else "diagnostic-override"),
+        "channel_losses_db": list(losses),
+        "representative_channel_loss_db": representative_loss,
         "nearest_training_request": list(nearest),
         "setting": int(nominal_record["setting"]),
         "atten_code": int(atten_code), "bank_code": int(bank_code),
@@ -352,6 +397,8 @@ def solve(peaking_db: float, f_peak_hz: float, loss_db: float = 7.5) -> dict:
         "table_rows_checked": int(sum(
             row["bank_rows_checked"] for row in records)),
         "offline_spice_rows": len(table.settings) * len(table.corners),
+        "offline_link_points": (len(table.settings) * len(table.corners)
+                                * len(table.losses)),
         "_nominal": nominal, "_verification": verification,
     }
 
@@ -359,4 +406,5 @@ def solve(peaking_db: float, f_peak_hz: float, loss_db: float = 7.5) -> dict:
 __all__ = (
     "PolicyTrace", "HybridSelection", "build_observation",
     "available_actions", "moved_setting", "trace_policy",
-    "select_with_bank_fallback", "solve")
+    "select_with_bank_fallback", "losses_to_verify",
+    "verification_conditions", "solve")

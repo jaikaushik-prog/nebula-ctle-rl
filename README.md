@@ -12,8 +12,12 @@ handoff document; they are otherwise independent by design.
 | Deadline | open-ended | **15 Sept 2026** (Astera Labs × BITS Goa) |
 
 **Owner:** Jai Kaushik, BITS Pilani EEE.
-**Status as of 2026-08-06:** 698 tests green. Nebula gate G0 passed; G1 in
-progress.
+**Status as of 2026-09-04:** Nebula's frozen shielded-RL product path accepts
+two user targets, automatically verifies seven channel losses across all 45
+PVT corners, and outputs a code map, exact SPICE deck and schematic. The
+9 dB / 1.9 GHz demo passes 315/315 conditions; the upper 12 dB request edge is
+an honestly recorded bank-coverage limitation. See
+[`nebula/PROJECT_SOLUTION_OVERVIEW.md`](nebula/PROJECT_SOLUTION_OVERVIEW.md).
 
 > **This repository is private and must stay private.** It sits alongside ten
 > copyrighted reference PDFs and the competition organisers' material, all of
@@ -188,7 +192,10 @@ ngspice 41 lives in the conda env `nebula`; SKY130 is installed at
 `C:\Users\DELL\sky130A`.
 
 ```bash
-# The full test suite — 698 tests, ~2 min. Run from the repo root.
+# The shielded-RL product: only peaking and peak frequency are user targets.
+python -m nebula.design --method rl-hybrid --peaking 9 --f-peak 1.9 --out out
+
+# The full test suite. Run from the repo root.
 python -m pytest tests nebula/tests -q -m "not slow"
 
 # Either suite standalone

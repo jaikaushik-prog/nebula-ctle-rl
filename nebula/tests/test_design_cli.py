@@ -217,6 +217,58 @@ def test_cli_exposes_the_shielded_RL_product_path():
     assert "rl-hybrid" in text
     assert "--channel-loss" in text
     assert "safety shield" in text.lower()
+    assert "automatically checks all seven" in text.lower()
+    assert "diagnostic override" in text.lower()
+
+
+def test_rl_hybrid_default_needs_only_the_two_problem_statement_inputs(
+        monkeypatch):
+    """Channel loss is swept internally unless a diagnostic override is set."""
+    import inspect
+
+    assert inspect.signature(D.design).parameters["channel_loss_db"].default is None
+    seen = {}
+    stub = {
+        "u": [0.5] * N_ACTIONS, "reward": None, "sims": 0,
+        "n_candidates": 512, "n_tied_at_best": 1, "design_id": "bank",
+        "atten_code": 3, "atten_max_x": 2.0, "bank_code": 4,
+        "which_path": "rl-bank", "_nominal": _fake_nominal(),
+        "_verification": {"n_corners": 45, "n_channel_losses": 7,
+                          "n_points": 315, "n_pass": 315, "n_failed": 0,
+                          "all_points_pass": True,
+                          "n_mandated_points": 45,
+                          "n_mandated_pass": 45,
+                          "mandated_all_pass": True},
+        "policy_seed": 2026090500,
+        "channel_losses_db": [3.0, 4.5, 6.0, 7.5, 9.0, 10.5, 12.0],
+        "representative_channel_loss_db": 7.5,
+        "rl_proposals": 100, "shield_fallbacks": 4,
+        "table_rows_checked": 2048, "offline_spice_rows": 23040,
+    }
+
+    def fake_solve(target, loss):
+        seen["loss"] = loss
+        return dict(stub)
+
+    monkeypatch.setattr(D, "solve_rl_hybrid", fake_solve)
+    out = D.design(9.0, 1.9e9, method="rl-hybrid")
+    assert seen["loss"] is None
+    assert out["verification"]["n_points"] == 315
+    text = D.report(out)
+    assert "7 channel losses x 45 PVT corners = 315" in text
+    assert "315 / 315" in text
+
+
+def test_cli_reports_an_uncovered_request_without_a_traceback(
+        monkeypatch, capsys):
+    """A safe refusal is a product outcome, not an internal crash."""
+    monkeypatch.setattr(
+        D, "design", lambda *a, **k: (_ for _ in ()).throw(
+            RuntimeError("no compliant setting at 7 of 315 conditions")))
+    rc = D.main(["--method", "rl-hybrid", "--peaking", "12",
+                 "--f-peak", "1.25"])
+    assert rc == 2
+    assert "no compliant setting" in capsys.readouterr().err
 
 
 def test_rl_hybrid_dispatch_does_not_remeasure_without_the_attenuator(monkeypatch):
@@ -228,8 +280,15 @@ def test_rl_hybrid_dispatch_does_not_remeasure_without_the_attenuator(monkeypatc
         "which_path": "rl-bank", "_nominal": _fake_nominal(),
         "_verification": {"n_corners": 45, "n_points": 45,
                           "n_pass": 45, "n_failed": 0,
-                          "all_points_pass": True},
-        "policy_seed": 2026090500, "channel_loss_db": 7.5,
+                          "all_points_pass": True,
+                          "n_channel_losses": 1,
+                          "n_mandated_points": 45,
+                          "n_mandated_pass": 45,
+                          "mandated_all_pass": True},
+        "policy_seed": 2026090500,
+        "channel_loss_mode": "diagnostic-override",
+        "channel_losses_db": [7.5],
+        "representative_channel_loss_db": 7.5,
         "rl_proposals": 100, "shield_fallbacks": 4,
         "table_rows_checked": 2048,
     }
@@ -271,16 +330,22 @@ def test_rl_hybrid_schematic_panel_cannot_look_like_one_fixed_code_passed():
     panel = D._schematic_panel({
         "method": "rl-hybrid",
         "search": {"atten_code": 1, "bank_code": 40,
-                   "policy_seed": 2026090500, "channel_loss_db": 7.5},
+                   "policy_seed": 2026090500,
+                   "channel_loss_mode": "automatic-family",
+                   "channel_losses_db": [3.0, 4.5, 6.0, 7.5, 9.0, 10.5,
+                                         12.0]},
         "nominal": _fake_nominal(),
-        "verification": {"n_points": 45, "n_failed": 0,
-                         "n_corners": 45, "n_loads": 1},
+        "verification": {"n_points": 315, "n_failed": 0,
+                         "n_corners": 45, "n_channel_losses": 7,
+                         "n_mandated_points": 45},
         "simulations": {"total": 0},
     })
     assert panel["PDK"] == "SKY130 nfet+pfet"
     assert panel["TT tuning code"] == "A1 / B40"
     assert panel["PVT mode"] == "adaptive code map"
-    assert panel["PVT verified"] == "45/45 PASS (adaptive)"
+    assert panel["PVT per channel"] == "45/45 PASS"
+    assert panel["all conditions"] == "315/315 PASS"
+    assert panel["channel sweep"] == "3-12 dB (7 points)"
 
 
 def test_rl_hybrid_report_counts_the_extra_deck_used_by_output_export(monkeypatch):
@@ -291,8 +356,15 @@ def test_rl_hybrid_report_counts_the_extra_deck_used_by_output_export(monkeypatc
         "which_path": "rl-bank", "_nominal": _fake_nominal(),
         "_verification": {"n_corners": 45, "n_points": 45,
                           "n_pass": 45, "n_failed": 0,
-                          "all_points_pass": True},
-        "policy_seed": 2026090500, "channel_loss_db": 7.5,
+                          "all_points_pass": True,
+                          "n_channel_losses": 1,
+                          "n_mandated_points": 45,
+                          "n_mandated_pass": 45,
+                          "mandated_all_pass": True},
+        "policy_seed": 2026090500,
+        "channel_loss_mode": "diagnostic-override",
+        "channel_losses_db": [7.5],
+        "representative_channel_loss_db": 7.5,
         "rl_proposals": 100, "shield_fallbacks": 4,
         "table_rows_checked": 2048, "offline_spice_rows": 23040,
     }
@@ -302,7 +374,7 @@ def test_rl_hybrid_report_counts_the_extra_deck_used_by_output_export(monkeypatc
     out["simulations"]["total"] += 1
     text = D.report(out)
     assert "export 1" in text
-    assert "output export ran 1 new nominal deck" in text
+    assert "output export ran 1 new representative deck" in text
 
 
 # ─────────────────────────────────────────────────────────────────────────────

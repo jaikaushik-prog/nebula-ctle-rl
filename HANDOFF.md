@@ -17,17 +17,15 @@
 > decisions that are OPEN and human-only, and what to do next. It supersedes
 > `nebula/NEXT_STEPS.md`. This file remains the full state of record.
 
-Last updated: **2026-09-04** (session 42, Entry 89 product integration: the one-time
-2,430-identity fresh evaluation ran only after policy commit `a84082e`, data
-commit `51a1146` and evaluator commit `6ec86bd`. Fixed compliance/q is
-0.8226/0.5619; shielded RL mean is 0.8388/0.7169 at 5.579 measurements, delta
-+0.1550 with paired 95% CI [+0.1508,+0.1593]. All five seeds improve and R1-R10
-pass. Pure raw RL remains unsafe. `design.py --method rl-hybrid` now runs the
-frozen deployment proposer at all 45 PVT corners, applies the simulator shield,
-uses an exhaustive measured-bank fallback on RL misses, and emits the code map,
-attenuator-correct deck and honestly labelled schematic. A 9 dB / 1.9 GHz /
-7.5 dB smoke passed 45/45; RL supplied 38 corners and fallback supplied 7.
-Post-integration suite: 2,706/2,706.)
+Last updated: **2026-09-04** (session 43, all-channel RL product flow: the normal
+interface now takes only peaking and peak frequency. Channel loss is an
+automatic seven-point verification axis; the optional CLI flag is explicitly a
+one-loss diagnostic override. The 9 dB / 1.9 GHz product run passes all 315
+channel/PVT conditions, with 2,406 policy measurements and 49 classical
+fallbacks, and emits a 315-condition map, exact representative deck and
+visually checked schematic. A predeclared five-request edge/centre check passes
+3/5: both 12 dB edges expose real bank-coverage gaps and are refused safely.
+Entry 89 FINAL remains untouched.)
 
 Earlier session 22p: (**THE REPORT EXISTS** --
 `nebula/report/Nebula_CTLE_Report.pdf`, **10 pages, 9 figures, 598 KB**,
@@ -1459,7 +1457,8 @@ signaling, ADC-based DSP receiver, 28 nm CMOS reference parameters).
 │   │                       compliant visible eye among measured settings.
 │   ├── rl/hybrid_designer.py  Production Entry 89 inference: exact actor
 │   │                       observation/mask, eight-visit trace, shield and
-│   │                       exhaustive measured-bank fallback over 45 PVT.
+│   │                       exhaustive measured-bank fallback over the default
+│   │                       7-channel x 45-PVT operating matrix.
 │   ├── rl/oracle_imitation.py  DEVELOPMENT-only reachable teacher targets and
 │   │                       shortest-path actor samples without hidden fields.
 │   ├── rl/oracle_warmstart.py  Entry 89 actor-only soft-label imitation:
@@ -1495,6 +1494,8 @@ signaling, ADC-based DSP receiver, 28 nm CMOS reference parameters).
 │   │                       proposer/verifier attribution boundary.
 │   ├── PROJECT_SOLUTION_OVERVIEW.md  Plain-language mapping from the competition
 │   │                       problem statement to the product, gaps and judge view.
+│   ├── product_demo/rl_hybrid_9db_1p9ghz/  Generated all-channel example:
+│   │                       315-condition JSON map, exact CIR and schematic PNG.
 │   ├── ENTRY89_DEVELOPMENT_RESULTS.md  Five-seed training integrity and exposed
 │   │                       raw-versus-shielded mechanism result; not FINAL.
 │   ├── ENTRY89_MIDPOINT_DATA.md  Fresh-data provenance and the explicit
@@ -1756,6 +1757,14 @@ Plus: git init, .gitignore, 28 tests, Wilson-bound BER reporting.
   RL is 0.8388/0.7169 at 5.579 measurements. Delta is +0.1550, paired 95% CI
   [+0.1508,+0.1593], 5/5 seeds positive; R1-R10 PASS. Raw RL is unsafe at mean
   0.6444 compliance, so the valid method is the policy plus simulator shield.
+- Session 43 corrected channel loss's product role without changing any model,
+  range, reward or policy. The user now supplies only peaking and peak
+  frequency; `rl-hybrid` automatically evaluates 7 characterised losses x 45
+  PVT corners. The real 9 dB / 1.9 GHz run passes 315/315. A five-request
+  edge/centre check then found that 12 dB at 1.25 GHz lacks a bank solution at
+  7/315 conditions and 12 dB at 2.5 GHz lacks one at 203/315; both are safely
+  refused. This is the first product-level measurement of the full S3 request
+  rectangle and is now an explicit limitation, not a hidden traceback.
 
 ## 6. Key numbers & validated behavior (current state)
 
@@ -1778,19 +1787,20 @@ Plus: git init, .gitignore, 28 tests, Wilson-bound BER reporting.
   is essential. The old Entry 88 policy with the same shield is 0.8272/0.6986,
   so new training adds +0.0117 compliance and +0.0183 q. Global oracle is
   1.0000/1.0000, leaving a real fallback gap. Result SHA-256 `942CDD...9FEA`.
-- **Nebula Entry 89 is integrated into the product front door:**
-  `python -m nebula.design --peaking 9 --f-peak 1.9 --channel-loss 7.5
-  --method rl-hybrid --out out` loads the hash-checked deployment seed
-  `2026090500`, preserves the exact 62-field actor observation and action mask,
-  proposes at most eight settings independently at each of the 45 PVT corners,
-  shields every trace with V6 compliance, and searches the already-measured
-  512-code bank when RL visits none. The first real smoke produced **45/45
-  PASS**: RL supplied 38 corner codes and classical fallback supplied 7, from
-  354 proposed measurements and 3,584 fallback table lookups. It reused the
-  existing 23,040 ngspice rows (zero new SPICE for the request) and emitted an
-  attenuator-aware deck plus schematic. The picture says `adaptive code map`;
-  it does not imply one fixed code passed 45 corners. Full suite:
-  **2,706/2,706**, 13 deselected, 2 known warnings in 333.60 s.
+- **Nebula Entry 89 is integrated into the two-input product front door:**
+  `python -m nebula.design --peaking 9 --f-peak 1.9 --method rl-hybrid
+  --out out` loads the hash-checked deployment seed `2026090500`, preserves the
+  exact 62-field actor observation and action mask, and automatically evaluates
+  every one of 7 characterised channel losses x 45 PVT corners. The actor is
+  told neither loss nor corner. It proposes at most eight settings from the
+  request, code and measured eye history; V6 shields each trace and the
+  already-measured 512-code bank supplies a safe fallback. The real product
+  run produced **315/315 PASS** with 2,406 proposed measurements and 49
+  fallbacks (25,088 table checks). It reused 23,040 device SPICE rows carrying
+  161,280 channel-response points; only exact-deck export ran one new SPICE
+  invocation. `design.json` carries the 315-condition adaptive code map, while
+  `design.cir` and the schematic show the representative TT/7.5 dB code.
+  `--channel-loss` remains an explicitly diagnostic one-loss override.
 - **Nebula Entry 88 masked-PPO result:** FINAL TEST fixed compliance/q is
   0.9865/0.6824. Five-seed PPO mean is 0.9274/0.7690 at 3.797 trials; q delta
   is +0.0866 with paired 95% CI `[+0.0772,+0.0956]`, and 5/5 seeds are
@@ -2264,6 +2274,15 @@ Plus: git init, .gitignore, 28 tests, Wilson-bound BER reporting.
   a compliant design. The midpoint data reuse the same transistor
   geometries/PVT lattice and are fresh channel/request views, not independent
   silicon.
+- **(nebula) The product does not yet cover the entire S3 request rectangle at
+  every added channel condition.** A predeclared edge/centre check passed all
+  315 conditions for 3 dB at 1.25/2.5 GHz and 7.5 dB at the octave midpoint,
+  but the current 512-setting bank has no compliant code at 7/315 conditions
+  for 12 dB at 1.25 GHz and 203/315 for 12 dB at 2.5 GHz. These are legitimate
+  user targets under S3, so do not claim full 3-12 dB x 1.25-2.5 GHz product
+  coverage. The CLI refuses the result cleanly. Closing it requires a
+  human-approved design-range or architecture change, followed by new SPICE;
+  it is not permission to tune against Entry 89 FINAL.
 - **(nebula) The completed combined-bank experiment still uses the constructed
   channel, modeled eye and one design load.** Seven loss values do not add
   measured reflections, crosstalk or termination interaction. Entry 81's
@@ -2314,12 +2333,15 @@ The subsequent one-time FINAL run passed R1-R10: primary compliance/q
 0.8388/0.7169 versus fixed 0.8226/0.5619 at 5.579 measurements. Product
 integration is now complete: `--method rl-hybrid` uses the frozen deployment
 seed, simulator shield and an exhaustive lookup over the already-measured bank
-when no compliant setting was visited, then writes the 45-corner code map,
-attenuator-correct nominal deck and adaptive-code-labelled schematic. **Next:**
-predeclare and run a small request/loss demo matrix, save representative output,
-then update the report/slides. Also document or draw the complete switched Rs/Cs
-implementation: today's deck is the selected nominal configuration and the JSON
-is the source of truth for the PVT code map. Do not rerun, tune or replace FINAL.
+when no compliant setting was visited. The product now takes only peaking and
+peak frequency, automatically checks 7 channels x 45 PVT points, then writes
+the 315-condition code map, attenuator-correct representative deck and
+adaptive-code-labelled schematic. The predeclared request edge/centre check and
+representative output are complete. **Next human decision:** either accept the
+honestly bounded request coverage for submission, or approve a specific
+physical range/architecture expansion for the unsupported 12 dB edge before
+any new bank simulation. After that, update report/slides and document/draw the
+complete switched Rs/Cs implementation. Do not rerun, tune or replace FINAL.
 Full immutable sequence and R1-R10:
 `nebula/NEXT_AGENT_ENTRY89.md` and `PREDICTIONS.md` Entry 89.
 
@@ -5301,6 +5323,20 @@ interpretation almost unavoidable.
 map is a first-class output and every summary/picture must say `adaptive code`.
 Label the configuration represented by a single deck. Never place an aggregate
 adaptive pass count beside one configuration without naming that boundary.
+
+### G156. A tunable spec range is not full Cartesian product coverage
+
+The 512-setting bank served the registered 4-10 dB inset request grid at every
+channel loss, and the 9 dB product smoke passed every PVT point. It was tempting
+to turn those facts into "3-12 dB on demand." A predeclared check of the actual
+S3 rectangle disproved that: the 12 dB / 1.25 GHz edge has 7 uncovered
+channel/PVT conditions and 12 dB / 2.5 GHz has 203. Adding channel loss as a
+robustness axis makes the Cartesian product stricter than either axis alone.
+
+**Rule:** before claiming a tunable input range, test the rectangle's corners
+and report the served domain. A nearest training request plus a safety fallback
+is not evidence that the physical bank contains a solution. Refuse uncovered
+requests; never shrink the advertised test set after seeing the failures.
 
 ## 10. Environment
 
@@ -15076,3 +15112,42 @@ the temporary files were visually inspected and removed.
 Baseline was the post-FINAL **2,696/2,696** suite. The post-integration non-slow
 suite passes **2,706/2,706**, with 13 deselected and the same two known warnings
 in 333.60 s. FINAL was neither loaded for scoring, rerun nor used for tuning.
+
+### 2026-09-04 - session 43 (all-channel product flow). **Channel loss is now an automatic verification axis, not a third user target.**
+
+The owner approved six product changes: keep the normal interface to peaking
+and peak frequency, make one-loss selection diagnostic-only, automatically run
+the seven characterised channel losses across 45 PVT corners, keep loss/PVT
+hidden from the actor, emit the complete map plus representative circuit, and
+test multiple requests. Three boundary tests were added first and failed on the
+old 7.5 dB default, help text and absent family selector. A fourth fail-first
+gate came from the real edge test: an uncovered request must return a clean CLI
+error rather than a traceback.
+
+`hybrid_designer.solve(..., loss_db=None)` now iterates all seven losses and 45
+corners. Each of the 315 episodes uses the same frozen observation -- request,
+code and measured eye only -- then the V6 shield and measured-bank fallback.
+The optional scalar chooses exactly one characterised loss and is labelled a
+diagnostic override. Output separates S9's 45 mandated PVT points per channel
+from this project's extra 315-condition robustness matrix. The representative
+deck is the true middle characterised loss, 7.5 dB; `design.json` contains
+`per_condition` rows with both loss and corner.
+
+The real 9 dB / 1.9 GHz product run passes **315/315**. It used 2,406 policy
+measurements, 49 fallbacks and 25,088 fallback table checks, reusing 23,040
+device SPICE rows that carry 161,280 channel-response points. Export ran one
+new representative deck. The persistent output is
+`nebula/product_demo/rl_hybrid_9db_1p9ghz/{design.json,design.cir,
+design_schematic.png}`; the schematic was visually inspected, its first long
+panel labels were found overlapping, shortened, regenerated and checked again.
+
+The predeclared five-request set was `(3 dB, 1.25 GHz)`, `(3 dB, 2.5 GHz)`,
+`(7.5 dB, sqrt(1.25*2.5) GHz)`, `(12 dB, 1.25 GHz)` and `(12 dB, 2.5 GHz)`.
+The first three pass 315/315. The 12 dB requests are honestly uncovered at
+7/315 and 203/315 conditions respectively. No range, topology, reward, policy
+or FINAL artifact was changed in response. G156 records why this prevents a
+full-rectangle coverage claim and why closing it is a human design decision.
+
+Required pre-change suite: **2,706 passed**, 13 deselected, two known warnings
+in 485.08 s. Focused post-change gates: **37 passed**. Final full suite:
+**2,710 passed**, 13 deselected and the same two known warnings in 303.46 s.

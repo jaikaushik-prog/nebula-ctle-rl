@@ -228,7 +228,8 @@ def solve_auto(target: SpecTarget, budget: int, seed: int,
             "screened_on": [p.label for p in screen.points]}
 
 
-def solve_rl_hybrid(target: SpecTarget, channel_loss_db: float) -> dict:
+def solve_rl_hybrid(target: SpecTarget,
+                    channel_loss_db: Optional[float] = None) -> dict:
     """Frozen RL proposer + simulator shield + measured-bank fallback."""
     from nebula.rl.hybrid_designer import solve
 
@@ -313,11 +314,20 @@ def _schematic_panel(d: dict) -> dict:
         v = d.get("verification") or {}
         if "n_points" in v and "n_failed" in v:
             n, f = int(v["n_points"]), int(v["n_failed"])
-            panel["PVT verified"] = f"{n - f}/{n} PASS (adaptive)"
+            panel["all conditions"] = f"{n - f}/{n} PASS"
+        if "n_mandated_points" in v:
+            n = int(v["n_mandated_points"])
+            panel["PVT per channel"] = f"{n}/{n} PASS"
         if "policy_seed" in search:
             panel["policy seed"] = str(int(search["policy_seed"]))
-        if "channel_loss_db" in search:
-            panel["channel loss"] = f"{float(search['channel_loss_db']):g} dB"
+        losses = search.get("channel_losses_db") or []
+        if losses:
+            if search.get("channel_loss_mode") == "automatic-family":
+                panel["channel sweep"] = (
+                    f"{float(min(losses)):g}-{float(max(losses)):g} dB "
+                    f"({len(losses)} points)")
+            else:
+                panel["channel diagnostic"] = f"{float(losses[0]):g} dB"
     m = nom.get("meas") or {}
     if method != "rl-hybrid" and "peaking_db" in m:
         panel["peaking (TT)"] = f"{float(m['peaking_db']):.2f} dB"
@@ -394,14 +404,14 @@ def netlist_for(u: Sequence[float], cl_f: float,
 def design(peaking_db: float, f_peak_hz: float, method: str = "auto",
            budget: int = 150, seed: int = 0, robust: bool = False,
            verify: bool = False, peaking_tiebreak: bool = True,
-           channel_loss_db: float = 7.5) -> dict:
+           channel_loss_db: Optional[float] = None) -> dict:
     """Target specs in; a sized schematic and its measured specs out."""
     target = SpecTarget(peaking_db=float(peaking_db), f_peak_hz=float(f_peak_hz))
     t0 = time.perf_counter()
     if method == "auto":
         sol = solve_auto(target, budget, seed)
     elif method == "rl-hybrid":
-        sol = solve_rl_hybrid(target, float(channel_loss_db))
+        sol = solve_rl_hybrid(target, channel_loss_db)
     elif method == "library":
         sol = solve_library(target, peaking_tiebreak)
     else:
@@ -449,8 +459,9 @@ def design(peaking_db: float, f_peak_hz: float, method: str = "auto",
             if method == "auto" else
             "the rl-hybrid safety shield scores V6_SPECS, including both "
             "S3_peaking_match and S3_f_peak_match, at every mandated PVT "
-            "corner. The requested peaking and frequency are therefore IN "
-            "the acceptance test."
+            "corner and every automatically checked channel loss. The "
+            "requested peaking and frequency are therefore IN the acceptance "
+            "test."
             if method == "rl-hybrid" else
             "reward_v1's DEFAULT spec set, V1_SPECS, has no S3_peaking_match "
             "row, so on this path target_peaking_db is honoured as a TIE-BREAK "
@@ -524,11 +535,19 @@ def report(d: dict) -> str:
     if d["method"] == "rl-hybrid":
         L.append("  METHOD      rl-hybrid   (frozen RL PROPOSER + safety shield)")
         L.append(f"              deployment policy seed {sr.get('policy_seed')}; "
-                 f"at most 8 eye measurements per PVT corner")
+                 f"at most 8 eye measurements per channel/PVT condition")
+        n_conditions = int((d.get("verification") or {}).get("n_points", 0))
         L.append(f"              {sr.get('rl_proposals', 0)} proposals checked; "
                  f"classical bank fallback used at "
-                 f"{sr.get('shield_fallbacks', 0)} of 45 corners")
-        L.append(f"              channel loss {sr.get('channel_loss_db')} dB")
+                 f"{sr.get('shield_fallbacks', 0)} of {n_conditions} conditions")
+        losses = sr.get("channel_losses_db") or []
+        if sr.get("channel_loss_mode") == "automatic-family" and losses:
+            L.append(f"              channel loss is NOT a user target; "
+                     f"automatically checked {len(losses)} characterised "
+                     f"values ({min(losses):g}-{max(losses):g} dB)")
+        elif losses:
+            L.append(f"              diagnostic override: channel loss "
+                     f"{float(losses[0]):g} dB")
     elif d["method"] == "auto":
         # **Name the SOURCE, not just "a proposal".** This printed
         # "retrieval" for every accepted proposal regardless of where the
@@ -573,7 +592,13 @@ def report(d: dict) -> str:
     L.append(f"    rl      {p['rl']:10.2f} ohm     "
              f"cl      {p['cl'] * 1e15:10.2f} fF  (context)")
     L.append("")
-    L.append("  RESULTING SPECS  at TT / 1.00 / 27 C")
+    if d["method"] == "rl-hybrid":
+        rep_loss = sr.get("representative_channel_loss_db")
+        L.append("  REPRESENTATIVE RESULTING SPECS  at TT / 1.00 / 27 C"
+                 + (f" and {float(rep_loss):g} dB channel loss"
+                    if rep_loss is not None else ""))
+    else:
+        L.append("  RESULTING SPECS  at TT / 1.00 / 27 C")
     L.append(f"    {'spec':<24}{'measured':>14}  {'requirement':<14}")
     L.append("    " + "-" * 56)
     m = n["meas"]
@@ -592,7 +617,7 @@ def report(d: dict) -> str:
         L.append(f"    ^ feasible = {len(R.V6_SPECS)} V6 rows, including the "
                  "request, operating-point linearity, area and eye.")
         L.append("      The same rows are checked by the simulator-backed "
-                 "shield at all 45 PVT corners below.")
+                 "shield at every channel/PVT condition below.")
     else:
         L.append(f"    ^ feasible = {len(R.V1_SPECS)} device rows at "
                  f"TT/1.00/27C. NOT S4 (linearity), S7 (area) or S8 (eye):")
@@ -633,18 +658,28 @@ def report(d: dict) -> str:
             "all_points_pass", False)))
         L.append("")
         L.append("  SIMULATOR SAFETY SHIELD")
-        L.append(f"    MANDATED PVT (S9): {n_pass} / {n_points}   "
-                 f"{'PASS' if passed else 'FAIL'}")
-        L.append(f"    one tunable circuit; the verified code may change by "
-                 f"corner at {float(v.get('channel_loss_db', sr.get('channel_loss_db', 0.0))):.1f} "
-                 f"dB channel loss")
+        n_losses = int(v.get("n_channel_losses", 1))
+        total_pass = int(v.get("n_pass", 0))
+        total_points = int(v.get("n_points", 0))
+        L.append(f"    MANDATED PVT (S9): {n_pass} / {n_points} at each "
+                 f"channel loss   {'PASS' if passed else 'FAIL'}")
+        if n_losses > 1:
+            L.append(f"    CHANNEL ROBUSTNESS (extra): {n_losses} channel "
+                     f"losses x {v.get('n_corners')} PVT corners = "
+                     f"{total_points}")
+            L.append(f"    ALL CONDITIONS: {total_pass} / {total_points}   "
+                     f"{'PASS' if v.get('all_points_pass') else 'FAIL'}")
+        L.append("    one tunable circuit; the verified code may change by "
+                 "channel/PVT condition")
         L.append(f"    scored on {v.get('spec_set', 'the registered spec set')}")
         if "export" in d.get("simulations", {}):
             L.append("    selection reused the immutable 512 x 45 ngspice "
-                     "bank; output export ran 1 new nominal deck")
+                     "bank with its channel responses; output export ran 1 "
+                     "new representative deck")
         else:
             L.append("    values come from the immutable 512 x 45 ngspice "
-                     "bank; this request ran no new SPICE decks")
+                     "bank with its channel responses; this request ran no "
+                     "new SPICE decks")
     elif v:
         L.append("")
         L.append(f"  CORNER VERIFICATION")
@@ -766,11 +801,12 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
                          "ngspice-backed safety shield, then a classical "
                          "measured-bank fallback")
     from nebula.link.channel import FAMILY_IL_DB
-    ap.add_argument("--channel-loss", type=float, default=7.5,
+    ap.add_argument("--channel-loss", type=float, default=None,
                     choices=tuple(float(value) for value in FAMILY_IL_DB),
-                    help="channel insertion loss in dB for rl-hybrid; must be "
-                         "one of the seven ngspice-bank characterisation "
-                         "points (default: 7.5)")
+                    help="optional rl-hybrid diagnostic override for one "
+                         "channel insertion loss. By default the product "
+                         "automatically checks all seven characterised "
+                         "losses; channel loss is not a user target")
     ap.add_argument("--budget", type=int, default=150,
                     help="simulation budget for search methods")
     ap.add_argument("--seed", type=int, default=0)
@@ -804,7 +840,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
                    verify=args.verify,
                    peaking_tiebreak=not args.no_peaking_tiebreak,
                    channel_loss_db=args.channel_loss)
-    except ValueError as exc:
+    except (ValueError, RuntimeError) as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 2
 
@@ -851,9 +887,9 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
                 if not nom.get("ok", False):
                     warn = str(nom.get("verdict") or "no valid measurement")
                 search = d.get("search") or {}
-                code_note = (f"  -  TT configuration A"
+                code_note = (f"  -  representative TT configuration A"
                              f"{search.get('atten_code')}/B"
-                             f"{search.get('bank_code')}; PVT code map in "
+                             f"{search.get('bank_code')}; channel/PVT code map in "
                              f"design.json" if d.get("method") == "rl-hybrid"
                              else "  -  values parsed from the netlist beside it")
                 written.append(draw_schematic(
