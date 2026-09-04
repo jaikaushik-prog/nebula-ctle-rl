@@ -14837,3 +14837,18 @@ with 13 deselected and two known warnings in 313.20 s.
 The documentation-only post-registration suite also passes 2,759/2,759, with
 13 deselected and the same two warnings in 304.09 s. Freeze this registration
 before adding the Entry 97 implementation.
+
+### Entry 97 implementation boundary -- before measurement
+
+Seven fail-capable tests first failed on the absent module and now pass 7/7.
+The implementation hash-gates Entry 96, reuses its bank/control definitions and
+batches all 64 codes into one full-PDK invocation per registered LVT scale.
+Every one of the 384 logical rows retains the three ordinary resistor switches,
+six LVT capacitor switches including OFF devices, and a separately drawn
+physical control. The parser and scorer recompute complex admittance, all gates
+and the smallest simultaneous-pass selection; the writer refuses overwrite.
+No Entry 97 simulator invocation or result exists at this boundary.
+
+The complete implementation-boundary non-slow suite passes 2,766/2,766, with
+13 deselected and the same two warnings in 292.36 s. Commit this boundary before
+the first Entry 97 simulator invocation.

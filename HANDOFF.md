@@ -904,6 +904,11 @@ real-passive-control networks, parses differential admittance and scores S1-S6.
 exposed 64-row artifact is `nebula/experiments/split_tuning_bank_results.json`;
 `nebula/SPLIT_TUNING_BANK_RESULTS.md` is the readable failure audit.
 
+Entry 97 additions (session 45): `nebula/device/lvt_tuning_bank.py` batches all
+64 codes into one real-PDK deck per frozen LVT width scale and scores the full
+384-row screen; `nebula/experiments/exp_lvt_tuning_bank.py` is its anti-clobber
+writer; `nebula/tests/test_lvt_tuning_bank.py` holds seven fail-capable gates.
+
 ```
 ├── .gitignore              ← sectioned BY REASON (copyright / redistribution /
 │                             regenerable), not by extension. Keeps the ten
@@ -15826,3 +15831,24 @@ or result exists at this boundary.
 The documentation-only post-registration suite also passes **2,759/2,759**,
 with 13 deselected and the same two warnings in 304.09 s. Commit this frozen
 registration before implementing the runner.
+
+### 2026-09-04 - session 45 (Entry 97 implementation boundary). **The safe-LVT screen is built, tested and still unopened.**
+
+Seven focused tests first failed because `device/lvt_tuning_bank.py` did not
+exist and now pass 7/7. The implementation hash-gates Entry 96, imports its
+single definitions of the passive bank and accuracy limits, and changes only
+the six capacitor selectors to the official `nfet_01v8_lvt`. It emits one
+batched 64-code deck per registered scale, keeping all ordinary resistor
+switches, LVT ON/OFF capacitor switches and same-deck real-passive controls.
+Every gate remains at 0 or 1.8 V.
+
+The parser reuses Entry 96's four-source complex differential-admittance
+reconstruction. The pure scorer requires all 384 rows, checks both axes at each
+scale, records whether any scale separately passes loss and capacitance, and
+selects only the smallest simultaneous pass. The writer recomputes the score,
+records the runner commit and refuses overwrite. No Entry 97 SPICE invocation
+or result artifact exists at this boundary.
+
+The complete implementation-boundary non-slow suite passes **2,766/2,766**,
+with 13 deselected and the same two warnings in 292.36 s. Commit this boundary
+before the first Entry 97 simulator invocation.
