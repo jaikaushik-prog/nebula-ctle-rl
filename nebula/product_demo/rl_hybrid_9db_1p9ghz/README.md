@@ -18,9 +18,12 @@ claim.
 
 Files:
 
-- `design.json`: complete 315-condition adaptive code map and measured results.
+- `design.json`: complete 315-condition adaptive code map, measured results,
+  and the actor's actual eye-measurement/action trace for every condition.
 - `design.cir`: exact representative TT/7.5 dB configuration sent to ngspice.
 - `design_schematic.png`: schematic drawn by parsing that exact deck.
+- `rl_dashboard.png`: judge-facing 7 x 45 map of RL-versus-fallback decisions
+  plus the longest real adaptation trace from this run.
 
 The single deck is representative. It is not one fixed configuration claimed
 to pass all 315 conditions; the verified attenuator/Rs/Cs code is allowed to

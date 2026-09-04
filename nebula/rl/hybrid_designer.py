@@ -55,6 +55,36 @@ class HybridSelection:
     bank_rows_checked: int
 
 
+ACTION_NAMES = {
+    A_ATTEN_DOWN: "atten_down",
+    A_ATTEN_UP: "atten_up",
+    A_RS_DOWN: "rs_down",
+    A_RS_UP: "rs_up",
+    A_CS_DOWN: "cs_down",
+    A_CS_UP: "cs_up",
+    A_LOCK: "lock",
+}
+
+
+def policy_trace_record(trace: PolicyTrace) -> dict:
+    """JSON-safe, human-readable copy of the actor's actual eye trace."""
+    try:
+        actions = [ACTION_NAMES[int(action)] for action in trace.actions]
+    except KeyError as exc:
+        raise ValueError(f"unknown policy action {exc.args[0]}") from exc
+    return {
+        "start_setting": int(trace.start_setting),
+        "locked_setting": int(trace.locked_setting),
+        "settings_tried": [int(setting) for setting in trace.settings_tried],
+        "measurements": [
+            {"link_valid": bool(ok), "eye_h_v": float(eye_h),
+             "eye_w_ui": float(eye_w)}
+            for ok, eye_h, eye_w in trace.measurements
+        ],
+        "actions": actions,
+    }
+
+
 def build_observation(
         request: tuple[float, float], current_setting: int,
         settings_tried: Sequence[int],
@@ -332,6 +362,7 @@ def solve(peaking_db: float, f_peak_hz: float,
             "rl_measurements": len(trace.settings_tried),
             "verifier_calls": selected.verifier_calls,
             "bank_rows_checked": selected.bank_rows_checked,
+            "policy_trace": policy_trace_record(trace),
         })
     misses = [row for row in records if not row["compliant"]]
     if misses:
@@ -404,7 +435,8 @@ def solve(peaking_db: float, f_peak_hz: float,
 
 
 __all__ = (
-    "PolicyTrace", "HybridSelection", "build_observation",
+    "PolicyTrace", "HybridSelection", "ACTION_NAMES", "policy_trace_record",
+    "build_observation",
     "available_actions", "moved_setting", "trace_policy",
     "select_with_bank_fallback", "losses_to_verify",
     "verification_conditions", "solve")

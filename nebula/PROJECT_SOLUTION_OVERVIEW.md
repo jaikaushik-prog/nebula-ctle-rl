@@ -39,7 +39,8 @@ The complete flow is:
    operating conditions. Channel loss is an external verification condition,
    not a user target.
 8. The framework returns the measured results, exact SPICE netlist and a
-   schematic image generated from that same netlist.
+   schematic image generated from that same netlist, and an RL adaptation
+   dashboard generated from the same delivered 315-condition record.
 
 An optional natural-language interface allows a request such as "9 dB near
 1.9 GHz" to be converted into the same validated design flow. The language
@@ -80,7 +81,8 @@ The safety shield checks those codes against the immutable ngspice
 characterisation. If none is compliant, a classical lookup searches the 512
 measured bank settings for that condition. The output is one tunable CTLE, its
 315-condition code map, the representative TT configuration's exact SPICE
-deck, measured specifications and an adaptive-code schematic.
+deck, measured specifications, an adaptive-code schematic and a 7 x 45 RL
+adaptation dashboard.
 
 `--channel-loss` still exists as an explicitly optional diagnostic override
 when a developer intentionally wants to inspect one characterised channel.
@@ -96,6 +98,7 @@ when a developer intentionally wants to inspect one characterised channel.
 | Automatic design flow | Covered |
 | Exact SPICE netlist as output | Covered |
 | Human-readable schematic image | Covered |
+| RL trace and RL-versus-fallback condition dashboard | Covered |
 | Resulting measured specifications | Covered |
 | One-stage CTLE with variable Rs and Cs | Covered |
 | One-tap DFE | Covered in the link model |
@@ -119,7 +122,8 @@ The strongest part of the project is its engineering foundation:
   calculation.
 - It checks process, voltage and temperature variation rather than reporting
   only a nominal result.
-- It produces a traceable netlist, schematic and measurement record.
+- It produces a traceable netlist, schematic, measurement record and RL
+  adaptation dashboard.
 - It compares RL with fixed selection, random search, grid search, CMA-ES and
   hidden-oracle limits.
 - It preserves unsuccessful experiments instead of changing the test after
@@ -251,8 +255,10 @@ The remaining decisive work is:
 
 The generated product example is in
 `nebula/product_demo/rl_hybrid_9db_1p9ghz/`: `design.json` contains all 315
-condition decisions, `design.cir` is the exact representative deck that ran,
-and `design_schematic.png` is drawn from that deck.
+condition decisions and policy traces, `design.cir` is the exact representative
+deck that ran, `design_schematic.png` is drawn from that deck, and
+`rl_dashboard.png` visualises the delivered condition records without replaying
+the policy or inventing a value.
 
 ## One-sentence summary
 

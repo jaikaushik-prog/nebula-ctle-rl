@@ -17,12 +17,14 @@
 > decisions that are OPEN and human-only, and what to do next. It supersedes
 > `nebula/NEXT_STEPS.md`. This file remains the full state of record.
 
-Last updated: **2026-09-04** (session 44, Entry 90 outcome: all 1,350 focused
-real-PMOS rows completed. The high 12 dB edge closes 112/315 -> 315/315; the low
-edge improves 308/315 -> 314/315 and leaves one `sf/0.95/125C`, 3 dB-channel
-compression failure. Q1-Q2 and Q4-Q7 pass, Q3 and overall fail. The stop rule
-forbids an automatic 8.4 dB response. This remains diagnostic, not production
-adoption, and Entry 89 FINAL is untouched. Earlier session 43: the normal
+Last updated: **2026-09-04** (session 44, Entry 91 product dashboard: every
+RL-hybrid output now carries the actor's real per-condition eye/action traces
+and writes a judge-facing `rl_dashboard.png`. The real 9 dB / 1.9 GHz demo shows
+315/315 verified, 266 RL-shield selections and 49 measured-bank fallbacks over
+the 7 x 45 condition grid. No policy replay, retraining, FINAL access or new
+design decision occurs. Earlier Entry 90: the high 12 dB edge closes; the low
+edge reaches 314/315 and its registered verdict remains FAIL. Earlier session
+43: the normal
 interface now takes only peaking and peak frequency. Channel loss is an
 automatic seven-point verification axis; the optional CLI flag is explicitly a
 one-loss diagnostic override. The 9 dB / 1.9 GHz product run passes all 315
@@ -1513,7 +1515,12 @@ signaling, ADC-based DSP receiver, 28 nm CMOS reference parameters).
 │   ├── PROJECT_SOLUTION_OVERVIEW.md  Plain-language mapping from the competition
 │   │                       problem statement to the product, gaps and judge view.
 │   ├── product_demo/rl_hybrid_9db_1p9ghz/  Generated all-channel example:
-│   │                       315-condition JSON map, exact CIR and schematic PNG.
+│   │                       315-condition JSON+trace map, exact CIR, schematic
+│   │                       PNG and RL adaptation dashboard PNG.
+│   ├── report/rl_dashboard.py  Validates the delivered loss/PVT matrix and
+│   │                       draws RL/fallback provenance plus a real eye trace.
+│   ├── tests/test_rl_dashboard.py  Five fail-first completeness, trace,
+│   │                       rendering and product-output gates.
 │   ├── ENTRY89_DEVELOPMENT_RESULTS.md  Five-seed training integrity and exposed
 │   │                       raw-versus-shielded mechanism result; not FINAL.
 │   ├── ENTRY89_MIDPOINT_DATA.md  Fresh-data provenance and the explicit
@@ -1786,6 +1793,15 @@ Plus: git init, .gitignore, 28 tests, Wilson-bound BER reporting.
 
 ## 6. Key numbers & validated behavior (current state)
 
+- **Nebula Entry 91 adds a traceable RL adaptation dashboard to the product:**
+  every `rl-hybrid` condition record now preserves the actor's exact setting
+  sequence, named actions and measured eye inputs. `--out` validates the full
+  delivered condition matrix and writes `rl_dashboard.png`; it never replays
+  the policy or reads FINAL. The regenerated 9 dB / 1.9 GHz demo is 315/315:
+  the RL shield supplies 266 codes, measured-bank fallback supplies 49, and the
+  longest real actor trace uses all eight allowed eye measurements. Five tests
+  failed first on the absent feature; the focused dashboard/product suite now
+  passes 42/42. The image was visually inspected at native resolution.
 - **Nebula Entry 90 is complete and overall FAIL:** all 1,350/1,350 registered
   real-PMOS rows have exact membership and zero hard device failures. The
   extra-low 1.294863 pF Cs and 581.2038 ohm intermediate Rs close 12 dB /
@@ -2369,13 +2385,15 @@ the 315-condition code map, attenuator-correct representative deck and
 adaptive-code-labelled schematic. The predeclared request edge/centre check and
 representative output are complete. Entry 90's focused physical probe is also
 complete: the high 12 dB edge closes, the low edge reaches 314/315 and the
-overall registered verdict is FAIL. **Next action:** preserve that result, then
-build the owner-requested RL adaptation dashboard without altering the frozen
-policy or FINAL set. The remaining physical decision is whether to preregister
-an isolated 8.4 dB one-point diagnostic; separately, adopting the successful
-Cs/Rs candidates needs a production-map decision. After the dashboard, add the
-natural-language wrapper, complete switched Rs/Cs/attenuator schematic and real
-Touchstone upload path. Do not rerun, tune or replace FINAL.
+overall registered verdict is FAIL. The owner-requested RL adaptation dashboard
+is now integrated and validated against the real 315-condition demo. **Next
+action:** build the natural-language request wrapper without changing the two
+actual user targets or bypassing their range validation. The remaining physical
+decision is whether to preregister an isolated 8.4 dB one-point diagnostic;
+separately, adopting the successful Cs/Rs candidates needs a production-map
+decision. After the language wrapper, add the complete switched
+Rs/Cs/attenuator schematic and real Touchstone upload path.
+Do not rerun, tune or replace FINAL.
 Full immutable sequence and R1-R10:
 `nebula/NEXT_AGENT_ENTRY89.md` and `PREDICTIONS.md` Entry 89.
 
@@ -5394,6 +5412,17 @@ membership. This was not an ngspice exit-zero failure and not a circuit row.
 **Rule:** require a durably committed first row before calling a long launch
 healthy. On Windows, use `faulthandler` to distinguish a host numerical-library
 termination from a parsed circuit failure, and preserve the empty-journal fact.
+
+### G159. A fallback-selected code is not part of the actor's trace
+
+In the real 9 dB dashboard's longest episode, the actor spends all eight eye
+measurements and the shield then selects a different code through the measured
+bank fallback. Drawing that code as a ninth solid actor point would falsely
+credit RL with a measurement and action it never made.
+
+**Rule:** keep policy visits and final selection as separate provenance. If a
+fallback code was not visited, draw it as a separately labelled fallback and
+never add it to the actor's measurement count or action sequence.
 
 ## 10. Environment
 
@@ -15285,3 +15314,26 @@ failed inside SciPy's Windows LAPACK DLL before any row; system Python completed
 the same ngspice workload. G157-G158 record both lessons. The required final
 non-slow suite passes **2,718/2,718**, with 13 deselected and the same two known
 warnings in 265.49 s.
+
+### 2026-09-04 - session 44 (Entry 91 product dashboard). **A judge can now see where RL helped, where the safety fallback answered, and what the actor actually measured.**
+
+Five fail-first tests initially failed because neither the dashboard module nor
+the JSON-safe trace export existed. `rl/hybrid_designer.py` now copies each
+condition's exact tried settings, named actions and eye measurements into
+`design.json`. `report/rl_dashboard.py` rejects duplicate, missing or
+misaligned records before rendering the delivered loss-by-PVT matrix; it does
+not load an experiment result, replay the actor, call SPICE or read FINAL.
+`design.py --out` writes `rl_dashboard.png` beside the JSON, exact deck and
+schematic. Focused dashboard, RL-product and CLI tests pass **42/42**.
+
+The existing 9 dB / 1.9 GHz product demo was regenerated through the real
+frozen deployment policy. It again passes **315/315** conditions using 2,406
+actor measurements: the simulator shield accepts an RL-visited code at 266
+conditions and the deterministic measured-bank fallback supplies 49. Its
+dashboard shows all 7 channel losses x 45 PVT corners and the longest actual
+eight-measurement policy trace. Where the final fallback code was not visited,
+the figure draws it as a separate dashed transition rather than inventing a
+ninth RL action (G159). The PNG was inspected at native resolution and is
+readable. No retraining, reward/range/topology change or FINAL access occurred.
+The complete post-change non-slow suite passes **2,723/2,723**, with 13
+deselected and the same two known warnings in 266.91 s.

@@ -14,9 +14,11 @@ handoff document; they are otherwise independent by design.
 **Owner:** Jai Kaushik, BITS Pilani EEE.
 **Status as of 2026-09-04:** Nebula's frozen shielded-RL product path accepts
 two user targets, automatically verifies seven channel losses across all 45
-PVT corners, and outputs a code map, exact SPICE deck and schematic. The
-9 dB / 1.9 GHz demo passes 315/315 conditions; the upper 12 dB request edge is
-an honestly recorded bank-coverage limitation. See
+PVT corners, and outputs a code map, exact SPICE deck, schematic and RL
+adaptation dashboard. The 9 dB / 1.9 GHz demo passes 315/315 conditions. A
+separate diagnostic closes the high-frequency 12 dB edge and reaches 314/315
+at the low-frequency edge; those candidates are not yet in the shipping bank.
+See
 [`nebula/PROJECT_SOLUTION_OVERVIEW.md`](nebula/PROJECT_SOLUTION_OVERVIEW.md).
 
 > **This repository is private and must stay private.** It sits alongside ten

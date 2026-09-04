@@ -817,7 +817,8 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
                     help="verify at 45 corners x 3 loads (135 simulations)")
     ap.add_argument("--no-peaking-tiebreak", action="store_true")
     ap.add_argument("--out", type=Path, default=None,
-                    help="write design.json and design.cir here")
+                    help="write design.json, design.cir, schematic, and the "
+                         "RL adaptation dashboard here")
     ap.add_argument("--json", action="store_true", help="print JSON only")
     ap.add_argument("--provenance", action="store_true",
                     help="print the search box and the measurement behind "
@@ -901,6 +902,19 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
             except Exception as exc:                        # noqa: BLE001
                 print(f"\nwarning: the schematic could not be drawn ({exc}). "
                       f"design.json and design.cir are unaffected.",
+                      file=sys.stderr)
+        if d.get("method") == "rl-hybrid":
+            # The dashboard reads the exact per-condition records already
+            # written to design.json. It performs no policy replay, inference
+            # or SPICE work, and refuses a partial/duplicated condition grid.
+            try:
+                from nebula.report.rl_dashboard import draw_rl_dashboard
+
+                written.append(draw_rl_dashboard(
+                    d, args.out / "rl_dashboard.png"))
+            except Exception as exc:                        # noqa: BLE001
+                print(f"\nwarning: the RL dashboard could not be drawn "
+                      f"({exc}). Existing outputs are unaffected.",
                       file=sys.stderr)
         print("\nwrote " + ", ".join(str(w) for w in written))
     return 0
