@@ -14500,3 +14500,96 @@ result JSON SHA-256 is
 The 400.65 s timer is the resumed 1,271-row segment only; the first 79-row
 diagnostic segment was not timed durably. Full audit:
 `EDGE_BANK_PROBE_RESULTS.md`.
+
+## Entry 95 -- physical Rs/Cs selector switches
+
+**Written:** 2026-09-04, session 45, after Entry 93 exposed that the 64 Rs/Cs
+codes are separately regenerated geometries rather than one programmable
+circuit, and before any Entry 95 switch measurement or switched-CTLE result.
+**Owner approval:** explicit approval in chat to implement the physical
+switchable CTLE bank. This does not reopen Entry 89 FINAL and does not permit
+reusing the frozen policy if the electrical code values change.
+
+### Existing evidence and the missing measurement
+
+The old tuning-trade experiment measured a 40 um / 0.15 um SKY130 NMOS at
+`Vsource = 0 V` and obtained 16.50 ohm. It did not put the transistor in the
+CTLE, measure its OFF capacitance or test PVT. A new read-only sweep of the
+unchanged production base circuit found `v(s1) = 0.4484427--0.5414126 V`
+across all 45 mandated corners. Entry 75 already proved why carrying a switch
+number between bias conditions is unsafe: the input attenuator's NMOS became
+9.148 gigaohm at its real common mode.
+
+### Frozen switch probe
+
+Use the real `sky130_fd_pr__nfet_01v8`, `L = 0.15 um`, total widths
+`40, 80, 160, 320, 640 um` with 40 um per finger, source common modes
+`0.44, 0.50, 0.55 V`, both S3 band edges `1.25, 2.5 GHz`, and all 45 process /
+VDD / temperature corners. Gate high is ON and gate 0 is OFF; body stays at
+ground. `Ron` is the fitted `dV/dI` over 5--45 mV, not a one-point quotient.
+AC current reports ON impedance and OFF effective capacitance. Exact
+membership is 45 x 3 x 5 = 675 bias/width rows, each carrying both frequencies.
+
+Two architectures are evaluated in this order:
+
+1. **Exact one-hot:** eight complete resistor legs and eight complete capacitor
+   legs, one selected on each axis. It preserves the present logarithmic code
+   values and therefore permits a direct old-versus-switched comparison.
+2. **Three-switch binary fallback:** fixed `Rmax` plus three binary-weighted
+   parallel-conductance legs, and fixed `Cmin` plus three binary-weighted
+   capacitor legs. It preserves the two endpoint values and 8 x 8 logical
+   reach with six selector transistors, but its seven intermediate R/C values
+   differ. Therefore it requires new bank characterisation and RL retraining;
+   the frozen policy may not be relabelled onto it.
+
+### Predictions before implementation or measurement
+
+1. The old 40 um switch will have higher Ron at the real 0.44--0.55 V source
+   bias than its ground-biased 16.50 ohm value. Confidence 0.95.
+2. No measured width will satisfy both exact one-hot limits: the width needed
+   for the 10 pF ON path will make seven disabled switches exceed the OFF-load
+   allowance. Confidence 0.80.
+3. At least one measured width will satisfy the less severe six-switch binary
+   limits. Confidence 0.65; this remains uncertain until the PDK capacitance is
+   measured at the actual bias.
+4. If a switch width passes the isolated binary gate, the fully netlisted TT
+   bank will still move at least one response by more than the isolated
+   half-step estimate, because body capacitance and all enabled/disabled legs
+   interact. Confidence 0.70. This is why the full circuit comparison remains
+   mandatory.
+
+### Pre-registered gates and stopping rule
+
+- **P1 integrity:** 675 unique rows, all requested corners/biases/widths and
+  both frequencies, zero silent ngspice failures, finite positive Ron/ON
+  impedance/OFF capacitance.
+- **P2 scaling:** within each corner and common mode, Ron strictly decreases
+  and OFF capacitance strictly increases with width. A violation invalidates
+  the probe rather than becoming a favourable selector point.
+- **P3 exact one-hot:** worst-case Ron <= 2.02 ohm and worst-case OFF
+  capacitance <= 36.22 fF. The Ron limit makes the effective-capacitance loss
+  of a 10 pF selected leg at 2.5 GHz no larger than half the smallest existing
+  adjacent Cs step (0.91499 pF); seven OFF devices together may consume no
+  more than half the smallest existing adjacent step (0.25356 pF).
+- **P4 binary fallback:** worst-case Ron <= 5.06 ohm and worst-case OFF
+  capacitance <= 198.0 fF. These are the same half-step construction applied
+  to a linear three-bit bank: its capacitor step is 1.18791 pF, its largest
+  switched leg is 4.75163 pF and at most three selector devices exist per axis.
+- **P5 selection:** choose the smallest measured width satisfying all limits
+  for the relevant topology. No interpolation or unmeasured width may pass.
+- **P6 full-circuit gate:** only a P3-passing exact bank or P4-passing binary
+  bank may enter the CTLE. Compare all 64 TT codes against separately drawn
+  controls and report maximum peaking/frequency/noise error and code ordering.
+  No production manifest, 45-corner claim or RL policy is upgraded at TT.
+
+If P3 passes, implement and compare exact one-hot first. If P3 fails and P4
+passes, implement the binary fallback and keep it explicitly experimental.
+If both fail, freeze the negative result and do not hide the selector behind
+ideal switches. A successful TT comparison authorises a separately registered
+all-corner bank rebuild; it does not authorise attaching Entry 86/89 claims to
+the new hardware.
+
+The documentation-only post-registration suite reached 2,741 passes with the
+known timing-sensitive PDK trim speed assertion failing once at `tt` (3.71 s
+trimmed versus 2.82 s untrimmed); bit identity had passed and the exact case
+then passed alone in 4.17 s. No Entry 95 switch measurement has been run.

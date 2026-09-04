@@ -17,7 +17,14 @@
 > decisions that are OPEN and human-only, and what to do next. It supersedes
 > `nebula/NEXT_STEPS.md`. This file remains the full state of record.
 
-Last updated: **2026-09-04** (session 44, Entry 94 real-channel intake: Nebula
+Last updated: **2026-09-04** (session 45, Entry 95 physical-bank
+preregistration: the owner approved implementing real Rs/Cs selector switches.
+The unchanged base CTLE measures `v(s1)=0.4484427--0.5414126 V` over all 45
+corners, so the old 16.50 ohm ground-biased NMOS result is not reused. Entry 95
+freezes a 675-row width/bias/PVT Ron and OFF-capacitance probe, exact one-hot
+first and a six-switch binary fallback second, with half-code-step gates before
+either topology may enter the CTLE. No switch result exists yet. Earlier Entry
+94 real-channel intake: Nebula
 now parses Touchstone 1.x `.sNp` files without scikit-rf and writes a
 hash-grounded JSON/PNG profile. It refuses malformed records, invalid port maps
 and missing Nyquist coverage, and labels every upload
@@ -2440,12 +2447,14 @@ complete: the high 12 dB edge closes, the low edge reaches 314/315 and the
 overall registered verdict is FAIL. The owner-requested RL adaptation dashboard
 is now integrated and validated against the real 315-condition demo. The
 natural-language wrapper is also connected to that same product and exporter.
-**Next action:** run Entry 94's intake on a genuinely measured `.s4p` when one
-is supplied, then decide whether its full phase/reflection response warrants a
-new 512-setting link re-characterisation. Do not attach the existing 315/315
-claim to it. The logical architecture drawing is complete, but selecting a
-transistor topology for the Rs/Cs switches remains a physical design decision
-and is not silently assumed. Separately, the remaining decisions are whether to
+**Next action:** implement and run Entry 95's frozen real-NMOS selector probe.
+Try the exact one-hot bank first because it preserves the existing code values;
+if its seven disabled devices violate the registered capacitance gate, try the
+registered six-switch binary fallback. Only a topology that clears its
+isolated gate may enter the 64-code TT comparison, and neither TT result may
+upgrade the production manifest or reuse the frozen policy. Separately, run
+Entry 94's intake on a genuinely measured `.s4p` when one is supplied and do
+not attach the existing 315/315 claim to it. The remaining decisions are whether to
 preregister an isolated 8.4 dB one-point diagnostic and whether to adopt Entry
 90's successful Cs/Rs candidates into the production map.
 Do not rerun, tune or replace FINAL.
@@ -5523,6 +5532,19 @@ crosstalk, and the frozen eye bank still belongs to the constructed family.
 the `(output,input)` ports; hash the source; refuse files that miss Nyquist.
 Every intake artifact must say `PROFILED_NOT_RL_VERIFIED` until the CTLE bank is
 re-evaluated using that exact file's full response.
+
+### G163. A switch resistance belongs to a bias point, not just a W/L
+
+The old degeneration-bank sketch carried a 16.50 ohm NMOS result measured with
+its source at ground. The production CTLE's unchanged base design puts the
+source at 0.448--0.541 V across 45 PVT corners, reducing gate overdrive and
+adding body effect. Entry 75 already showed the catastrophic version of this
+error at the 1.5 V input common mode: the copied NMOS became 9.148 gigaohm.
+
+**Rule:** qualify an analog selector at the voltage of the node it switches,
+over PVT, and measure both states. `Ron` alone is insufficient: disabled-device
+capacitance must be included in the assembled circuit before any programmable
+hardware claim.
 
 ## 10. Environment
 
@@ -15523,3 +15545,31 @@ exact failed case then passed alone in 5.43 s. The owner explicitly declined a
 second complete run after that isolated pass. There were 13 deselected and the
 same two known warnings; no RL policy, reward, range, topology, frozen artifact
 or simulator result changed.
+
+### 2026-09-04 - session 45 (Entry 95 preregistration). **The physical Rs/Cs selector is now a measured design task, not an implied ideal switch.**
+
+The owner approved implementing the missing selector hardware. A read-only
+sweep of the unchanged production base CTLE first measured `v(s1)` at all 45
+mandated corners: 0.4484427 V minimum (`fs/0.95/125C`) and 0.5414126 V maximum
+(`sf/1.05/125C`). The old 16.50 ohm NMOS result was measured with its source at
+ground and is therefore not carried into this design.
+
+Entry 95 freezes five total widths, three source biases bracketing the measured
+range, two band-edge frequencies and all 45 PVT corners: 675 bias/width rows.
+It measures fitted Ron, ON impedance and OFF effective capacitance. Half-code-
+step limits separately gate an exact 16-leg one-hot bank and a lower-parasitic
+six-switch binary fallback. Exact one-hot is tried first because it preserves
+the frozen code values; binary values differ and therefore cannot inherit the
+old 23,040-row table or RL policy. Neither topology may enter the CTLE unless
+its isolated gate passes, and a TT circuit comparison cannot upgrade the
+production manifest. Full registration: `nebula/PREDICTIONS.md` Entry 95.
+
+The required pre-change non-slow suite passes **2,742/2,742**, with 13
+deselected and the same two warnings in 429.90 s. No Entry 95 switch
+measurement or switched netlist exists at this boundary.
+
+The documentation-only post-registration suite reached **2,741 passed** with
+one timing-only failure in `test_pdk_trim...[tt]`: trimmed 3.71 s versus
+untrimmed 2.82 s on that invocation. The bit-identity checks before the timing
+assertion passed, and the exact failed case then passed alone in 4.17 s. There
+were 13 deselected and the same two warnings. The experiment remains unopened.
