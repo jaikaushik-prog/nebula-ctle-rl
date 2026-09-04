@@ -882,6 +882,12 @@ signaling, ADC-based DSP receiver, 28 nm CMOS reference parameters).
 
 ## 2. Repository map (what every file/folder is)
 
+Entry 95 additions (session 45): `nebula/device/tuning_switch.py` owns the
+isolated real-NMOS W/bias/PVT Ron, ON-impedance and OFF-capacitance probe;
+`nebula/experiments/exp_tuning_switch.py` is its hash-recorded anti-clobber
+runner; `nebula/tests/test_tuning_switch.py` holds the nine fail-capable parser,
+membership, scaling, selection and evidence-write gates.
+
 ```
 ├── .gitignore              ← sectioned BY REASON (copyright / redistribution /
 │                             regenerable), not by extension. Keeps the ten
@@ -15573,3 +15579,24 @@ one timing-only failure in `test_pdk_trim...[tt]`: trimmed 3.71 s versus
 untrimmed 2.82 s on that invocation. The bit-identity checks before the timing
 assertion passed, and the exact failed case then passed alone in 4.17 s. There
 were 13 deselected and the same two warnings. The experiment remains unopened.
+
+### 2026-09-04 - session 45 (Entry 95 implementation boundary). **The switch probe is fail-first gated and still unopened.**
+
+Nine focused tests first failed because `device/tuning_switch.py` did not
+exist. The implemented deck places a real `nfet_01v8` at every registered
+source bias in both ON and OFF states, keeps total width and finger count
+separate, fits `dV/dI` over 5--45 mV and parses ngspice's real `(x,y)` versus
+complex `(x,re,im)` formats explicitly. One corner invocation carries all 15
+width/bias pairs, so the full 675-row evidence costs 45 launches rather than
+675. Missing artifacts, warning-shaped silent failures, malformed axes and
+non-positive numbers all abort.
+
+The pure assessor independently reconstructs exact 675-row membership, checks
+Ron-down/Coff-up scaling with width, applies P3/P4 and selects only the smallest
+actually measured passing width. The experiment wrapper recomputes that
+assessment, hashes all rows and refuses overwrite. Focused gates pass **9/9**.
+No real Entry 95 switch deck has run and no result artifact exists yet.
+
+The complete implementation-boundary non-slow suite passes **2,751/2,751**,
+with 13 deselected and the same two warnings in 425.53 s. Commit this boundary
+before invoking the real-PDK runner.

@@ -14593,3 +14593,17 @@ The documentation-only post-registration suite reached 2,741 passes with the
 known timing-sensitive PDK trim speed assertion failing once at `tt` (3.71 s
 trimmed versus 2.82 s untrimmed); bit identity had passed and the exact case
 then passed alone in 4.17 s. No Entry 95 switch measurement has been run.
+
+### Entry 95 implementation boundary -- before measurement
+
+Nine fail-capable tests failed first on the absent module and now pass 9/9.
+The runner measures all 15 W/bias pairs in one deck per corner, parses real and
+complex `wrdata` formats under independent shape/frequency-axis gates, scans
+warning-shaped failures, and refuses a missing output despite ngspice's exit
+code. The assessor reconstructs exact membership and P1--P5 from the rows; the
+anti-clobber artifact wrapper recomputes it and hashes the canonical row list.
+No real switch deck or Entry 95 result exists at this boundary.
+
+The complete implementation-boundary non-slow suite passes 2,751/2,751, with
+13 deselected and the same two warnings in 425.53 s. Commit this boundary
+before invoking the real-PDK runner.
