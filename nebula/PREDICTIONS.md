@@ -14696,7 +14696,7 @@ The source files are hash-gated:
   differential capacitance strictly increases as Cs code moves 0 -> 7.
 - **S4 resistor accuracy:** absolute switched-minus-control conductance error
   <= half one binary conductance step at every row/frequency. The step is
-  `(1/70.173472 - 1/683.841986)/7`; the fixed limit is 0.913586 mS.
+  `(1/70.173472 - 1/683.841986)/7`; the fixed limit is 0.913434 mS.
 - **S5 capacitor accuracy:** absolute switched-minus-control effective-C error
   <= half one binary capacitance step at every row/frequency. The fixed limit
   is 0.593954 pF.
@@ -14726,3 +14726,23 @@ The required pre-change non-slow suite is the Entry 95 final run:
 The documentation-only post-registration suite also passes 2,751/2,751, with
 13 deselected and the same two warnings in 284.52 s. Freeze this registration
 before adding the Entry 96 implementation.
+
+**Pre-measurement arithmetic correction:** the first fail-capable test derived
+the conductance half-step from the exact endpoints and found the registered
+decimal 0.913586 mS was a transcription/calculation error. The exact value is
+0.9134338016 mS, rounded to **0.913434 mS**. The correction tightens the gate,
+occurred before any Entry 96 simulator invocation and changes no topology.
+
+### Entry 96 implementation boundary -- before measurement
+
+Eight fail-capable tests failed first on the absent module and now pass 8/8.
+The implementation hash-gates both source artifacts, derives rather than
+duplicates the binary endpoints, keeps all nine ON/OFF selector devices in each
+deck and compares against a separately drawn control under the same library and
+analysis. The parser verifies ngspice's three-row complex format before using
+only the registered endpoints. S1-S6 are recomputed by the anti-clobber writer.
+No Entry 96 SPICE deck or result exists at this boundary.
+
+The complete implementation-boundary non-slow suite passes 2,759/2,759, with
+13 deselected and the same two warnings in 325.28 s. Commit this boundary before
+the first Entry 96 simulator invocation.

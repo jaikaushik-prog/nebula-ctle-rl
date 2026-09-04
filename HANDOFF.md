@@ -894,6 +894,12 @@ membership, scaling, selection and evidence-write gates. The exposed 675-row
 artifact is `nebula/experiments/tuning_switch_results.json`; the professor-ready
 audit is `nebula/TUNING_SWITCH_RESULTS.md`.
 
+Entry 96 additions (session 45): `nebula/device/split_tuning_bank.py` derives
+the hash-gated binary endpoints/branches, emits the same-deck switched and
+real-passive-control networks, parses differential admittance and scores S1-S6.
+`nebula/experiments/exp_split_tuning_bank.py` is its anti-clobber result writer;
+`nebula/tests/test_split_tuning_bank.py` holds eight fail-capable gates.
+
 ```
 ├── .gitignore              ← sectioned BY REASON (copyright / redistribution /
 │                             regenerable), not by extension. Keeps the ten
@@ -15696,7 +15702,7 @@ conductance/capacitance and keep every disabled device in the deck.
 
 Stage one is exactly 64 TT block measurements, each beside a separately drawn
 real-passive `R || C` control at both S3 band edges. S1-S6 require exact
-membership, strict ordering, <=0.913586 mS conductance error and <=0.593954 pF
+membership, strict ordering, <=0.913434 mS conductance error and <=0.593954 pF
 effective-capacitance error. Any failure stops before CTLE insertion or
 post-result resizing. Even a pass cannot inherit the old intermediate-code
 table or policy. Full registration: `nebula/PREDICTIONS.md` Entry 96.
@@ -15706,3 +15712,28 @@ deselected and two known warnings in 282.61 s. No Entry 96 code or result exists
 
 The documentation-only post-registration suite also passes **2,751/2,751**,
 with 13 deselected and the same two warnings in 284.52 s.
+
+The first implementation test caught a pre-measurement arithmetic typo:
+the exact conductance half-step is 0.9134338016 mS, not 0.913586 mS. The gate
+was corrected to the tighter exact value before any Entry 96 SPICE invocation;
+the topology and capacitor limit are unchanged.
+
+### 2026-09-04 - session 45 (Entry 96 implementation boundary). **The new 64-code block runner is fail-first gated and unopened.**
+
+Eight focused tests first failed because `device/split_tuning_bank.py` did not
+exist. The implementation hash-checks Entry 81 endpoints and Entry 95 Ron,
+derives the binary values, subtracts nominal measured Ron only from the three
+floating resistor branches and emits real SKY130 poly/MIM geometry. Every deck
+contains all three resistor and six split-cap NMOS selectors, including OFF
+devices, plus a separately drawn real-passive control. Differential admittance
+is reconstructed from four complex source currents at the exact two endpoints.
+
+The pure scorer gates 64-code membership, strict R/C ordering and the two exact
+half-step errors; a source test excludes CTLE/link/reward/policy/FINAL imports.
+The writer recomputes the result and refuses overwrite. Focused tests pass
+**8/8** after the pre-measurement arithmetic correction. No Entry 96 deck or
+result artifact exists at this boundary.
+
+The complete implementation-boundary non-slow suite passes **2,759/2,759**,
+with 13 deselected and the same two warnings in 325.28 s. Commit this boundary
+before the first Entry 96 simulator invocation.
