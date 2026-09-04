@@ -14624,3 +14624,24 @@ only the pre-registered endpoint rows. No measured number or gate changed.
 
 The exact-three-row repair passes the complete non-slow suite 2,751/2,751,
 with 13 deselected and the same two warnings in 311.29 s.
+
+### Entry 95 outcome -- **both selector architectures FAIL**
+
+All 675 registered real-NMOS rows pass exact membership and numeric/scaling
+integrity. Predictions 1 and 2 HIT, prediction 3 MISSES and prediction 4 is not
+scored because its P4 condition was false. P1-P2 pass. Exact one-hot P3 fails:
+no width has both Ron <=2.02 ohm and OFF C <=36.22 fF. Binary P4 also fails:
+320 um has 8.710 ohm / 149.09 fF and 640 um has 4.355 ohm / 298.03 fF, so the
+resistance and capacitance limits do not overlap. P5 selects nothing and the
+stopping rule forbids P6's 64-code CTLE insertion.
+
+The old 40 um / source-ground value was 16.50 ohm. Across the real-bias grid it
+is 18.10--69.68 ohm, with the maximum at `fs/0.95/125C`, source 0.55 V. The
+complete result-file SHA-256 is
+`E99F7CD8BAD788DF2F36CD4E3585E66110D30108D7AEBCB520498E7B6F339883`;
+the canonical 675-row SHA-256 is
+`753B55A40A2E2D9752590F01AA308444D67C002606511EB3FC6D0A4092F4CB41`.
+Full audit: `TUNING_SWITCH_RESULTS.md`.
+
+The final post-result non-slow suite passes 2,751/2,751, with 13 deselected and
+the same two warnings in 282.61 s.

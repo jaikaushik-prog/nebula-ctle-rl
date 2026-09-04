@@ -17,14 +17,13 @@
 > decisions that are OPEN and human-only, and what to do next. It supersedes
 > `nebula/NEXT_STEPS.md`. This file remains the full state of record.
 
-Last updated: **2026-09-04** (session 45, Entry 95 physical-bank
-preregistration: the owner approved implementing real Rs/Cs selector switches.
-The unchanged base CTLE measures `v(s1)=0.4484427--0.5414126 V` over all 45
-corners, so the old 16.50 ohm ground-biased NMOS result is not reused. Entry 95
-freezes a 675-row width/bias/PVT Ron and OFF-capacitance probe, exact one-hot
-first and a six-switch binary fallback second, with half-code-step gates before
-either topology may enter the CTLE. No switch result exists yet. Earlier Entry
-94 real-channel intake: Nebula
+Last updated: **2026-09-04** (session 45, Entry 95 physical-bank outcome:
+675/675 real-NMOS rows pass integrity, but both registered architectures fail.
+Exact one-hot has no width below both 2.02 ohm and 36.22 fF; the binary fallback
+has 320 um at 8.710 ohm / 149.09 fF and 640 um at 4.355 ohm / 298.03 fF, so its
+Ron/Coff limits do not overlap either. No selector entered the CTLE and the
+production/RL claims are unchanged. Earlier Entry 94 real-channel intake:
+Nebula
 now parses Touchstone 1.x `.sNp` files without scikit-rf and writes a
 hash-grounded JSON/PNG profile. It refuses malformed records, invalid port maps
 and missing Nyquist coverage, and labels every upload
@@ -886,7 +885,9 @@ Entry 95 additions (session 45): `nebula/device/tuning_switch.py` owns the
 isolated real-NMOS W/bias/PVT Ron, ON-impedance and OFF-capacitance probe;
 `nebula/experiments/exp_tuning_switch.py` is its hash-recorded anti-clobber
 runner; `nebula/tests/test_tuning_switch.py` holds the nine fail-capable parser,
-membership, scaling, selection and evidence-write gates.
+membership, scaling, selection and evidence-write gates. The exposed 675-row
+artifact is `nebula/experiments/tuning_switch_results.json`; the professor-ready
+audit is `nebula/TUNING_SWITCH_RESULTS.md`.
 
 ```
 ├── .gitignore              ← sectioned BY REASON (copyright / redistribution /
@@ -1828,6 +1829,14 @@ Plus: git init, .gitignore, 28 tests, Wilson-bound BER reporting.
 
 ## 6. Key numbers & validated behavior (current state)
 
+- **Nebula Entry 95 rejects the two ordinary series-NMOS Rs/Cs selector
+  arrangements:** all 675 rows across five widths, three actual-node biases and
+  45 PVT corners are valid and monotonic. Exact one-hot P3 and six-switch binary
+  P4 both fail because lowering Ron by widening the device raises its disabled
+  capacitance. The old 40 um source-ground result was 16.50 ohm; at the actual
+  0.44--0.55 V bias it is 18.10--69.68 ohm. No width is selected, no switch is
+  inserted into the CTLE and P6 is correctly not run. Result:
+  `nebula/TUNING_SWITCH_RESULTS.md`.
 - **Nebula Entry 94 makes real Touchstone input usable without borrowing the
   frozen result:** `link/channel.py` now parses Touchstone 1.x RI, MA and DB
   S-parameter data locally, including continuation lines, row-wise 3+-port
@@ -2394,6 +2403,12 @@ Plus: git init, .gitignore, 28 tests, Wilson-bound BER reporting.
   claim full 3-12 dB x 1.25-2.5 GHz coverage. A further 8.4 dB diagnostic and
   any production adoption require separate human decisions; neither permits
   tuning against Entry 89 FINAL.
+- **(nebula) The Rs/Cs bank is still not a tapeout-ready switch matrix.** Entry
+  95 measures why: neither an exact one-hot nor a uniform-width three-switch
+  binary series-NMOS selector meets its predeclared Ron/OFF-capacitance limits.
+  The frozen 512 settings remain separately drawn geometries. The PMOS input
+  attenuator is still the only netlisted-and-measured programmable block; do
+  not upgrade the architecture manifest or reuse Entry 86/89 on a new topology.
 - **(nebula) The completed combined-bank experiment still uses the constructed
   channel, modeled eye and one design load.** Seven loss values do not add
   measured reflections, crosstalk or termination interaction. Entry 81's
@@ -2453,12 +2468,12 @@ complete: the high 12 dB edge closes, the low edge reaches 314/315 and the
 overall registered verdict is FAIL. The owner-requested RL adaptation dashboard
 is now integrated and validated against the real 315-condition demo. The
 natural-language wrapper is also connected to that same product and exporter.
-**Next action:** implement and run Entry 95's frozen real-NMOS selector probe.
-Try the exact one-hot bank first because it preserves the existing code values;
-if its seven disabled devices violate the registered capacitance gate, try the
-registered six-switch binary fallback. Only a topology that clears its
-isolated gate may enter the 64-code TT comparison, and neither TT result may
-upgrade the production manifest or reuse the frozen policy. Separately, run
+**Next action:** decide whether to preregister a new split-capacitor topology.
+The capacitor between `s1`/`s2` can be represented by two symmetric capacitors
+to AC ground, moving its NMOS switches near ground where gate overdrive is much
+larger; the resistor requires a separate topology because grounding it would
+change DC bias. Entry 95's failed series-switch result cannot be retuned or
+silently widened. Separately, run
 Entry 94's intake on a genuinely measured `.s4p` when one is supplied and do
 not attach the existing 315/315 claim to it. The remaining decisions are whether to
 preregister an isolated 8.4 dB one-point diagnostic and whether to adopt Entry
@@ -15618,10 +15633,10 @@ with 13 deselected and the same two warnings in 425.53 s. Commit this boundary
 before invoking the real-PDK runner.
 
 The first frozen invocation produced no result: the AC shape gate found one
-row where two were required. This ngspice build emits `N-1` rows for
-`ac lin N`; `cap_probe.py` had recorded the same local quirk. The deck now asks
-for `ac lin 3` and still asserts that the only emitted frequencies are exactly
-1.25 and 2.5 GHz. G164 records the repair. No selector value was accepted and
+row where two were required. This was initially attributed too broadly to an
+`N-1` rule; `cap_probe.py` had recorded only the two-point special case. The
+deck was changed to `ac lin 3`; the next paragraph records why its parser also
+needed repair. No selector value was accepted and
 `tuning_switch_results.json` does not exist.
 
 The post-repair complete non-slow suite passes **2,751/2,751**, with 13
@@ -15636,3 +15651,30 @@ No switch value or threshold changed and the result path remains absent.
 
 The exact-three-row repair passes the complete non-slow suite **2,751/2,751**,
 with 13 deselected and the same two warnings in 311.29 s.
+
+### 2026-09-04 - session 45 (Entry 95 outcome). **Both registered series-NMOS selector architectures fail; no switch enters the CTLE.**
+
+The third invocation completed all **675/675** registered rows in 2.73 s with
+P1 exact membership and P2 monotonic scaling both passing. Widening the NMOS
+works electrically in one direction and fails in the other: worst Ron falls
+69.679 -> 4.355 ohm from 40 -> 640 um, while worst OFF capacitance rises
+18.640 -> 298.031 fF.
+
+Exact one-hot P3 fails: no measured width meets both <=2.02 ohm and <=36.22 fF.
+Uniform-width binary P4 also fails: 320 um meets capacitance at 149.09 fF but
+misses resistance at 8.710 ohm; 640 um meets resistance at 4.355 ohm but misses
+capacitance at 298.03 fF. P5 selects nothing, so the registered stopping rule
+forbids P6's 64-code CTLE insertion. Predictions 1-2 HIT, 3 MISSES and
+conditional prediction 4 is unscored. The production manifest, frozen policy
+and Entry 86/89 claims remain unchanged.
+
+The complete audit is `nebula/TUNING_SWITCH_RESULTS.md`. Result-file SHA-256 is
+`E99F7CD8BAD788DF2F36CD4E3585E66110D30108D7AEBCB520498E7B6F339883`;
+canonical-row SHA-256 is
+`753B55A40A2E2D9752590F01AA308444D67C002606511EB3FC6D0A4092F4CB41`.
+The JSON's `preregistration_commit` field accurately contains frozen runner
+HEAD `41552b7` but is imprecisely named; registration-only commit is `2a5e1ea`.
+Preserve the exposed artifact rather than rewriting that field.
+
+The final post-result non-slow suite passes **2,751/2,751**, with 13 deselected
+and the same two warnings in 282.61 s.
