@@ -18,11 +18,11 @@
 > `nebula/NEXT_STEPS.md`. This file remains the full state of record.
 
 Last updated: **2026-09-04** (session 44, Entry 90 physical-edge probe
-preregistered: the owner approved measuring an 8.3 dB attenuation ceiling, a
-1.294863 pF extra-low Cs candidate and a 581.2038 ohm intermediate Rs candidate
-over exactly 30 settings x 45 corners. No Entry 90 code or SPICE row exists;
-this is diagnostic approval, not production adoption. Entry 89 FINAL remains
-untouched. Earlier session 43: the normal
+implementation boundary: eight gates failed first on the absent module and now
+pass. The crash-safe 30-setting x 45-corner runner, immutable-source validation,
+union coverage analysis and Q1-Q7 scorer exist. No Entry 90 SPICE row or result
+exists; this is diagnostic approval, not production adoption. Entry 89 FINAL
+remains untouched. Earlier session 43: the normal
 interface now takes only peaking and peak frequency. Channel loss is an
 automatic seven-point verification axis; the optional CLI flag is explicitly a
 one-loss diagnostic override. The 9 dB / 1.9 GHz product run passes all 315
@@ -1430,6 +1430,13 @@ signaling, ADC-based DSP receiver, 28 nm CMOS reference parameters).
 │   ├── experiments/exp_joint_bank_73.py  Entry 86's distinct resumable full
 │   │                       bank/PVT verification of the 7.3 dB candidate.
 │   │                       Reuses entry 81 machinery; scores Q1-Q7 and deltas.
+│   ├── experiments/exp_edge_bank_probe.py  Entry 90's preregistered 30-setting
+│   │                       physical edge probe: crash-safe 1,350-row runner,
+│   │                       old-bank union scoring and Q1-Q7 gates. Diagnostic
+│   │                       only; production bank and Entry 89 stay immutable.
+│   ├── tests/test_edge_bank_probe.py  Eight fail-capable Entry 90 gates for
+│   │                       membership, physical values, union attribution,
+│   │                       independent failures, anti-clobber and isolation.
 │   ├── JOINT_BANK_73_RESULTS.md  Entry 86's complete result, Q1 audit,
 │   │                       evidence hashes and RL implication.
 │   ├── MARGIN_ADAPT_RL_RESULTS.md  Entry 87's complete five-seed held-out
@@ -1773,7 +1780,7 @@ Plus: git init, .gitignore, 28 tests, Wilson-bound BER reporting.
 
 ## 6. Key numbers & validated behavior (current state)
 
-- **Nebula Entry 90 is preregistered and not yet implemented or run:** the
+- **Nebula Entry 90 is implemented but has not run:** the
   existing 512-bank diagnosis assigns the low 12 dB edge's seven failures to
   0.0319-0.8490 dB of residual short-channel compression at maximum
   attenuation. The high 12 dB edge fails at the same 29 corners on all seven
@@ -1781,8 +1788,11 @@ Plus: git init, .gitignore, 28 tests, Wilson-bound BER reporting.
   codes. The owner approved a focused 1,350-row diagnostic using 8.3 dB max
   attenuation, one geometric Cs step down (1.294863 pF) and the top-Rs
   geometric midpoint (581.2038 ohm). Exact membership and Q1-Q7 are frozen in
-  `nebula/PREDICTIONS.md` Entry 90. This does not adopt a range, alter the
-  production bank, retrain RL or reopen Entry 89 FINAL.
+  `nebula/PREDICTIONS.md` Entry 90. Eight tests first failed because the module
+  was absent and now pass 8/8. The runner journals and resumes exact membership,
+  byte-verifies its gzip, checks the immutable source hash, re-scores the union
+  and exposes Q1-Q7. This does not adopt a range, alter the production bank,
+  retrain RL or reopen Entry 89 FINAL.
 - **Nebula Entry 89 policies and fresh data are separately frozen:** all
   five seeds `2026090500..04` completed 50 BC epochs plus 200,000 PPO steps,
   one million PPO steps total, with finite and distinct artifacts. Exposed
@@ -2352,10 +2362,10 @@ when no compliant setting was visited. The product now takes only peaking and
 peak frequency, automatically checks 7 channels x 45 PVT points, then writes
 the 315-condition code map, attenuator-correct representative deck and
 adaptive-code-labelled schematic. The predeclared request edge/centre check and
-representative output are complete. **Next action:** implement and run the
-owner-approved, separately preregistered Entry 90 focused physical probe for
-the unsupported 12 dB edges. It is not permission to adopt the resulting range
-automatically. After that, update report/slides and document/draw the
+representative output are complete. **Next action:** run the full suite, commit
+the implemented Entry 90 boundary, then run its owner-approved focused physical
+probe for the unsupported 12 dB edges. It is not permission to adopt the
+resulting range automatically. After that, update report/slides and document/draw the
 complete switched Rs/Cs implementation. Do not rerun, tune or replace FINAL.
 Full immutable sequence and R1-R10:
 `nebula/NEXT_AGENT_ENTRY89.md` and `PREDICTIONS.md` Entry 89.
@@ -15192,3 +15202,24 @@ deselected and the two known warnings in 530.35 s. No implementation or result
 artifact exists at this boundary. The preregistration-only post-change suite
 also passes **2,710/2,710**, with 13 deselected and the same two warnings in
 391.64 s.
+
+### 2026-09-04 - session 44 (Entry 90 implementation boundary). **The focused runner and Q1-Q7 evaluator are fail-first gated; no new SPICE row exists.**
+
+Eight focused tests first failed at collection because
+`experiments/exp_edge_bank_probe.py` did not exist. The implemented runner now
+constructs exactly the preregistered six low-edge and 24 high-edge candidates,
+measures each across 45 corners with all seven link views, journals every row
+for crash-safe resume, validates exact candidate/corner/link membership and
+byte-verifies a compressed evidence copy.
+
+The evaluator loads the old 512-setting archive only after checking its decoded
+SHA-256, scores old and old-plus-probe pools separately, and reports every newly
+covered condition against the candidate that supplied it. Q1-Q7 are pure and
+independently fail-capable; the source test forbids any Entry 89 FINAL evaluator
+or result path. The production 7.3 dB constant, frozen policy, reward,
+tolerances, topology and existing bank are unchanged. Focused tests pass
+**8/8**. Run the complete non-slow suite, commit this implementation boundary,
+and only then invoke the 1,350-row probe.
+
+The complete implementation-boundary non-slow suite passes **2,718/2,718**,
+with 13 deselected and the same two known warnings in 343.48 s.

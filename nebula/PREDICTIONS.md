@@ -14460,3 +14460,16 @@ is made from the exposed result without a new owner decision and preregistration
 
 The required pre-change non-slow suite passes **2,710/2,710**, with 13
 deselected and the two known warnings in 530.35 s.
+
+### Entry 90 implementation boundary -- before measurement
+
+Eight fail-capable tests failed first because the registered experiment module
+was absent and now pass 8/8. The implementation constructs the exact 30
+candidates, journals and resumes 1,350 candidate/corner rows, validates all
+seven link keys, byte-verifies the compressed evidence, hash-checks the
+immutable 512-setting source and scores old versus union coverage with new-only
+candidate attribution. It contains no Entry 89 FINAL evaluator or result path.
+
+No Entry 90 SPICE row or result exists at this boundary. The complete non-slow
+suite passes **2,718/2,718**, with 13 deselected and the two known warnings in
+343.48 s. Commit this boundary before invoking the registered runner.
