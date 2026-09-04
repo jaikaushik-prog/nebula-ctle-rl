@@ -14607,3 +14607,12 @@ No real switch deck or Entry 95 result exists at this boundary.
 The complete implementation-boundary non-slow suite passes 2,751/2,751, with
 13 deselected and the same two warnings in 425.53 s. Commit this boundary
 before invoking the real-PDK runner.
+
+The first invocation exposed no result: every `ac lin 2` deck wrote one row,
+and the predeclared shape gate raised before an artifact could be created. The
+mechanical G164 repair uses `ac lin 3`, the convention already required by
+`device/cap_probe.py`, while retaining exact two-row/frequency assertions.
+No measured switch value has been accepted or used to change a gate.
+
+The post-repair complete non-slow suite passes 2,751/2,751, with 13 deselected
+and the same two warnings in 308.45 s. Freeze the repair before retrying.

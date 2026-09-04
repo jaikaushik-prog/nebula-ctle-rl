@@ -45,7 +45,8 @@ def test_deck_uses_real_bias_body_and_both_switch_states():
     # Fourth MOS terminal is ground: the real p-substrate connection.
     assert " gate_on " in text and " 0 sky130_fd_pr__nfet_01v8" in text
     assert "dc Vdelta 0 0.05 0.001" in text
-    assert "ac lin 2 1.25e+09 2.5e+09" in text
+    # This ngspice emits N-1 rows for `ac lin N`; 3 gives both endpoints.
+    assert "ac lin 3 1.25e+09 2.5e+09" in text
     assert "wrdata ron.txt" in text
     assert "wrdata zon.txt" in text
     assert "wrdata coff.txt" in text

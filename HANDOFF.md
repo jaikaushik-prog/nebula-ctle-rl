@@ -5552,6 +5552,17 @@ over PVT, and measure both states. `Ron` alone is insufficient: disabled-device
 capacitance must be included in the assembled circuit before any programmable
 hardware claim.
 
+### G164. In this ngspice build, `ac lin N` writes N-1 rows
+
+Entry 95's first frozen invocation asked for `ac lin 2` at the two S3 band
+edges. Every deck exited, but `wrdata` contained one row; the shape gate stopped
+the experiment before any result artifact was written. `device/cap_probe.py`
+had already encountered and locally documented the same behaviour.
+
+**Rule:** use `ac lin 3 lo hi` when exactly the two endpoints are required, and
+assert the output shape and frequency values. Never infer that the requested
+point count equals the emitted row count.
+
 ## 10. Environment
 
 - Windows 11, PowerShell 5.1 (+ Git Bash available), Python 3.13.14,
@@ -15600,3 +15611,14 @@ No real Entry 95 switch deck has run and no result artifact exists yet.
 The complete implementation-boundary non-slow suite passes **2,751/2,751**,
 with 13 deselected and the same two warnings in 425.53 s. Commit this boundary
 before invoking the real-PDK runner.
+
+The first frozen invocation produced no result: the AC shape gate found one
+row where two were required. This ngspice build emits `N-1` rows for
+`ac lin N`; `cap_probe.py` had recorded the same local quirk. The deck now asks
+for `ac lin 3` and still asserts that the only emitted frequencies are exactly
+1.25 and 2.5 GHz. G164 records the repair. No selector value was accepted and
+`tuning_switch_results.json` does not exist.
+
+The post-repair complete non-slow suite passes **2,751/2,751**, with 13
+deselected and the same two warnings in 308.45 s. Freeze the repair before the
+second invocation.

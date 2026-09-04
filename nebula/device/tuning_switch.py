@@ -93,7 +93,9 @@ def build_deck(process: str, vdd_v: float, temp_c: float,
         "set filetype=ascii",
         "dc Vdelta 0 0.05 0.001",
         f"wrdata ron.txt {on_vecs}",
-        f"ac lin 2 {FREQS_HZ[0]:g} {FREQS_HZ[1]:g}",
+        # G164: this ngspice build returns N-1 rows for `ac lin N`.
+        # `lin 3` is therefore the two registered endpoints, not a midpoint.
+        f"ac lin 3 {FREQS_HZ[0]:g} {FREQS_HZ[1]:g}",
         f"wrdata zon.txt {on_vecs}",
         f"wrdata coff.txt {off_vecs}",
         "quit",
