@@ -21,9 +21,15 @@ Files:
 - `design.cir`: exact representative TT/7.5 dB configuration sent to ngspice.
 - `design_schematic.png`: schematic parsed from that exact deck.
 - `rl_dashboard.png`: 7 x 45 RL-versus-fallback map and real adaptation trace.
+- `programmable_architecture.png`: the 512-setting A/R/C code architecture,
+  selected code and explicit measured-versus-not-netlisted hardware boundary.
 - `explanation.txt`: deterministic prose containing only recorded facts.
 
 The deck, schematic and dashboard are byte-identical to the numeric
 `rl_hybrid_9db_1p9ghz` demo. Natural language changes only request entry and
 explanation; it cannot alter the optimiser, widen S3, or fabricate a measured
 result.
+
+The input attenuator's PMOS switches are netlisted and measured. The 64 Rs/Cs
+points are separately drawn passive geometries; their selector transistors and
+parasitics remain explicitly unimplemented.

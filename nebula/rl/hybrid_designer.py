@@ -293,6 +293,78 @@ def verification_conditions(
                  for loss in losses for corner in table.corners)
 
 
+def programmable_hardware_manifest(base_u: Sequence[float]) -> dict:
+    """Describe what the 512 settings physically mean, without overclaiming.
+
+    The input attenuator is a real PMOS-switched network in every measured
+    deck.  The Rs/Cs bank evidence is different: its 64 points were produced
+    by drawing and measuring 64 passive geometries, not by netlisting the
+    selector switches which a final programmable IC would need.  Keeping
+    those statuses beside the code values prevents a code map from being
+    mistaken for completed switch hardware.
+    """
+    from nebula.device import attenuator as AT
+
+    settings = J.bank(base_u, n_rs=J.N_RS, n_cs=J.N_CS,
+                      rs_span=J.RS_SPAN, cs_span=J.CS_SPAN)
+    rs_by_code: dict[int, float] = {}
+    cs_by_code: dict[int, float] = {}
+    for setting in settings:
+        params = sizing_from_u(setting.u).params
+        rs = float(params["rs"])
+        cs = float(params["cs"])
+        previous_rs = rs_by_code.setdefault(int(setting.i_rs), rs)
+        previous_cs = cs_by_code.setdefault(int(setting.i_cs), cs)
+        if not math.isclose(previous_rs, rs, rel_tol=0.0, abs_tol=1e-12):
+            raise ValueError("one Rs code maps to more than one target")
+        if not math.isclose(previous_cs, cs, rel_tol=0.0, abs_tol=1e-24):
+            raise ValueError("one Cs code maps to more than one target")
+    expected = list(range(8))
+    if sorted(rs_by_code) != expected or sorted(cs_by_code) != expected:
+        raise ValueError("the programmable bank must contain eight Rs/Cs codes")
+
+    return {
+        "total_logical_settings": int(AT.N_CODES * len(settings)),
+        "setting_encoding": "setting = A*64 + R*8 + C",
+        "attenuator": {
+            "topology": (
+                "differential series-shunt divider with three binary "
+                "PMOS-switched shunt legs per side"),
+            "series_ohm": float(AT.RSER_OHM),
+            "switch_status": "netlisted-and-measured",
+            "switch_device": "sky130_fd_pr__pfet_01v8",
+            "switch_w_um": float(AT.SWITCH_W_UM),
+            "switch_l_um": float(AT.SWITCH_L_UM),
+            "codes": [
+                {"code": code,
+                 "attenuation_db": float(AT.attenuation_db(code)),
+                 "voltage_ratio": float(AT.attenuation(code))}
+                for code in range(AT.N_CODES)
+            ],
+        },
+        "rs_bank": {
+            "topology": "eight selectable source-degeneration resistances",
+            "switch_status": "not-netlisted",
+            "evidence_status": (
+                "eight separately drawn-and-measured resistor geometries"),
+            "codes": [
+                {"code": code, "target_ohm": rs_by_code[code]}
+                for code in expected
+            ],
+        },
+        "cs_bank": {
+            "topology": "eight selectable source-degeneration capacitances",
+            "switch_status": "not-netlisted",
+            "evidence_status": (
+                "eight separately drawn-and-measured capacitor geometries"),
+            "codes": [
+                {"code": code, "target_f": cs_by_code[code]}
+                for code in expected
+            ],
+        },
+    }
+
+
 def _nominal_from_row(row: J.JointRow, u: Sequence[float], loss_db: float,
                       request: tuple[float, float]) -> dict:
     from nebula.rl import reward_v1 as R
@@ -375,6 +447,7 @@ def solve(peaking_db: float, f_peak_hz: float,
     _, _, base_u, _ = BANK73._load_sources()
     bank = J.bank(base_u, n_rs=J.N_RS, n_cs=J.N_CS,
                   rs_span=J.RS_SPAN, cs_span=J.CS_SPAN)
+    hardware = programmable_hardware_manifest(base_u)
     nominal_corner = "tt/1.00/27C"
     # For the automatic family this is its actual middle characterised point
     # (7.5 dB for the registered seven-point grid), not a new design target.
@@ -420,6 +493,7 @@ def solve(peaking_db: float, f_peak_hz: float,
         "nearest_training_request": list(nearest),
         "setting": int(nominal_record["setting"]),
         "atten_code": int(atten_code), "bank_code": int(bank_code),
+        "programmable_hardware": hardware,
         "atten_max_x": float(BANK73.PROBE_MAX_X),
         "rl_proposals": int(sum(row["rl_measurements"] for row in records)),
         "shield_verifier_calls": int(sum(
@@ -439,4 +513,4 @@ __all__ = (
     "build_observation",
     "available_actions", "moved_setting", "trace_policy",
     "select_with_bank_fallback", "losses_to_verify",
-    "verification_conditions", "solve")
+    "verification_conditions", "programmable_hardware_manifest", "solve")

@@ -17,7 +17,12 @@
 > decisions that are OPEN and human-only, and what to do next. It supersedes
 > `nebula/NEXT_STEPS.md`. This file remains the full state of record.
 
-Last updated: **2026-09-04** (session 44, Entry 92 plain-English product: the
+Last updated: **2026-09-04** (session 44, Entry 93 programmable architecture:
+every RL product now carries the exact 8 x 8 x 8 code manifest and emits a
+judge-facing hardware/status drawing. It shows the real netlisted/measured PMOS
+input attenuator and explicitly marks the Rs/Cs selector switches and their
+parasitics as not netlisted; those 64 settings remain separately drawn passive
+geometries, not a tapeout-ready switch matrix. Earlier Entry 92: the
 existing guarded parser now defaults to `rl-hybrid`, understands its 7 x 45
 result and calls the numeric front door's single shared exporter. The real
 offline sentence-to-circuit demo passes 315/315 and writes JSON, exact deck,
@@ -1516,13 +1521,17 @@ signaling, ADC-based DSP receiver, 28 nm CMOS reference parameters).
 │   │                       problem statement to the product, gaps and judge view.
 │   ├── product_demo/rl_hybrid_9db_1p9ghz/  Generated all-channel example:
 │   │                       315-condition JSON+trace map, exact CIR, schematic
-│   │                       PNG and RL adaptation dashboard PNG.
+│   │                       PNG, RL dashboard and programmable architecture.
 │   ├── product_demo/plain_english_9db_1p9ghz/  Offline natural-language demo:
 │   │                       same engineering outputs plus grounded explanation.
 │   ├── report/rl_dashboard.py  Validates the delivered loss/PVT matrix and
 │   │                       draws RL/fallback provenance plus a real eye trace.
+│   ├── report/programmable_architecture.py  Validates and draws the 512-code
+│   │                       A/R/C architecture plus its evidence boundary.
 │   ├── tests/test_rl_dashboard.py  Five fail-first completeness, trace,
 │   │                       rendering and product-output gates.
+│   ├── tests/test_programmable_architecture.py  Five manifest, code-order,
+│   │                       evidence-boundary and render/output gates.
 │   ├── tests/test_llm_product.py  Five fail-first gates connecting the safe
 │   │                       language wrapper to the shielded-RL/export path.
 │   ├── ENTRY89_DEVELOPMENT_RESULTS.md  Five-seed training integrity and exposed
@@ -1797,6 +1806,17 @@ Plus: git init, .gitignore, 28 tests, Wilson-bound BER reporting.
 
 ## 6. Key numbers & validated behavior (current state)
 
+- **Nebula Entry 93 makes all 512 programmable choices visible without
+  overstating hardware maturity:** `rl/hybrid_designer.py` derives the exact
+  8 attenuation, 8 Rs and 8 Cs code values from the same production constants
+  and bank generator used by inference, then records `A*64 + R*8 + C` in
+  `design.json`. `report/programmable_architecture.py` renders the selected
+  code and all target values. It accepts the attenuator only as
+  `netlisted-and-measured` and deliberately refuses any manifest that labels
+  the unbuilt Rs/Cs selector switches as measured. Five tests failed first and
+  now pass. This is a complete logical architecture/status map; the 64 Rs/Cs
+  geometries were separately measured and their physical switches/parasitics
+  remain an explicit limitation.
 - **Nebula Entry 92 connects the guarded language interface to the actual RL
   product:** `python -m nebula.llm "..."` now defaults to `rl-hybrid`, uses only
   the two validated S3 request fields, catches uncovered-bank refusals and calls
@@ -2401,11 +2421,12 @@ complete: the high 12 dB edge closes, the low edge reaches 314/315 and the
 overall registered verdict is FAIL. The owner-requested RL adaptation dashboard
 is now integrated and validated against the real 315-condition demo. The
 natural-language wrapper is also connected to that same product and exporter.
-**Next action:** document and draw the complete switched Rs/Cs/attenuator
-implementation without changing its measured topology. The remaining physical
-decision is whether to preregister an isolated 8.4 dB one-point diagnostic;
-separately, adopting the successful Cs/Rs candidates needs a production-map
-decision. After the complete schematic, add the real Touchstone upload path.
+**Next action:** add the real Touchstone upload path. The logical 512-code
+architecture/status drawing is complete, but selecting a transistor topology
+for the Rs/Cs switches remains a physical design decision and is not silently
+assumed. Separately, the remaining physical decisions are whether to
+preregister an isolated 8.4 dB one-point diagnostic and whether to adopt Entry
+90's successful Cs/Rs candidates into the production map.
 Do not rerun, tune or replace FINAL.
 Full immutable sequence and R1-R10:
 `nebula/NEXT_AGENT_ENTRY89.md` and `PREDICTIONS.md` Entry 89.
@@ -5449,6 +5470,21 @@ front doors had silently become different products.
 public designer and the same artifact writer as numeric input. Run export before
 wording the explanation so the stated simulation cost includes that deck; never
 copy the output-writing block into the language wrapper.
+
+### G161. A configuration code map is not proof of a physical switch matrix
+
+The joint bank contains 512 real simulator settings, but only the eight-code
+input attenuator includes its PMOS switch devices and their parasitics in every
+deck. The 64 Rs/Cs points are produced by regenerating one fixed passive
+geometry per code. Calling all three axes "programmable hardware" without that
+distinction would turn measured functional reachability into an unsupported
+tapeout claim.
+
+**Rule:** every product manifest and architecture view must keep per-block
+implementation status. The attenuator may say `netlisted-and-measured`; Rs and
+Cs must say `not-netlisted` until one approved selector topology, including
+disabled-device parasitics, is built and re-characterised. A plot or policy
+code cannot upgrade that evidence status.
 
 ## 10. Environment
 
@@ -15393,3 +15429,30 @@ so language altered no engineering result. No model API, retraining, FINAL
 access, range/reward/topology change or additional product decision occurred.
 The complete post-change non-slow suite passes **2,728/2,728**, with 13
 deselected and the same two known warnings in 524.31 s.
+
+### 2026-09-04 - session 44 (Entry 93 programmable architecture). **The 512-setting code map is now visible, while the unbuilt Rs/Cs switch matrix remains impossible to mistake for verified hardware.**
+
+Five fail-first tests initially failed because the product exposed only
+integer A/bank codes and had no physical-status view. `rl/hybrid_designer.py`
+now derives a `programmable_hardware` manifest from the exact production
+attenuator constants and the same 8 x 8 Rs/Cs bank generator used by inference.
+It records all target values, the stable `setting = A*64 + R*8 + C` encoding
+and 512-setting count. No tuning range, reward, policy, topology or frozen
+experiment artifact changed.
+
+`report/programmable_architecture.py` validates that manifest before drawing.
+It requires the real-PMOS input attenuator to carry
+`netlisted-and-measured`, requires Rs and Cs to remain `not-netlisted`, decodes
+and highlights the representative A/R/C setting, and refuses a manifest that
+silently upgrades the passive geometries into measured switch hardware.
+`design.py` writes `programmable_architecture.png` beside every RL JSON, exact
+deck, parsed schematic and RL dashboard. The image was inspected at native
+resolution and its initial overlapping annotations were corrected before
+acceptance.
+
+Both 9 dB / 1.9 GHz numeric and offline natural-language demos were regenerated
+through their real product commands. They remain 315/315 with 2,406 actor
+measurements, 266 RL-shield selections and 49 measured-bank fallbacks. Each now
+contains the exact 8 x 8 x 8 code/status image and JSON manifest. The focused
+feature gates pass **5/5**. The complete post-change non-slow suite passes
+**2,733/2,733**, with 13 deselected and the same two known warnings in 437.49 s.

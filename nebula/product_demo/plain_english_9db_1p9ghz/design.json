@@ -42,6 +42,138 @@
   "setting": 104,
   "atten_code": 1,
   "bank_code": 40,
+  "programmable_hardware": {
+   "total_logical_settings": 512,
+   "setting_encoding": "setting = A*64 + R*8 + C",
+   "attenuator": {
+    "topology": "differential series-shunt divider with three binary PMOS-switched shunt legs per side",
+    "series_ohm": 150.0,
+    "switch_status": "netlisted-and-measured",
+    "switch_device": "sky130_fd_pr__pfet_01v8",
+    "switch_w_um": 40.0,
+    "switch_l_um": 0.15,
+    "codes": [
+     {
+      "code": 0,
+      "attenuation_db": -0.0,
+      "voltage_ratio": 1.0
+     },
+     {
+      "code": 1,
+      "attenuation_db": 1.4977853737551112,
+      "voltage_ratio": 0.8416096980592991
+     },
+     {
+      "code": 2,
+      "attenuation_db": 2.774883632735237,
+      "voltage_ratio": 0.726533791459851
+     },
+     {
+      "code": 3,
+      "attenuation_db": 3.888053789300703,
+      "voltage_ratio": 0.6391419311451978
+     },
+     {
+      "code": 4,
+      "attenuation_db": 4.874632141472263,
+      "voltage_ratio": 0.5705167413061712
+     },
+     {
+      "code": 5,
+      "attenuation_db": 5.76049360692487,
+      "voltage_ratio": 0.5151993656925172
+     },
+     {
+      "code": 6,
+      "attenuation_db": 6.564310442854017,
+      "voltage_ratio": 0.46966097771169657
+     },
+     {
+      "code": 7,
+      "attenuation_db": 7.3,
+      "voltage_ratio": 0.43151907682776525
+     }
+    ]
+   },
+   "rs_bank": {
+    "topology": "eight selectable source-degeneration resistances",
+    "switch_status": "not-netlisted",
+    "evidence_status": "eight separately drawn-and-measured resistor geometries",
+    "codes": [
+     {
+      "code": 0,
+      "target_ohm": 70.17347204196405
+     },
+     {
+      "code": 1,
+      "target_ohm": 97.14661002997194
+     },
+     {
+      "code": 2,
+      "target_ohm": 134.48762852537493
+     },
+     {
+      "code": 3,
+      "target_ohm": 186.18171257647606
+     },
+     {
+      "code": 4,
+      "target_ohm": 257.7458646418858
+     },
+     {
+      "code": 5,
+      "target_ohm": 356.81770148453967
+     },
+     {
+      "code": 6,
+      "target_ohm": 493.97057163112163
+     },
+     {
+      "code": 7,
+      "target_ohm": 683.8419860404529
+     }
+    ]
+   },
+   "cs_bank": {
+    "topology": "eight selectable source-degeneration capacitances",
+    "switch_status": "not-netlisted",
+    "evidence_status": "eight separately drawn-and-measured capacitor geometries",
+    "codes": [
+     {
+      "code": 0,
+      "target_f": 1.6846486662527978e-12
+     },
+     {
+      "code": 1,
+      "target_f": 2.1917703964300834e-12
+     },
+     {
+      "code": 2,
+      "target_f": 2.8515485554341908e-12
+     },
+     {
+      "code": 3,
+      "target_f": 3.709936577865539e-12
+     },
+     {
+      "code": 4,
+      "target_f": 4.826721040942929e-12
+     },
+     {
+      "code": 5,
+      "target_f": 6.279685789260853e-12
+     },
+     {
+      "code": 6,
+      "target_f": 8.170029566104976e-12
+     },
+     {
+      "code": 7,
+      "target_f": 9.999999999999985e-12
+     }
+    ]
+   }
+  },
   "atten_max_x": 2.3173946499684783,
   "rl_proposals": 2406,
   "shield_verifier_calls": 2406,
@@ -93,7 +225,7 @@
   "export": 1
  },
  "peaking_is_a_band_not_a_target": "the rl-hybrid safety shield scores V6_SPECS, including both S3_peaking_match and S3_f_peak_match, at every mandated PVT corner and every automatically checked channel loss. The requested peaking and frequency are therefore IN the acceptance test.",
- "wall_s": 14.136974699998973,
+ "wall_s": 6.843591500000912,
  "request_match": {
   "peaking_err_db": -1.009971043014855,
   "f_peak_err_oct": -0.2178560705290343,
@@ -24014,7 +24146,7 @@
   "request": "I need about 9 dB of peaking with the peak near 1.9 GHz",
   "notes": []
  },
- "export_wall_s": 0.5958604000006744,
+ "export_wall_s": 0.25541380000140634,
  "explanation": {
   "text": "You asked for 9 dB of high-frequency peaking with the peak near 1.9 GHz.\n\nThe sized stage peaks at 7.99 dB at 1.634 GHz, and lifts the response by 7.518 dB at Nyquist -- so it equalises rather than merely peaking somewhere below the data band.\nInput-referred noise is 0.3702 mV_rms against a 1.5 mV limit, and it draws 6.68 mW against 15 mW.\nThe input pair sits 0.6422 V into saturation and the tail 0.3464 V.\n\nSizing: input pair 57.98 um wide and 391.1 nm long in 4 fingers, tail current 3.627 mA, degeneration 356.8 ohm with 1.685 pF, load 254.6 ohm, input common mode 1.501 V.\n\nIt cost 1 SPICE simulation.\n\nThe frozen RL proposer used 2406 eye measurements. The simulator-backed shield accepted an RL-visited code at 266 conditions; the deterministic measured-bank fallback supplied 49 conditions.\nAcross 7 characterised channel losses and 45 process-voltage-temperature corners -- 315 conditions -- it passes every point.\n\nNote: the requested peaking and peak frequency are both scored by the acceptance test; they are not post-processing preferences.",
   "source": "template"

@@ -40,7 +40,9 @@ The complete flow is:
    not a user target.
 8. The framework returns the measured results, exact SPICE netlist and a
    schematic image generated from that same netlist, and an RL adaptation
-   dashboard generated from the same delivered 315-condition record.
+   dashboard generated from the same delivered 315-condition record. It also
+   returns a complete 512-code architecture map: all attenuation/Rs/Cs target
+   values, the selected A/R/C code, and the verification status of each block.
 
 The natural-language interface allows a request such as "9 dB near 1.9 GHz"
 to enter the same validated shielded-RL design flow. Its default parser is
@@ -87,6 +89,13 @@ measured bank settings for that condition. The output is one tunable CTLE, its
 deck, measured specifications, an adaptive-code schematic and a 7 x 45 RL
 adaptation dashboard.
 
+The 512-setting architecture is `A x R x C = 8 x 8 x 8`. Its input
+attenuator is physically netlisted with real PMOS switches and measured in the
+SKY130 simulations. The Rs/Cs evidence consists of 64 separately drawn passive
+geometries. Their final selector transistors and switch parasitics have not yet
+been netlisted, so the architecture image marks that boundary prominently
+instead of implying the complete switch matrix is tapeout-ready.
+
 `--channel-loss` still exists as an explicitly optional diagnostic override
 when a developer intentionally wants to inspect one characterised channel.
 
@@ -103,7 +112,7 @@ when a developer intentionally wants to inspect one characterised channel.
 | Human-readable schematic image | Covered |
 | RL trace and RL-versus-fallback condition dashboard | Covered |
 | Resulting measured specifications | Covered |
-| One-stage CTLE with variable Rs and Cs | Covered |
+| One-stage CTLE with variable Rs and Cs | Functionally covered by 64 measured passive geometries; physical selector switches/parasitics are not yet netlisted |
 | One-tap DFE | Covered in the link model |
 | Noise, power, linearity and area checks | Covered |
 | Horizontal and vertical eye opening | Covered by the statistical link model |
@@ -126,7 +135,7 @@ The strongest part of the project is its engineering foundation:
 - It checks process, voltage and temperature variation rather than reporting
   only a nominal result.
 - It produces a traceable netlist, schematic, measurement record and RL
-  adaptation dashboard.
+  adaptation dashboard, plus an honest 512-setting hardware/status map.
 - It compares RL with fixed selection, random search, grid search, CMA-ES and
   hidden-oracle limits.
 - It preserves unsuccessful experiments instead of changing the test after
@@ -211,6 +220,16 @@ circuit. This is a circuit-bank coverage limitation, not an RL runtime error.
 Closing it requires a separately approved expansion of the physical design
 range or architecture; the project rules forbid silently widening device
 ranges after observing a result.
+
+### 7. The Rs/Cs code bank is not yet a transistor-level switch matrix
+
+The product has measured all 64 Rs/Cs targets as separately generated passive
+geometries, and the real PMOS-switched input attenuator is already present in
+the simulation netlists. However, the physical switches that would select the
+eight Rs and eight Cs values in one fabricated CTLE have not been designed or
+simulated. Their on-resistance and parasitic capacitance could shift the
+response. The product therefore emits a logical architecture/status drawing
+and labels this gap rather than presenting it as completed silicon hardware.
 
 ## How is a judge likely to see the product?
 

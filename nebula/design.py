@@ -842,6 +842,20 @@ def write_outputs(d: dict, out_path, *, deck: Optional[str] = None,
             warnings.append(
                 f"the RL dashboard could not be drawn ({exc}). Existing "
                 f"outputs are unaffected.")
+        # This consumes the code manifest derived from the same bank used by
+        # solve().  It labels the unimplemented Rs/Cs switch boundary rather
+        # than presenting 64 simulated passive variants as complete hardware.
+        try:
+            from nebula.report.programmable_architecture import (
+                draw_programmable_architecture,
+            )
+
+            written.append(draw_programmable_architecture(
+                d, out / "programmable_architecture.png"))
+        except Exception as exc:                            # noqa: BLE001
+            warnings.append(
+                f"the programmable architecture could not be drawn ({exc}). "
+                f"Existing outputs are unaffected.")
 
     for name, text in (extra_files or {}).items():
         target = Path(name)
