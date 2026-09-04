@@ -14473,3 +14473,30 @@ candidate attribution. It contains no Entry 89 FINAL evaluator or result path.
 No Entry 90 SPICE row or result exists at this boundary. The complete non-slow
 suite passes **2,718/2,718**, with 13 deselected and the two known warnings in
 343.48 s. Commit this boundary before invoking the registered runner.
+
+### Entry 90 outcome -- **high edge closed; low edge 314/315; overall FAIL**
+
+All 1,350 registered real-PMOS rows completed with exact membership and zero
+hard device failures. Predictions score 3 HIT / 1 MISS. The extra-low Cs and
+intermediate Rs close 12 dB / 2.5 GHz from 112/315 to **315/315** (prediction
+2 HIT). The 8.3 dB candidate improves 12 dB / 1.25 GHz from 308/315 to
+**314/315**, not the registered 315/315 (prediction 1 MISS). All three controls
+remain 315/315 (prediction 3 HIT), and new candidates supply 209 formerly
+missing conditions (prediction 4 HIT).
+
+The sole remainder is 3 dB channel loss at `sf/0.95/125C`. The adjacent
+scorable setting misses frequency match by 0.01442 octaves; the shape-correct
+setting compresses at 704.2 mVpp demand versus 698.4 mVpp limit, a 0.07184 dB
+attenuation lower bound. Q1-Q2 and Q4-Q7 pass; Q3 and OVERALL fail. Per the
+registered stop rule, no 8.4 dB follow-up or production adoption is authorised
+from this exposed result.
+
+Raw/decoded journal SHA-256 is
+`E46CE25CA4DF67DACEE8944852573162EAF3B3410757AF4E9E9ADD229B905D02`;
+gzip SHA-256 is
+`4EC5F77ED184AC2263FB4F5E49D6CD8D676E7B7A9F88974355FEAB0C869F5F53`;
+result JSON SHA-256 is
+`684D80727B3B44952B274AF10DBB30F31793C50FEC57E137A429636F5FFBC48E`.
+The 400.65 s timer is the resumed 1,271-row segment only; the first 79-row
+diagnostic segment was not timed durably. Full audit:
+`EDGE_BANK_PROBE_RESULTS.md`.

@@ -431,6 +431,8 @@ def run(workers: int = 1, resume: bool = False) -> dict:
         "rows_before_segment": before,
         "rows_this_segment": len(probe_rows) - before,
         "resumed": bool(resume), "wall_clock_s": float(elapsed),
+        "wall_clock_scope": ("resume segment only" if resume else
+                             "complete uninterrupted run"),
         "raw_sha256": raw_hash, "gzip_sha256": _sha256(GZIP_LOG),
         "decoded_sha256": decoded_hash,
         "summary": summary,

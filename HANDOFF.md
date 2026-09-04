@@ -17,12 +17,12 @@
 > decisions that are OPEN and human-only, and what to do next. It supersedes
 > `nebula/NEXT_STEPS.md`. This file remains the full state of record.
 
-Last updated: **2026-09-04** (session 44, Entry 90 physical-edge probe
-implementation boundary: eight gates failed first on the absent module and now
-pass. The crash-safe 30-setting x 45-corner runner, immutable-source validation,
-union coverage analysis and Q1-Q7 scorer exist. No Entry 90 SPICE row or result
-exists; this is diagnostic approval, not production adoption. Entry 89 FINAL
-remains untouched. Earlier session 43: the normal
+Last updated: **2026-09-04** (session 44, Entry 90 outcome: all 1,350 focused
+real-PMOS rows completed. The high 12 dB edge closes 112/315 -> 315/315; the low
+edge improves 308/315 -> 314/315 and leaves one `sf/0.95/125C`, 3 dB-channel
+compression failure. Q1-Q2 and Q4-Q7 pass, Q3 and overall fail. The stop rule
+forbids an automatic 8.4 dB response. This remains diagnostic, not production
+adoption, and Entry 89 FINAL is untouched. Earlier session 43: the normal
 interface now takes only peaking and peak frequency. Channel loss is an
 automatic seven-point verification axis; the optional CLI flag is explicitly a
 one-loss diagnostic override. The 9 dB / 1.9 GHz product run passes all 315
@@ -1434,6 +1434,12 @@ signaling, ADC-based DSP receiver, 28 nm CMOS reference parameters).
 │   │                       physical edge probe: crash-safe 1,350-row runner,
 │   │                       old-bank union scoring and Q1-Q7 gates. Diagnostic
 │   │                       only; production bank and Entry 89 stay immutable.
+│   ├── experiments/edge_bank_probe_run.jsonl.gz  Entry 90's byte-verified
+│   │                       1,350-row real-PMOS evidence journal.
+│   ├── experiments/edge_bank_probe_results.json  Entry 90's candidate map,
+│   │                       coverage, attribution, Q1-Q7 and evidence hashes.
+│   ├── EDGE_BANK_PROBE_RESULTS.md  Professor-ready Entry 90 result: high edge
+│   │                       closed, low edge 314/315, overall honest fail.
 │   ├── tests/test_edge_bank_probe.py  Eight fail-capable Entry 90 gates for
 │   │                       membership, physical values, union attribution,
 │   │                       independent failures, anti-clobber and isolation.
@@ -1780,19 +1786,16 @@ Plus: git init, .gitignore, 28 tests, Wilson-bound BER reporting.
 
 ## 6. Key numbers & validated behavior (current state)
 
-- **Nebula Entry 90 is implemented but has not run:** the
-  existing 512-bank diagnosis assigns the low 12 dB edge's seven failures to
-  0.0319-0.8490 dB of residual short-channel compression at maximum
-  attenuation. The high 12 dB edge fails at the same 29 corners on all seven
-  losses; every best near-miss is at minimum Cs and one of the top two Rs
-  codes. The owner approved a focused 1,350-row diagnostic using 8.3 dB max
-  attenuation, one geometric Cs step down (1.294863 pF) and the top-Rs
-  geometric midpoint (581.2038 ohm). Exact membership and Q1-Q7 are frozen in
-  `nebula/PREDICTIONS.md` Entry 90. Eight tests first failed because the module
-  was absent and now pass 8/8. The runner journals and resumes exact membership,
-  byte-verifies its gzip, checks the immutable source hash, re-scores the union
-  and exposes Q1-Q7. This does not adopt a range, alter the production bank,
-  retrain RL or reopen Entry 89 FINAL.
+- **Nebula Entry 90 is complete and overall FAIL:** all 1,350/1,350 registered
+  real-PMOS rows have exact membership and zero hard device failures. The
+  extra-low 1.294863 pF Cs and 581.2038 ohm intermediate Rs close 12 dB /
+  2.5 GHz from 112/315 to **315/315**. The 8.3 dB attenuator improves 12 dB /
+  1.25 GHz from 308/315 to **314/315**; the remaining 3 dB-channel point is
+  `sf/0.95/125C`. Its shape-correct setting needs 704.2 mVpp against a 698.4
+  mVpp limit, a 0.07184 dB further-attenuation lower bound. Three controls stay
+  315/315, and new settings supply 209 conditions. Q1-Q2 and Q4-Q7 pass; Q3
+  and overall fail. No 8.4 dB follow-up or production adoption is authorised.
+  Result: `nebula/EDGE_BANK_PROBE_RESULTS.md`; Entry 89 FINAL is untouched.
 - **Nebula Entry 89 policies and fresh data are separately frozen:** all
   five seeds `2026090500..04` completed 50 BC epochs plus 200,000 PPO steps,
   one million PPO steps total, with finite and distinct artifacts. Exposed
@@ -2299,15 +2302,17 @@ Plus: git init, .gitignore, 28 tests, Wilson-bound BER reporting.
   a compliant design. The midpoint data reuse the same transistor
   geometries/PVT lattice and are fresh channel/request views, not independent
   silicon.
-- **(nebula) The product does not yet cover the entire S3 request rectangle at
-  every added channel condition.** A predeclared edge/centre check passed all
-  315 conditions for 3 dB at 1.25/2.5 GHz and 7.5 dB at the octave midpoint,
-  but the current 512-setting bank has no compliant code at 7/315 conditions
-  for 12 dB at 1.25 GHz and 203/315 for 12 dB at 2.5 GHz. These are legitimate
-  user targets under S3, so do not claim full 3-12 dB x 1.25-2.5 GHz product
-  coverage. The CLI refuses the result cleanly. Closing it requires a
-  human-approved design-range or architecture change, followed by new SPICE;
-  it is not permission to tune against Entry 89 FINAL.
+- **(nebula) The shipping product does not yet cover the entire S3 request
+  rectangle at every added channel condition.** Its unchanged 512-setting bank
+  still lacks a compliant code at 7/315 conditions for 12 dB at 1.25 GHz and
+  203/315 for 12 dB at 2.5 GHz, and the CLI refuses those requests cleanly.
+  Entry 90 measured a separate diagnostic union: the proposed extra Cs/Rs
+  choices close the high edge at 315/315, while the 8.3 dB attenuator reaches
+  314/315 at the low edge. The one remaining point is 3 dB channel loss at
+  `sf/0.95/125C`. These candidates are not yet production codes, so do not
+  claim full 3-12 dB x 1.25-2.5 GHz coverage. A further 8.4 dB diagnostic and
+  any production adoption require separate human decisions; neither permits
+  tuning against Entry 89 FINAL.
 - **(nebula) The completed combined-bank experiment still uses the constructed
   channel, modeled eye and one design load.** Seven loss values do not add
   measured reflections, crosstalk or termination interaction. Entry 81's
@@ -2362,11 +2367,15 @@ when no compliant setting was visited. The product now takes only peaking and
 peak frequency, automatically checks 7 channels x 45 PVT points, then writes
 the 315-condition code map, attenuator-correct representative deck and
 adaptive-code-labelled schematic. The predeclared request edge/centre check and
-representative output are complete. **Next action:** run the full suite, commit
-the implemented Entry 90 boundary, then run its owner-approved focused physical
-probe for the unsupported 12 dB edges. It is not permission to adopt the
-resulting range automatically. After that, update report/slides and document/draw the
-complete switched Rs/Cs implementation. Do not rerun, tune or replace FINAL.
+representative output are complete. Entry 90's focused physical probe is also
+complete: the high 12 dB edge closes, the low edge reaches 314/315 and the
+overall registered verdict is FAIL. **Next action:** preserve that result, then
+build the owner-requested RL adaptation dashboard without altering the frozen
+policy or FINAL set. The remaining physical decision is whether to preregister
+an isolated 8.4 dB one-point diagnostic; separately, adopting the successful
+Cs/Rs candidates needs a production-map decision. After the dashboard, add the
+natural-language wrapper, complete switched Rs/Cs/attenuator schematic and real
+Touchstone upload path. Do not rerun, tune or replace FINAL.
 Full immutable sequence and R1-R10:
 `nebula/NEXT_AGENT_ENTRY89.md` and `PREDICTIONS.md` Entry 89.
 
@@ -5362,6 +5371,29 @@ robustness axis makes the Cartesian product stricter than either axis alone.
 and report the served domain. A nearest training request plus a safety fallback
 is not evidence that the physical bank contains a solution. Refuse uncovered
 requests; never shrink the advertised test set after seeing the failures.
+
+### G157. A compression-ratio estimate is a lower bound, not a certified range
+
+Entry 90's old-bank diagnosis suggested as much as 0.849 dB additional
+attenuation. The preregistered 8.3 dB endpoint included that amount plus a
+guard, yet one resized real-PMOS point still compressed by the equivalent of
+0.07184 dB. Changing the physical divider also changes loading and response, so
+the simple voltage ratio did not certify the resized circuit.
+
+**Rule:** use compression ratios to choose the next measured candidate, never
+to claim that a physical range will pass. Freeze the observed result and obtain
+a new decision before testing an exposed-result response.
+
+### G158. A Python numerical DLL crash can happen before the first SPICE row
+
+Entry 90's first conda-Python launch terminated inside SciPy's Windows LAPACK
+DLL with status `0xc06d007f`, before the journal contained any row. System
+Python then drove the same absolute `ngspice_con.exe` and completed exact
+membership. This was not an ngspice exit-zero failure and not a circuit row.
+
+**Rule:** require a durably committed first row before calling a long launch
+healthy. On Windows, use `faulthandler` to distinguish a host numerical-library
+termination from a parsed circuit failure, and preserve the empty-journal fact.
 
 ## 10. Environment
 
@@ -15223,3 +15255,33 @@ and only then invoke the 1,350-row probe.
 
 The complete implementation-boundary non-slow suite passes **2,718/2,718**,
 with 13 deselected and the same two known warnings in 343.48 s.
+
+### 2026-09-04 - session 44 (Entry 90 outcome). **The high 12 dB edge closes; the low edge reaches 314/315; the registered overall verdict is FAIL.**
+
+All **1,350/1,350** focused real-PMOS rows completed with exact membership and
+zero hard device failures. Re-scoring the immutable old bank plus the registered
+30 candidates preserves all three 315/315 controls, closes 12 dB / 2.5 GHz from
+112/315 to **315/315**, and improves 12 dB / 1.25 GHz from 308/315 to
+**314/315**. New settings directly supply 209 previously missing conditions.
+Predictions score three HIT and one MISS; Q1-Q2 and Q4-Q7 pass, Q3 and OVERALL
+fail.
+
+The sole remainder is 3 dB channel loss at `sf/0.95/125C`. Its shape-correct
+candidate demands 704.2 mVpp against a 698.4 mVpp measured compression limit;
+0.07184 dB is only a lower bound for further attenuation. The stop rule
+therefore forbids automatically testing 8.4 dB or adopting any candidate.
+Entry 89 FINAL, its policies, reward and the production 7.3 dB bank remain
+untouched. The complete audit is `nebula/EDGE_BANK_PROBE_RESULTS.md`.
+
+The raw/decoded journal SHA-256 is
+`E46CE25CA4DF67DACEE8944852573162EAF3B3410757AF4E9E9ADD229B905D02`,
+the gzip SHA-256 is
+`4EC5F77ED184AC2263FB4F5E49D6CD8D676E7B7A9F88974355FEAB0C869F5F53`,
+and the result JSON SHA-256 is
+`684D80727B3B44952B274AF10DBB30F31793C50FEC57E137A429636F5FFBC48E`.
+The reported 400.65 s timer covers only the resumed 1,271-row segment; the
+initial 79-row diagnostic segment was not timed durably. The first conda launch
+failed inside SciPy's Windows LAPACK DLL before any row; system Python completed
+the same ngspice workload. G157-G158 record both lessons. The required final
+non-slow suite passes **2,718/2,718**, with 13 deselected and the same two known
+warnings in 265.49 s.
