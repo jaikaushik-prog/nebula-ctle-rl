@@ -197,6 +197,9 @@ ngspice 41 lives in the conda env `nebula`; SKY130 is installed at
 # The shielded-RL product: only peaking and peak frequency are user targets.
 python -m nebula.design --method rl-hybrid --peaking 9 --f-peak 1.9 --out out
 
+# The same product from plain English; offline and deterministic by default.
+python -m nebula.llm "I need 9 dB of peaking near 1.9 GHz" --out out
+
 # The full test suite. Run from the repo root.
 python -m pytest tests nebula/tests -q -m "not slow"
 

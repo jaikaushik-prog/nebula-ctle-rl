@@ -769,6 +769,89 @@ def provenance_report() -> str:
     return "\n".join(L)
 
 
+def prepare_output_deck(d: dict) -> Optional[str]:
+    """Run the one representative export deck and account for it once."""
+    from nebula.experiments.cl_range import committed_cl_range
+
+    export_started = time.perf_counter()
+    deck = netlist_for(
+        d["search"]["u"], committed_cl_range().cl_mid_f,
+        atten_code=d["search"].get("atten_code"),
+        atten_max_x=d["search"].get("atten_max_x"))
+    export_elapsed = time.perf_counter() - export_started
+    if deck:
+        if "export" in d["simulations"]:
+            raise ValueError("the representative output deck was already run")
+        d["simulations"]["export"] = 1
+        d["simulations"]["total"] += 1
+        d["export_wall_s"] = export_elapsed
+        d["wall_s"] += export_elapsed
+    return deck
+
+
+def write_outputs(d: dict, out_path, *, deck: Optional[str] = None,
+                  extra_files: Optional[dict[str, str]] = None
+                  ) -> tuple[list[Path], list[str]]:
+    """Write every product artifact from one design dictionary and deck.
+
+    Both numeric and natural-language front doors call this function.  Drawing
+    failures are returned as warnings after preserving JSON and the exact deck.
+    """
+    out = Path(out_path)
+    out.mkdir(parents=True, exist_ok=True)
+    (out / "design.json").write_text(
+        json.dumps(d, indent=1, default=str), encoding="utf-8")
+    written = [out / "design.json"]
+    warnings: list[str] = []
+
+    if deck:
+        (out / "design.cir").write_text(deck, encoding="utf-8")
+        written.append(out / "design.cir")
+        # The drawing parses the same deck string just written above (G32).
+        try:
+            from nebula.report.schematic import draw_schematic
+
+            nom = d.get("nominal") or {}
+            warn = None
+            if not nom.get("ok", False):
+                warn = str(nom.get("verdict") or "no valid measurement")
+            search = d.get("search") or {}
+            code_note = (f"  -  representative TT configuration A"
+                         f"{search.get('atten_code')}/B"
+                         f"{search.get('bank_code')}; channel/PVT code map in "
+                         f"design.json" if d.get("method") == "rl-hybrid"
+                         else "  -  values parsed from the netlist beside it")
+            written.append(draw_schematic(
+                deck, out / "design_schematic.png",
+                subtitle=f"target {d['request']['peaking_db']:.1f} dB @ "
+                         f"{d['request']['f_peak_hz'] / 1e9:.3f} GHz"
+                         f"{code_note}",
+                extra=_schematic_panel(d), warning=warn))
+        except Exception as exc:                            # noqa: BLE001
+            warnings.append(
+                f"the schematic could not be drawn ({exc}). "
+                f"design.json and design.cir are unaffected.")
+
+    if d.get("method") == "rl-hybrid":
+        # This consumes the exact delivered records; no replay or simulation.
+        try:
+            from nebula.report.rl_dashboard import draw_rl_dashboard
+
+            written.append(draw_rl_dashboard(d, out / "rl_dashboard.png"))
+        except Exception as exc:                            # noqa: BLE001
+            warnings.append(
+                f"the RL dashboard could not be drawn ({exc}). Existing "
+                f"outputs are unaffected.")
+
+    for name, text in (extra_files or {}).items():
+        target = Path(name)
+        if target.is_absolute() or target.name != name:
+            raise ValueError(f"extra output name must be a basename: {name!r}")
+        (out / target).write_text(str(text), encoding="utf-8")
+        written.append(out / target)
+    return written, warnings
+
+
 def main(argv: Optional[Sequence[str]] = None) -> int:
     lo_db, hi_db = SPEC_PEAKING_DB_RANGE
     lo_hz, hi_hz = SPEC_F_PEAK_HZ_RANGE
@@ -845,77 +928,14 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         print(f"error: {exc}", file=sys.stderr)
         return 2
 
-    deck = None
-    if args.out:
-        from nebula.experiments.cl_range import committed_cl_range
-
-        export_started = time.perf_counter()
-        deck = netlist_for(
-            d["search"]["u"], committed_cl_range().cl_mid_f,
-            atten_code=d["search"].get("atten_code"),
-            atten_max_x=d["search"].get("atten_max_x"))
-        export_elapsed = time.perf_counter() - export_started
-        if deck:
-            d["simulations"]["export"] = 1
-            d["simulations"]["total"] += 1
-            d["export_wall_s"] = export_elapsed
-            d["wall_s"] += export_elapsed
+    deck = prepare_output_deck(d) if args.out else None
 
     print(json.dumps(d, indent=1, default=str) if args.json else report(d))
 
     if args.out:
-        args.out.mkdir(parents=True, exist_ok=True)
-        (args.out / "design.json").write_text(
-            json.dumps(d, indent=1, default=str), encoding="utf-8")
-        written = [args.out / "design.json"]
-        if deck:
-            (args.out / "design.cir").write_text(deck, encoding="utf-8")
-            written.append(args.out / "design.cir")
-            # **The brief asks for a SCHEMATIC, and a SPICE deck is one only to
-            # a reader who parses SPICE.** The drawing is rendered FROM `deck`
-            # -- the same string just written to `design.cir` -- so the picture
-            # and the netlist cannot disagree (G32). A drawing failure must not
-            # cost the caller the deck and the JSON that already succeeded, so
-            # it is reported and not raised.
-            try:
-                from nebula.report.schematic import draw_schematic
-
-                nom = d.get("nominal") or {}
-                # **A failed run still has a netlist.** Drawing it silently
-                # under a panel headed "Delivered design" would hand a reader
-                # a picture of a circuit that does not meet the request.
-                warn = None
-                if not nom.get("ok", False):
-                    warn = str(nom.get("verdict") or "no valid measurement")
-                search = d.get("search") or {}
-                code_note = (f"  -  representative TT configuration A"
-                             f"{search.get('atten_code')}/B"
-                             f"{search.get('bank_code')}; channel/PVT code map in "
-                             f"design.json" if d.get("method") == "rl-hybrid"
-                             else "  -  values parsed from the netlist beside it")
-                written.append(draw_schematic(
-                    deck, args.out / "design_schematic.png",
-                    subtitle=f"target {d['request']['peaking_db']:.1f} dB @ "
-                             f"{d['request']['f_peak_hz'] / 1e9:.3f} GHz"
-                             f"{code_note}",
-                    extra=_schematic_panel(d), warning=warn))
-            except Exception as exc:                        # noqa: BLE001
-                print(f"\nwarning: the schematic could not be drawn ({exc}). "
-                      f"design.json and design.cir are unaffected.",
-                      file=sys.stderr)
-        if d.get("method") == "rl-hybrid":
-            # The dashboard reads the exact per-condition records already
-            # written to design.json. It performs no policy replay, inference
-            # or SPICE work, and refuses a partial/duplicated condition grid.
-            try:
-                from nebula.report.rl_dashboard import draw_rl_dashboard
-
-                written.append(draw_rl_dashboard(
-                    d, args.out / "rl_dashboard.png"))
-            except Exception as exc:                        # noqa: BLE001
-                print(f"\nwarning: the RL dashboard could not be drawn "
-                      f"({exc}). Existing outputs are unaffected.",
-                      file=sys.stderr)
+        written, warnings = write_outputs(d, args.out, deck=deck)
+        for warning in warnings:
+            print(f"\nwarning: {warning}", file=sys.stderr)
         print("\nwrote " + ", ".join(str(w) for w in written))
     return 0
 

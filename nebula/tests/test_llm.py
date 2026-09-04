@@ -307,7 +307,8 @@ def test_the_model_is_never_in_the_sizing_loop():
                 f"able to touch the sizing loop")
     # the CLI may call the designer, but only through its public entry point
     cli = inspect.getsource(M)
-    assert "from nebula.design import design, report" in cli
+    assert "from nebula.design import" in cli
+    assert "design, prepare_output_deck, report, write_outputs" in cli
     assert "METHODS" not in cli and "Objective" not in cli
 
 

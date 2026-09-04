@@ -1,0 +1,14 @@
+You asked for 9 dB of high-frequency peaking with the peak near 1.9 GHz.
+
+The sized stage peaks at 7.99 dB at 1.634 GHz, and lifts the response by 7.518 dB at Nyquist -- so it equalises rather than merely peaking somewhere below the data band.
+Input-referred noise is 0.3702 mV_rms against a 1.5 mV limit, and it draws 6.68 mW against 15 mW.
+The input pair sits 0.6422 V into saturation and the tail 0.3464 V.
+
+Sizing: input pair 57.98 um wide and 391.1 nm long in 4 fingers, tail current 3.627 mA, degeneration 356.8 ohm with 1.685 pF, load 254.6 ohm, input common mode 1.501 V.
+
+It cost 1 SPICE simulation.
+
+The frozen RL proposer used 2406 eye measurements. The simulator-backed shield accepted an RL-visited code at 266 conditions; the deterministic measured-bank fallback supplied 49 conditions.
+Across 7 characterised channel losses and 45 process-voltage-temperature corners -- 315 conditions -- it passes every point.
+
+Note: the requested peaking and peak frequency are both scored by the acceptance test; they are not post-processing preferences.

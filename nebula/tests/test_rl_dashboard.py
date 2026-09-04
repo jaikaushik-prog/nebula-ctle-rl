@@ -126,6 +126,6 @@ def test_policy_trace_export_names_actions_and_preserves_eye_measurements():
 def test_design_output_path_includes_the_rl_dashboard():
     import nebula.design as design
 
-    source = inspect.getsource(design.main)
+    source = inspect.getsource(design.write_outputs)
     assert "draw_rl_dashboard" in source
     assert "rl_dashboard.png" in source

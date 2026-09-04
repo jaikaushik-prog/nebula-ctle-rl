@@ -78,14 +78,26 @@ def facts(d: Mapping[str, Any]) -> dict:
     })
     v = d.get("verification")
     if v:
-        out.update({
-            "corner_points": v["n_points"],
-            "corner_points_failed": v["n_failed"],
-            "corner_points_failed_unscreened": v["n_failed_outside_the_screen"],
-            "worst_corner_reward": v["worst_reward"],
-            "n_corners": v["n_corners"],
-            "n_loads": v["n_loads"],
-        })
+        out.update({"corner_points": v["n_points"],
+                    "corner_points_failed": v["n_failed"],
+                    "n_corners": v["n_corners"]})
+        if d.get("method") == "rl-hybrid":
+            search = d.get("search") or {}
+            out.update({
+                "n_channel_losses": v["n_channel_losses"],
+                "rl_proposals": search["rl_proposals"],
+                "shield_fallbacks": search["shield_fallbacks"],
+                "rl_shield_selections": (
+                    v["n_points"] - v["n_failed"]
+                    - search["shield_fallbacks"]),
+            })
+        else:
+            out.update({
+                "corner_points_failed_unscreened":
+                    v["n_failed_outside_the_screen"],
+                "worst_corner_reward": v["worst_reward"],
+                "n_loads": v["n_loads"],
+            })
     return out
 
 
@@ -104,6 +116,7 @@ def verdicts(d: Mapping[str, Any]) -> dict:
                            ("passes every point" if v["all_points_pass"]
                             else "FAILS at least one point")),
         "peaking_is_a_band": True,
+        "request_scored": d["method"] in ("auto", "rl-hybrid"),
     }
 
 
@@ -139,24 +152,46 @@ def template(d: Mapping[str, Any]) -> str:
         (f"It cost {f['simulations_total']:g} SPICE simulation"
          + ("s." if f["simulations_total"] != 1 else ".")),
     ]
+    if w["method"] == "rl-hybrid":
+        L.extend([
+            "",
+            f"The frozen RL proposer used {f['rl_proposals']:g} eye "
+            f"measurements. The simulator-backed shield accepted an "
+            f"RL-visited code at {f['rl_shield_selections']:g} conditions; "
+            f"the deterministic measured-bank fallback supplied "
+            f"{f['shield_fallbacks']:g} conditions.",
+        ])
     if w["corner_verified"]:
-        L.append(
-            f"Across {f['n_corners']:g} process-voltage-temperature corners at "
-            f"{f['n_loads']:g} loads -- {f['corner_points']:g} points -- it "
-            f"{w['corner_verdict']}"
-            + (f", failing {f['corner_points_failed']:g} of them, "
-               f"{f['corner_points_failed_unscreened']:g} at corners the "
-               f"three-corner screen never evaluates."
-               if f.get("corner_points_failed") else
-               f", with a worst-case score of "
-               f"{f['worst_corner_reward']:.4g}."))
+        if w["method"] == "rl-hybrid":
+            L.append(
+                f"Across {f['n_channel_losses']:g} characterised channel "
+                f"losses and {f['n_corners']:g} process-voltage-temperature "
+                f"corners -- {f['corner_points']:g} conditions -- it "
+                f"{w['corner_verdict']}.")
+        else:
+            L.append(
+                f"Across {f['n_corners']:g} process-voltage-temperature "
+                f"corners at {f['n_loads']:g} loads -- "
+                f"{f['corner_points']:g} points -- it {w['corner_verdict']}"
+                + (f", failing {f['corner_points_failed']:g} of them, "
+                   f"{f['corner_points_failed_unscreened']:g} at corners the "
+                   f"three-corner screen never evaluates."
+                   if f.get("corner_points_failed") else
+                   f", with a worst-case score of "
+                   f"{f['worst_corner_reward']:.4g}."))
     else:
         L.append("It has NOT been verified across corners; the search saw one "
                  "corner and one load.")
     L.append("")
-    L.append("Note: the peaking figure is a BAND requirement, not a target the "
-             "optimiser aims at -- the request is honoured as a tie-break "
-             "among designs that already meet every specification.")
+    if w["request_scored"]:
+        L.append("Note: the requested peaking and peak frequency are both "
+                 "scored by the acceptance test; they are not post-processing "
+                 "preferences.")
+    else:
+        L.append("Note: the peaking figure is a BAND requirement, not a target "
+                 "the optimiser aims at -- the request is honoured as a "
+                 "tie-break among designs that already meet every "
+                 "specification.")
     return "\n".join(L)
 
 

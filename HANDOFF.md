@@ -17,14 +17,14 @@
 > decisions that are OPEN and human-only, and what to do next. It supersedes
 > `nebula/NEXT_STEPS.md`. This file remains the full state of record.
 
-Last updated: **2026-09-04** (session 44, Entry 91 product dashboard: every
-RL-hybrid output now carries the actor's real per-condition eye/action traces
-and writes a judge-facing `rl_dashboard.png`. The real 9 dB / 1.9 GHz demo shows
-315/315 verified, 266 RL-shield selections and 49 measured-bank fallbacks over
-the 7 x 45 condition grid. No policy replay, retraining, FINAL access or new
-design decision occurs. Earlier Entry 90: the high 12 dB edge closes; the low
-edge reaches 314/315 and its registered verdict remains FAIL. Earlier session
-43: the normal
+Last updated: **2026-09-04** (session 44, Entry 92 plain-English product: the
+existing guarded parser now defaults to `rl-hybrid`, understands its 7 x 45
+result and calls the numeric front door's single shared exporter. The real
+offline sentence-to-circuit demo passes 315/315 and writes JSON, exact deck,
+schematic, RL dashboard and grounded explanation. Its engineering artifacts
+are byte-identical to the numeric demo. Earlier Entry 91 added the traceable RL
+dashboard; Entry 90's high 12 dB edge closes while the low reaches 314/315 and
+remains an honest registered fail. Earlier session 43: the normal
 interface now takes only peaking and peak frequency. Channel loss is an
 automatic seven-point verification axis; the optional CLI flag is explicitly a
 one-loss diagnostic override. The 9 dB / 1.9 GHz product run passes all 315
@@ -1517,10 +1517,14 @@ signaling, ADC-based DSP receiver, 28 nm CMOS reference parameters).
 │   ├── product_demo/rl_hybrid_9db_1p9ghz/  Generated all-channel example:
 │   │                       315-condition JSON+trace map, exact CIR, schematic
 │   │                       PNG and RL adaptation dashboard PNG.
+│   ├── product_demo/plain_english_9db_1p9ghz/  Offline natural-language demo:
+│   │                       same engineering outputs plus grounded explanation.
 │   ├── report/rl_dashboard.py  Validates the delivered loss/PVT matrix and
 │   │                       draws RL/fallback provenance plus a real eye trace.
 │   ├── tests/test_rl_dashboard.py  Five fail-first completeness, trace,
 │   │                       rendering and product-output gates.
+│   ├── tests/test_llm_product.py  Five fail-first gates connecting the safe
+│   │                       language wrapper to the shielded-RL/export path.
 │   ├── ENTRY89_DEVELOPMENT_RESULTS.md  Five-seed training integrity and exposed
 │   │                       raw-versus-shielded mechanism result; not FINAL.
 │   ├── ENTRY89_MIDPOINT_DATA.md  Fresh-data provenance and the explicit
@@ -1793,6 +1797,15 @@ Plus: git init, .gitignore, 28 tests, Wilson-bound BER reporting.
 
 ## 6. Key numbers & validated behavior (current state)
 
+- **Nebula Entry 92 connects the guarded language interface to the actual RL
+  product:** `python -m nebula.llm "..."` now defaults to `rl-hybrid`, uses only
+  the two validated S3 request fields, catches uncovered-bank refusals and calls
+  the same output implementation as `nebula.design`. The explainer now handles
+  the 7 x 45 schema and distinguishes RL proposals, simulator-shield selection
+  and classical fallback. The real offline 9 dB / 1.9 GHz run passes 315/315
+  and writes five artifacts; its CIR, schematic and dashboard are byte-identical
+  to the numeric demo. Five tests failed first on the old disconnected behavior;
+  the focused language/export/dashboard suite passes 65/65.
 - **Nebula Entry 91 adds a traceable RL adaptation dashboard to the product:**
   every `rl-hybrid` condition record now preserves the actor's exact setting
   sequence, named actions and measured eye inputs. `--out` validates the full
@@ -2386,13 +2399,13 @@ adaptive-code-labelled schematic. The predeclared request edge/centre check and
 representative output are complete. Entry 90's focused physical probe is also
 complete: the high 12 dB edge closes, the low edge reaches 314/315 and the
 overall registered verdict is FAIL. The owner-requested RL adaptation dashboard
-is now integrated and validated against the real 315-condition demo. **Next
-action:** build the natural-language request wrapper without changing the two
-actual user targets or bypassing their range validation. The remaining physical
+is now integrated and validated against the real 315-condition demo. The
+natural-language wrapper is also connected to that same product and exporter.
+**Next action:** document and draw the complete switched Rs/Cs/attenuator
+implementation without changing its measured topology. The remaining physical
 decision is whether to preregister an isolated 8.4 dB one-point diagnostic;
 separately, adopting the successful Cs/Rs candidates needs a production-map
-decision. After the language wrapper, add the complete switched
-Rs/Cs/attenuator schematic and real Touchstone upload path.
+decision. After the complete schematic, add the real Touchstone upload path.
 Do not rerun, tune or replace FINAL.
 Full immutable sequence and R1-R10:
 `nebula/NEXT_AGENT_ENTRY89.md` and `PREDICTIONS.md` Entry 89.
@@ -5423,6 +5436,19 @@ credit RL with a measurement and action it never made.
 **Rule:** keep policy visits and final selection as separate provenance. If a
 fallback code was not visited, draw it as a separately labelled fallback and
 never add it to the actor's measurement count or action sequence.
+
+### G160. A safe language parser is not a product wrapper until it shares the exporter
+
+The original `nebula.llm` correctly validated requests and grounded prose, but
+still defaulted to the old library method and wrote only JSON plus text. It
+therefore could not demonstrate the frozen RL path, exact netlist, schematic or
+dashboard, and its explainer assumed the old 45-corner x load schema. The two
+front doors had silently become different products.
+
+**Rule:** language may add parsing and explanation only. It must call the same
+public designer and the same artifact writer as numeric input. Run export before
+wording the explanation so the stated simulation cost includes that deck; never
+copy the output-writing block into the language wrapper.
 
 ## 10. Environment
 
@@ -15337,3 +15363,33 @@ ninth RL action (G159). The PNG was inspected at native resolution and is
 readable. No retraining, reward/range/topology change or FINAL access occurred.
 The complete post-change non-slow suite passes **2,723/2,723**, with 13
 deselected and the same two known warnings in 266.91 s.
+
+### 2026-09-04 - session 44 (Entry 92 plain-English RL product). **One sentence now reaches the same verified circuit artifacts as numeric input, offline.**
+
+The natural-language safety layer already existed, but its CLI defaulted to the
+old `library` method, omitted `rl-hybrid` from its choices, wrote only JSON/text
+and raised a schema error when explaining a modern 7 x 45 result. Five focused
+tests failed first on those exact gaps. `nebula.llm` now defaults to the frozen
+shielded-RL path, still exposes older methods only as explicit diagnostics,
+catches uncovered-bank failures as clean refusals and never exposes channel
+loss as a requested design target.
+
+`design.py` now owns one shared `prepare_output_deck` / `write_outputs` path.
+Both front doors use it for the exact representative netlist, parsed schematic,
+RL dashboard and JSON. The language path adds only its validated parse record
+and grounded explanation. Export occurs before explanation so the one-deck cost
+is truthful; a test prevents the two output paths from diverging again. The
+explainer separately reports the actor measurements, RL-shield selections,
+measured-bank fallbacks and 7 x 45 verdict instead of forcing the old load-grid
+schema. Focused language, output, CLI and dashboard tests pass **65/65**.
+
+The real no-network command
+`python -m nebula.llm "I need about 9 dB of peaking with the peak near 1.9 GHz"
+--out nebula/product_demo/plain_english_9db_1p9ghz` completed successfully. It
+passes 315/315, records 2,406 actor measurements, 266 RL-shield selections and
+49 fallbacks, and writes JSON, CIR, schematic PNG, dashboard PNG and grounded
+text. The CIR, schematic and dashboard hashes match the numeric demo exactly,
+so language altered no engineering result. No model API, retraining, FINAL
+access, range/reward/topology change or additional product decision occurred.
+The complete post-change non-slow suite passes **2,728/2,728**, with 13
+deselected and the same two known warnings in 524.31 s.

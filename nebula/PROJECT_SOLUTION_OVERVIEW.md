@@ -42,9 +42,12 @@ The complete flow is:
    schematic image generated from that same netlist, and an RL adaptation
    dashboard generated from the same delivered 315-condition record.
 
-An optional natural-language interface allows a request such as "9 dB near
-1.9 GHz" to be converted into the same validated design flow. The language
-model is not allowed to change the circuit or invent measurement results.
+The natural-language interface allows a request such as "9 dB near 1.9 GHz"
+to enter the same validated shielded-RL design flow. Its default parser is
+deterministic and offline; an LLM is optional. Neither path can change the
+circuit, widen the legal request range or invent measurement results. With
+`--out`, it uses the same exporter as the numeric front door and writes the
+netlist, schematic, dashboard, JSON record and grounded explanation.
 
 ## What is the RL system doing?
 
@@ -107,7 +110,7 @@ when a developer intentionally wants to inspect one characterised channel.
 | Process, voltage and temperature checks | Covered over the 45 required corners at every characterised channel loss |
 | Lower online design effort than exhaustive search | Covered experimentally: 5.579 mean measured settings instead of 512 |
 | Zero human intervention during a design run | Covered |
-| Optional LLM-based interaction | Covered |
+| Natural-language interaction with optional LLM wording | Covered and connected to the shielded-RL product |
 | A useful and safe RL result on unseen conditions | Covered: Entry 89 passed all R1-R10 gates and is integrated as `--method rl-hybrid` |
 | Fabricated-silicon validation | Not covered; present evidence is simulator-backed |
 
