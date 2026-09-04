@@ -17,12 +17,12 @@
 > decisions that are OPEN and human-only, and what to do next. It supersedes
 > `nebula/NEXT_STEPS.md`. This file remains the full state of record.
 
-Last updated: **2026-09-04** (session 45, Entry 97 preregistration: the owner
-approved a safe lower-Ron attempt. Before measurement, six width scales of the
-official SKY130 `nfet_01v8_lvt` capacitor selector are frozen for a 384-row TT
-screen. A candidate must meet Entry 96's unchanged conductance and capacitance
-limits simultaneously; no boosted gate, CTLE insertion or RL change is allowed
-at this stage. Earlier Entry 96 outcome: the split-capacitor bank passes
+Last updated: **2026-09-04** (session 45, Entry 97 outcome: all 384 safe-LVT
+rows pass integrity and ordering, but no width passes loss and capacitance
+together. Scale 1 alone passes C accuracy; scale 8 has the best G error at
+2.875972 mS, still 3.15x over the 0.913434 mS limit, and larger devices worsen
+both metrics through parasitics. No all-corner, CTLE or RL change occurred.
+Earlier Entry 96 outcome: the split-capacitor bank passes
 capacitance accuracy at 0.517849 pF error versus a 0.593954 pF limit, but ON
 switch loss adds 18.117350 mS versus the 0.913434 mS limit. Earlier Entry 95:
 675/675 real-NMOS rows pass integrity, but both registered architectures fail.
@@ -908,6 +908,8 @@ Entry 97 additions (session 45): `nebula/device/lvt_tuning_bank.py` batches all
 64 codes into one real-PDK deck per frozen LVT width scale and scores the full
 384-row screen; `nebula/experiments/exp_lvt_tuning_bank.py` is its anti-clobber
 writer; `nebula/tests/test_lvt_tuning_bank.py` holds seven fail-capable gates.
+The exposed artifact is `nebula/experiments/lvt_tuning_bank_results.json` and
+`nebula/LVT_TUNING_BANK_RESULTS.md` is its readable failure audit.
 
 ```
 ├── .gitignore              ← sectioned BY REASON (copyright / redistribution /
@@ -1849,11 +1851,12 @@ Plus: git init, .gitignore, 28 tests, Wilson-bound BER reporting.
 
 ## 6. Key numbers & validated behavior (current state)
 
-- **Nebula Entry 97 is registered but unmeasured:** stage A will compare six
-  safe 1.8 V `nfet_01v8_lvt` width scales (1/2/4/8/16/32x) across the same 64
-  TT split-bank codes. The smallest scale must pass both <=0.913434 mS real-
-  admittance error and <=0.593954 pF effective-C error. No CTLE or RL claim can
-  move on a TT failure. Full registration: `nebula/PREDICTIONS.md`.
+- **Nebula Entry 97 rejects safe LVT resizing:** all 384 rows and both code
+  axes pass, but no scale passes loss and C accuracy together. Scale 1 has
+  17.477435 mS / 0.550334 pF errors; scale 8 reaches the best loss at 2.875972
+  mS but C error is already 2.127597 pF. Wider devices worsen both through OFF
+  parasitics. No CTLE or RL run is authorised. Result:
+  `nebula/LVT_TUNING_BANK_RESULTS.md`.
 - **Nebula Entry 96 proves the ground-referenced split capacitor gets the
   value right but is far too lossy:** all 64 TT codes simulate, both axes are
   monotonic and effective-C error passes (0.517849 <= 0.593954 pF). Total
@@ -2441,7 +2444,8 @@ Plus: git init, .gitignore, 28 tests, Wilson-bound BER reporting.
   binary series-NMOS selector meets its predeclared Ron/OFF-capacitance limits.
   Entry 96's ground-referenced split-C alternative passes capacitance accuracy
   but fails its conductance-loss gate by 19.83x, so it also remains outside the
-  CTLE.
+  CTLE. Entry 97 finds no safe LVT width overlap either: best loss is still
+  3.15x high and occurs at a scale whose capacitance error is 3.58x high.
   The frozen 512 settings remain separately drawn geometries. The PMOS input
   attenuator is still the only netlisted-and-measured programmable block; do
   not upgrade the architecture manifest or reuse Entry 86/89 on a new topology.
@@ -2504,11 +2508,12 @@ complete: the high 12 dB edge closes, the low edge reaches 314/315 and the
 overall registered verdict is FAIL. The owner-requested RL adaptation dashboard
 is now integrated and validated against the real 315-condition demo. The
 natural-language wrapper is also connected to that same product and exporter.
-**Next action:** implement Entry 97's preregistered 384-row safe-LVT selector
-screen, freeze its runner, and only then invoke ngspice. Entry 96 itself may not
-be retuned: its capacitance value passes, but ordinary-switch loss is 19.83x
-the conductance-error limit. A stage-A Entry 97 failure stops before CTLE;
-a pass permits only a separately preregistered all-corner bank qualification.
+**Next action:** make a human choice between stopping the optional programmable-
+bank work and keeping the competition-valid per-request fixed-passive generator,
+or preregistering a fundamentally different safe-bias tuning principle such as
+a PDK varactor plus DAC. Entry 97 stops the series-MOS selector path: none of
+its six safe LVT scales passes the unchanged loss/C gates, so interpolation,
+all-corner, CTLE and RL continuation are forbidden.
 Separately, run
 Entry 94's intake on a genuinely measured `.s4p` when one is supplied and do
 not attach the existing 315/315 claim to it. The remaining decisions are whether to
@@ -5631,6 +5636,18 @@ the 10.000 pF control.
 **Rule:** characterise a switched reactive bank with complex admittance. Gate
 both its effective reactance and real loss before inserting it into an
 amplifier; a correct C/L value alone is not evidence of a usable element.
+
+### G166. Series-switch loss versus width can be U-shaped, not monotonic
+
+Entry 97 widens an official LVT selector over 32x. Conductance error initially
+falls 17.477 -> 2.876 mS from scale 1 -> 8, then rises to 4.374 and 6.208 mS at
+scales 16 and 32. The worst row also moves from a fully enabled high-C code to
+low-C codes because disabled-device parasitic paths take over. Meanwhile C
+error rises monotonically from 0.550 to 4.472 pF.
+
+**Rule:** do not extrapolate a MOS switch bank with `Ron proportional to 1/W`.
+Measure the complete ON/OFF network across width, and require loss and reactive-
+value accuracy to pass at the same width before selecting anything.
 
 ## 10. Environment
 
@@ -15852,3 +15869,28 @@ or result artifact exists at this boundary.
 The complete implementation-boundary non-slow suite passes **2,766/2,766**,
 with 13 deselected and the same two warnings in 292.36 s. Commit this boundary
 before the first Entry 97 simulator invocation.
+
+### 2026-09-04 - session 45 (Entry 97 outcome). **The official safe-LVT switch also has no valid loss/capacitance overlap.**
+
+The frozen runner completed all **384/384** registered rows in 80.279 s. L1
+integrity, L2 ordering and L6 isolation/safety pass. L3 fails because the best
+loss is 2.875972 mS at scale 8, still 3.15x the unchanged 0.913434 mS limit.
+L4 has a pass only at scale 1, where capacitance error is 0.550334 pF against
+0.593954 pF, but that scale's loss is 17.477435 mS. Therefore no scale passes
+both, L5 selects nothing and overall is FAIL.
+
+Loss decreases through scale 8 but rises again at scales 16 and 32, while C
+error grows from 0.550334 to 4.472337 pF. The worst loss row moves into low-C
+codes at large width, proving that disabled-device parasitics—not insufficient
+ON width—become the limiter. Predictions 1, 2, 4 and 5 HIT; prediction 3
+MISSES. Per the registered stopping rule, no all-corner, CTLE, link, reward or
+RL work followed, and the production/Entry 89 records remain unchanged.
+
+The complete audit is `nebula/LVT_TUNING_BANK_RESULTS.md`. Result-file SHA-256
+is `6B4584A2BA2B8C9889CFF785D886A3AB3CF008ABE12DD98ED1D78D2FE6DC9502`;
+canonical-row SHA-256 is
+`E8273184E56C7B31EBDD9518203CC3B2F9FCF4FC513657BC812A4BF904A46F0D`.
+The frozen runner commit is `60f921581ff52c97255361bf9b17e75957c40d0d`.
+
+The final post-result non-slow suite passes **2,766/2,766**, with 13 deselected
+and the same two warnings in 332.73 s.

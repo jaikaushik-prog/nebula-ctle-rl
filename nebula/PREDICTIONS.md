@@ -14852,3 +14852,27 @@ No Entry 97 simulator invocation or result exists at this boundary.
 The complete implementation-boundary non-slow suite passes 2,766/2,766, with
 13 deselected and the same two warnings in 292.36 s. Commit this boundary before
 the first Entry 97 simulator invocation.
+
+### Entry 97 outcome -- **safe LVT screen FAILS; no width has a valid overlap**
+
+All 384 real-SKY130 rows pass L1 integrity, L2 ordering and L6 safe isolation.
+LVT scale 1 passes the capacitance gate at 0.550334 pF error but has 17.477435
+mS conductance error. Loss falls through scale 8, where its best measured value
+is still 2.875972 mS against 0.913434 mS (3.15x), while capacitance error has
+already grown to 2.127597 pF. At scales 16 and 32 both metrics worsen as OFF-
+device parasitics dominate. L3 fails, L4 passes through scale 1 only, L5 selects
+nothing and overall is FAIL.
+
+Prediction 1 HIT, prediction 2 HIT, prediction 3 MISS, prediction 4 HIT and
+prediction 5 HIT. The registered stopping rule forbids all-corner, CTLE, link
+or RL work. The existing production manifest and Entry 89 FINAL record remain
+unchanged.
+
+Canonical-row SHA-256 is
+`E8273184E56C7B31EBDD9518203CC3B2F9FCF4FC513657BC812A4BF904A46F0D`;
+result-file SHA-256 is
+`6B4584A2BA2B8C9889CFF785D886A3AB3CF008ABE12DD98ED1D78D2FE6DC9502`.
+Full audit: `LVT_TUNING_BANK_RESULTS.md`.
+
+The final post-result non-slow suite passes 2,766/2,766, with 13 deselected and
+the same two warnings in 332.73 s.
