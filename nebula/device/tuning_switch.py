@@ -93,8 +93,9 @@ def build_deck(process: str, vdd_v: float, temp_c: float,
         "set filetype=ascii",
         "dc Vdelta 0 0.05 0.001",
         f"wrdata ron.txt {on_vecs}",
-        # G164: this ngspice build returns N-1 rows for `ac lin N`.
-        # `lin 3` is therefore the two registered endpoints, not a midpoint.
+        # G164: `lin 2` emitted one row in the first frozen invocation, while
+        # `lin 3` emits low/mid/high.  The parser verifies all three and keeps
+        # only the two registered endpoints.
         f"ac lin 3 {FREQS_HZ[0]:g} {FREQS_HZ[1]:g}",
         f"wrdata zon.txt {on_vecs}",
         f"wrdata coff.txt {off_vecs}",
@@ -128,19 +129,21 @@ def parse_ac_table(raw: np.ndarray,
                    names: Sequence[str]) -> dict[str, tuple[complex, ...]]:
     """Parse complex `wrdata`: one `(frequency, real, imag)` triple/vector."""
     arr = np.atleast_2d(np.asarray(raw, dtype=float))
-    expected = (len(FREQS_HZ), 3 * len(names))
+    expected_f = np.linspace(FREQS_HZ[0], FREQS_HZ[1], 3)
+    expected = (len(expected_f), 3 * len(names))
     if arr.shape != expected:
         raise ValueError(f"AC table has shape {arr.shape}, expected {expected}")
     f = arr[:, 0]
-    if not np.allclose(f, FREQS_HZ, rtol=1e-12, atol=1.0):
-        raise ValueError(f"AC frequency axis {tuple(f)} != {FREQS_HZ}")
+    if not np.allclose(f, expected_f, rtol=1e-12, atol=1.0):
+        raise ValueError(f"AC frequency axis {tuple(f)} != {tuple(expected_f)}")
     out: dict[str, tuple[complex, ...]] = {}
     for i, name in enumerate(names):
         base = 3 * i
         if not np.allclose(arr[:, base], f, rtol=0.0, atol=1.0):
             raise ValueError(f"AC x-axis mismatch for {name}")
-        out[name] = tuple(complex(re, im) for re, im in
-                          zip(arr[:, base + 1], arr[:, base + 2]))
+        values = tuple(complex(re, im) for re, im in
+                       zip(arr[:, base + 1], arr[:, base + 2]))
+        out[name] = (values[0], values[-1])
     return out
 
 

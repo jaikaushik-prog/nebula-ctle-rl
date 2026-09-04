@@ -14616,3 +14616,11 @@ No measured switch value has been accepted or used to change a gate.
 
 The post-repair complete non-slow suite passes 2,751/2,751, with 13 deselected
 and the same two warnings in 308.45 s. Freeze the repair before retrying.
+
+The second invocation also wrote no artifact. `ac lin 3` emitted the normal
+three rows, so the `N-1` explanation was false even though the first one-row
+observation was real. The parser now requires low/mid/high exactly and selects
+only the pre-registered endpoint rows. No measured number or gate changed.
+
+The exact-three-row repair passes the complete non-slow suite 2,751/2,751,
+with 13 deselected and the same two warnings in 311.29 s.

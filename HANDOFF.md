@@ -5552,16 +5552,21 @@ over PVT, and measure both states. `Ron` alone is insufficient: disabled-device
 capacitance must be included in the assembled circuit before any programmable
 hardware claim.
 
-### G164. In this ngspice build, `ac lin N` writes N-1 rows
+### G164. In this ngspice build, `ac lin 2` is not a two-row endpoint sweep
 
 Entry 95's first frozen invocation asked for `ac lin 2` at the two S3 band
 edges. Every deck exited, but `wrdata` contained one row; the shape gate stopped
 the experiment before any result artifact was written. `device/cap_probe.py`
 had already encountered and locally documented the same behaviour.
 
-**Rule:** use `ac lin 3 lo hi` when exactly the two endpoints are required, and
-assert the output shape and frequency values. Never infer that the requested
-point count equals the emitted row count.
+The first repair incorrectly generalised that observation to `N-1`. The next
+invocation showed `ac lin 3` emitting the normal three rows: low, midpoint and
+high. Its shape gate also stopped before an artifact. The issue is the two-point
+special case, not a general `N-1` rule.
+
+**Rule:** use `ac lin 3 lo hi`, require low/mid/high exactly, and deliberately
+select the first and last rows when exactly the two endpoints are required.
+Never infer or generalise a simulator's emitted grid without inspecting it.
 
 ## 10. Environment
 
@@ -15622,3 +15627,12 @@ for `ac lin 3` and still asserts that the only emitted frequencies are exactly
 The post-repair complete non-slow suite passes **2,751/2,751**, with 13
 deselected and the same two warnings in 308.45 s. Freeze the repair before the
 second invocation.
+
+The second invocation also produced no result: `ac lin 3` correctly emitted
+three rows, contradicting the repair's over-broad `N-1` explanation. The parser
+now requires the exact low/mid/high grid and returns only the registered low
+and high endpoints. This narrows G164 to the observed `lin 2` special case.
+No switch value or threshold changed and the result path remains absent.
+
+The exact-three-row repair passes the complete non-slow suite **2,751/2,751**,
+with 13 deselected and the same two warnings in 311.29 s.

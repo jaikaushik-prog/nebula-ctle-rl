@@ -45,7 +45,7 @@ def test_deck_uses_real_bias_body_and_both_switch_states():
     # Fourth MOS terminal is ground: the real p-substrate connection.
     assert " gate_on " in text and " 0 sky130_fd_pr__nfet_01v8" in text
     assert "dc Vdelta 0 0.05 0.001" in text
-    # This ngspice emits N-1 rows for `ac lin N`; 3 gives both endpoints.
+    # `lin 2` emitted one row; `lin 3` gives low/mid/high and we use endpoints.
     assert "ac lin 3 1.25e+09 2.5e+09" in text
     assert "wrdata ron.txt" in text
     assert "wrdata zon.txt" in text
@@ -66,7 +66,7 @@ def test_dc_parser_fits_dv_di_and_checks_every_x_axis():
 
 
 def test_ac_parser_reads_x_real_imag_triples_not_magnitude_columns():
-    f = np.asarray(FREQS_HZ)
+    f = np.linspace(FREQS_HZ[0], FREQS_HZ[1], 3)
     # Two vectors; current a = j*w*20 fF, b = 1/(5+j/(w*1pF)).
     ia = 1j * 2.0 * math.pi * f * 20e-15
     zb = 5.0 - 1j / (2.0 * math.pi * f * 1e-12)
@@ -75,7 +75,7 @@ def test_ac_parser_reads_x_real_imag_triples_not_magnitude_columns():
                            f, ib.real, ib.imag))
     got = parse_ac_table(raw, ("a", "b"))
     assert got["a"][0] == pytest.approx(ia[0])
-    assert got["b"][1] == pytest.approx(ib[1])
+    assert got["b"][1] == pytest.approx(ib[-1])
     with pytest.raises(ValueError, match="shape"):
         parse_ac_table(raw[:, :-1], ("a", "b"))
 
