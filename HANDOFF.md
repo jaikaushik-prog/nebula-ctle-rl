@@ -17,7 +17,12 @@
 > decisions that are OPEN and human-only, and what to do next. It supersedes
 > `nebula/NEXT_STEPS.md`. This file remains the full state of record.
 
-Last updated: **2026-09-04** (session 43, all-channel RL product flow: the normal
+Last updated: **2026-09-04** (session 44, Entry 90 physical-edge probe
+preregistered: the owner approved measuring an 8.3 dB attenuation ceiling, a
+1.294863 pF extra-low Cs candidate and a 581.2038 ohm intermediate Rs candidate
+over exactly 30 settings x 45 corners. No Entry 90 code or SPICE row exists;
+this is diagnostic approval, not production adoption. Entry 89 FINAL remains
+untouched. Earlier session 43: the normal
 interface now takes only peaking and peak frequency. Channel loss is an
 automatic seven-point verification axis; the optional CLI flag is explicitly a
 one-loss diagnostic override. The 9 dB / 1.9 GHz product run passes all 315
@@ -1768,6 +1773,16 @@ Plus: git init, .gitignore, 28 tests, Wilson-bound BER reporting.
 
 ## 6. Key numbers & validated behavior (current state)
 
+- **Nebula Entry 90 is preregistered and not yet implemented or run:** the
+  existing 512-bank diagnosis assigns the low 12 dB edge's seven failures to
+  0.0319-0.8490 dB of residual short-channel compression at maximum
+  attenuation. The high 12 dB edge fails at the same 29 corners on all seven
+  losses; every best near-miss is at minimum Cs and one of the top two Rs
+  codes. The owner approved a focused 1,350-row diagnostic using 8.3 dB max
+  attenuation, one geometric Cs step down (1.294863 pF) and the top-Rs
+  geometric midpoint (581.2038 ohm). Exact membership and Q1-Q7 are frozen in
+  `nebula/PREDICTIONS.md` Entry 90. This does not adopt a range, alter the
+  production bank, retrain RL or reopen Entry 89 FINAL.
 - **Nebula Entry 89 policies and fresh data are separately frozen:** all
   five seeds `2026090500..04` completed 50 BC epochs plus 200,000 PPO steps,
   one million PPO steps total, with finite and distinct artifacts. Exposed
@@ -2337,10 +2352,10 @@ when no compliant setting was visited. The product now takes only peaking and
 peak frequency, automatically checks 7 channels x 45 PVT points, then writes
 the 315-condition code map, attenuator-correct representative deck and
 adaptive-code-labelled schematic. The predeclared request edge/centre check and
-representative output are complete. **Next human decision:** either accept the
-honestly bounded request coverage for submission, or approve a specific
-physical range/architecture expansion for the unsupported 12 dB edge before
-any new bank simulation. After that, update report/slides and document/draw the
+representative output are complete. **Next action:** implement and run the
+owner-approved, separately preregistered Entry 90 focused physical probe for
+the unsupported 12 dB edges. It is not permission to adopt the resulting range
+automatically. After that, update report/slides and document/draw the
 complete switched Rs/Cs implementation. Do not rerun, tune or replace FINAL.
 Full immutable sequence and R1-R10:
 `nebula/NEXT_AGENT_ENTRY89.md` and `PREDICTIONS.md` Entry 89.
@@ -15151,3 +15166,29 @@ full-rectangle coverage claim and why closing it is a human design decision.
 Required pre-change suite: **2,706 passed**, 13 deselected, two known warnings
 in 485.08 s. Focused post-change gates: **37 passed**. Final full suite:
 **2,710 passed**, 13 deselected and the same two known warnings in 303.46 s.
+
+### 2026-09-04 - session 44 (Entry 90 preregistration). **The two unsupported 12 dB edges have a measured physical diagnosis and an owner-approved focused probe; no new SPICE row exists.**
+
+The immutable 512-setting Entry 86 table was re-scored without simulation.
+For 12 dB / 1.25 GHz, six failures are on the 3 dB channel and one repeats at
+4.5 dB. Every least-overdriven shape-compliant option is already at attenuator
+code 7 and needs 0.0319-0.8490 dB additional attenuation. For 12 dB / 2.5 GHz,
+the same 29 PVT corners fail at every channel loss, all best near-misses hit
+minimum Cs and use Rs code 6 or 7. This isolates a physical code-bank boundary,
+not an RL, channel or eye failure.
+
+The owner approved a diagnostic at an 8.3 dB attenuator ceiling, one geometric
+Cs step below the present bank (1.294863 pF) and the geometric midpoint of its
+top two Rs values (581.2038 ohm). Entry 90 freezes exactly 30 candidate settings
+x 45 corners = 1,350 real-PMOS rows, with the old 512 rows reused rather than
+re-simulated. Q1-Q7 require exact membership, simulator integrity, 315/315 at
+both 12 dB edges, retention of three 315/315 controls, new-row attribution and
+isolation from Entry 89 FINAL. A passing probe is only a recommendation for a
+later production-map decision; a failure is frozen before any further range
+change. Full registration: `nebula/PREDICTIONS.md` Entry 90.
+
+The required pre-change non-slow suite passes **2,710/2,710**, with 13
+deselected and the two known warnings in 530.35 s. No implementation or result
+artifact exists at this boundary. The preregistration-only post-change suite
+also passes **2,710/2,710**, with 13 deselected and the same two warnings in
+391.64 s.

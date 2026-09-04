@@ -14369,3 +14369,94 @@ when the RL trajectory visits no compliant code.
 
 The post-FINAL non-slow suite passes 2,696/2,696, with 13 deselected and the
 two known warnings in 298.87 s.
+
+## Entry 90 -- focused physical-bank probe for the two unsupported 12 dB edges
+
+**Written:** 2026-09-04, session 44, after the product's predeclared
+edge/centre check exposed 7/315 failures at 12 dB / 1.25 GHz and 203/315 at
+12 dB / 2.5 GHz, and before any Entry 90 code or SPICE row exists.
+**Owner approval:** explicit approval in chat of the proposed 8.3 dB maximum
+attenuation, 1.295 pF extra-low Cs candidate and 581.2 ohm intermediate Rs
+candidate. This approves a focused diagnostic only; it does not adopt a new
+production range, remap the frozen 512-code bank, retrain a policy or reopen
+Entry 89 FINAL.
+
+### Existing-data diagnosis
+
+The zero-SPICE diagnosis used only the immutable Entry 86 table. The low-edge
+request fails at six PVT corners on the 3 dB channel and one of those corners
+also fails at 4.5 dB. Every least-overdriven shape-compliant candidate is at
+attenuator code 7; its compression ratio requires 0.0319-0.8490 dB more
+attenuation. The proposed 8.3 dB ceiling is therefore the existing 7.3 dB
+ceiling plus the measured 0.8490 dB lower bound and 0.1510 dB diagnostic
+guard.
+
+The high-edge request fails at the same 29 PVT corners on every one of seven
+channel losses, proving the channel and eye are not the cause. Every best
+near-miss uses the lowest Cs code. The best Rs code is always one of the two
+highest codes, whose requested physical values are 493.9706 and 683.8420 ohm.
+The probe continues the existing geometric Cs ladder down by one step,
+1.684649 -> **1.294863 pF**, and inserts the geometric Rs midpoint,
+**581.2038 ohm**. These are candidates to measure, not claimed realised values;
+the artifact must record the drawn-passive result produced by the simulator.
+
+### Frozen probe membership
+
+Exactly 30 candidate settings are evaluated at all 45 mandated PVT corners,
+for **1,350 real-PMOS ngspice rows**. Every row carries all seven already
+characterised channel views.
+
+1. Low-edge group: maximum attenuator code under the explicit 8.3 dB range,
+   existing Rs codes 6 and 7, and existing Cs codes 2, 3 and 4: 6 settings.
+2. High-edge group: all eight attenuator codes under the same 8.3 dB range,
+   Rs at code 6, the registered midpoint and code 7, and only the registered
+   extra-low Cs value: 24 settings.
+
+The scored pool is the union of these 30 candidates with the immutable
+512-setting Entry 86 table. Existing rows are not re-simulated. The three
+already passing controls -- 3 dB / 1.25 GHz, 3 dB / 2.5 GHz and 7.5 dB at the
+octave midpoint -- are re-scored from the union to catch a scoring regression.
+No reward, tolerance, target, topology, transistor geometry, PVT point,
+channel loss or Entry 89 artifact may change.
+
+### Predictions before implementation
+
+1. The 8.3 dB top code will close 12 dB / 1.25 GHz at all 315 conditions.
+   Confidence 0.80: the largest measured compression lower bound is 0.8490 dB,
+   leaving 0.1510 dB, but the re-sized physical divider can also move noise,
+   frequency and eye height.
+2. The extra-low Cs plus intermediate Rs will materially reduce the 203
+   high-edge misses and is expected to close all 315 conditions. Confidence
+   0.60: one existing Cs step moves frequency by roughly the observed deficit,
+   while the Rs midpoint targets the measured peaking-code gap; neither is a
+   substitute for SPICE.
+3. All three already passing controls will remain 315/315 because the original
+   512 settings remain in the scored union. Any regression is an evaluator bug.
+4. The new rows will be selected in at least one formerly failing condition;
+   otherwise the probe has added no usable physical coverage even if a count
+   changes elsewhere.
+
+### Pre-registered gates and stopping rule
+
+- **Q1 membership:** exactly 30 candidate settings x 45 corners = 1,350 unique
+  rows, with exact candidate/corner membership and all seven link keys.
+- **Q2 simulator integrity:** zero hard device failures; compression is an
+  honestly scored link rejection, not a hard simulator failure.
+- **Q3 low edge:** 12 dB / 1.25 GHz is compliant at 315/315 conditions in the
+  union pool.
+- **Q4 high edge:** 12 dB / 2.5 GHz is compliant at 315/315 conditions in the
+  union pool.
+- **Q5 controls:** each of the three prior controls remains 315/315.
+- **Q6 attribution:** at least one newly covered condition selects an Entry 90
+  candidate, and per-request/per-loss coverage plus candidate usage is written.
+- **Q7 isolation:** the immutable source hash is checked, existing rows are not
+  simulated, and no Entry 89 FINAL evaluator or result is imported or read.
+
+Q1-Q7 must all pass for the probe to recommend a production-bank redesign.
+Even a pass is not automatic adoption: the owner must separately approve the
+logical-code mapping and any RL retraining/integration. If Q3 or Q4 fails, the
+result is frozen as a failed probe; no further range, code or tolerance change
+is made from the exposed result without a new owner decision and preregistration.
+
+The required pre-change non-slow suite passes **2,710/2,710**, with 13
+deselected and the two known warnings in 530.35 s.
