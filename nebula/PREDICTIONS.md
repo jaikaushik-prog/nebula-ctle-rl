@@ -14770,3 +14770,70 @@ Full audit: `SPLIT_TUNING_BANK_RESULTS.md`.
 
 The final post-result non-slow suite passes 2,759/2,759, with 13 deselected and
 the same two warnings in 313.20 s.
+
+## Entry 97 -- preregistration: safe LVT capacitor-selector feasibility screen
+
+**Frozen before implementation or any new SPICE measurement on 2026-09-04.**
+
+Entry 96 proved that the split capacitor reaches the requested capacitance but
+that its ordinary `nfet_01v8` selectors add 18.117350 mS of real admittance at
+the worst row, against the unchanged 0.9134338016 mS limit. The owner approved
+trying the lower-Ron alternative. Entry 97 will test the PDK-qualified
+`sky130_fd_pr__nfet_01v8_lvt` at the normal 1.8 V supply; it will not use a
+boosted gate, an unqualified voltage, an ideal switch or a hand-written model.
+
+### Frozen stage-A experiment
+
+- Reuse Entry 96's floating-resistor bank, split-MIM capacitor bank, 64 logical
+  `Rcode x Ccode` settings, separately drawn real-passive control, 0.50 V
+  terminal bias, 27 C temperature and exact 1.25/2.50 GHz endpoints.
+- Change only the six capacitor selectors from ordinary NFET to the official
+  LVT NFET. The three per-side base widths remain 160/320/640 um and are tested
+  at frozen scale factors **1, 2, 4, 8, 16 and 32**. Length stays 0.15 um and
+  each 40 um of total width is one model finger.
+- Use the installed PDK's own `tt` library section. Every candidate keeps all
+  enabled and disabled selector devices in the deck.
+- This is **384 rows**: six scales times 64 codes. No candidate may be selected
+  until every registered row has completed and the pure scorer has run.
+
+### Frozen gates
+
+- **L1 integrity:** exactly 384 unique finite rows, with the registered scales,
+  codes and both frequency endpoints; any parsed ngspice warning-shaped error
+  fails loudly.
+- **L2 ordering:** for every scale and endpoint, conductance strictly decreases
+  with Rs code and effective capacitance strictly increases with Cs code.
+- **L3 loss:** a scale passes only if its maximum switched-minus-control real
+  admittance error is <= Entry 96's unchanged **0.9134338016 mS**.
+- **L4 capacitance:** a scale passes only if its maximum effective-capacitance
+  error is <= Entry 96's unchanged **0.5939536667 pF**.
+- **L5 selection:** select the smallest scale passing L2-L4. If no scale passes
+  both L3 and L4, stop; do not invent an intermediate scale from the exposed
+  curve.
+- **L6 isolation/safety:** stage A must not access the CTLE, link, reward,
+  policy, architecture manifest or Entry 89 FINAL record, and every terminal
+  remains within the PDK's ordinary 0--1.8 V operating range.
+
+Only L1-L6 all-pass authorises a separately preregistered all-corner bank
+qualification. Even that would not transfer the old CTLE, 512-bank, or RL
+evidence. This screen cannot change production claims.
+
+### Predictions before implementation or measurement
+
+1. LVT at scale 1 will reduce the worst loss by less than 2x and will still
+   fail L3. Confidence 0.85.
+2. Increasing width will monotonically reduce the high-code loss until OFF
+   parasitics become important. Confidence 0.85.
+3. At least one scale will individually pass L3. Confidence 0.60.
+4. No registered scale will pass L3 and L4 simultaneously, because the roughly
+   20x loss reduction Entry 96 needs trades directly against OFF capacitance.
+   Confidence 0.75.
+5. Therefore L5 will select no candidate and stage A will stop before CTLE.
+   Confidence 0.75.
+
+The required pre-change non-slow baseline is Entry 96's final 2,759/2,759 pass,
+with 13 deselected and two known warnings in 313.20 s.
+
+The documentation-only post-registration suite also passes 2,759/2,759, with
+13 deselected and the same two warnings in 304.09 s. Freeze this registration
+before adding the Entry 97 implementation.

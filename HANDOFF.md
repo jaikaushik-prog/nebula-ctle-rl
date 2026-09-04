@@ -17,11 +17,14 @@
 > decisions that are OPEN and human-only, and what to do next. It supersedes
 > `nebula/NEXT_STEPS.md`. This file remains the full state of record.
 
-Last updated: **2026-09-04** (session 45, Entry 96 outcome: the split-capacitor
-bank passes capacitance accuracy at 0.517849 pF error versus a 0.593954 pF
-limit, and both code axes remain ordered. It still fails overall because ON
-capacitor-switch loss adds 18.117350 mS versus the 0.913434 mS conductance-error
-limit. No CTLE insertion or RL change occurred. Earlier Entry 95 outcome:
+Last updated: **2026-09-04** (session 45, Entry 97 preregistration: the owner
+approved a safe lower-Ron attempt. Before measurement, six width scales of the
+official SKY130 `nfet_01v8_lvt` capacitor selector are frozen for a 384-row TT
+screen. A candidate must meet Entry 96's unchanged conductance and capacitance
+limits simultaneously; no boosted gate, CTLE insertion or RL change is allowed
+at this stage. Earlier Entry 96 outcome: the split-capacitor bank passes
+capacitance accuracy at 0.517849 pF error versus a 0.593954 pF limit, but ON
+switch loss adds 18.117350 mS versus the 0.913434 mS limit. Earlier Entry 95:
 675/675 real-NMOS rows pass integrity, but both registered architectures fail.
 Exact one-hot has no width below both 2.02 ohm and 36.22 fF; the binary fallback
 has 320 um at 8.710 ohm / 149.09 fF and 640 um at 4.355 ohm / 298.03 fF, so its
@@ -1841,6 +1844,11 @@ Plus: git init, .gitignore, 28 tests, Wilson-bound BER reporting.
 
 ## 6. Key numbers & validated behavior (current state)
 
+- **Nebula Entry 97 is registered but unmeasured:** stage A will compare six
+  safe 1.8 V `nfet_01v8_lvt` width scales (1/2/4/8/16/32x) across the same 64
+  TT split-bank codes. The smallest scale must pass both <=0.913434 mS real-
+  admittance error and <=0.593954 pF effective-C error. No CTLE or RL claim can
+  move on a TT failure. Full registration: `nebula/PREDICTIONS.md`.
 - **Nebula Entry 96 proves the ground-referenced split capacitor gets the
   value right but is far too lossy:** all 64 TT codes simulate, both axes are
   monotonic and effective-C error passes (0.517849 <= 0.593954 pF). Total
@@ -2491,11 +2499,11 @@ complete: the high 12 dB edge closes, the low edge reaches 314/315 and the
 overall registered verdict is FAIL. The owner-requested RL adaptation dashboard
 is now integrated and validated against the real 315-condition demo. The
 natural-language wrapper is also connected to that same product and exporter.
-**Next action:** choose whether to investigate a fundamentally lower-Ron
-capacitor selector (a qualified SKY130 low-threshold device, a reliability-safe
-boosted gate, or a different tunable-capacitor topology). Entry 96 may not be
-inserted into the CTLE or resized against its exposed result: its capacitance
-value passes, but ON-switch loss is 19.83x the conductance-error limit.
+**Next action:** implement Entry 97's preregistered 384-row safe-LVT selector
+screen, freeze its runner, and only then invoke ngspice. Entry 96 itself may not
+be retuned: its capacitance value passes, but ordinary-switch loss is 19.83x
+the conductance-error limit. A stage-A Entry 97 failure stops before CTLE;
+a pass permits only a separately preregistered all-corner bank qualification.
 Separately, run
 Entry 94's intake on a genuinely measured `.s4p` when one is supplied and do
 not attach the existing 315/315 claim to it. The remaining decisions are whether to
@@ -15793,3 +15801,28 @@ The frozen runner commit is `f6f4c01a04fb7eeb4c35c03380a8da8b8c4b1db9`.
 
 The final post-result non-slow suite passes **2,759/2,759**, with 13 deselected
 and the same two warnings in 313.20 s.
+
+### 2026-09-04 - session 45 (Entry 97 preregistration). **Try the official LVT switch safely, and require loss and capacitance to pass together.**
+
+The owner approved the next lower-Ron attempt. Inspection of the installed
+SKY130 PDK confirms an official `sky130_fd_pr__nfet_01v8_lvt` device and TT/SS/
+FF/SF/FS model support. Entry 97 deliberately chooses it over gate boosting:
+all device terminals remain within 0--1.8 V, so the experiment adds no oxide-
+reliability assumption.
+
+Before implementation or new measurement, stage A freezes six width scales
+(1/2/4/8/16/32x) around Entry 96's 160/320/640 um per-side capacitor-selector
+widths. Each scale runs all 64 TT codes beside the same separately drawn real-
+passive control, for 384 total rows. The unchanged gates require strict R/C
+ordering, <=0.9134338016 mS real-admittance error and <=0.5939536667 pF
+effective-C error. The smallest simultaneous pass is selected; no pass stops
+before all-corner, CTLE or RL work. Full gates and predictions are frozen in
+`nebula/PREDICTIONS.md` Entry 97.
+
+The pre-change non-slow baseline is Entry 96's final **2,759/2,759** pass, with
+13 deselected and the same two warnings in 313.20 s. No Entry 97 implementation
+or result exists at this boundary.
+
+The documentation-only post-registration suite also passes **2,759/2,759**,
+with 13 deselected and the same two warnings in 304.09 s. Commit this frozen
+registration before implementing the runner.
