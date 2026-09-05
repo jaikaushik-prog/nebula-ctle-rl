@@ -17,7 +17,9 @@
 > decisions that are OPEN and human-only, and what to do next. It supersedes
 > `nebula/NEXT_STEPS.md`. This file remains the full state of record.
 
-Last updated: **2026-09-06** (session 48, Entry 100: owner-approved product
+Last updated: **2026-09-06** (session 49, Entry 101: owner approved fresh fixed
+setting-490 validation. Runner/plan added; measurements pending; existing demo
+unchanged. See `nebula/FIXED_490_PLAN.md`. Earlier session 48, Entry 100: owner-approved product
 readiness audit completed; area/scope reporting corrected. Fixed setting 425
 passes 43/45 PVT corners (301/315 conditions); two hot/low-supply corners miss
 the peaking request by about 0.055 dB. All 315 eyes pass with DFE removed
@@ -909,6 +911,10 @@ signaling, ADC-based DSP receiver, 28 nm CMOS reference parameters).
   **PRIVATE, and must stay private** (contains copyrighted PDFs, see G1).
 
 ## 2. Repository map (what every file/folder is)
+
+Entry 101: `nebula/experiments/exp_fixed_candidate.py` validates setting 490
+using Entry 100's unchanged physical/DFE checks; `nebula/FIXED_490_PLAN.md`
+freezes the 91-call scope. It does not implement a new production selector.
 
 Entry 100 additions: `nebula/report/product_scope.py` inventories the exported
 deck and labels partial/full implementation scope; `nebula/experiments/exp_product_readiness.py`
@@ -2554,6 +2560,11 @@ this one candidate; the 100 MHz / exact-export / DFE audit has NOT been repeated
 on it. Get owner approval, then preregister that small validation. Send the draft
 organiser questions through an official contact supplied by the owner. Do not
 begin a new switch/DFE topology, hide setting 425's two misses, or retune exposed FINAL.
+
+Entry 101 update: the owner has now approved candidate-490 validation. Run the
+frozen 91-call audit, then report whether it clears the fixed-circuit gate before
+any export-selection integration. The organiser draft still needs an official
+recipient and has not been sent.
 
 **Session-39 ordering:** entries 80 through 86 are complete. The non-RL
 controls are qualified and the 7.3 dB combined bank has been measured across
@@ -16155,3 +16166,16 @@ full receiver false, partial-area status and the separate 43/45 audit. Its ZIP
 contains 15 files (approximately 0.75 MB compressed). The updated schematic was
 visually inspected. The local dashboard remains running at http://127.0.0.1:8765/;
 no training, product audit or test process remains running.
+
+### 2026-09-06 - session 49 (Entry 101 preregistration). Validate setting 490 first.
+
+The owner accepted the proposed fixed-circuit validation next step. The new
+runner requires the measured all-condition candidate intersection to be exactly
+[490], derives its geometry through the frozen bank, captures one nominal deck,
+then calls Entry 100's unchanged 45-corner/two-tone/DFE audit. Maximum 91 calls;
+no bypass-changing retries, no retuning, no new RL training, no FINAL exposure.
+It refuses existing output directories and records hashes/journals. The old
+demo and selection policy remain untouched. New tests failed on the absent
+module, then **17/17** candidate/readiness gates passed. Baseline full regression
+passed **2,791/2,791**, 13 deselected and two known warnings, in 488.87 s.
+No fresh candidate SPICE invocation exists at this boundary.

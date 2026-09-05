@@ -14902,3 +14902,12 @@ with minimum 139.531 mV / 0.6875 UI. All ideal controls pass. Prediction 4 HIT:
 the central request reproduces setting 425 while high-peaking boundary gaps
 remain; overall eight of twelve requests pass all conditions. No retuning or
 hardware adoption followed. Full results: `PRODUCT_READINESS_RESULTS.md`.
+
+## Entry 101 (2026-09-06): fixed candidate 490
+
+Owner approved validating the only all-condition V6 bank intersection at
+9 dB / 1.9 GHz: code 490. `FIXED_490_PLAN.md` freezes the maximum 91 SPICE
+calls and reuses Entry 100's instruments/controls. Prediction: all 315 model
+conditions pass, including the two peaking misses of 425. No-tap eye pass
+remains an open question. No production adoption or full-hardware claim is
+licensed by the validation alone. No new candidate measurement at this boundary.
