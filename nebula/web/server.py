@@ -191,6 +191,7 @@ def present_design(design_id: str, design: dict, *, source: str,
         "status_label": "MODEL PASS" if status == "pass" else "NEEDS WORK",
         "implementation_scope": implementation_scope(design),
         "area_inventory": design.get("area_inventory"),
+        "product_readiness_audit": design.get("product_readiness_audit"),
         "failure_reasons": failures,
         "request_match": request_match,
         "nominal": {

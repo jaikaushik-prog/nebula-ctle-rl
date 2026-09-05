@@ -1,5 +1,13 @@
 # Shielded-RL product example
 
+**6 September readiness update:** the adaptive model map still passes 315/315,
+but this one fixed exported setting passes **43/45 PVT corners** (301/315
+channel/PVT conditions). Two hot/low-voltage corners miss the 9 dB request
+tolerance by about 0.055 dB. All 315 model eyes pass even with DFE removed.
+Full receiver area/power and DFE/selector hardware remain unverified. Read
+[`READINESS.md`](READINESS.md) before presenting this as a completed receiver.
+The circuit and frozen RL policy have not been changed to hide these gaps.
+
 This directory was generated with:
 
 ```powershell
@@ -37,3 +45,10 @@ change according to the map in `design.json`.
 The Rs/Cs values in the code map were each measured as a separately drawn
 passive geometry. This demo does not claim that their physical selector switch
 transistors or parasitics have been implemented.
+
+The evidence ZIP now also contains `audit_summary.json`, the 45-corner and
+12-request journals, expanded area inventory, provenance, original hashed
+input snapshots and the unsent organiser-scope question draft. `design.json`
+adds the same audit and implementation-scope information; its historical
+measurements, code map and cost counters are unchanged. Audit cost is recorded
+separately: 90 SPICE calls, not silently added to the original design run.

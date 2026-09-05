@@ -301,6 +301,8 @@ def _schematic_panel(d: dict) -> dict:
     # this one. `library`/`cmaes` runs that fail still produce a netlist.
     panel["status"] = ("PASS" if nom.get("ok") and nom.get("feasible")
                        else str(nom.get("verdict") or "no measurement"))
+    if method == "rl-hybrid" and panel["status"] == "PASS":
+        panel["status"] = "MODEL PASS"
     if nom.get("design_id"):
         panel["design id"] = str(nom["design_id"])
     panel["PDK"] = ("SKY130 nfet+pfet" if method == "rl-hybrid"

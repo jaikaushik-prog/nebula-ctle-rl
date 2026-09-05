@@ -127,3 +127,20 @@ def test_model_success_does_not_certify_full_product_or_area():
     assert area["status"] is None
     assert area["status_label"] == "Partial only"
     assert "adaptive" in shown["implementation_scope"]["verification_note"].lower()
+
+
+def test_separate_fixed_audit_is_labelled_and_cannot_attach_to_a_different_code():
+    d = {"method": "rl-hybrid", "search": {"setting": 425},
+         "product_readiness_audit": {"fixed": {"setting": 425,
+             "n_representative_pvt_pass": 43, "n_corners": 45,
+             "n_model_pass": 301, "n_expected_conditions": 315}}}
+    assert "43/45" in " ".join(S.implementation_scope(d)["notes"])
+    d["search"]["setting"] = 490
+    assert "43/45" not in " ".join(S.implementation_scope(d)["notes"])
+
+
+def test_shipped_schematic_labels_scoped_success_not_full_hardware_pass():
+    import json
+    from nebula.design import _schematic_panel
+    shown = _schematic_panel(json.loads((DEMO / "design.json").read_text(encoding="utf-8")))
+    assert shown["status"] == "MODEL PASS"

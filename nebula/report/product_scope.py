@@ -123,13 +123,22 @@ def implementation_scope(design: dict) -> dict:
         "verify the single exported setting across PVT."
         if adaptive else "Results describe only the recorded circuit/link model and tested conditions."
     )
+    audit = design.get("product_readiness_audit") or {}
+    fixed = audit.get("fixed") or {}
+    audit_notes = []
+    if fixed and fixed.get("setting") == (design.get("search") or {}).get("setting"):
+        audit_notes.append(
+            f"Separate fixed-code audit: {fixed.get('n_representative_pvt_pass')}/"
+            f"{fixed.get('n_corners')} PVT corners and {fixed.get('n_model_pass')}/"
+            f"{fixed.get('n_expected_conditions')} model conditions pass. "
+            "This result does not replace the adaptive map above.")
     return {
         "full_product_compliance": False,
         "area_status": "NOT_VERIFIED",
         "power_scope": "SPICE CTLE supply power; full receiver power is not verified.",
         "dfe_scope": "Behavioural 1-tap DFE; no transistor-level DFE, slicer or clock implementation.",
         "verification_note": verification_note,
-        "notes": [verification_note,
+        "notes": [verification_note, *audit_notes,
                   "S7 full area is not verified: the legacy number includes Rs, Cs and two RL bodies only.",
                   "Power is CTLE-only; DFE and full bias/control implementation are not included.",
                   "DFE is behavioural; physical Rs/Cs selector switches remain unimplemented."],

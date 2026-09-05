@@ -18,10 +18,14 @@
 > `nebula/NEXT_STEPS.md`. This file remains the full state of record.
 
 Last updated: **2026-09-06** (session 48, Entry 100: owner-approved product
-readiness audit implemented; area/scope reporting corrected. Full-area and
-receiver implementation are NOT verified. Fixed-code PVT, current-circuit DFE
-sensitivity and 12-request accuracy results are pending. See
-`nebula/PRODUCT_READINESS_PLAN.md`. Earlier session 47, Entry 99: target-centred selection now
+readiness audit completed; area/scope reporting corrected. Fixed setting 425
+passes 43/45 PVT corners (301/315 conditions); two hot/low-supply corners miss
+the peaking request by about 0.055 dB. All 315 eyes pass with DFE removed
+(worst 139.531 mV / 0.6875 UI), but hardware DFE and full area/power are NOT
+verified. Eight of 12 endpoint/interior requests pass every adaptive condition.
+Stored bank setting 490 is a potential fixed-robust replacement, NOT adopted
+or freshly reverified. See `nebula/PRODUCT_READINESS_RESULTS.md`.
+Earlier session 47, Entry 99: target-centred selection now
 keeps V6 compliance hard, ranks safe settings by normalized peaking/frequency
 error before eye area, and consults the existing 512-setting table when the RL
 visits miss the central 0.5 dB / 0.1-octave region. The real 9 dB / 1.9 GHz
@@ -910,7 +914,10 @@ Entry 100 additions: `nebula/report/product_scope.py` inventories the exported
 deck and labels partial/full implementation scope; `nebula/experiments/exp_product_readiness.py`
 runs the frozen fixed-circuit/DFE/request audit; `nebula/PRODUCT_READINESS_PLAN.md`
 registers its inputs and stop rules; `nebula/ORGANISER_SCOPE_QUESTIONS.md` is an
-UNSENT clarification draft. No new topology or policy is implemented by these files.
+UNSENT clarification draft. `nebula/PRODUCT_READINESS_RESULTS.md` summarises the
+90-call outcome; `nebula/product_audits/entry100_20260906/` preserves the raw
+journals, hashes and input snapshots. Copies are included in the Judge demo's
+evidence bundle. No new topology or policy is implemented by these files.
 
 Entry 95 additions (session 45): `nebula/device/tuning_switch.py` owns the
 isolated real-NMOS W/bias/PVT Ron, ON-impedance and OFF-capacitance probe;
@@ -1890,7 +1897,11 @@ and MOS gate geometry, with unimplemented bias capacitor/source and layout
 overhead explicitly unknown. Historical reward/bank numbers are unchanged.
 The browser calls success MODEL PASS and labels power CTLE-only. The 315-point
 adaptive map is not verification of the one fixed exported circuit. Fresh
-fixed-code evidence is pending at this implementation boundary.
+fixed-code evidence: 43/45 corners / 301/315 conditions pass; only the request
+peaking-match row fails. No-tap eyes pass 315/315, worst 139.531 mV / 0.6875 UI;
+ideal control agrees at every condition. Expanded geometry is 0.002519027 mm2,
+still NOT full area. The 12-request replay is fully supported at eight requests;
+9 dB/2.5 GHz and all three tested 12 dB requests are refused.
 
 - **Nebula Entry 97 rejects safe LVT resizing:** all 384 rows and both code
   axes pass, but no scale passes loss and C accuracy together. Scale 1 has
@@ -2536,11 +2547,13 @@ fixed-code evidence is pending at this implementation boundary.
 
 ## 8. Next steps (prioritized backlog with context)
 
-**Current owner-approved task, Entry 100:** finish regression gates, freeze the
-readiness runner, run the fixed setting-425 audit (90 SPICE calls maximum),
-record DFE controls and 12-request errors, then freeze a transparently scoped
-demo. Send the draft organiser questions through an official contact supplied
-by the owner. Do not begin a new switch/DFE topology or retune exposed FINAL.
+**Entry 100 audit complete; next decisions:** validate existing bank setting 490
+as a candidate fixed-robust 9 dB / 1.9 GHz export before any adoption or new
+fixed-robust selection mode. A read-only all-condition intersection finds exactly
+this one candidate; the 100 MHz / exact-export / DFE audit has NOT been repeated
+on it. Get owner approval, then preregister that small validation. Send the draft
+organiser questions through an official contact supplied by the owner. Do not
+begin a new switch/DFE topology, hide setting 425's two misses, or retune exposed FINAL.
 
 **Session-39 ordering:** entries 80 through 86 are complete. The non-RL
 controls are qualified and the 7.3 dB combined bank has been measured across
@@ -16096,3 +16109,49 @@ with numeric identity intact). The sentence was corrected. The two failed
 tests plus complete CLI/new-audit/web groups then passed **52/52** in 5.28 s;
 no PDK code or timing threshold was changed. Fresh measurements remain pending
 at this implementation freeze. A final full regression follows the product audit.
+
+### 2026-09-06 - session 48 (Entry 100 outcome). Fixed-code peaking misses, not DFE dependence.
+
+Runner freeze `da86ac6` preceded all fresh measurements. All 45 corners and both
+HD3 tones completed with invariant circuit signatures: 90 SPICE calls total,
+followed by the registered 12-request replay, in 153.54 s. The runner correctly
+exits 1 because fixed setting 425 passes only 43/45 PVT corners / 301/315
+channel-PVT conditions. SS and FS at 0.95 VDD scale / 125 C measure 7.445335
+and 7.446011 dB; they miss the 9 dB request's 7.5 dB floor by 0.054665 and
+0.053989 dB. No other model row fails. All 45 100 MHz HD3 measurements pass,
+worst -82.849857 dBc at the unchanged checklist drive of 0.1 V differential peak.
+
+All 315 ideal ablation controls reproduce bridge eye height/width to 1e-9.
+All four policies pass every model eye: ideal minimum 147.416 mV / 0.78125 UI;
+none 139.531 mV / 0.6875 UI; 20% misadaptation 145.839 mV / 0.765625 UI;
+existing nominal 4-bit grid 141.204 mV / 0.78125 UI. The last is a diagnostic
+1/16-step grid with inclusive endpoints (17 values), not a designed 16-code
+DAC. No claim about hardware DFE timing, jitter, decision errors or power/area.
+
+Request replay passes all conditions at eight of twelve requests. Miss counts:
+9 dB/2.5 GHz 42; 12 dB/1.25 GHz 7; 12 dB/1.9 GHz 3; 12 dB/2.5 GHz 203.
+The central request reproduces setting 425. A subsequent read-only intersection
+of the immutable development bank finds only setting 490 as a fixed all-315
+V6 candidate for 9 dB/1.9 GHz. No new circuit or policy was adopted and no
+additional SPICE was run; candidate 490 needs separate approval/validation.
+
+`PRODUCT_READINESS_RESULTS.md` contains the simple interpretation and evidence
+links. The cached demo retains its exact circuit and original search/cost data,
+adds area/scope and separate fixed-audit metadata, regenerated truthful schematic
+labels and all audit journals/input snapshots in its evidence ZIP. The organiser
+questions remain UNSENT. Browser automation returned "No browser is available";
+the live local API and generated schematic are checked instead.
+
+Final verification: **2,790/2,790 full-suite tests passed**, 13 deselected and
+the same two warnings, in 566.26 s. During final visual review a last fail-first
+schematic-label regression was added (bringing collection to 2,791); its fix
+and the complete affected CLI/schematic/web/readiness groups pass **81/81** in
+6.10 s. The full run plus this final focused run cover every test; do not quote
+2,791 as a single full-suite invocation. No circuit math changed after the audit.
+Source snapshots and evidence-ZIP snapshots match the stored hashes; the fixed
+summary recomputes exactly from the journal; every original design.json key
+and the circuit signature remain unchanged. The live API reports MODEL PASS,
+full receiver false, partial-area status and the separate 43/45 audit. Its ZIP
+contains 15 files (approximately 0.75 MB compressed). The updated schematic was
+visually inspected. The local dashboard remains running at http://127.0.0.1:8765/;
+no training, product audit or test process remains running.

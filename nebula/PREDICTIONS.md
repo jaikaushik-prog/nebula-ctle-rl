@@ -14890,3 +14890,15 @@ fixed-code PVT passes fewer conditions than the adaptive map; removing the DFE
 shrinks some eyes (all-condition pass unknown); the central request reproduces
 the shipped setting while high-peaking endpoint coverage gaps remain. No
 production change may be chosen from this diagnostic without a new decision.
+
+### Entry 100 outcome
+
+Runner `da86ac6` completed 90 SPICE calls and the replay in 153.54 s. Prediction
+1 HIT: expanded geometry 0.002519027 mm2, full S7 still unknown. Prediction 2
+HIT: fixed setting 425 passes 301/315 conditions (43/45 corners), failing only
+peaking-match at SS/FS, 0.95 supply, 125 C by approximately 0.055 dB. Prediction
+3 HIT: removing the DFE shrinks eyes; all 315 still exceed both S8 thresholds,
+with minimum 139.531 mV / 0.6875 UI. All ideal controls pass. Prediction 4 HIT:
+the central request reproduces setting 425 while high-peaking boundary gaps
+remain; overall eight of twelve requests pass all conditions. No retuning or
+hardware adoption followed. Full results: `PRODUCT_READINESS_RESULTS.md`.

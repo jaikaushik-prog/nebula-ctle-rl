@@ -1,0 +1,297 @@
+{
+  "provenance": {
+    "run_pid": 20156,
+    "run_started_unix": 1788639895.5463524,
+    "run_host": "JAI",
+    "design_json_sha256": "321790D9E6C2A5B74295FEC550FF29B32AB4E7404BEEEB97B3FBB1B5FC0C9467",
+    "deck_file_sha256": "353D3B66FF45C34FB155E54EF21DF6F0BF8AABB4E29B0FB4A120933669095F88",
+    "runner_sha256": "2E07449B2C8BE3F3CA2BAD8133182D2129EFC52C0F1B415E80421FDF4A3CA145",
+    "plan_sha256": "625C4360CFCD2BCDDEDE564FCB1FB1A446A9ABC4680871B0A391CA0AFC240F73",
+    "table_decoded_sha256": "1B5F941DF4B34F3C90F6DD050F264D8A77C7BB2E5CE4D9EED8CC29EBD9F9843F",
+    "policy_manifest_sha256": "3E910DECEFD7CAAA5D401655E77C310F8BE4A645DD48538EEE4E1531199734DB",
+    "s4_tone_hz": 100000000.0,
+    "s4_vin_diff_peak_v": 0.1,
+    "scope": "Entry 100 product diagnostic; no training, FINAL evaluation or topology changes"
+  },
+  "spice_calls": 90,
+  "fixed": {
+    "setting": 425,
+    "n_corners": 45,
+    "n_invalid_corners": 0,
+    "n_expected_conditions": 315,
+    "n_model_pass": 301,
+    "representative_loss_db": 7.5,
+    "n_representative_pvt_pass": 43,
+    "failed_spec_counts": {
+      "S3_peaking_match": 14
+    },
+    "dfe_control_all_pass": true,
+    "dfe_policies": {
+      "ideal": {
+        "n_valid_control": 315,
+        "n_expected": 315,
+        "n_eye_pass": 315,
+        "min_eye_h_v": 0.14741565588222566,
+        "min_eye_w_ui": 0.78125,
+        "all_eyes_pass": true
+      },
+      "none": {
+        "n_valid_control": 315,
+        "n_expected": 315,
+        "n_eye_pass": 315,
+        "min_eye_h_v": 0.13953109492506233,
+        "min_eye_w_ui": 0.6875,
+        "all_eyes_pass": true
+      },
+      "misadapted": {
+        "n_valid_control": 315,
+        "n_expected": 315,
+        "n_eye_pass": 315,
+        "min_eye_h_v": 0.145838743690793,
+        "min_eye_w_ui": 0.765625,
+        "all_eyes_pass": true
+      },
+      "quantised": {
+        "n_valid_control": 315,
+        "n_expected": 315,
+        "n_eye_pass": 315,
+        "min_eye_h_v": 0.14120395923385476,
+        "min_eye_w_ui": 0.78125,
+        "all_eyes_pass": true
+      }
+    },
+    "full_product_compliance": false,
+    "note": "Fixed code, 45 PVT corners, one load, seven constructed channels. Model pass still uses partial passive area and behavioural eyes; not full silicon compliance."
+  },
+  "accuracy": [
+    {
+      "target_peaking_db": 3.0,
+      "target_f_peak_hz": 1250000000.0,
+      "n_conditions": 315,
+      "n_compliant": 315,
+      "product_deliverable_under_current_model": true,
+      "max_accepted_abs_peaking_error_db": 0.8493991557734195,
+      "max_accepted_abs_frequency_error_oct": 0.13119769976510354,
+      "nominal": {
+        "corner": "tt/1.00/27C",
+        "loss_db": 7.5,
+        "setting": 333,
+        "compliant": true,
+        "source": "bank-fallback",
+        "reason": "target-refinement",
+        "peaking_error_db": 0.3960171205530276,
+        "frequency_error_oct": 0.09688635392505351
+      }
+    },
+    {
+      "target_peaking_db": 3.0,
+      "target_f_peak_hz": 1900000000.0,
+      "n_conditions": 315,
+      "n_compliant": 315,
+      "product_deliverable_under_current_model": true,
+      "max_accepted_abs_peaking_error_db": 0.4826932281900511,
+      "max_accepted_abs_frequency_error_oct": 0.07935377027665491,
+      "nominal": {
+        "corner": "tt/1.00/27C",
+        "loss_db": 7.5,
+        "setting": 459,
+        "compliant": true,
+        "source": "bank-fallback",
+        "reason": "target-refinement",
+        "peaking_error_db": 0.20465544829874238,
+        "frequency_error_oct": -0.025963802911937783
+      }
+    },
+    {
+      "target_peaking_db": 3.0,
+      "target_f_peak_hz": 2500000000.0,
+      "n_conditions": 315,
+      "n_compliant": 315,
+      "product_deliverable_under_current_model": true,
+      "max_accepted_abs_peaking_error_db": 0.8281392997610952,
+      "max_accepted_abs_frequency_error_oct": 0.15849679146086543,
+      "nominal": {
+        "corner": "tt/1.00/27C",
+        "loss_db": 7.5,
+        "setting": 336,
+        "compliant": true,
+        "source": "bank-fallback",
+        "reason": "target-refinement",
+        "peaking_error_db": 0.6261097762464511,
+        "frequency_error_oct": -0.10431408901044552
+      }
+    },
+    {
+      "target_peaking_db": 6.0,
+      "target_f_peak_hz": 1250000000.0,
+      "n_conditions": 315,
+      "n_compliant": 315,
+      "product_deliverable_under_current_model": true,
+      "max_accepted_abs_peaking_error_db": 0.696128934802891,
+      "max_accepted_abs_frequency_error_oct": 0.11532997436269854,
+      "nominal": {
+        "corner": "tt/1.00/27C",
+        "loss_db": 7.5,
+        "setting": 284,
+        "compliant": true,
+        "source": "bank-fallback",
+        "reason": "target-refinement",
+        "peaking_error_db": -0.27823491168634185,
+        "frequency_error_oct": 0.035241809510296096
+      }
+    },
+    {
+      "target_peaking_db": 6.0,
+      "target_f_peak_hz": 1900000000.0,
+      "n_conditions": 315,
+      "n_compliant": 315,
+      "product_deliverable_under_current_model": true,
+      "max_accepted_abs_peaking_error_db": 0.4932174549769641,
+      "max_accepted_abs_frequency_error_oct": 0.09894184867459987,
+      "nominal": {
+        "corner": "tt/1.00/27C",
+        "loss_db": 7.5,
+        "setting": 160,
+        "compliant": true,
+        "source": "rl-shield",
+        "reason": "safe-rl-proposal-well-centred",
+        "peaking_error_db": 0.30364426390681043,
+        "frequency_error_oct": -0.08440588307350472
+      }
+    },
+    {
+      "target_peaking_db": 6.0,
+      "target_f_peak_hz": 2500000000.0,
+      "n_conditions": 315,
+      "n_compliant": 315,
+      "product_deliverable_under_current_model": true,
+      "max_accepted_abs_peaking_error_db": 0.7992764546348452,
+      "max_accepted_abs_frequency_error_oct": 0.267673198981484,
+      "nominal": {
+        "corner": "tt/1.00/27C",
+        "loss_db": 7.5,
+        "setting": 480,
+        "compliant": true,
+        "source": "bank-fallback",
+        "reason": "target-refinement",
+        "peaking_error_db": 0.7464308657181418,
+        "frequency_error_oct": -0.08270099605936931
+      }
+    },
+    {
+      "target_peaking_db": 9.0,
+      "target_f_peak_hz": 1250000000.0,
+      "n_conditions": 315,
+      "n_compliant": 315,
+      "product_deliverable_under_current_model": true,
+      "max_accepted_abs_peaking_error_db": 1.1087589728280323,
+      "max_accepted_abs_frequency_error_oct": 0.1702565663943666,
+      "nominal": {
+        "corner": "tt/1.00/27C",
+        "loss_db": 7.5,
+        "setting": 106,
+        "compliant": true,
+        "source": "rl-shield",
+        "reason": "safe-rl-proposal-well-centred",
+        "peaking_error_db": -0.46890482960136737,
+        "frequency_error_oct": 0.02899417126189663
+      }
+    },
+    {
+      "target_peaking_db": 9.0,
+      "target_f_peak_hz": 1900000000.0,
+      "n_conditions": 315,
+      "n_compliant": 315,
+      "product_deliverable_under_current_model": true,
+      "max_accepted_abs_peaking_error_db": 0.6466866843594925,
+      "max_accepted_abs_frequency_error_oct": 0.11417200079307704,
+      "nominal": {
+        "corner": "tt/1.00/27C",
+        "loss_db": 7.5,
+        "setting": 425,
+        "compliant": true,
+        "source": "bank-fallback",
+        "reason": "target-refinement",
+        "peaking_error_db": -0.36730395955691364,
+        "frequency_error_oct": -0.003000201287264914
+      }
+    },
+    {
+      "target_peaking_db": 9.0,
+      "target_f_peak_hz": 2500000000.0,
+      "n_conditions": 315,
+      "n_compliant": 273,
+      "product_deliverable_under_current_model": false,
+      "max_accepted_abs_peaking_error_db": 1.432817514533907,
+      "max_accepted_abs_frequency_error_oct": 0.2813084776415988,
+      "nominal": {
+        "corner": "tt/1.00/27C",
+        "loss_db": 7.5,
+        "setting": 488,
+        "compliant": true,
+        "source": "bank-fallback",
+        "reason": "target-refinement",
+        "peaking_error_db": -0.5010363272792144,
+        "frequency_error_oct": -0.13402989651499325
+      }
+    },
+    {
+      "target_peaking_db": 12.0,
+      "target_f_peak_hz": 1250000000.0,
+      "n_conditions": 315,
+      "n_compliant": 308,
+      "product_deliverable_under_current_model": false,
+      "max_accepted_abs_peaking_error_db": 1.4230408108867874,
+      "max_accepted_abs_frequency_error_oct": 0.28156826520261113,
+      "nominal": {
+        "corner": "tt/1.00/27C",
+        "loss_db": 7.5,
+        "setting": 500,
+        "compliant": true,
+        "source": "bank-fallback",
+        "reason": "target-refinement",
+        "peaking_error_db": -1.0659317625996678,
+        "frequency_error_oct": 0.0835904164354937
+      }
+    },
+    {
+      "target_peaking_db": 12.0,
+      "target_f_peak_hz": 1900000000.0,
+      "n_conditions": 315,
+      "n_compliant": 312,
+      "product_deliverable_under_current_model": false,
+      "max_accepted_abs_peaking_error_db": 1.337117974583899,
+      "max_accepted_abs_frequency_error_oct": 0.22312156014131163,
+      "nominal": {
+        "corner": "tt/1.00/27C",
+        "loss_db": 7.5,
+        "setting": 498,
+        "compliant": true,
+        "source": "bank-fallback",
+        "reason": "no-compliant-rl-proposal",
+        "peaking_error_db": -1.2722392257931716,
+        "frequency_error_oct": -0.1500711530038858
+      }
+    },
+    {
+      "target_peaking_db": 12.0,
+      "target_f_peak_hz": 2500000000.0,
+      "n_conditions": 315,
+      "n_compliant": 112,
+      "product_deliverable_under_current_model": false,
+      "max_accepted_abs_peaking_error_db": 1.4923172740332902,
+      "max_accepted_abs_frequency_error_oct": 0.19440509549347806,
+      "nominal": {
+        "corner": "tt/1.00/27C",
+        "loss_db": 7.5,
+        "setting": 496,
+        "compliant": false,
+        "source": "bank-miss",
+        "reason": "no-compliant-bank-setting",
+        "peaking_error_db": -1.605149503361103,
+        "frequency_error_oct": -0.1818574058168732
+      }
+    }
+  ],
+  "wall_s": 153.54028539999945
+}
