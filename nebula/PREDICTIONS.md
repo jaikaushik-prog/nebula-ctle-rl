@@ -14911,3 +14911,12 @@ calls and reuses Entry 100's instruments/controls. Prediction: all 315 model
 conditions pass, including the two peaking misses of 425. No-tap eye pass
 remains an open question. No production adoption or full-hardware claim is
 licensed by the validation alone. No new candidate measurement at this boundary.
+
+### Entry 101 outcome: PASS
+
+Prediction HIT: all 45 fixed PVT corners / 315 model conditions pass after
+91 calls in 88.37 s, frozen runner `843ca0c`. All DFE controls pass; all no-tap
+eyes still pass (minimum 131.283 mV / 0.65625 UI). Nominal 8.852970 dB at
+1.771915 GHz; minimum peaking/frequency-match slack is 0.138321 dB / 0.011880
+octave. No new production selector or hardware adoption followed. Full receiver
+area/power/DFE/selector implementation remains unverified. See `FIXED_490_RESULTS.md`.

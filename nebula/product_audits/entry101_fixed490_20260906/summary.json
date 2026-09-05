@@ -1,0 +1,62 @@
+{
+  "provenance": {
+    "run_pid": 11316,
+    "run_started_unix": 1788642693.0871427,
+    "run_host": "JAI",
+    "runner_sha256": "CB38E2AA60E1D46ACC9691D143BF69CEC248CE15A95D42CE9EC0A7EDC0EDF026",
+    "shared_audit_sha256": "2E07449B2C8BE3F3CA2BAD8133182D2129EFC52C0F1B415E80421FDF4A3CA145",
+    "plan_sha256": "A3639B82466E857FE19FE7EDD5718138D8CDB05F41D09ED1C8EF4D607D9EB59F",
+    "candidate_sha256": "740F2874BE97B76B6F424254B03B879998A4EB744F408A0663F623AAC53F699A",
+    "deck_sha256": "E6B1EBB01F2AE2FA6779A36A18B06FF80493D49B0085669C73CFD50863C8043B"
+  },
+  "spice_calls": 91,
+  "fixed": {
+    "setting": 490,
+    "n_corners": 45,
+    "n_invalid_corners": 0,
+    "n_expected_conditions": 315,
+    "n_model_pass": 315,
+    "representative_loss_db": 7.5,
+    "n_representative_pvt_pass": 45,
+    "failed_spec_counts": {},
+    "dfe_control_all_pass": true,
+    "dfe_policies": {
+      "ideal": {
+        "n_valid_control": 315,
+        "n_expected": 315,
+        "n_eye_pass": 315,
+        "min_eye_h_v": 0.13244209257104372,
+        "min_eye_w_ui": 0.765625,
+        "all_eyes_pass": true
+      },
+      "none": {
+        "n_valid_control": 315,
+        "n_expected": 315,
+        "n_eye_pass": 315,
+        "min_eye_h_v": 0.13128256071668754,
+        "min_eye_w_ui": 0.65625,
+        "all_eyes_pass": true
+      },
+      "misadapted": {
+        "n_valid_control": 315,
+        "n_expected": 315,
+        "n_eye_pass": 315,
+        "min_eye_h_v": 0.1322101862001725,
+        "min_eye_w_ui": 0.75,
+        "all_eyes_pass": true
+      },
+      "quantised": {
+        "n_valid_control": 315,
+        "n_expected": 315,
+        "n_eye_pass": 315,
+        "min_eye_h_v": 0.13128256071668754,
+        "min_eye_w_ui": 0.765625,
+        "all_eyes_pass": true
+      }
+    },
+    "full_product_compliance": false,
+    "note": "Fixed code, 45 PVT corners, one load, seven constructed channels. Model pass still uses partial passive area and behavioural eyes; not full silicon compliance."
+  },
+  "wall_s": 88.36916370000017,
+  "adopted": false
+}

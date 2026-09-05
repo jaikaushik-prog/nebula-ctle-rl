@@ -18,8 +18,10 @@
 > `nebula/NEXT_STEPS.md`. This file remains the full state of record.
 
 Last updated: **2026-09-06** (session 49, Entry 101: owner approved fresh fixed
-setting-490 validation. Runner/plan added; measurements pending; existing demo
-unchanged. See `nebula/FIXED_490_PLAN.md`. Earlier session 48, Entry 100: owner-approved product
+setting-490 validation. Fresh result PASS: 45/45 fixed PVT corners and 315/315
+model conditions, including both HD3 tones; all no-DFE model eyes pass. Nominal
+8.852970 dB at 1.771915 GHz. Existing demo/selector unchanged. See
+`nebula/FIXED_490_RESULTS.md`. Earlier session 48, Entry 100: owner-approved product
 readiness audit completed; area/scope reporting corrected. Fixed setting 425
 passes 43/45 PVT corners (301/315 conditions); two hot/low-supply corners miss
 the peaking request by about 0.055 dB. All 315 eyes pass with DFE removed
@@ -915,6 +917,8 @@ signaling, ADC-based DSP receiver, 28 nm CMOS reference parameters).
 Entry 101: `nebula/experiments/exp_fixed_candidate.py` validates setting 490
 using Entry 100's unchanged physical/DFE checks; `nebula/FIXED_490_PLAN.md`
 freezes the 91-call scope. It does not implement a new production selector.
+`nebula/FIXED_490_RESULTS.md` records the outcome; raw evidence is in
+`nebula/product_audits/entry101_fixed490_20260906/`.
 
 Entry 100 additions: `nebula/report/product_scope.py` inventories the exported
 deck and labels partial/full implementation scope; `nebula/experiments/exp_product_readiness.py`
@@ -1896,6 +1900,13 @@ Plus: git init, .gitignore, 28 tests, Wilson-bound BER reporting.
 
 ## 6. Key numbers & validated behavior (current state)
 
+Entry 101: setting 490 freshly passes all 45 fixed PVT corners / 315 model
+conditions at 9 dB / 1.9 GHz (91 calls, 88.37 s). Nominal is 8.852970 dB /
+1.771915 GHz; worst no-DFE model eye 131.283 mV / 0.65625 UI. Worst 100 MHz
+HD3 -82.700764 dBc. Request-match slack is modest: minimum 0.138321 dB and
+0.011880 octave. Full area/receiver implementation remains unverified; production
+still exports the old 425 representative until a fixed-robust mode is integrated.
+
 Entry 100 correction (2026-09-06): the shipped `area_mm2` of approximately
 0.001677 is Rs/Cs/two-RL body/plate area only. It is not full S7 compliance.
 The exporter now adds a separate inventory including all attenuator branches
@@ -2565,6 +2576,11 @@ Entry 101 update: the owner has now approved candidate-490 validation. Run the
 frozen 91-call audit, then report whether it clears the fixed-circuit gate before
 any export-selection integration. The organiser draft still needs an official
 recipient and has not been sent.
+
+Entry 101 outcome: validation passes. Next is fixed-robust export-selection
+integration with honest RL-versus-bank attribution, not hard-coding 490 or
+relabeling the existing adaptive map. Keep the nominal-frequency trade-off and
+small worst-corner request margins visible. No production replacement yet.
 
 **Session-39 ordering:** entries 80 through 86 are complete. The non-RL
 controls are qualified and the 7.3 dB combined bank has been measured across
@@ -16179,3 +16195,27 @@ demo and selection policy remain untouched. New tests failed on the absent
 module, then **17/17** candidate/readiness gates passed. Baseline full regression
 passed **2,791/2,791**, 13 deselected and two known warnings, in 488.87 s.
 No fresh candidate SPICE invocation exists at this boundary.
+
+### 2026-09-06 - session 49 (Entry 101 outcome). Fixed setting 490 passes the model gate.
+
+After freeze commit `843ca0c`, the runner completed 91 SPICE calls in 88.37 s.
+All 45 fixed PVT corners / 315 model conditions pass, with invariant circuit
+signatures and no bypass retries. SS and FS at 0.95 supply / 125 C now measure
+7.647806 and 7.638321 dB versus the unchanged 7.5 dB floor. Nominal 8.852970 dB
+at 1.771915 GHz trades frequency centring for all-corner request compliance.
+Minimum match margins are 0.138321 dB / 0.011880 octave, not a large guarantee
+against unmodelled mismatch or layout. Worst 100 MHz HD3 is -82.700764 dBc;
+worst CTLE power 7.117249 mW.
+
+All 315 ideal DFE controls reproduce; all four eye policies pass. Without DFE,
+the minimum eye is 131.283 mV / 0.65625 UI. Geometry subtotal 0.002847367 mm2 is
+still not full S7 area. This is a fixed measured-bank candidate, not a new RL
+selection or full-hardware completion. `FIXED_490_RESULTS.md` and the exclusive
+Entry 101 audit directory preserve the findings. No production code, cached
+demo, thresholds or frozen RL data changed. Final full regression passed
+**2,794/2,794**, 13 deselected and two known warnings, in 373.75 s (baseline
+2,791/2,791). The candidate/readiness focused run passed 17/17. Raw-journal
+summary recomputation, candidate/netlist hashes, all 45 circuit signatures and
+the 91-call total pass independent integrity checks. No validation or test
+process remains running. The normal export flow and cached demo still use
+their prior selection logic; integration is the next implementation task.
