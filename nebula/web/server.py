@@ -39,6 +39,7 @@ from nebula.common.types import (
     SPEC_VN_IN_MAX_VRMS,
 )
 from nebula.llm.spec_parse import SpecOutOfRange, parse_request
+from nebula.report.product_scope import implementation_scope
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -72,10 +73,11 @@ def _spec_rows(design: dict) -> list[dict]:
         ("Nyquist boost", "nyq_boost_db", "dB", 0.0, "min", None),
         ("Input noise", "_noise_mv", "mV rms",
          SPEC_VN_IN_MAX_VRMS * 1e3, "max", None),
-        ("Power", "_power_mw", "mW", SPEC_POWER_MAX_W * 1e3, "max", None),
+        ("CTLE power", "_power_mw", "mW", SPEC_POWER_MAX_W * 1e3, "max", None),
         ("HD3 at Nyquist", "hd3_nyq_dbc", "dBc", SPEC_HD3_MAX_DBC,
          "max", None),
-        ("Area", "area_mm2", "mm2", SPEC_AREA_MAX_MM2, "max", None),
+        ("Partial passive area", "area_mm2", "mm2", SPEC_AREA_MAX_MM2, "max", None),
+        ("Full receiver area", "_full_area_mm2", "mm2", SPEC_AREA_MAX_MM2, "max", None),
         ("Eye height", "eye_h_v", "V", SPEC_EYE_H_MIN_V, "min", None),
         ("Eye width", "eye_w_ui", "UI", SPEC_EYE_W_MIN_UI, "min", None),
     ]
@@ -84,7 +86,9 @@ def _spec_rows(design: dict) -> list[dict]:
         measured = _number(meas.get(key))
         target_n = _number(target)
         status: Optional[bool] = None
-        if measured is not None and target_n is not None:
+        if key == "_full_area_mm2":
+            measured = None  # No implemented layout/DFE area exists yet.
+        if key != "area_mm2" and measured is not None and target_n is not None:
             if rule == "min":
                 status = measured >= target_n
             elif rule == "max":
@@ -97,7 +101,9 @@ def _spec_rows(design: dict) -> list[dict]:
                 status = abs(math.log2(measured / target_n)) <= float(tolerance)
         out.append({"label": label, "key": key, "unit": unit,
                     "measured": measured, "target": target_n,
-                    "rule": rule, "status": status})
+                    "rule": rule, "status": status,
+                    "status_label": ("Partial only" if key == "area_mm2" else
+                                     "Not verified" if key == "_full_area_mm2" else None)})
     return out
 
 
@@ -182,6 +188,9 @@ def present_design(design_id: str, design: dict, *, source: str,
         "method_label": "RL policy with simulator safety shield"
         if design.get("method") == "rl-hybrid" else str(design.get("method")),
         "status": status,
+        "status_label": "MODEL PASS" if status == "pass" else "NEEDS WORK",
+        "implementation_scope": implementation_scope(design),
+        "area_inventory": design.get("area_inventory"),
         "failure_reasons": failures,
         "request_match": request_match,
         "nominal": {

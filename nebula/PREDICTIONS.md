@@ -14876,3 +14876,17 @@ Full audit: `LVT_TUNING_BANK_RESULTS.md`.
 
 The final post-result non-slow suite passes 2,766/2,766, with 13 deselected and
 the same two warnings in 332.73 s.
+
+## Entry 100 (2026-09-06) - current-product readiness, no retuning
+
+The owner approved the five product-readiness actions. The complete preregistered
+inputs, measurements, predictions and stopping rules are in
+`PRODUCT_READINESS_PLAN.md`; the executable is
+`experiments/exp_product_readiness.py`. Frozen source is the current Entry 99
+9 dB / 1.9 GHz exported setting 425, not the older Entry 39 DFE circuit.
+
+Predictions: counted geometry exceeds the old partial area without closing S7;
+fixed-code PVT passes fewer conditions than the adaptive map; removing the DFE
+shrinks some eyes (all-condition pass unknown); the central request reproduces
+the shipped setting while high-peaking endpoint coverage gaps remain. No
+production change may be chosen from this diagnostic without a new decision.

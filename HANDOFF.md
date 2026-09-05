@@ -17,7 +17,11 @@
 > decisions that are OPEN and human-only, and what to do next. It supersedes
 > `nebula/NEXT_STEPS.md`. This file remains the full state of record.
 
-Last updated: **2026-09-04** (session 47, Entry 99: target-centred selection now
+Last updated: **2026-09-06** (session 48, Entry 100: owner-approved product
+readiness audit implemented; area/scope reporting corrected. Full-area and
+receiver implementation are NOT verified. Fixed-code PVT, current-circuit DFE
+sensitivity and 12-request accuracy results are pending. See
+`nebula/PRODUCT_READINESS_PLAN.md`. Earlier session 47, Entry 99: target-centred selection now
 keeps V6 compliance hard, ranks safe settings by normalized peaking/frequency
 error before eye area, and consults the existing 512-setting table when the RL
 visits miss the central 0.5 dB / 0.1-octave region. The real 9 dB / 1.9 GHz
@@ -901,6 +905,12 @@ signaling, ADC-based DSP receiver, 28 nm CMOS reference parameters).
   **PRIVATE, and must stay private** (contains copyrighted PDFs, see G1).
 
 ## 2. Repository map (what every file/folder is)
+
+Entry 100 additions: `nebula/report/product_scope.py` inventories the exported
+deck and labels partial/full implementation scope; `nebula/experiments/exp_product_readiness.py`
+runs the frozen fixed-circuit/DFE/request audit; `nebula/PRODUCT_READINESS_PLAN.md`
+registers its inputs and stop rules; `nebula/ORGANISER_SCOPE_QUESTIONS.md` is an
+UNSENT clarification draft. No new topology or policy is implemented by these files.
 
 Entry 95 additions (session 45): `nebula/device/tuning_switch.py` owns the
 isolated real-NMOS W/bias/PVT Ron, ON-impedance and OFF-capacitance probe;
@@ -1873,6 +1883,15 @@ Plus: git init, .gitignore, 28 tests, Wilson-bound BER reporting.
 
 ## 6. Key numbers & validated behavior (current state)
 
+Entry 100 correction (2026-09-06): the shipped `area_mm2` of approximately
+0.001677 is Rs/Cs/two-RL body/plate area only. It is not full S7 compliance.
+The exporter now adds a separate inventory including all attenuator branches
+and MOS gate geometry, with unimplemented bias capacitor/source and layout
+overhead explicitly unknown. Historical reward/bank numbers are unchanged.
+The browser calls success MODEL PASS and labels power CTLE-only. The 315-point
+adaptive map is not verification of the one fixed exported circuit. Fresh
+fixed-code evidence is pending at this implementation boundary.
+
 - **Nebula Entry 97 rejects safe LVT resizing:** all 384 rows and both code
   axes pass, but no scale passes loss and C accuracy together. Scale 1 has
   17.477435 mS / 0.550334 pF errors; scale 8 reaches the best loss at 2.875972
@@ -2371,6 +2390,12 @@ Plus: git init, .gitignore, 28 tests, Wilson-bound BER reporting.
 
 ## 7. Known model limitations (honest list — do not overclaim)
 
+- **Entry 100 / full receiver:** no complete area footprint, transistor-level
+  DFE/slicer/clock, physical Rs/Cs selector, or complete bias/control power has
+  been verified. OFF attenuator switches occupy geometry too. A gate/body/plate
+  subtotal cannot close S7. Entry 39's DFE ablation applies only to its older
+  circuit; new schematics must not reuse its "not load-bearing" conclusion.
+
 - Statistical engine: ideal DFE (no error propagation), MMSE-designed FFE
   (assumes white noise in design, correlated in evaluation), Gaussianized
   quantization, NO clipping distortion in the BER itself (only a constraint),
@@ -2510,6 +2535,12 @@ Plus: git init, .gitignore, 28 tests, Wilson-bound BER reporting.
   untrusted until proven (the Phase-0 experience says assume bugs).
 
 ## 8. Next steps (prioritized backlog with context)
+
+**Current owner-approved task, Entry 100:** finish regression gates, freeze the
+readiness runner, run the fixed setting-425 audit (90 SPICE calls maximum),
+record DFE controls and 12-request errors, then freeze a transparently scoped
+demo. Send the draft organiser questions through an official contact supplied
+by the owner. Do not begin a new switch/DFE topology or retune exposed FINAL.
 
 **Session-39 ordering:** entries 80 through 86 are complete. The non-RL
 controls are qualified and the 7.3 dB combined bank has been measured across
@@ -2971,6 +3002,11 @@ explicit scope.
 **1-9.** (See existing backlog: .s4p, clipping disto, joint adaptation, etc.)
 
 ## 9. Gotchas & footguns (each one cost real debugging time)
+
+**Entry 100 scope footgun:** a green historical S7 reward row is only a partial
+passive-area comparison, and 315 green adaptive conditions use multiple
+configurations. Neither proves one full receiver meets all requirements. Keep
+raw historical scores reproducible, but qualify UI/CLI/JSON and fresh evidence.
 
 - **G1 — Repo must stay PRIVATE.** The PDFs are copyrighted (IEEE, theses,
   Intel/Xilinx). A public/portfolio version must strip them from HISTORY
@@ -16028,3 +16064,35 @@ CLI fallback provenance were corrected, and the three focused groups passed
 and the same warnings in 343.60 s. Both regenerated figures were visually
 inspected, and a live web-worker run returned the same 8.632696 dB /
 1.896053 GHz, 315/315 result.
+
+### 2026-09-06 - session 48 (Entry 100 implementation). Product-readiness scope audit.
+
+The owner approved area corrections, fixed exported-circuit PVT, new DFE
+sensitivity, organiser scope clarification and a multi-request accuracy check.
+The baseline suite passed **2,777/2,777**, 13 deselected, two known warnings,
+in 576.80 s. New fail-first tests initially rejected the missing inventory
+module, then the unqualified UI status. Focused export/schematic/actor/UI/audit
+gates passed **56/56** before two additional grid/control-mutation tests.
+
+`product_scope.py` reads the actual deck, counts OFF attenuator branches,
+parallel passives and total-width MOS gates, and refuses unknown geometry.
+Cbyp, Iref, integrated load realization and missing receiver/layout blocks are
+explicitly unresolved; no overhead factor is guessed and no full-area pass is
+emitted. Exported JSON receives the inventory/scope. UI/CLI labels distinguish
+partial area, CTLE power, adaptive map and MODEL PASS. The schematic no longer
+quotes Entry 39's old ablation as a fact about every exported circuit.
+
+`PRODUCT_READINESS_PLAN.md` freezes one current setting across all 45 corners,
+90 maximum SPICE calls for operating-point and 100 MHz HD3, seven modelled
+channels, the four existing DFE policies, and 12 endpoint/interior requests.
+The runner checks invariant circuit signatures, suppresses bypass-changing
+retries, preserves hashed inputs and journals results without overwriting.
+The ideal DFE control licenses every sensitivity result. `ORGANISER_SCOPE_QUESTIONS.md`
+is a draft, not an external message. No policy, reward, bounds or topology change.
+The first post-change full suite ran all **2,789** tests: 2,787 passed; one
+new generic scope sentence violated the older nominal-only CLI warning test,
+and the existing PDK `ll` speed assertion lost by 0.020 s (4.224 vs 4.204 s,
+with numeric identity intact). The sentence was corrected. The two failed
+tests plus complete CLI/new-audit/web groups then passed **52/52** in 5.28 s;
+no PDK code or timing threshold was changed. Fresh measurements remain pending
+at this implementation freeze. A final full regression follows the product audit.

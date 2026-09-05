@@ -45,9 +45,9 @@ common mode they establish IS shown, as a label on the gates, because it is a
 sized quantity (`vcm_in`) the design chose.
 
 The 1-tap DFE is shown as a **behavioural block**, clearly marked as such,
-because that is exactly what it is in this project: entry 39 measured that the
-eye meets both S8 rows at all 45 mandated corners **with the DFE removed
-entirely**, so no transistor-level DFE was ever sized. Drawing it as if it were
+because that is exactly what it is in this project. Entry 39's ablation applies
+only to its older circuit, not automatically to a newly exported design.
+No transistor-level DFE was ever sized. Drawing it as if it were
 sized silicon would be a fabrication; omitting it would hide a mandated part of
 S2's topology. A labelled block with the ablation quoted beside it is the only
 honest option.
@@ -471,13 +471,13 @@ def draw_schematic(netlist: str, out_path, *,
     ax.text(PANEL_X + 0.18, by + 0.70, "The DFE is BEHAVIOURAL, not sized.",
             fontsize=8, color=WARM, zorder=4, fontweight="bold")
     ax.text(PANEL_X + 0.18, by + 0.44,
-            "Entry 39 measured the eye meeting both", fontsize=7.6,
+            "Tap-sensitivity evidence is circuit-specific.", fontsize=7.6,
             color=GREY, zorder=4)
     ax.text(PANEL_X + 0.18, by + 0.24,
-            "S8 rows at all 45 mandated corners with", fontsize=7.6,
+            "An open model eye does not implement", fontsize=7.6,
             color=GREY, zorder=4)
     ax.text(PANEL_X + 0.18, by + 0.04,
-            "the tap REMOVED - so it is not load-bearing.", fontsize=7.6,
+            "the DFE, slicer, clock or their area/power.", fontsize=7.6,
             color=GREY, zorder=4)
 
     from pathlib import Path as _P

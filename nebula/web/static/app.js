@@ -65,14 +65,14 @@ function requirement(row) {
   return `${number(row.target, 3)} ${row.unit}`;
 }
 
-function statusNode(status) {
+function statusNode(status, label = null) {
   const span = document.createElement("span");
   const name = status === true ? "pass" : status === false ? "fail" : "unknown";
   span.className = `status ${name}`;
   const dot = document.createElement("span");
   dot.className = "status-dot";
   const copy = document.createElement("span");
-  copy.textContent = status === true ? "Pass" : status === false ? "Fail" : "Not measured";
+  copy.textContent = label || (status === true ? "Pass" : status === false ? "Fail" : "Not measured");
   span.append(dot, copy);
   return span;
 }
@@ -115,7 +115,9 @@ function renderDesign(design) {
   renderSchematic(design);
   renderSpecs(design.specs || []);
   renderSizing(design.nominal?.params || {});
-  renderHardware(design.hardware || {});
+  const scope = design.implementation_scope || {};
+  const hardware = design.hardware || {};
+  renderHardware({...hardware, note: [hardware.note, ...(scope.notes || [])].filter(Boolean).join(" ")});
   renderOutcome(design);
   renderRunTruth(design);
   renderPvt(design);
@@ -159,7 +161,7 @@ function renderSpecs(rows) {
     value.textContent = measured(row);
     value.className = "numeric";
     const result = document.createElement("td");
-    result.append(statusNode(row.status));
+    result.append(statusNode(row.status, row.status_label));
     tr.append(name, target, value, result);
     body.append(tr);
   });
@@ -206,10 +208,10 @@ function renderOutcome(design) {
   const card = $("#outcomeCard");
   card.className = `outcome-card ${design.status}`;
   $("#outcomeIcon").textContent = design.status === "pass" ? "OK" : "!";
-  $("#outcomeText").textContent = design.status === "pass" ? "PASS" : "NEEDS WORK";
+  $("#outcomeText").textContent = design.status_label || "MODEL STATUS UNKNOWN";
   const v = design.verification || {};
   $("#outcomeDetail").textContent = finite(v.n_points)
-    ? `${number(v.n_pass, 0)} of ${number(v.n_points, 0)} conditions pass`
+    ? `${number(v.n_pass, 0)} of ${number(v.n_points, 0)} model conditions pass; full receiver not verified`
     : "No complete verification record";
   const failure = $("#failureBox");
   if ((design.failure_reasons || []).length) {
@@ -382,7 +384,7 @@ function renderCompare() {
   $("#compareAHead").textContent = circuitName(a);
   $("#compareBHead").textContent = circuitName(b);
   const rows = [
-    ["Overall result", a.status.toUpperCase(), b.status.toUpperCase()],
+    ["Model result", a.status_label || "Unknown", b.status_label || "Unknown"],
     ["Design ID", a.nominal.design_id || "Not recorded", b.nominal.design_id || "Not recorded"],
     ["Requested peaking", `${number(a.request?.peaking_db, 3)} dB`, `${number(b.request?.peaking_db, 3)} dB`],
     ["Requested peak frequency", `${number(a.request?.f_peak_ghz, 4)} GHz`, `${number(b.request?.f_peak_ghz, 4)} GHz`],
@@ -390,8 +392,8 @@ function renderCompare() {
     ["Peak frequency", measuredValue(a, "_f_peak_ghz", "GHz"), measuredValue(b, "_f_peak_ghz", "GHz")],
     ["Eye height", measuredValue(a, "eye_h_v", "V"), measuredValue(b, "eye_h_v", "V")],
     ["Eye width", measuredValue(a, "eye_w_ui", "UI"), measuredValue(b, "eye_w_ui", "UI")],
-    ["Power", measuredValue(a, "_power_mw", "mW"), measuredValue(b, "_power_mw", "mW")],
-    ["Area", measuredValue(a, "area_mm2", "mm2"), measuredValue(b, "area_mm2", "mm2")],
+    ["CTLE power", measuredValue(a, "_power_mw", "mW"), measuredValue(b, "_power_mw", "mW")],
+    ["Partial passive area", measuredValue(a, "area_mm2", "mm2"), measuredValue(b, "area_mm2", "mm2")],
     ...Object.entries({ w_in: "Input pair width", l_in: "Input pair length", nf_in: "Input fingers", i_bias: "Bias current", rs: "Source resistance", cs: "Source capacitance", rl: "Load resistance", cl: "Output load", vcm_in: "Input common mode" })
       .map(([key, label]) => [label, engineering(a.nominal.params[key], key), engineering(b.nominal.params[key], key)]),
   ];

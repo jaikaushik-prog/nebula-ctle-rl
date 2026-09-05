@@ -619,7 +619,7 @@ def report(d: dict) -> str:
     # here, so the scope is stated rather than left to be discovered.
     if d["method"] == "rl-hybrid":
         L.append(f"    ^ feasible = {len(R.V6_SPECS)} V6 rows, including the "
-                 "request, operating-point linearity, area and eye.")
+                 "request, operating-point linearity, partial passive area and model eye.")
         L.append("      The same rows are checked by the simulator-backed "
                  "shield at every channel/PVT condition below.")
     else:
@@ -735,6 +735,10 @@ def report(d: dict) -> str:
                  f"table lookups for safety/target refinement")
     L.append("")
     L.append("  NOTE ON --peaking: " + d["peaking_is_a_band_not_a_target"])
+    from nebula.report.product_scope import implementation_scope
+    L.append("  IMPLEMENTATION SCOPE -- not full receiver compliance:")
+    for note in implementation_scope(d)["notes"]:
+        L.extend("    " + line for line in textwrap.wrap(note, 68))
     L.append("=" * 74)
     return "\n".join(L)
 
@@ -803,6 +807,10 @@ def write_outputs(d: dict, out_path, *, deck: Optional[str] = None,
     """
     out = Path(out_path)
     out.mkdir(parents=True, exist_ok=True)
+    from nebula.report.product_scope import area_inventory, implementation_scope
+    d["implementation_scope"] = implementation_scope(d)
+    if deck:
+        d["area_inventory"] = area_inventory(deck)
     (out / "design.json").write_text(
         json.dumps(d, indent=1, default=str), encoding="utf-8")
     written = [out / "design.json"]
