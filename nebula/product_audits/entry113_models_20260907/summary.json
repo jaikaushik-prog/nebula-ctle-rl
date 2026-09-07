@@ -1,0 +1,2494 @@
+{
+  "status": "OMITTED_RESISTOR_NONLINEARITY_CONFIRMED",
+  "protocol_sha256": "f1cb6a0f1b0b44f54a1664ea3c25155d93053c2c88418b16363ef8f6bb8427c3",
+  "simulations_run": 0,
+  "saved_logs": 137,
+  "log_records": [
+    {
+      "path": "nebula\\product_demo\\physical_bias_9db_1p9ghz_20260906\\physical_evidence\\calibration\\ngspice.log",
+      "sha256": "c6781f21c44cde191dd78cbf075b4eabc086863be1c6cd7deaea568ffce613bc",
+      "ignored": [],
+      "omitted_nonlinear_terms": []
+    },
+    {
+      "path": "nebula\\product_demo\\physical_bias_9db_1p9ghz_20260906\\physical_evidence\\ff_0.95_0\\ac_noise\\ngspice.log",
+      "sha256": "b2effef37be4d0a85e1f3cadcb1479c6ec6858ac660754fee346774c406070bb",
+      "ignored": [
+        "isnoisy",
+        "p2",
+        "p3",
+        "q2",
+        "q3",
+        "sw_et"
+      ],
+      "omitted_nonlinear_terms": [
+        "p2",
+        "p3",
+        "q2",
+        "q3"
+      ]
+    },
+    {
+      "path": "nebula\\product_demo\\physical_bias_9db_1p9ghz_20260906\\physical_evidence\\ff_0.95_0\\nyquist\\ngspice.log",
+      "sha256": "3b4bf6ce0c9f7576b97af163ed110e048b1dc39aac7baf4cc0b4590bc1016972",
+      "ignored": [
+        "isnoisy",
+        "p2",
+        "p3",
+        "q2",
+        "q3",
+        "sw_et"
+      ],
+      "omitted_nonlinear_terms": [
+        "p2",
+        "p3",
+        "q2",
+        "q3"
+      ]
+    },
+    {
+      "path": "nebula\\product_demo\\physical_bias_9db_1p9ghz_20260906\\physical_evidence\\ff_0.95_0\\s4\\ngspice.log",
+      "sha256": "20b8acf824de12abad0c564e68019905133d0c29df2ade2bbdf87853b79831c2",
+      "ignored": [
+        "isnoisy",
+        "p2",
+        "p3",
+        "q2",
+        "q3",
+        "sw_et"
+      ],
+      "omitted_nonlinear_terms": [
+        "p2",
+        "p3",
+        "q2",
+        "q3"
+      ]
+    },
+    {
+      "path": "nebula\\product_demo\\physical_bias_9db_1p9ghz_20260906\\physical_evidence\\ff_0.95_125\\ac_noise\\ngspice.log",
+      "sha256": "79b6d09e114e421ec3936dd225ff099b605494aaf4b6470f62ca663cab9f0609",
+      "ignored": [
+        "isnoisy",
+        "p2",
+        "p3",
+        "q2",
+        "q3",
+        "sw_et"
+      ],
+      "omitted_nonlinear_terms": [
+        "p2",
+        "p3",
+        "q2",
+        "q3"
+      ]
+    },
+    {
+      "path": "nebula\\product_demo\\physical_bias_9db_1p9ghz_20260906\\physical_evidence\\ff_0.95_125\\nyquist\\ngspice.log",
+      "sha256": "d07f47252caf232ef3868519d7f46f7db6eff0f7588ff719e1cdf3491574f80b",
+      "ignored": [
+        "isnoisy",
+        "p2",
+        "p3",
+        "q2",
+        "q3",
+        "sw_et"
+      ],
+      "omitted_nonlinear_terms": [
+        "p2",
+        "p3",
+        "q2",
+        "q3"
+      ]
+    },
+    {
+      "path": "nebula\\product_demo\\physical_bias_9db_1p9ghz_20260906\\physical_evidence\\ff_0.95_125\\s4\\ngspice.log",
+      "sha256": "28e5b8b9b9318b765127df5f88d7e4edc82b267bc8233b7fd9bd98ff68c40d57",
+      "ignored": [
+        "isnoisy",
+        "p2",
+        "p3",
+        "q2",
+        "q3",
+        "sw_et"
+      ],
+      "omitted_nonlinear_terms": [
+        "p2",
+        "p3",
+        "q2",
+        "q3"
+      ]
+    },
+    {
+      "path": "nebula\\product_demo\\physical_bias_9db_1p9ghz_20260906\\physical_evidence\\ff_0.95_27\\ac_noise\\ngspice.log",
+      "sha256": "53c47a924bb603da76dbefb5d41bfb24e0f467dd384627c960728db5929dc2fb",
+      "ignored": [
+        "isnoisy",
+        "p2",
+        "p3",
+        "q2",
+        "q3",
+        "sw_et"
+      ],
+      "omitted_nonlinear_terms": [
+        "p2",
+        "p3",
+        "q2",
+        "q3"
+      ]
+    },
+    {
+      "path": "nebula\\product_demo\\physical_bias_9db_1p9ghz_20260906\\physical_evidence\\ff_0.95_27\\nyquist\\ngspice.log",
+      "sha256": "557c5f9f13c5704e9723d5531035829f5b27a49a5f26f9e75b32165fdabe2196",
+      "ignored": [
+        "isnoisy",
+        "p2",
+        "p3",
+        "q2",
+        "q3",
+        "sw_et"
+      ],
+      "omitted_nonlinear_terms": [
+        "p2",
+        "p3",
+        "q2",
+        "q3"
+      ]
+    },
+    {
+      "path": "nebula\\product_demo\\physical_bias_9db_1p9ghz_20260906\\physical_evidence\\ff_0.95_27\\s4\\ngspice.log",
+      "sha256": "38bb8d71f0fe2beda1025860691f991557a83ae0b1b5823ed37d1ee0340797ce",
+      "ignored": [
+        "isnoisy",
+        "p2",
+        "p3",
+        "q2",
+        "q3",
+        "sw_et"
+      ],
+      "omitted_nonlinear_terms": [
+        "p2",
+        "p3",
+        "q2",
+        "q3"
+      ]
+    },
+    {
+      "path": "nebula\\product_demo\\physical_bias_9db_1p9ghz_20260906\\physical_evidence\\ff_1.00_0\\ac_noise\\ngspice.log",
+      "sha256": "069986beb71add999a6fc16b6707dfc48c741683c56fd1cf0bba33aff2798f8b",
+      "ignored": [
+        "isnoisy",
+        "p2",
+        "p3",
+        "q2",
+        "q3",
+        "sw_et"
+      ],
+      "omitted_nonlinear_terms": [
+        "p2",
+        "p3",
+        "q2",
+        "q3"
+      ]
+    },
+    {
+      "path": "nebula\\product_demo\\physical_bias_9db_1p9ghz_20260906\\physical_evidence\\ff_1.00_0\\nyquist\\ngspice.log",
+      "sha256": "a42db442a77ce0be375f3fa79e3deb5989d6c340ca35ee3b0b72a2da253b2e7f",
+      "ignored": [
+        "isnoisy",
+        "p2",
+        "p3",
+        "q2",
+        "q3",
+        "sw_et"
+      ],
+      "omitted_nonlinear_terms": [
+        "p2",
+        "p3",
+        "q2",
+        "q3"
+      ]
+    },
+    {
+      "path": "nebula\\product_demo\\physical_bias_9db_1p9ghz_20260906\\physical_evidence\\ff_1.00_0\\s4\\ngspice.log",
+      "sha256": "4c1bac6b588a8ce52bf9cae1b72191c4f320b95dab9b1434287aaca30196d4f9",
+      "ignored": [
+        "isnoisy",
+        "p2",
+        "p3",
+        "q2",
+        "q3",
+        "sw_et"
+      ],
+      "omitted_nonlinear_terms": [
+        "p2",
+        "p3",
+        "q2",
+        "q3"
+      ]
+    },
+    {
+      "path": "nebula\\product_demo\\physical_bias_9db_1p9ghz_20260906\\physical_evidence\\ff_1.00_125\\ac_noise\\ngspice.log",
+      "sha256": "c4aceaabedddecae7bdf738e8deccd04582a76bb30e2207118e7c7db40b02bc4",
+      "ignored": [
+        "isnoisy",
+        "p2",
+        "p3",
+        "q2",
+        "q3",
+        "sw_et"
+      ],
+      "omitted_nonlinear_terms": [
+        "p2",
+        "p3",
+        "q2",
+        "q3"
+      ]
+    },
+    {
+      "path": "nebula\\product_demo\\physical_bias_9db_1p9ghz_20260906\\physical_evidence\\ff_1.00_125\\nyquist\\ngspice.log",
+      "sha256": "5fd3758b064ad6fcbf02543237b7fb5996eb5b3ba5727bd362d9b8b59a7b96fb",
+      "ignored": [
+        "isnoisy",
+        "p2",
+        "p3",
+        "q2",
+        "q3",
+        "sw_et"
+      ],
+      "omitted_nonlinear_terms": [
+        "p2",
+        "p3",
+        "q2",
+        "q3"
+      ]
+    },
+    {
+      "path": "nebula\\product_demo\\physical_bias_9db_1p9ghz_20260906\\physical_evidence\\ff_1.00_125\\s4\\ngspice.log",
+      "sha256": "1f244c3cb3eabf3be74fe5ceeb7178655aa032c79a1764dac7964aff08768b69",
+      "ignored": [
+        "isnoisy",
+        "p2",
+        "p3",
+        "q2",
+        "q3",
+        "sw_et"
+      ],
+      "omitted_nonlinear_terms": [
+        "p2",
+        "p3",
+        "q2",
+        "q3"
+      ]
+    },
+    {
+      "path": "nebula\\product_demo\\physical_bias_9db_1p9ghz_20260906\\physical_evidence\\ff_1.00_27\\ac_noise\\ngspice.log",
+      "sha256": "949d2d83c42df48309a067fa7f70bbe97be3894da94956cc412662fc6624c969",
+      "ignored": [
+        "isnoisy",
+        "p2",
+        "p3",
+        "q2",
+        "q3",
+        "sw_et"
+      ],
+      "omitted_nonlinear_terms": [
+        "p2",
+        "p3",
+        "q2",
+        "q3"
+      ]
+    },
+    {
+      "path": "nebula\\product_demo\\physical_bias_9db_1p9ghz_20260906\\physical_evidence\\ff_1.00_27\\nyquist\\ngspice.log",
+      "sha256": "93c32b7d923b36cdd4c72611aa23313a806479a325b140f61fbe4aac03e80d86",
+      "ignored": [
+        "isnoisy",
+        "p2",
+        "p3",
+        "q2",
+        "q3",
+        "sw_et"
+      ],
+      "omitted_nonlinear_terms": [
+        "p2",
+        "p3",
+        "q2",
+        "q3"
+      ]
+    },
+    {
+      "path": "nebula\\product_demo\\physical_bias_9db_1p9ghz_20260906\\physical_evidence\\ff_1.00_27\\s4\\ngspice.log",
+      "sha256": "92f9245bc1503d6bf99396121c4ee5d8caeaf98ddb094b65481a0100ee80b82d",
+      "ignored": [
+        "isnoisy",
+        "p2",
+        "p3",
+        "q2",
+        "q3",
+        "sw_et"
+      ],
+      "omitted_nonlinear_terms": [
+        "p2",
+        "p3",
+        "q2",
+        "q3"
+      ]
+    },
+    {
+      "path": "nebula\\product_demo\\physical_bias_9db_1p9ghz_20260906\\physical_evidence\\ff_1.05_0\\ac_noise\\ngspice.log",
+      "sha256": "52f9a69c3f557e0ee6d1910b496c00eaa7ade9f09acb94a950c4f51e9422079f",
+      "ignored": [
+        "isnoisy",
+        "p2",
+        "p3",
+        "q2",
+        "q3",
+        "sw_et"
+      ],
+      "omitted_nonlinear_terms": [
+        "p2",
+        "p3",
+        "q2",
+        "q3"
+      ]
+    },
+    {
+      "path": "nebula\\product_demo\\physical_bias_9db_1p9ghz_20260906\\physical_evidence\\ff_1.05_0\\nyquist\\ngspice.log",
+      "sha256": "4837ca4ed0150a0845bc639d12c46e8542a9537c425e7ac08f4e827822cbbdd8",
+      "ignored": [
+        "isnoisy",
+        "p2",
+        "p3",
+        "q2",
+        "q3",
+        "sw_et"
+      ],
+      "omitted_nonlinear_terms": [
+        "p2",
+        "p3",
+        "q2",
+        "q3"
+      ]
+    },
+    {
+      "path": "nebula\\product_demo\\physical_bias_9db_1p9ghz_20260906\\physical_evidence\\ff_1.05_0\\s4\\ngspice.log",
+      "sha256": "519c84f1f827b67553d0e572024d9fd3239adb30ba062b6e671b43a6515e50fb",
+      "ignored": [
+        "isnoisy",
+        "p2",
+        "p3",
+        "q2",
+        "q3",
+        "sw_et"
+      ],
+      "omitted_nonlinear_terms": [
+        "p2",
+        "p3",
+        "q2",
+        "q3"
+      ]
+    },
+    {
+      "path": "nebula\\product_demo\\physical_bias_9db_1p9ghz_20260906\\physical_evidence\\ff_1.05_125\\ac_noise\\ngspice.log",
+      "sha256": "626accbe3d773a9e1efe5326897567228ed411e85b902ba74843a6ff38911fe2",
+      "ignored": [
+        "isnoisy",
+        "p2",
+        "p3",
+        "q2",
+        "q3",
+        "sw_et"
+      ],
+      "omitted_nonlinear_terms": [
+        "p2",
+        "p3",
+        "q2",
+        "q3"
+      ]
+    },
+    {
+      "path": "nebula\\product_demo\\physical_bias_9db_1p9ghz_20260906\\physical_evidence\\ff_1.05_125\\nyquist\\ngspice.log",
+      "sha256": "170f0a829b666d9f7eabe4ad157bf4e8b7618740f5719d67934e5272d15736cf",
+      "ignored": [
+        "isnoisy",
+        "p2",
+        "p3",
+        "q2",
+        "q3",
+        "sw_et"
+      ],
+      "omitted_nonlinear_terms": [
+        "p2",
+        "p3",
+        "q2",
+        "q3"
+      ]
+    },
+    {
+      "path": "nebula\\product_demo\\physical_bias_9db_1p9ghz_20260906\\physical_evidence\\ff_1.05_125\\s4\\ngspice.log",
+      "sha256": "af80058d9f431aca8f37f9ab74e7494c2157f242529f6dbc379a05708d6eb2bf",
+      "ignored": [
+        "isnoisy",
+        "p2",
+        "p3",
+        "q2",
+        "q3",
+        "sw_et"
+      ],
+      "omitted_nonlinear_terms": [
+        "p2",
+        "p3",
+        "q2",
+        "q3"
+      ]
+    },
+    {
+      "path": "nebula\\product_demo\\physical_bias_9db_1p9ghz_20260906\\physical_evidence\\ff_1.05_27\\ac_noise\\ngspice.log",
+      "sha256": "9043e41f6c7590d13b1859afb4002030a6510eddf788e1e73b867c6f46fa5a78",
+      "ignored": [
+        "isnoisy",
+        "p2",
+        "p3",
+        "q2",
+        "q3",
+        "sw_et"
+      ],
+      "omitted_nonlinear_terms": [
+        "p2",
+        "p3",
+        "q2",
+        "q3"
+      ]
+    },
+    {
+      "path": "nebula\\product_demo\\physical_bias_9db_1p9ghz_20260906\\physical_evidence\\ff_1.05_27\\nyquist\\ngspice.log",
+      "sha256": "90245e67f72d6f7896c918e0affa5f0c3e70039a37b64eed7f4c4f500c668a78",
+      "ignored": [
+        "isnoisy",
+        "p2",
+        "p3",
+        "q2",
+        "q3",
+        "sw_et"
+      ],
+      "omitted_nonlinear_terms": [
+        "p2",
+        "p3",
+        "q2",
+        "q3"
+      ]
+    },
+    {
+      "path": "nebula\\product_demo\\physical_bias_9db_1p9ghz_20260906\\physical_evidence\\ff_1.05_27\\s4\\ngspice.log",
+      "sha256": "229ca055d84947b3337100d2c332027d6f17dd9ab99c0b6f5a23490338f552d6",
+      "ignored": [
+        "isnoisy",
+        "p2",
+        "p3",
+        "q2",
+        "q3",
+        "sw_et"
+      ],
+      "omitted_nonlinear_terms": [
+        "p2",
+        "p3",
+        "q2",
+        "q3"
+      ]
+    },
+    {
+      "path": "nebula\\product_demo\\physical_bias_9db_1p9ghz_20260906\\physical_evidence\\fs_0.95_0\\ac_noise\\ngspice.log",
+      "sha256": "f69d8248f5780186f2d385e8f5f5f0ae1e0667b7cd870fcbf2047f600bd525d2",
+      "ignored": [
+        "isnoisy",
+        "p2",
+        "p3",
+        "q2",
+        "q3",
+        "sw_et"
+      ],
+      "omitted_nonlinear_terms": [
+        "p2",
+        "p3",
+        "q2",
+        "q3"
+      ]
+    },
+    {
+      "path": "nebula\\product_demo\\physical_bias_9db_1p9ghz_20260906\\physical_evidence\\fs_0.95_0\\nyquist\\ngspice.log",
+      "sha256": "461c2f54b7cbe3ebe19e69cebd31125b450be2e939b96472135d9ea90f3d61ee",
+      "ignored": [
+        "isnoisy",
+        "p2",
+        "p3",
+        "q2",
+        "q3",
+        "sw_et"
+      ],
+      "omitted_nonlinear_terms": [
+        "p2",
+        "p3",
+        "q2",
+        "q3"
+      ]
+    },
+    {
+      "path": "nebula\\product_demo\\physical_bias_9db_1p9ghz_20260906\\physical_evidence\\fs_0.95_0\\s4\\ngspice.log",
+      "sha256": "9f56c955b1f82d76ddbcf72776df19d40d26ce2a6b3aa068d27f95267c4c55a1",
+      "ignored": [
+        "isnoisy",
+        "p2",
+        "p3",
+        "q2",
+        "q3",
+        "sw_et"
+      ],
+      "omitted_nonlinear_terms": [
+        "p2",
+        "p3",
+        "q2",
+        "q3"
+      ]
+    },
+    {
+      "path": "nebula\\product_demo\\physical_bias_9db_1p9ghz_20260906\\physical_evidence\\fs_0.95_125\\ac_noise\\ngspice.log",
+      "sha256": "da544fce42d0c99c106d99546d9dea75e456ceacfa0faf64bff71c766a51f088",
+      "ignored": [
+        "isnoisy",
+        "p2",
+        "p3",
+        "q2",
+        "q3",
+        "sw_et"
+      ],
+      "omitted_nonlinear_terms": [
+        "p2",
+        "p3",
+        "q2",
+        "q3"
+      ]
+    },
+    {
+      "path": "nebula\\product_demo\\physical_bias_9db_1p9ghz_20260906\\physical_evidence\\fs_0.95_125\\nyquist\\ngspice.log",
+      "sha256": "c6fc7a7890d07f878f572b1fc0cb9611f42f0dd2aef5d7de921beb50ee5e2c47",
+      "ignored": [
+        "isnoisy",
+        "p2",
+        "p3",
+        "q2",
+        "q3",
+        "sw_et"
+      ],
+      "omitted_nonlinear_terms": [
+        "p2",
+        "p3",
+        "q2",
+        "q3"
+      ]
+    },
+    {
+      "path": "nebula\\product_demo\\physical_bias_9db_1p9ghz_20260906\\physical_evidence\\fs_0.95_125\\s4\\ngspice.log",
+      "sha256": "9ec6859510bc3d7fed06ba16c3b04241fbf2705b61a53661342b5dc07c01558a",
+      "ignored": [
+        "isnoisy",
+        "p2",
+        "p3",
+        "q2",
+        "q3",
+        "sw_et"
+      ],
+      "omitted_nonlinear_terms": [
+        "p2",
+        "p3",
+        "q2",
+        "q3"
+      ]
+    },
+    {
+      "path": "nebula\\product_demo\\physical_bias_9db_1p9ghz_20260906\\physical_evidence\\fs_0.95_27\\ac_noise\\ngspice.log",
+      "sha256": "acb1669820fb6f3f5fbea837bf90b8edfc919d377df26c306b04d0d0314d3e4c",
+      "ignored": [
+        "isnoisy",
+        "p2",
+        "p3",
+        "q2",
+        "q3",
+        "sw_et"
+      ],
+      "omitted_nonlinear_terms": [
+        "p2",
+        "p3",
+        "q2",
+        "q3"
+      ]
+    },
+    {
+      "path": "nebula\\product_demo\\physical_bias_9db_1p9ghz_20260906\\physical_evidence\\fs_0.95_27\\nyquist\\ngspice.log",
+      "sha256": "07486649a83d1acf8909a2f4e968132f9e46dba89c2655b7d57753daa24c7e57",
+      "ignored": [
+        "isnoisy",
+        "p2",
+        "p3",
+        "q2",
+        "q3",
+        "sw_et"
+      ],
+      "omitted_nonlinear_terms": [
+        "p2",
+        "p3",
+        "q2",
+        "q3"
+      ]
+    },
+    {
+      "path": "nebula\\product_demo\\physical_bias_9db_1p9ghz_20260906\\physical_evidence\\fs_0.95_27\\s4\\ngspice.log",
+      "sha256": "db636392b20f84cc549471312469b9d932ad640926c3c9798aff7619ffccac8e",
+      "ignored": [
+        "isnoisy",
+        "p2",
+        "p3",
+        "q2",
+        "q3",
+        "sw_et"
+      ],
+      "omitted_nonlinear_terms": [
+        "p2",
+        "p3",
+        "q2",
+        "q3"
+      ]
+    },
+    {
+      "path": "nebula\\product_demo\\physical_bias_9db_1p9ghz_20260906\\physical_evidence\\fs_1.00_0\\ac_noise\\ngspice.log",
+      "sha256": "6c46d9148a47e6311271c85d7c60617172af83e069501c56b3717ad47204d67a",
+      "ignored": [
+        "isnoisy",
+        "p2",
+        "p3",
+        "q2",
+        "q3",
+        "sw_et"
+      ],
+      "omitted_nonlinear_terms": [
+        "p2",
+        "p3",
+        "q2",
+        "q3"
+      ]
+    },
+    {
+      "path": "nebula\\product_demo\\physical_bias_9db_1p9ghz_20260906\\physical_evidence\\fs_1.00_0\\nyquist\\ngspice.log",
+      "sha256": "ebd86b2fa975a2ad06c283e3ebafd3740a5fc6cbab0bd1c4db07857379825228",
+      "ignored": [
+        "isnoisy",
+        "p2",
+        "p3",
+        "q2",
+        "q3",
+        "sw_et"
+      ],
+      "omitted_nonlinear_terms": [
+        "p2",
+        "p3",
+        "q2",
+        "q3"
+      ]
+    },
+    {
+      "path": "nebula\\product_demo\\physical_bias_9db_1p9ghz_20260906\\physical_evidence\\fs_1.00_0\\s4\\ngspice.log",
+      "sha256": "a881ff4504d1f32f173796d9143b5e935a732032ab1f63da6347458781f279ac",
+      "ignored": [
+        "isnoisy",
+        "p2",
+        "p3",
+        "q2",
+        "q3",
+        "sw_et"
+      ],
+      "omitted_nonlinear_terms": [
+        "p2",
+        "p3",
+        "q2",
+        "q3"
+      ]
+    },
+    {
+      "path": "nebula\\product_demo\\physical_bias_9db_1p9ghz_20260906\\physical_evidence\\fs_1.00_125\\ac_noise\\ngspice.log",
+      "sha256": "b6af12e0d0d97c073f37f641cb3e00792c9b5d3f937b3ab0a257e9e492b3f3a1",
+      "ignored": [
+        "isnoisy",
+        "p2",
+        "p3",
+        "q2",
+        "q3",
+        "sw_et"
+      ],
+      "omitted_nonlinear_terms": [
+        "p2",
+        "p3",
+        "q2",
+        "q3"
+      ]
+    },
+    {
+      "path": "nebula\\product_demo\\physical_bias_9db_1p9ghz_20260906\\physical_evidence\\fs_1.00_125\\nyquist\\ngspice.log",
+      "sha256": "a8245a0ad31cd877c3646186a03d6fc4b5ed35f2726b29ede75b3b898aa552bd",
+      "ignored": [
+        "isnoisy",
+        "p2",
+        "p3",
+        "q2",
+        "q3",
+        "sw_et"
+      ],
+      "omitted_nonlinear_terms": [
+        "p2",
+        "p3",
+        "q2",
+        "q3"
+      ]
+    },
+    {
+      "path": "nebula\\product_demo\\physical_bias_9db_1p9ghz_20260906\\physical_evidence\\fs_1.00_125\\s4\\ngspice.log",
+      "sha256": "5cd834e5f0daf965f6998abf7a2d4348288ccec1313bc5066b1e8d8a0a595e14",
+      "ignored": [
+        "isnoisy",
+        "p2",
+        "p3",
+        "q2",
+        "q3",
+        "sw_et"
+      ],
+      "omitted_nonlinear_terms": [
+        "p2",
+        "p3",
+        "q2",
+        "q3"
+      ]
+    },
+    {
+      "path": "nebula\\product_demo\\physical_bias_9db_1p9ghz_20260906\\physical_evidence\\fs_1.00_27\\ac_noise\\ngspice.log",
+      "sha256": "0f522be03d0dbec305052e9a3e094b9e3bd73757139b4bed24267d44408b1216",
+      "ignored": [
+        "isnoisy",
+        "p2",
+        "p3",
+        "q2",
+        "q3",
+        "sw_et"
+      ],
+      "omitted_nonlinear_terms": [
+        "p2",
+        "p3",
+        "q2",
+        "q3"
+      ]
+    },
+    {
+      "path": "nebula\\product_demo\\physical_bias_9db_1p9ghz_20260906\\physical_evidence\\fs_1.00_27\\nyquist\\ngspice.log",
+      "sha256": "ef698d275b4562e5ab885068e9392595c5362c4974bd687021c62abcd18601d3",
+      "ignored": [
+        "isnoisy",
+        "p2",
+        "p3",
+        "q2",
+        "q3",
+        "sw_et"
+      ],
+      "omitted_nonlinear_terms": [
+        "p2",
+        "p3",
+        "q2",
+        "q3"
+      ]
+    },
+    {
+      "path": "nebula\\product_demo\\physical_bias_9db_1p9ghz_20260906\\physical_evidence\\fs_1.00_27\\s4\\ngspice.log",
+      "sha256": "2d61d84caf9e9da3955ad635fb28ffc9b68c733dab689892be369a867f0ef81e",
+      "ignored": [
+        "isnoisy",
+        "p2",
+        "p3",
+        "q2",
+        "q3",
+        "sw_et"
+      ],
+      "omitted_nonlinear_terms": [
+        "p2",
+        "p3",
+        "q2",
+        "q3"
+      ]
+    },
+    {
+      "path": "nebula\\product_demo\\physical_bias_9db_1p9ghz_20260906\\physical_evidence\\fs_1.05_0\\ac_noise\\ngspice.log",
+      "sha256": "2381eb296dfc6363614d510a311bd087804ec30f578345a19212e75f846a1816",
+      "ignored": [
+        "isnoisy",
+        "p2",
+        "p3",
+        "q2",
+        "q3",
+        "sw_et"
+      ],
+      "omitted_nonlinear_terms": [
+        "p2",
+        "p3",
+        "q2",
+        "q3"
+      ]
+    },
+    {
+      "path": "nebula\\product_demo\\physical_bias_9db_1p9ghz_20260906\\physical_evidence\\fs_1.05_0\\nyquist\\ngspice.log",
+      "sha256": "782a4f57f461a9e1da5d860bba3e18db11a70f55584c20b8b2963b0dcdf8b8f9",
+      "ignored": [
+        "isnoisy",
+        "p2",
+        "p3",
+        "q2",
+        "q3",
+        "sw_et"
+      ],
+      "omitted_nonlinear_terms": [
+        "p2",
+        "p3",
+        "q2",
+        "q3"
+      ]
+    },
+    {
+      "path": "nebula\\product_demo\\physical_bias_9db_1p9ghz_20260906\\physical_evidence\\fs_1.05_0\\s4\\ngspice.log",
+      "sha256": "f1b3297090c186c6fe73337888a56571252e1313332d57037da5c733d1cca253",
+      "ignored": [
+        "isnoisy",
+        "p2",
+        "p3",
+        "q2",
+        "q3",
+        "sw_et"
+      ],
+      "omitted_nonlinear_terms": [
+        "p2",
+        "p3",
+        "q2",
+        "q3"
+      ]
+    },
+    {
+      "path": "nebula\\product_demo\\physical_bias_9db_1p9ghz_20260906\\physical_evidence\\fs_1.05_125\\ac_noise\\ngspice.log",
+      "sha256": "4262342a31293acfb93437821cca2aad74c48084629dd3471c7de0036b630ed5",
+      "ignored": [
+        "isnoisy",
+        "p2",
+        "p3",
+        "q2",
+        "q3",
+        "sw_et"
+      ],
+      "omitted_nonlinear_terms": [
+        "p2",
+        "p3",
+        "q2",
+        "q3"
+      ]
+    },
+    {
+      "path": "nebula\\product_demo\\physical_bias_9db_1p9ghz_20260906\\physical_evidence\\fs_1.05_125\\nyquist\\ngspice.log",
+      "sha256": "d242dff4a5c8641103c15e32480d9aa37f692e1c903a952f694e7fb469c031ba",
+      "ignored": [
+        "isnoisy",
+        "p2",
+        "p3",
+        "q2",
+        "q3",
+        "sw_et"
+      ],
+      "omitted_nonlinear_terms": [
+        "p2",
+        "p3",
+        "q2",
+        "q3"
+      ]
+    },
+    {
+      "path": "nebula\\product_demo\\physical_bias_9db_1p9ghz_20260906\\physical_evidence\\fs_1.05_125\\s4\\ngspice.log",
+      "sha256": "d5ad2dbd2ffa7c4ec861b4c7a00160c56a35b402babd49955fbbb32325c11758",
+      "ignored": [
+        "isnoisy",
+        "p2",
+        "p3",
+        "q2",
+        "q3",
+        "sw_et"
+      ],
+      "omitted_nonlinear_terms": [
+        "p2",
+        "p3",
+        "q2",
+        "q3"
+      ]
+    },
+    {
+      "path": "nebula\\product_demo\\physical_bias_9db_1p9ghz_20260906\\physical_evidence\\fs_1.05_27\\ac_noise\\ngspice.log",
+      "sha256": "6000c644fd9fe286a5438f8f75b69fb5f3df2952cd5ad2392a2c8d901bdd87e4",
+      "ignored": [
+        "isnoisy",
+        "p2",
+        "p3",
+        "q2",
+        "q3",
+        "sw_et"
+      ],
+      "omitted_nonlinear_terms": [
+        "p2",
+        "p3",
+        "q2",
+        "q3"
+      ]
+    },
+    {
+      "path": "nebula\\product_demo\\physical_bias_9db_1p9ghz_20260906\\physical_evidence\\fs_1.05_27\\nyquist\\ngspice.log",
+      "sha256": "d6ca5783b651561aa24404386e7c655d14dc08cb4b35bb8def0dce312f5ac79e",
+      "ignored": [
+        "isnoisy",
+        "p2",
+        "p3",
+        "q2",
+        "q3",
+        "sw_et"
+      ],
+      "omitted_nonlinear_terms": [
+        "p2",
+        "p3",
+        "q2",
+        "q3"
+      ]
+    },
+    {
+      "path": "nebula\\product_demo\\physical_bias_9db_1p9ghz_20260906\\physical_evidence\\fs_1.05_27\\s4\\ngspice.log",
+      "sha256": "16daff2230985a1ddfc1e8ab355f4c9f9a60839460ae6893f2d6d73f98278cea",
+      "ignored": [
+        "isnoisy",
+        "p2",
+        "p3",
+        "q2",
+        "q3",
+        "sw_et"
+      ],
+      "omitted_nonlinear_terms": [
+        "p2",
+        "p3",
+        "q2",
+        "q3"
+      ]
+    },
+    {
+      "path": "nebula\\product_demo\\physical_bias_9db_1p9ghz_20260906\\physical_evidence\\legacy_candidate\\ngspice.log",
+      "sha256": "49c2820202c1dbf3cdbf5c82172b92c7703bb9c17c9ba6f8da6fcc0b397645f7",
+      "ignored": [
+        "isnoisy",
+        "p2",
+        "p3",
+        "q2",
+        "q3",
+        "sw_et"
+      ],
+      "omitted_nonlinear_terms": [
+        "p2",
+        "p3",
+        "q2",
+        "q3"
+      ]
+    },
+    {
+      "path": "nebula\\product_demo\\physical_bias_9db_1p9ghz_20260906\\physical_evidence\\sf_0.95_0\\ac_noise\\ngspice.log",
+      "sha256": "58fffb54be0119b0cf424088fc4587956cd01f367085698ec8b675e21c0f421a",
+      "ignored": [
+        "isnoisy",
+        "p2",
+        "p3",
+        "q2",
+        "q3",
+        "sw_et"
+      ],
+      "omitted_nonlinear_terms": [
+        "p2",
+        "p3",
+        "q2",
+        "q3"
+      ]
+    },
+    {
+      "path": "nebula\\product_demo\\physical_bias_9db_1p9ghz_20260906\\physical_evidence\\sf_0.95_0\\nyquist\\ngspice.log",
+      "sha256": "2ff607a12aa9c5f3d50e82abbff24565d29ee8ef4e1481eed74a335f37720e2a",
+      "ignored": [
+        "isnoisy",
+        "p2",
+        "p3",
+        "q2",
+        "q3",
+        "sw_et"
+      ],
+      "omitted_nonlinear_terms": [
+        "p2",
+        "p3",
+        "q2",
+        "q3"
+      ]
+    },
+    {
+      "path": "nebula\\product_demo\\physical_bias_9db_1p9ghz_20260906\\physical_evidence\\sf_0.95_0\\s4\\ngspice.log",
+      "sha256": "23b265160a1599468cd4616fe9e38cc02457bc939d74a82be1fc896bf474f48a",
+      "ignored": [
+        "isnoisy",
+        "p2",
+        "p3",
+        "q2",
+        "q3",
+        "sw_et"
+      ],
+      "omitted_nonlinear_terms": [
+        "p2",
+        "p3",
+        "q2",
+        "q3"
+      ]
+    },
+    {
+      "path": "nebula\\product_demo\\physical_bias_9db_1p9ghz_20260906\\physical_evidence\\sf_0.95_125\\ac_noise\\ngspice.log",
+      "sha256": "36db456e52fadc9947ce993278736a80b32e086bbf237b20eba4b83d3d87d6de",
+      "ignored": [
+        "isnoisy",
+        "p2",
+        "p3",
+        "q2",
+        "q3",
+        "sw_et"
+      ],
+      "omitted_nonlinear_terms": [
+        "p2",
+        "p3",
+        "q2",
+        "q3"
+      ]
+    },
+    {
+      "path": "nebula\\product_demo\\physical_bias_9db_1p9ghz_20260906\\physical_evidence\\sf_0.95_125\\nyquist\\ngspice.log",
+      "sha256": "2d0c6861c5fc70532ad21223a0602bfbb38831371860e9fc343574fff45d353f",
+      "ignored": [
+        "isnoisy",
+        "p2",
+        "p3",
+        "q2",
+        "q3",
+        "sw_et"
+      ],
+      "omitted_nonlinear_terms": [
+        "p2",
+        "p3",
+        "q2",
+        "q3"
+      ]
+    },
+    {
+      "path": "nebula\\product_demo\\physical_bias_9db_1p9ghz_20260906\\physical_evidence\\sf_0.95_125\\s4\\ngspice.log",
+      "sha256": "81a883cd41ea95ada3c783434ce396522095f1f400512e32c1fc8bbd238d0014",
+      "ignored": [
+        "isnoisy",
+        "p2",
+        "p3",
+        "q2",
+        "q3",
+        "sw_et"
+      ],
+      "omitted_nonlinear_terms": [
+        "p2",
+        "p3",
+        "q2",
+        "q3"
+      ]
+    },
+    {
+      "path": "nebula\\product_demo\\physical_bias_9db_1p9ghz_20260906\\physical_evidence\\sf_0.95_27\\ac_noise\\ngspice.log",
+      "sha256": "106cd1989a875340541fdb2a822d7ba7106f8b5b1b851352835ca03103d88dcb",
+      "ignored": [
+        "isnoisy",
+        "p2",
+        "p3",
+        "q2",
+        "q3",
+        "sw_et"
+      ],
+      "omitted_nonlinear_terms": [
+        "p2",
+        "p3",
+        "q2",
+        "q3"
+      ]
+    },
+    {
+      "path": "nebula\\product_demo\\physical_bias_9db_1p9ghz_20260906\\physical_evidence\\sf_0.95_27\\nyquist\\ngspice.log",
+      "sha256": "a7fa3c16c787864ea46146128f941eeb0fd3e57f4a5ff3f53cac7fd1fe8a49e3",
+      "ignored": [
+        "isnoisy",
+        "p2",
+        "p3",
+        "q2",
+        "q3",
+        "sw_et"
+      ],
+      "omitted_nonlinear_terms": [
+        "p2",
+        "p3",
+        "q2",
+        "q3"
+      ]
+    },
+    {
+      "path": "nebula\\product_demo\\physical_bias_9db_1p9ghz_20260906\\physical_evidence\\sf_0.95_27\\s4\\ngspice.log",
+      "sha256": "7de196c167403ef6cd8bdf3329e94ada8994a5255fed6b5de574bea3c2ba8756",
+      "ignored": [
+        "isnoisy",
+        "p2",
+        "p3",
+        "q2",
+        "q3",
+        "sw_et"
+      ],
+      "omitted_nonlinear_terms": [
+        "p2",
+        "p3",
+        "q2",
+        "q3"
+      ]
+    },
+    {
+      "path": "nebula\\product_demo\\physical_bias_9db_1p9ghz_20260906\\physical_evidence\\sf_1.00_0\\ac_noise\\ngspice.log",
+      "sha256": "3b8d79cdc158e41b0d8ed32a1a6a030e74a845792b09da76b15fa3bddf913429",
+      "ignored": [
+        "isnoisy",
+        "p2",
+        "p3",
+        "q2",
+        "q3",
+        "sw_et"
+      ],
+      "omitted_nonlinear_terms": [
+        "p2",
+        "p3",
+        "q2",
+        "q3"
+      ]
+    },
+    {
+      "path": "nebula\\product_demo\\physical_bias_9db_1p9ghz_20260906\\physical_evidence\\sf_1.00_0\\nyquist\\ngspice.log",
+      "sha256": "4b4c0a2333c8c79f07c020d8db71be6f8f6bbd2c50b55a0abef45a02798c798d",
+      "ignored": [
+        "isnoisy",
+        "p2",
+        "p3",
+        "q2",
+        "q3",
+        "sw_et"
+      ],
+      "omitted_nonlinear_terms": [
+        "p2",
+        "p3",
+        "q2",
+        "q3"
+      ]
+    },
+    {
+      "path": "nebula\\product_demo\\physical_bias_9db_1p9ghz_20260906\\physical_evidence\\sf_1.00_0\\s4\\ngspice.log",
+      "sha256": "7bd1cb6639565b4e8135c4037456ae72fd2d7ce2c1778e9c63e591c1b4a40318",
+      "ignored": [
+        "isnoisy",
+        "p2",
+        "p3",
+        "q2",
+        "q3",
+        "sw_et"
+      ],
+      "omitted_nonlinear_terms": [
+        "p2",
+        "p3",
+        "q2",
+        "q3"
+      ]
+    },
+    {
+      "path": "nebula\\product_demo\\physical_bias_9db_1p9ghz_20260906\\physical_evidence\\sf_1.00_125\\ac_noise\\ngspice.log",
+      "sha256": "ed4dff9f4acf4c507bef740ec776468b18403d57c7b7a96a1a689e171938ee47",
+      "ignored": [
+        "isnoisy",
+        "p2",
+        "p3",
+        "q2",
+        "q3",
+        "sw_et"
+      ],
+      "omitted_nonlinear_terms": [
+        "p2",
+        "p3",
+        "q2",
+        "q3"
+      ]
+    },
+    {
+      "path": "nebula\\product_demo\\physical_bias_9db_1p9ghz_20260906\\physical_evidence\\sf_1.00_125\\nyquist\\ngspice.log",
+      "sha256": "96db6f3d4f51d9de21ceee448eb9b64a206e4c4df3e897f1e17bc08f43f01cda",
+      "ignored": [
+        "isnoisy",
+        "p2",
+        "p3",
+        "q2",
+        "q3",
+        "sw_et"
+      ],
+      "omitted_nonlinear_terms": [
+        "p2",
+        "p3",
+        "q2",
+        "q3"
+      ]
+    },
+    {
+      "path": "nebula\\product_demo\\physical_bias_9db_1p9ghz_20260906\\physical_evidence\\sf_1.00_125\\s4\\ngspice.log",
+      "sha256": "459f6684a8e311a217991a433fdbf545a98208807c899ee1a286b0975ab15996",
+      "ignored": [
+        "isnoisy",
+        "p2",
+        "p3",
+        "q2",
+        "q3",
+        "sw_et"
+      ],
+      "omitted_nonlinear_terms": [
+        "p2",
+        "p3",
+        "q2",
+        "q3"
+      ]
+    },
+    {
+      "path": "nebula\\product_demo\\physical_bias_9db_1p9ghz_20260906\\physical_evidence\\sf_1.00_27\\ac_noise\\ngspice.log",
+      "sha256": "1f59bc440f8489431e8e6498a70b95104588bb4fffa3bdb2c8586166ba0eebd2",
+      "ignored": [
+        "isnoisy",
+        "p2",
+        "p3",
+        "q2",
+        "q3",
+        "sw_et"
+      ],
+      "omitted_nonlinear_terms": [
+        "p2",
+        "p3",
+        "q2",
+        "q3"
+      ]
+    },
+    {
+      "path": "nebula\\product_demo\\physical_bias_9db_1p9ghz_20260906\\physical_evidence\\sf_1.00_27\\nyquist\\ngspice.log",
+      "sha256": "166a6f4cf0997f1175d8fa0cedd02267489cdf4b8d70378351618c4a095a0e79",
+      "ignored": [
+        "isnoisy",
+        "p2",
+        "p3",
+        "q2",
+        "q3",
+        "sw_et"
+      ],
+      "omitted_nonlinear_terms": [
+        "p2",
+        "p3",
+        "q2",
+        "q3"
+      ]
+    },
+    {
+      "path": "nebula\\product_demo\\physical_bias_9db_1p9ghz_20260906\\physical_evidence\\sf_1.00_27\\s4\\ngspice.log",
+      "sha256": "0e21ce26e43fdef12f7ecc4a195bfadab6bed26eef2c1a6140ff7a6b0eb2e605",
+      "ignored": [
+        "isnoisy",
+        "p2",
+        "p3",
+        "q2",
+        "q3",
+        "sw_et"
+      ],
+      "omitted_nonlinear_terms": [
+        "p2",
+        "p3",
+        "q2",
+        "q3"
+      ]
+    },
+    {
+      "path": "nebula\\product_demo\\physical_bias_9db_1p9ghz_20260906\\physical_evidence\\sf_1.05_0\\ac_noise\\ngspice.log",
+      "sha256": "4799eb4ddc9b48b3ebd142505f1857569b2cbedf39224349d0998a3eb3b78fbc",
+      "ignored": [
+        "isnoisy",
+        "p2",
+        "p3",
+        "q2",
+        "q3",
+        "sw_et"
+      ],
+      "omitted_nonlinear_terms": [
+        "p2",
+        "p3",
+        "q2",
+        "q3"
+      ]
+    },
+    {
+      "path": "nebula\\product_demo\\physical_bias_9db_1p9ghz_20260906\\physical_evidence\\sf_1.05_0\\nyquist\\ngspice.log",
+      "sha256": "dd759b853e1c8c8b79977c99bfaf3f33ba5acff34afbef21cb8c12cf3685d7fe",
+      "ignored": [
+        "isnoisy",
+        "p2",
+        "p3",
+        "q2",
+        "q3",
+        "sw_et"
+      ],
+      "omitted_nonlinear_terms": [
+        "p2",
+        "p3",
+        "q2",
+        "q3"
+      ]
+    },
+    {
+      "path": "nebula\\product_demo\\physical_bias_9db_1p9ghz_20260906\\physical_evidence\\sf_1.05_0\\s4\\ngspice.log",
+      "sha256": "6e7edac9e6804595a8460d4d0db18da057273adfe386bfd7293b483149177e45",
+      "ignored": [
+        "isnoisy",
+        "p2",
+        "p3",
+        "q2",
+        "q3",
+        "sw_et"
+      ],
+      "omitted_nonlinear_terms": [
+        "p2",
+        "p3",
+        "q2",
+        "q3"
+      ]
+    },
+    {
+      "path": "nebula\\product_demo\\physical_bias_9db_1p9ghz_20260906\\physical_evidence\\sf_1.05_125\\ac_noise\\ngspice.log",
+      "sha256": "afcf48ffea12e22f2289c1385ded41b7260133768f25f5f0020633847e659ee4",
+      "ignored": [
+        "isnoisy",
+        "p2",
+        "p3",
+        "q2",
+        "q3",
+        "sw_et"
+      ],
+      "omitted_nonlinear_terms": [
+        "p2",
+        "p3",
+        "q2",
+        "q3"
+      ]
+    },
+    {
+      "path": "nebula\\product_demo\\physical_bias_9db_1p9ghz_20260906\\physical_evidence\\sf_1.05_125\\nyquist\\ngspice.log",
+      "sha256": "4fa8bad7e4fba921d47e77bc9076d25056fdcece06f3c4aed19e8b340ab7b2be",
+      "ignored": [
+        "isnoisy",
+        "p2",
+        "p3",
+        "q2",
+        "q3",
+        "sw_et"
+      ],
+      "omitted_nonlinear_terms": [
+        "p2",
+        "p3",
+        "q2",
+        "q3"
+      ]
+    },
+    {
+      "path": "nebula\\product_demo\\physical_bias_9db_1p9ghz_20260906\\physical_evidence\\sf_1.05_125\\s4\\ngspice.log",
+      "sha256": "308fef2a4f556094bef15189826377d05a25a35e1d3d1ff1c5b6224e62a7d70b",
+      "ignored": [
+        "isnoisy",
+        "p2",
+        "p3",
+        "q2",
+        "q3",
+        "sw_et"
+      ],
+      "omitted_nonlinear_terms": [
+        "p2",
+        "p3",
+        "q2",
+        "q3"
+      ]
+    },
+    {
+      "path": "nebula\\product_demo\\physical_bias_9db_1p9ghz_20260906\\physical_evidence\\sf_1.05_27\\ac_noise\\ngspice.log",
+      "sha256": "1224ef1f66026955694a22a1d5c1e71972aab71cf77219854fb7a3d776ac7884",
+      "ignored": [
+        "isnoisy",
+        "p2",
+        "p3",
+        "q2",
+        "q3",
+        "sw_et"
+      ],
+      "omitted_nonlinear_terms": [
+        "p2",
+        "p3",
+        "q2",
+        "q3"
+      ]
+    },
+    {
+      "path": "nebula\\product_demo\\physical_bias_9db_1p9ghz_20260906\\physical_evidence\\sf_1.05_27\\nyquist\\ngspice.log",
+      "sha256": "80e8a35707fb3eddfd9fe534c440e9da9f0fd020018a51e9ce1d704f5b257ec8",
+      "ignored": [
+        "isnoisy",
+        "p2",
+        "p3",
+        "q2",
+        "q3",
+        "sw_et"
+      ],
+      "omitted_nonlinear_terms": [
+        "p2",
+        "p3",
+        "q2",
+        "q3"
+      ]
+    },
+    {
+      "path": "nebula\\product_demo\\physical_bias_9db_1p9ghz_20260906\\physical_evidence\\sf_1.05_27\\s4\\ngspice.log",
+      "sha256": "f3b0a3c4b004f8986ce0a57d94c44381458babc626984cbeda6403cfa10ae357",
+      "ignored": [
+        "isnoisy",
+        "p2",
+        "p3",
+        "q2",
+        "q3",
+        "sw_et"
+      ],
+      "omitted_nonlinear_terms": [
+        "p2",
+        "p3",
+        "q2",
+        "q3"
+      ]
+    },
+    {
+      "path": "nebula\\product_demo\\physical_bias_9db_1p9ghz_20260906\\physical_evidence\\ss_0.95_0\\ac_noise\\ngspice.log",
+      "sha256": "e588ff0823d74d3102bc5e430542a15e73781cba665158a7b2c5be7ce8821fc7",
+      "ignored": [
+        "isnoisy",
+        "p2",
+        "p3",
+        "q2",
+        "q3",
+        "sw_et"
+      ],
+      "omitted_nonlinear_terms": [
+        "p2",
+        "p3",
+        "q2",
+        "q3"
+      ]
+    },
+    {
+      "path": "nebula\\product_demo\\physical_bias_9db_1p9ghz_20260906\\physical_evidence\\ss_0.95_0\\nyquist\\ngspice.log",
+      "sha256": "d42a69af7477d70615a7b1fedd90f408236a9d55d9947fb63cdeae4ef0e35e30",
+      "ignored": [
+        "isnoisy",
+        "p2",
+        "p3",
+        "q2",
+        "q3",
+        "sw_et"
+      ],
+      "omitted_nonlinear_terms": [
+        "p2",
+        "p3",
+        "q2",
+        "q3"
+      ]
+    },
+    {
+      "path": "nebula\\product_demo\\physical_bias_9db_1p9ghz_20260906\\physical_evidence\\ss_0.95_0\\s4\\ngspice.log",
+      "sha256": "a078347df6f99db5c872b7e5fbea480f8c9b48ef05f6e2951bc1ac9759c1fa52",
+      "ignored": [
+        "isnoisy",
+        "p2",
+        "p3",
+        "q2",
+        "q3",
+        "sw_et"
+      ],
+      "omitted_nonlinear_terms": [
+        "p2",
+        "p3",
+        "q2",
+        "q3"
+      ]
+    },
+    {
+      "path": "nebula\\product_demo\\physical_bias_9db_1p9ghz_20260906\\physical_evidence\\ss_0.95_125\\ac_noise\\ngspice.log",
+      "sha256": "ff59dc4c75dcfd60045d7c08d7887f5aaf280619d803a8999f30298623cd34d6",
+      "ignored": [
+        "isnoisy",
+        "p2",
+        "p3",
+        "q2",
+        "q3",
+        "sw_et"
+      ],
+      "omitted_nonlinear_terms": [
+        "p2",
+        "p3",
+        "q2",
+        "q3"
+      ]
+    },
+    {
+      "path": "nebula\\product_demo\\physical_bias_9db_1p9ghz_20260906\\physical_evidence\\ss_0.95_125\\nyquist\\ngspice.log",
+      "sha256": "f1553651513c4f36934ec1511b39f8297d0a7a1f09208e29910ac2a618b2037e",
+      "ignored": [
+        "isnoisy",
+        "p2",
+        "p3",
+        "q2",
+        "q3",
+        "sw_et"
+      ],
+      "omitted_nonlinear_terms": [
+        "p2",
+        "p3",
+        "q2",
+        "q3"
+      ]
+    },
+    {
+      "path": "nebula\\product_demo\\physical_bias_9db_1p9ghz_20260906\\physical_evidence\\ss_0.95_125\\s4\\ngspice.log",
+      "sha256": "4c3b998db5766b53d9a2db68b1f3528e7d28a912ee143be9f9c154237a9c344f",
+      "ignored": [
+        "isnoisy",
+        "p2",
+        "p3",
+        "q2",
+        "q3",
+        "sw_et"
+      ],
+      "omitted_nonlinear_terms": [
+        "p2",
+        "p3",
+        "q2",
+        "q3"
+      ]
+    },
+    {
+      "path": "nebula\\product_demo\\physical_bias_9db_1p9ghz_20260906\\physical_evidence\\ss_0.95_27\\ac_noise\\ngspice.log",
+      "sha256": "92bf115a1d490dfcc4063945f3ccd64fd8b43819c9827a9168506478cef371cc",
+      "ignored": [
+        "isnoisy",
+        "p2",
+        "p3",
+        "q2",
+        "q3",
+        "sw_et"
+      ],
+      "omitted_nonlinear_terms": [
+        "p2",
+        "p3",
+        "q2",
+        "q3"
+      ]
+    },
+    {
+      "path": "nebula\\product_demo\\physical_bias_9db_1p9ghz_20260906\\physical_evidence\\ss_0.95_27\\nyquist\\ngspice.log",
+      "sha256": "5fae14c6e42176e41c34519cd5e488d00d3b99eb3a1c240dc80960a6b3716387",
+      "ignored": [
+        "isnoisy",
+        "p2",
+        "p3",
+        "q2",
+        "q3",
+        "sw_et"
+      ],
+      "omitted_nonlinear_terms": [
+        "p2",
+        "p3",
+        "q2",
+        "q3"
+      ]
+    },
+    {
+      "path": "nebula\\product_demo\\physical_bias_9db_1p9ghz_20260906\\physical_evidence\\ss_0.95_27\\s4\\ngspice.log",
+      "sha256": "5becd58adf8bf74f6d920f237c920824ad09f04d9ee2126b99efaecd44a237e3",
+      "ignored": [
+        "isnoisy",
+        "p2",
+        "p3",
+        "q2",
+        "q3",
+        "sw_et"
+      ],
+      "omitted_nonlinear_terms": [
+        "p2",
+        "p3",
+        "q2",
+        "q3"
+      ]
+    },
+    {
+      "path": "nebula\\product_demo\\physical_bias_9db_1p9ghz_20260906\\physical_evidence\\ss_1.00_0\\ac_noise\\ngspice.log",
+      "sha256": "b148676d244efd0b825e3e660769888e2f67766a1d9077e8b1c3adb12e679de3",
+      "ignored": [
+        "isnoisy",
+        "p2",
+        "p3",
+        "q2",
+        "q3",
+        "sw_et"
+      ],
+      "omitted_nonlinear_terms": [
+        "p2",
+        "p3",
+        "q2",
+        "q3"
+      ]
+    },
+    {
+      "path": "nebula\\product_demo\\physical_bias_9db_1p9ghz_20260906\\physical_evidence\\ss_1.00_0\\nyquist\\ngspice.log",
+      "sha256": "3a6e0c24783287fb39160ae47dcbbacc8c19bd0d697080bbd7c55b13760cc115",
+      "ignored": [
+        "isnoisy",
+        "p2",
+        "p3",
+        "q2",
+        "q3",
+        "sw_et"
+      ],
+      "omitted_nonlinear_terms": [
+        "p2",
+        "p3",
+        "q2",
+        "q3"
+      ]
+    },
+    {
+      "path": "nebula\\product_demo\\physical_bias_9db_1p9ghz_20260906\\physical_evidence\\ss_1.00_0\\s4\\ngspice.log",
+      "sha256": "aaa39550b0d2723c21227556ee4592efcef6544c3c711909f4120d21cad7ebec",
+      "ignored": [
+        "isnoisy",
+        "p2",
+        "p3",
+        "q2",
+        "q3",
+        "sw_et"
+      ],
+      "omitted_nonlinear_terms": [
+        "p2",
+        "p3",
+        "q2",
+        "q3"
+      ]
+    },
+    {
+      "path": "nebula\\product_demo\\physical_bias_9db_1p9ghz_20260906\\physical_evidence\\ss_1.00_125\\ac_noise\\ngspice.log",
+      "sha256": "21ab243930f0bb598f33c7ecebcc35904f490f93923638dd0f1905d54518e854",
+      "ignored": [
+        "isnoisy",
+        "p2",
+        "p3",
+        "q2",
+        "q3",
+        "sw_et"
+      ],
+      "omitted_nonlinear_terms": [
+        "p2",
+        "p3",
+        "q2",
+        "q3"
+      ]
+    },
+    {
+      "path": "nebula\\product_demo\\physical_bias_9db_1p9ghz_20260906\\physical_evidence\\ss_1.00_125\\nyquist\\ngspice.log",
+      "sha256": "6806e4d6f0d1426c935774d7a435e453c63deb1fd99bbebeb8c427bb2dd5f553",
+      "ignored": [
+        "isnoisy",
+        "p2",
+        "p3",
+        "q2",
+        "q3",
+        "sw_et"
+      ],
+      "omitted_nonlinear_terms": [
+        "p2",
+        "p3",
+        "q2",
+        "q3"
+      ]
+    },
+    {
+      "path": "nebula\\product_demo\\physical_bias_9db_1p9ghz_20260906\\physical_evidence\\ss_1.00_125\\s4\\ngspice.log",
+      "sha256": "b220adfaa2a24237e2773d446b3ff97b29779b336fcf0e56daa417e5678b23b3",
+      "ignored": [
+        "isnoisy",
+        "p2",
+        "p3",
+        "q2",
+        "q3",
+        "sw_et"
+      ],
+      "omitted_nonlinear_terms": [
+        "p2",
+        "p3",
+        "q2",
+        "q3"
+      ]
+    },
+    {
+      "path": "nebula\\product_demo\\physical_bias_9db_1p9ghz_20260906\\physical_evidence\\ss_1.00_27\\ac_noise\\ngspice.log",
+      "sha256": "097c95ba1df14938c49eb4f460df5dbacad2508c92219132d1b633a66d0632cc",
+      "ignored": [
+        "isnoisy",
+        "p2",
+        "p3",
+        "q2",
+        "q3",
+        "sw_et"
+      ],
+      "omitted_nonlinear_terms": [
+        "p2",
+        "p3",
+        "q2",
+        "q3"
+      ]
+    },
+    {
+      "path": "nebula\\product_demo\\physical_bias_9db_1p9ghz_20260906\\physical_evidence\\ss_1.00_27\\nyquist\\ngspice.log",
+      "sha256": "bd31d084199d39cd5ca60a56912a1694665a088fc2a2d6fa9480a8bbfd52ba28",
+      "ignored": [
+        "isnoisy",
+        "p2",
+        "p3",
+        "q2",
+        "q3",
+        "sw_et"
+      ],
+      "omitted_nonlinear_terms": [
+        "p2",
+        "p3",
+        "q2",
+        "q3"
+      ]
+    },
+    {
+      "path": "nebula\\product_demo\\physical_bias_9db_1p9ghz_20260906\\physical_evidence\\ss_1.00_27\\s4\\ngspice.log",
+      "sha256": "fda6210f1a05b29562a94d33ea2afc2f7f6a1ecac193ea13ffcb547e775956b9",
+      "ignored": [
+        "isnoisy",
+        "p2",
+        "p3",
+        "q2",
+        "q3",
+        "sw_et"
+      ],
+      "omitted_nonlinear_terms": [
+        "p2",
+        "p3",
+        "q2",
+        "q3"
+      ]
+    },
+    {
+      "path": "nebula\\product_demo\\physical_bias_9db_1p9ghz_20260906\\physical_evidence\\ss_1.05_0\\ac_noise\\ngspice.log",
+      "sha256": "d9d1090bdebbf1e034bbffcd4181528fcb9ab04ce0f29d7bcb234619e965eb9e",
+      "ignored": [
+        "isnoisy",
+        "p2",
+        "p3",
+        "q2",
+        "q3",
+        "sw_et"
+      ],
+      "omitted_nonlinear_terms": [
+        "p2",
+        "p3",
+        "q2",
+        "q3"
+      ]
+    },
+    {
+      "path": "nebula\\product_demo\\physical_bias_9db_1p9ghz_20260906\\physical_evidence\\ss_1.05_0\\nyquist\\ngspice.log",
+      "sha256": "f84eb5c43ea1a718375b6f13d7cbc96f0aa303b02c6b74dc38981fe4a613b100",
+      "ignored": [
+        "isnoisy",
+        "p2",
+        "p3",
+        "q2",
+        "q3",
+        "sw_et"
+      ],
+      "omitted_nonlinear_terms": [
+        "p2",
+        "p3",
+        "q2",
+        "q3"
+      ]
+    },
+    {
+      "path": "nebula\\product_demo\\physical_bias_9db_1p9ghz_20260906\\physical_evidence\\ss_1.05_0\\s4\\ngspice.log",
+      "sha256": "40a3cffa70445cfb8438a6ee6c3f6d2b68df12d204dd24112986d16b77cbf011",
+      "ignored": [
+        "isnoisy",
+        "p2",
+        "p3",
+        "q2",
+        "q3",
+        "sw_et"
+      ],
+      "omitted_nonlinear_terms": [
+        "p2",
+        "p3",
+        "q2",
+        "q3"
+      ]
+    },
+    {
+      "path": "nebula\\product_demo\\physical_bias_9db_1p9ghz_20260906\\physical_evidence\\ss_1.05_125\\ac_noise\\ngspice.log",
+      "sha256": "2aa40432ad6321618564d863cd892666958a088283fc88690817c7f072750fe0",
+      "ignored": [
+        "isnoisy",
+        "p2",
+        "p3",
+        "q2",
+        "q3",
+        "sw_et"
+      ],
+      "omitted_nonlinear_terms": [
+        "p2",
+        "p3",
+        "q2",
+        "q3"
+      ]
+    },
+    {
+      "path": "nebula\\product_demo\\physical_bias_9db_1p9ghz_20260906\\physical_evidence\\ss_1.05_125\\nyquist\\ngspice.log",
+      "sha256": "1d11e53d4b38fbe8ca22bc0e997f9bdef637cba510f4ae2ddf1c84725cac70fd",
+      "ignored": [
+        "isnoisy",
+        "p2",
+        "p3",
+        "q2",
+        "q3",
+        "sw_et"
+      ],
+      "omitted_nonlinear_terms": [
+        "p2",
+        "p3",
+        "q2",
+        "q3"
+      ]
+    },
+    {
+      "path": "nebula\\product_demo\\physical_bias_9db_1p9ghz_20260906\\physical_evidence\\ss_1.05_125\\s4\\ngspice.log",
+      "sha256": "11be1ee1a03f1efdb9d6f9b87af73d149176d4ea15ba9f15b7b7900adcc2d48d",
+      "ignored": [
+        "isnoisy",
+        "p2",
+        "p3",
+        "q2",
+        "q3",
+        "sw_et"
+      ],
+      "omitted_nonlinear_terms": [
+        "p2",
+        "p3",
+        "q2",
+        "q3"
+      ]
+    },
+    {
+      "path": "nebula\\product_demo\\physical_bias_9db_1p9ghz_20260906\\physical_evidence\\ss_1.05_27\\ac_noise\\ngspice.log",
+      "sha256": "fba53849f17692070088dd79d5298c82dac3eb4456ec7850b884a7d1867e5163",
+      "ignored": [
+        "isnoisy",
+        "p2",
+        "p3",
+        "q2",
+        "q3",
+        "sw_et"
+      ],
+      "omitted_nonlinear_terms": [
+        "p2",
+        "p3",
+        "q2",
+        "q3"
+      ]
+    },
+    {
+      "path": "nebula\\product_demo\\physical_bias_9db_1p9ghz_20260906\\physical_evidence\\ss_1.05_27\\nyquist\\ngspice.log",
+      "sha256": "34781b74fcbc8172275a3417fb461888754784e357f5832d1f0e6e5366b0dfd6",
+      "ignored": [
+        "isnoisy",
+        "p2",
+        "p3",
+        "q2",
+        "q3",
+        "sw_et"
+      ],
+      "omitted_nonlinear_terms": [
+        "p2",
+        "p3",
+        "q2",
+        "q3"
+      ]
+    },
+    {
+      "path": "nebula\\product_demo\\physical_bias_9db_1p9ghz_20260906\\physical_evidence\\ss_1.05_27\\s4\\ngspice.log",
+      "sha256": "aa6a375ae3c30c1646943676689e297b408257f2e5645323a12650a0d93a2fd7",
+      "ignored": [
+        "isnoisy",
+        "p2",
+        "p3",
+        "q2",
+        "q3",
+        "sw_et"
+      ],
+      "omitted_nonlinear_terms": [
+        "p2",
+        "p3",
+        "q2",
+        "q3"
+      ]
+    },
+    {
+      "path": "nebula\\product_demo\\physical_bias_9db_1p9ghz_20260906\\physical_evidence\\tt_0.95_0\\ac_noise\\ngspice.log",
+      "sha256": "7f894b647ae21a26c0601b896c73a480087451a0af4b3ae01ff5144e143ca564",
+      "ignored": [
+        "isnoisy",
+        "p2",
+        "p3",
+        "q2",
+        "q3",
+        "sw_et"
+      ],
+      "omitted_nonlinear_terms": [
+        "p2",
+        "p3",
+        "q2",
+        "q3"
+      ]
+    },
+    {
+      "path": "nebula\\product_demo\\physical_bias_9db_1p9ghz_20260906\\physical_evidence\\tt_0.95_0\\nyquist\\ngspice.log",
+      "sha256": "e9199d726c970d935a556d3c58026d6235ecfa22aa8301592d3405f677a39f27",
+      "ignored": [
+        "isnoisy",
+        "p2",
+        "p3",
+        "q2",
+        "q3",
+        "sw_et"
+      ],
+      "omitted_nonlinear_terms": [
+        "p2",
+        "p3",
+        "q2",
+        "q3"
+      ]
+    },
+    {
+      "path": "nebula\\product_demo\\physical_bias_9db_1p9ghz_20260906\\physical_evidence\\tt_0.95_0\\s4\\ngspice.log",
+      "sha256": "492207e808c489c648eb98465f05a1d32280a4d61d0a5a797e3b4bfca659f5a1",
+      "ignored": [
+        "isnoisy",
+        "p2",
+        "p3",
+        "q2",
+        "q3",
+        "sw_et"
+      ],
+      "omitted_nonlinear_terms": [
+        "p2",
+        "p3",
+        "q2",
+        "q3"
+      ]
+    },
+    {
+      "path": "nebula\\product_demo\\physical_bias_9db_1p9ghz_20260906\\physical_evidence\\tt_0.95_125\\ac_noise\\ngspice.log",
+      "sha256": "a8c82566f34f952c6913f3e95dccbd9ff58f321d4368be340ac9e564096bcd57",
+      "ignored": [
+        "isnoisy",
+        "p2",
+        "p3",
+        "q2",
+        "q3",
+        "sw_et"
+      ],
+      "omitted_nonlinear_terms": [
+        "p2",
+        "p3",
+        "q2",
+        "q3"
+      ]
+    },
+    {
+      "path": "nebula\\product_demo\\physical_bias_9db_1p9ghz_20260906\\physical_evidence\\tt_0.95_125\\nyquist\\ngspice.log",
+      "sha256": "dad252f5928870258c4a9b63447a150234ea4bec59ef72f8bd938b009dbf5454",
+      "ignored": [
+        "isnoisy",
+        "p2",
+        "p3",
+        "q2",
+        "q3",
+        "sw_et"
+      ],
+      "omitted_nonlinear_terms": [
+        "p2",
+        "p3",
+        "q2",
+        "q3"
+      ]
+    },
+    {
+      "path": "nebula\\product_demo\\physical_bias_9db_1p9ghz_20260906\\physical_evidence\\tt_0.95_125\\s4\\ngspice.log",
+      "sha256": "fbac4d5163e1df7170e5b34464c257106d8b5da4701d73093e4abbe72d6dfbb2",
+      "ignored": [
+        "isnoisy",
+        "p2",
+        "p3",
+        "q2",
+        "q3",
+        "sw_et"
+      ],
+      "omitted_nonlinear_terms": [
+        "p2",
+        "p3",
+        "q2",
+        "q3"
+      ]
+    },
+    {
+      "path": "nebula\\product_demo\\physical_bias_9db_1p9ghz_20260906\\physical_evidence\\tt_0.95_27\\ac_noise\\ngspice.log",
+      "sha256": "748f6c73a4b62a013c4016e1ce730bdbebf632c77da9276db8eceb839a544317",
+      "ignored": [
+        "isnoisy",
+        "p2",
+        "p3",
+        "q2",
+        "q3",
+        "sw_et"
+      ],
+      "omitted_nonlinear_terms": [
+        "p2",
+        "p3",
+        "q2",
+        "q3"
+      ]
+    },
+    {
+      "path": "nebula\\product_demo\\physical_bias_9db_1p9ghz_20260906\\physical_evidence\\tt_0.95_27\\nyquist\\ngspice.log",
+      "sha256": "d2b7365bd8fe8b07ea5424a840db71f92d3ff36eaeeb23fbbb9db0c073cea384",
+      "ignored": [
+        "isnoisy",
+        "p2",
+        "p3",
+        "q2",
+        "q3",
+        "sw_et"
+      ],
+      "omitted_nonlinear_terms": [
+        "p2",
+        "p3",
+        "q2",
+        "q3"
+      ]
+    },
+    {
+      "path": "nebula\\product_demo\\physical_bias_9db_1p9ghz_20260906\\physical_evidence\\tt_0.95_27\\s4\\ngspice.log",
+      "sha256": "51423c14b9aeee906687df2bf7957061e3bdaacbcd231c4abb839ec2b77fff6c",
+      "ignored": [
+        "isnoisy",
+        "p2",
+        "p3",
+        "q2",
+        "q3",
+        "sw_et"
+      ],
+      "omitted_nonlinear_terms": [
+        "p2",
+        "p3",
+        "q2",
+        "q3"
+      ]
+    },
+    {
+      "path": "nebula\\product_demo\\physical_bias_9db_1p9ghz_20260906\\physical_evidence\\tt_1.00_0\\ac_noise\\ngspice.log",
+      "sha256": "1073b4c506cb7f202fe084895b325024be8bf1ede67b213856505a43fac9a93b",
+      "ignored": [
+        "isnoisy",
+        "p2",
+        "p3",
+        "q2",
+        "q3",
+        "sw_et"
+      ],
+      "omitted_nonlinear_terms": [
+        "p2",
+        "p3",
+        "q2",
+        "q3"
+      ]
+    },
+    {
+      "path": "nebula\\product_demo\\physical_bias_9db_1p9ghz_20260906\\physical_evidence\\tt_1.00_0\\nyquist\\ngspice.log",
+      "sha256": "964fb8f7b38d827c6a45f14dd4a51dce17fecc859acf3cd21bb9d0f7e02b283b",
+      "ignored": [
+        "isnoisy",
+        "p2",
+        "p3",
+        "q2",
+        "q3",
+        "sw_et"
+      ],
+      "omitted_nonlinear_terms": [
+        "p2",
+        "p3",
+        "q2",
+        "q3"
+      ]
+    },
+    {
+      "path": "nebula\\product_demo\\physical_bias_9db_1p9ghz_20260906\\physical_evidence\\tt_1.00_0\\s4\\ngspice.log",
+      "sha256": "e081323b9a822bf7fab33b7fd8ebcbeeec465b9629461d44ee795a11d5c1fac8",
+      "ignored": [
+        "isnoisy",
+        "p2",
+        "p3",
+        "q2",
+        "q3",
+        "sw_et"
+      ],
+      "omitted_nonlinear_terms": [
+        "p2",
+        "p3",
+        "q2",
+        "q3"
+      ]
+    },
+    {
+      "path": "nebula\\product_demo\\physical_bias_9db_1p9ghz_20260906\\physical_evidence\\tt_1.00_125\\ac_noise\\ngspice.log",
+      "sha256": "d8da403f56da171728f4e912df4cd333d220605f21d20bbc3db786b00df9569e",
+      "ignored": [
+        "isnoisy",
+        "p2",
+        "p3",
+        "q2",
+        "q3",
+        "sw_et"
+      ],
+      "omitted_nonlinear_terms": [
+        "p2",
+        "p3",
+        "q2",
+        "q3"
+      ]
+    },
+    {
+      "path": "nebula\\product_demo\\physical_bias_9db_1p9ghz_20260906\\physical_evidence\\tt_1.00_125\\nyquist\\ngspice.log",
+      "sha256": "5ddf78dfc14d7b46a8f9929ed1a79ded94017079b355c581ddf9fb4e93b63cf7",
+      "ignored": [
+        "isnoisy",
+        "p2",
+        "p3",
+        "q2",
+        "q3",
+        "sw_et"
+      ],
+      "omitted_nonlinear_terms": [
+        "p2",
+        "p3",
+        "q2",
+        "q3"
+      ]
+    },
+    {
+      "path": "nebula\\product_demo\\physical_bias_9db_1p9ghz_20260906\\physical_evidence\\tt_1.00_125\\s4\\ngspice.log",
+      "sha256": "a110408e47800fb33a6c6212149ba94ded8d73a1efc6b0c6f14553954439e80c",
+      "ignored": [
+        "isnoisy",
+        "p2",
+        "p3",
+        "q2",
+        "q3",
+        "sw_et"
+      ],
+      "omitted_nonlinear_terms": [
+        "p2",
+        "p3",
+        "q2",
+        "q3"
+      ]
+    },
+    {
+      "path": "nebula\\product_demo\\physical_bias_9db_1p9ghz_20260906\\physical_evidence\\tt_1.00_27\\ac_noise\\ngspice.log",
+      "sha256": "ff374ec3d84b3ab3fce229d018616fab57a3137a049e99cab141fe3198c86b9d",
+      "ignored": [
+        "isnoisy",
+        "p2",
+        "p3",
+        "q2",
+        "q3",
+        "sw_et"
+      ],
+      "omitted_nonlinear_terms": [
+        "p2",
+        "p3",
+        "q2",
+        "q3"
+      ]
+    },
+    {
+      "path": "nebula\\product_demo\\physical_bias_9db_1p9ghz_20260906\\physical_evidence\\tt_1.00_27\\nyquist\\ngspice.log",
+      "sha256": "d5a4f74cd4694b02a2ff9529ac674d74e81808088f3fbffb693a6a565286fa7d",
+      "ignored": [
+        "isnoisy",
+        "p2",
+        "p3",
+        "q2",
+        "q3",
+        "sw_et"
+      ],
+      "omitted_nonlinear_terms": [
+        "p2",
+        "p3",
+        "q2",
+        "q3"
+      ]
+    },
+    {
+      "path": "nebula\\product_demo\\physical_bias_9db_1p9ghz_20260906\\physical_evidence\\tt_1.00_27\\s4\\ngspice.log",
+      "sha256": "6a823bc13c8038e7d3f905bcea0f5f91bd11b8b1c35b3b28d564e22bb57f57b3",
+      "ignored": [
+        "isnoisy",
+        "p2",
+        "p3",
+        "q2",
+        "q3",
+        "sw_et"
+      ],
+      "omitted_nonlinear_terms": [
+        "p2",
+        "p3",
+        "q2",
+        "q3"
+      ]
+    },
+    {
+      "path": "nebula\\product_demo\\physical_bias_9db_1p9ghz_20260906\\physical_evidence\\tt_1.05_0\\ac_noise\\ngspice.log",
+      "sha256": "e01bd712d8d2989eb88b172eca00d35627cfebe375546141c64b708ba16dfa18",
+      "ignored": [
+        "isnoisy",
+        "p2",
+        "p3",
+        "q2",
+        "q3",
+        "sw_et"
+      ],
+      "omitted_nonlinear_terms": [
+        "p2",
+        "p3",
+        "q2",
+        "q3"
+      ]
+    },
+    {
+      "path": "nebula\\product_demo\\physical_bias_9db_1p9ghz_20260906\\physical_evidence\\tt_1.05_0\\nyquist\\ngspice.log",
+      "sha256": "1177522cfe0a7053c612def9de3fbf4be0c35dba1bad90c00f1c97b402739749",
+      "ignored": [
+        "isnoisy",
+        "p2",
+        "p3",
+        "q2",
+        "q3",
+        "sw_et"
+      ],
+      "omitted_nonlinear_terms": [
+        "p2",
+        "p3",
+        "q2",
+        "q3"
+      ]
+    },
+    {
+      "path": "nebula\\product_demo\\physical_bias_9db_1p9ghz_20260906\\physical_evidence\\tt_1.05_0\\s4\\ngspice.log",
+      "sha256": "f95a440e35916894aae16324808590d9cf998083c24b24753e5b3e108cad677d",
+      "ignored": [
+        "isnoisy",
+        "p2",
+        "p3",
+        "q2",
+        "q3",
+        "sw_et"
+      ],
+      "omitted_nonlinear_terms": [
+        "p2",
+        "p3",
+        "q2",
+        "q3"
+      ]
+    },
+    {
+      "path": "nebula\\product_demo\\physical_bias_9db_1p9ghz_20260906\\physical_evidence\\tt_1.05_125\\ac_noise\\ngspice.log",
+      "sha256": "69b9fea8ec11cc66ec5e022e2554c509ab75c22550eb0b7f377a868332d336d0",
+      "ignored": [
+        "isnoisy",
+        "p2",
+        "p3",
+        "q2",
+        "q3",
+        "sw_et"
+      ],
+      "omitted_nonlinear_terms": [
+        "p2",
+        "p3",
+        "q2",
+        "q3"
+      ]
+    },
+    {
+      "path": "nebula\\product_demo\\physical_bias_9db_1p9ghz_20260906\\physical_evidence\\tt_1.05_125\\nyquist\\ngspice.log",
+      "sha256": "096fb06d97044957115157a418d4c60674b149e4d6e68d42371faacc9a879d7f",
+      "ignored": [
+        "isnoisy",
+        "p2",
+        "p3",
+        "q2",
+        "q3",
+        "sw_et"
+      ],
+      "omitted_nonlinear_terms": [
+        "p2",
+        "p3",
+        "q2",
+        "q3"
+      ]
+    },
+    {
+      "path": "nebula\\product_demo\\physical_bias_9db_1p9ghz_20260906\\physical_evidence\\tt_1.05_125\\s4\\ngspice.log",
+      "sha256": "00843e45f2e147a10d5b8c1b9b2350112e0927737f64ac8a86b20286ecbe84b1",
+      "ignored": [
+        "isnoisy",
+        "p2",
+        "p3",
+        "q2",
+        "q3",
+        "sw_et"
+      ],
+      "omitted_nonlinear_terms": [
+        "p2",
+        "p3",
+        "q2",
+        "q3"
+      ]
+    },
+    {
+      "path": "nebula\\product_demo\\physical_bias_9db_1p9ghz_20260906\\physical_evidence\\tt_1.05_27\\ac_noise\\ngspice.log",
+      "sha256": "fac7300d36dd2dad8fb1b588979734eef387323a6a37a68672ff5e80e031a73c",
+      "ignored": [
+        "isnoisy",
+        "p2",
+        "p3",
+        "q2",
+        "q3",
+        "sw_et"
+      ],
+      "omitted_nonlinear_terms": [
+        "p2",
+        "p3",
+        "q2",
+        "q3"
+      ]
+    },
+    {
+      "path": "nebula\\product_demo\\physical_bias_9db_1p9ghz_20260906\\physical_evidence\\tt_1.05_27\\nyquist\\ngspice.log",
+      "sha256": "30d27adefde7b62f0481a7e1cf6fbb6a808a679972b7a661c0aeed0e0810424c",
+      "ignored": [
+        "isnoisy",
+        "p2",
+        "p3",
+        "q2",
+        "q3",
+        "sw_et"
+      ],
+      "omitted_nonlinear_terms": [
+        "p2",
+        "p3",
+        "q2",
+        "q3"
+      ]
+    },
+    {
+      "path": "nebula\\product_demo\\physical_bias_9db_1p9ghz_20260906\\physical_evidence\\tt_1.05_27\\s4\\ngspice.log",
+      "sha256": "52d120b32fdb076e53551d870757959e6feb14a48ef3586b35143eacc63059a0",
+      "ignored": [
+        "isnoisy",
+        "p2",
+        "p3",
+        "q2",
+        "q3",
+        "sw_et"
+      ],
+      "omitted_nonlinear_terms": [
+        "p2",
+        "p3",
+        "q2",
+        "q3"
+      ]
+    }
+  ],
+  "instantiated_generic_resistors": [
+    "Xatt_sp inx inp 0 sky130_fd_pr__res_high_po w=10 l=3.41",
+    "Xatt_sn iny inn 0 sky130_fd_pr__res_high_po w=10 l=3.41",
+    "Xatt_rp0 inp att_p0 0 sky130_fd_pr__res_high_po w=8 l=16.22",
+    "Xatt_rn0 inn att_n0 0 sky130_fd_pr__res_high_po w=8 l=16.22",
+    "Xatt_rp1 inp att_p1 0 sky130_fd_pr__res_high_po w=5.73 l=4.97",
+    "Xatt_rn1 inn att_n1 0 sky130_fd_pr__res_high_po w=5.73 l=4.97",
+    "Xatt_rp2 inp att_p2 0 sky130_fd_pr__res_high_po w=5.73 l=4.97 m=2",
+    "Xatt_rn2 inn att_n2 0 sky130_fd_pr__res_high_po w=5.73 l=4.97 m=2",
+    "Xrlp  vdd outp 0 sky130_fd_pr__res_high_po w=10 l=14.745 m=2",
+    "Xrln  vdd outn 0 sky130_fd_pr__res_high_po w=10 l=14.745 m=2",
+    "Xrs   s1 s2 0 sky130_fd_pr__res_high_po w=2 l=0.99",
+    "Xrbias p_bias 0 0 sky130_fd_pr__res_high_po w=1 l=5.34 m=1"
+  ],
+  "model_sources": [
+    {
+      "path": "C:\\Users\\DELL\\sky130A\\libs.ref\\sky130_fd_pr\\spice\\sky130_fd_pr__res_high_po.model.spice",
+      "sha256": "dfe6e94934301aab023df90baeed14b0ee0e43689e2ad3475bf5963b59cdad4c",
+      "generic_coefficients": true,
+      "voltage_expression": false
+    },
+    {
+      "path": "C:\\Users\\DELL\\sky130A\\libs.ref\\sky130_fd_pr\\spice\\sky130_fd_pr__res_high_po_0p69.model.spice",
+      "sha256": "ebdc054a2461258c5120a3d7c085d3beb6b75ae99778adc9c4a4fb91d6f0eb76",
+      "generic_coefficients": false,
+      "voltage_expression": true
+    }
+  ],
+  "saved_evidence_files_verified": 616,
+  "hd3_full_passive_linearity": "NOT_VERIFIED",
+  "circuit_changed": false,
+  "conclusion": "Saved HD3 extraction is valid for the simulated model. Generic resistor voltage coefficients are ignored. Fixed-width PDK resistors have supported voltage expressions but different resistance and parasitics; no drop-in equivalence or corrected-circuit compliance is established."
+}

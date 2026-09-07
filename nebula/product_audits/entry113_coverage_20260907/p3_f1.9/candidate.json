@@ -1,0 +1,196 @@
+{
+  "request": {
+    "peaking_db": 3.0,
+    "f_peak_hz": 1900000000.0,
+    "f_peak_ghz": 1.9
+  },
+  "search": {
+    "u": [
+      0.47470897153701547,
+      0.5052153178730102,
+      0.7146841021685507,
+      0.33028625985505805,
+      0.6703975283764638,
+      0.5871048097551593,
+      0.8020459464395331
+    ],
+    "reward": null,
+    "sims": 0,
+    "n_candidates": 512,
+    "n_tied_at_best": 1,
+    "design_id": null,
+    "which_path": "legacy-rl-proposal/classical-fixed-intersection/fresh-physical",
+    "policy_seed": 2026090500,
+    "policy_file": "shielded_policy_2026090500.pth",
+    "channel_loss_mode": "automatic-family",
+    "channel_losses_db": [
+      3.0,
+      4.5,
+      6.0,
+      7.5,
+      9.0,
+      10.5,
+      12.0
+    ],
+    "representative_channel_loss_db": 7.5,
+    "nearest_training_request": [
+      4.0,
+      1921093976.6100154
+    ],
+    "setting": 273,
+    "atten_code": 4,
+    "bank_code": 17,
+    "programmable_hardware": {
+      "total_logical_settings": 512,
+      "setting_encoding": "setting = A*64 + R*8 + C",
+      "attenuator": {
+        "topology": "differential series-shunt divider with three binary PMOS-switched shunt legs per side",
+        "series_ohm": 150.0,
+        "switch_status": "netlisted-and-measured",
+        "switch_device": "sky130_fd_pr__pfet_01v8",
+        "switch_w_um": 40.0,
+        "switch_l_um": 0.15,
+        "codes": [
+          {
+            "code": 0,
+            "attenuation_db": -0.0,
+            "voltage_ratio": 1.0
+          },
+          {
+            "code": 1,
+            "attenuation_db": 1.4977853737551112,
+            "voltage_ratio": 0.8416096980592991
+          },
+          {
+            "code": 2,
+            "attenuation_db": 2.774883632735237,
+            "voltage_ratio": 0.726533791459851
+          },
+          {
+            "code": 3,
+            "attenuation_db": 3.888053789300703,
+            "voltage_ratio": 0.6391419311451978
+          },
+          {
+            "code": 4,
+            "attenuation_db": 4.874632141472263,
+            "voltage_ratio": 0.5705167413061712
+          },
+          {
+            "code": 5,
+            "attenuation_db": 5.76049360692487,
+            "voltage_ratio": 0.5151993656925172
+          },
+          {
+            "code": 6,
+            "attenuation_db": 6.564310442854017,
+            "voltage_ratio": 0.46966097771169657
+          },
+          {
+            "code": 7,
+            "attenuation_db": 7.3,
+            "voltage_ratio": 0.43151907682776525
+          }
+        ]
+      },
+      "rs_bank": {
+        "topology": "eight selectable source-degeneration resistances",
+        "switch_status": "not-netlisted",
+        "evidence_status": "eight separately drawn-and-measured resistor geometries",
+        "codes": [
+          {
+            "code": 0,
+            "target_ohm": 70.17347204196405
+          },
+          {
+            "code": 1,
+            "target_ohm": 97.14661002997194
+          },
+          {
+            "code": 2,
+            "target_ohm": 134.48762852537493
+          },
+          {
+            "code": 3,
+            "target_ohm": 186.18171257647606
+          },
+          {
+            "code": 4,
+            "target_ohm": 257.7458646418858
+          },
+          {
+            "code": 5,
+            "target_ohm": 356.81770148453967
+          },
+          {
+            "code": 6,
+            "target_ohm": 493.97057163112163
+          },
+          {
+            "code": 7,
+            "target_ohm": 683.8419860404529
+          }
+        ]
+      },
+      "cs_bank": {
+        "topology": "eight selectable source-degeneration capacitances",
+        "switch_status": "not-netlisted",
+        "evidence_status": "eight separately drawn-and-measured capacitor geometries",
+        "codes": [
+          {
+            "code": 0,
+            "target_f": 1.6846486662527978e-12
+          },
+          {
+            "code": 1,
+            "target_f": 2.1917703964300834e-12
+          },
+          {
+            "code": 2,
+            "target_f": 2.8515485554341908e-12
+          },
+          {
+            "code": 3,
+            "target_f": 3.709936577865539e-12
+          },
+          {
+            "code": 4,
+            "target_f": 4.826721040942929e-12
+          },
+          {
+            "code": 5,
+            "target_f": 6.279685789260853e-12
+          },
+          {
+            "code": 6,
+            "target_f": 8.170029566104976e-12
+          },
+          {
+            "code": 7,
+            "target_f": 9.999999999999985e-12
+          }
+        ]
+      }
+    },
+    "atten_max_x": 2.3173946499684783,
+    "rl_proposals": 2395,
+    "shield_verifier_calls": 2395,
+    "shield_fallbacks": 292,
+    "target_refinements": 292,
+    "safety_fallbacks": 0,
+    "selection_objective": "legacy fixed intersection proposes one candidate; fresh physical electrical gate decides",
+    "centering_trigger_fraction": 0.3333333333333333,
+    "table_rows_checked": 149504,
+    "offline_spice_rows": 23040,
+    "offline_link_points": 161280,
+    "legacy_nominal_setting": 459,
+    "fixed_eligible_settings": [
+      273,
+      337,
+      401
+    ],
+    "fixed_prescreen_rows_checked": 161280,
+    "fixed_selection_reason": "lowest-fixed-eligible",
+    "evidence_warning": "Old-bank reward/verification are not physical-bias evidence."
+  }
+}

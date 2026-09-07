@@ -55,7 +55,13 @@
           <div class="unit-input"><input id="frequencyInput" type="number" min="1.25" max="2.5" step="0.01" value="1.9"><span>GHz</span></div>
         </div>
       </div>
-      <p id="parseNote" class="field-note">Accepted range: 3-12 dB at 1.25-2.50 GHz.</p>
+      <p id="parseNote" class="field-note">Request bounds: 3-12 dB at 1.25-2.50 GHz. Physical coverage is limited; requests may be refused or fail verification.</p>
+      <label for="designMode">Circuit verification mode</label>
+      <select id="designMode">
+        <option value="rl-hybrid">Legacy RL bank · adaptive settings</option>
+        <option value="rl-physical" selected>Physical bias · fixed circuit · fresh PVT</option>
+      </select>
+      <p class="field-note">Physical mode runs up to 137 simulations in the background. Full receiver area and transistor-level DFE are not verified.</p>
 
       <button id="generateButton" class="button button-primary generate-button" type="button">
         <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="2"/><circle cx="18" cy="5" r="2"/><circle cx="18" cy="19" r="2"/><path d="M7 11l9-5M7 13l9 5"/></svg>
@@ -163,7 +169,7 @@
         <div class="pvt-summary">
           <div><strong id="pvtPassCount">--</strong><span>conditions pass</span></div>
           <div><strong id="pvtWorstEye">--</strong><span>smallest eye area</span></div>
-          <div><strong id="pvtSettings">--</strong><span>adaptive settings used</span></div>
+          <div><strong id="pvtSettings">--</strong><span id="pvtSettingsLabel">adaptive settings used</span></div>
         </div>
         <div class="pvt-card">
           <div class="pvt-axis-note">Columns combine VDD and temperature. Rows are SKY130 process corners.</div>

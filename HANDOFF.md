@@ -17,7 +17,10 @@
 > decisions that are OPEN and human-only, and what to do next. It supersedes
 > `nebula/NEXT_STEPS.md`. This file remains the full state of record.
 
-Last updated: **2026-09-06** (session 49, Entry 101: owner approved fresh fixed
+Last updated: **2026-09-07**, session 61 / Entry 113. Attribution, bounded
+physical coverage and the 19-page report are complete. See outcome below.
+
+Previous status snapshot: **2026-09-06** (session 49, Entry 101: owner approved fresh fixed
 setting-490 validation. Fresh result PASS: 45/45 fixed PVT corners and 315/315
 model conditions, including both HD3 tones; all no-DFE model eyes pass. Nominal
 8.852970 dB at 1.771915 GHz. Existing demo/selector unchanged. See
@@ -914,10 +917,12 @@ signaling, ADC-based DSP receiver, 28 nm CMOS reference parameters).
 
 ## 2. Repository map (what every file/folder is)
 
-Entry 113 (2026-09-07): post-review attribution and bounded physical
-coverage are registered in nebula/POST_REVIEW_PLAN.md; see session 61 below.
-Frozen results stay unchanged; omitted generic-poly nonlinearity remains
-NOT_VERIFIED. New helpers/tests use the post_review name.
+Entry 113 (2026-09-07): supplemental attribution and 12-request physical
+coverage are complete; see nebula/POST_REVIEW_RESULTS.md and session 61 below.
+PPO improves quality over imitation but random has higher compliance. One of
+12 physical requests passes; 548 calls. Generic-poly nonlinearity remains
+NOT_VERIFIED. Report has 19 visually checked pages; release_snapshot.py
+packages private source/evidence. Historical policies/results stay unchanged.
 
 Entry 101: `nebula/experiments/exp_fixed_candidate.py` validates setting 490
 using Entry 100's unchanged physical/DFE checks; `nebula/FIXED_490_PLAN.md`
@@ -1762,10 +1767,12 @@ PRBS → scramble → Gray/PAM4 → TX-FFE → ZOH ×OSR(8) → TX pole (0.75·f
 
 ## 5. Complete history (what was done, in order, with the WHY)
 
-Entry 113 (2026-09-07): post-review attribution and bounded physical
-coverage are registered in nebula/POST_REVIEW_PLAN.md; see session 61 below.
-Frozen results stay unchanged; omitted generic-poly nonlinearity remains
-NOT_VERIFIED. New helpers/tests use the post_review name.
+Entry 113 (2026-09-07): supplemental attribution and 12-request physical
+coverage are complete; see nebula/POST_REVIEW_RESULTS.md and session 61 below.
+PPO improves quality over imitation but random has higher compliance. One of
+12 physical requests passes; 548 calls. Generic-poly nonlinearity remains
+NOT_VERIFIED. Report has 19 visually checked pages; release_snapshot.py
+packages private source/evidence. Historical policies/results stay unchanged.
 
 ### Phase 0 — audit + correctness (commit `ce733a8` equivalent; authors later rewritten, see G12)
 Bugs found in the inherited code and fixed:
@@ -1910,10 +1917,12 @@ Plus: git init, .gitignore, 28 tests, Wilson-bound BER reporting.
 
 ## 6. Key numbers & validated behavior (current state)
 
-Entry 113 (2026-09-07): post-review attribution and bounded physical
-coverage are registered in nebula/POST_REVIEW_PLAN.md; see session 61 below.
-Frozen results stay unchanged; omitted generic-poly nonlinearity remains
-NOT_VERIFIED. New helpers/tests use the post_review name.
+Entry 113 (2026-09-07): supplemental attribution and 12-request physical
+coverage are complete; see nebula/POST_REVIEW_RESULTS.md and session 61 below.
+PPO improves quality over imitation but random has higher compliance. One of
+12 physical requests passes; 548 calls. Generic-poly nonlinearity remains
+NOT_VERIFIED. Report has 19 visually checked pages; release_snapshot.py
+packages private source/evidence. Historical policies/results stay unchanged.
 
 Entry 101: setting 490 freshly passes all 45 fixed PVT corners / 315 model
 conditions at 9 dB / 1.9 GHz (91 calls, 88.37 s). Nominal is 8.852970 dB /
@@ -2433,10 +2442,12 @@ still NOT full area. The 12-request replay is fully supported at eight requests;
 
 ## 7. Known model limitations (honest list — do not overclaim)
 
-Entry 113 (2026-09-07): post-review attribution and bounded physical
-coverage are registered in nebula/POST_REVIEW_PLAN.md; see session 61 below.
-Frozen results stay unchanged; omitted generic-poly nonlinearity remains
-NOT_VERIFIED. New helpers/tests use the post_review name.
+Entry 113 (2026-09-07): supplemental attribution and 12-request physical
+coverage are complete; see nebula/POST_REVIEW_RESULTS.md and session 61 below.
+PPO improves quality over imitation but random has higher compliance. One of
+12 physical requests passes; 548 calls. Generic-poly nonlinearity remains
+NOT_VERIFIED. Report has 19 visually checked pages; release_snapshot.py
+packages private source/evidence. Historical policies/results stay unchanged.
 
 - **Entry 100 / full receiver:** no complete area footprint, transistor-level
   DFE/slicer/clock, physical Rs/Cs selector, or complete bias/control power has
@@ -2584,10 +2595,12 @@ NOT_VERIFIED. New helpers/tests use the post_review name.
 
 ## 8. Next steps (prioritized backlog with context)
 
-Entry 113 (2026-09-07): post-review attribution and bounded physical
-coverage are registered in nebula/POST_REVIEW_PLAN.md; see session 61 below.
-Frozen results stay unchanged; omitted generic-poly nonlinearity remains
-NOT_VERIFIED. New helpers/tests use the post_review name.
+Entry 113 (2026-09-07): supplemental attribution and 12-request physical
+coverage are complete; see nebula/POST_REVIEW_RESULTS.md and session 61 below.
+PPO improves quality over imitation but random has higher compliance. One of
+12 physical requests passes; 548 calls. Generic-poly nonlinearity remains
+NOT_VERIFIED. Report has 19 visually checked pages; release_snapshot.py
+packages private source/evidence. Historical policies/results stay unchanged.
 
 **Entry 100 audit complete; next decisions:** validate existing bank setting 490
 as a candidate fixed-robust 9 dB / 1.9 GHz export before any adoption or new
@@ -3068,10 +3081,12 @@ explicit scope.
 
 ## 9. Gotchas & footguns (each one cost real debugging time)
 
-Entry 113 (2026-09-07): post-review attribution and bounded physical
-coverage are registered in nebula/POST_REVIEW_PLAN.md; see session 61 below.
-Frozen results stay unchanged; omitted generic-poly nonlinearity remains
-NOT_VERIFIED. New helpers/tests use the post_review name.
+Entry 113 (2026-09-07): supplemental attribution and 12-request physical
+coverage are complete; see nebula/POST_REVIEW_RESULTS.md and session 61 below.
+PPO improves quality over imitation but random has higher compliance. One of
+12 physical requests passes; 548 calls. Generic-poly nonlinearity remains
+NOT_VERIFIED. Report has 19 visually checked pages; release_snapshot.py
+packages private source/evidence. Historical policies/results stay unchanged.
 
 **Entry 100 scope footgun:** a green historical S7 reward row is only a partial
 passive-area comparison, and 315 green adaptive conditions use multiple
@@ -16282,4 +16297,62 @@ in 327.74 s. Coverage/model-audit helpers were added after suite collection;
 their focused gates are run before the protocol commit and the final full
 suite will include them. No supplemental measurement has started.
 
+### 2026-09-07 - session 61 / Entry 113 outcome: attribution and physical coverage
+
+Protocol/helpers frozen at 030b8f2 before runs. Cached attribution: 88.733 s,
+zero SPICE/training, all five PPO traces reproduce historical per-identity
+selection, compliance, quality and visit counts. Same 8-visit cap/shield:
+imitation q=0.676945, compliance=0.823539, visits=4.473992; PPO q=0.716902,
+compliance=0.838848, visits=5.579424. PPO-minus-imitation q=+0.039957,
+95% request/loss-block interval [+0.016756,+0.064411]. Local random:
+q=0.650816, compliance=0.907942, visits=8. PPO improves quality but loses
+compliance to random and slightly to hill climbing. The preregistered
+universal no-compliance-loss condition is NOT MET. No tuning or seed change.
+
+Physical matrix: 12 requests, four measured candidates, 548 fresh calls /
+380.446 s. 9 dB / 1.9 GHz passes 315/315; 3/1.9 passes 312/315 and 6/1.9
+passes 314/315, with failed linear-eye cases exceeding the measured swing guard.
+6/2.5 passes 308/315: ff/1.05/0 C exceeds the absolute frequency upper bound.
+Eight requests have no fixed bank candidate, not proof of impossibility.
+All four choices agree with the RL-bypassed lowest eligible setting; two
+intersections are singletons. A complete timed RL-disabled physical pipeline
+was NOT run. An early progress message incorrectly said 411 calls/nine
+refusals; corrected to the complete summary's 548 calls/eight refusals.
+
+Model audit: 616 original physical evidence hashes verified, 137 saved logs.
+Ignored generic-resistor p2/q2/p3/q3 confirmed. Fixed-width PDK expressions
+are supported but represent different resistor behaviour and parasitics.
+No unvalidated replacement or full-passive HD3 claim was made.
+
+Report: HD3/shield/eye/DFE/cost qualifications corrected; two data-derived
+supplemental pages added. All 19 pages passed source hashes, text/bounds,
+Poppler rendering and visual review. Original PDF/sidecars preserved in
+output/pdf/archive_20260906/. UI visibly selects physical mode; historical
+API default preserved. No configured LLM client; live bonus NOT_VERIFIED.
+
+New paths: POST_REVIEW_RESULTS.md, REPRODUCE_POST_REVIEW.md,
+requirements-reviewed.txt, release_snapshot.py and tests; evidence is under
+product_audits/entry113_{attribution,coverage,models}_20260907/.
+The private release includes the actual working-tree product source/evidence,
+excludes copyrighted reference PDFs/credentials/caches/full external PDK,
+and verifies all included payload hashes. It is not a clean-commit or
+clean-machine certification. Pre-existing work stays intact; no public push.
+
+Baseline: 2946 passed, 13 deselected, two existing warnings, 293.47 s.
+Intermediate full: 2960 passed, 327.74 s. Final focused group before archive fix: 41 passed. Archive membership was then
+checked against original and supplemental physical hash manifests: raw .log
+and copied .spiceinit suffixes were added, with regression cases, so these
+auditable inputs are preserved.
+The first final-suite foreground run was interrupted without a result;
+a hidden background wrapper recorded the complete final run durably.
+First completed final run: 2980 passed, one failure, 13 deselected in 724.03 s.
+The existing hl PDK trim timing assertion failed (6.5366 s trimmed vs 6.4427 s
+untrimmed); the preceding raw electrical comparison passed. No test was
+loosened. A full run after the archive fix follows.
+Final full regression: 2983 passed, 13 deselected, 2 warnings in 388.19s (0:06:28)
+
+Next: present the actual PPO quality/compliance trade-off and limited physical
+domain. Further physical candidates, supported nonlinear resistors, hardware
+DFE/switching and full layout/budgets need separately bounded design work.
+Do not tune on exposed FINAL, loosen constraints or erase negative rows.
 
