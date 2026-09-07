@@ -924,6 +924,7 @@ PPO improves quality over imitation but random has higher compliance. One of
 NOT_VERIFIED. Report has 19 visually checked pages; release_snapshot.py
 packages private source/evidence. Historical policies/results stay unchanged.
 Release membership includes required characterization CSVs and raw SPICE logs.
+Entry 114: final-page table replaced with a concise delivered-workflow conclusion.
 
 Entry 101: `nebula/experiments/exp_fixed_candidate.py` validates setting 490
 using Entry 100's unchanged physical/DFE checks; `nebula/FIXED_490_PLAN.md`
@@ -1775,6 +1776,7 @@ PPO improves quality over imitation but random has higher compliance. One of
 NOT_VERIFIED. Report has 19 visually checked pages; release_snapshot.py
 packages private source/evidence. Historical policies/results stay unchanged.
 Release membership includes required characterization CSVs and raw SPICE logs.
+Entry 114: final-page table replaced with a concise delivered-workflow conclusion.
 
 ### Phase 0 — audit + correctness (commit `ce733a8` equivalent; authors later rewritten, see G12)
 Bugs found in the inherited code and fixed:
@@ -1926,6 +1928,7 @@ PPO improves quality over imitation but random has higher compliance. One of
 NOT_VERIFIED. Report has 19 visually checked pages; release_snapshot.py
 packages private source/evidence. Historical policies/results stay unchanged.
 Release membership includes required characterization CSVs and raw SPICE logs.
+Entry 114: final-page table replaced with a concise delivered-workflow conclusion.
 
 Entry 101: setting 490 freshly passes all 45 fixed PVT corners / 315 model
 conditions at 9 dB / 1.9 GHz (91 calls, 88.37 s). Nominal is 8.852970 dB /
@@ -2452,6 +2455,7 @@ PPO improves quality over imitation but random has higher compliance. One of
 NOT_VERIFIED. Report has 19 visually checked pages; release_snapshot.py
 packages private source/evidence. Historical policies/results stay unchanged.
 Release membership includes required characterization CSVs and raw SPICE logs.
+Entry 114: final-page table replaced with a concise delivered-workflow conclusion.
 
 - **Entry 100 / full receiver:** no complete area footprint, transistor-level
   DFE/slicer/clock, physical Rs/Cs selector, or complete bias/control power has
@@ -2606,6 +2610,7 @@ PPO improves quality over imitation but random has higher compliance. One of
 NOT_VERIFIED. Report has 19 visually checked pages; release_snapshot.py
 packages private source/evidence. Historical policies/results stay unchanged.
 Release membership includes required characterization CSVs and raw SPICE logs.
+Entry 114: final-page table replaced with a concise delivered-workflow conclusion.
 
 **Entry 100 audit complete; next decisions:** validate existing bank setting 490
 as a candidate fixed-robust 9 dB / 1.9 GHz export before any adoption or new
@@ -3093,6 +3098,7 @@ PPO improves quality over imitation but random has higher compliance. One of
 NOT_VERIFIED. Report has 19 visually checked pages; release_snapshot.py
 packages private source/evidence. Historical policies/results stay unchanged.
 Release membership includes required characterization CSVs and raw SPICE logs.
+Entry 114: final-page table replaced with a concise delivered-workflow conclusion.
 
 **Entry 100 scope footgun:** a green historical S7 reward row is only a partial
 passive-area comparison, and 315 green adaptive conditions use multiple
@@ -16379,3 +16385,19 @@ in the temporary extracted copy. Moved that disposable copy under the existing
 __pycache__ exclusion; no test code or assertion changed. The affected scan
 and complete release tests then passed: 17 passed in 0.86 s. The full run plus
 this targeted rerun covers all 2985 tests; no unresolved failure remains.
+
+### 2026-09-07 - Entry 114 / closing-page editorial revision
+
+Owner requested removal of the final-page coverage table. Replaced page 19
+with a concise delivered-workflow conclusion; detailed negative results remain
+in POST_REVIEW_RESULTS.md and the saved evidence. The closing prose identifies
+the single accepted request and bounded tuning coverage, and points to the
+existing measurement and integration qualifications. No result, policy, circuit
+or scientific evidence changed. Updated the PDF checker for the new closing
+heading and table removal. PDF/source manifest and private release must be
+refreshed together. Prior regression covers 2985 tests (2984 plus the cleared
+temporary-copy documentation scan); immediate pre-edit report checks: 6 passed.
+
+Post-edit full regression: 2985 passed, 13 deselected, 2 warnings in 640.02s (0:10:40)
+PDF checks: 19 pages, source hashes and bounds PASS; page 19 visually checked.
+Pages 1-18 render pixel-identically to the previous approved report.

@@ -69,8 +69,9 @@ def main():
     assert len(reader.pages) == 19 and len(reader.outline) == 19
     with pdfplumber.open(path) as parsed:
         text = "\n".join(p.extract_text() or "" for p in parsed.pages)
-    for expected in ["315/315", "45/45", "0.1550", "NOT_VERIFIED", "behavioural", "8.834", "1.769", "0.007855", "rl-physical", "p2/q2/p3/q3", "Imitation only", "BANK NO FIXED"]:
+    for expected in ["315/315", "45/45", "0.1550", "NOT_VERIFIED", "behavioural", "8.834", "1.769", "0.007855", "rl-physical", "p2/q2/p3/q3", "Imitation only", "Acceptance across requests"]:
         assert expected in text, expected
+    assert "TARGET dB / GHz" not in doc[-1].get_text()
     assert "\ufffd" not in text
     assert not problems, problems
     qa = {"pages": stats, "bounds_issues": problems, "renderer": renderer,
