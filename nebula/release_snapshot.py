@@ -11,7 +11,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 SUFFIXES = {'.py','.md','.json','.jsonl','.gz','.pth','.pt','.npz','.npy',
-            '.cir','.spice','.spiceinit','.log','.js','.css','.html','.txt','.png','.svg','.s2p','.s4p'}
+            '.cir','.spice','.spiceinit','.log','.csv','.js','.css','.html','.txt','.png','.svg','.s2p','.s4p'}
 BLOCKED = {'resources','references','.claude','.git','__pycache__','.pytest_cache','node_modules'}
 TOP = {'AGENTS.md','HANDOFF.md','CLAUDEwa.md','README.md','requirements.txt','pytest.ini','pyproject.toml'}
 

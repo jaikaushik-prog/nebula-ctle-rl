@@ -13,6 +13,8 @@ def test_release_excludes_references_credentials_and_paths(name):
     'nebula/physical_design.py','nebula/device/spice/.spiceinit',
     'nebula/product_audits/example/tt/ac_noise/ngspice.log',
     'nebula/product_audits/example/inputs/15_.spiceinit',
+    'nebula/experiments/cl_range_data.csv',
+    'nebula/experiments/robust_geometry_data.csv',
     'nebula/experiments/shielded_bc_2026090500.pth',
     'output/pdf/Nebula_Competition_Report.pdf'])
 def test_release_includes_required_runtime_and_our_report(name):
