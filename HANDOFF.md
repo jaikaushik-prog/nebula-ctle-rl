@@ -914,6 +914,11 @@ signaling, ADC-based DSP receiver, 28 nm CMOS reference parameters).
 
 ## 2. Repository map (what every file/folder is)
 
+Entry 113 (2026-09-07): post-review attribution and bounded physical
+coverage are registered in nebula/POST_REVIEW_PLAN.md; see session 61 below.
+Frozen results stay unchanged; omitted generic-poly nonlinearity remains
+NOT_VERIFIED. New helpers/tests use the post_review name.
+
 Entry 101: `nebula/experiments/exp_fixed_candidate.py` validates setting 490
 using Entry 100's unchanged physical/DFE checks; `nebula/FIXED_490_PLAN.md`
 freezes the 91-call scope. It does not implement a new production selector.
@@ -1757,6 +1762,11 @@ PRBS → scramble → Gray/PAM4 → TX-FFE → ZOH ×OSR(8) → TX pole (0.75·f
 
 ## 5. Complete history (what was done, in order, with the WHY)
 
+Entry 113 (2026-09-07): post-review attribution and bounded physical
+coverage are registered in nebula/POST_REVIEW_PLAN.md; see session 61 below.
+Frozen results stay unchanged; omitted generic-poly nonlinearity remains
+NOT_VERIFIED. New helpers/tests use the post_review name.
+
 ### Phase 0 — audit + correctness (commit `ce733a8` equivalent; authors later rewritten, see G12)
 Bugs found in the inherited code and fixed:
 1. **MC seeding no-op:** `np.random.seed(42)` inside run_link made all Monte
@@ -1899,6 +1909,11 @@ Plus: git init, .gitignore, 28 tests, Wilson-bound BER reporting.
   rectangle and is now an explicit limitation, not a hidden traceback.
 
 ## 6. Key numbers & validated behavior (current state)
+
+Entry 113 (2026-09-07): post-review attribution and bounded physical
+coverage are registered in nebula/POST_REVIEW_PLAN.md; see session 61 below.
+Frozen results stay unchanged; omitted generic-poly nonlinearity remains
+NOT_VERIFIED. New helpers/tests use the post_review name.
 
 Entry 101: setting 490 freshly passes all 45 fixed PVT corners / 315 model
 conditions at 9 dB / 1.9 GHz (91 calls, 88.37 s). Nominal is 8.852970 dB /
@@ -2418,6 +2433,11 @@ still NOT full area. The 12-request replay is fully supported at eight requests;
 
 ## 7. Known model limitations (honest list — do not overclaim)
 
+Entry 113 (2026-09-07): post-review attribution and bounded physical
+coverage are registered in nebula/POST_REVIEW_PLAN.md; see session 61 below.
+Frozen results stay unchanged; omitted generic-poly nonlinearity remains
+NOT_VERIFIED. New helpers/tests use the post_review name.
+
 - **Entry 100 / full receiver:** no complete area footprint, transistor-level
   DFE/slicer/clock, physical Rs/Cs selector, or complete bias/control power has
   been verified. OFF attenuator switches occupy geometry too. A gate/body/plate
@@ -2563,6 +2583,11 @@ still NOT full area. The 12-request replay is fully supported at eight requests;
   untrusted until proven (the Phase-0 experience says assume bugs).
 
 ## 8. Next steps (prioritized backlog with context)
+
+Entry 113 (2026-09-07): post-review attribution and bounded physical
+coverage are registered in nebula/POST_REVIEW_PLAN.md; see session 61 below.
+Frozen results stay unchanged; omitted generic-poly nonlinearity remains
+NOT_VERIFIED. New helpers/tests use the post_review name.
 
 **Entry 100 audit complete; next decisions:** validate existing bank setting 490
 as a candidate fixed-robust 9 dB / 1.9 GHz export before any adoption or new
@@ -3042,6 +3067,11 @@ explicit scope.
 **1-9.** (See existing backlog: .s4p, clipping disto, joint adaptation, etc.)
 
 ## 9. Gotchas & footguns (each one cost real debugging time)
+
+Entry 113 (2026-09-07): post-review attribution and bounded physical
+coverage are registered in nebula/POST_REVIEW_PLAN.md; see session 61 below.
+Frozen results stay unchanged; omitted generic-poly nonlinearity remains
+NOT_VERIFIED. New helpers/tests use the post_review name.
 
 **Entry 100 scope footgun:** a green historical S7 reward row is only a partial
 passive-area comparison, and 315 green adaptive conditions use multiple
@@ -16219,3 +16249,37 @@ summary recomputation, candidate/netlist hashes, all 45 circuit signatures and
 the 91-call total pass independent integrity checks. No validation or test
 process remains running. The normal export flow and cached demo still use
 their prior selection logic; integration is the next implementation task.
+
+### 2026-09-07 - session 61 / Entry 113 preregistration: independent-review follow-up
+
+The owner authorised the ranked submission improvements after the independent
+review. POST_REVIEW_PLAN.md freezes a supplemental exposed-data attribution
+study, read-only resistor-model diagnosis and an enumerated 12-request physical
+coverage matrix. No reward, policy, parameter range, tolerance or hardware
+topology changes. Original FINAL and final-demo artifacts remain historical.
+
+Repo map: experiments/exp_post_review_attribution.py and its tests add a
+zero-SPICE diagnostic of frozen PPO versus imitation and classical proposals,
+all with the same best-compliant-visited selection and 2/4/8 visit caps.
+The eight-visit PPO replay must reproduce every original per-identity result.
+Prefixes retain the trained eight-visit observation scaling and bill repeats.
+Intervals resample request/loss blocks, conditional on this shared library.
+
+Known limitation: final generic res_high_po drops p2/q2/p3/q3 in ngspice 41;
+the fixed-width families use supported expressions but are different devices.
+No equivalent circuit replacement has been validated. HD3 must be qualified
+as simulated-model evidence, with omitted resistor distortion NOT_VERIFIED.
+
+Baseline: 2946 passed, 13 deselected, two existing warnings in 293.47 s.
+The first baseline session lost its output on interruption; the durable rerun
+is tmp/score_baseline_20260907.log. New fail-first tests were observed to fail
+on the absent module, then the focused group passed 20 tests.
+Next: run the committed attribution protocol, preserve nulls/trade-offs,
+execute bounded coverage, correct/render report and package private evidence.
+
+Implementation regression: 2960 passed, 13 deselected, two existing warnings
+in 327.74 s. Coverage/model-audit helpers were added after suite collection;
+their focused gates are run before the protocol commit and the final full
+suite will include them. No supplemental measurement has started.
+
+
