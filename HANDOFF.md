@@ -17,8 +17,9 @@
 > decisions that are OPEN and human-only, and what to do next. It supersedes
 > `nebula/NEXT_STEPS.md`. This file remains the full state of record.
 
-Last updated: **2026-09-07**, session 61 / Entry 113. Attribution, bounded
-physical coverage and the 19-page report are complete. See outcome below.
+Last updated: **2026-09-08**, Entry 115 preregistration. Attribution,
+bounded physical coverage and the 19-page report are complete; the winning
+sprint is frozen.
 
 Previous status snapshot: **2026-09-06** (session 49, Entry 101: owner approved fresh fixed
 setting-490 validation. Fresh result PASS: 45/45 fixed PVT corners and 315/315
@@ -925,6 +926,7 @@ NOT_VERIFIED. Report has 19 visually checked pages; release_snapshot.py
 packages private source/evidence. Historical policies/results stay unchanged.
 Release membership includes required characterization CSVs and raw SPICE logs.
 Entry 114: final-page table replaced with a concise delivered-workflow conclusion.
+Entry 115: exhaustive regret and two-target physical recovery are preregistered; no result yet.
 
 Entry 101: `nebula/experiments/exp_fixed_candidate.py` validates setting 490
 using Entry 100's unchanged physical/DFE checks; `nebula/FIXED_490_PLAN.md`
@@ -1777,6 +1779,7 @@ NOT_VERIFIED. Report has 19 visually checked pages; release_snapshot.py
 packages private source/evidence. Historical policies/results stay unchanged.
 Release membership includes required characterization CSVs and raw SPICE logs.
 Entry 114: final-page table replaced with a concise delivered-workflow conclusion.
+Entry 115: exhaustive regret and two-target physical recovery are preregistered; no result yet.
 
 ### Phase 0 — audit + correctness (commit `ce733a8` equivalent; authors later rewritten, see G12)
 Bugs found in the inherited code and fixed:
@@ -1929,6 +1932,7 @@ NOT_VERIFIED. Report has 19 visually checked pages; release_snapshot.py
 packages private source/evidence. Historical policies/results stay unchanged.
 Release membership includes required characterization CSVs and raw SPICE logs.
 Entry 114: final-page table replaced with a concise delivered-workflow conclusion.
+Entry 115: exhaustive regret and two-target physical recovery are preregistered; no result yet.
 
 Entry 101: setting 490 freshly passes all 45 fixed PVT corners / 315 model
 conditions at 9 dB / 1.9 GHz (91 calls, 88.37 s). Nominal is 8.852970 dB /
@@ -2456,6 +2460,7 @@ NOT_VERIFIED. Report has 19 visually checked pages; release_snapshot.py
 packages private source/evidence. Historical policies/results stay unchanged.
 Release membership includes required characterization CSVs and raw SPICE logs.
 Entry 114: final-page table replaced with a concise delivered-workflow conclusion.
+Entry 115: exhaustive regret and two-target physical recovery are preregistered; no result yet.
 
 - **Entry 100 / full receiver:** no complete area footprint, transistor-level
   DFE/slicer/clock, physical Rs/Cs selector, or complete bias/control power has
@@ -2611,6 +2616,7 @@ NOT_VERIFIED. Report has 19 visually checked pages; release_snapshot.py
 packages private source/evidence. Historical policies/results stay unchanged.
 Release membership includes required characterization CSVs and raw SPICE logs.
 Entry 114: final-page table replaced with a concise delivered-workflow conclusion.
+Entry 115: exhaustive regret and two-target physical recovery are preregistered; no result yet.
 
 **Entry 100 audit complete; next decisions:** validate existing bank setting 490
 as a candidate fixed-robust 9 dB / 1.9 GHz export before any adoption or new
@@ -3099,6 +3105,7 @@ NOT_VERIFIED. Report has 19 visually checked pages; release_snapshot.py
 packages private source/evidence. Historical policies/results stay unchanged.
 Release membership includes required characterization CSVs and raw SPICE logs.
 Entry 114: final-page table replaced with a concise delivered-workflow conclusion.
+Entry 115: exhaustive regret and two-target physical recovery are preregistered; no result yet.
 
 **Entry 100 scope footgun:** a green historical S7 reward row is only a partial
 passive-area comparison, and 315 green adaptive conditions use multiple
@@ -16401,3 +16408,12 @@ temporary-copy documentation scan); immediate pre-edit report checks: 6 passed.
 Post-edit full regression: 2985 passed, 13 deselected, 2 warnings in 640.02s (0:10:40)
 PDF checks: 19 pages, source hashes and bounds PASS; page 19 visually checked.
 Pages 1-18 render pixel-identically to the previous approved report.
+
+### 2026-09-08 - Entry 115 / winning-sprint preregistration
+
+The owner authorised the ranked technical improvements after the independent
+review. WINNING_SPRINT_PLAN.md freezes an exhaustive-oracle regret/visit study
+on the five existing policies and automatic physical recovery for the two
+multi-candidate near-pass targets. No Entry-115 result or new SPICE candidate
+has been measured. Existing policy, reward, tolerances, circuit evidence and
+report remain unchanged. Baseline: 2985 passed, 13 deselected, two warnings.
