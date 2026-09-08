@@ -1,0 +1,77 @@
+{
+  "fixed": {
+    "setting": 417,
+    "n_corners": 45,
+    "n_invalid_corners": 0,
+    "n_expected_conditions": 315,
+    "n_model_pass": 308,
+    "representative_loss_db": 7.5,
+    "n_representative_pvt_pass": 44,
+    "failed_spec_counts": {
+      "S3_peaking_match": 7
+    },
+    "dfe_control_all_pass": true,
+    "dfe_policies": {
+      "ideal": {
+        "n_valid_control": 315,
+        "n_expected": 315,
+        "n_eye_pass": 315,
+        "min_eye_h_v": 0.1651381167338218,
+        "min_eye_w_ui": 0.78125,
+        "all_eyes_pass": true
+      },
+      "none": {
+        "n_valid_control": 315,
+        "n_expected": 315,
+        "n_eye_pass": 315,
+        "min_eye_h_v": 0.1618502405774462,
+        "min_eye_w_ui": 0.734375,
+        "all_eyes_pass": true
+      },
+      "misadapted": {
+        "n_valid_control": 315,
+        "n_expected": 315,
+        "n_eye_pass": 315,
+        "min_eye_h_v": 0.16448054150254668,
+        "min_eye_w_ui": 0.78125,
+        "all_eyes_pass": true
+      },
+      "quantised": {
+        "n_valid_control": 315,
+        "n_expected": 315,
+        "n_eye_pass": 315,
+        "min_eye_h_v": 0.1618502405774462,
+        "min_eye_w_ui": 0.78125,
+        "all_eyes_pass": true
+      }
+    },
+    "full_product_compliance": false,
+    "note": "Electrical model gate only: S7 excluded as unknown; behavioural DFE, typical passives, one load, constructed channels. NOT full hardware compliance.",
+    "area_status": "NOT_VERIFIED",
+    "electrical_specs": [
+      "S3_f_peak_band",
+      "S3_f_peak_match",
+      "S3_peaking",
+      "S3_peaking_match",
+      "S3_nyq_boost",
+      "S5_noise",
+      "S6_power",
+      "saturation",
+      "tail_saturation",
+      "S8_eye_h",
+      "S8_eye_w",
+      "S4_hd3_nyq",
+      "S4_hd3"
+    ],
+    "excluded_full_receiver_specs": [
+      "S7_area"
+    ],
+    "hd3_100mhz_worst_dbc": -79.2198969451304,
+    "hd3_nyquist_worst_dbc": -46.07715977422466,
+    "max_fit_residual_db": 0.10048222073144863
+  },
+  "spice_calls": 137,
+  "electrical_model_pass": false,
+  "full_product_compliance": false,
+  "wall_s": 88.83027870000024
+}

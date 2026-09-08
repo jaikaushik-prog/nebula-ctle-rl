@@ -1,0 +1,334 @@
+{
+  "deck_sha256": "ed8bd71774dcd22f7c0a6bea65447f380d91083106ced500251efdb7b243272b",
+  "components": [
+    {
+      "name": "vdd",
+      "netlist_line": "vdd vdd 0 {vdd}",
+      "geometry_um2": null,
+      "kind": "supply_or_testbench"
+    },
+    {
+      "name": "vcm",
+      "netlist_line": "vcm cm 0 {vcm}",
+      "geometry_um2": null,
+      "kind": "supply_or_testbench"
+    },
+    {
+      "name": "vid",
+      "netlist_line": "vid vid 0 dc 0 ac 1",
+      "geometry_um2": null,
+      "kind": "supply_or_testbench"
+    },
+    {
+      "name": "einp",
+      "netlist_line": "einp inx cm vid 0 0.5",
+      "geometry_um2": null,
+      "kind": "supply_or_testbench"
+    },
+    {
+      "name": "einn",
+      "netlist_line": "einn iny cm vid 0 -0.5",
+      "geometry_um2": null,
+      "kind": "supply_or_testbench"
+    },
+    {
+      "name": "xatt_sp",
+      "netlist_line": "xatt_sp inx inp 0 sky130_fd_pr__res_high_po w=10 l=3.41",
+      "geometry_um2": 34.1,
+      "model": "sky130_fd_pr__res_high_po",
+      "w_um": 10.0,
+      "l_um": 3.41,
+      "multiplier": 1.0,
+      "kind": "passive_body_plate"
+    },
+    {
+      "name": "xatt_sn",
+      "netlist_line": "xatt_sn iny inn 0 sky130_fd_pr__res_high_po w=10 l=3.41",
+      "geometry_um2": 34.1,
+      "model": "sky130_fd_pr__res_high_po",
+      "w_um": 10.0,
+      "l_um": 3.41,
+      "multiplier": 1.0,
+      "kind": "passive_body_plate"
+    },
+    {
+      "name": "xatt_rp0",
+      "netlist_line": "xatt_rp0 inp att_p0 0 sky130_fd_pr__res_high_po w=8 l=16.22",
+      "geometry_um2": 129.76,
+      "model": "sky130_fd_pr__res_high_po",
+      "w_um": 8.0,
+      "l_um": 16.22,
+      "multiplier": 1.0,
+      "kind": "passive_body_plate"
+    },
+    {
+      "name": "xatt_swp0",
+      "netlist_line": "xatt_swp0 att_p0 0 cm vdd sky130_fd_pr__pfet_01v8 w=40 l=0.15 nf=1",
+      "geometry_um2": 6.0,
+      "model": "sky130_fd_pr__pfet_01v8",
+      "w_um": 40.0,
+      "l_um": 0.15,
+      "multiplier": 1.0,
+      "kind": "mos_gate"
+    },
+    {
+      "name": "xatt_rn0",
+      "netlist_line": "xatt_rn0 inn att_n0 0 sky130_fd_pr__res_high_po w=8 l=16.22",
+      "geometry_um2": 129.76,
+      "model": "sky130_fd_pr__res_high_po",
+      "w_um": 8.0,
+      "l_um": 16.22,
+      "multiplier": 1.0,
+      "kind": "passive_body_plate"
+    },
+    {
+      "name": "xatt_swn0",
+      "netlist_line": "xatt_swn0 att_n0 0 cm vdd sky130_fd_pr__pfet_01v8 w=40 l=0.15 nf=1",
+      "geometry_um2": 6.0,
+      "model": "sky130_fd_pr__pfet_01v8",
+      "w_um": 40.0,
+      "l_um": 0.15,
+      "multiplier": 1.0,
+      "kind": "mos_gate"
+    },
+    {
+      "name": "xatt_rp1",
+      "netlist_line": "xatt_rp1 inp att_p1 0 sky130_fd_pr__res_high_po w=5.73 l=4.97",
+      "geometry_um2": 28.4781,
+      "model": "sky130_fd_pr__res_high_po",
+      "w_um": 5.73,
+      "l_um": 4.97,
+      "multiplier": 1.0,
+      "kind": "passive_body_plate"
+    },
+    {
+      "name": "xatt_swp1",
+      "netlist_line": "xatt_swp1 att_p1 0 cm vdd sky130_fd_pr__pfet_01v8 w=80 l=0.15 nf=2",
+      "geometry_um2": 12.0,
+      "model": "sky130_fd_pr__pfet_01v8",
+      "w_um": 80.0,
+      "l_um": 0.15,
+      "multiplier": 1.0,
+      "kind": "mos_gate"
+    },
+    {
+      "name": "xatt_rn1",
+      "netlist_line": "xatt_rn1 inn att_n1 0 sky130_fd_pr__res_high_po w=5.73 l=4.97",
+      "geometry_um2": 28.4781,
+      "model": "sky130_fd_pr__res_high_po",
+      "w_um": 5.73,
+      "l_um": 4.97,
+      "multiplier": 1.0,
+      "kind": "passive_body_plate"
+    },
+    {
+      "name": "xatt_swn1",
+      "netlist_line": "xatt_swn1 att_n1 0 cm vdd sky130_fd_pr__pfet_01v8 w=80 l=0.15 nf=2",
+      "geometry_um2": 12.0,
+      "model": "sky130_fd_pr__pfet_01v8",
+      "w_um": 80.0,
+      "l_um": 0.15,
+      "multiplier": 1.0,
+      "kind": "mos_gate"
+    },
+    {
+      "name": "xatt_rp2",
+      "netlist_line": "xatt_rp2 inp att_p2 0 sky130_fd_pr__res_high_po w=5.73 l=4.97 m=2",
+      "geometry_um2": 56.9562,
+      "model": "sky130_fd_pr__res_high_po",
+      "w_um": 5.73,
+      "l_um": 4.97,
+      "multiplier": 2.0,
+      "kind": "passive_body_plate"
+    },
+    {
+      "name": "xatt_swp2",
+      "netlist_line": "xatt_swp2 att_p2 0 cm vdd sky130_fd_pr__pfet_01v8 w=160 l=0.15 nf=4",
+      "geometry_um2": 24.0,
+      "model": "sky130_fd_pr__pfet_01v8",
+      "w_um": 160.0,
+      "l_um": 0.15,
+      "multiplier": 1.0,
+      "kind": "mos_gate"
+    },
+    {
+      "name": "xatt_rn2",
+      "netlist_line": "xatt_rn2 inn att_n2 0 sky130_fd_pr__res_high_po w=5.73 l=4.97 m=2",
+      "geometry_um2": 56.9562,
+      "model": "sky130_fd_pr__res_high_po",
+      "w_um": 5.73,
+      "l_um": 4.97,
+      "multiplier": 2.0,
+      "kind": "passive_body_plate"
+    },
+    {
+      "name": "xatt_swn2",
+      "netlist_line": "xatt_swn2 att_n2 0 cm vdd sky130_fd_pr__pfet_01v8 w=160 l=0.15 nf=4",
+      "geometry_um2": 24.0,
+      "model": "sky130_fd_pr__pfet_01v8",
+      "w_um": 160.0,
+      "l_um": 0.15,
+      "multiplier": 1.0,
+      "kind": "mos_gate"
+    },
+    {
+      "name": "xm1",
+      "netlist_line": "xm1 outp inp s1 0 sky130_fd_pr__nfet_01v8 w={w} l={l} nf={nf}",
+      "geometry_um2": 22.677553500850614,
+      "model": "sky130_fd_pr__nfet_01v8",
+      "w_um": 57.97671772296124,
+      "l_um": 0.3911493163378813,
+      "multiplier": 1.0,
+      "kind": "mos_gate"
+    },
+    {
+      "name": "xm2",
+      "netlist_line": "xm2 outn inn s2 0 sky130_fd_pr__nfet_01v8 w={w} l={l} nf={nf}",
+      "geometry_um2": 22.677553500850614,
+      "model": "sky130_fd_pr__nfet_01v8",
+      "w_um": 57.97671772296124,
+      "l_um": 0.3911493163378813,
+      "multiplier": 1.0,
+      "kind": "mos_gate"
+    },
+    {
+      "name": "xrlp",
+      "netlist_line": "xrlp vdd outp 0 sky130_fd_pr__res_high_po w=10 l=14.745 m=2",
+      "geometry_um2": 294.9,
+      "model": "sky130_fd_pr__res_high_po",
+      "w_um": 10.0,
+      "l_um": 14.745,
+      "multiplier": 2.0,
+      "kind": "passive_body_plate"
+    },
+    {
+      "name": "xrln",
+      "netlist_line": "xrln vdd outn 0 sky130_fd_pr__res_high_po w=10 l=14.745 m=2",
+      "geometry_um2": 294.9,
+      "model": "sky130_fd_pr__res_high_po",
+      "w_um": 10.0,
+      "l_um": 14.745,
+      "multiplier": 2.0,
+      "kind": "passive_body_plate"
+    },
+    {
+      "name": "xrs",
+      "netlist_line": "xrs s1 s2 0 sky130_fd_pr__res_high_po w=5.73 l=2.055",
+      "geometry_um2": 11.775150000000002,
+      "model": "sky130_fd_pr__res_high_po",
+      "w_um": 5.73,
+      "l_um": 2.055,
+      "multiplier": 1.0,
+      "kind": "passive_body_plate"
+    },
+    {
+      "name": "xcs",
+      "netlist_line": "xcs s1 s2 sky130_fd_pr__cap_mim_m3_1 w=37.595 l=37.595",
+      "geometry_um2": 1413.3840249999998,
+      "model": "sky130_fd_pr__cap_mim_m3_1",
+      "w_um": 37.595,
+      "l_um": 37.595,
+      "multiplier": 1.0,
+      "kind": "passive_body_plate"
+    },
+    {
+      "name": "xbpref",
+      "netlist_line": "xbpref p_bias p_bias vdd vdd sky130_fd_pr__pfet_01v8 w=25.2069 l=0.5 nf=1",
+      "geometry_um2": 12.60345,
+      "model": "sky130_fd_pr__pfet_01v8",
+      "w_um": 25.2069,
+      "l_um": 0.5,
+      "multiplier": 1.0,
+      "kind": "mos_gate"
+    },
+    {
+      "name": "xbpfeed",
+      "netlist_line": "xbpfeed nbias p_bias vdd vdd sky130_fd_pr__pfet_01v8 w=25.2069 l=0.5 nf=1",
+      "geometry_um2": 12.60345,
+      "model": "sky130_fd_pr__pfet_01v8",
+      "w_um": 25.2069,
+      "l_um": 0.5,
+      "multiplier": 1.0,
+      "kind": "mos_gate"
+    },
+    {
+      "name": "xrbias",
+      "netlist_line": "xrbias p_bias 0 0 sky130_fd_pr__res_high_po w=1 l=5.34 m=1",
+      "geometry_um2": 5.34,
+      "model": "sky130_fd_pr__res_high_po",
+      "w_um": 1.0,
+      "l_um": 5.34,
+      "multiplier": 1.0,
+      "kind": "passive_body_plate"
+    },
+    {
+      "name": "xmr",
+      "netlist_line": "xmr nbias nbias 0 0 sky130_fd_pr__nfet_01v8 w={wref} l={lt} nf={nfref}",
+      "geometry_um2": 12.60345,
+      "model": "sky130_fd_pr__nfet_01v8",
+      "w_um": 25.2069,
+      "l_um": 0.5,
+      "multiplier": 1.0,
+      "kind": "mos_gate"
+    },
+    {
+      "name": "xmt1",
+      "netlist_line": "xmt1 s1 nbias 0 0 sky130_fd_pr__nfet_01v8 w={wt} l={lt} nf={nft}",
+      "geometry_um2": 100.828,
+      "model": "sky130_fd_pr__nfet_01v8",
+      "w_um": 201.656,
+      "l_um": 0.5,
+      "multiplier": 1.0,
+      "kind": "mos_gate"
+    },
+    {
+      "name": "xmt2",
+      "netlist_line": "xmt2 s2 nbias 0 0 sky130_fd_pr__nfet_01v8 w={wt} l={lt} nf={nft}",
+      "geometry_um2": 100.828,
+      "model": "sky130_fd_pr__nfet_01v8",
+      "w_um": 201.656,
+      "l_um": 0.5,
+      "multiplier": 1.0,
+      "kind": "mos_gate"
+    },
+    {
+      "name": "xcbyp",
+      "netlist_line": "xcbyp nbias 0 sky130_fd_pr__cap_mim_m3_1 w=70.545 l=70.545 m=1",
+      "geometry_um2": 4976.597025,
+      "model": "sky130_fd_pr__cap_mim_m3_1",
+      "w_um": 70.545,
+      "l_um": 70.545,
+      "multiplier": 1.0,
+      "kind": "passive_body_plate"
+    },
+    {
+      "name": "clp",
+      "netlist_line": "clp outp 0 {cl}",
+      "geometry_um2": null,
+      "kind": "external_load_assumption",
+      "value": 3.262805963205924e-14
+    },
+    {
+      "name": "cln",
+      "netlist_line": "cln outn 0 {cl}",
+      "geometry_um2": null,
+      "kind": "external_load_assumption",
+      "value": 3.262805963205924e-14
+    }
+  ],
+  "legacy_passive_area_mm2": 0.0020149591749999995,
+  "passive_body_plate_mm2": 0.0074954848,
+  "mos_gate_area_mm2": 0.0003688214570017012,
+  "geometry_subtotal_mm2": 0.007864306257001701,
+  "full_area_mm2": null,
+  "layout_overhead_mm2": null,
+  "s7_status": "NOT_VERIFIED",
+  "unresolved": [],
+  "not_in_netlist": [
+    "transistor-level DFE/slicer/clocking",
+    "physical Rs/Cs selector and control logic",
+    "common-mode generation",
+    "contacts, diffusion, wells, guards, routing, spacing and floorplan"
+  ],
+  "note": "Geometry subtotal only, not laid-out cell/core area. No arbitrary overhead factor. Physical bypass-capacitor plates are included when present in the deck. CLp/CLn are assumed external loads; an integrated receiver must account for their realization."
+}

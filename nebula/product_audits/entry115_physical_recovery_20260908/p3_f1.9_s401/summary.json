@@ -1,0 +1,75 @@
+{
+  "fixed": {
+    "setting": 401,
+    "n_corners": 45,
+    "n_invalid_corners": 0,
+    "n_expected_conditions": 315,
+    "n_model_pass": 315,
+    "representative_loss_db": 7.5,
+    "n_representative_pvt_pass": 45,
+    "failed_spec_counts": {},
+    "dfe_control_all_pass": true,
+    "dfe_policies": {
+      "ideal": {
+        "n_valid_control": 315,
+        "n_expected": 315,
+        "n_eye_pass": 315,
+        "min_eye_h_v": 0.17014200852470485,
+        "min_eye_w_ui": 0.796875,
+        "all_eyes_pass": true
+      },
+      "none": {
+        "n_valid_control": 315,
+        "n_expected": 315,
+        "n_eye_pass": 315,
+        "min_eye_h_v": 0.16173728133601192,
+        "min_eye_w_ui": 0.75,
+        "all_eyes_pass": true
+      },
+      "misadapted": {
+        "n_valid_control": 315,
+        "n_expected": 315,
+        "n_eye_pass": 315,
+        "min_eye_h_v": 0.16846106308696626,
+        "min_eye_w_ui": 0.78125,
+        "all_eyes_pass": true
+      },
+      "quantised": {
+        "n_valid_control": 315,
+        "n_expected": 315,
+        "n_eye_pass": 315,
+        "min_eye_h_v": 0.16403088283822703,
+        "min_eye_w_ui": 0.796875,
+        "all_eyes_pass": true
+      }
+    },
+    "full_product_compliance": false,
+    "note": "Electrical model gate only: S7 excluded as unknown; behavioural DFE, typical passives, one load, constructed channels. NOT full hardware compliance.",
+    "area_status": "NOT_VERIFIED",
+    "electrical_specs": [
+      "S3_f_peak_band",
+      "S3_f_peak_match",
+      "S3_peaking",
+      "S3_peaking_match",
+      "S3_nyq_boost",
+      "S5_noise",
+      "S6_power",
+      "saturation",
+      "tail_saturation",
+      "S8_eye_h",
+      "S8_eye_w",
+      "S4_hd3_nyq",
+      "S4_hd3"
+    ],
+    "excluded_full_receiver_specs": [
+      "S7_area"
+    ],
+    "hd3_100mhz_worst_dbc": -73.50177863077752,
+    "hd3_nyquist_worst_dbc": -46.32443264849056,
+    "max_fit_residual_db": 0.09442674364871029
+  },
+  "spice_calls": 137,
+  "electrical_model_pass": true,
+  "full_product_compliance": false,
+  "wall_s": 103.72113269999954
+}

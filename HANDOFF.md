@@ -17,9 +17,9 @@
 > decisions that are OPEN and human-only, and what to do next. It supersedes
 > `nebula/NEXT_STEPS.md`. This file remains the full state of record.
 
-Last updated: **2026-09-08**, Entry 115A outcome. The 91.7657x cached
-candidate-visit gate passes, near-optimality fails, and the physical recovery
-runner is frozen before measurement.
+Last updated: **2026-09-08**, Entry 115B complete. Three fixed physical
+targets pass 315/315 conditions, the verified registry is integrated, and the
+final report and complete regression pass.
 
 Previous status snapshot: **2026-09-06** (session 49, Entry 101: owner approved fresh fixed
 setting-490 validation. Fresh result PASS: 45/45 fixed PVT corners and 315/315
@@ -928,6 +928,7 @@ Release membership includes required characterization CSVs and raw SPICE logs.
 Entry 114: final-page table replaced with a concise delivered-workflow conclusion.
 Entry 115: exhaustive regret and two-target physical recovery are preregistered; no result yet.
 Entry 115A: 91.7657x visit-reduction gate passes; near-optimality fails; physical recovery is not yet measured.
+Entry 115B: 3/6/9 dB at 1.9 GHz pass 315/315; verified registry, report and 2996-test regression complete.
 
 Entry 101: `nebula/experiments/exp_fixed_candidate.py` validates setting 490
 using Entry 100's unchanged physical/DFE checks; `nebula/FIXED_490_PLAN.md`
@@ -1782,6 +1783,7 @@ Release membership includes required characterization CSVs and raw SPICE logs.
 Entry 114: final-page table replaced with a concise delivered-workflow conclusion.
 Entry 115: exhaustive regret and two-target physical recovery are preregistered; no result yet.
 Entry 115A: 91.7657x visit-reduction gate passes; near-optimality fails; physical recovery is not yet measured.
+Entry 115B: 3/6/9 dB at 1.9 GHz pass 315/315; verified registry, report and 2996-test regression complete.
 
 ### Phase 0 — audit + correctness (commit `ce733a8` equivalent; authors later rewritten, see G12)
 Bugs found in the inherited code and fixed:
@@ -1936,6 +1938,7 @@ Release membership includes required characterization CSVs and raw SPICE logs.
 Entry 114: final-page table replaced with a concise delivered-workflow conclusion.
 Entry 115: exhaustive regret and two-target physical recovery are preregistered; no result yet.
 Entry 115A: 91.7657x visit-reduction gate passes; near-optimality fails; physical recovery is not yet measured.
+Entry 115B: 3/6/9 dB at 1.9 GHz pass 315/315; verified registry, report and 2996-test regression complete.
 
 Entry 101: setting 490 freshly passes all 45 fixed PVT corners / 315 model
 conditions at 9 dB / 1.9 GHz (91 calls, 88.37 s). Nominal is 8.852970 dB /
@@ -2465,6 +2468,7 @@ Release membership includes required characterization CSVs and raw SPICE logs.
 Entry 114: final-page table replaced with a concise delivered-workflow conclusion.
 Entry 115: exhaustive regret and two-target physical recovery are preregistered; no result yet.
 Entry 115A: 91.7657x visit-reduction gate passes; near-optimality fails; physical recovery is not yet measured.
+Entry 115B: 3/6/9 dB at 1.9 GHz pass 315/315; verified registry, report and 2996-test regression complete.
 
 - **Entry 100 / full receiver:** no complete area footprint, transistor-level
   DFE/slicer/clock, physical Rs/Cs selector, or complete bias/control power has
@@ -2622,6 +2626,7 @@ Release membership includes required characterization CSVs and raw SPICE logs.
 Entry 114: final-page table replaced with a concise delivered-workflow conclusion.
 Entry 115: exhaustive regret and two-target physical recovery are preregistered; no result yet.
 Entry 115A: 91.7657x visit-reduction gate passes; near-optimality fails; physical recovery is not yet measured.
+Entry 115B: 3/6/9 dB at 1.9 GHz pass 315/315; verified registry, report and 2996-test regression complete.
 
 **Entry 100 audit complete; next decisions:** validate existing bank setting 490
 as a candidate fixed-robust 9 dB / 1.9 GHz export before any adoption or new
@@ -3112,6 +3117,7 @@ Release membership includes required characterization CSVs and raw SPICE logs.
 Entry 114: final-page table replaced with a concise delivered-workflow conclusion.
 Entry 115: exhaustive regret and two-target physical recovery are preregistered; no result yet.
 Entry 115A: 91.7657x visit-reduction gate passes; near-optimality fails; physical recovery is not yet measured.
+Entry 115B: 3/6/9 dB at 1.9 GHz pass 315/315; verified registry, report and 2996-test regression complete.
 
 **Entry 100 scope footgun:** a green historical S7 reward row is only a partial
 passive-area comparison, and 315 green adaptive conditions use multiple
@@ -16439,3 +16445,27 @@ recovery runner. It verifies the preserved coverage hashes and candidate
 membership, attempts all ten frozen candidates even after a pass, retains raw
 failures and enforces the 1,370-call aggregate ceiling. No Entry-115B candidate
 has been simulated yet. Focused implementation checks: 23 passed.
+
+### 2026-09-08 - Entry 115B / recovered targets, automated registry and final report
+
+The frozen recovery run completed all ten candidates and exactly 1,370 fresh
+SPICE calls in 952.04 s. Setting 401 passes 315/315 conditions for 3 dB /
+1.9 GHz. Settings 474, 410 and 352 pass 315/315 for 6 dB / 1.9 GHz;
+the preregistered first passing choice is 474. All 6,172 output-file hashes
+verify. Together with setting 490 at 9 dB / 1.9 GHz, three fixed physical
+target points are now demonstrated. These are electrical-model results with
+behavioural DFE and a geometry subtotal, not full receiver sign-off.
+
+Added physical_verified_registry.json and fail-closed product selection. Exact
+3 dB and 6 dB requests verify the accepted result, nested manifest, every raw
+hash, setting and circuit identity before selection; fresh acceptance still
+remeasures the candidate. Unknown targets retain the existing selector. The
+registry is included in each new physical run provenance snapshot.
+
+The 19-page competition report now leads with three demonstrated 1.9 GHz target
+points and the 91.7657x cached candidate-visit reduction. Detailed regret and
+failed-candidate rows remain in the companion evidence. Pages 2, 15, 18 and 19
+were visually reviewed; Poppler/text/bounds/source checks pass. Final PDF hash:
+f6b5cda581c148a5bf6fc928357e752a32b8a602dc5c1dce7c071e248d399117.
+
+Full after-suite: 2996 passed, 13 deselected, two known warnings in 593.94 s.

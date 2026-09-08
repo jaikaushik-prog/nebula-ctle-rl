@@ -24,6 +24,53 @@ from nebula.report.product_scope import area_inventory, circuit_signature, imple
 ROOT = Path(__file__).resolve().parents[1]
 MODE = 'fresh-fixed-physical-bias-v1'
 MAX_CALLS = 137
+VERIFIED_REGISTRY = ROOT / 'nebula/physical_verified_registry.json'
+
+
+def verified_physical_entry(peaking_db, f_peak_hz):
+    """Return an exact-target setting only after all saved evidence hashes pass."""
+    if not VERIFIED_REGISTRY.is_file():
+        return None
+    data = json.loads(VERIFIED_REGISTRY.read_text(encoding='utf-8'))
+    if data.get('schema') != 'nebula-physical-verified-setting-v1':
+        raise ValueError('unknown physical verified-setting registry schema')
+    matches = [entry for entry in data.get('entries', [])
+               if abs(float(entry['peaking_db']) - float(peaking_db)) <= 1e-12
+               and abs(float(entry['f_peak_hz']) - float(f_peak_hz)) <= 1.]
+    if not matches:
+        return None
+    if len(matches) != 1:
+        raise ValueError('duplicate physical verified-setting registry target')
+    entry = dict(matches[0])
+    directory = (ROOT / entry['evidence_dir']).resolve()
+    if not directory.is_relative_to(ROOT.resolve()):
+        raise ValueError('physical registry evidence escapes repository')
+    result_path = directory / 'result.json'
+    manifest_path = directory / 'evidence_sha256.json'
+    expected = ((result_path, entry['result_json_sha256']),
+                (manifest_path, entry['evidence_manifest_sha256']))
+    for evidence_path, evidence_hash in expected:
+        if (not evidence_path.is_file()
+                or hashlib.sha256(evidence_path.read_bytes()).hexdigest() != evidence_hash):
+            raise ValueError(f'physical registry evidence hash mismatch: {evidence_path.name}')
+    manifest = json.loads(manifest_path.read_text(encoding='utf-8'))
+    for name, expected_hash in manifest.items():
+        evidence_path = (directory / name).resolve()
+        if (not evidence_path.is_relative_to(directory)
+                or not evidence_path.is_file()
+                or hashlib.sha256(evidence_path.read_bytes()).hexdigest() != expected_hash):
+            raise ValueError(f'physical registry raw hash mismatch: {name}')
+    result = json.loads(result_path.read_text(encoding='utf-8'))
+    if (not is_verified(result)
+            or result['search']['setting'] != int(entry['setting'])
+            or result['verification']['n_pass'] != int(entry['n_model_pass'])
+            or result['verification']['n_points'] != int(entry['n_expected_conditions'])
+            or result['physical_evidence']['deck_sha256'] != entry['deck_sha256']
+            or result['physical_evidence']['circuit_signature'] != entry['circuit_signature']):
+        raise ValueError('physical registry result does not match its accepted evidence')
+    entry['registry_sha256'] = hashlib.sha256(VERIFIED_REGISTRY.read_bytes()).hexdigest()
+    return entry
+
 
 
 def select_fixed_setting(table, request, nominal_setting, losses, forced_setting=None):
@@ -50,10 +97,14 @@ def propose(peaking_db, f_peak_hz, loss_db, forced_setting=None):
     from nebula.rl import hybrid_designer as H
     from nebula.experiments import exp_joint_bank as J, exp_joint_bank_73 as B
     old = H.solve(peaking_db, f_peak_hz, loss_db)
+    registered = None if forced_setting is not None else verified_physical_entry(
+        peaking_db, f_peak_hz)
+    requested_setting = (forced_setting if forced_setting is not None
+                         else registered['setting'] if registered else None)
     table, _, _, _ = H._load_assets()
     setting, eligible, checks = select_fixed_setting(
         table, (peaking_db, f_peak_hz), old['setting'], old['channel_losses_db'],
-        forced_setting=forced_setting)
+        forced_setting=requested_setting)
     _, _, base_u, _ = B._load_sources()
     bank = J.bank(base_u, n_rs=J.N_RS, n_cs=J.N_CS, rs_span=J.RS_SPAN, cs_span=J.CS_SPAN)
     atten, code = J.split_setting(setting)
@@ -65,8 +116,13 @@ def propose(peaking_db, f_peak_hz, loss_db, forced_setting=None):
                   fixed_prescreen_rows_checked=checks,
                   fixed_selection_reason=(
                       'entry115-preregistered-eligible-candidate' if forced_setting is not None
+                      else 'verified-physical-registry' if registered
                       else 'kept-nominal' if setting == old['setting'] else 'lowest-fixed-eligible'),
-                  selection_objective='legacy fixed intersection proposes one candidate; fresh physical electrical gate decides',
+                  verified_physical_entry=registered,
+                  selection_objective=(
+                      'hash-verified physical registry selects an exact-target candidate; '
+                      'fresh physical electrical gate remeasures it' if registered else
+                      'legacy fixed intersection proposes one candidate; fresh physical electrical gate decides'),
                   evidence_warning='Old-bank reward/verification are not physical-bias evidence.')
     return search, old
 
@@ -163,7 +219,8 @@ def _snapshots(out):
              ROOT / 'nebula/rl/reward_v1.py', ROOT / 'nebula/rl/evaluator.py',
              ROOT / 'nebula/link/bridge.py', ROOT / 'nebula/link/fit.py',
              ROOT / 'nebula/link/config.py', ROOT / 'nebula/link/dfe_ablation.py',
-             ROOT / 'nebula/PHYSICAL_PRODUCT_PLAN.md', S.SPICE_DIR / '.spiceinit']
+             ROOT / 'nebula/PHYSICAL_PRODUCT_PLAN.md', VERIFIED_REGISTRY,
+             S.SPICE_DIR / '.spiceinit']
     folder = out / 'inputs'
     folder.mkdir()
     hashes = {}

@@ -1,0 +1,104 @@
+* nebula sky130 sizing point (auto-generated; do not edit by hand)
+.lib "C:/Users/DELL/Desktop/serdes-dsp-framework-main/nebula/device/spice/pdk_trim/sections/sky130_ctle_pfet__sf.lib.spice" sf
+.temp 0.0
+
+.param W=57.97671772296124 L=0.3911493163378813 NF=4
+.param RL=254.6329712064977 RS=186.18171257647606 CS=2.8515485554341908e-12 IT=0.001813449296655868 CL=3.262805963205924e-14
+.param VDD=1.89 VCM=1.5010229732197666
+
+Vdd   vdd 0 {VDD}
+Vcm   cm  0 {VCM}
+
+* One swept/AC source, two VCVSs: v(inp,inn) == v(vid) exactly. This makes the
+* .noise input reference DIFFERENTIAL (see the module docstring) and lets .dc
+* sweep the differential input directly.
+Vid   vid 0 dc 0 ac 1 sin(0 0.1 1e+08)
+Einp  inx cm vid 0 0.5
+Einn  iny cm vid 0 -0.5
+* Input attenuator (D16), code 6 of 7: A = 0.4697 (6.56 dB).
+* Explicit diagnostic/historical range: 2.31739x.
+* Production D16 default: 2.31739x maximum.
+Xatt_sp inx inp 0 sky130_fd_pr__res_high_po w=10 l=3.41
+Xatt_sn iny inn 0 sky130_fd_pr__res_high_po w=10 l=3.41
+Xatt_rp0 inp att_p0 0 sky130_fd_pr__res_high_po w=8 l=16.22
+Xatt_swp0 att_p0 vdd cm vdd sky130_fd_pr__pfet_01v8 W=40 L=0.15 nf=1
+Xatt_rn0 inn att_n0 0 sky130_fd_pr__res_high_po w=8 l=16.22
+Xatt_swn0 att_n0 vdd cm vdd sky130_fd_pr__pfet_01v8 W=40 L=0.15 nf=1
+Xatt_rp1 inp att_p1 0 sky130_fd_pr__res_high_po w=5.73 l=4.97
+Xatt_swp1 att_p1 0 cm vdd sky130_fd_pr__pfet_01v8 W=80 L=0.15 nf=2
+Xatt_rn1 inn att_n1 0 sky130_fd_pr__res_high_po w=5.73 l=4.97
+Xatt_swn1 att_n1 0 cm vdd sky130_fd_pr__pfet_01v8 W=80 L=0.15 nf=2
+Xatt_rp2 inp att_p2 0 sky130_fd_pr__res_high_po w=5.73 l=4.97 m=2
+Xatt_swp2 att_p2 0 cm vdd sky130_fd_pr__pfet_01v8 W=160 L=0.15 nf=4
+Xatt_rn2 inn att_n2 0 sky130_fd_pr__res_high_po w=5.73 l=4.97 m=2
+Xatt_swn2 att_n2 0 cm vdd sky130_fd_pr__pfet_01v8 W=160 L=0.15 nf=4
+
+XM1   outp inp s1 0 sky130_fd_pr__nfet_01v8 W={W} L={L} nf={NF}
+XM2   outn inn s2 0 sky130_fd_pr__nfet_01v8 W={W} L={L} nf={NF}
+
+* Load resistors: SKY130 poly, drawn geometry from passives.to_geometry().
+* Third terminal is the substrate -- it carries the res_po bottom-plate
+* parasitic, half of which lands on the output node (PASSIVES.md 4.4).
+Xrlp  vdd outp 0 sky130_fd_pr__res_high_po w=10 l=14.745 m=2
+Xrln  vdd outn 0 sky130_fd_pr__res_high_po w=10 l=14.745 m=2
+
+* Degeneration, between the two SOURCES (the /2 in k = 1 + (gm+gmbs)*Rs/2).
+Xrs   s1 s2 0 sky130_fd_pr__res_high_po w=5.73 l=2.055
+* MIM: two terminals, no bulk node -- the model carries no bottom plate at all
+* (PASSIVES.md 4.4), which is a modelling absence, not a physical one.
+Xcs   s1 s2 sky130_fd_pr__cap_mim_m3_1 w=37.595 l=37.595
+
+
+* Current-mirror tail. N = W_tail/W_ref = 8; the reference device is one
+* unit of the same finger width, so the mirror ratio is set by geometry and not
+* by a voltage that would drift against vth across corners.
+.param WT=201.656 LT=0.5 NFT=8
+.param WREF=25.2069 NFREF=1 IREF=0.000226681162 CBYP=1e-11
+
+* Physical supply-dependent reference prototype, not a precision reference.
+* IREF is the nominal sizing target below, not an ideal current source.
+Xbpref p_bias p_bias vdd vdd sky130_fd_pr__pfet_01v8 W=25.2069 L=0.5 nf=1
+Xbpfeed nbias p_bias vdd vdd sky130_fd_pr__pfet_01v8 W=25.2069 L=0.5 nf=1
+Xrbias p_bias 0 0 sky130_fd_pr__res_high_po w=1 l=5.34 m=1
+XMR   nbias nbias 0 0 sky130_fd_pr__nfet_01v8 W={WREF} L={LT} nf={NFREF}
+XMT1  s1    nbias 0 0 sky130_fd_pr__nfet_01v8 W={WT} L={LT} nf={NFT}
+XMT2  s2    nbias 0 0 sky130_fd_pr__nfet_01v8 W={WT} L={LT} nf={NFT}
+* Physical MIM bypass; body/plate area is counted, layout remains unverified.
+Xcbyp nbias 0 sky130_fd_pr__cap_mim_m3_1 w=70.545 l=70.545 m=1
+
+CLp   outp 0 {CL}
+CLn   outn 0 {CL}
+
+.control
+set noaskquit
+set numdgt=15
+set filetype=ascii
+
+op
+print v(p_bias)
+print @m.xbpref.msky130_fd_pr__pfet_01v8[id] @m.xbpfeed.msky130_fd_pr__pfet_01v8[id]
+print @m.xm1.msky130_fd_pr__nfet_01v8[gm] @m.xm1.msky130_fd_pr__nfet_01v8[gmbs] @m.xm1.msky130_fd_pr__nfet_01v8[gds]
+print @m.xm1.msky130_fd_pr__nfet_01v8[vth] @m.xm1.msky130_fd_pr__nfet_01v8[vds] @m.xm1.msky130_fd_pr__nfet_01v8[vdsat]
+print @m.xm1.msky130_fd_pr__nfet_01v8[vgs] @m.xm1.msky130_fd_pr__nfet_01v8[id]
+print v(outp) v(s1)
+* Supply branch current. The MEASURED power, so a mirror's reference branch and
+* its gain error are billed rather than assumed (rule 1). Negated in Python:
+* ngspice reports current INTO the source's + terminal.
+print i(Vdd)
+print @m.xmt1.msky130_fd_pr__nfet_01v8[id] @m.xmt1.msky130_fd_pr__nfet_01v8[vds]
+print @m.xmt1.msky130_fd_pr__nfet_01v8[vdsat] @m.xmt1.msky130_fd_pr__nfet_01v8[vgs]
+print @m.xmt1.msky130_fd_pr__nfet_01v8[vth] @m.xmt1.msky130_fd_pr__nfet_01v8[gm]
+print @m.xmr.msky130_fd_pr__nfet_01v8[id] v(nbias)
+
+
+* S4: HD3 from transient + FFT. `.disto` returns exactly 0.0 on BSIM4 (G21).
+* Exactly 20 cycles captured after 5 cycles of settling,
+* so the FFT window has no leakage. The FFT itself is done in Python (rule 10).
+tran 1e-10 2.5e-07 5e-08
+linearize
+let vd_t = v(outp) - v(outn)
+wrdata hd3.txt vd_t
+
+quit
+.endc
+.end

@@ -30,9 +30,28 @@ Evidence:
 `product_audits/entry115_exhaustive_benchmark_20260908/summary.json`,
 `per_identity.jsonl.gz` and `sha256.json`.
 
-## B. Fixed physical-candidate recovery (pending)
+## B. Fixed physical-candidate recovery (complete)
 
-The runner and tests are frozen before measurement. It will attempt all ten
-remaining candidates in the order recorded by `WINNING_SPRINT_PLAN.md`; it
-will retain both passing and failing raw evidence. This is a classical recovery
-experiment, not RL ranking.
+All ten frozen candidates were measured in the preregistered order with 1,370
+fresh SPICE calls. Both near-pass targets were recovered without changing the
+circuit topology, PVT grid, channel grid, tolerances or acceptance predicate.
+
+| Target | Preserved first miss | First passing setting | Result |
+|---|---:|---:|---:|
+| 3 dB / 1.9 GHz | 273 | 401 | 315/315 PASS |
+| 6 dB / 1.9 GHz | 288 | 474 | 315/315 PASS |
+
+Settings 410 and 352 also pass 315/315 for 6 dB / 1.9 GHz. Every candidate,
+including failures, remains in the append-only journal and hash manifest. The
+accepted 3 dB setting has worst-case eye height 170.1 mV, eye width 0.7969 UI,
+100 MHz HD3 -73.50 dBc, noise 0.689 mVrms and power 9.802 mW. The accepted
+6 dB setting has worst-case eye height 165.3 mV, eye width 0.7812 UI, 100 MHz
+HD3 -76.997 dBc, noise 0.736 mVrms and power 9.802 mW.
+
+The exact accepted settings are registered with result, deck, circuit-signature
+and raw-evidence hashes. An exact 3 dB or 6 dB request now selects this verified
+candidate automatically and re-runs the unchanged fresh physical gate. The
+registry is a classical safety and product component; it is not RL ranking.
+
+Evidence: `product_audits/entry115_physical_recovery_20260908/summary.json`,
+`recovery.jsonl`, `sha256.json` and the ten nested candidate directories.

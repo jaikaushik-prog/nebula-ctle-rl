@@ -92,3 +92,20 @@ def test_recovery_runs_all_candidates_and_records_first_pass(tmp_path, monkeypat
     assert result["spice_calls"] == 1370
     assert json.loads((tmp_path / "evidence/summary.json").read_text())["n_candidates"] == 10
     assert "summary.json" in json.loads((tmp_path / "evidence/sha256.json").read_text())
+
+def test_verified_registry_accepts_both_recovered_targets():
+    three = D.verified_physical_entry(3.0, 1.9e9)
+    six = D.verified_physical_entry(6.0, 1.9e9)
+    assert (three["setting"], three["n_model_pass"]) == (401, 315)
+    assert (six["setting"], six["n_model_pass"]) == (474, 315)
+    assert D.verified_physical_entry(9.0, 1.9e9) is None
+
+
+def test_verified_registry_fails_closed_on_result_hash_change(tmp_path, monkeypatch):
+    registry = json.loads(D.VERIFIED_REGISTRY.read_text())
+    registry["entries"][0]["result_json_sha256"] = "0" * 64
+    changed = tmp_path / "registry.json"
+    changed.write_text(json.dumps(registry))
+    monkeypatch.setattr(D, "VERIFIED_REGISTRY", changed)
+    with pytest.raises(ValueError, match="evidence hash mismatch"):
+        D.verified_physical_entry(3.0, 1.9e9)

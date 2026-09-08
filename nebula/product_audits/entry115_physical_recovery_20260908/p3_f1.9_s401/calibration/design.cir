@@ -1,0 +1,14 @@
+* Entry 103 isolated TT calibration; Ical is measurement apparatus ONLY
+.lib "C:/Users/DELL/Desktop/serdes-dsp-framework-main/nebula/device/spice/pdk_trim/sections/sky130_ctle_pfet__tt.lib.spice" tt
+.temp 27
+Vdd vdd 0 1.8
+Xbpref p_bias p_bias vdd vdd sky130_fd_pr__pfet_01v8 W=25.2069 L=0.5 nf=1
+Ical p_bias 0 0.000226681162
+.control
+set noaskquit
+set numdgt=15
+op
+print v(p_bias)
+quit
+.endc
+.end

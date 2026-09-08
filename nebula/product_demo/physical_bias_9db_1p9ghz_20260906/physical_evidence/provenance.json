@@ -1,0 +1,24 @@
+{
+  "input_sha256": {
+    "nebula\\physical_design.py": "e3efb1e17d298035e44bf96cc83680abd7326b39a813f9c1d6a589a0cf50c015",
+    "nebula\\experiments\\exp_physical_bias.py": "95676fed54257fbbae7223230bce97e3cec37d187cf3c5f1ac9979b4fcbe1c1c",
+    "nebula\\experiments\\exp_physical_bias_validation.py": "2946d6baaf6e8b8a4e236511f0d86c04831b927e07acaef866464a4cd24ff6fb",
+    "nebula\\device\\sky130_runner.py": "0f4a2329bd847ebcc5b66d39131d5f1694fba9ddf89bac7f812ace60d6261b3a",
+    "nebula\\device\\bias_reference.py": "73c91799e5b657defe38dff8587a26825d9aed1f69c88dee3d82a3f1d9437ea7",
+    "nebula\\device\\passives.py": "553940fbd64ee8ef942f340b93b6e9868d522ec5dfe2e0719454d8b5a41f512f",
+    "nebula\\report\\product_scope.py": "0e4de5eb0f12423ce5a01255046e36d308c3ff2623d394e9dd4f208d3e176273",
+    "nebula\\rl\\hybrid_designer.py": "067d4f38d55f4ee7423f8148e3d1d4031f99d31dbbc703a9accb2c34e9242da0",
+    "nebula\\rl\\reward_v1.py": "387b153a183e688ebefa990d6c47358f37932c4aec858363a3c97669eb08349e",
+    "nebula\\rl\\evaluator.py": "142a06eb70fa5b897eea067c15c8fcc1c4d045653509b27c4a7d1ab8e4457d53",
+    "nebula\\link\\bridge.py": "1f09cbff005f6f5ee00e8002f41b2b06bb26e316972845e31d4c372d978facf6",
+    "nebula\\link\\fit.py": "ee017fd9dc492bd01b79a9ca9aa0b160544b7a73c363d93d1b0ee1b6f5015a80",
+    "nebula\\link\\config.py": "21f311197dcef9f7de72d3f41804d590036a433068b89aecfa5e50477461073c",
+    "nebula\\link\\dfe_ablation.py": "5296e64b7847b522debee380e2afad4126634892bc03edd9a12d63e909eae975",
+    "nebula\\PHYSICAL_PRODUCT_PLAN.md": "708c2c2405d1ebf261e5bef82cb94d426a50c60e67fc2a8a2eba399da82f1062",
+    "nebula\\device\\spice\\.spiceinit": "8b97b36a4bd54e39135b7a8b487e6a689ae156a6ba0baf2e7d08b00a2c457cb3"
+  },
+  "max_spice_calls": 137,
+  "ngspice": "C:\\Users\\DELL\\miniforge3\\envs\\nebula\\Library\\bin\\ngspice_con.exe",
+  "verification_mode": "fresh-fixed-physical-bias-v1",
+  "note": "Legacy bank is proposal-only. No physical-bias RL training or full receiver claim."
+}

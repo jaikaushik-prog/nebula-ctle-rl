@@ -1,0 +1,6 @@
+# Simulator evidence is content-addressed. Git must preserve its exact bytes.
+nebula/product_audits/** -text
+nebula/product_demo/** -text
+
+# Generated binary report.
+output/pdf/*.pdf -text

@@ -1,0 +1,203 @@
+{
+  "status": "ENTRY115_FIXED_PHYSICAL_RECOVERY",
+  "protocol_sha256": "ec013111b93c3a8907af1e393546771ef852f1f3b0a2eab600cbd5e89a775462",
+  "coverage_manifest_sha256": "d64cce85e818297380fb7d9514590db46c3932821c9e22f0d1b2ca85d8eb2600",
+  "n_candidates": 10,
+  "spice_calls": 1370,
+  "max_spice_calls": 1370,
+  "all_candidates_attempted": true,
+  "targets": [
+    {
+      "peaking_db": 3.0,
+      "f_peak_hz": 1900000000.0,
+      "preserved_first_failed_setting": 273,
+      "attempted_in_order": [
+        401,
+        337
+      ],
+      "passing_settings": [
+        401
+      ],
+      "first_passing_setting": 401,
+      "recovery_pass": true
+    },
+    {
+      "peaking_db": 6.0,
+      "f_peak_hz": 1900000000.0,
+      "preserved_first_failed_setting": 288,
+      "attempted_in_order": [
+        481,
+        474,
+        473,
+        417,
+        410,
+        353,
+        352,
+        346
+      ],
+      "passing_settings": [
+        474,
+        410,
+        352
+      ],
+      "first_passing_setting": 474,
+      "recovery_pass": true
+    }
+  ],
+  "candidates": [
+    {
+      "peaking_db": 3.0,
+      "f_peak_hz": 1900000000.0,
+      "setting": 401,
+      "preserved_first_failed_setting": 273,
+      "status": "MODEL_PASS",
+      "spice_calls": 137,
+      "electrical_model_pass": true,
+      "full_product_compliance": false,
+      "n_pass": 315,
+      "n_points": 315,
+      "circuit_signature": "7c2475d5c7e0b0c656031c46e0d613135af3ebb12649b44416d7308a5f6d9875",
+      "deck_sha256": "dd037c385f74f0dfc058e36e48b80e308de7c96cfe154b0b62adda4608e1b5a8",
+      "wall_s": 107.11462410000058
+    },
+    {
+      "peaking_db": 3.0,
+      "f_peak_hz": 1900000000.0,
+      "setting": 337,
+      "preserved_first_failed_setting": 273,
+      "status": "MODEL_FAIL",
+      "spice_calls": 137,
+      "electrical_model_pass": false,
+      "full_product_compliance": false,
+      "n_pass": 314,
+      "n_points": 315,
+      "circuit_signature": "a8037ab1ab656c659f04c2a59ed2a8a14bf80fcc578cbe1fed038da3b994a89d",
+      "deck_sha256": "1edd3abd2e5eff91d56f37eb2d3eab2a322c0de7bfb54d6bbba7f3bfcc90d6fc",
+      "wall_s": 92.47874320000028
+    },
+    {
+      "peaking_db": 6.0,
+      "f_peak_hz": 1900000000.0,
+      "setting": 481,
+      "preserved_first_failed_setting": 288,
+      "status": "MODEL_FAIL",
+      "spice_calls": 137,
+      "electrical_model_pass": false,
+      "full_product_compliance": false,
+      "n_pass": 308,
+      "n_points": 315,
+      "circuit_signature": "8449a7bd64dda59a3291f3736411f835769017939fcb66d351c191b2073a0622",
+      "deck_sha256": "90047fafd17ff2b93bcbe95b81e5749a6827f4a8934eec49d0f5412a55a79b4b",
+      "wall_s": 93.1109336999998
+    },
+    {
+      "peaking_db": 6.0,
+      "f_peak_hz": 1900000000.0,
+      "setting": 474,
+      "preserved_first_failed_setting": 288,
+      "status": "MODEL_PASS",
+      "spice_calls": 137,
+      "electrical_model_pass": true,
+      "full_product_compliance": false,
+      "n_pass": 315,
+      "n_points": 315,
+      "circuit_signature": "d3bee87ce3540901f9e1b9019c4b1f8d666028a81efbd66aa98e574311162cbc",
+      "deck_sha256": "8f6807b1f54f78ba1c041771cb76070bdda61565292efff52ec6a16d12c58303",
+      "wall_s": 95.9402997999996
+    },
+    {
+      "peaking_db": 6.0,
+      "f_peak_hz": 1900000000.0,
+      "setting": 473,
+      "preserved_first_failed_setting": 288,
+      "status": "MODEL_FAIL",
+      "spice_calls": 137,
+      "electrical_model_pass": false,
+      "full_product_compliance": false,
+      "n_pass": 308,
+      "n_points": 315,
+      "circuit_signature": "682391b68ab928738e54dba93e9a2026ff739e68acf1cce0e257b0cacf0b3419",
+      "deck_sha256": "f15b3e9ef556e9496df2d69363ab132a918ecac403eb8872769504ca97c73fed",
+      "wall_s": 95.40633459999935
+    },
+    {
+      "peaking_db": 6.0,
+      "f_peak_hz": 1900000000.0,
+      "setting": 417,
+      "preserved_first_failed_setting": 288,
+      "status": "MODEL_FAIL",
+      "spice_calls": 137,
+      "electrical_model_pass": false,
+      "full_product_compliance": false,
+      "n_pass": 308,
+      "n_points": 315,
+      "circuit_signature": "624baa3b842ecdcf3945f540a9685019c99a4ae7236a1c58ebb75fca57072c65",
+      "deck_sha256": "49ddb40cf47303ae0052dad40773c8af9c56641fe4c42b2787df46296162b313",
+      "wall_s": 92.00683630000094
+    },
+    {
+      "peaking_db": 6.0,
+      "f_peak_hz": 1900000000.0,
+      "setting": 410,
+      "preserved_first_failed_setting": 288,
+      "status": "MODEL_PASS",
+      "spice_calls": 137,
+      "electrical_model_pass": true,
+      "full_product_compliance": false,
+      "n_pass": 315,
+      "n_points": 315,
+      "circuit_signature": "aa9a494721156c7fde4bc35bb4eccca8150ec7af5e3fdde45ecf04bce1563617",
+      "deck_sha256": "1a5f60f4114050a07d55dfa8a9de8b8ed40087e8a5c495a0b14321bea5696bf2",
+      "wall_s": 92.87115559999984
+    },
+    {
+      "peaking_db": 6.0,
+      "f_peak_hz": 1900000000.0,
+      "setting": 353,
+      "preserved_first_failed_setting": 288,
+      "status": "MODEL_FAIL",
+      "spice_calls": 137,
+      "electrical_model_pass": false,
+      "full_product_compliance": false,
+      "n_pass": 307,
+      "n_points": 315,
+      "circuit_signature": "6e2226c662478b67a25f503a2e83eac35bdc6581c73b0d77021fdf654fadbb93",
+      "deck_sha256": "65505e73493b442a4e30b19fb5d189a193ac906e329c1c9490b761dca0dd8a89",
+      "wall_s": 91.97295549999944
+    },
+    {
+      "peaking_db": 6.0,
+      "f_peak_hz": 1900000000.0,
+      "setting": 352,
+      "preserved_first_failed_setting": 288,
+      "status": "MODEL_PASS",
+      "spice_calls": 137,
+      "electrical_model_pass": true,
+      "full_product_compliance": false,
+      "n_pass": 315,
+      "n_points": 315,
+      "circuit_signature": "e4a3c03c7102dfe6b591f573fcc74fabf1c75b016233808e866652d0761c28ce",
+      "deck_sha256": "e8f8b0c82e6d797ce6baff14b2df551812915ad575a5b4a6871757b0cce4eaed",
+      "wall_s": 97.16787719999957
+    },
+    {
+      "peaking_db": 6.0,
+      "f_peak_hz": 1900000000.0,
+      "setting": 346,
+      "preserved_first_failed_setting": 288,
+      "status": "MODEL_FAIL",
+      "spice_calls": 137,
+      "electrical_model_pass": false,
+      "full_product_compliance": false,
+      "n_pass": 307,
+      "n_points": 315,
+      "circuit_signature": "c2703b6c225622e2d5660c8115879292079c8d49f8bfd13f00f534759ceb9e65",
+      "deck_sha256": "4fc289961d1fd1b3bc7222fce57dbfe1c7e59d3e865c4ff74732f51df37d6dab",
+      "wall_s": 93.96361640000032
+    }
+  ],
+  "n_targets_recovered": 2,
+  "full_product_compliance": false,
+  "claim_boundary": "Fresh fixed-circuit electrical model evidence; classical recovery, behavioural DFE, geometry subtotal",
+  "wall_s": 952.036417700001
+}
