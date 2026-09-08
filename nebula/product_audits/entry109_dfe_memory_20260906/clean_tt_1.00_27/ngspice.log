@@ -1,0 +1,31 @@
+
+Note: Compatibility modes selected: hs a
+
+
+Circuit: * entry 109: isolated memory; ideal test inputs, not a hardware dfe
+
+option SCALE: Scale is set to 1e-06 for instance and model parameters
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+
+Initial Transient Solution
+--------------------------
+
+Node                                   Voltage
+----                                   -------
+vdd                                        1.8
+bx                                         1.8
+by                                         1.8
+q                                     0.819537
+qb                                    0.819537
+q_series                              0.756569
+qb_series                             0.756569
+vreset#branch                                0
+vset#branch                                  0
+vdd#branch                        -0.000143719
+
+ Reference value :  4.46550e-09
+
+No. of Data Rows : 8040
+ngspice-41 done
+

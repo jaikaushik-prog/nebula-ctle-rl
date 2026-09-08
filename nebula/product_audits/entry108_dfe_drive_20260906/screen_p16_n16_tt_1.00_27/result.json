@@ -1,0 +1,298 @@
+{
+  "block_pass": false,
+  "stimulus_valid": true,
+  "stimulus_max_error_v": [
+    1.0934586569533167e-12,
+    2.0872192862952943e-14,
+    2.0872192862952943e-14
+  ],
+  "scored_bits": 32,
+  "correct_bits": 14,
+  "bits": [
+    {
+      "bit_index": 4,
+      "expected_bit": 0,
+      "raw_min_logic_margin_v": 0.03753016382334362,
+      "held_min_logic_margin_v": 0.8925908354598769,
+      "raw_final_stable_delay_s": 8.250000000000794e-11,
+      "pass": true
+    },
+    {
+      "bit_index": 5,
+      "expected_bit": 0,
+      "raw_min_logic_margin_v": 0.11324792961528962,
+      "held_min_logic_margin_v": 0.8869908264844609,
+      "raw_final_stable_delay_s": 7.350000000000704e-11,
+      "pass": true
+    },
+    {
+      "bit_index": 6,
+      "expected_bit": 1,
+      "raw_min_logic_margin_v": -0.0013093371335154425,
+      "held_min_logic_margin_v": -0.9095786380556363,
+      "raw_final_stable_delay_s": 8.950000000000905e-11,
+      "pass": false
+    },
+    {
+      "bit_index": 7,
+      "expected_bit": 1,
+      "raw_min_logic_margin_v": 0.09566499871152356,
+      "held_min_logic_margin_v": -0.9155403811317685,
+      "raw_final_stable_delay_s": 7.550000000000682e-11,
+      "pass": false
+    },
+    {
+      "bit_index": 8,
+      "expected_bit": 0,
+      "raw_min_logic_margin_v": 0.00748923771625043,
+      "held_min_logic_margin_v": 0.8942382052688079,
+      "raw_final_stable_delay_s": 8.749999999999086e-11,
+      "pass": true
+    },
+    {
+      "bit_index": 9,
+      "expected_bit": 1,
+      "raw_min_logic_margin_v": 0.04885498855098058,
+      "held_min_logic_margin_v": -0.9129977884812507,
+      "raw_final_stable_delay_s": 8.04999999999916e-11,
+      "pass": false
+    },
+    {
+      "bit_index": 10,
+      "expected_bit": 0,
+      "raw_min_logic_margin_v": 0.02988230031245598,
+      "held_min_logic_margin_v": 0.89324993860285,
+      "raw_final_stable_delay_s": 8.349999999999211e-11,
+      "pass": true
+    },
+    {
+      "bit_index": 11,
+      "expected_bit": 1,
+      "raw_min_logic_margin_v": 0.03866342428681846,
+      "held_min_logic_margin_v": -0.9123213038245273,
+      "raw_final_stable_delay_s": 8.24999999999918e-11,
+      "pass": false
+    },
+    {
+      "bit_index": 12,
+      "expected_bit": 0,
+      "raw_min_logic_margin_v": 0.0346067349436604,
+      "held_min_logic_margin_v": 0.893061306933587,
+      "raw_final_stable_delay_s": 8.24999999999918e-11,
+      "pass": true
+    },
+    {
+      "bit_index": 13,
+      "expected_bit": 1,
+      "raw_min_logic_margin_v": 0.03649313493786066,
+      "held_min_logic_margin_v": -0.9121687684621981,
+      "raw_final_stable_delay_s": 8.249999999999222e-11,
+      "pass": false
+    },
+    {
+      "bit_index": 14,
+      "expected_bit": 1,
+      "raw_min_logic_margin_v": 0.11280722817973166,
+      "held_min_logic_margin_v": -0.9221072101325961,
+      "raw_final_stable_delay_s": 7.349999999999277e-11,
+      "pass": false
+    },
+    {
+      "bit_index": 15,
+      "expected_bit": 1,
+      "raw_min_logic_margin_v": 0.14928140594240746,
+      "held_min_logic_margin_v": -0.9566895042380746,
+      "raw_final_stable_delay_s": 7.049999999999267e-11,
+      "pass": false
+    },
+    {
+      "bit_index": 16,
+      "expected_bit": 0,
+      "raw_min_logic_margin_v": -0.020200758235635607,
+      "held_min_logic_margin_v": 0.895322626999126,
+      "raw_final_stable_delay_s": 9.44999999999897e-11,
+      "pass": false
+    },
+    {
+      "bit_index": 17,
+      "expected_bit": 0,
+      "raw_min_logic_margin_v": 0.08725127128678811,
+      "held_min_logic_margin_v": 0.8908028325640699,
+      "raw_final_stable_delay_s": 7.650000000001395e-11,
+      "pass": true
+    },
+    {
+      "bit_index": 18,
+      "expected_bit": 1,
+      "raw_min_logic_margin_v": 0.011630579534402719,
+      "held_min_logic_margin_v": -0.9104738843110107,
+      "raw_final_stable_delay_s": 8.650000000002447e-11,
+      "pass": false
+    },
+    {
+      "bit_index": 19,
+      "expected_bit": 1,
+      "raw_min_logic_margin_v": 0.10150860978960274,
+      "held_min_logic_margin_v": -0.9173436029281982,
+      "raw_final_stable_delay_s": 7.450000000002161e-11,
+      "pass": false
+    },
+    {
+      "bit_index": 20,
+      "expected_bit": 0,
+      "raw_min_logic_margin_v": 0.004587950964812237,
+      "held_min_logic_margin_v": 0.894499854196175,
+      "raw_final_stable_delay_s": 8.85000000000259e-11,
+      "pass": true
+    },
+    {
+      "bit_index": 21,
+      "expected_bit": 0,
+      "raw_min_logic_margin_v": 0.09833523853297199,
+      "held_min_logic_margin_v": 0.8904431231093549,
+      "raw_final_stable_delay_s": 7.550000000002357e-11,
+      "pass": true
+    },
+    {
+      "bit_index": 22,
+      "expected_bit": 1,
+      "raw_min_logic_margin_v": 0.006180423119785505,
+      "held_min_logic_margin_v": -0.9100955012221679,
+      "raw_final_stable_delay_s": 8.750000000002643e-11,
+      "pass": false
+    },
+    {
+      "bit_index": 23,
+      "expected_bit": 0,
+      "raw_min_logic_margin_v": 0.04942516482727122,
+      "held_min_logic_margin_v": 0.892444557919252,
+      "raw_final_stable_delay_s": 8.050000000002262e-11,
+      "pass": true
+    },
+    {
+      "bit_index": 24,
+      "expected_bit": 0,
+      "raw_min_logic_margin_v": 0.11873106874952966,
+      "held_min_logic_margin_v": 0.885749533034515,
+      "raw_final_stable_delay_s": 7.350000000002048e-11,
+      "pass": true
+    },
+    {
+      "bit_index": 25,
+      "expected_bit": 1,
+      "raw_min_logic_margin_v": -0.004108016063636644,
+      "held_min_logic_margin_v": -0.9093794171630112,
+      "raw_final_stable_delay_s": 8.950000000002704e-11,
+      "pass": false
+    },
+    {
+      "bit_index": 26,
+      "expected_bit": 0,
+      "raw_min_logic_margin_v": 0.054085776393241525,
+      "held_min_logic_margin_v": 0.89224362602367,
+      "raw_final_stable_delay_s": 8.050000000002345e-11,
+      "pass": true
+    },
+    {
+      "bit_index": 27,
+      "expected_bit": 0,
+      "raw_min_logic_margin_v": 0.12089473893432201,
+      "held_min_logic_margin_v": 0.8849625706574279,
+      "raw_final_stable_delay_s": 7.35000000000213e-11,
+      "pass": true
+    },
+    {
+      "bit_index": 28,
+      "expected_bit": 1,
+      "raw_min_logic_margin_v": -0.005219039419833593,
+      "held_min_logic_margin_v": -0.9093207032758173,
+      "raw_final_stable_delay_s": 9.050000000002735e-11,
+      "pass": false
+    },
+    {
+      "bit_index": 29,
+      "expected_bit": 1,
+      "raw_min_logic_margin_v": 0.09394629750438666,
+      "held_min_logic_margin_v": -0.9152327782227588,
+      "raw_final_stable_delay_s": 7.550000000002192e-11,
+      "pass": false
+    },
+    {
+      "bit_index": 30,
+      "expected_bit": 0,
+      "raw_min_logic_margin_v": 0.008336279536887758,
+      "held_min_logic_margin_v": 0.8944002001768679,
+      "raw_final_stable_delay_s": 8.75000000000256e-11,
+      "pass": true
+    },
+    {
+      "bit_index": 31,
+      "expected_bit": 0,
+      "raw_min_logic_margin_v": 0.09998936946317527,
+      "held_min_logic_margin_v": 0.890407484370544,
+      "raw_final_stable_delay_s": 7.550000000002192e-11,
+      "pass": true
+    },
+    {
+      "bit_index": 32,
+      "expected_bit": 1,
+      "raw_min_logic_margin_v": 0.005359407626565504,
+      "held_min_logic_margin_v": -0.9100483535199616,
+      "raw_final_stable_delay_s": 8.75000000000256e-11,
+      "pass": false
+    },
+    {
+      "bit_index": 33,
+      "expected_bit": 1,
+      "raw_min_logic_margin_v": 0.09871489152915902,
+      "held_min_logic_margin_v": -0.9163068315423052,
+      "raw_final_stable_delay_s": 7.550000000002109e-11,
+      "pass": false
+    },
+    {
+      "bit_index": 34,
+      "expected_bit": 1,
+      "raw_min_logic_margin_v": 0.1422586304922474,
+      "held_min_logic_margin_v": -0.9471145273673496,
+      "raw_final_stable_delay_s": 7.150000000002152e-11,
+      "pass": false
+    },
+    {
+      "bit_index": 35,
+      "expected_bit": 1,
+      "raw_min_logic_margin_v": 0.16442969825041043,
+      "held_min_logic_margin_v": -0.9800323197393214,
+      "raw_final_stable_delay_s": 6.95000000000209e-11,
+      "pass": false
+    }
+  ],
+  "dut_vdd_power_w": 0.0010049188961638643,
+  "external_clock_net_power_w": 8.498189767280744e-05,
+  "external_clock_positive_supplied_power_w": 0.00041118446269099304,
+  "ideal_input_source_net_power_w": -3.5928001952567155e-07,
+  "hardware_dfe_complete": false,
+  "full_receiver_verified": false,
+  "instrument_ok": true,
+  "buffer_trace_valid": true,
+  "raw_correct_bits": 28,
+  "held_correct_bits": 15,
+  "drive_um": [
+    16,
+    16
+  ],
+  "mos_signature": "7f57e7bee869c1f028540b41c8cc226dd3ff48594ce9cc17b308d6380d9abc21",
+  "common_mode_v": 1.364486680057613,
+  "common_mode_source_key": "tt_1.00_27/ac_noise/ngspice.log",
+  "common_mode_source_sha256": "ff374ec3d84b3ab3fce229d018616fab57a3137a049e99cab141fe3198c86b9d",
+  "geometry": {
+    "mos_count": 27,
+    "input_total_width_um": 4,
+    "length_um": 0.15,
+    "gate_geometry_mm2": 2.4e-05,
+    "full_area_mm2": null,
+    "scope": "MOS gate W*L only, not layout area",
+    "buffer_mos_count": 8,
+    "first_stage_pmos_width_um": 16,
+    "second_stage_nmos_width_um": 16
+  }
+}

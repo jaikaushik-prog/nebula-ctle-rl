@@ -21,7 +21,95 @@ Last updated: **2026-09-08**, Entry 116 complete. The competition report now
 opens with the named BITS Pilani team and closes with a prioritized future-
 development roadmap; the 20-page PDF and complete regression pass.
 
-Previous status snapshot: **2026-09-06** (session 49, Entry 101: owner approved fresh fixed
+Previous status snapshot: **2026-09-06**, session 60 / Entry 112: owner freezes further
+DFE pursuit and requests a polished, current competition report. Revised
+report is anchored to the integrated physical-bias product (Entry 105), not
+the historical unadopted Entry 101 candidate. No new SPICE or RL run.
+Baseline full suite: 2940 passed, 13 deselected, two known warnings, 304.99 s.
+Report evidence tests: 10 passed. Final 17-page PDF has passed source-hash,
+text/bounds and Poppler visual QA. Full after-suite: 2946 passed, 13
+deselected, two unchanged warnings, 410.98 s. No job remains running.
+
+Previous session 59 / Entry 111: both lower-load chains
+FAIL. W=2/1 um give raw 32/32, held 14/32 each; all 18 transitions fail,
+all 14 repeats pass. Memory now switches but late. Stop after 2 calls /
+2.621075 s. Terminal |VDS/VGS| reaches 2.176608/2.227363 V, beyond model domain.
+See `nebula/DFE_LOW_LOAD_RESULTS.md`; 35 hashes verified. Full tests 2922
+passed before / 2940 after, 302.48 / 296.01 s, 13 deselected and two known
+warnings. Focused 103 passed. No job running, PVT, extra sizing or product changes.
+
+Previous session 58 / Entry 110: clean-input buffers plus
+memory pass 32/32 held bits, unchanged sixteen width-4 MOS, one TT call /
+.763771 s. Real comparator remains absent and connected prototype remains
+failed; no DFE/PVT/product pass. See `nebula/DFE_BUFFER_MEMORY_RESULTS.md`.
+25 evidence hashes verified. Full tests 2914 passed before / 2922 after,
+305.53 / 291.04 s, 13 deselected and two known warnings. Focused 85 passed.
+No experiment or test job remains running. Rs/Cs and working product unchanged.
+
+Previous session 57 / Entry 109: isolated existing memory
+passes 32/32 held bits with ideal clean inputs, one TT call / 0.489541 s.
+This is NOT a connected decision/hold or hardware DFE pass. Real buffer
+interface remains failed. See `nebula/DFE_MEMORY_RESULTS.md`; 22 raw/source
+hashes verified. No sizing, PVT or product changes. Full tests: 2896 passed
+before / 2914 after, 13 deselected, two known warnings; 330.24 / 383.05 s.
+Focused DFE tests: 77 passed. No experiment or test job remains running.
+
+Previous session 56 / Entry 108: targeted buffer drive
+fails all four nominal candidates. Raw/held counts are 32/15, 32/15, 28/15,
+28/15 out of 32; combined counts 15,15,14,14. Stop after 4 calls / 3.990993 s;
+no PVT or integration. One memory waveform briefly goes high but fails hold.
+See `nebula/DFE_DRIVE_RESULTS.md`. Full regression: 2879 passed before / 2896
+after, 13 deselected and two known warnings; after-run 298.44 s. Focused group
+59 passed. No experiment or test job remains running. Rs/Cs/product unchanged.
+
+Previous session 55 / Entry 107: buffered decision/hold
+prototype improves raw nominal decisions to 32/32, but held bits stay 15/32
+at all three widths. Gate FAIL; stop after 3 calls / 10.412893 s. No PVT,
+feedback or product integration. See `nebula/DFE_BUFFER_RESULTS.md` and its
+measured diagnostic plot. Full regression: 2861 passed before / 2879 after,
+13 deselected and two known warnings; after-run 568.90 s. Focused group 42
+passed. No experiment or test job remains running. Rs/Cs/product unchanged.
+
+Previous session 54 / Entry 106: owner leaves Rs/Cs
+switching unchanged and prioritises transistor DFE only. The first MOS-only
+decision/hold prototype FAILED nominal: 4/8/16 um each correct on 15/32 bits,
+all zeros pass/all ones fail. Stopped after 3 calls / 2.423 s; no PVT or
+feedback integration. See `nebula/DFE_HARDWARE_RESULTS.md`. The behavioural
+DFE and working CTLE product remain unchanged. Full regression: 2837 passed
+before / 2861 after, 13 deselected and two known warnings; after-run 355.09 s.
+All 24 new tests pass. No further simulator experiment is authorised by this
+failed gate; freeze/approve the proposed buffered variant before measuring it.
+
+Previous session 53 / Entry 105: opt-in `rl-physical`
+CLI/web integration passes the real product check: fixed setting 490, 45/45 PVT
+corners and 315/315 electrical model cases, 137 fresh calls / 107.908 s.
+Exact physical-bias/MIM schematic and raw evidence are exported. Full S7 is
+unknown/excluded, full receiver false. See `nebula/PHYSICAL_PRODUCT_RESULTS.md`.
+Full regression: 2823 passed before / 2837 after, 13 deselected and two known
+warnings; after-run 469.79 s. No simulation or test job remains running.
+Legacy defaults, bank, cached Judge demo and PDF remain unchanged.
+
+Previous session 52 / Entry 104b: physical-reference
+electrical model gate passes 315/315 cases after correcting the DC instrument's
+missed G140 attenuation adjustment. Both HD3 tones pass; worst ideal/no-DFE
+eye heights 133.517/131.943 mV. 135 new calls total (90 initial + 45 DC-only
+correction), no circuit changes or product adoption. Full S7 remains unknown.
+See `nebula/BIAS_VALIDATION_RESULTS.md`; original failure records are retained.
+
+Previous session 51 / Entry 103: owner prioritised
+physical Iref and bypass-capacitor area. See `nebula/BIAS_REFERENCE_PLAN.md`.
+Entry 102 fixed-export work is paused; prototype measurements are not production
+evidence. The physical-reference/MIM prototype measured all 45 corners inside
+S3/S5/S6 limits; HD3/eyes were still unverified at that boundary (subsequently
+checked in Entry 104b). Full receiver remains unverified. Geometry subtotal
+0.007854511 mm2, worst measured VDD power 9.802119 mW. See
+`nebula/BIAS_REFERENCE_RESULTS.md`. Existing RL bank, demo and report are unchanged.
+
+Previous update (session 50): fresh competition report authored from
+raw evidence in `nebula/report/competition_2026.py`, output
+`output/pdf/Nebula_Competition_Report.pdf`; report-only work, no selector,
+simulator, policy or cached demo changes. Entry 101 candidate remains unadopted.
+Earlier session 49, Entry 101: owner approved fresh fixed
 setting-490 validation. Fresh result PASS: 45/45 fixed PVT corners and 315/315
 model conditions, including both HD3 tones; all no-DFE model eyes pass. Nominal
 8.852970 dB at 1.771915 GHz. Existing demo/selector unchanged. See
@@ -31,8 +119,8 @@ passes 43/45 PVT corners (301/315 conditions); two hot/low-supply corners miss
 the peaking request by about 0.055 dB. All 315 eyes pass with DFE removed
 (worst 139.531 mV / 0.6875 UI), but hardware DFE and full area/power are NOT
 verified. Eight of 12 endpoint/interior requests pass every adaptive condition.
-Stored bank setting 490 is a potential fixed-robust replacement, NOT adopted
-or freshly reverified. See `nebula/PRODUCT_READINESS_RESULTS.md`.
+Stored bank setting 490 was then freshly reverified in Entry 101, but is NOT
+adopted. See `nebula/PRODUCT_READINESS_RESULTS.md` for the earlier audit.
 Earlier session 47, Entry 99: target-centred selection now
 keeps V6 compliance hard, ranks safe settings by normalized peaking/frequency
 error before eye area, and consults the existing 512-setting table when the RL
@@ -930,9 +1018,77 @@ NOT_VERIFIED. Report has 19 visually checked pages; release_snapshot.py
 packages private source/evidence. Historical policies/results stay unchanged.
 Release membership includes required characterization CSVs and raw SPICE logs.
 Entry 114: final-page table replaced with a concise delivered-workflow conclusion.
-Entry 115: exhaustive regret and two-target physical recovery are preregistered; no result yet.
-Entry 115A: 91.7657x visit-reduction gate passes; near-optimality fails; physical recovery is not yet measured.
-Entry 115B: 3/6/9 dB at 1.9 GHz pass 315/315; verified registry, report and 2996-test regression complete.
+
+Entry 112 adds `nebula/report/competition_submission.py` and
+`nebula/tests/test_submission_report.py`. The stable competition_2026 entry
+point now builds the current physical-product report; historical candidate
+helpers remain unchanged. PDF, source manifest and visual-review record are
+in `output/pdf/`. Poppler is isolated in ignored `tmp/pdfs/poppler-runtime/`.
+
+Entry 111 adds `chain_width_um` to the shared DFE renderer (explicit approved
+2/1 um peripheral-only option), `nebula/device/dfe_voltage_audit.py`, bounded
+runner `nebula/experiments/exp_dfe_low_load.py`, plan/results in
+`nebula/DFE_LOW_LOAD_PLAN.md` / `DFE_LOW_LOAD_RESULTS.md`, and
+`nebula/tests/test_dfe_low_load.py`. Raw folder
+`nebula/product_audits/entry111_dfe_low_load_20260906/` has two failed runs,
+all-terminal traces and 35 hashes. No legacy default change.
+
+Entry 110 adds opt-in `with_buffers` / CLI `--with-buffers` to the existing
+memory probe/runner, `nebula/DFE_BUFFER_MEMORY_PLAN.md` / results companion,
+and `nebula/tests/test_dfe_buffer_memory.py`. Exact existing sixteen MOS are
+referenced. Legacy clean-memory default/deck remains unchanged. Raw evidence
+in `nebula/product_audits/entry110_dfe_buffer_memory_20260906/` has 25 hashes.
+
+Entry 109 adds `nebula/DFE_MEMORY_PLAN.md` / `DFE_MEMORY_RESULTS.md`, isolated
+instrument `nebula/device/dfe_memory_probe.py`, one-call runner
+`nebula/experiments/exp_dfe_memory.py`, and `nebula/tests/test_dfe_memory_probe.py`.
+`nebula/product_audits/entry109_dfe_memory_20260906/` retains the clean-input
+nominal memory result with 22 evidence hashes. Existing device definitions
+are referenced, not copied; production is unchanged.
+
+Entry 108 adds `nebula/DFE_DRIVE_PLAN.md` / `DFE_DRIVE_RESULTS.md`, the bounded
+runner `nebula/experiments/exp_dfe_drive.py`, and `nebula/tests/test_dfe_drive.py`.
+The shared DFE renderer gains an explicit approved `buffer_drive_um` option;
+legacy defaults stay unchanged. `nebula/product_audits/entry108_dfe_drive_20260906/`
+retains four failed raw runs and 44 evidence hashes/source snapshots.
+
+Entry 107 adds an explicit `--buffered` experiment mode to the existing DFE
+prototype, `nebula/DFE_BUFFER_PLAN.md` / `DFE_BUFFER_RESULTS.md`, and tests in
+`nebula/tests/test_dfe_buffer.py`. `nebula/experiments/analyze_dfe_buffer.py`
+reparses raw evidence without SPICE. New raw folder:
+`nebula/product_audits/entry107_dfe_buffer_20260906/`; separate diagnostic JSON,
+PNG and analysis-source snapshot in `entry107_dfe_buffer_analysis_20260906/`.
+
+Entry 106 adds `nebula/device/dfe_hardware.py` (19-MOS decision/hold prototype,
+NOT a full DFE), `nebula/experiments/exp_dfe_slicer.py` (bounded standalone
+instrument), `nebula/tests/test_dfe_hardware.py` (boundary and raw-reproduction
+tests), and `nebula/DFE_HARDWARE_PLAN.md` / `DFE_HARDWARE_RESULTS.md`.
+`nebula/product_audits/entry106_dfe_slicer_run_20260906/` retains all three
+failed raw trials plus 30 evidence hashes/source snapshots. The similarly
+named directory without `_run_` preserves a zero-call preflight refusal.
+
+Entry 105 integration: `nebula/physical_design.py` (opt-in orchestration),
+`nebula/report/physical_schematic.py` (ordered-pin checked physical drawing),
+`nebula/PHYSICAL_PRODUCT_PLAN.md`, `nebula/tests/test_physical_product.py`.
+Existing CLI/web expose the mode without replacing legacy defaults.
+
+Entry 104/104b: `nebula/experiments/exp_physical_bias_validation.py` validates
+exact physical-bias decks, using archived AC/noise and new HD3/swing.
+`exp_physical_bias_swing_fix.py` preserves the bounded DC-only correction.
+Plans/results: `nebula/BIAS_VALIDATION_PLAN.md`, `BIAS_SWING_CORRECTION_PLAN.md`,
+`BIAS_VALIDATION_RESULTS.md`. Tests: `nebula/tests/test_bias_validation.py`.
+
+Entry 103 additions: `nebula/device/bias_reference.py` renders an isolated
+physical-reference/MIM prototype; `nebula/experiments/exp_physical_bias.py`
+performs the bounded fresh measurement. Plan: `nebula/BIAS_REFERENCE_PLAN.md`.
+Deferred Entry 102 tests live in `nebula/plans/test_fixed_export.py.pending`;
+they describe an unimplemented feature and are intentionally not collected.
+
+Session 50 report: `nebula/report/competition_2026.py` builds the fresh 16-page
+competition report; `nebula/report/check_competition_pdf.py` renders and checks
+it. The final PDF, source-hash manifest and visual-review record live in
+`output/pdf/`. Four evidence guards are in `nebula/tests/test_competition_report.py`.
+The narrowly unignored report is our own authored material, not a reference PDF.
 
 Entry 101: `nebula/experiments/exp_fixed_candidate.py` validates setting 490
 using Entry 100's unchanged physical/DFE checks; `nebula/FIXED_490_PLAN.md`
@@ -1789,9 +1945,60 @@ NOT_VERIFIED. Report has 19 visually checked pages; release_snapshot.py
 packages private source/evidence. Historical policies/results stay unchanged.
 Release membership includes required characterization CSVs and raw SPICE logs.
 Entry 114: final-page table replaced with a concise delivered-workflow conclusion.
-Entry 115: exhaustive regret and two-target physical recovery are preregistered; no result yet.
-Entry 115A: 91.7657x visit-reduction gate passes; near-optimality fails; physical recovery is not yet measured.
-Entry 115B: 3/6/9 dB at 1.9 GHz pass 315/315; verified registry, report and 2996-test regression complete.
+
+2026-09-06 / Entry 112: owner elects to finalise the existing submission
+instead of extending the transistor-DFE experiments. Report revised with
+physical-reference/bypass evidence, readable analog diagrams, measured plots,
+RL attribution, engineering journey and fuller page composition. Product,
+learning policy, circuit, thresholds and raw evidence remain unchanged.
+
+2026-09-06 / Entry 111: owner-approved lower-load chains (all sixteen
+buffer/memory MOS W=2/1 um, nf=1) improve simulated raw timing to 45.5/40.5 ps,
+but all 18 data transitions are still late; 14 repeats alone pass. Terminal
+audit also finds >1.95 V model-domain excursions. Two calls then stop; no
+PVT or integration. New dimensions/clock/interface decisions require review.
+
+2026-09-06 / Entry 110: owner approves isolating existing buffers plus memory
+under Entry 109's clean stimulus. One TT call gives 32/32 held bits, latest
+threshold settling 92.5 ps; no sizing or integration. This narrows the open
+problem to real comparator drive/timing/loading rather than proving a repair.
+
+2026-09-06 / Entry 109: after the failed drive grid, owner continues with
+isolated memory diagnosis. Exact existing eight 4 um MOS, clean full-swing
+external inputs, unchanged 32-bit hold window: 32/32 pass at nominal.
+One call / .489541 s. This rules out inherent stuck-low behaviour under the
+clean stimulus, not the real interface failures or complete DFE limitations.
+No new architecture, dimensions or PVT run.
+
+2026-09-06 / Entry 108: owner approved four drive pairs at fixed 4 um core.
+All four fail the complete gate; two retain raw 32/32, two fall to 28/32.
+All hold only zeros correctly (15/32). One transient q crosses high but not
+within a valid complete hold window. Stop after four TT calls; reassess
+loading/stage count/storage architecture before requesting another sizing grid.
+
+2026-09-06 / Entry 107: approved two-inverter isolation on each dynamic output.
+Eight added PDK MOS, fixed starting width ratios, same stimulus/gate. All three
+sizes resolve raw bits 32/32, but memory stays low, so combined gate fails
+15/32. Stop after three nominal calls; no speculative 45-PVT sweep or adoption.
+
+2026-09-06 / Entry 106: owner explicitly defers Rs/Cs switching and asks for
+transistor DFE. A bounded decision/hold feasibility gate precedes feedback;
+three nominal widths fail the bit test, so no 45-PVT run or product adoption.
+This is a measured failed building block, not a hardware-DFE completion claim.
+
+2026-09-06, Entry 105: owner continued after the physical-bias gate. Opt-in
+fixed physical product now passes its 137-call end-to-end test (315/315 model
+conditions). No implicit migration of old RL evidence or new training claim.
+
+2026-09-06, Entry 104b: the real-reference circuit passes 315/315 electrical
+model cases with both HD3 tones and all four DFE assumptions. An initial DC
+instrument missed G140's attenuation scaling; 45 bounded DC-only calls restored
+the established range. No hardware/tolerance changes and no old evidence erased.
+
+2026-09-06, Entry 103: owner prioritised removal of ideal reference/bypass
+assumptions. A separate physical PMOS/poly/MIM prototype was built and freshly
+checked at 45 DC/AC/noise PVT points plus one nominal supply ramp. Broad S3/S5/S6
+limits pass; no new HD3/eye or full-area claim. Entry 102 integration is paused.
 
 ### Phase 0 — audit + correctness (commit `ce733a8` equivalent; authors later rewritten, see G12)
 Bugs found in the inherited code and fixed:
@@ -1948,9 +2155,93 @@ NOT_VERIFIED. Report has 19 visually checked pages; release_snapshot.py
 packages private source/evidence. Historical policies/results stay unchanged.
 Release membership includes required characterization CSVs and raw SPICE logs.
 Entry 114: final-page table replaced with a concise delivered-workflow conclusion.
-Entry 115: exhaustive regret and two-target physical recovery are preregistered; no result yet.
-Entry 115A: 91.7657x visit-reduction gate passes; near-optimality fails; physical recovery is not yet measured.
-Entry 115B: 3/6/9 dB at 1.9 GHz pass 315/315; verified registry, report and 2996-test regression complete.
+
+Entry 112 report headline is the integrated Entry 105 `rl-physical` example:
+fixed 490, 45/45 PVT, 315/315 electrical-model cases; nominal 8.834174 dB at
+1.768990 GHz. Known geometry subtotal .007854511 mm2 includes physical MIM
+bypass. Behavioural DFE remains; full-receiver area/power not verified.
+All 616 physical-evidence hashes and exact nominal export are checked while
+building. The five-seed RL result belongs to the frozen library experiment,
+not to retraining on this later physical-bias circuit.
+
+Entry 111: W=2/1 um peripheral chains, unchanged width-4 comparator, each raw
+32/32 and held 14/32. All repeats pass, all transitions fail. Bit 6 correct
+stored-one samples start at 164.5/157.5 ps, after the 110 ps hold start.
+Worst raw settling 45.5/40.5 ps is only exploratory simulated timing: maximum
+|VDS/VGS| reaches 2.176608/2.227363 V outside documented model domains. DUT
+VDD .953274/.776334 mW; external clock net .091879/.094861 mW and positive
+supplied .427961/.444501 mW. W*L .000012/.0000096 mm2 is not full area.
+Two calls / 2.621075 s, 35 hashes and per-bit/terminal audits reproduce; no
+selection/PVT/DFE/receiver pass or product adoption.
+
+Entry 110: clean-input buffers plus memory, TT / 1.8 V / 27 C, 32/32 held bits
+pass, one call / .763771 s. Buffer low arrival 37.5..39.5 ps, last low sample
+129.5 ps, memory stable by 92.5 ps, worst held margin .806478 V. Thus part of
+the +110..190 ps hold window remains actively driven; at least 60 subsequent
+samples have both inputs inactive and correct q/qb. VDD .657757 mW; ideal
+input net/positive .042304/.119316 mW. MOS W*L .0000096 mm2, not full area.
+Raw undershoot about -.214 V retained; terminal reliability unverified.
+25 hashes and saved results reproduce. Comparator/DFE/receiver remain absent.
+
+Entry 109: isolated eight-MOS memory, TT / 1.8 V / 27 C, clean ideal sources,
+32/32 held bits pass (15 zeros, 17 ones, 18 transitions), one call / .489541 s.
+Worst held logic margin .893147 V; latest sampled settling 50.5 ps from clean
+stimulus edge. VDD power .167895 mW; ideal-source net .031393 mW, positive
+supplied .110301 mW, all isolated-bench quantities. W*L subtotal .0000048 mm2,
+not layout area. All 22 hashes and raw results reproduce. Full DFE/receiver
+still false; clean signals arrive earlier/stronger than the connected path.
+
+Entry 108: 4 calls / 3.990993 s. P1/N2 pairs 8/8,8/16,16/8,16/16 um give
+raw counts 32,32,28,28; held counts all 15; combined counts 15,15,14,14 out of 32.
+None selected, no PVT. DUT VDD power 1.001361/.948090/1.016568/1.004919 mW.
+8/8 briefly raises q to 1.267450 V, but all one-bit hold windows still fail.
+The prior claim 'memory never crosses high' applies to Entry 107, NOT Entry 108.
+All 44 source/raw hashes and saved per-bit gates reproduce in regression.
+
+Entry 107: 3 calls / 10.412893 s. Buffered W=4/8/16 um at nominal gives raw
+32/32 each, held 15/32 each, complete gate FAIL. Raw decisions settle by about
+57.5 ps with worst margin about .194 V, but q never crosses .9 V in the scored
+interval (max .358203/.354249/.352142 V). DUT VDD power .905883/1.810409/3.613041
+mW, ideal clock supply separate. No full receiver, feedback or PVT result.
+Thirty-five raw/source hashes verified; diagnostic plot uses real bit 6 data.
+
+Entry 106: 3 nominal calls / 2.422833 s. The 4/8/16 um StrongARM + direct NAND
+SR prototypes each pass 15/32 bits (zeros) and fail 17/32 (ones). Independent
+clock/input checks pass; no simulator error detected. DUT VDD power is
+0.681107/1.360216/2.728493 mW, excluding external clock/input sources. Full
+DFE/receiver remains false. No width selected; no PVT run. Thirty evidence
+hashes and raw waveform decisions are checked by regression. Entry 105 product
+numbers below remain unchanged and are NOT measurements of this new block.
+
+Entry 105 integration passes its bounded real 9 dB / 1.9 GHz test: 315/315 model
+conditions, one fixed setting 490 and circuit signature. Fresh nominal peaking
+8.834174 dB / 1.768990 GHz, CTLE/reference power 6.965787 mW, noise 0.589729 mVrms.
+137 calls / 107.908 s. All 616 raw evidence hashes match, 135 corner decks have
+one signature, top-level export equals the measured TT deck byte-for-byte.
+CLI `--method rl-physical` requires `--out`; web provides an opt-in mode and
+background progress. Evidence ZIP includes nested raw files (~7.4 MB).
+The old RL path proposes 425; classical fixed intersection proposes 490; only
+fresh physical measurements can certify this new electrical result. No new
+training benefit or all-target guarantee. Original Judge demo/PDF unchanged.
+
+Entry 104b completes electrical model verification for the fixed Entry 103
+physical-reference circuit: 315/315, 45 PVT points x seven constructed channels.
+Worst HD3 -81.490709 dBc at 100 MHz / -47.079003 dBc at Nyquist. Minimum ideal
+eye 133.517 mV / 0.765625 UI; no-DFE 131.943 mV / 0.65625 UI. S7 excluded as
+unknown; full receiver false. No adoption or new RL result. Request-frequency
+margin is only 0.004412 octave, so do not infer mismatch/passive/layout robustness.
+
+Entry 103 hardware prototype is separate from all older numbers below. Replacing
+ideal Iref/Cbyp invalidates transfer of old PVT/HD3/eye evidence. Fresh DC/AC/noise
+passes the broad S3/S5/S6 limits at 45/45 points; at that boundary HD3/eyes/full
+S7 were not verified. Entry 104b now adds HD3/model-eye evidence, not full S7.
+Current drift is substantial (165.885-301.412 uA); do not call it a precision
+reference. Geometry subtotal 0.007854511 mm2 includes the physical MIM bypass.
+
+Session 50: fresh competition report complete and visually checked (16 pages,
+nine figures, 60 verified source hashes). Regression: 2,794 before / 2,798
+after, 13 deselected and two known warnings. Report-only changes; all circuit,
+RL and deployment evidence below is unchanged.
 
 Entry 101: setting 490 freshly passes all 45 fixed PVT corners / 315 model
 conditions at 9 dB / 1.9 GHz (91 calls, 88.37 s). Nominal is 8.852970 dB /
@@ -2485,9 +2776,60 @@ NOT_VERIFIED. Report has 19 visually checked pages; release_snapshot.py
 packages private source/evidence. Historical policies/results stay unchanged.
 Release membership includes required characterization CSVs and raw SPICE logs.
 Entry 114: final-page table replaced with a concise delivered-workflow conclusion.
-Entry 115: exhaustive regret and two-target physical recovery are preregistered; no result yet.
-Entry 115A: 91.7657x visit-reduction gate passes; near-optimality fails; physical recovery is not yet measured.
-Entry 115B: 3/6/9 dB at 1.9 GHz pass 315/315; verified registry, report and 2996-test regression complete.
+
+Entry 112 presentation boundary: headline electrical-model acceptance is not
+full receiver compliance. Scope includes typical passive models, sampled
+PVT, one assumed load and constructed channels. Rs/Cs physical selectors,
+transistor DFE/clocking, common-mode generator and layout remain extensions.
+Do not substitute an earlier candidate's numbers or cached Judge artifact
+for the current physical export. The report presents engineering progression
+without promoting isolated DFE-study logic results to a hardware pass.
+
+Entry 111's lower-load candidates still miss every transition hold window
+and exceed the documented 1.95 V drain/gate model magnitude. Faster simulated
+raw decisions cannot be promoted to validated hardware timing outside model
+domain. Signed off-state/reverse excursions are reported separately from
+high magnitudes; neither is a physical damage/lifetime proof. No complete
+DFE, PVT, receiver, clock or layout qualification follows from these runs.
+
+Entry 110's buffer/memory pass uses ideal inputs available much earlier and
+stronger than real comparator signals. Do not add isolated delays and treat
+that as connected-path verification. Buffer inputs remain active until about
+130 ps, partway into the nominal hold window. Measured undershoot is retained;
+no device-stress/reliability claim. Complete receiver and hardware DFE stay false.
+
+Entry 109's clean-input memory pass is only a nominal isolation result. Ideal
+sources remove real drive/loading limits and provide earlier valid inputs.
+It does not pass the connected decision/hold gate or validate noise, mismatch,
+PVT, feedback, clock generation, receiver power or layout area. Do not replace
+the product's behavioural DFE with this isolated testbench.
+
+Entry 108's targeted buffer-drive pairs also fail. Larger first-stage PMOS
+degrades raw timing; a briefly high output does not satisfy stored-bit timing.
+No complete DFE or PVT result follows from these partial transitions. Reassess
+buffer loading/stage count/storage architecture before another approved trial.
+
+Entry 107's buffered raw latch passes the small deterministic nominal pattern,
+NOT the complete decision/hold gate. Partial buffer pulses do not store ones;
+the device-to-memory timing/drive interface needs an explicit new sizing plan.
+Even a later stored-bit pass would not provide causal DFE feedback, physical
+clock, loaded CTLE verification, mismatch/dynamic noise or full layout area.
+
+Entry 106 has no feedback summer or phased previous-bit register, no connected
+CTLE loading/kickback test and no noise/mismatch/clock-generation validation.
+Its nominal decision/hold gate fails. Direct memory loading is a hypothesis
+for preferred-zero behaviour, not proven causation. W*L subtotals are not
+layout area, and ideal external-clock energy is separate from DUT VDD power.
+
+Entry 105's new gate does not retrain RL on physical bias. Empty legacy fixed
+intersection means no proposal under this procedure, not physical infeasibility.
+Excluding unknown S7 explicitly does not make full receiver compliance true.
+
+Entry 103 adds a separate physical-reference/MIM prototype, not a completed
+receiver. Its 45-point sweep holds passive process typical, and its single TT
+supply-ramp diagnostic does not qualify startup. Bias is supply/PVT dependent.
+Physical DFE, Rs/Cs selector/control, common-mode generation, independent passive
+variation, mismatch and layout remain open. Old production evidence is unchanged.
 
 - **Entry 100 / full receiver:** no complete area footprint, transistor-level
   DFE/slicer/clock, physical Rs/Cs selector, or complete bias/control power has
@@ -2638,6 +2980,13 @@ Entry 115B: 3/6/9 dB at 1.9 GHz pass 315/315; verified registry, report and 2996
 
 ## 8. Next steps (prioritized backlog with context)
 
+Entry 118 (2026-09-08): the complete recoverable local project state is backed
+up to GitHub after an explicit owner request prompted by laptop battery failure.
+The backup includes source, plans, tests, trained policy checkpoints, authored
+reports and Entry 103-111 physical audit evidence. Regenerable caches and
+duplicate release ZIPs remain local; preserve this split in future backups.
+
+
 Entry 117 (2026-09-08): the product UI now makes aggregate-versus-slice PVT
 scope explicit, opens the first failing channel loss, labels cells with text,
 uses a larger circuit stage and a shorter first-page control/sidebar layout.
@@ -2657,15 +3006,76 @@ NOT_VERIFIED. Report has 19 visually checked pages; release_snapshot.py
 packages private source/evidence. Historical policies/results stay unchanged.
 Release membership includes required characterization CSVs and raw SPICE logs.
 Entry 114: final-page table replaced with a concise delivered-workflow conclusion.
-Entry 115: exhaustive regret and two-target physical recovery are preregistered; no result yet.
-Entry 115A: 91.7657x visit-reduction gate passes; near-optimality fails; physical recovery is not yet measured.
-Entry 115B: 3/6/9 dB at 1.9 GHz pass 315/315; verified registry, report and 2996-test regression complete.
 
-**Entry 100 audit complete; next decisions:** validate existing bank setting 490
-as a candidate fixed-robust 9 dB / 1.9 GHz export before any adoption or new
-fixed-robust selection mode. A read-only all-condition intersection finds exactly
-this one candidate; the 100 MHz / exact-export / DFE audit has NOT been repeated
-on it. Get owner approval, then preregister that small validation. Send the draft
+After Entry 112 / owner's current direction: finalise submission materials
+around the working physical CTLE and behavioural DFE. Do not resume hardware
+DFE experiments or change circuit/clock dimensions without new approval.
+Complete report visual QA/regression, then review the packaged evidence and
+demo narrative. Historical hardware-research next steps below are deferred.
+
+After Entry 111: stop this two-size family. Reassess path depth, pulse
+regeneration, clock/storage timing and measured excursions before proposing
+another architecture or size. Owner approval is required for new dimensions,
+topology or timing. Do not move the old hold window to relabel late updates
+as passes; any new timing proposal must establish causal feedback within
+the 200 ps UI independently. Keep product/CTLE/RL/Rs/Cs/demo/report unchanged.
+
+Historical after Entry 110: stop isolation calls; unchanged buffers and memory pass under
+clean drive. Propose a shorter/lower-load comparator-to-storage interface with
+explicit circuit, dimensions and bounded budget for owner approval. Do not
+extend failed width grids, move the hold gate or integrate ideal test sources.
+Connected decision/hold and then PVT/causal feedback/loaded receiver checks
+remain required. Rs/Cs, CTLE/RL, dashboard, behavioral DFE and report unchanged.
+
+Historical after Entry 109: existing memory passes the clean-input diagnostic. Prepare a
+bounded real-interface investigation (pulse depth/duration, delay and loading)
+before a new architecture or sizing choice. Saved-waveform replay is a possible
+next diagnostic, NOT run or authorised by this entry's one-call budget. Obtain
+owner approval for new topology/dimensions/timing; do not relax the connected
+decision/hold gate. Full DFE integration must wait for that gate and subsequent
+causal feedback/loaded receiver validation. Rs/Cs and product stay unchanged.
+
+Historical after Entry 108: stop the four-pair drive grid; none passes nominal. Next
+proposal should address lower input loading and a shorter/storage-compatible
+path, with explicit architecture/dimensions/budget approved by the owner.
+Do not extend widths, clock phases or gate windows to manufacture a pass.
+Rs/Cs, working CTLE/RL product and old report remain unchanged.
+
+Historical after Entry 107: buffered raw decisions improve, but the memory gate still
+fails all ones. Stop this trial family. Next owner sizing decision should
+target buffer drive/loading and storage timing independently (not global
+width scaling), with a small frozen budget. No new runs or relaxed criteria
+authorised by this result. Rs/Cs stays deferred. Old product/demo/report intact.
+
+Historical after Entry 106: stop the failed unbuffered slicer experiment. Proposed next
+hardware step needs a frozen bounded plan and buffer sizing decision: isolate
+dynamic outputs from static memory, then recheck both polarities before DFE
+feedback work. Do not extend the original size sweep or silently change the
+clock, input amplitude, or pass windows. Rs/Cs work stays deferred by owner.
+
+Historical after Entry 105: full regression is complete (2837 passed). The physical-reference
+product stage is complete, opt-in, and covered by fresh evidence. Next hardware
+choices need a bounded plan/owner direction: transistor-level DFE/slicer/clock,
+physical Rs/Cs selection, VCM generation, then complete area/power and layout.
+Do not silently change the legacy default/demo or rerun RL seeds for this result.
+
+Historical next step after Entry 104b (now implemented as opt-in Entry 105):
+controlled physical-reference integration and honest schematic
+export/fresh verification. The old RL bank describes ideal-Iref hardware and
+must not be silently relabelled as measurements of this physical reference.
+Its HD3/eye gate is now complete for the fixed tested candidate, not all targets.
+
+Owner priority on 2026-09-06: evaluate physical Iref plus a physically sized
+bypass capacitor first (Entry 103), then decide whether the reference needs
+compensation before fresh HD3/eye validation and integration. Physical DFE,
+Rs/Cs selector hardware, common-mode generation and layout area remain open.
+Entry 102 fixed-export integration is paused, not completed.
+
+**Entry 101 validation and session 50 report complete; next decisions:** setting
+490 has now passed its fresh 91-call fixed audit but is not adopted. A production
+fixed-robust export mode is the next implementation step when the owner resumes
+product work. The owner prioritised the report first; no selector change was made
+in session 50. Send the draft
 organiser questions through an official contact supplied by the owner. Do not
 begin a new switch/DFE topology, hide setting 425's two misses, or retune exposed FINAL.
 
@@ -3148,9 +3558,32 @@ NOT_VERIFIED. Report has 19 visually checked pages; release_snapshot.py
 packages private source/evidence. Historical policies/results stay unchanged.
 Release membership includes required characterization CSVs and raw SPICE logs.
 Entry 114: final-page table replaced with a concise delivered-workflow conclusion.
-Entry 115: exhaustive regret and two-target physical recovery are preregistered; no result yet.
-Entry 115A: 91.7657x visit-reduction gate passes; near-optimality fails; physical recovery is not yet measured.
-Entry 115B: 3/6/9 dB at 1.9 GHz pass 315/315; verified registry, report and 2996-test regression complete.
+
+Entry 112 report guard: legacy Entry 101 still truthfully records an unadopted
+candidate; it must not be relabelled. Current report data must load the saved
+Entry 105 physical product and validate raw hashes, one circuit signature,
+45 unique corners, seven losses per corner and byte-exact nominal export.
+Scientific plots are regenerated from those saved measurements, never from
+mock data or decorative AI-generated curves. Keep full-area status unknown.
+
+Entry 105 integration guard: `rl-physical` must not call the legacy export
+renderer after fresh verification or inherit its bank pass. Export the captured
+physical TT file with a checked hash, keep S7 unknown, and include nested raw
+evidence in ZIPs without following paths outside the run directory.
+
+Entry 104 re-hit G140: importing the generic `_SWING_BLOCK` with vid_max=0.8
+is NOT equivalent to the product's swing instrument when an attenuator exists.
+Use `_attenuation_run_args`' `0.8/input_gain`; the shorter sweep can end before
+compression and its conservative lower bound can reject otherwise valid links.
+Do not call a rejected lower-bound comparison a measured compression point.
+The new validation requires an explicit adjusted range and pins the helper.
+
+Entry 103 instrument note: `print i(Vdd)` emits `i(vdd) = ...`, not
+`vdd#branch = ...`. The prototype reader initially used the latter alias and
+correctly failed closed on all rows. Fix the parser and reparse preserved raw
+logs into separate files; do not resimulate or erase the original failure journal.
+Another guard now requires Iref/Cbyp before the old schematic draws them; a
+new physical-reference topology must not reuse an ideal-source picture.
 
 **Entry 100 scope footgun:** a green historical S7 reward row is only a partial
 passive-area comparison, and 315 green adaptive conditions use multiple
@@ -5904,6 +6337,61 @@ the safe set. Normalize unlike units by the one existing tolerance definition,
 record whether RL or the measured bank supplied the code, and never credit an
 in-memory table refinement as either a new simulation or an RL proposal.
 
+### G168. A resolving dynamic latch is not a held bit or a complete DFE
+
+Entry 106's directly connected StrongARM/NAND-SR prototype reads all tested
+zeros correctly but fails all ones at nominal, for three uniformly scaled
+widths. A waveform that looks digital or a successful ngspice exit is not
+proof of a valid sampled decision. Check BOTH input polarities and transitions,
+raw resolution before precharge AND complementary memory through reset.
+Static memory can load dynamic nodes in a state-dependent way; buffering is
+a hypothesis to test, not a retroactive explanation proved by these data.
+Entry 107 subsequently resolves all 32 raw bits after buffering but still holds
+only zero: raw threshold resolution is not sufficient output drive. Buffer
+pulse amplitude/duration and the final held state must also be measured. For
+bit 6, buffered set input never falls below 1.6168 V at nominal 1.8 V supply;
+elsewhere a brief low pulse still does not flip memory. Keep the complete gate.
+Entry 108 then makes q briefly exceed VDD/2 for drive pair 8/8, but all ones
+still fail the full hold window. A waveform peak or one sampled high is not
+evidence of reliable storage. Raw and held-window gates must both pass.
+Entry 109 isolates the identical memory with clean external full-swing pulses:
+all 32 held bits pass. This does not retroactively pass the connected circuit;
+ideal sources remove loading limits and arrive sooner. Attribute the result
+to the isolated memory and stimulus, not to a working receiver or DFE.
+Entry 110 also passes with the existing buffers included under ideal inputs.
+It does not prove the real comparator supplies adequate signal or timing.
+Inspect input release: a correct output during a nominal "hold" window may
+still be driven for part of it. Here bx/by remain active to about +130 ps;
+only the later part demonstrates retention with both inputs inactive.
+Even a passing decision/hold block still needs causal previous-bit feedback,
+physical summing/tap control and loaded receiver verification to be a DFE.
+
+### G169. Correct bits do not establish device model-domain validity
+
+Entry 110's clean-input 32/32 pass has PMOS VDS near -2.014 V, outside the
+standard 1.8 V PDK model's documented -1.95..0 V interval. Entry 111 captures
+every drawn terminal and finds |VDS/VGS| up to 2.176608/2.227363 V even at
+nominal 1.8 V supply. The rail value alone does not bound internal transient
+voltage; check differences using actual D/G/S/B connections, not just node
+voltages to ground. Preserve the un-clipped trace and excursion counts.
+Published SPICE model-domain ranges are NOT absolute-maximum lifetime ratings;
+negative/reverse/off-state excursions and excessive magnitude must not be
+silently conflated. Keep logical timing, model-domain and full reliability
+claims separate. A model-domain excursion is not proof of physical damage,
+and a clean interval check is not reliability signoff. No invented transient
+time exemption or relaxed logical window is allowed to manufacture a pass.
+
+
+### G170. Evidence trees must be exempt from Git text conversion
+
+Raw SPICE decks, logs, tables and provenance are bound by byte SHA-256 hashes.
+On Windows, Git's automatic LF/CRLF conversion can preserve readable text while
+invalidating every recorded hash after checkout. `.gitattributes` therefore
+marks `nebula/product_audits/**` and `nebula/product_demo/**` as `-text`.
+Keep those rules whenever evidence is committed; verify the hashes after any
+archive or checkout operation rather than assuming unchanged-looking text is
+byte-identical.
+
 ### G171. Report structure changes require a numbering audit
 
 Replacing the executive page with a cover removed the old Figure 1 while later
@@ -5911,7 +6399,6 @@ captions still began at Figure 2. The PDF rendered successfully and ordinary
 layout checks did not detect the gap. After changing report page content, audit
 figure numbering separately and update page-count, outline and extracted-text
 assertions together.
-
 
 ### G172. A green PVT slice is not an all-condition pass
 
@@ -5922,6 +6409,16 @@ green grid. Any sliced verification view must label both scopes, show per-slice
 counts, select a failing slice when one exists, and render PASS/FAIL as text as
 well as color. Derive all of those values from the same saved per-condition
 rows and flag any disagreement with the recorded aggregate.
+
+### G173. Do not put duplicate release ZIPs into ordinary Git history
+
+The local output/release directory reached about 1.3 GB and contains individual
+ZIPs between 238 MB and 305 MB, above GitHub's 100 MB per-file limit. These
+ZIPs duplicate source and evidence that belong in Git directly. For recovery
+backups, commit the underlying project files, trained policies, authored
+reports and audit evidence; keep output/release, tmp and the machine-local
+gmcmp.pkl out of Git. Use a release-asset service if a generated bundle itself
+must later be distributed.
 
 ## 10. Environment
 
@@ -16348,6 +16845,505 @@ the 91-call total pass independent integrity checks. No validation or test
 process remains running. The normal export flow and cached demo still use
 their prior selection logic; integration is the next implementation task.
 
+### 2026-09-06 - session 50. Fresh competition report from raw evidence.
+
+The owner switched priority to a new competition PDF, explicitly not reusing
+earlier reports. Added a standalone ReportLab builder, fresh evidence-derived
+plots and a regenerated, topology-checked core schematic. Output is
+`output/pdf/Nebula_Competition_Report.pdf` (16 pages), with a SHA-256 source
+manifest beside it. `nebula/report/check_competition_pdf.py` renders all pages
+and checks extraction, text bounds and PDF outlines. This Windows environment
+has no Poppler executable; installed PyMuPDF is used for visual QA. ReportLab
+and pypdf were installed in the existing Python 3.13 user environment.
+
+The narrative distinguishes frozen Entry 89 RL results from the later
+target-centred production selector, adaptive 315/315 from fixed setting 425's
+43/45, and the unadopted fixed 490's fresh 45/45 result. Offline bank and
+training costs are explicit. Full receiver area/power, physical DFE and
+Rs/Cs selectors remain unverified; no global-optimality, exhaustive-sweep
+speedup or continuous target coverage claim is made. Four report evidence
+guards were added. Baseline full regression: 2,794 passed, 13 deselected,
+two known warnings, 588.28 s. Post-change regression: **2,798 passed**, 13
+deselected, the same two warnings, 498.06 s; focused new tests **4/4** passed.
+All 16 pages were rendered and visually inspected; final changed pages were
+rechecked at full size. Page count/outlines, extraction, text bounds, required
+claims, all 60 source hashes and the final PDF hash passed. The review record
+is beside the PDF. Generated scratch figures and page PNGs were removed after
+review; both builders regenerate them. The final PDF SHA-256 is
+`674b948ab5972898dfd9f49f8d829a6609bc7e1e71f71239f340cc67c09b1792`.
+Only this authored report is exempted from the reference-PDF ignore rule.
+No new SPICE or training run was needed; product integration remains next.
+No test or report-generation process remains running. No commit or push was
+performed; the report, its source/tests and handoff update are left together
+in the working tree for the owner's next normal commit.
+
+### 2026-09-06 - session 51 (Entry 103 preregistration). Physical bias first.
+
+Owner explicitly asked to replace ideal Iref first and include bypass-capacitor
+area. Added an opt-in resistor-biased PMOS mirror and PDK MIM bypass renderer,
+using existing canonical passive geometry. No production runner, frozen bank,
+policy, selected demo or report was changed. Full receiver area remains unknown.
+Area inventory now includes physical reference/cap instances when actually
+present, while retaining the old unresolved labels on historical ideal decks.
+The old core drawing requires Iref and Cbyp so it refuses this changed topology;
+its synthetic test fixture was corrected to include its previously missing Iref.
+
+The earlier Entry 102 fail-first test imported an unimplemented fixed-export
+module. Work was interrupted before implementation; preserved that test as a
+pending plan outside collection, not as a skipped/passing implemented feature.
+Baseline before hardware edits: 2,798 passed, 13 deselected, two known warnings,
+262.60 s. Physical-bias tests first failed on the absent implementation, then
+the bias/schematic/readiness group passed 55/55. The fixed 47-call plan is in
+`nebula/BIAS_REFERENCE_PLAN.md`; no new result is asserted at this boundary.
+
+### 2026-09-06 - session 51 (Entry 103 outcome). Real reference/MIM prototype.
+
+Completed exactly 47 fresh SPICE calls in 13.766 s. One TT diode-PMOS
+calibration produced a 2072.198448-ohm physical resistor (W=1, L=5.34 um).
+Both added PMOS are W=25.2069, L=0.5 um, nf=1. The 10 pF MIM bypass is
+70.545 x 70.545 um, nominal 9.999453162 pF. Its plate adds 0.004976597 mm2;
+the total counted geometry rises from 0.002847367 to 0.007854511 mm2.
+Full receiver area is still unknown, not a zero-cost assumption for missing blocks.
+
+The original reader used the wrong printed-current key (`vdd#branch` rather
+than `i(vdd)`). Its journal/summary therefore reported parser failures, even
+though all raw SPICE results were retained. Added a failing regression,
+corrected the reader and reparsed ALL raw rows without any new SPICE calls.
+The original instrument snapshot hash matches the original provenance exactly;
+original failure records remain untouched. Corrected results have separate
+`corners_reparsed.jsonl` / `summary_reparsed.json` and hash provenance.
+
+Fresh DC/AC/noise results: 45/45 measured points meet broad S3 peaking/location,
+positive Nyquist boost, S5 noise and measured S6 VDD power. This does NOT prove
+full S3 tuning coverage or full S3-S9 receiver compliance. Nominal 8.834174 dB
+at 1.768990 GHz; range 7.618983-9.666630 dB / 1.548007-1.891556 GHz. Maximum
+noise 0.768042 mV RMS; maximum CTLE+reference VDD power 9.802119 mW.
+Reference current 165.885-301.412 uA is strongly PVT dependent; no precision
+or compensated-reference claim. The one TT supply ramp reaches the DC bias
+by 200 ns; no startup corner/mismatch guarantee follows.
+
+Independent evidence check: 45 unique conditions, one circuit signature,
+zero raw-hash mismatches. `nebula/BIAS_REFERENCE_RESULTS.md` records the
+findings, limitations and next gate. No HD3/eye validation was run on this
+changed circuit. DFE, physical Rs/Cs selection, common-mode generator and layout
+remain open; existing RL bank, production runner/demo and PDF are unchanged.
+
+Final full regression: **2,812 passed**, 13 deselected, the same two known
+warnings, 405.27 s (baseline 2,798 passed). All 14 new physical-bias tests are
+included. The current-label regression failed before its correction and passes
+in the full run. No SPICE or test process remains running. No commit or push
+was performed; preserve unrelated owner files and the earlier report work.
+
+### 2026-09-06 - session 52 (Entry 104 preregistration). Physical-bias HD3/eyes.
+
+Owner said continue after the physical-reference prototype. Added a standalone
+exact-deck validation instrument, not an edit to the production SPICE runner.
+It verifies Entry 103 hashes and all 45 circuit identities, reuses its AC/noise,
+and adds two canonical HD3 calls per corner (100 MHz / Nyquist), the latter
+including the existing DC-swing instrument. Raw waveforms/logs/decks retained.
+Existing fit, compression gate, request tolerances and four DFE policies reused.
+S7 is excluded from the electrical gate and explicitly remains unknown; a
+passing electrical model cannot set full receiver compliance true.
+
+Baseline 2,812 passed, 13 deselected, two known warnings, 270.53 s. The new
+tests first failed on the absent module; focused boundaries pass after the
+adapter/source checks. No new SPICE result is claimed at this boundary.
+
+### 2026-09-06 - session 52 (Entry 104 / 104b boundary). G140 instrument error.
+
+Entry 104 completed 90 calls in 53.447 s. Both HD3 tones pass all 45 corners
+(worst -81.490709 dBc at 100 MHz, -47.079003 dBc at Nyquist). Electrical gate
+accepted 168/315 conditions; others lacked valid eyes because the compression
+gate rejected predictions above the measured sweep endpoint. Inspection found
+that this new instrument accidentally used generic +/-0.8 V instead of the
+existing attenuation-adjusted `0.8/input_gain` from `_attenuation_run_args`.
+All limits were lower bounds, not observed compression. This re-hit G140;
+do NOT attribute the rejected cases to a demonstrated physical-reference failure.
+
+The user was informed before any correction measurements. Entry 104b plan
+`nebula/BIAS_SWING_CORRECTION_PLAN.md` freezes 45 additional DC-only calls,
+restoring the existing adjustment with no new circuit, repeated HD3 or relaxed
+limits. Original Entry 104 artifacts and source snapshot remain immutable.
+The original runner now requires explicit adjusted vid_max, preventing silent
+default use. New correction tests first failed on the absent module; focused
+bias/readiness checks now pass 39/39. No corrected SPICE result yet.
+
+### 2026-09-06 - session 52 (Entry 104b outcome). Electrical model gate passes.
+
+The frozen DC-only correction completed 45 calls in 35.802 s; 135 new calls
+this turn including the original 90, 182 including Entry 103's 47 prior calls.
+All 45 physical circuit corners / 315 constructed-channel cases pass the
+electrical gate, explicitly excluding full S7 area. Both HD3 tones pass:
+worst -81.490709 dBc at 100 MHz / 0.1 V differential peak, -47.079003 dBc at
+2.5 GHz / 0.267338 V differential peak. The fit residual maximum is 0.112242 dB.
+All 315 ideal-DFE controls reproduce the bridge. Worst ideal eye 133.517 mV /
+0.765625 UI; no-DFE 131.943 mV / 0.65625 UI. Misadapted and quantised controls
+also pass every case. This is a behavioural eye check, not a hardware DFE.
+
+The corrected external-source sweep is +/-1.85391572 V, exactly the existing
+G140 helper. Nominal measured output limit 1.103941 Vpp; 3/45 corner limits
+remain conservative lower bounds. No circuit, HD3 waveform or threshold changed.
+All new/old evidence hashes match, with one circuit signature over 45 corners.
+Original incorrect-instrument results remain preserved and separately labelled.
+
+`nebula/BIAS_VALIDATION_RESULTS.md` gives the simple interpretation and links.
+Physical reference current still drifts over PVT, and the weakest requested
+frequency margin is only 0.004412 octave (~0.3%); independent passive variation,
+mismatch, Rs/Cs selector parasitics and layout are not verified. Full receiver
+area/power/DFE/common-mode generation remain incomplete. No integration, new
+RL training, old-bank rewrite, cached-demo change or PDF regeneration occurred.
+
+Final full regression: **2,823 passed**, 13 deselected, two unchanged warnings,
+277.86 s; baseline 2,812 passed. All 11 new boundary/correction tests are
+included; focused bias/readiness group passed 39/39. No simulation or test
+process remains running. No commit/push was performed. Preserve unrelated
+owner files and the previous report/physical-reference work in the dirty tree.
+
+### 2026-09-06 - session 53 (Entry 105 preregistration). Opt-in physical product.
+
+User: continue after Entry 104b. Baseline full regression: 2823 passed,
+13 deselected, two known warnings, 293.96 s. New tests first failed because
+physical_design did not exist. Frozen PHYSICAL_PRODUCT_PLAN.md permits one
+9 dB / 1.9 GHz demonstration, maximum 137 calls, all raw failures retained.
+Legacy RL proposes; classical fixed intersection picks one unchanged candidate;
+one TT physical reference calibration and fresh 45-PVT electrical gate decide.
+Added explicit CLI/web mode and exact-deck physical schematic. No training,
+reward, threshold, bank, existing demo or report change. Validation pending.
+
+### 2026-09-06 - session 53 (Entry 105 outcome). Product path passes.
+
+The frozen 137-call CLI acceptance run completed in 107.908 s, fixed setting
+490 across all 45 PVT corners. All 315 electrical model cases pass, with S7
+unknown/excluded and full receiver false. Exact nominal peaking 8.834174025 dB
+at 1.768989568 GHz, power 6.965786645 mW, noise 0.589729450 mVrms. Both HD3
+tones and behavioural eye/DFE controls reproduce Entry 104b's results.
+
+New output: `nebula/product_demo/physical_bias_9db_1p9ghz_20260906/`.
+616 evidence hashes checked with zero mismatches. All 135 per-corner decks have
+one signature, and top-level design.cir equals the actually simulated TT AC
+deck byte-for-byte. Schematic visually inspected: all 27 physical instances,
+real PMOS reference and MIM bypass, both attenuator halves, explicit DFE/area
+limits. Existing ideal-Iref renderer still refuses this different topology.
+
+CLI and existing background web worker expose `rl-physical`. Legacy stays the
+default. UI exposes fresh PVT cell measurements, labels current as a sizing
+target, counts the bypass/bias geometry without treating it as full S7, and
+bundles nested raw evidence. JSON POST mode routing and worker dispatch tested;
+JavaScript syntax check passes. No extra browser-triggered SPICE run performed.
+
+After the acceptance run, the presentation checker gained stronger complete-
+membership/same-signature/fixed-setting checks. Tests refuse a missing or changed
+condition and failed DFE control even with stale all-pass counters. No raw
+files were rewritten or measurements repeated; original source snapshot/hash
+is retained. New focused group: 34 passed. Full regression pending here.
+No additional simulator job, new topology, old-bank rewrite, legacy demo/PDF
+regeneration, commit or push. Preserve unrelated owner files and prior changes.
+
+### 2026-09-06 - session 53 (Entry 105 final regression).
+
+Full suite after changes: **2837 passed**, 13 deselected, two unchanged warnings,
+469.79 s. Before: **2823 passed**, 13 deselected, two warnings, 293.96 s.
+All 14 added product-boundary tests are included; focused group 34/34 passed.
+`node --check nebula/web/static/app.js` and `git diff --check` pass. The new
+delivered schematic was visually inspected. No job remains running from this
+turn. Next agent should read PHYSICAL_PRODUCT_RESULTS.md, retain legacy defaults
+and historical evidence, and get a bounded plan before new hardware architecture.
+No commit/push; the private dirty worktree includes earlier owner/report/bias work.
+
+### 2026-09-06 - session 54 (Entry 106). Transistor DFE first block fails.
+
+Owner: leave Rs/Cs switching unchanged, focus on transistor DFE. Baseline full
+suite 2837 passed, 13 deselected, two known warnings, 290.01 s. Added plan and
+tests before implementation; absent-module tests failed as intended. A separate
+19-PDK-MOS StrongARM + NAND SR hold bench uses the measured physical CTLE output
+common mode, 5 GHz external clock and +/-50 mV differential levels. All seeds
+flow through LinkConfig. No behavioural decision drives the DUT.
+
+First preflight refused a valid older hash because its keys use Windows slashes;
+no simulator was launched. Kept source snapshots and added a reproducing test,
+normalized separators while rejecting conflicting aliases, then used a fresh
+output directory. No evidence altered and no extra circuit trial consumed.
+
+Frozen 4/8/16 um TT screen completed 3 calls in 2.422833 s. Every size correct
+on 15/32 scored bits; all 17 ones fail. Independent stimuli match the equations,
+raw traces/logs are finite and complete, and both raw decision/held-memory
+windows fail for ones. Smallest prototype has q=0.036314 V for bit 6 expected
+high at 95 ps into evaluation. No width qualifies, so the registered stopping
+rule cancels all 45 follow-up PVT calls. No retry, hidden widening or production
+adoption. Direct state-dependent storage loading is a plausible mechanism,
+not yet isolated; propose buffered isolation with explicit sizes/budget next.
+
+Results guide records separate DUT/ideal-clock power and W*L-only geometry;
+no complete DFE, area, receiver noise/eyes/PVT or new RL benefit claimed.
+Thirty raw/source hashes and every per-bit result are reparsed in regression.
+PDF skill was used only to inspect the primary circuit reference figures;
+no old project report was modified or new reference figure distributed.
+Post-change full regression: **2861 passed**, 13 deselected, two unchanged
+warnings, 355.09 s. Baseline **2837 passed**, 290.01 s. All 24 new tests pass,
+including reconstruction of the actual failed waveforms and 30 evidence hashes.
+`git diff --check` passes. Only the task-downloaded reference PDF and its two
+temporary page renders were removed; project evidence/reports were preserved
+and the reference remains available from its cited author URL. Preserve
+unrelated owner files and all prior report/bias/product changes. No commit/push.
+
+### 2026-09-06 - session 55 (Entry 107 preregistration). Buffered decision/hold.
+
+Owner approved the exact buffered follow-up proposed in DFE_HARDWARE_RESULTS.md:
+two CMOS inverters per dynamic output, W=trial width for each N/P device,
+L=.15 um, nf=W/2. Three TT sizes 4/8/16 um then one selected width across 45 PVT
+conditions, maximum 48 calls, no retries. Old stimulus/gate and raw evidence
+remain unchanged. DFE_BUFFER_PLAN.md frozen before code or measurements.
+Baseline full regression running at this documentation boundary. No hardware
+pass or product integration claim; Rs/Cs remains explicitly out of this work.
+
+### 2026-09-06 - session 55 (Entry 107 outcome). Raw decision fixed, hold fails.
+
+Full baseline 2861 passed, 13 deselected, two known warnings, 438.15 s.
+New buffered boundary tests failed before implementation (14 fail, one existing
+schedule check passes); 39 focused checks pass afterward. Added opt-in buffered
+renderer/runner, unchanged legacy deck text (newline-normalised comparison),
+eight real CMOS buffer MOS and an auxiliary buffer trace with strict time-axis
+validation. No model-card fork, changed stimulus or decision/hold gate.
+
+Approved experiment completed 3 nominal calls in 10.412893 s. Every size
+4/8/16 um resolves raw bits 32/32, but held output remains 15/32, all ones fail.
+No size eligible, so no PVT calls. Raw worst logic margin .193852 V and maximum
+stable delay about 57.5 ps, while q never crosses .9 V. Width 4 bit 6 shows raw
+decision correct at 98 ps but first buffer peaks .895247 V and active-low set
+input stays above 1.616793 V. Other bits can briefly drive a low, but none
+successfully stores a one. Thus improve buffer/storage interface next; do not
+credit this partial result as completed hardware DFE or infer unique causation.
+
+Read-only analysis verifies all 35 raw hashes and reproduces every saved gate,
+adds zero simulations, and emits diagnostic JSON/PNG with its source snapshot
+and separate hashes. Plot visually inspected. Added raw-reproduction and
+analysis/tamper tests; focused group now 42 passes. DUT VDD and external-clock
+energy are reported separately; W*L-only geometry includes all 27 MOS. New
+DFE_BUFFER_RESULTS.md explains the partial progress and remaining boundaries.
+Full post-change suite: **2879 passed**, 13 deselected, two unchanged warnings,
+568.90 s; baseline **2861 passed**, 438.15 s. All 18 new tests pass, including
+the real failure reproduction, diagnostic figure and tamper refusal. Focused
+DFE group 42 passed; `git diff --check` passes. No experiment or test job
+remains running. No further simulation, product/CTLE/RL/selector/demo/report
+change, commit or push. Preserve dirty owner files and previous bias/report/
+product/evidence work. Next hardware sizing decision remains with the owner.
+
+### 2026-09-06 - session 56 (Entry 108 preregistration). Targeted buffer drive.
+
+Owner approved (8,8), (8,16), (16,8), (16,16) um for first buffer PMOS and
+second buffer NMOS, both symmetric paths. All other devices fixed at Entry 107
+width 4 values. Four nominal calls, select passing minimum width sum with
+lexicographic tie-break, then one fixed circuit at 45 PVT points: maximum 49.
+No retry, extra pair, changed stimulus or relaxed raw/hold gate. Plan and
+boundary tests written before implementation. Full baseline running. This
+remains standalone decision/hold feasibility, not physical DFE completion.
+
+### 2026-09-06 - session 56 (Entry 108 outcome). Stronger drive does not pass.
+
+Baseline full suite 2879 passed, 13 deselected, two known warnings, 279.61 s.
+All 16 new targeted tests failed before implementation; focused 58 passed after
+the approved four-device width/nf change and standalone runner. Old stimulus,
+measurement, circuit defaults and source evidence remain unchanged. Same PDK,
+shared run lock, fixed MOS identity across hypothetical PVT and failure values
+with retained logs; no retry or silent alternate candidate.
+
+Approved four TT calls finished in 3.990993 s. P1/N2=8/8 and 8/16 retain 32/32 raw
+decisions; 16/8 and 16/16 give 28/32 (four late). All hold 15/32 zeros correctly,
+and all 17 one-bit hold windows fail. Combined counts 15,15,14,14. No passing
+candidate, so no 45-PVT follow-up or integration. 8/8 q briefly reaches 1.267450 V,
+which is NOT a successful held one. The other q maxima are .053705/.321515/
+.025527 V. Recorded bit 6 buffer excursions decline as either drive width
+increases. Evidence is consistent with a loading/timing tradeoff, not proof of
+every underlying capacitance. Reassess input load/stage count/storage interface
+before further sizing; new architecture/dimensions still need owner approval.
+
+DFE_DRIVE_RESULTS.md records all four failures, separate power/geometry scope,
+and the unchanged complete-receiver limitations. Added raw reproduction test:
+all 44 evidence hashes, signatures and per-bit gate results match; explicitly
+tests that a briefly high q does not pass. Focused group now 59 passes. Full
+post-change suite: **2896 passed**, 13 deselected, two unchanged warnings,
+298.44 s. Before: **2879 passed**, 279.61 s. All 17 new tests pass;
+`git diff --check` passes. No experiment or test job remains running. Before
+another architecture/sizing choice, propose separately verifying the existing
+memory with clean full-swing inputs and isolating buffer loading. No additional
+diagnostic simulation is authorised or launched in this completed trial family.
+No new RL, CTLE, selector, product, demo or old report changes; no commit/push.
+Preserve dirty owner/prior work.
+
+### 2026-09-06 - session 57 (Entry 109). Isolated existing memory diagnostic.
+
+Owner says continue after the proposed clean-input memory test. Froze
+DFE_MEMORY_PLAN.md before measuring: one TT / 1.8 V / 27 C call, no retries,
+no sizing/PVT/feedback/product edits. Extract the exact existing eight NAND
+memory MOS from dfe_hardware.dut_lines(4, buffered=True); no redeclaration.
+Ideal bx/by sources assert separately for the existing evaluation half-cycle,
+2 ps edges, then release before the unchanged +110..190 ps held-bit window.
+These test sources are explicitly not physical DFE components and arrive
+earlier than the real buffer signals.
+
+Full before-suite: 2896 passed, 13 deselected, two known warnings, 330.24 s.
+All 17 new instrument tests failed for absent implementation, then focused
+old/new DFE group passed 76 tests. One physical SPICE call completed in
+.489541 s: 32/32 held bits pass, including 18 scored transitions. Worst margin
+.893147 V, worst sampled final settling 50.5 ps. Memory supply .167895 mW;
+ideal source net .031393 mW and positive .110301 mW kept separate. Gate area
+.0000048 mm2 is not full layout area or S7 compliance. Eight unchanged MOS,
+no output initialisation/forced state, 8,040 saved solver samples.
+
+All 22 evidence hashes verified and raw reanalysis matches all saved fields;
+added a regression test for those exact results after measurement. This is
+the 18th new test. Clean-input success narrows attention to the demonstrated
+real buffer/storage interface failure; it is not proof of a unique cause or
+of complete hardware DFE. No second call, PVT, sizing or integration followed.
+DFE_MEMORY_RESULTS.md documents scope and a possible bounded interface/replay
+proposal for later approval. Full after-suite: 2914 passed, 13 deselected,
+two unchanged warnings, 383.05 s. Before: 2896 passed in 330.24 s. All 18 new
+tests pass; focused DFE group 77 passed in 9.59 s. `git diff --check` passes.
+No experiment or test job remains running. Working CTLE/RL, behavioural DFE,
+Rs/Cs, dashboard, cached demo and report unchanged. No commit or push; preserve
+all dirty owner and prior work.
+
+### 2026-09-06 - session 58 (Entry 110 preregistration). Buffer/memory isolation.
+
+Owner approved one clean-input buffer-plus-memory diagnostic after read-only
+analysis of Entry 107/108/109 waveforms. All 101 old evidence hashes verified.
+Entry 107 all three widths: none of 18 data transitions reaches active-low
+memory threshold by +190 ps; all 14 repeated bits do, but first crossings
+arrive about +119..124 ps, after the +110 ps hold window begins. Width-4
+sampled low spans are only 18..26 ps. This is observed waveform history and
+timing, not proof of a unique capacitance mechanism or justification to relax
+the hold check. Entry 109 clean memory result independently reproduces 32/32.
+
+Frozen DFE_BUFFER_MEMORY_PLAN.md: exactly one nominal call, unchanged existing
+eight buffer and eight memory MOS, exact Entry 109 clean source equations now
+driving x/y rather than bx/by. Comparator absent; no raw comparator pass or
+DFE/receiver claim. Same held-window analyzer, separate real buffer-node trace,
+shared run lock, strict launcher, full evidence. No new sizes, timing, PVT,
+feedback or production edits. Seven new tests first fail on absent opt-in
+mode. Baseline running; implementation and physical result pending.
+
+### 2026-09-06 - session 58 (Entry 110 result). Clean buffer/memory path passes.
+
+Baseline completed: 2914 passed, 13 deselected, two unchanged warnings, 305.53 s.
+Implemented a default-off buffer inclusion option in the existing memory
+probe/runner, not a second device definition. Same source equations, seven
+main measured vectors (actual external sources plus q/qb and currents), and
+strict shared analyzer; four real buffer nodes saved/validated separately.
+All seven prewritten tests pass; focused old/new DFE group 84 passed in 4.93 s.
+
+Exactly one approved TT call in .763771 s gives 32/32 held bits. Buffer low
+threshold arrival 37.5..39.5 ps, last low sample 129.5 ps, latest memory stable
+92.5 ps, worst hold margin .806478 V. Unlike Entry 109, buffered inputs remain
+active for the first part of the +110..190 ps window: at least 60 later samples
+have both inputs high while q/qb remain correct. This limitation is explicit.
+VDD .657757 mW, ideal-input net/positive .042304/.119316 mW; gate geometry
+.0000096 mm2 only. Raw active-node undershoot about -.214 V is not clipped;
+terminal-stress/reliability remains unverified. No full S6/S7 claim.
+
+All 25 evidence hashes and saved measurements reproduce. Added the eighth
+new test after measurement to pin exact evidence, timing, retention samples
+and preserved undershoot. DFE_BUFFER_MEMORY_RESULTS.md explains interpretation:
+the real comparator interface remains failed; clean-input success does not
+establish a physical DFE. No further trial or PVT run. Next circuit/dimensions
+need owner approval. Full after-suite: 2922 passed, 13 deselected, two unchanged
+warnings, 291.04 s; baseline 2914 passed, 305.53 s. All eight new tests pass;
+focused group 85 passed in 8.31 s. `git diff --check` passes. No experiment
+or test job remains running. Product, RL, CTLE, behavioral DFE, Rs/Cs,
+dashboard, cached demo and old PDF unchanged. No commit or push; preserve all
+dirty owner and prior work.
+
+### 2026-09-06 - session 59 (Entry 111 preregistration). Lower-load chain.
+
+Owner approved two fixed peripheral widths, 2 and 1 um, each nf=1, L=.15 um;
+all sixteen buffer/memory MOS change together, comparator width-4 and tail-8
+definition stays unchanged. Two TT calls then stop, no PVT even if passing.
+DFE_LOW_LOAD_PLAN.md freezes dimensions, stimuli, unchanged raw/held gate,
+voltage diagnostics and budget. Sixteen prewritten tests fail before code.
+Full baseline running; no new design simulation yet.
+
+Prior read-only check found Entry 110 PMOS VDS magnitude ~2.014 V beyond the
+PDK's documented 1.95 V model range. That clean-input result remains logic-only;
+not a terminal-domain or reliability pass. New diagnostic will capture all
+terminal voltages and signed VDS/VGS/VBS per exact drawn device. Published
+model-domain intervals are not reliability absolute maxima; preserve signed
+reverse/off-state excursions and distinguish them from >1.95 V magnitude.
+No invented transient exemption, clipped waveforms or relaxed logical gate.
+No changes to production CTLE/RL/Rs/Cs/behavioral DFE/dashboard/demo/report.
+
+### 2026-09-06 - session 59 (Entry 111 outcome). Lower load still fails.
+
+Baseline full suite 2922 passed, 13 deselected, two known warnings, 302.48 s.
+Seventeen prewritten boundaries failed before implementation; then focused
+DFE group 102 passed in 5.54 s. Added only explicit peripheral width/finger
+override and all-node trace to shared renderer. Core, models, stimulus and
+old decks/gates remain unchanged. New audit derives signed VDS/VGS/VBS from
+exact device connections, using published model-domain intervals rather
+than invented reliability limits. Source snapshots and every raw failure kept.
+
+Exactly two TT calls, 2.621075 s: W=2 and W=1 both raw 32/32, held 14/32.
+Every repeated bit passes; all 18 transitions fail. The memory now changes
+state, but too late: bit 6 complementary one starts at 164.5/157.5 ps, versus
+110 ps hold start. Raw maximum delays improve to 45.5/40.5 ps from Entry 107's
+~57.5 ps. These are exploratory simulator outputs, not validated physical
+performance because voltage domain also fails. Maximum |VDS/VGS| is
+2.176608/2.227363 V (input-pair VDS / first-buffer VGS respectively). No extra
+size, retries, PVT sweep, selection or integration followed. New G169 records
+why logic, model-domain and reliability are separate claims.
+
+All 35 evidence hashes verified; gate and voltage reanalysis match saved
+results. Added an eighteenth raw-regression test after measurement, including
+exact shared values across primary/buffer/all-terminal files, late-but-real
+state updates, and voltage excursions. DFE_LOW_LOAD_RESULTS.md reports the
+two failures and scoped power/area. Full after-suite: 2940 passed, 13
+deselected, two unchanged warnings, 296.01 s. Before: 2922 passed in 302.48 s.
+All 18 new tests pass; focused DFE group 103 passed in 9.26 s.
+`git diff --check` passes. No experiment or test job remains running.
+Next structural or clock/timing decision belongs to owner after a bounded proposal, not another
+automatic sweep. Production RL/CTLE/Rs/Cs, behavioral DFE, dashboard, cached
+demo and old PDF unchanged; no commit/push; preserve all dirty prior work.
+
+### 2026-09-06 - session 60 (Entry 112). Final submission report revision.
+
+Owner decides to finalise the existing product instead of extending the
+transistor-DFE pursuit, then requests a fuller and more polished report for an
+analog-design competition audience. PDF skill used: reportlab generation,
+Poppler rendering, text/bounds checks and visual review of every page. The
+old 16-page PDF is preserved locally under tmp/pdfs/report_revision/old/.
+
+New competition_submission builder produces 17 A4 pages with 13 numbered
+figures: workflow, separate readable CTLE/bias/attenuator schematics, raw AC
+envelope, PVT response, noise/power, HD3/DC transfer, channel-eye ranges,
+behavioural DFE controls, five-seed RL evidence and physical area inventory.
+Engineering journey is presented as decisions and validated milestones,
+without a catalogue of failed DFE trials. Scope remains explicit and does not
+claim full silicon, hardware DFE, physical Rs/Cs selectors or complete area.
+
+Current headline source is the integrated Entry 105 physical product, not
+Entry 101's historical unadopted candidate. Builder verifies all 616 evidence
+hashes, 45 unique PVT points, the seven-channel grid, one exact circuit
+signature and a byte-identical nominal exported deck. Six new tests were
+written first; collection failed before the new module existed, then all
+six and the four preserved historical-report tests passed. Production code,
+policy, circuit and raw evidence remain untouched; zero new SPICE/RL runs.
+
+Output: output/pdf/Nebula_Competition_Report.pdf, sources.json and review.json
+companions with the same filename prefix. Final PDF SHA-256 is
+977f5816245a4fbc1825a9f39b0484674c6146ec32f3cbb7f6fbf0809d525d35.
+All 17 pages rendered with isolated Poppler at 122 dpi and visually inspected.
+Fixed crowded labels and HD3 legend overlap; added useful content to sparse
+pages. Final text, source hashes, outlines, page bounds and body-depth checks
+pass. Review record is bound to the reviewed PDF hash. The only ignore-rule
+addition is /tmp/pdfs/ for regenerable renders and isolated PDF tooling;
+measurement evidence and final output remain eligible for version control.
+
+Baseline: 2940 passed, 13 deselected, two known warnings, 304.99 s.
+Full after-suite: 2946 passed, 13 deselected, two unchanged warnings, 410.98 s.
+The final focused report group also passed 10/10 in 4.30 s. Diff whitespace
+check passes. No experiment/test job remains running. No new hardware
+experiment is authorised; next work is submission/demo packaging and owner
+review of this report. No commit/push; all unrelated prior dirty changes
+preserved.
+
 ### 2026-09-07 - session 61 / Entry 113 preregistration: independent-review follow-up
 
 The owner authorised the ranked submission improvements after the independent
@@ -16556,11 +17552,11 @@ letting a passing channel-loss slice visually hide them.**
 The owner reported a 5 dB / 1.9 GHz physical run whose result said 312/315
 while the PVT heatmap appeared entirely green. The saved per-condition evidence
 was internally consistent: all three failures are in the 3.0 dB channel-loss
-slice (SS/0.95/0C, SF/0.95/0C and SF/0.95/27C); the old browser silently
+slice (SS/0.95/0 C, SF/0.95/0 C and SF/0.95/27 C); the old browser silently
 opened the passing 7.5 dB slice. This was a presentation-scope defect, not a
 contradiction in the electrical evidence.
 
-present_design() now exports an explicit pass/fail/missing status for every
+`present_design()` now exports an explicit pass/fail/missing status for every
 condition, per-loss counts, the first failing loss and an aggregate-versus-row
 consistency check. The PVT explorer shows 312/315 overall separately from
 42/45 in the selected 3.0 dB slice, annotates each channel-loss option, opens
@@ -16581,7 +17577,30 @@ pass/fail/missing status and the aggregate/slice UI contract. Focused web
 suite: 11 passed; JavaScript syntax and diff checks pass. Desktop result and
 PVT screenshots were rendered with local headless Edge and visually inspected.
 
-Pre-change full baseline: 2996 passed and one transient historical ll PDK
+Pre-change full baseline: 2996 passed and one transient historical `ll` PDK
 trim timing assertion failed; its immediate isolated rerun passed without a
 code or tolerance change. Final full regression: 2999 passed, 13 deselected
 and the same two known warnings in 412.22 s.
+### 2026-09-08 - Entry 118 / full GitHub recovery backup
+
+At the owner's explicit request, pulled origin/main with --ff-only before
+preparing a complete recovery backup. The remote was already up to date and
+its 1c2088a head is an ancestor of the local winning-sprint branch, so the
+update is a normal fast-forward with no remote work overwritten. The owner
+also explicitly directed that the existing public repository remain public.
+
+The backup includes all project-owned source, plans, tests, trained .pt and
+.pth policy checkpoints, experiment data needed by those policies, the final
+competition report and its authored archives, the physical schematic review,
+and complete Entry 103-111 product-audit directories including raw simulator
+logs and provenance. A credential-pattern scan of the candidate project files
+found no private keys or common token formats. Copyrighted reference PDFs were
+not added.
+
+output/release (about 1.3 GB, including 238-305 MB duplicate ZIPs), tmp (about
+1.6 GB of regenerable work files), and the machine-local gmcmp.pkl remain
+excluded. Several release ZIPs exceed GitHub's normal 100 MB blob limit, and
+all three exclusions duplicate or regenerate from the committed project state.
+The latest complete verification before this backup remains 2999 passed, 13
+deselected and two known warnings in 412.22 s; no training or circuit
+simulation was launched for the backup itself.

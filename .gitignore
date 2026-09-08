@@ -11,6 +11,8 @@
 # `git status --ignored` and `git ls-files '*.pdf'` are the two checks.
 # ─────────────────────────────────────────────────────────────────────────────
 *.pdf
+# Our newly authored report only; reference/library PDFs stay excluded.
+!output/pdf/Nebula_Competition_Report.pdf
 *.docx
 *.doc
 *.pptx
@@ -201,3 +203,11 @@ nebula/experiments/edge_bank_probe_run.jsonl
 
 # Raw desktop-app session transcript kept as a local backup only (2026-08-22).
 session25_desktop_transcript.jsonl
+
+# Entry 112: regenerable report renders and isolated PDF tooling, not evidence.
+/tmp/pdfs/
+# Entry 118: machine-recovery backup exclusions. These are regenerable local
+# bundles/caches; the source, final report, models and evidence are tracked.
+/gmcmp.pkl
+/tmp/
+/output/release/

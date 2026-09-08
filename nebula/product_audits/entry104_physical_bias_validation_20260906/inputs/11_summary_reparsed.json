@@ -1,0 +1,69 @@
+{
+  "n_expected": 45,
+  "n_measured": 45,
+  "n_s3_s5_s6_only_pass": 45,
+  "ranges": {
+    "reference_current_a": [
+      0.0001658854280597492,
+      0.0003014121977054334
+    ],
+    "power_ctle_and_bias_w": [
+      0.005006974616214071,
+      0.009802118569010376
+    ],
+    "noise_vrms": [
+      0.0005228355059443359,
+      0.000768042099991239
+    ],
+    "peaking_db": [
+      7.618983458181333,
+      9.66662968506122
+    ],
+    "f_peak_hz": [
+      1548006512.3247073,
+      1891556039.3889105
+    ]
+  },
+  "startup": {
+    "ok": true,
+    "final_nbias_v": 0.7709919,
+    "nominal_nbias_v": 0.7709919215872112,
+    "relative_settling_error": 2.7999270346690253e-08
+  },
+  "full_product_compliance": false,
+  "deployed": false,
+  "not_verified": [
+    "HD3",
+    "eye",
+    "physical DFE",
+    "Rs/Cs selector",
+    "common-mode generator",
+    "independent passive corners",
+    "mismatch",
+    "layout area/parasitics"
+  ],
+  "invocations": 47,
+  "elapsed_s": 13.765980000000127,
+  "nominal": {
+    "key": "tt_1.00_27",
+    "process": "tt",
+    "vdd_scale": 1.0,
+    "temp_c": 27,
+    "ok": true,
+    "reference_current_a": 0.0002223851377038998,
+    "tail_current_each_a": 0.001710405990794063,
+    "pmos_resistor_branch_a": 0.0002266843272561094,
+    "pmos_output_branch_a": 0.0002223851374089104,
+    "nbias_v": 0.7709919215872112,
+    "p_bias_v": 0.4697349222088273,
+    "power_ctle_and_bias_w": 0.006965786645056476,
+    "noise_vrms": 0.0005897294495183118,
+    "peaking_db": 8.834174025328473,
+    "f_peak_hz": 1768989568.062205,
+    "nyquist_boost_db": 8.7136851,
+    "s3_s5_s6_only_pass": true,
+    "circuit_signature": "21f09626c56aeb70f1cf1dc07be00809c281fe32ae65666977119e38a36f104d"
+  },
+  "reparse_note": "i(vdd) is the print label; vdd#branch was the wrong parser key. No SPICE rerun.",
+  "reparse_additional_spice_calls": 0
+}

@@ -1,0 +1,43 @@
+
+Note: Compatibility modes selected: hs a
+
+
+Circuit: * entry 108: targeted buffer drive; external clock/input, no dfe feedback
+
+option SCALE: Scale is set to 1e-06 for instance and model parameters
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+
+Initial Transient Solution
+--------------------------
+
+Node                                   Voltage
+----                                   -------
+vdd                                        1.8
+clk                                          0
+inp                                    1.33949
+inn                                    1.38949
+p                                          1.8
+tail                                   1.12068
+n                                          1.8
+x                                          1.8
+y                                          1.8
+bx1                                4.07211e-07
+bx                                         1.8
+by1                                4.07211e-07
+by                                         1.8
+q                                     0.819537
+qb                                    0.819537
+q_series                              0.756569
+qb_series                             0.756569
+vinn#branch                                  0
+vinp#branch                                  0
+vclk#branch                                  0
+vdd#branch                        -0.000143724
+
+ Reference value :  1.40750e-09
+ Reference value :  4.83550e-09
+
+No. of Data Rows : 8154
+ngspice-41 done
+

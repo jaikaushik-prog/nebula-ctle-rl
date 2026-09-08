@@ -1,0 +1,60 @@
+"""Deferred Entry 102 test specification; physical bias takes priority."""
+from copy import deepcopy
+import pytest
+
+from nebula.rl.fixed_export import select_fixed_setting, verify_fixed_deck
+
+
+class Table:
+    settings = (1, 2, 3)
+    corners = ("tt/1.00/27C", "ss/0.95/125C")
+    losses = (3., 12.)
+
+    def compliant_settings(self, corner, loss, *request):
+        return (1, 2) if corner.startswith("tt") else (2, 3)
+
+
+def test_fixed_intersection_does_not_choose_different_codes_by_corner():
+    selected, candidates, checks = select_fixed_setting(Table(), (9., 1.9e9), 1)
+    assert (selected, candidates, checks) == (2, [2], 12)
+
+
+def test_fixed_refuses_empty_intersection():
+    table = Table()
+    table.compliant_settings = lambda corner, loss, *req: (1,) if corner.startswith("tt") else (3,)
+    with pytest.raises(RuntimeError, match="no single fixed"):
+        select_fixed_setting(table, (9., 1.9e9), 1)
+
+
+def test_fixed_keeps_existing_nominal_choice_if_it_survives_every_condition():
+    table = Table()
+    table.compliant_settings = lambda *args: (1, 2)
+    assert select_fixed_setting(table, (9., 1.9e9), 2)[0] == 2
+
+
+def test_fixed_verifier_refuses_repeated_audit(tmp_path):
+    d = {"simulations": {"fixed_verify": 90}}
+    with pytest.raises(ValueError, match="already"):
+        verify_fixed_deck(d, "unused", audit_dir=tmp_path)
+
+
+def test_fixed_scope_never_describes_an_adaptive_map():
+    from nebula.report.product_scope import implementation_scope
+    scope = implementation_scope({"method": "rl-hybrid", "export_mode": "fixed-robust"})
+    assert "one unchanged" in scope["verification_note"]
+    assert scope["full_product_compliance"] is False
+
+
+def test_pending_fixed_result_cannot_be_presented_as_pass():
+    from nebula.tests.test_web_app import _design
+    from nebula.web.server import present_design
+    d = _design()
+    d["export_mode"] = "fixed-robust"
+    assert present_design("pending", d, source="live-run")["status"] == "fail"
+
+
+def test_invalid_export_mode_refuses_before_any_design(monkeypatch):
+    import nebula.design as D
+    monkeypatch.setattr(D, "solve_rl_hybrid", lambda *a: pytest.fail("search must not run"))
+    with pytest.raises(ValueError, match="export mode"):
+        D.design(9, 1.9e9, method="rl-hybrid", export_mode="unknown")

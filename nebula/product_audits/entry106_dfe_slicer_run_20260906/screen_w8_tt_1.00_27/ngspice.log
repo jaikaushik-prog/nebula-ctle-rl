@@ -1,0 +1,39 @@
+
+Note: Compatibility modes selected: hs a
+
+
+Circuit: * entry 106: decision and hold only; external clock/input, no dfe feedback
+
+option SCALE: Scale is set to 1e-06 for instance and model parameters
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+
+Initial Transient Solution
+--------------------------
+
+Node                                   Voltage
+----                                   -------
+vdd                                        1.8
+clk                                          0
+inp                                    1.33949
+inn                                    1.38949
+p                                          1.8
+tail                                   1.13452
+n                                          1.8
+x                                          1.8
+y                                          1.8
+q                                  4.07497e-07
+qb                                         1.8
+q_series                           2.03749e-07
+qb_series                              1.48527
+vinn#branch                                  0
+vinp#branch                                  0
+vclk#branch                                  0
+vdd#branch                        -2.59393e-09
+
+ Reference value :  1.08736e-09
+ Reference value :  5.09021e-09
+
+No. of Data Rows : 8219
+ngspice-41 done
+

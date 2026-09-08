@@ -1,0 +1,637 @@
+{
+  "entry": 107,
+  "evidence_hashes_verified": 35,
+  "spice_calls_added": 0,
+  "measured_spice_calls": 3,
+  "screening": [
+    {
+      "width_um": 4,
+      "raw_correct_bits": 32,
+      "held_correct_bits": 15,
+      "raw_worst_margin_v": 0.19626911758826104,
+      "raw_max_final_stable_delay_s": 5.7500000000017224e-11,
+      "buffer_low_reached_bits": 14,
+      "active_low_min_v": 0.4264248472684086,
+      "memory_q_min_v": -0.1352409517718892,
+      "memory_q_max_v": 0.3582025403135798,
+      "buffer_bits": [
+        {
+          "bit_index": 4,
+          "expected_bit": 0,
+          "active_low_min_v": 1.470129906520892,
+          "first_inverter_max_v": 0.9397096694686939
+        },
+        {
+          "bit_index": 5,
+          "expected_bit": 0,
+          "active_low_min_v": 0.4346825424790967,
+          "first_inverter_max_v": 1.210932517126665
+        },
+        {
+          "bit_index": 6,
+          "expected_bit": 1,
+          "active_low_min_v": 1.616792975253723,
+          "first_inverter_max_v": 0.8952466245038827
+        },
+        {
+          "bit_index": 7,
+          "expected_bit": 1,
+          "active_low_min_v": 0.7072179428283898,
+          "first_inverter_max_v": 1.220975240721593
+        },
+        {
+          "bit_index": 8,
+          "expected_bit": 0,
+          "active_low_min_v": 1.569718659133424,
+          "first_inverter_max_v": 0.892628250997192
+        },
+        {
+          "bit_index": 9,
+          "expected_bit": 1,
+          "active_low_min_v": 1.52903227956269,
+          "first_inverter_max_v": 0.9541530697968246
+        },
+        {
+          "bit_index": 10,
+          "expected_bit": 0,
+          "active_low_min_v": 1.477468572006442,
+          "first_inverter_max_v": 0.936595461796238
+        },
+        {
+          "bit_index": 11,
+          "expected_bit": 1,
+          "active_low_min_v": 1.547088606150833,
+          "first_inverter_max_v": 0.9444360477433158
+        },
+        {
+          "bit_index": 12,
+          "expected_bit": 0,
+          "active_low_min_v": 1.47186557666799,
+          "first_inverter_max_v": 0.9385115078463533
+        },
+        {
+          "bit_index": 13,
+          "expected_bit": 1,
+          "active_low_min_v": 1.546141040206645,
+          "first_inverter_max_v": 0.9447385309267593
+        },
+        {
+          "bit_index": 14,
+          "expected_bit": 1,
+          "active_low_min_v": 0.6625974592513426,
+          "first_inverter_max_v": 1.230786710563561
+        },
+        {
+          "bit_index": 15,
+          "expected_bit": 1,
+          "active_low_min_v": 0.5235391474963776,
+          "first_inverter_max_v": 1.268269816275504
+        },
+        {
+          "bit_index": 16,
+          "expected_bit": 0,
+          "active_low_min_v": 1.579515719545918,
+          "first_inverter_max_v": 0.8856548574366594
+        },
+        {
+          "bit_index": 17,
+          "expected_bit": 0,
+          "active_low_min_v": 0.4710146977617842,
+          "first_inverter_max_v": 1.201448598871751
+        },
+        {
+          "bit_index": 18,
+          "expected_bit": 1,
+          "active_low_min_v": 1.61493923498897,
+          "first_inverter_max_v": 0.8969036100790808
+        },
+        {
+          "bit_index": 19,
+          "expected_bit": 1,
+          "active_low_min_v": 0.7061555525955684,
+          "first_inverter_max_v": 1.221263106203466
+        },
+        {
+          "bit_index": 20,
+          "expected_bit": 0,
+          "active_low_min_v": 1.568328795938835,
+          "first_inverter_max_v": 0.8929834538082395
+        },
+        {
+          "bit_index": 21,
+          "expected_bit": 0,
+          "active_low_min_v": 0.4657595228763184,
+          "first_inverter_max_v": 1.202670568868251
+        },
+        {
+          "bit_index": 22,
+          "expected_bit": 1,
+          "active_low_min_v": 1.615829610105925,
+          "first_inverter_max_v": 0.8960677264861284
+        },
+        {
+          "bit_index": 23,
+          "expected_bit": 0,
+          "active_low_min_v": 1.438731107687039,
+          "first_inverter_max_v": 0.948916018047333
+        },
+        {
+          "bit_index": 24,
+          "expected_bit": 0,
+          "active_low_min_v": 0.4267436860097453,
+          "first_inverter_max_v": 1.21222520948867
+        },
+        {
+          "bit_index": 25,
+          "expected_bit": 1,
+          "active_low_min_v": 1.617701301305866,
+          "first_inverter_max_v": 0.8943814963959098
+        },
+        {
+          "bit_index": 26,
+          "expected_bit": 0,
+          "active_low_min_v": 1.437469862447843,
+          "first_inverter_max_v": 0.9492445755897765
+        },
+        {
+          "bit_index": 27,
+          "expected_bit": 0,
+          "active_low_min_v": 0.4264248472684086,
+          "first_inverter_max_v": 1.212265918703275
+        },
+        {
+          "bit_index": 28,
+          "expected_bit": 1,
+          "active_low_min_v": 1.617103160670803,
+          "first_inverter_max_v": 0.8949692714920121
+        },
+        {
+          "bit_index": 29,
+          "expected_bit": 1,
+          "active_low_min_v": 0.7073900987945989,
+          "first_inverter_max_v": 1.220932547587583
+        },
+        {
+          "bit_index": 30,
+          "expected_bit": 0,
+          "active_low_min_v": 1.567994910151927,
+          "first_inverter_max_v": 0.8930022154757902
+        },
+        {
+          "bit_index": 31,
+          "expected_bit": 0,
+          "active_low_min_v": 0.4654112170558703,
+          "first_inverter_max_v": 1.202629619794929
+        },
+        {
+          "bit_index": 32,
+          "expected_bit": 1,
+          "active_low_min_v": 1.61519936715796,
+          "first_inverter_max_v": 0.896673312258535
+        },
+        {
+          "bit_index": 33,
+          "expected_bit": 1,
+          "active_low_min_v": 0.6939125678341983,
+          "first_inverter_max_v": 1.222486872940992
+        },
+        {
+          "bit_index": 34,
+          "expected_bit": 1,
+          "active_low_min_v": 0.5128322838809712,
+          "first_inverter_max_v": 1.268314436597699
+        },
+        {
+          "bit_index": 35,
+          "expected_bit": 1,
+          "active_low_min_v": 0.4891969275328126,
+          "first_inverter_max_v": 1.273940132761777
+        }
+      ],
+      "dut_vdd_power_w": 0.0009058825736156106,
+      "external_clock_net_power_w": 8.83196015837249e-05,
+      "external_clock_positive_supplied_power_w": 0.00041504704570790197,
+      "gate_geometry_mm2": 1.6800000000000002e-05
+    },
+    {
+      "width_um": 8,
+      "raw_correct_bits": 32,
+      "held_correct_bits": 15,
+      "raw_worst_margin_v": 0.19543363296781002,
+      "raw_max_final_stable_delay_s": 5.738343609159775e-11,
+      "buffer_low_reached_bits": 14,
+      "active_low_min_v": 0.4317522450602193,
+      "memory_q_min_v": -0.1348364075611435,
+      "memory_q_max_v": 0.3542486960202803,
+      "buffer_bits": [
+        {
+          "bit_index": 4,
+          "expected_bit": 0,
+          "active_low_min_v": 1.473988393135123,
+          "first_inverter_max_v": 0.938421266175107
+        },
+        {
+          "bit_index": 5,
+          "expected_bit": 0,
+          "active_low_min_v": 0.438332135233721,
+          "first_inverter_max_v": 1.210055012079175
+        },
+        {
+          "bit_index": 6,
+          "expected_bit": 1,
+          "active_low_min_v": 1.618599043356562,
+          "first_inverter_max_v": 0.8941786740115336
+        },
+        {
+          "bit_index": 7,
+          "expected_bit": 1,
+          "active_low_min_v": 0.7110752547300608,
+          "first_inverter_max_v": 1.21974789578284
+        },
+        {
+          "bit_index": 8,
+          "expected_bit": 0,
+          "active_low_min_v": 1.571986183072267,
+          "first_inverter_max_v": 0.8911728534535
+        },
+        {
+          "bit_index": 9,
+          "expected_bit": 1,
+          "active_low_min_v": 1.53100255346468,
+          "first_inverter_max_v": 0.9528619917902346
+        },
+        {
+          "bit_index": 10,
+          "expected_bit": 0,
+          "active_low_min_v": 1.481288373704783,
+          "first_inverter_max_v": 0.9353476022555853
+        },
+        {
+          "bit_index": 11,
+          "expected_bit": 1,
+          "active_low_min_v": 1.549026989998832,
+          "first_inverter_max_v": 0.9433110868634409
+        },
+        {
+          "bit_index": 12,
+          "expected_bit": 0,
+          "active_low_min_v": 1.475659413713115,
+          "first_inverter_max_v": 0.9372674980593818
+        },
+        {
+          "bit_index": 13,
+          "expected_bit": 1,
+          "active_low_min_v": 1.548134691897224,
+          "first_inverter_max_v": 0.9435843131752092
+        },
+        {
+          "bit_index": 14,
+          "expected_bit": 1,
+          "active_low_min_v": 0.6656849282530527,
+          "first_inverter_max_v": 1.229433588637498
+        },
+        {
+          "bit_index": 15,
+          "expected_bit": 1,
+          "active_low_min_v": 0.5264254932140531,
+          "first_inverter_max_v": 1.267069865789366
+        },
+        {
+          "bit_index": 16,
+          "expected_bit": 0,
+          "active_low_min_v": 1.582040010178859,
+          "first_inverter_max_v": 0.8838230419928221
+        },
+        {
+          "bit_index": 17,
+          "expected_bit": 0,
+          "active_low_min_v": 0.4749254763775209,
+          "first_inverter_max_v": 1.200514061095523
+        },
+        {
+          "bit_index": 18,
+          "expected_bit": 1,
+          "active_low_min_v": 1.616751730329502,
+          "first_inverter_max_v": 0.895830506074969
+        },
+        {
+          "bit_index": 19,
+          "expected_bit": 1,
+          "active_low_min_v": 0.710022912140962,
+          "first_inverter_max_v": 1.22003396303742
+        },
+        {
+          "bit_index": 20,
+          "expected_bit": 0,
+          "active_low_min_v": 1.570717007646603,
+          "first_inverter_max_v": 0.8915447509673463
+        },
+        {
+          "bit_index": 21,
+          "expected_bit": 0,
+          "active_low_min_v": 0.4693617187787191,
+          "first_inverter_max_v": 1.201806078321197
+        },
+        {
+          "bit_index": 22,
+          "expected_bit": 1,
+          "active_low_min_v": 1.617542944542368,
+          "first_inverter_max_v": 0.8950798930459966
+        },
+        {
+          "bit_index": 23,
+          "expected_bit": 0,
+          "active_low_min_v": 1.442323384635912,
+          "first_inverter_max_v": 0.9477602908906797
+        },
+        {
+          "bit_index": 24,
+          "expected_bit": 0,
+          "active_low_min_v": 0.4320650076837758,
+          "first_inverter_max_v": 1.210928072684327
+        },
+        {
+          "bit_index": 25,
+          "expected_bit": 1,
+          "active_low_min_v": 1.619318219243616,
+          "first_inverter_max_v": 0.8934748674310822
+        },
+        {
+          "bit_index": 26,
+          "expected_bit": 0,
+          "active_low_min_v": 1.441143506189663,
+          "first_inverter_max_v": 0.9480731070537045
+        },
+        {
+          "bit_index": 27,
+          "expected_bit": 0,
+          "active_low_min_v": 0.4317522450602193,
+          "first_inverter_max_v": 1.210966762384978
+        },
+        {
+          "bit_index": 28,
+          "expected_bit": 1,
+          "active_low_min_v": 1.618819644069507,
+          "first_inverter_max_v": 0.8939818998929026
+        },
+        {
+          "bit_index": 29,
+          "expected_bit": 1,
+          "active_low_min_v": 0.7112208790352353,
+          "first_inverter_max_v": 1.219712038192517
+        },
+        {
+          "bit_index": 30,
+          "expected_bit": 0,
+          "active_low_min_v": 1.570384338097218,
+          "first_inverter_max_v": 0.8915581383939115
+        },
+        {
+          "bit_index": 31,
+          "expected_bit": 0,
+          "active_low_min_v": 0.4690418110462084,
+          "first_inverter_max_v": 1.201756752643649
+        },
+        {
+          "bit_index": 32,
+          "expected_bit": 1,
+          "active_low_min_v": 1.617016247046289,
+          "first_inverter_max_v": 0.895596120148651
+        },
+        {
+          "bit_index": 33,
+          "expected_bit": 1,
+          "active_low_min_v": 0.6974809833434663,
+          "first_inverter_max_v": 1.221128224906082
+        },
+        {
+          "bit_index": 34,
+          "expected_bit": 1,
+          "active_low_min_v": 0.5159531767404612,
+          "first_inverter_max_v": 1.267039281364602
+        },
+        {
+          "bit_index": 35,
+          "expected_bit": 1,
+          "active_low_min_v": 0.4943013776762611,
+          "first_inverter_max_v": 1.27262888016986
+        }
+      ],
+      "dut_vdd_power_w": 0.0018104088685603275,
+      "external_clock_net_power_w": 0.0001796440422578433,
+      "external_clock_positive_supplied_power_w": 0.0007676107354251583,
+      "gate_geometry_mm2": 3.3600000000000004e-05
+    },
+    {
+      "width_um": 16,
+      "raw_correct_bits": 32,
+      "held_correct_bits": 15,
+      "raw_worst_margin_v": 0.19385224958297387,
+      "raw_max_final_stable_delay_s": 5.7438798073999476e-11,
+      "buffer_low_reached_bits": 14,
+      "active_low_min_v": 0.4324491824164378,
+      "memory_q_min_v": -0.13428638796268,
+      "memory_q_max_v": 0.3521424276720591,
+      "buffer_bits": [
+        {
+          "bit_index": 4,
+          "expected_bit": 0,
+          "active_low_min_v": 1.475939530254524,
+          "first_inverter_max_v": 0.9372952469312452
+        },
+        {
+          "bit_index": 5,
+          "expected_bit": 0,
+          "active_low_min_v": 0.4435415308994073,
+          "first_inverter_max_v": 1.208542434918885
+        },
+        {
+          "bit_index": 6,
+          "expected_bit": 1,
+          "active_low_min_v": 1.619610927233287,
+          "first_inverter_max_v": 0.8930541054744852
+        },
+        {
+          "bit_index": 7,
+          "expected_bit": 1,
+          "active_low_min_v": 0.7138000969981206,
+          "first_inverter_max_v": 1.218949925643288
+        },
+        {
+          "bit_index": 8,
+          "expected_bit": 0,
+          "active_low_min_v": 1.573623736320394,
+          "first_inverter_max_v": 0.8898900154621663
+        },
+        {
+          "bit_index": 9,
+          "expected_bit": 1,
+          "active_low_min_v": 1.534120601424423,
+          "first_inverter_max_v": 0.9509756882969014
+        },
+        {
+          "bit_index": 10,
+          "expected_bit": 0,
+          "active_low_min_v": 1.483470053952416,
+          "first_inverter_max_v": 0.9340750225390799
+        },
+        {
+          "bit_index": 11,
+          "expected_bit": 1,
+          "active_low_min_v": 1.552318158706638,
+          "first_inverter_max_v": 0.9409217814774138
+        },
+        {
+          "bit_index": 12,
+          "expected_bit": 0,
+          "active_low_min_v": 1.477669248439219,
+          "first_inverter_max_v": 0.936103799629314
+        },
+        {
+          "bit_index": 13,
+          "expected_bit": 1,
+          "active_low_min_v": 1.551482529005713,
+          "first_inverter_max_v": 0.9411690541090448
+        },
+        {
+          "bit_index": 14,
+          "expected_bit": 1,
+          "active_low_min_v": 0.6675198539452271,
+          "first_inverter_max_v": 1.229009494391763
+        },
+        {
+          "bit_index": 15,
+          "expected_bit": 1,
+          "active_low_min_v": 0.5302397932517016,
+          "first_inverter_max_v": 1.266072814113858
+        },
+        {
+          "bit_index": 16,
+          "expected_bit": 0,
+          "active_low_min_v": 1.583902575928272,
+          "first_inverter_max_v": 0.8824474161304572
+        },
+        {
+          "bit_index": 17,
+          "expected_bit": 0,
+          "active_low_min_v": 0.4792596409143806,
+          "first_inverter_max_v": 1.199220038704036
+        },
+        {
+          "bit_index": 18,
+          "expected_bit": 1,
+          "active_low_min_v": 1.617847662100206,
+          "first_inverter_max_v": 0.8946523856012961
+        },
+        {
+          "bit_index": 19,
+          "expected_bit": 1,
+          "active_low_min_v": 0.7128138513135875,
+          "first_inverter_max_v": 1.219219596793516
+        },
+        {
+          "bit_index": 20,
+          "expected_bit": 0,
+          "active_low_min_v": 1.57233601164079,
+          "first_inverter_max_v": 0.8901950680474012
+        },
+        {
+          "bit_index": 21,
+          "expected_bit": 0,
+          "active_low_min_v": 0.4735156988650926,
+          "first_inverter_max_v": 1.200558387971512
+        },
+        {
+          "bit_index": 22,
+          "expected_bit": 1,
+          "active_low_min_v": 1.618670971840729,
+          "first_inverter_max_v": 0.8938808713999292
+        },
+        {
+          "bit_index": 23,
+          "expected_bit": 0,
+          "active_low_min_v": 1.447412346620857,
+          "first_inverter_max_v": 0.9456592472469052
+        },
+        {
+          "bit_index": 24,
+          "expected_bit": 0,
+          "active_low_min_v": 0.4324491824164378,
+          "first_inverter_max_v": 1.210746506393907
+        },
+        {
+          "bit_index": 25,
+          "expected_bit": 1,
+          "active_low_min_v": 1.621634033511708,
+          "first_inverter_max_v": 0.8912808665722103
+        },
+        {
+          "bit_index": 26,
+          "expected_bit": 0,
+          "active_low_min_v": 1.444219717177897,
+          "first_inverter_max_v": 0.9468057670649341
+        },
+        {
+          "bit_index": 27,
+          "expected_bit": 0,
+          "active_low_min_v": 0.4355359709068363,
+          "first_inverter_max_v": 1.209815642522418
+        },
+        {
+          "bit_index": 28,
+          "expected_bit": 1,
+          "active_low_min_v": 1.619899528550948,
+          "first_inverter_max_v": 0.892792671095475
+        },
+        {
+          "bit_index": 29,
+          "expected_bit": 1,
+          "active_low_min_v": 0.7139872146691465,
+          "first_inverter_max_v": 1.218902905453643
+        },
+        {
+          "bit_index": 30,
+          "expected_bit": 0,
+          "active_low_min_v": 1.572013414745125,
+          "first_inverter_max_v": 0.8902096419985357
+        },
+        {
+          "bit_index": 31,
+          "expected_bit": 0,
+          "active_low_min_v": 0.4731685817130044,
+          "first_inverter_max_v": 1.200517832037524
+        },
+        {
+          "bit_index": 32,
+          "expected_bit": 1,
+          "active_low_min_v": 1.618111714422289,
+          "first_inverter_max_v": 0.8944152131733337
+        },
+        {
+          "bit_index": 33,
+          "expected_bit": 1,
+          "active_low_min_v": 0.7006111898770774,
+          "first_inverter_max_v": 1.220493887762486
+        },
+        {
+          "bit_index": 34,
+          "expected_bit": 1,
+          "active_low_min_v": 0.5176980046892475,
+          "first_inverter_max_v": 1.266627551124708
+        },
+        {
+          "bit_index": 35,
+          "expected_bit": 1,
+          "active_low_min_v": 0.4945271846062552,
+          "first_inverter_max_v": 1.272243124607317
+        }
+      ],
+      "dut_vdd_power_w": 0.003613040585822454,
+      "external_clock_net_power_w": 0.000365738378111397,
+      "external_clock_positive_supplied_power_w": 0.0014879756484175615,
+      "gate_geometry_mm2": 6.720000000000001e-05
+    }
+  ],
+  "hardware_dfe_complete": false,
+  "full_receiver_verified": false
+}
