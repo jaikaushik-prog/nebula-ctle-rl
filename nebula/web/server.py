@@ -81,6 +81,12 @@ def _spec_rows(design: dict) -> list[dict]:
         ("Eye height", "eye_h_v", "V", SPEC_EYE_H_MIN_V, "min", None),
         ("Eye width", "eye_w_ui", "UI", SPEC_EYE_W_MIN_UI, "min", None),
     ]
+    if design.get("method") == "rl-physical":
+        rows = [("Counted geometry subtotal" if key == "area_mm2" else
+                 "CTLE + reference power" if key == "_power_mw" else label,
+                 key, unit, target, rule, tol)
+                for label, key, unit, target, rule, tol in rows]
+        rows.insert(6, ("HD3 at 100 MHz", "hd3_100mhz_dbc", "dBc", SPEC_HD3_MAX_DBC, "max", None))
     out: list[dict] = []
     for label, key, unit, target, rule, tolerance in rows:
         measured = _number(meas.get(key))
@@ -120,11 +126,15 @@ def _hardware_truth(design: dict) -> dict:
     }
     incomplete = [name for name, status in statuses.items()
                   if status != "netlisted-and-measured"]
+    if design.get("method") == "rl-physical":
+        statuses["Physical reference and MIM bypass"] = "netlisted; see fresh electrical verification"
     return {
         "items": statuses,
         "programmable_selector_complete": not incomplete and bool(hardware),
         "incomplete_items": incomplete,
         "note": (
+            "One fixed physical-reference circuit is tested across PVT. The Rs/Cs selector hardware is not implemented."
+            if design.get("method") == "rl-physical" else
             "The representative SKY130 circuit and passive values are real. "
             "The adaptive Rs/Cs selector network is not yet a tapeout-ready "
             "switch matrix."
@@ -146,6 +156,9 @@ def present_design(design_id: str, design: dict, *, source: str,
     request_match = design.get("request_match")
     conditions = []
     for row in verification.get("per_condition") or ():
+        compliant = row.get("compliant")
+        condition_status = ("pass" if compliant is True else
+                            "fail" if compliant is False else "missing")
         conditions.append({
             "channel_loss_db": _number(row.get("channel_loss_db")),
             "corner": row.get("corner"),
@@ -154,12 +167,61 @@ def present_design(design_id: str, design: dict, *, source: str,
             "bank_code": row.get("bank_code"),
             "source": row.get("source"),
             "selection_reason": row.get("selection_reason"),
-            "compliant": row.get("compliant"),
+            "compliant": compliant,
+            "condition_status": condition_status,
             "eye_area": _number(row.get("eye_area")),
             "rl_measurements": row.get("rl_measurements"),
             "verifier_calls": row.get("verifier_calls"),
             "bank_rows_checked": row.get("bank_rows_checked"),
+            "meas": row.get("meas"),
+            "eye_h_v": _number(row.get("eye_h_v")),
+            "eye_w_ui": _number(row.get("eye_w_ui")),
+            "reason": row.get("reason"),
+            "failed_specs": row.get("failed_specs"),
+            "unmeasured_specs": row.get("unmeasured_specs"),
         })
+
+    # The browser shows one channel-loss slice at a time, while the saved
+    # verdict covers every slice. Export both scopes from the same condition
+    # rows so a green slice can never conceal failures elsewhere in the run.
+    grouped_losses: dict[float, dict] = {}
+    for condition in conditions:
+        loss = condition["channel_loss_db"]
+        if loss is None:
+            continue
+        summary = grouped_losses.setdefault(loss, {
+            "channel_loss_db": loss,
+            "n_points": 0,
+            "n_pass": 0,
+            "n_failed": 0,
+            "n_missing": 0,
+        })
+        summary["n_points"] += 1
+        count_key = {
+            "pass": "n_pass",
+            "fail": "n_failed",
+            "missing": "n_missing",
+        }[condition["condition_status"]]
+        summary[count_key] += 1
+    loss_summaries = sorted(grouped_losses.values(),
+                            key=lambda item: item["channel_loss_db"])
+    for summary in loss_summaries:
+        summary["all_pass"] = (summary["n_points"] > 0 and
+                               summary["n_pass"] == summary["n_points"])
+    first_failing_loss_db = next(
+        (item["channel_loss_db"] for item in loss_summaries
+         if item["n_failed"]), None)
+
+    condition_counts_match = None
+    if conditions:
+        row_pass = sum(item["condition_status"] == "pass"
+                       for item in conditions)
+        row_fail = sum(item["condition_status"] == "fail"
+                       for item in conditions)
+        condition_counts_match = (
+            verification.get("n_points") == len(conditions) and
+            verification.get("n_pass") == row_pass and
+            verification.get("n_failed") == row_fail)
 
     failures: list[str] = []
     if not nominal.get("ok", False):
@@ -175,6 +237,11 @@ def present_design(design_id: str, design: dict, *, source: str,
         failures.append(f"{failed} of {total} recorded verification conditions failed.")
 
     verified = bool(verification.get("all_points_pass", False))
+    if design.get("method") == "rl-physical":
+        from nebula.physical_design import is_verified
+        verified = is_verified(design)
+        if not verified:
+            failures.append("Fresh fixed physical-bias verification is incomplete or failed; old-bank passes cannot certify this circuit.")
     request_met = bool(request_match and request_match.get("request_met", False))
     status = "pass" if nominal.get("ok") and request_met and verified else "fail"
     search = design.get("search") or {}
@@ -186,7 +253,9 @@ def present_design(design_id: str, design: dict, *, source: str,
         "natural_language": design.get("natural_language"),
         "method": design.get("method"),
         "method_label": "RL policy with simulator safety shield"
-        if design.get("method") == "rl-hybrid" else str(design.get("method")),
+        if design.get("method") == "rl-hybrid" else
+        "RL proposal + fixed physical bias + fresh verification"
+        if design.get("method") == "rl-physical" else str(design.get("method")),
         "status": status,
         "status_label": "MODEL PASS" if status == "pass" else "NEEDS WORK",
         "implementation_scope": implementation_scope(design),
@@ -214,6 +283,9 @@ def present_design(design_id: str, design: dict, *, source: str,
             "n_channel_losses": verification.get("n_channel_losses"),
             "channel_losses_db": verification.get("channel_losses_db") or [],
             "conditions": conditions,
+            "loss_summaries": loss_summaries,
+            "first_failing_loss_db": first_failing_loss_db,
+            "condition_counts_match": condition_counts_match,
             "spec_set": verification.get("spec_set"),
         },
         "search": {
@@ -288,14 +360,16 @@ class NebulaWebApp:
             self.design_dirs[shown["id"]] = self.demo_dir
         return shown
 
-    def start_design(self, request_text: str) -> Job:
+    def start_design(self, request_text: str, method: str = "rl-hybrid") -> Job:
         # Parse before enqueueing so a malformed request fails immediately and
         # never occupies the single simulator worker.
+        if method not in ("rl-hybrid", "rl-physical"):
+            raise ValueError("Unknown design mode; choose rl-hybrid or rl-physical.")
         parsed = parse_request(request_text, use_llm=False)
         job = Job(uuid.uuid4().hex, "design")
         with self.lock:
             self.jobs[job.id] = job
-        self.executor.submit(self._run_design, job, parsed)
+        self.executor.submit(self._run_design, job, parsed, method)
         return job
 
     def _update(self, job: Job, *, status: Optional[str] = None,
@@ -313,23 +387,31 @@ class NebulaWebApp:
             if error is not None:
                 job.error = error
 
-    def _run_design(self, job: Job, parsed) -> None:
+    def _run_design(self, job: Job, parsed, method: str = "rl-hybrid") -> None:
         out_dir = self.run_root / job.id
         out_dir.mkdir(parents=True, exist_ok=False)
         job.output_dir = out_dir
+        with self.lock:
+            self.design_dirs[job.id] = out_dir  # retain failed-run evidence too
         try:
             self._update(job, status="running", stage="Selecting and shielding the circuit", progress=15)
             from nebula.design import design, prepare_output_deck, write_outputs
             from nebula.llm.explanation import explain as explain_design
 
+            physical_args = ({"evidence_dir": out_dir / "physical_evidence",
+                              "progress": lambda stage, value: self._update(job, stage=stage, progress=value)}
+                             if method == "rl-physical" else {})
             design_data = design(parsed.target.peaking_db,
                                  parsed.target.f_peak_hz,
-                                 method="rl-hybrid", verify=True)
+                                 method=method, verify=True, **physical_args)
             design_data["natural_language"] = parsed.as_dict()
-            self._update(job, stage="Exporting the exact representative SPICE deck", progress=72)
+            self._update(job, stage="Exporting the exact representative SPICE deck", progress=82)
             deck = prepare_output_deck(design_data)
-            explanation, explanation_source = explain_design(
-                design_data, use_llm=False)
+            if method == "rl-physical":
+                from nebula.physical_design import report as physical_report
+                explanation, explanation_source = physical_report(design_data), "physical-evidence-template"
+            else:
+                explanation, explanation_source = explain_design(design_data, use_llm=False)
             design_data["explanation"] = {
                 "text": explanation, "source": explanation_source}
             self._update(job, stage="Building the evidence bundle", progress=88)
@@ -431,9 +513,9 @@ class NebulaWebApp:
             return None
         buf = io.BytesIO()
         with zipfile.ZipFile(buf, "w", compression=zipfile.ZIP_DEFLATED) as zf:
-            for path in sorted(directory.iterdir()):
-                if path.is_file():
-                    zf.write(path, arcname=path.name)
+            for path in sorted(directory.rglob("*")):
+                if path.is_file() and not path.is_symlink() and path.resolve().is_relative_to(directory.resolve()):
+                    zf.write(path, arcname=path.relative_to(directory).as_posix())
         return buf.getvalue()
 
 
@@ -546,7 +628,7 @@ class _Handler(BaseHTTPRequestHandler):
                 text = str(data.get("request", "")).strip()
                 if not text:
                     raise ValueError("Enter a circuit request first.")
-                job = self.app.start_design(text)
+                job = self.app.start_design(text, method=data.get("method", "rl-hybrid"))
                 self._json(job.public(), HTTPStatus.ACCEPTED)
                 return
             if parsed.path == "/api/channel":

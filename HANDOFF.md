@@ -2448,7 +2448,10 @@ still NOT full area. The 12-request replay is fully supported at eight requests;
   request passed 315/315 and wrote six artifacts during Entry 98 verification.
   Judge mode is explicitly labelled as a preverified cached artifact, and the
   channel upload keeps `PROFILED_NOT_RL_VERIFIED`. Circuit comparison compares
-  generated circuits only; no algorithm benchmark panel exists.
+  generated circuits only; no algorithm benchmark panel exists. Entry 117
+  separates the all-condition verdict from the selected 45-point loss slice,
+  annotates every loss option with its pass count, and opens the first failing
+  slice automatically.
 - **(nebula) The delivered selector is now target-centred after safety.** V6
   compliance remains the hard first gate. Safe choices are ranked by worst
   normalized peaking/frequency error, then total target error, then eye area.
@@ -2617,6 +2620,9 @@ Entry 115B: 3/6/9 dB at 1.9 GHz pass 315/315; verified registry, report and 2996
   server restart. Generated artifacts themselves remain on disk in the chosen
   `--run-root` (or a temporary directory by default). It is not a cloud service,
   does not train a policy, and does not make uploaded channels RL-verified.
+  The PVT heatmap displays one channel-loss slice at a time; the separate
+  aggregate count and scope message must remain visible whenever that slice is
+  shown.
 - **(nebula) Target centring is still limited by the frozen physical bank.**
   Entry 99 can choose the closest safe code already among the 512 settings; it
   cannot synthesize a value between codes. Exact agreement at every PVT corner
@@ -2631,6 +2637,13 @@ Entry 115B: 3/6/9 dB at 1.9 GHz pass 315/315; verified registry, report and 2996
   untrusted until proven (the Phase-0 experience says assume bugs).
 
 ## 8. Next steps (prioritized backlog with context)
+
+Entry 117 (2026-09-08): the product UI now makes aggregate-versus-slice PVT
+scope explicit, opens the first failing channel loss, labels cells with text,
+uses a larger circuit stage and a shorter first-page control/sidebar layout.
+The user's saved 5 dB / 1.9 GHz run reproduces as 312/315 overall and 42/45 at
+3.0 dB; the other six channel-loss slices are 45/45. No new simulation or
+training was run.
 
 Entry 116 (2026-09-08): the final competition report has a dedicated team/
 institution cover and a prioritized future-development page. The 20-page
@@ -5898,6 +5911,17 @@ captions still began at Figure 2. The PDF rendered successfully and ordinary
 layout checks did not detect the gap. After changing report page content, audit
 figure numbering separately and update page-count, outline and extracted-text
 assertions together.
+
+
+### G172. A green PVT slice is not an all-condition pass
+
+The browser previously paired the 315-point aggregate verdict with a heatmap
+that silently defaulted to only the 7.5 dB, 45-point channel-loss slice. A run
+with three failures at 3.0 dB therefore displayed 312/315 beside an entirely
+green grid. Any sliced verification view must label both scopes, show per-slice
+counts, select a failing slice when one exists, and render PASS/FAIL as text as
+well as color. Derive all of those values from the same saved per-condition
+rows and flag any disagreement with the recorded aggregate.
 
 ## 10. Environment
 
@@ -16523,3 +16547,41 @@ SHA-256: 3cd67ffc933b8f369d601a72f16e39295542780777ca5bccc797135278faf43b.
 
 Required tests: 2996 passed before the change; 2997 passed after it, with 13
 deselected and the same two known warnings. Focused report tests: 7 passed.
+
+### In English: **the product now shows failed operating conditions instead of
+letting a passing channel-loss slice visually hide them.**
+
+### 2026-09-08 - Entry 117 / PVT scope correction and product UI cleanup
+
+The owner reported a 5 dB / 1.9 GHz physical run whose result said 312/315
+while the PVT heatmap appeared entirely green. The saved per-condition evidence
+was internally consistent: all three failures are in the 3.0 dB channel-loss
+slice (SS/0.95/0C, SF/0.95/0C and SF/0.95/27C); the old browser silently
+opened the passing 7.5 dB slice. This was a presentation-scope defect, not a
+contradiction in the electrical evidence.
+
+present_design() now exports an explicit pass/fail/missing status for every
+condition, per-loss counts, the first failing loss and an aggregate-versus-row
+consistency check. The PVT explorer shows 312/315 overall separately from
+42/45 in the selected 3.0 dB slice, annotates each channel-loss option, opens
+the first failing slice, spells PASS/FAIL inside every cell and shows failure
+reasons in the inspected condition. Unknown results remain missing rather than
+being colored as failures or passes.
+
+The first-page controls use shorter copy and one mode explanation. The
+duplicated long hardware note is reduced to a compact boundary summary, the
+three headline metrics move into one row, and the exact-deck circuit drawing
+uses the full center column with a 430 px minimum stage and 600 px image cap.
+The tablet breakpoint moves to 1280 px to avoid horizontal crowding.
+
+No training or circuit simulation was launched. The user-reported saved
+artifact was only parsed: 312/315 overall; 3.0 dB is 42/45 and every other
+loss is 45/45. Two focused regression tests cover per-loss grouping,
+pass/fail/missing status and the aggregate/slice UI contract. Focused web
+suite: 11 passed; JavaScript syntax and diff checks pass. Desktop result and
+PVT screenshots were rendered with local headless Edge and visually inspected.
+
+Pre-change full baseline: 2996 passed and one transient historical ll PDK
+trim timing assertion failed; its immediate isolated rerun passed without a
+code or tolerance change. Final full regression: 2999 passed, 13 deselected
+and the same two known warnings in 412.22 s.

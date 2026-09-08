@@ -67,6 +67,48 @@ def test_failures_are_explained_not_hidden(request_met, verified, fragment):
     assert fragment in " ".join(shown["failure_reasons"])
 
 
+def test_presentation_groups_failures_by_channel_loss_and_marks_unknowns():
+    design = _design(verified=False)
+    design["verification"].update({
+        "n_points": 4,
+        "n_pass": 2,
+        "n_failed": 1,
+        "channel_losses_db": [3.0, 7.5],
+        "per_condition": [
+            {"channel_loss_db": 3.0, "corner": "ss/0.95/0C", "compliant": False},
+            {"channel_loss_db": 3.0, "corner": "tt/1.00/27C", "compliant": True},
+            {"channel_loss_db": 7.5, "corner": "tt/1.00/27C", "compliant": True},
+            {"channel_loss_db": 7.5, "corner": "ff/1.05/125C", "compliant": None},
+        ],
+    })
+
+    shown = present_design("x", design, source="live-run")
+    verification = shown["verification"]
+    assert [row["condition_status"] for row in verification["conditions"]] == [
+        "fail", "pass", "pass", "missing"]
+    assert verification["loss_summaries"] == [
+        {"channel_loss_db": 3.0, "n_points": 2, "n_pass": 1,
+         "n_failed": 1, "n_missing": 0, "all_pass": False},
+        {"channel_loss_db": 7.5, "n_points": 2, "n_pass": 1,
+         "n_failed": 0, "n_missing": 1, "all_pass": False},
+    ]
+    assert verification["first_failing_loss_db"] == 3.0
+    assert verification["condition_counts_match"] is True
+
+
+def test_interface_distinguishes_overall_pvt_verdict_from_selected_slice():
+    static = Path("nebula/web/static")
+    html = (static / "index.html").read_text(encoding="utf-8")
+    js = (static / "app.js").read_text(encoding="utf-8")
+    css = (static / "styles.css").read_text(encoding="utf-8")
+
+    assert 'id="pvtOverallCount"' in html
+    assert 'id="pvtScopeNote"' in html
+    assert "first_failing_loss_db" in js
+    assert "condition_counts_match" in js
+    assert ".pvt-scope-note.fail" in css
+
+
 def test_judge_mode_is_the_real_preverified_artifact_not_a_ui_fixture(tmp_path):
     app = NebulaWebApp(run_root=tmp_path, demo_dir=DEMO)
     try:

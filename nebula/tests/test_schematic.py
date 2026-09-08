@@ -46,6 +46,7 @@ Xrlp  vdd outp 0 sky130_fd_pr__res_high_po w=10 l=17.835
 Xrln  vdd outn 0 sky130_fd_pr__res_high_po w=10 l=17.835
 Xrs   s1 s2 0 sky130_fd_pr__res_high_po w=5.73 l=6.77
 Xcs   s1 s2 sky130_fd_pr__cap_mim_m3_1 w=17.215 l=17.215
+Iref  vdd nbias {IREF}
 XMR   nbias nbias 0 0 sky130_fd_pr__nfet_01v8 W={WREF} L={LT} nf={NFREF}
 XMT1  s1    nbias 0 0 sky130_fd_pr__nfet_01v8 W={WT} L={LT} nf={NFT}
 XMT2  s2    nbias 0 0 sky130_fd_pr__nfet_01v8 W={WT} L={LT} nf={NFT}

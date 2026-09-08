@@ -77,6 +77,8 @@ _REQUIRED: tuple[tuple[str, tuple[str, ...]], ...] = (
     ("XMR", ("nbias", "nbias")),
     ("XMT1", ("s1", "nbias")),
     ("XMT2", ("s2", "nbias")),
+    ("Iref", ("vdd", "nbias")),
+    ("Cbyp", ("nbias", "0")),
     ("CLp", ("outp", "0")),
     ("CLn", ("outn", "0")),
 )

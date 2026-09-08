@@ -406,9 +406,14 @@ def netlist_for(u: Sequence[float], cl_f: float,
 def design(peaking_db: float, f_peak_hz: float, method: str = "auto",
            budget: int = 150, seed: int = 0, robust: bool = False,
            verify: bool = False, peaking_tiebreak: bool = True,
-           channel_loss_db: Optional[float] = None) -> dict:
+           channel_loss_db: Optional[float] = None, evidence_dir=None,
+           progress=None) -> dict:
     """Target specs in; a sized schematic and its measured specs out."""
     target = SpecTarget(peaking_db=float(peaking_db), f_peak_hz=float(f_peak_hz))
+    if method == "rl-physical":
+        from nebula.physical_design import run
+        return run(target.peaking_db, target.f_peak_hz, evidence_dir=evidence_dir,
+                   channel_loss_db=channel_loss_db, progress=progress)
     t0 = time.perf_counter()
     if method == "auto":
         sol = solve_auto(target, budget, seed)
@@ -524,6 +529,9 @@ def design(peaking_db: float, f_peak_hz: float, method: str = "auto",
 
 
 def report(d: dict) -> str:
+    if d.get("method") == "rl-physical":
+        from nebula.physical_design import report as physical_report
+        return physical_report(d)
     L: list[str] = []
     req = d["request"]
     L.append("=" * 74)
@@ -781,6 +789,9 @@ def provenance_report() -> str:
 
 def prepare_output_deck(d: dict) -> Optional[str]:
     """Run the one representative export deck and account for it once."""
+    if d.get("method") == "rl-physical":
+        from nebula.physical_design import output_deck
+        return output_deck(d)
     from nebula.experiments.cl_range import committed_cl_range
 
     export_started = time.perf_counter()
@@ -835,6 +846,11 @@ def write_outputs(d: dict, out_path, *, deck: Optional[str] = None,
                          f"{search.get('bank_code')}; channel/PVT code map in "
                          f"design.json" if d.get("method") == "rl-hybrid"
                          else "  -  values parsed from the netlist beside it")
+            if d.get("method") == "rl-physical":
+                from nebula.report.physical_schematic import draw_physical_schematic
+                from nebula.physical_design import is_verified
+                draw_schematic = draw_physical_schematic
+                warn = None if is_verified(d) else "Physical verification did not pass"
             written.append(draw_schematic(
                 deck, out / "design_schematic.png",
                 subtitle=f"target {d['request']['peaking_db']:.1f} dB @ "
@@ -898,7 +914,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
                          f"is {lo_hz/1e9:.2f}-{hi_hz/1e9:.2f} GHz. This IS the "
                          f"reward's target.")
     ap.add_argument("--method", default="auto",
-                    choices=("auto", "rl-hybrid", "library", "uniform",
+                    choices=("auto", "rl-hybrid", "rl-physical", "library", "uniform",
                              "lhs", "grid", "cmaes", "gp_bo", "ppo"),
                     help="auto = THE DEFAULT and the deliverable: the "
                          "passives are SOLVED in closed form and proposed "
@@ -910,7 +926,9 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
                          "measured indistinguishable from uniform random; "
                          "rl-hybrid = the improved frozen RL proposer, an "
                          "ngspice-backed safety shield, then a classical "
-                         "measured-bank fallback")
+                         "measured-bank fallback; rl-physical = opt-in fixed "
+                         "physical bias with mandatory fresh 45-PVT verification "
+                         "(requires --out; at most 137 SPICE calls)")
     from nebula.link.channel import FAMILY_IL_DB
     ap.add_argument("--channel-loss", type=float, default=None,
                     choices=tuple(float(value) for value in FAMILY_IL_DB),
@@ -946,13 +964,17 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         ap.error(f"the following arguments are required: {', '.join(missing)}")
 
     f_peak = args.f_peak * 1e9 if args.f_peak < 100 else args.f_peak
+    if args.method == "rl-physical" and args.out is None:
+        ap.error("--method rl-physical requires --out for raw evidence")
+    physical_args = ({"evidence_dir": args.out / "physical_evidence"}
+                     if args.method == "rl-physical" else {})
     try:
         d = design(args.peaking, f_peak, method=args.method,
                    budget=args.budget, seed=args.seed, robust=args.robust,
                    verify=args.verify,
                    peaking_tiebreak=not args.no_peaking_tiebreak,
-                   channel_loss_db=args.channel_loss)
-    except (ValueError, RuntimeError) as exc:
+                   channel_loss_db=args.channel_loss, **physical_args)
+    except (ValueError, RuntimeError, OSError) as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 2
 
@@ -965,6 +987,9 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         for warning in warnings:
             print(f"\nwarning: {warning}", file=sys.stderr)
         print("\nwrote " + ", ".join(str(w) for w in written))
+    if args.method == "rl-physical":
+        from nebula.physical_design import is_verified
+        return 0 if is_verified(d) else 1
     return 0
 
 

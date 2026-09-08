@@ -16,6 +16,12 @@ standing rules that were written after specific failures and are not guessable.
 
 ## Reading order
 
+**Latest product addition (2026-09-06):** opt-in physical-bias mode is available
+in the dashboard and as `--method rl-physical`. It performs fresh fixed-PVT
+verification and exports the physical reference/MIM schematic. See
+[usage, measured results and remaining limits](PHYSICAL_PRODUCT_RESULTS.md).
+The legacy mode and cached Judge demo remain unchanged.
+
 If you are new to this track, read in this order. Each document is a
 self-contained write-up of one experiment.
 

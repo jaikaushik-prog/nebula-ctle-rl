@@ -114,7 +114,7 @@ function renderDesign(design) {
 
   renderSchematic(design);
   renderSpecs(design.specs || []);
-  renderSizing(design.nominal?.params || {});
+  renderSizing(design.nominal?.params || {}, design.method === "rl-physical");
   const scope = design.implementation_scope || {};
   const hardware = design.hardware || {};
   renderHardware({...hardware, note: [hardware.note, ...(scope.notes || [])].filter(Boolean).join(" ")});
@@ -167,12 +167,13 @@ function renderSpecs(rows) {
   });
 }
 
-function renderSizing(params) {
+function renderSizing(params, physical = false) {
   const labels = {
     w_in: "Input pair width", l_in: "Input pair length", nf_in: "Input fingers",
     i_bias: "Bias current", rs: "Source resistance", cs: "Source capacitance",
     rl: "Load resistance", cl: "Output load", vcm_in: "Input common mode",
   };
+  if (physical) labels.i_bias = "Tail current sizing target";
   const grid = $("#sizingGrid");
   grid.replaceChildren();
   Object.entries(labels).forEach(([key, label]) => {
@@ -201,7 +202,10 @@ function renderHardware(hardware) {
     li.append(left, right); list.append(li);
   });
   target.append(list);
-  $("#hardwareNote").textContent = hardware.note || "No hardware record loaded.";
+  const incomplete = hardware.incomplete_items || [];
+  $("#hardwareNote").textContent = incomplete.length
+    ? `${incomplete.length} implementation item${incomplete.length === 1 ? "" : "s"} remain. Open the hardware boundary below for details.`
+    : "All recorded hardware items are implemented.";
 }
 
 function renderOutcome(design) {
@@ -257,13 +261,24 @@ function parseCorner(text) {
 }
 
 function renderPvt(design) {
+  $("#pvtSettingsLabel").textContent = design.method === "rl-physical" ? "fixed settings in slice" : "adaptive settings in slice";
   const v = design.verification || {};
   const select = $("#channelLossSelect");
   select.replaceChildren();
+  const summaries = new Map((v.loss_summaries || []).map((item) => [Number(item.channel_loss_db), item]));
   (v.channel_losses_db || []).forEach((loss) => {
-    const option = document.createElement("option"); option.value = String(loss); option.textContent = `${number(loss, 1)} dB`; select.append(option);
+    const summary = summaries.get(Number(loss));
+    const result = summary
+      ? ` - ${summary.n_pass}/${summary.n_points}${summary.n_failed ? ` (${summary.n_failed} fail)` : ""}`
+      : "";
+    const option = document.createElement("option"); option.value = String(loss); option.textContent = `${number(loss, 1)} dB${result}`; select.append(option);
   });
-  if (v.channel_losses_db?.includes(7.5)) select.value = "7.5";
+  const preferredLoss = finite(v.first_failing_loss_db) ? Number(v.first_failing_loss_db)
+    : (v.channel_losses_db || []).some((loss) => Number(loss) === 7.5) ? 7.5
+      : Number(select.options[0]?.value);
+  if (finite(preferredLoss)) select.value = String(preferredLoss);
+  $("#pvtOverallCount").textContent = finite(v.n_pass) && finite(v.n_points)
+    ? `${number(v.n_pass, 0)}/${number(v.n_points, 0)}` : "Not measured";
   select.onchange = () => drawPvtGrid(design, Number(select.value));
   if (select.options.length) drawPvtGrid(design, Number(select.value));
   else {
@@ -271,6 +286,7 @@ function renderPvt(design) {
     $("#pvtPassCount").textContent = "Not measured";
     $("#pvtWorstEye").textContent = "Not measured";
     $("#pvtSettings").textContent = "Not measured";
+    $("#pvtScopeNote").textContent = "No per-condition verification rows were recorded.";
   }
 }
 
@@ -288,22 +304,37 @@ function drawPvtGrid(design, loss) {
     const head = document.createElement("div"); head.className = "pvt-row-head"; head.textContent = process.toUpperCase(); grid.append(head);
     columns.forEach((column) => {
       const item = byKey.get(`${process}|${column}`);
+      const status = item?.condition_status || (item?.compliant === true ? "pass" : item?.compliant === false ? "fail" : "missing");
       const button = document.createElement("button"); button.type = "button";
-      button.className = `pvt-cell ${item ? (item.compliant ? "pass" : "fail") : "missing"}`;
-      button.textContent = item ? `A${item.atten_code ?? "?"} B${item.bank_code ?? "?"}` : "--";
-      button.title = item ? `${item.corner}: ${item.compliant ? "pass" : "fail"}` : "Not measured";
+      button.className = `pvt-cell ${status}`;
+      const verdict = document.createElement("strong"); verdict.textContent = item ? status.toUpperCase() : "--";
+      const codes = document.createElement("span"); codes.textContent = item ? `A${item.atten_code ?? "?"} B${item.bank_code ?? "?"}` : "Not measured";
+      button.append(verdict, codes);
+      button.title = item ? `${item.corner}: ${status}${item.reason ? ` - ${item.reason}` : ""}` : "Not measured";
       button.disabled = !item;
       if (item) button.onclick = () => showCondition(item, button);
       grid.append(button);
     });
   });
-  const pass = rows.filter((row) => row.compliant).length;
+  const pass = rows.filter((row) => row.condition_status === "pass" || row.compliant === true).length;
+  const failed = rows.filter((row) => row.condition_status === "fail" || row.compliant === false).length;
   const areas = rows.map((row) => row.eye_area).filter(finite).map(Number);
   const settings = new Set(rows.map((row) => row.setting).filter((v) => v !== null && v !== undefined));
   $("#pvtPassCount").textContent = `${pass}/${rows.length}`;
   $("#pvtWorstEye").textContent = areas.length ? number(Math.min(...areas), 4) : "Not measured";
   $("#pvtSettings").textContent = number(settings.size, 0);
-  $("#conditionDetail").innerHTML = "<p>Select a cell to see its recorded values.</p>";
+  const scope = $("#pvtScopeNote");
+  scope.className = `pvt-scope-note${failed ? " fail" : ""}`;
+  if (design.verification?.condition_counts_match === false) {
+    scope.textContent = "Saved totals and per-condition rows disagree. Inspect the evidence bundle before using this verdict.";
+    scope.className = "pvt-scope-note fail";
+  } else if (Number(design.verification?.n_failed) > 0) {
+    scope.textContent = `Overall: ${number(design.verification.n_failed, 0)} of ${number(design.verification.n_points, 0)} conditions fail. Showing ${number(loss, 1)} dB: ${failed} failure${failed === 1 ? "" : "s"}.`;
+  } else {
+    scope.textContent = `Overall: all ${number(design.verification?.n_points, 0)} conditions pass. Showing the ${number(loss, 1)} dB channel-loss slice.`;
+  }
+  const detail = $("#conditionDetail"); detail.replaceChildren();
+  const prompt = document.createElement("p"); prompt.textContent = "Select a cell to see its recorded values."; detail.append(prompt);
 }
 
 function showCondition(item, button) {
@@ -313,11 +344,23 @@ function showCondition(item, button) {
   const dl = document.createElement("dl");
   const items = [
     ["Corner", item.corner], ["Channel loss", `${number(item.channel_loss_db, 1)} dB`],
-    ["Result", item.compliant ? "Pass" : "Fail"], ["Eye area", number(item.eye_area, 5)],
+    ["Result", item.condition_status === "missing" ? "Not measured" : item.compliant ? "Pass" : "Fail"], ["Eye area", number(item.eye_area, 5)],
     ["Selected code", `A${item.atten_code ?? "?"} / B${item.bank_code ?? "?"}`],
     ["Decision source", item.source || "Not recorded"], ["RL measurements", item.rl_measurements ?? "Not recorded"],
     ["Shield table rows", item.bank_rows_checked ?? "Not recorded"],
   ];
+  if (item.meas) {
+    items.splice(6); // Physical conditions are fresh measurements, not bank decisions.
+    items.push(["Peaking", `${number(item.meas.peaking_db, 4)} dB`],
+      ["Peak frequency", `${number(2.5 * 2 ** item.meas.f_peak_oct, 6)} GHz`],
+      ["CTLE + reference power", `${number(item.meas.power_w * 1e3, 4)} mW`],
+      ["Input noise", `${number(item.meas.inoise_vrms * 1e3, 4)} mV rms`],
+      ["Eye height / width", finite(item.eye_h_v) && finite(item.eye_w_ui)
+        ? `${number(item.eye_h_v * 1e3, 2)} mV / ${number(item.eye_w_ui, 4)} UI` : "Not measured"]);
+    if (item.reason) items.push(["Failure reason", item.reason]);
+    if (item.failed_specs?.length) items.push(["Failed checks", item.failed_specs.join(", ")]);
+    if (item.unmeasured_specs?.length) items.push(["Unmeasured checks", item.unmeasured_specs.join(", ")]);
+  }
   items.forEach(([name, value]) => { const wrap = document.createElement("div"); const dt = document.createElement("dt"); const dd = document.createElement("dd"); dt.textContent = name; dd.textContent = String(value); wrap.append(dt, dd); dl.append(wrap); });
   detail.append(dl);
 }
@@ -428,7 +471,7 @@ async function generate() {
   $("#requestText").value = request;
   const button = $("#generateButton"); button.disabled = true;
   try {
-    const job = await api("/api/design", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ request }) });
+    const job = await api("/api/design", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ request, method: $("#designMode").value }) });
     showProgress(job);
     await pollJob(job.id, (update) => showProgress(update));
   } catch (error) {
@@ -436,6 +479,13 @@ async function generate() {
   } finally {
     button.disabled = false;
   }
+}
+
+function updateModeSummary() {
+  const physical = $("#designMode").value === "rl-physical";
+  $("#modeSummary").textContent = physical
+    ? "One fixed circuit is remeasured across 45 PVT points and seven channel losses."
+    : "The frozen RL policy proposes adaptive settings; the simulator-backed shield checks every condition.";
 }
 
 function showProgress(job) {
@@ -523,6 +573,7 @@ function bindEvents() {
   $$(".tab").forEach((button) => button.addEventListener("click", () => selectTab(button.dataset.tab)));
   $$('[data-open-tab]').forEach((button) => button.addEventListener("click", () => selectTab(button.dataset.openTab)));
   $("#readRequest").addEventListener("click", () => parseNaturalRequest().catch(() => {}));
+  $("#designMode").addEventListener("change", updateModeSummary);
   $("#generateButton").addEventListener("click", generate);
   $("#judgeButton").addEventListener("click", enterJudgeMode);
   $("#exitJudge").addEventListener("click", exitJudgeMode);
@@ -538,6 +589,7 @@ function bindEvents() {
 
 async function init() {
   bindEvents();
+  updateModeSummary();
   try {
     renderDesign(await api("/api/demo"));
     const catalogue = await api("/api/designs");

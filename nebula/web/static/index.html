@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="Nebula CTLE Designer - evidence-grounded SKY130 circuit sizing">
   <title>Nebula CTLE Designer</title>
-  <link rel="stylesheet" href="/styles.css?v=1">
+  <link rel="stylesheet" href="/styles.css?v=3">
 </head>
 <body>
   <a class="skip-link" href="#workspace">Skip to workspace</a>
@@ -37,12 +37,13 @@
   <main id="workspace" class="workspace">
     <aside class="target-panel" aria-labelledby="targetTitle">
       <div class="panel-heading">
-        <h1 id="targetTitle">Describe the circuit</h1>
-        <p>Give the peaking and peak frequency. Nebula handles channel-loss verification automatically.</p>
+        <p class="eyebrow">NEW DESIGN</p>
+        <h1 id="targetTitle">Set the response</h1>
+        <p>Peaking and peak frequency in; a verified circuit and evidence bundle out.</p>
       </div>
 
       <label for="requestText">Plain-language request</label>
-      <textarea id="requestText" rows="4">I need 9 dB of peaking with the peak near 1.9 GHz</textarea>
+      <textarea id="requestText" rows="2">I need 9 dB of peaking with the peak near 1.9 GHz</textarea>
       <button id="readRequest" class="text-button read-request" type="button">Read this request</button>
 
       <div class="field-row">
@@ -55,13 +56,13 @@
           <div class="unit-input"><input id="frequencyInput" type="number" min="1.25" max="2.5" step="0.01" value="1.9"><span>GHz</span></div>
         </div>
       </div>
-      <p id="parseNote" class="field-note">Request bounds: 3-12 dB at 1.25-2.50 GHz. Physical coverage is limited; requests may be refused or fail verification.</p>
-      <label for="designMode">Circuit verification mode</label>
+      <p id="parseNote" class="field-note">Supported request: 3-12 dB at 1.25-2.50 GHz.</p>
+      <label for="designMode">Design path</label>
       <select id="designMode">
-        <option value="rl-hybrid">Legacy RL bank · adaptive settings</option>
-        <option value="rl-physical" selected>Physical bias · fixed circuit · fresh PVT</option>
+        <option value="rl-hybrid">RL + shield - adaptive bank</option>
+        <option value="rl-physical" selected>Physical - fixed circuit PVT</option>
       </select>
-      <p class="field-note">Physical mode runs up to 137 simulations in the background. Full receiver area and transistor-level DFE are not verified.</p>
+      <p id="modeSummary" class="mode-summary">One fixed circuit is remeasured across 45 PVT points and seven channel losses.</p>
 
       <button id="generateButton" class="button button-primary generate-button" type="button">
         <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="2"/><circle cx="18" cy="5" r="2"/><circle cx="18" cy="19" r="2"/><path d="M7 11l9-5M7 13l9 5"/></svg>
@@ -74,11 +75,6 @@
         <p>One protected worker runs the engineering pipeline. You can continue using this page.</p>
       </section>
 
-      <section class="method-note">
-        <h2>What runs</h2>
-        <p>The frozen RL policy proposes a setting. A simulator-backed safety shield checks it and uses the measured bank when needed.</p>
-        <p class="muted">Training never runs from this interface.</p>
-      </section>
     </aside>
 
     <section class="main-panel">
@@ -167,10 +163,12 @@
           <label class="select-label" for="channelLossSelect">Channel loss<select id="channelLossSelect"></select></label>
         </div>
         <div class="pvt-summary">
-          <div><strong id="pvtPassCount">--</strong><span>conditions pass</span></div>
-          <div><strong id="pvtWorstEye">--</strong><span>smallest eye area</span></div>
-          <div><strong id="pvtSettings">--</strong><span id="pvtSettingsLabel">adaptive settings used</span></div>
+          <div><strong id="pvtOverallCount">--</strong><span>all conditions</span></div>
+          <div><strong id="pvtPassCount">--</strong><span>selected loss slice</span></div>
+          <div><strong id="pvtWorstEye">--</strong><span>slice smallest eye area</span></div>
+          <div><strong id="pvtSettings">--</strong><span id="pvtSettingsLabel">adaptive settings in slice</span></div>
         </div>
+        <p id="pvtScopeNote" class="pvt-scope-note" role="status">Loading verification scope.</p>
         <div class="pvt-card">
           <div class="pvt-axis-note">Columns combine VDD and temperature. Rows are SKY130 process corners.</div>
           <div id="pvtGrid" class="pvt-grid"></div>
@@ -249,6 +247,6 @@
   </main>
 
   <template id="statusTemplate"><span class="status-dot"></span><span class="status-copy"></span></template>
-  <script src="/app.js?v=2" defer></script>
+  <script src="/app.js?v=3" defer></script>
 </body>
 </html>
