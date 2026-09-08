@@ -22,7 +22,7 @@ def main():
     pages.mkdir(parents=True, exist_ok=True)
     doc = fitz.open(path)
     manifest = json.loads((OUT / 'Nebula_Competition_Report_sources.json').read_text())
-    assert len(doc) == manifest['page_count'] == 19
+    assert len(doc) == manifest['page_count'] == 20
     assert hashlib.sha256(path.read_bytes()).hexdigest() == manifest['report_sha256']
     for source in manifest['sources']:
         assert hashlib.sha256((ROOT / source['path']).read_bytes()).hexdigest() == source['sha256'], source['path']
@@ -66,10 +66,10 @@ def main():
                 d.text((x,y-18), f"PAGE {p}", fill="#16263c")
         sheet.save(pages / f"contact-{group+1}.png")
     reader = PdfReader(path)
-    assert len(reader.pages) == 19 and len(reader.outline) == 19
+    assert len(reader.pages) == 20 and len(reader.outline) == 20
     with pdfplumber.open(path) as parsed:
         text = "\n".join(p.extract_text() or "" for p in parsed.pages)
-    for expected in ["315/315", "45/45", "0.1550", "NOT_VERIFIED", "behavioural", "8.834", "1.769", "0.007855", "rl-physical", "p2/q2/p3/q3", "Imitation only", "Acceptance across requests"]:
+    for expected in ["315/315", "45/45", "0.1550", "NOT_VERIFIED", "behavioural", "8.834", "1.769", "0.007855", "rl-physical", "p2/q2/p3/q3", "Imitation only", "Acceptance across requests", "Jai Kaushik", "Rishabh Agarwal", "Avi Mehta", "BITS Pilani", "FUTURE DEVELOPMENT"]:
         assert expected in text, expected
     assert "TARGET dB / GHz" not in doc[-1].get_text()
     assert "\ufffd" not in text
@@ -79,7 +79,7 @@ def main():
           "source_hash_checks": "PASS", "text_checks": "PASS", "visual_review": "PENDING"}
     (SCRATCH / "qa.json").write_text(json.dumps(qa, indent=2), encoding="utf-8")
     (OUT / 'Nebula_Competition_Report_review.json').write_text(json.dumps(qa, indent=2), encoding='utf-8')
-    print(f"PASS: 19 pages, source hashes, outlines, extraction, body depth and text bounds. Rendered with {renderer}.")
+    print(f"PASS: 20 pages, source hashes, outlines, extraction, body depth and text bounds. Rendered with {renderer}.")
 
 
 if __name__ == "__main__":

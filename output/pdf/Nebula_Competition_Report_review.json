@@ -2,8 +2,8 @@
   "pages": [
     {
       "page": 1,
-      "characters": 1258,
-      "images": 1,
+      "characters": 1153,
+      "images": 0,
       "body_bottom_pt": 758.2
     },
     {
@@ -56,7 +56,7 @@
     },
     {
       "page": 10,
-      "characters": 1524,
+      "characters": 1523,
       "images": 1,
       "body_bottom_pt": 775.5
     },
@@ -113,12 +113,23 @@
       "characters": 2569,
       "images": 0,
       "body_bottom_pt": 775.5
+    },
+    {
+      "page": 20,
+      "characters": 1876,
+      "images": 0,
+      "body_bottom_pt": 758.2
     }
   ],
   "bounds_issues": [],
   "renderer": "Poppler pdftoppm 122 dpi",
-  "report_sha256": "f6b5cda581c148a5bf6fc928357e752a32b8a602dc5c1dce7c071e248d399117",
+  "report_sha256": "3cd67ffc933b8f369d601a72f16e39295542780777ca5bccc797135278faf43b",
   "source_hash_checks": "PASS",
   "text_checks": "PASS",
-  "visual_review": "PENDING"
+  "visual_review": "PASS",
+  "visual_reviewed_pages": [
+    1,
+    20
+  ],
+  "visual_review_notes": "Cover and future-development page inspected at original Poppler render: hierarchy, spacing, team emails and roadmap text are legible; no overlap or clipping."
 }

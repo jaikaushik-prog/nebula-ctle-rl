@@ -17,9 +17,9 @@
 > decisions that are OPEN and human-only, and what to do next. It supersedes
 > `nebula/NEXT_STEPS.md`. This file remains the full state of record.
 
-Last updated: **2026-09-08**, Entry 115B complete. Three fixed physical
-targets pass 315/315 conditions, the verified registry is integrated, and the
-final report and complete regression pass.
+Last updated: **2026-09-08**, Entry 116 complete. The competition report now
+opens with the named BITS Pilani team and closes with a prioritized future-
+development roadmap; the 20-page PDF and complete regression pass.
 
 Previous status snapshot: **2026-09-06** (session 49, Entry 101: owner approved fresh fixed
 setting-490 validation. Fresh result PASS: 45/45 fixed PVT corners and 315/315
@@ -918,6 +918,10 @@ signaling, ADC-based DSP receiver, 28 nm CMOS reference parameters).
 
 ## 2. Repository map (what every file/folder is)
 
+Entry 116 (2026-09-08): the final competition report has a dedicated team/
+institution cover and a prioritized future-development page. The 20-page
+artifact passes source-hash, outline, extraction, bounds and visual checks.
+
 Entry 113 (2026-09-07): supplemental attribution and 12-request physical
 coverage are complete; see nebula/POST_REVIEW_RESULTS.md and session 61 below.
 PPO improves quality over imitation but random has higher compliance. One of
@@ -1773,6 +1777,10 @@ PRBS → scramble → Gray/PAM4 → TX-FFE → ZOH ×OSR(8) → TX pole (0.75·f
 
 ## 5. Complete history (what was done, in order, with the WHY)
 
+Entry 116 (2026-09-08): the final competition report has a dedicated team/
+institution cover and a prioritized future-development page. The 20-page
+artifact passes source-hash, outline, extraction, bounds and visual checks.
+
 Entry 113 (2026-09-07): supplemental attribution and 12-request physical
 coverage are complete; see nebula/POST_REVIEW_RESULTS.md and session 61 below.
 PPO improves quality over imitation but random has higher compliance. One of
@@ -1927,6 +1935,10 @@ Plus: git init, .gitignore, 28 tests, Wilson-bound BER reporting.
   rectangle and is now an explicit limitation, not a hidden traceback.
 
 ## 6. Key numbers & validated behavior (current state)
+
+Entry 116 (2026-09-08): the final competition report has a dedicated team/
+institution cover and a prioritized future-development page. The 20-page
+artifact passes source-hash, outline, extraction, bounds and visual checks.
 
 Entry 113 (2026-09-07): supplemental attribution and 12-request physical
 coverage are complete; see nebula/POST_REVIEW_RESULTS.md and session 61 below.
@@ -2458,6 +2470,10 @@ still NOT full area. The 12-request replay is fully supported at eight requests;
 
 ## 7. Known model limitations (honest list — do not overclaim)
 
+Entry 116 (2026-09-08): the final competition report has a dedicated team/
+institution cover and a prioritized future-development page. The 20-page
+artifact passes source-hash, outline, extraction, bounds and visual checks.
+
 Entry 113 (2026-09-07): supplemental attribution and 12-request physical
 coverage are complete; see nebula/POST_REVIEW_RESULTS.md and session 61 below.
 PPO improves quality over imitation but random has higher compliance. One of
@@ -2615,6 +2631,10 @@ Entry 115B: 3/6/9 dB at 1.9 GHz pass 315/315; verified registry, report and 2996
   untrusted until proven (the Phase-0 experience says assume bugs).
 
 ## 8. Next steps (prioritized backlog with context)
+
+Entry 116 (2026-09-08): the final competition report has a dedicated team/
+institution cover and a prioritized future-development page. The 20-page
+artifact passes source-hash, outline, extraction, bounds and visual checks.
 
 Entry 113 (2026-09-07): supplemental attribution and 12-request physical
 coverage are complete; see nebula/POST_REVIEW_RESULTS.md and session 61 below.
@@ -5870,6 +5890,14 @@ also compliant and measures 8.633 dB at 1.896 GHz.
 the safe set. Normalize unlike units by the one existing tolerance definition,
 record whether RL or the measured bank supplied the code, and never credit an
 in-memory table refinement as either a new simulation or an RL proposal.
+
+### G171. Report structure changes require a numbering audit
+
+Replacing the executive page with a cover removed the old Figure 1 while later
+captions still began at Figure 2. The PDF rendered successfully and ordinary
+layout checks did not detect the gap. After changing report page content, audit
+figure numbering separately and update page-count, outline and extracted-text
+assertions together.
 
 ## 10. Environment
 
@@ -16469,3 +16497,29 @@ were visually reviewed; Poppler/text/bounds/source checks pass. Final PDF hash:
 f6b5cda581c148a5bf6fc928357e752a32b8a602dc5c1dce7c071e248d399117.
 
 Full after-suite: 2996 passed, 13 deselected, two known warnings in 593.94 s.
+
+### 2026-09-08 - Entry 116 / named submission cover and future-development roadmap
+
+At the owner's request, page 1 of the competition report is now a dedicated
+submission cover. It names the project as Nebula: RL-Assisted Automated Analog
+Circuit Design for a PCIe Gen2 Equalizer, identifies Birla Institute of
+Technology and Science, Pilani (BITS Pilani), and lists Jai Kaushik, Rishabh
+Agarwal and Avi Mehta with their supplied institutional email addresses. PDF
+author and subject metadata use the same identity constants, which are covered
+by a focused test.
+
+Added page 20, From verified prototype to a complete receiver. It gives a
+positive, prioritized roadmap: physical Rs/Cs tuning coverage, a transistor-
+level 1-tap DFE, layout and extraction closure, robustness evidence, a broader
+RL action space with equal-budget baselines, and deployment and LLM
+improvements. It does not change the demonstrated evidence boundary. Removing
+the previous page-1 flow figure also triggered sequential renumbering of all
+remaining figures.
+
+PDF validation passes for all 20 pages: source hashes, outlines, extraction,
+body depth and text bounds; Poppler rendered every page. Pages 1 and 20 were
+visually inspected and have no clipping, overlap or legibility issue. Final PDF
+SHA-256: 3cd67ffc933b8f369d601a72f16e39295542780777ca5bccc797135278faf43b.
+
+Required tests: 2996 passed before the change; 2997 passed after it, with 13
+deselected and the same two known warnings. Focused report tests: 7 passed.

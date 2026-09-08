@@ -20,6 +20,13 @@ POST_DIRS = {name: POST / f'entry113_{name}_20260907' for name in ('attribution'
 WIN_BENCH = POST / 'entry115_exhaustive_benchmark_20260908'
 WIN_RECOVERY = POST / 'entry115_physical_recovery_20260908'
 WIN_REGISTRY = ROOT / 'nebula/physical_verified_registry.json'
+PROJECT_NAME = 'Nebula: RL-Assisted Automated Analog Circuit Design for a PCIe Gen2 Equalizer'
+INSTITUTION = 'Birla Institute of Technology and Science, Pilani (BITS Pilani)'
+TEAM_MEMBERS = (
+    ('Jai Kaushik', 'f20240419@pilani.bits-pilani.ac.in'),
+    ('Rishabh Agarwal', 'f20240387@pilani.bits-pilani.ac.in'),
+    ('Avi Mehta', 'f20240607@pilani.bits-pilani.ac.in'),
+)
 
 
 def verify_hashes(root, manifest):
@@ -284,6 +291,8 @@ def make_figures(e):
 class SubmissionReport(Report):
     def __init__(self,path):
         super().__init__(path)
+        self.c.setAuthor('; '.join(name for name, _ in TEAM_MEMBERS))
+        self.c.setSubject(PROJECT_NAME + ' | ' + INSTITUTION)
         self.content_bottoms=[]
 
     def finish_page(self):
@@ -320,16 +329,16 @@ def build():
     r=SubmissionReport(pdf)
     n=m['nominal']; mm=n['meas']; fixed=e['summary']['fixed']; agg=e['final']['aggregate']
 
-    r.new('01 / Executive overview','NEBULA','RL-assisted analogue equalizer design | 5 Gbps NRZ | SKY130 130 nm')
-    r.para('A specification-to-circuit workflow that combines a learned search policy, physical circuit simulation and deterministic acceptance checks. The final demonstrated product exports one fixed, source-degenerated CTLE with a transistor reference and physical MIM bypass, together with the evidence needed to review it.',size=11)
-    r.table(['FINAL DEMONSTRATION','RESULT'],[
-        ['Requested response','9 dB peaking at 1.90 GHz'],
-        ['Nominal measured response',f"{m['nom_peak']:.3f} dB at {m['nom_freq']:.3f} GHz"],
-        ['Fixed-circuit verification','45/45 PVT points; 315/315 electrical-model cases'],
-        ['Worst modelled eye',f"{m['min_eye_mv']:.2f} mV height; {fixed['dfe_policies']['ideal']['min_eye_w_ui']:.4f} UI width"],
-        ['Worst simulated noise / power',f"{m['max_noise_mv']:.3f} mVrms / {m['max_power_mw']:.3f} mW (CTLE + bias)"]],[235,268],9.7)
-    r.figure('submission_flow','Figure 1. The product separates fast proposal generation from fresh physical acceptance. All headline values come from the saved physical-product run [E1].',max_h=205)
-    r.takeaway('Submission contribution','An implemented automation product with a verified physical CTLE example, repeatable RL evidence and inspectable exports. The 1-tap DFE is behavioural; full receiver layout, area and power closure are outside the demonstrated hardware boundary.')
+    r.new('Competition submission','NEBULA','RL-assisted automated analog circuit design for a PCIe Gen2 equalizer')
+    r.para('<b>Project:</b> ' + PROJECT_NAME,size=15,gap=18)
+    r.para('A specification-to-circuit Python framework combining learned proposal generation, SKY130/ngspice circuit simulation, deterministic acceptance checks and inspectable design evidence.',size=11,gap=17)
+    r.table(['DEMONSTRATED TARGETS','PHYSICAL VERIFICATION','SEARCH EFFICIENCY'],[
+        ['3, 6 and 9 dB<br/>at 1.9 GHz','45/45 PVT points<br/>315/315 cases each','91.8x fewer cached<br/>candidate visits']],[168,168,167],9.5)
+    r.heading('Team members')
+    r.table(['NAME','EMAIL ADDRESS'],[[name,email] for name,email in TEAM_MEMBERS],[170,333],9.6)
+    r.heading('Institution')
+    r.para('<b>' + INSTITUTION + '</b><br/>Competition Technical Report | 8 September 2026',size=11,gap=14)
+    r.takeaway('Project contribution','Nebula accepts a requested equalizer response and produces a sized SKY130 circuit, measured specifications, a readable schematic and hash-verified evidence through an automated RL-assisted workflow.')
 
     r.new('02 / Requirements','From brief to acceptance','The competition asks for a working equalizer, not eye opening in isolation.')
     r.table(['BRIEF REQUIREMENT','IMPLEMENTED INTERPRETATION / EVIDENCE'],[
@@ -347,7 +356,7 @@ def build():
     r.takeaway('How to read the result','Electrical acceptance and physical integration are reported separately: the 315-case grid verifies circuit/link behaviour under the stated conditions; layout and complete receiver area remain integration milestones.')
 
     r.new('03 / Automation architecture','Fast proposals. Physical decisions.','The final flow makes the boundary between learning, search and circuit verification explicit.')
-    r.figure('submission_flow','Figure 2. Offline data are reused for proposals. Acceptance of the physical-bias export requires fresh simulator evidence, not a cached legacy score.',max_h=228)
+    r.figure('submission_flow','Figure 1. Offline data are reused for proposals. Acceptance of the physical-bias export requires fresh simulator evidence, not a cached legacy score.',max_h=228)
     r.stages([
         ('1. Interpret a target','Validate peaking and peak frequency. Natural-language assistance maps a request into these structured fields; engineering constraints remain in the verifier.'),
         ('2. Propose and intersect','The frozen RL-hybrid policy proposes a library setting. A deterministic all-corner intersection identifies fixed setting 490 (A7, Rs index 5, Cs index 2).'),
@@ -356,7 +365,7 @@ def build():
     r.takeaway('Attribution matters','The deployed result is a hybrid system: RL supplies a proposal, classical verification enforces a fixed-circuit decision, and fresh SPICE establishes the final evidence. The physical-bias circuit was not used to retrain the frozen policy.')
 
     r.new('04 / Circuit architecture','The source-degenerated CTLE','A differential NMOS pair with resistive loads and a shared Rs || Cs degeneration network.')
-    r.figure('submission_core','Figure 3. Connectivity redrawn from the exported deck and checked against all physical instances. Input attenuator and bias are expanded on the following pages. NMOS bulks connect to ground.',max_h=300)
+    r.figure('submission_core','Figure 2. Connectivity redrawn from the exported deck and checked against all physical instances. Input attenuator and bias are expanded on the following pages. NMOS bulks connect to ground.',max_h=300)
     r.table(['DEVICE / ELEMENT','FINAL NOMINAL GEOMETRY OR VALUE'],[
         ['M1 / M2','W = 57.9767 um total; L = 0.39115 um; nf = 4'],
         ['MT1 / MT2','W = 201.656 um; L = 0.5 um; nf = 8'],
@@ -366,7 +375,7 @@ def build():
     r.takeaway('A device-level implementation','The delivered netlist uses SKY130 MOS, poly-resistor and MIM models. External loading and common-mode excitation are explicitly documented testbench interfaces for the next stage of receiver integration.')
 
     r.new('05 / Bias implementation','Reference current made physical','The final export replaces the ideal Iref source and counts the bypass capacitor explicitly.')
-    r.figure('submission_bias','Figure 4. PMOS reference/feed mirror, poly bias resistor, diode-connected NMOS reference and MIM bypass. Equal net names connect to the CTLE. PMOS bulks = VDD; NMOS bulk = 0.',max_h=290)
+    r.figure('submission_bias','Figure 3. PMOS reference/feed mirror, poly bias resistor, diode-connected NMOS reference and MIM bypass. Equal net names connect to the CTLE. PMOS bulks = VDD; NMOS bulk = 0.',max_h=290)
     r.table(['IMPLEMENTATION','VALUE / PURPOSE'],[
         ['MPref / MPfeed','W/L = 25.2069/0.5 um; PMOS supply-dependent reference'],
         ['MR and tail mirror','MR W/L = 25.2069/0.5 um; each tail has 8x width'],
@@ -377,13 +386,13 @@ def build():
     r.takeaway('Design interpretation','This is a compact supply-dependent bias circuit, not a precision bandgap reference. Its practical value here is replacing an ideal source with a simulated physical implementation while preserving the fixed-circuit acceptance result.')
 
     r.new('06 / Input conditioning','Physical attenuation and peaking','The input switches are real; the Rs/Cs search indices do not imply a fabricated tuning bank.')
-    r.figure('submission_attenuator','Figure 5. Positive input leg; the negative leg is identical. Three PMOS-switched shunt branches join inp to cm. A7 holds all three gates at 0 V (ON). W labels are total microns; L = 0.15 um.',max_h=204)
+    r.figure('submission_attenuator','Figure 4. Positive input leg; the negative leg is identical. Three PMOS-switched shunt branches join inp to cm. A7 holds all three gates at 0 V (ON). W labels are total microns; L = 0.15 um.',max_h=204)
     r.para('The differential series-shunt network uses a 150 ohm series target per leg and binary-weighted shunt branches. Its switch resistance and parasitic loading are included in the measured response. In this export the attenuator code, Rs and Cs are held fixed across PVT.',size=10)
-    r.figure('submission_ac',f"Figure 6. Raw SPICE AC magnitude: final nominal peaking {m['nom_peak']:.3f} dB at {m['nom_freq']:.3f} GHz; shaded limits show the 45-corner envelope. The curve is absolute voltage gain, not gain normalised to 0 dB.",max_h=246)
+    r.figure('submission_ac',f"Figure 5. Raw SPICE AC magnitude: final nominal peaking {m['nom_peak']:.3f} dB at {m['nom_freq']:.3f} GHz; shaded limits show the 45-corner envelope. The curve is absolute voltage gain, not gain normalised to 0 dB.",max_h=246)
     r.takeaway('Peaking is a ratio, not absolute gain','Peaking is the maximum AC gain relative to low-frequency gain. A CTLE can therefore provide about 9 dB of peaking while its absolute peak gain remains near 0 dB; channel insertion loss is a different quantity.')
 
     r.new('07 / Frequency-domain robustness','One setting across the PVT grid','No corner-specific Rs/Cs retuning is used for this physical-product demonstration.')
-    r.figure('submission_pvt','Figure 7. All 45 measured points. Shading and dashed lines mark project request-matching bands; dotted lines mark the requested centres. Point order within each process is supply/temperature order.',max_h=320)
+    r.figure('submission_pvt','Figure 6. All 45 measured points. Shading and dashed lines mark project request-matching bands; dotted lines mark the requested centres. Point order within each process is supply/temperature order.',max_h=320)
     r.table(['METRIC','NOMINAL','45-CORNER RANGE'],[
         ['Peaking',f"{m['nom_peak']:.3f} dB",f"{m['min_peak']:.3f} to {m['max_peak']:.3f} dB"],
         ['Peak frequency',f"{m['nom_freq']:.3f} GHz",f"{m['min_freq']:.3f} to {m['max_freq']:.3f} GHz"],
@@ -393,7 +402,7 @@ def build():
     r.takeaway('Margin to watch',f"All points meet the declared response checks, but the tightest peak-frequency matching margin is {m['min_frequency_margin_oct']:.4f} octave. This is a sampled-corner result; mismatch, extracted parasitics and finer PVT sweeps remain separate sign-off steps.")
 
     r.new('08 / Electrical verification','Noise and supply power','Results are measured at the differential interface of the final physical CTLE.')
-    r.figure('submission_noise_power','Figure 8. Nine operating points per process corner. Dashed lines are the competition ceilings; power includes the CTLE and physical bias reference, not a transistor DFE or clock network.',max_h=265)
+    r.figure('submission_noise_power','Figure 7. Nine operating points per process corner. Dashed lines are the competition ceilings; power includes the CTLE and physical bias reference, not a transistor DFE or clock network.',max_h=265)
     r.table(['WORST OBSERVED','RESULT','REQUIREMENT'],[
         ['Input noise, 10 MHz-5 GHz',f"{m['max_noise_mv']:.3f} mVrms",'< 1.5 mVrms'],
         ['CTLE + bias power',f"{m['max_power_mw']:.3f} mW",'< 15 mW receiver target'],
@@ -404,7 +413,7 @@ def build():
     r.takeaway('Measurement discipline','The simulator returns integrated noise as RMS voltage, not a variance to square-root again. Output parsing, finite-value checks and transistor operating-point guards accompany every result; simulator exit status alone is not accepted as proof.')
 
     r.new('09 / Linearity and headroom','Validate the signal excursion','Harmonic distortion and DC swing complement small-signal AC measurements.')
-    r.figure('submission_linearity','Figure 9. HD3 at two separately tested tone frequencies across PVT (left) and the raw nominal DC transfer (right). Input amplitudes are differential peak values, not peak-to-peak.',max_h=285)
+    r.figure('submission_linearity','Figure 8. HD3 at two separately tested tone frequencies across PVT (left) and the raw nominal DC transfer (right). Input amplitudes are differential peak values, not peak-to-peak.',max_h=285)
     r.table(['MEASUREMENT','TEST CONDITION / RESULT'],[
         ['Competition HD3 test',f"100 MHz, 100 mV differential peak; worst {fixed['hd3_100mhz_worst_dbc']:.2f} dBc"],
         ['Additional Nyquist test',f"2.5 GHz, 267.338 mV differential peak; worst {fixed['hd3_nyquist_worst_dbc']:.2f} dBc"],
@@ -415,7 +424,7 @@ def build():
 
     r.new('10 / System bridge','From transistor response to eye','Absolute signal amplitude is carried into a 5 Gbps NRZ link model.')
     r.para('The bridge fits a one-zero/two-pole response to the measured CTLE magnitude, checks fit quality and measured output swing, and composes it with the transmitter and channel. Pulse cursors then give worst-ISI opening after first-post-cursor cancellation. This links device choices to a receiver metric without a transient SPICE run for every bit pattern.',size=10.5)
-    r.figure('submission_eyes','Figure 10. Minimum-to-maximum modelled eye over the 45 PVT points at each constructed channel loss, with ideal behavioural 1-tap DFE. Dashed lines: 100 mV and 0.4 UI thresholds.',max_h=249)
+    r.figure('submission_eyes','Figure 9. Minimum-to-maximum modelled eye over the 45 PVT points at each constructed channel loss, with ideal behavioural 1-tap DFE. Dashed lines: 100 mV and 0.4 UI thresholds.',max_h=249)
     r.table(['LINK CONDITION','DECLARED SETTING'],[
         ['Transmitter','0.8 V differential peak-to-peak; -3.5 dB de-emphasis'],
         ['Channel family','Constructed minimum-phase skin/dielectric-loss channels; 3 to 12 dB at Nyquist in 1.5 dB steps'],
@@ -425,7 +434,7 @@ def build():
     r.takeaway('What this visual establishes','These are noiseless cursor-based ISI openings: noise is not subtracted and width is measured at zero height. They are not BER contours. Phase is inferred from the magnitude fit, not independently validated; random jitter, clock recovery and DFE error propagation are absent.')
 
     r.new('11 / Decision feedback','What the 1-tap DFE contributes','A controlled behavioural model makes the cancellation assumption inspectable.')
-    r.figure('submission_dfe','Figure 11. Nominal 7.5 dB-channel cursors (left) and worst width under four DFE policies over all 315 conditions (right). These are saved link-model results, not transistor-level DFE measurements.',max_h=236)
+    r.figure('submission_dfe','Figure 10. Nominal 7.5 dB-channel cursors (left) and worst width under four DFE policies over all 315 conditions (right). These are saved link-model results, not transistor-level DFE measurements.',max_h=236)
     r.para('<b>Operation.</b> The normalised tap is b1 = h1/h0. The previous decision removes the first post-cursor, while the remaining pre- and post-cursors set the worst-ISI opening. For ideal cancellation, eye height is 2(h0 - sum of the remaining absolute cursor amplitudes), clipped at zero.',size=10.3)
     pol=fixed['dfe_policies']
     r.table(['TAP POLICY','MIN HEIGHT','MIN WIDTH'],[
@@ -448,7 +457,7 @@ def build():
     r.takeaway('Why this formulation','Early continuous-search experiments motivated a bounded library formulation with explicit requests and feasibility checks. This made improvement measurable, training reusable and the final decision explainable instead of relying on an opaque reward alone.')
 
     r.new('13 / Experimental evidence','The frozen hybrid-policy experiment','Original five-seed held-out result, preserved. Supplemental attribution controls appear on page 18.')
-    r.figure('submission_rl','Figure 12. Every seed improves normalised quality over the fixed start. Compliance compares the same held-out conditions. This is the frozen library-policy study [E3], not a re-training result for the later physical-bias circuit.',max_h=235)
+    r.figure('submission_rl','Figure 11. Every seed improves normalised quality over the fixed start. Compliance compares the same held-out conditions. This is the frozen library-policy study [E3], not a re-training result for the later physical-bias circuit.',max_h=235)
     r.table(['HELD-OUT RESULT','VALUE'],[
         ['Condition identities','2,430 per seed; 12,150 seed-condition evaluations'],
         ['Mean normalised quality',f"{e['final']['fixed']['mean_quality']:.4f} fixed start -> {agg['mean_quality']:.4f} shielded RL"],
@@ -489,7 +498,7 @@ def build():
     r.takeaway('Efficiency at a defined boundary','Characterisation is amortised across requests. The measured 91.8x candidate-visit reduction passes the frozen efficiency gate; offline banks, imitation, five PPO runs and each 137-call physical acceptance remain billed separately. End-to-end wall-clock speedup remains unverified.')
 
     r.new('16 / Area and integration','Geometry counted at the right boundary','A physical capacitor can dominate area even when MOS gate rectangles are small.')
-    r.figure('submission_area','Figure 13. Netlist-derived geometry inventory for all 27 physical instances. Values count passive bodies/plates and MOS W x L rectangles, with instance multiplicity; they are not a routed floorplan.',max_h=221)
+    r.figure('submission_area','Figure 12. Netlist-derived geometry inventory for all 27 physical instances. Values count passive bodies/plates and MOS W x L rectangles, with instance multiplicity; they are not a routed floorplan.',max_h=221)
     r.table(['AREA ACCOUNT','RESULT'],[
         ['Physical bypass MIM plate','0.004977 mm2'],
         ['All passive bodies / plates',f"{e['area']['passive_body_plate_mm2']:.6f} mm2"],
@@ -549,6 +558,16 @@ def build():
     r.para('Measurement definitions and integration scope are given alongside the relevant results: noise and HD3 on pages 8-9, link/DFE assumptions on pages 10-11, and geometry accounting on page 16. These definitions also apply to the closing result above.',size=9.4)
     r.para('Companion evidence: nebula/product_demo/physical_bias_9db_1p9ghz_20260906/; nebula/product_audits/entry115_physical_recovery_20260908/; nebula/product_audits/entry115_exhaustive_benchmark_20260908/; and nebula/WINNING_SPRINT_RESULTS.md.',size=8.8)
     r.takeaway('Delivered contribution','Nebula connects specification input, RL-assisted search, physical CTLE verification and inspectable circuit exports in one automated Python framework. The saved demonstration provides a reproducible starting point for extending tuning coverage and receiver integration.')
+
+    r.new('20 / Future development','From verified prototype to a complete receiver','A prioritized engineering roadmap that builds directly on the delivered automation and evidence framework.')
+    r.stages([
+        ('1. Extend physical tuning coverage','Implement the programmable Rs/Cs selector network with extracted switch parasitics, then demonstrate fixed circuits across the 1.25-2.5 GHz peak-frequency range and the remaining peaking targets.'),
+        ('2. Complete the transistor-level 1-tap DFE','Integrate a slicer, decision storage, feedback timing and a physical feedback DAC. Verify 5 Gbps settling, logic levels and cancellation across the same PVT matrix.'),
+        ('3. Close layout and post-extraction verification','Create the CTLE-plus-DFE floorplan, complete DRC/LVS and parasitic extraction, and re-evaluate area, power, noise, distortion, eye opening and device operating limits.'),
+        ('4. Expand robustness evidence','Add passive variation, mismatch and Monte Carlo analysis; replace the assumed output load with the integrated next stage and validate using measured or supplied channel S-parameters.'),
+        ('5. Grow the learning problem','Extend RL control to selected transistor dimensions, bias and programmable passives. Compare against Bayesian and evolutionary optimizers using equal physical SPICE-call and wall-clock budgets.'),
+        ('6. Strengthen deployment and interaction','Package the toolchain for repeatable installation and extend the LLM wrapper so engineers can request trade-offs while the deterministic verifier remains the authority for circuit acceptance.')])
+    r.takeaway('Development priority','First close physical frequency tuning and the transistor DFE; next complete layout extraction and broader robustness evidence. The existing artifact and hash framework can carry each new result into the same auditable workflow.')
     r.save()
     sources=[FINAL,DEMO/'design.json',DEMO/'design.cir',PHYS/'summary.json',PHYS/'fixed_pvt.jsonl',PHYS/'evidence_sha256.json',
              PHYS/'area_inventory.json',PHYS/'geometry.json',Path(__file__),ROOT/'nebula/report/competition_2026.py',
@@ -566,7 +585,7 @@ def build():
                 ROOT/'nebula/PASSIVES.md', ROOT/'nebula/DFE_LOW_LOAD_RESULTS.md',
                 ROOT/'nebula/experiments/joint_bank_73_results.json', ROOT/'nebula/experiments/joint_bank_midpoint_metadata.json']
     sources += [ROOT/f'nebula/experiments/shielded_train_{seed}.json' for seed in range(2026090500,2026090505)]
-    manifest=dict(report=pdf.name,revision='Entry 115 / verified target recovery and exhaustive visit benchmark',page_count=r.n,
+    manifest=dict(report=pdf.name,revision='Entry 116 / team cover and prioritized future-development roadmap',page_count=r.n,
                   circuit_signature=SIGNATURE,physical_evidence_hashes_checked=e['manifest_count'],
                   report_sha256=hashlib.sha256(pdf.read_bytes()).hexdigest(),content_bottoms_pt=r.content_bottoms,
                   sources=[dict(path=p.relative_to(ROOT).as_posix(),sha256=hashlib.sha256(p.read_bytes()).hexdigest()) for p in sources],

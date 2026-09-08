@@ -1,4 +1,6 @@
 """The final report must be bound to physical evidence, not the older demo."""
+from pathlib import Path
+
 import pytest
 
 from nebula.report import competition_submission as R
@@ -57,3 +59,16 @@ def test_final_report_schematic_checks_actual_connectivity():
     assert c['xcbyp']['geometry_um2'] == pytest.approx(4976.597025)
     with pytest.raises(ValueError):
         physical_components(deck.replace('Xbpfeed nbias p_bias vdd vdd', 'Xbpfeed p_bias nbias vdd vdd'))
+
+
+def test_submission_identity_and_future_scope_are_explicit():
+    assert R.PROJECT_NAME.startswith('Nebula:')
+    assert R.INSTITUTION == 'Birla Institute of Technology and Science, Pilani (BITS Pilani)'
+    assert R.TEAM_MEMBERS == (
+        ('Jai Kaushik', 'f20240419@pilani.bits-pilani.ac.in'),
+        ('Rishabh Agarwal', 'f20240387@pilani.bits-pilani.ac.in'),
+        ('Avi Mehta', 'f20240607@pilani.bits-pilani.ac.in'),
+    )
+    source = Path(R.__file__).read_text(encoding='utf-8')
+    assert "20 / Future development" in source
+    assert "Complete the transistor-level 1-tap DFE" in source
