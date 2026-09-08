@@ -96,6 +96,10 @@ MOS gate area and passive body/plate area are geometry proxies, NOT cell area.
     passive = sum(r["geometry_um2"] for r in components if r["kind"] == "passive_body_plate")
     mos = sum(r["geometry_um2"] for r in components if r["kind"] == "mos_gate")
     legacy = sum(r["geometry_um2"] for r in components if r["name"] in ("xrs", "xcs", "xrlp", "xrln"))
+    names = {r['name'] for r in components}
+    physical_bias = {'xbpref', 'xbpfeed', 'xrbias'} <= names and 'iref' not in names
+    cap_note = ("Cbyp has a capacitance but no physical implementation. " if 'cbyp' in names
+                else "Physical bypass-capacitor plates are included when present in the deck. ")
     return {
         "deck_sha256": hashlib.sha256(deck.encode()).hexdigest(),
         "components": components,
@@ -108,15 +112,29 @@ MOS gate area and passive body/plate area are geometry proxies, NOT cell area.
         "unresolved": [r["name"] for r in components if r["kind"].startswith("unimplemented")],
         "not_in_netlist": ["transistor-level DFE/slicer/clocking",
                            "physical Rs/Cs selector and control logic",
-                           "bias/common-mode generation",
+                           "common-mode generation" if physical_bias else "bias/common-mode generation",
                            "contacts, diffusion, wells, guards, routing, spacing and floorplan"],
         "note": "Geometry subtotal only, not laid-out cell/core area. No arbitrary overhead factor. "
-                "Cbyp has a capacitance but no physical implementation. CLp/CLn are assumed "
+                + cap_note + "CLp/CLn are assumed "
                 "external loads; an integrated receiver must account for their realization.",
     }
 
 
 def implementation_scope(design: dict) -> dict:
+    if design.get("method") == "rl-physical":
+        verification_note = (
+            "Fresh verification tests one unchanged physical-bias circuit and fixed "
+            "setting across PVT; the old RL bank supplies proposals, not these results.")
+        return {
+            "full_product_compliance": False, "area_status": "NOT_VERIFIED",
+            "power_scope": "Measured CTLE + physical reference VDD power; full receiver power is not verified.",
+            "dfe_scope": "Behavioural 1-tap DFE; no transistor-level DFE, slicer or clock implementation.",
+            "verification_note": verification_note,
+            "notes": [verification_note,
+                      "S7 full area is unknown and excluded from the electrical gate. Counted geometry includes the physical bypass MIM, bias devices and all netlisted passive/MOS bodies; it is not layout area.",
+                      "Power includes the CTLE and physical reference VDD branch, not DFE, clocking or external common-mode generation.",
+                      "DFE remains behavioural. Physical Rs/Cs selector switches, independent passive variation, mismatch and layout parasitics are unverified.",
+                      "One assumed external load and constructed channels are tested; physical bias current is supply/process/temperature dependent."]}
     adaptive = design.get("method") == "rl-hybrid"
     verification_note = (
         "Recorded PVT results use an adaptive per-condition setting map; they do not "

@@ -17,9 +17,9 @@
 > decisions that are OPEN and human-only, and what to do next. It supersedes
 > `nebula/NEXT_STEPS.md`. This file remains the full state of record.
 
-Last updated: **2026-09-08**, Entry 115 preregistration. Attribution,
-bounded physical coverage and the 19-page report are complete; the winning
-sprint is frozen.
+Last updated: **2026-09-08**, Entry 115A outcome. The 91.7657x cached
+candidate-visit gate passes, near-optimality fails, and the physical recovery
+runner is frozen before measurement.
 
 Previous status snapshot: **2026-09-06** (session 49, Entry 101: owner approved fresh fixed
 setting-490 validation. Fresh result PASS: 45/45 fixed PVT corners and 315/315
@@ -927,6 +927,7 @@ packages private source/evidence. Historical policies/results stay unchanged.
 Release membership includes required characterization CSVs and raw SPICE logs.
 Entry 114: final-page table replaced with a concise delivered-workflow conclusion.
 Entry 115: exhaustive regret and two-target physical recovery are preregistered; no result yet.
+Entry 115A: 91.7657x visit-reduction gate passes; near-optimality fails; physical recovery is not yet measured.
 
 Entry 101: `nebula/experiments/exp_fixed_candidate.py` validates setting 490
 using Entry 100's unchanged physical/DFE checks; `nebula/FIXED_490_PLAN.md`
@@ -1780,6 +1781,7 @@ packages private source/evidence. Historical policies/results stay unchanged.
 Release membership includes required characterization CSVs and raw SPICE logs.
 Entry 114: final-page table replaced with a concise delivered-workflow conclusion.
 Entry 115: exhaustive regret and two-target physical recovery are preregistered; no result yet.
+Entry 115A: 91.7657x visit-reduction gate passes; near-optimality fails; physical recovery is not yet measured.
 
 ### Phase 0 — audit + correctness (commit `ce733a8` equivalent; authors later rewritten, see G12)
 Bugs found in the inherited code and fixed:
@@ -1933,6 +1935,7 @@ packages private source/evidence. Historical policies/results stay unchanged.
 Release membership includes required characterization CSVs and raw SPICE logs.
 Entry 114: final-page table replaced with a concise delivered-workflow conclusion.
 Entry 115: exhaustive regret and two-target physical recovery are preregistered; no result yet.
+Entry 115A: 91.7657x visit-reduction gate passes; near-optimality fails; physical recovery is not yet measured.
 
 Entry 101: setting 490 freshly passes all 45 fixed PVT corners / 315 model
 conditions at 9 dB / 1.9 GHz (91 calls, 88.37 s). Nominal is 8.852970 dB /
@@ -2461,6 +2464,7 @@ packages private source/evidence. Historical policies/results stay unchanged.
 Release membership includes required characterization CSVs and raw SPICE logs.
 Entry 114: final-page table replaced with a concise delivered-workflow conclusion.
 Entry 115: exhaustive regret and two-target physical recovery are preregistered; no result yet.
+Entry 115A: 91.7657x visit-reduction gate passes; near-optimality fails; physical recovery is not yet measured.
 
 - **Entry 100 / full receiver:** no complete area footprint, transistor-level
   DFE/slicer/clock, physical Rs/Cs selector, or complete bias/control power has
@@ -2617,6 +2621,7 @@ packages private source/evidence. Historical policies/results stay unchanged.
 Release membership includes required characterization CSVs and raw SPICE logs.
 Entry 114: final-page table replaced with a concise delivered-workflow conclusion.
 Entry 115: exhaustive regret and two-target physical recovery are preregistered; no result yet.
+Entry 115A: 91.7657x visit-reduction gate passes; near-optimality fails; physical recovery is not yet measured.
 
 **Entry 100 audit complete; next decisions:** validate existing bank setting 490
 as a candidate fixed-robust 9 dB / 1.9 GHz export before any adoption or new
@@ -3106,6 +3111,7 @@ packages private source/evidence. Historical policies/results stay unchanged.
 Release membership includes required characterization CSVs and raw SPICE logs.
 Entry 114: final-page table replaced with a concise delivered-workflow conclusion.
 Entry 115: exhaustive regret and two-target physical recovery are preregistered; no result yet.
+Entry 115A: 91.7657x visit-reduction gate passes; near-optimality fails; physical recovery is not yet measured.
 
 **Entry 100 scope footgun:** a green historical S7 reward row is only a partial
 passive-area comparison, and 315 green adaptive conditions use multiple
@@ -16417,3 +16423,19 @@ on the five existing policies and automatic physical recovery for the two
 multi-candidate near-pass targets. No Entry-115 result or new SPICE candidate
 has been measured. Existing policy, reward, tolerances, circuit evidence and
 report remain unchanged. Baseline: 2985 passed, 13 deselected, two warnings.
+
+### 2026-09-08 - Entry 115A / exhaustive benchmark outcome and recovery runner
+
+The committed exposed-data benchmark rescored five frozen PPO seeds over 2,430
+identities against all 512 settings. PPO averages 5.5794 visits versus 512
+(91.7657x candidate-visit reduction), so the preregistered 20x efficiency gate
+passes. The near-optimality gate fails: mean oracle-solvable quality regret is
+0.28310 and 20.905% are within 0.05. This supports candidate-visit reduction,
+not near-optimality, SPICE speedup or new held-out performance. Evidence:
+nebula/product_audits/entry115_exhaustive_benchmark_20260908/.
+
+Added an explicit fail-closed forced-setting input and the Entry-115 physical
+recovery runner. It verifies the preserved coverage hashes and candidate
+membership, attempts all ten frozen candidates even after a pass, retains raw
+failures and enforces the 1,370-call aggregate ceiling. No Entry-115B candidate
+has been simulated yet. Focused implementation checks: 23 passed.

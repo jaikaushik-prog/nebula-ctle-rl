@@ -1,0 +1,54 @@
+{
+  "status": "ENTRY115_EXPOSED_CACHED_BENCHMARK",
+  "protocol_sha256": "ec013111b93c3a8907af1e393546771ef852f1f3b0a2eab600cbd5e89a775462",
+  "source_sha256": {
+    "episodes.jsonl.gz": "3aedd89542e199ad64cccaa67f2bd5cb092d67c5f29d3e5e47427ed5260b702b",
+    "summary.json": "1a62cf339db5f38918420f7789edd11a29b29d018b62e3ca6608030e7b1f7dc2"
+  },
+  "source_facts": {
+    "decoded": "99B6BF526EE610CF39EBC921A2B8BEA2EA482A610354056569B2A176AA1169E2",
+    "midpoint_membership": true,
+    "n_rows": 23040,
+    "n_settings": 512,
+    "n_corners": 45
+  },
+  "simulations_run": 0,
+  "training_steps": 0,
+  "n_settings": 512,
+  "n_identities": 2430,
+  "n_policy_seeds": 5,
+  "aggregate": {
+    "n_rows": 12150,
+    "n_oracle_solvable": 12150,
+    "policy_compliance": 0.8388477366255144,
+    "oracle_compliance": 1.0,
+    "policy_quality": 0.7169017256313512,
+    "oracle_quality": 1.0,
+    "mean_regret_oracle_solvable": 0.2830982743686488,
+    "median_regret_oracle_solvable": 0.1744190630825445,
+    "p90_regret_oracle_solvable": 1.0,
+    "fraction_within_0p01": 0.1842798353909465,
+    "fraction_within_0p05": 0.20905349794238684,
+    "mean_policy_visits": 5.579423868312757,
+    "mean_policy_unique_visits": 4.552263374485597,
+    "candidate_visit_reduction": 91.76574716034814,
+    "unique_candidate_reduction": 112.47152413668414,
+    "mean_regret_ci95": [
+      0.2368517834957417,
+      0.3298497203283255
+    ],
+    "within_0p05_ci95": [
+      0.15094650205761317,
+      0.2715226337448559
+    ],
+    "near_optimality_gate": false,
+    "visit_reduction_gate": true
+  },
+  "cached_timing": {
+    "oracle_all_identities_s": 20.295364399999926,
+    "policy_all_seed_identities_s": 1.1381729999993695,
+    "scope": "Python table scoring only; excludes policy inference and is not SPICE speedup"
+  },
+  "claim_boundary": "Exposed midpoint library-policy evidence; not the physical-bias circuit or a new held-out set",
+  "wall_s": 25.72806490000039
+}
