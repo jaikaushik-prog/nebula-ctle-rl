@@ -17997,3 +17997,19 @@ reports, registry and frozen RL remain unchanged.
 Archival completed: 114 gzip siblings, 1,383,204,851 compressed bytes,
 preserving 4,870,455,744 raw bytes. Largest archive 15,254,468 bytes; all
 local originals remain intact and the original manifest is unchanged.
+
+### 2026-09-10 - Entry 126 evidence preservation, first local batch
+
+The completed Entry 126 run has 90/90 new PVT passes and 95/95 new-DFE
+signed-voltage passes. Full local replay/validation passed: 51 focused tests
+and 3107 full tests (13 deselected, two known warnings), 130.98/1025.08 s.
+Its 190 byte-verified gzip traces total 2,305,436,700 bytes. Preserve them in
+two additive local commits, without rewriting history or deleting raw data:
+this first batch contains 48 complete case directories. The next checkpoint
+adds the remaining cases, complete manifests, results, tests and Entry 127
+registration. This intermediate commit is NOT the complete portable evidence
+bundle; do not run Entry 127 until the next complete checkpoint is frozen.
+GitHub's single-push limit motivates the split, not a failed simulator gate:
+https://docs.github.com/en/get-started/using-git/troubleshooting-the-2-gb-push-limit
+No public upload is authorized after the earlier auto-review rejection;
+no upload or alternate route has been attempted.
