@@ -60,6 +60,8 @@ def build():
     r.heading('Project team')
     r.table(['NAME','EMAIL ADDRESS'],[[name,email] for name,email in TEAM_MEMBERS],[170,333],9.8)
     r.para('Submitted 9 September 2026<br/>PCIe Gen2 equalizer design automation using SKY130, ngspice and reinforcement learning.',size=10.5,color='#526479',gap=16)
+    r.heading('Final circuit at a glance')
+    r.figure('submission_core','Final 9 dB / 1.9 GHz CTLE core. The complete exported deck also includes the physical bias reference, MIM bypass and input attenuator; detailed dimensions appear on page 6.',max_h=195)
 
     r.new('Front matter / Abstract','Abstract and project objectives','A concise statement of the problem, method, principal evidence and intended contribution.')
     r.heading('Abstract')
@@ -69,6 +71,13 @@ def build():
     r.heading('Project objectives')
     r.para('<b>1.</b> Accept peaking and peak-frequency targets through one validated interface.<br/><b>2.</b> Size and export an inspectable SKY130 source-degenerated CTLE.<br/><b>3.</b> Use reinforcement learning to reduce candidate visits within the characterised space.<br/><b>4.</b> Verify one fixed circuit across PVT, noise, distortion, power and link conditions.<br/><b>5.</b> Package the schematic, measurements and provenance for independent review.',size=9.8,gap=14)
     r.para('<b>Keywords:</b> analog design automation, reinforcement learning, CTLE, PCIe Gen2, SKY130, ngspice, PVT verification, decision-feedback equalization.',size=9.2,color='#526479')
+    r.heading('What the automated run produces')
+    r.table(['INPUT','DECISION PATH','ENGINEERING OUTPUT'],[[
+        'Peaking boost and peak-frequency targets',
+        'Frozen policy proposal, fixed-circuit selection and fresh ngspice acceptance',
+        'Sized schematic, exact SPICE deck, specifications and hash-verified evidence']],
+        [143,190,170],8.8)
+    r.takeaway('Evidence boundary','RL reduces visits inside the characterised design space. The final physical claim comes from remeasuring one fixed exported circuit across the declared PVT and channel grid.')
 
     r.new('Front matter / Contents','Contents and evidence map','The academic sequence follows the problem, implementation, validation, learning evidence, product and conclusions.')
     r.table(['SECTION','SUBJECT','PAGES'],[
@@ -86,6 +95,7 @@ def build():
         ['17-20','Design decisions, product workflow, computational cost, area and audit trail']],[90,413],9.1)
     r.heading('How to read the report')
     r.para('Headline circuit results come from one fixed physical CTLE at every tested corner. The RL pages separately establish proposal quality and candidate-visit reduction. Page 20 gives the exact evidence paths and reproduction command; page 22 ends with the prioritised future-work programme.',size=9.8)
+    r.takeaway('Three evidence layers','Pages 9-13 present fixed-circuit and link validation; pages 14-16 isolate the learned-policy experiment and its controls; pages 19-20 state the physical-integration boundary and exact audit trail.')
 
     r.new('Chapter 1 / Problem and objectives','Problem statement and success criteria','The competition asks for a working equalizer, not eye opening in isolation.')
     r.table(['BRIEF REQUIREMENT','IMPLEMENTED INTERPRETATION / EVIDENCE'],[

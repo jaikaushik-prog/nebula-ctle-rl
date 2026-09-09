@@ -17,12 +17,13 @@
 > decisions that are OPEN and human-only, and what to do next. It supersedes
 > `nebula/NEXT_STEPS.md`. This file remains the full state of record.
 
-Last updated: **2026-09-09**, Entry 119 complete. The unchanged 20-page
+Last updated: **2026-09-09**, Entry 120 complete. The unchanged 20-page
 competition report is preserved byte-for-byte in a dated archive, while a
 separate 22-page academic/competition edition adds an abstract, contents and
 evidence map, chapter ordering, and a less crowded cover. The new PDF passes
 source-hash, outline, extraction, figure-sequence, bounds and all-page visual
 checks. No simulation, policy training or evidence generation was run.
+Entry 120 fills pages 1-3 with a circuit visual and evidence guides.
 
 Previous status snapshot: **2026-09-06**, session 60 / Entry 112: owner freezes further
 DFE pursuit and requests a polished, current competition report. Revised
@@ -1009,6 +1010,9 @@ signaling, ADC-based DSP receiver, 28 nm CMOS reference parameters).
 
 ## 2. Repository map (what every file/folder is)
 
+Entry 120: competition_academic.py now fills pages 1-3 with a circuit visual, an input/decision/output table and an evidence guide. The PDF checker gates front-matter depth and the cover image.
+
+
 Entry 119 (2026-09-09): nebula/report/competition_academic.py builds a
 separate academic/competition report without changing the established
 competition_submission.py output. check_academic_pdf.py validates its
@@ -1946,6 +1950,9 @@ PRBS → scramble → Gray/PAM4 → TX-FFE → ZOH ×OSR(8) → TX pole (0.75·f
 
 ## 5. Complete history (what was done, in order, with the WHY)
 
+Entry 120 (2026-09-09): filled the three sparse academic front-matter pages using existing verified evidence. No technical result or claim changed. Rendered pages 4-22 are unchanged.
+
+
 Entry 119 (2026-09-09): the owner's AAPMS internship report was used only as a
 read-only structural reference. A new 22-page Nebula edition adopts the useful
 academic ordering: formal cover, abstract/objectives, contents/evidence map,
@@ -2164,6 +2171,9 @@ Plus: git init, .gitignore, 28 tests, Wilson-bound BER reporting.
   rectangle and is now an explicit limitation, not a hidden traceback.
 
 ## 6. Key numbers & validated behavior (current state)
+
+Entry 120: current academic PDF SHA-256 is a573db02335879e0a6a0b3feb2c9eeea87098bfc7d0f1f9462db691334a9449a6711. Pages 1-3 pass visual review; pages 4-22 match Entry 119.
+
 
 Entry 119 report state: two authored submission choices are retained. The
 established 20-page PDF has SHA-256
@@ -3010,6 +3020,9 @@ variation, mismatch and layout remain open. Old production evidence is unchanged
   untrusted until proven (the Phase-0 experience says assume bugs).
 
 ## 8. Next steps (prioritized backlog with context)
+
+**Entry 120 report status:** use the filled academic version for review. Keep the unchanged 20-page archive as the fallback submission.
+
 
 **Entry 119 submission-document status:** compare the preserved 20-page report
 and the new 22-page academic edition for final submission choice. The academic
@@ -6471,6 +6484,12 @@ editorial experiment irreversible and also obscures whether evidence changed.
 build the alternate version under a distinct filename and entry point; keep
 source manifests and QA records beside both. A report-only revision must not
 rerun simulation or training, and tests must verify the archived PDF hash.
+
+### G175. Front matter needs its own density gate
+
+General page checks excluded the cover, abstract and contents pages, so all three could pass while leaving large unused lower halves.
+
+**Rule:** set explicit lower-content bounds for front matter, require the planned cover visual, and compare untouched page renders after a local edit.
 
 ## 10. Environment
 
@@ -17682,3 +17701,9 @@ visual inspection of every Poppler render. Academic PDF SHA-256:
 Focused report regression: 13 passed. Pre-change full baseline: 2999 passed,
 13 deselected and two known warnings in 412.22 s. Post-change full regression:
 3001 passed, 13 deselected and two known warnings in 390.04 s. No SPICE simulation, training or new scientific measurement ran.
+
+### 2026-09-09 - Entry 120 / front-matter density revision
+
+The owner found the lower halves of pages 1-3 visually empty. The academic cover now previews the netlist-derived CTLE core. Page 2 adds an input/decision/output summary and evidence boundary. Page 3 adds an evidence hierarchy.
+
+The report remains 22 pages. All PDF checks pass. Pages 1-3 were inspected at full resolution; pages 4-22 are raster-identical to Entry 119. Current PDF SHA-256: a573db02335879e0a6a0b3feb2c9eeea87098bfc7d0f1f9462db691334a9449a6711. The 20-page report and archive remain unchanged. Pre-change full regression: 3001 passed, 13 deselected, two known warnings. Post-change full regression: 3001 passed, 13 deselected and two known warnings in 433.91 s. No simulation or training ran.

@@ -59,7 +59,14 @@ def main() -> None:
         bottom = max(b[3] for b in body)
         if i not in (1, 2, 3) and bottom < 625:
             problems.append({'page': i, 'issue': 'sparse body', 'body_bottom_pt': round(bottom, 1)})
-        stats.append({'page': i, 'characters': len(text), 'images': len(page.get_images()),
+        front_minimums = {1: 720, 2: 730, 3: 730}
+        if i in front_minimums and bottom < front_minimums[i]:
+            problems.append({'page': i, 'issue': 'sparse front matter',
+                             'body_bottom_pt': round(bottom, 1)})
+        image_count = len(page.get_images())
+        if i == 1 and image_count < 1:
+            problems.append({'page': i, 'issue': 'missing cover circuit visual'})
+        stats.append({'page': i, 'characters': len(text), 'images': image_count,
                       'body_bottom_pt': round(bottom, 1)})
 
     for group in range(math.ceil(len(doc) / 4)):
@@ -87,7 +94,9 @@ def main() -> None:
         'CHAPTER 5 / REPRODUCIBILITY', 'CHAPTER 6 / CONCLUSIONS',
         'Future work and development priorities', '315/315', '45/45',
         '91.8x', '0.1550', 'Jai Kaushik', 'Rishabh Agarwal', 'Avi Mehta',
-        'Birla Institute of Technology and Science, Pilani'
+        'Birla Institute of Technology and Science, Pilani',
+        'Final circuit at a glance', 'What the automated run produces',
+        'Three evidence layers'
     ]
     for value in expected:
         assert value in text, value

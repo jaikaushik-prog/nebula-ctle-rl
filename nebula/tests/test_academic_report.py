@@ -56,6 +56,9 @@ def test_academic_report_has_expected_structure_and_evidence_headlines():
         "Jai Kaushik",
         "Rishabh Agarwal",
         "Avi Mehta",
+        "Final circuit at a glance",
+        "What the automated run produces",
+        "Three evidence layers",
     )
     assert all(value in text for value in required)
     assert "Future work and development priorities" in (
