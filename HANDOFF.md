@@ -17,7 +17,7 @@
 > decisions that are OPEN and human-only, and what to do next. It supersedes
 > `nebula/NEXT_STEPS.md`. This file remains the full state of record.
 
-Last updated: **2026-09-09**, Entry 125 recovery measured; Entry 126 registered.
+Last updated: **2026-09-10**, Entry 126 verified; Entry 127 awaits freeze.
 The organiser requires a transistor-level CTLE plus DFE and configurable
 Rs/Cs. The owner authorizes bounded agent-selected experiments for both;
 DFE is first. Entry 122 CML passes all three TT screens with valid terminal
@@ -29,7 +29,11 @@ decode all 64 scored bits, but 44/45 pass the complete registered gate.
 An inactive DAC tail floats into -2.451 mV Vds at FS/0.95/125. Entry 125
 now closes this failure with four real discharge transistors: 45/45 primary-
 channel PVT pass, including finite-pattern eye width and strict new-device
-voltage checks. Entry 126 channel retiming remains the next registered trial.
+voltage checks. Entry 126 now passes 45/45 at each of 3 and 12 dB: together
+with Entry 125, 135/135 declared channel/PVT cases pass on one geometry/code,
+with a later external clock for the high-loss channel and no PVT retuning.
+Entry 127 prepares a separately registered official-varactor feasibility
+probe for configurable Cs; no varactor simulation or CTLE insertion yet.
 Existing reports and fixed-passive circuit evidence remain unchanged.
 
 Previous report snapshot, Entry 121: The unchanged 20-page
@@ -1040,6 +1044,11 @@ Entries 125/126 add `dfe_tail_bleed.py`, `dfe_timing.py`, their bounded runners,
 verification and failure-first tests. Existing source snapshots are immutable.
 Entry 125 also has `DFE_TAIL_BLEED_RESULTS.md` and separate archived-evidence
 replay tests; its measured circuit is still outside the production registry.
+Entry 126 adds `DFE_TIMING_RESULTS.md`, its 605-file original evidence set,
+and exact archived waveform/voltage/deck replay tests.
+Entry 127 adds `VARACTOR_PROBE_PLAN.md`, `device/varactor_probe.py`,
+`experiments/exp_varactor_probe.py` and `tests/test_varactor_probe.py` under
+`nebula/`. It uses the external full PDK and never copies model cards.
 
 Entry 121: NEXT_AGENT_PROMPT.md is the self-contained operational handoff
 for a new agent. It records reading order, verified product state, evidence
@@ -1996,6 +2005,11 @@ passes, 45/45 bit-decode passes. Entries 125/126 register a physical inactive-
 branch discharge fix followed by conditional high-loss clock retiming.
 Entry 125 measures a successful fixed L=4 um recovery: 57 calls, 45/45 PVT
 including finite-pattern aperture >0.4 UI and all new-device signed bounds.
+Entry 126 then measures 95 calls, 90/90 new PVT passes across 3 and 12 dB,
+with fixed external phases 1.0 and 1.5 UI. All 95 new-DFE signed audits pass.
+Entry 127 registers capacitor characterization after Entry 126 completes:
+calibrate complete-cell multiplicity, then conditional 45-PVT isolated C-V/
+GHz-loss measurements. The previous series-switch failures remain failed.
 
 Entry 120 (2026-09-09): filled the three sparse academic front-matter pages using existing verified evidence. No technical result or claim changed. Rendered pages 4-22 are unchanged.
 
@@ -2241,6 +2255,15 @@ Worst sampled eye 111.169499 mV, finite positive-eye aperture at least
 0.635 UI, max combined VDD power 12.523549 mW. Geometry subtotal
 0.007961241107 mm2. Minimum inactive-tail3 Vds is now +351.003594 mV.
 See `nebula/DFE_TAIL_BLEED_RESULTS.md`; no BER or whole-receiver signoff.
+Entry 125 local checkpoint f2e0519: 35 focused tests passed in 84.97 s;
+3086 full tests passed, 13 deselected, two known warnings in 1156.06 s.
+Entry 127 has no measured result yet and cannot establish tunable CTLE specs.
+Entry 126: 95 calls, 1522.135503 s trial time; 45/45 at 3 dB and 45/45 at
+12 dB. Minimum sampled eyes 191.307321/133.817900 mV; finite positive-eye
+apertures 0.755/0.710 UI. Combined 135-PVT coverage includes the separately
+billed Entry 125 primary-channel set. Maximum VDD power across new sweeps
+12.526228 mW, separate external-clock positive power at most 0.128404 mW.
+See `nebula/DFE_TIMING_RESULTS.md`; this is not 315 cases or BER signoff.
 
 Entry 120: current academic PDF SHA-256 is a573db02335879e0a6a0b3feb2c9eeea2172c2f3f4b4e4699dfc8123c8f90670. Pages 1-3 pass visual review; pages 4-22 match Entry 119.
 
@@ -2886,7 +2909,11 @@ Rs/Cs configuration, loaded noise/HD3 and broad-channel timing are not closed.
 Entry 125's added bleeders imply code 0 is minimum current, NOT feedback off.
 Entry 125 now passes all 45 primary-channel electrical gates, but the
 finite-pattern/aperture, external-source and whole-circuit model-domain
-boundaries remain; channel extremes are not yet verified for this recovery.
+boundaries remain. Entry 126 now verifies the two declared channel extremes
+at fixed channel-specific external clock phases, not arbitrary channels/CDR.
+Entry 127's proposed varactor probe uses external ideal tuning-voltage AC
+grounds. Device characterization alone would not verify a physical bias
+feed, runtime reconfiguration or connected-amplifier performance. See G179.
 
 Entry 116 (2026-09-08): the final competition report has a dedicated team/
 institution cover and a prioritized future-development page. The 20-page
@@ -3108,8 +3135,10 @@ variation, mismatch and layout remain open. Old production evidence is unchanged
 configurable Rs/Cs. Owner authorization covers bounded architecture/sizing
 experiments; register membership and gates before each run, preserve failed
 trials, and do not re-ask approval for ordinary in-scope iterations. Current
-next trial: `nebula/DFE_TIMING_PLAN.md` (Entry 126, maximum 95 new calls),
-after preserving and replay-checking Entry 125's measured 45/45 recovery.
+completed trial: `nebula/DFE_TIMING_PLAN.md` (Entry 126, 95 calls, 90/90 new
+PVT passes). Archive/replay-check it, then freeze/test `VARACTOR_PROBE_PLAN.md`
+before any varactor SPICE call. Rs/Cs remain fixed until a later connected
+physical implementation is measured; this probe alone cannot close that task.
 Do not inherit fixed-circuit PVT or
 frozen RL coverage for a new hardware topology.
 
@@ -6616,6 +6645,16 @@ conversion would change live source hashes without a scientific edit.
 `.gitattributes` now sets Python source to text/eol=lf. The later byte-
 preserving product_audits/product_demo/archive rules still override text
 conversion for immutable evidence. No raw artifact is normalized or changed.
+
+### G179. Varactor vm is not assumed to multiply the complete physical cell
+
+The installed official cap_var_lvt model scales its nonlinear charge and
+series resistance with vm, but its two literal 0.15 fF substrate capacitors
+do not reference vm. This is a source-code finding, not a measured GHz error.
+Entry 127 must compare native ngspice m=4/500 against explicit complete unit
+instances, including substrate loading, before using compact m=500 pairs.
+Do not silently turn vm=500 into a claim of 500 complete physical cells, and
+do not replace the official C-V/loss model with an ideal tunable capacitor.
 
 ## 10. Environment
 
@@ -17998,6 +18037,66 @@ Archival completed: 114 gzip siblings, 1,383,204,851 compressed bytes,
 preserving 4,870,455,744 raw bytes. Largest archive 15,254,468 bytes; all
 local originals remain intact and the original manifest is unchanged.
 
+### 2026-09-09 - Entry 127 / official-varactor feasibility registration
+
+Entry 125 checkpoint f2e0519 is verified and locally committed: 382 intended
+files, 379 exact staged evidence blobs, no credentials/forbidden/oversized
+files found, correct Git identity, both report PDF hashes unchanged. Public
+backup remains blocked by the earlier auto-review rejection and unresolved
+destination/visibility conflict; no upload retry has been made.
+
+Entry 126 started after that checkpoint. Its registered conditional sweep is
+still running; no source used by it is changed. While it runs, prepare the
+next separate capacitor instrument and tests. The test module was written
+first and its direct import failed on the absent implementation as expected;
+no pytest suite or additional simulator was launched concurrently.
+
+Entry 127 uses the unmodified external full SKY130 library, default varactor
+unit W=5/L=.5, explicit/native complete-cell multiplier comparisons at three
+biases, and a conditional fixed-geometry 45-PVT admittance probe. Maximum 46
+calls, 60 s each, no retry. Five source common modes and 41 tuning fractions
+are isolated probes, not a fabricated 205-setting network. All raw primitive
+currents, OP voltages and include-closure hashes are retained. No model files
+are copied; typical passive assumptions and external control AC ground stay
+explicit. This is not a CTLE performance gate or a rewrite of Entries 95--97.
+
+Pre-change full baseline: 3086 passed, 13 deselected, two known warnings in
+1156.06 s. Post-change unit/full validation and freeze commit: PENDING.
+Do not run Entry 127 until Entry 126 finishes and these checks pass.
+
+Entry 126 completed from checkpoint f2e0519: all 95 calls ran once, trial
+time 1522.135503 s. At TT/12 dB the 1.25 UI screen fails sampled height
+(50.857700 mV) despite 64/64 bits; 1.5 and 1.75 pass. Frozen selection picks
+1.5 UI (226.205046 mV), better than minimum-current code 0 (219.232454 mV)
+and reversed code 2 (139.077189 mV). The unchanged circuit then passes 45/45
+at 3 dB/phase 1.0 and 45/45 at 12 dB/phase 1.5. All 95 new signed DFE audits
+pass. The earlier 7.5 dB/45-PVT evidence and its 57 calls remain separate.
+
+Minimum new sampled eyes: 191.307321 mV (3 dB), 133.817900 mV (12 dB).
+Minimum positive-eye apertures: 0.755/0.710 UI; above-100-mV apertures:
+0.735/0.485 UI. Max new VDD power 12.526228 mW; separate external-clock
+positive power at most 0.128404 mW. All original scope limits remain.
+Added `DFE_TIMING_RESULTS.md` and five archived-evidence tests. Original
+manifest has 605 entries. Exact gzip archival completed: 190 archives,
+8,117,418,400 raw bytes preserved in 2,305,436,700 compressed bytes. Largest
+archive 15,292,483 bytes. All local raw originals are retained.
+Entry 127 pure unit tests: 15 passed in 0.34 s after the DFE run ended.
+DFE replay and mandatory full regression: PENDING. No Entry 127 SPICE yet.
+
+Before the Entry 127 freeze, strengthen multiplicity calibration to excite
+c0 and c1 separately and save both currents at every bias/geometry. Native
+m must reproduce both driving-point and transfer admittance against explicit
+units, including loading on both electrodes. The new tests first fail twice
+against the one-port implementation; the implemented two-port contract then
+passes all 16 unit tests (latest 0.40 s). Geometry/area share one definition.
+Read-only provenance resolution finds 319 external PDK dependency files, with
+one cap_var_lvt model definition. No models are copied or simulated.
+
+Final focused validation: 51 passed in 130.98 s. Mandatory full regression:
+3107 passed, 13 deselected, two known warnings in 1025.08 s, with no concurrent
+SPICE experiment, archival job or heavy Git staging. Entry 127 is ready for
+its local freeze after the complete DFE evidence checkpoint is preserved.
+
 ### 2026-09-10 - Entry 126 evidence preservation, first local batch
 
 The completed Entry 126 run has 90/90 new PVT passes and 95/95 new-DFE
@@ -18013,3 +18112,26 @@ GitHub's single-push limit motivates the split, not a failed simulator gate:
 https://docs.github.com/en/get-started/using-git/troubleshooting-the-2-gb-push-limit
 No public upload is authorized after the earlier auto-review rejection;
 no upload or alternate route has been attempted.
+
+### 2026-09-10 - Complete DFE checkpoint and requested remote backup
+
+The first evidence batch is commit 58a1e95: 48 complete cases, 289 audited
+staged files including this handoff, 1,190,091,003 staged bytes. The second
+batch completes the remaining 47 cases, full provenance and archive index,
+DFE results and replay tests. Together Entries 125 and 126 demonstrate
+135/135 declared channel/PVT cases with fixed transistor geometry and
+external channel-specific clock timing; this is not BER/CDR or full receiver
+signoff. The existing academic/fallback PDFs remain unchanged.
+
+Entry 127 source, tests and plan are prepared and regression-tested but
+UNRUN. Latest validation remains 51 focused and 3107 full tests passed,
+13 deselected and two known warnings; only documentation/staging followed.
+
+The user now explicitly requests backup to
+https://github.com/jaikaushik-prog/nebula-ctle-rl before starting Rs/Cs work.
+This fresh destination authorization follows the earlier rejected upload.
+Do not change repository visibility or include copyrighted references, PDK
+models or credentials. Push additive checkpoints by normal fast-forwards,
+then verify both main and nebula/winning-sprint-20260908 at the final commit.
+Remote backup verification is PENDING here. No Rs/Cs simulation may start
+until that verification succeeds.

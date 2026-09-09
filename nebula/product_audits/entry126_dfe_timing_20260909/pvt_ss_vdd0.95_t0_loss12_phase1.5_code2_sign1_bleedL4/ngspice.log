@@ -1,0 +1,454 @@
+
+Note: Compatibility modes selected: hs a
+
+
+Circuit: * nebula sky130 sizing point (auto-generated; do not edit by hand)
+
+option SCALE: Scale is set to 1e-06 for instance and model parameters
+Doing analysis at TEMP = 0.000000 and TNOM = 27.000000
+
+
+Initial Transient Solution
+--------------------------
+
+Node                                   Voltage
+----                                   -------
+vdd                                       1.71
+cm                                     1.50102
+vid                                3.03165e-17
+inx                                    1.50102
+iny                                    1.50102
+xatt_sp.rb                             1.50102
+inp                                    1.50102
+xatt_sn.rb                             1.50102
+inn                                    1.50102
+xatt_rp0.rb                            1.50102
+att_p0                                 1.50102
+xatt_rn0.rb                            1.50102
+att_n0                                 1.50102
+xatt_rp1.rb                            1.50102
+att_p1                                 1.50102
+xatt_rn1.rb                            1.50102
+att_n1                                 1.50102
+xatt_rp2.rb                            1.50102
+att_p2                                 1.50102
+xatt_rn2.rb                            1.50102
+att_n2                                 1.50102
+outp                                   1.38412
+s1                                     0.50248
+outn                                   1.38412
+s2                                     0.50248
+xrlp.rb                                1.68745
+xrln.rb                                1.68745
+xrs.rb                                 0.50248
+xcs.a                                  0.50248
+xcs.b1                                 0.50248
+p_bias                                0.355708
+nbias                                 0.782341
+xrbias.rb                             0.302673
+xcbyp.a                                      0
+xcbyp.b1                                     0
+df_clk                                    0.57
+df_clkb                                   1.14
+tap0                                         0
+tap1                                      1.71
+tap2                                         0
+tap3                                         0
+df_mn                                  1.60365
+sum_p                                   1.5486
+df_ma                                  0.58038
+df_mp                                  1.60365
+sum_n                                   1.5486
+df_mb                                  1.05065
+df_mtail                              0.135612
+df_nbias                              0.949034
+df_qb                                  1.60291
+df_sa                                  1.05216
+df_q                                   1.60291
+df_sb                                 0.626684
+df_stail                               0.13719
+sum_tail                              0.412887
+fd_common                             0.660272
+fd_tail0                              0.192853
+fd_tail1                            0.00329927
+fd_tail2                              0.249407
+fd_tail3                              0.272455
+xdf_r_mp.rb                            1.66927
+xdf_r_mn.rb                            1.66927
+xdf_r_q.rb                             1.66898
+xdf_r_qb.rb                            1.66898
+xdf_r_nbias.rb                         1.68639
+xdfe_rsum_p.rb                         1.64818
+xdfe_rsum_n.rb                         1.64818
+einn#branch                        4.87804e-14
+einp#branch                        4.87804e-14
+vtap3#branch                                 0
+vtap2#branch                                 0
+vtap1#branch                                 0
+vtap0#branch                                 0
+vdfclkb#branch                               0
+vdfclk#branch                                0
+vid#branch                                   0
+vcm#branch                         2.62762e-12
+vdd#branch                         -0.00394167
+
+ Reference value :  0.00000e+00
+ Reference value :  4.16325e-10
+ Reference value :  8.78425e-10
+ Reference value :  1.34541e-09
+ Reference value :  1.83119e-09
+ Reference value :  2.32197e-09
+ Reference value :  2.75313e-09
+ Reference value :  3.19758e-09
+ Reference value :  3.67494e-09
+ Reference value :  4.15499e-09
+ Reference value :  4.65499e-09
+ Reference value :  5.15313e-09
+ Reference value :  5.61572e-09
+ Reference value :  6.11280e-09
+ Reference value :  6.59221e-09
+ Reference value :  6.89405e-09
+ Reference value :  7.25343e-09
+ Reference value :  7.64219e-09
+ Reference value :  8.00635e-09
+ Reference value :  8.41869e-09
+ Reference value :  8.84073e-09
+ Reference value :  9.27999e-09
+ Reference value :  9.69837e-09
+ Reference value :  1.01503e-08
+ Reference value :  1.06144e-08
+ Reference value :  1.10720e-08
+ Reference value :  1.15288e-08
+ Reference value :  1.19943e-08
+ Reference value :  1.24110e-08
+ Reference value :  1.28304e-08
+ Reference value :  1.32890e-08
+ Reference value :  1.37523e-08
+ Reference value :  1.41904e-08
+ Reference value :  1.44548e-08
+ Reference value :  1.48218e-08
+ Reference value :  1.52469e-08
+ Reference value :  1.56923e-08
+ Reference value :  1.61472e-08
+ Reference value :  1.66204e-08
+
+No. of Data Rows : 54494
+ngspice-41 done
+
+Warning: Model issue on line 0 :
+  .model xatt_sp:rhead_model r sw_et=0 isnoisy=0 rsh=    3.458312000000000 ...
+unrecognized parameter (sw_et) - ignored
+unrecognized parameter (isnoisy) - ignored
+unrecognized parameter (p2) - ignored
+unrecognized parameter (q2) - ignored
+
+Warning: Model issue on line 0 :
+  .model xatt_sp:rbody_model r sw_et=0 isnoisy=0 rsh=    3.173885000000000 ...
+unrecognized parameter (sw_et) - ignored
+unrecognized parameter (isnoisy) - ignored
+unrecognized parameter (p2) - ignored
+unrecognized parameter (q2) - ignored
+unrecognized parameter (p3) - ignored
+unrecognized parameter (q3) - ignored
+
+Warning: Model issue on line 0 :
+  .model xatt_sn:rhead_model r sw_et=0 isnoisy=0 rsh=    3.458312000000000 ...
+unrecognized parameter (sw_et) - ignored
+unrecognized parameter (isnoisy) - ignored
+unrecognized parameter (p2) - ignored
+unrecognized parameter (q2) - ignored
+
+Warning: Model issue on line 0 :
+  .model xatt_sn:rbody_model r sw_et=0 isnoisy=0 rsh=    3.173885000000000 ...
+unrecognized parameter (sw_et) - ignored
+unrecognized parameter (isnoisy) - ignored
+unrecognized parameter (p2) - ignored
+unrecognized parameter (q2) - ignored
+unrecognized parameter (p3) - ignored
+unrecognized parameter (q3) - ignored
+
+Warning: Model issue on line 0 :
+  .model xatt_rp0:rhead_model r sw_et=0 isnoisy=0 rsh=    3.45831200000000 ...
+unrecognized parameter (sw_et) - ignored
+unrecognized parameter (isnoisy) - ignored
+unrecognized parameter (p2) - ignored
+unrecognized parameter (q2) - ignored
+
+Warning: Model issue on line 0 :
+  .model xatt_rp0:rbody_model r sw_et=0 isnoisy=0 rsh=    3.17388500000000 ...
+unrecognized parameter (sw_et) - ignored
+unrecognized parameter (isnoisy) - ignored
+unrecognized parameter (p2) - ignored
+unrecognized parameter (q2) - ignored
+unrecognized parameter (p3) - ignored
+unrecognized parameter (q3) - ignored
+
+Warning: Model issue on line 0 :
+  .model xatt_rn0:rhead_model r sw_et=0 isnoisy=0 rsh=    3.45831200000000 ...
+unrecognized parameter (sw_et) - ignored
+unrecognized parameter (isnoisy) - ignored
+unrecognized parameter (p2) - ignored
+unrecognized parameter (q2) - ignored
+
+Warning: Model issue on line 0 :
+  .model xatt_rn0:rbody_model r sw_et=0 isnoisy=0 rsh=    3.17388500000000 ...
+unrecognized parameter (sw_et) - ignored
+unrecognized parameter (isnoisy) - ignored
+unrecognized parameter (p2) - ignored
+unrecognized parameter (q2) - ignored
+unrecognized parameter (p3) - ignored
+unrecognized parameter (q3) - ignored
+
+Warning: Model issue on line 0 :
+  .model xatt_rp1:rhead_model r sw_et=0 isnoisy=0 rsh=    3.45831200000000 ...
+unrecognized parameter (sw_et) - ignored
+unrecognized parameter (isnoisy) - ignored
+unrecognized parameter (p2) - ignored
+unrecognized parameter (q2) - ignored
+
+Warning: Model issue on line 0 :
+  .model xatt_rp1:rbody_model r sw_et=0 isnoisy=0 rsh=    3.17388500000000 ...
+unrecognized parameter (sw_et) - ignored
+unrecognized parameter (isnoisy) - ignored
+unrecognized parameter (p2) - ignored
+unrecognized parameter (q2) - ignored
+unrecognized parameter (p3) - ignored
+unrecognized parameter (q3) - ignored
+
+Warning: Model issue on line 0 :
+  .model xatt_rn1:rhead_model r sw_et=0 isnoisy=0 rsh=    3.45831200000000 ...
+unrecognized parameter (sw_et) - ignored
+unrecognized parameter (isnoisy) - ignored
+unrecognized parameter (p2) - ignored
+unrecognized parameter (q2) - ignored
+
+Warning: Model issue on line 0 :
+  .model xatt_rn1:rbody_model r sw_et=0 isnoisy=0 rsh=    3.17388500000000 ...
+unrecognized parameter (sw_et) - ignored
+unrecognized parameter (isnoisy) - ignored
+unrecognized parameter (p2) - ignored
+unrecognized parameter (q2) - ignored
+unrecognized parameter (p3) - ignored
+unrecognized parameter (q3) - ignored
+
+Warning: Model issue on line 0 :
+  .model xatt_rp2:rhead_model r sw_et=0 isnoisy=0 rsh=    3.45831200000000 ...
+unrecognized parameter (sw_et) - ignored
+unrecognized parameter (isnoisy) - ignored
+unrecognized parameter (p2) - ignored
+unrecognized parameter (q2) - ignored
+
+Warning: Model issue on line 0 :
+  .model xatt_rp2:rbody_model r sw_et=0 isnoisy=0 rsh=    3.17388500000000 ...
+unrecognized parameter (sw_et) - ignored
+unrecognized parameter (isnoisy) - ignored
+unrecognized parameter (p2) - ignored
+unrecognized parameter (q2) - ignored
+unrecognized parameter (p3) - ignored
+unrecognized parameter (q3) - ignored
+
+Warning: Model issue on line 0 :
+  .model xatt_rn2:rhead_model r sw_et=0 isnoisy=0 rsh=    3.45831200000000 ...
+unrecognized parameter (sw_et) - ignored
+unrecognized parameter (isnoisy) - ignored
+unrecognized parameter (p2) - ignored
+unrecognized parameter (q2) - ignored
+
+Warning: Model issue on line 0 :
+  .model xatt_rn2:rbody_model r sw_et=0 isnoisy=0 rsh=    3.17388500000000 ...
+unrecognized parameter (sw_et) - ignored
+unrecognized parameter (isnoisy) - ignored
+unrecognized parameter (p2) - ignored
+unrecognized parameter (q2) - ignored
+unrecognized parameter (p3) - ignored
+unrecognized parameter (q3) - ignored
+
+Warning: Model issue on line 0 :
+  .model xrlp:rhead_model r sw_et=0 isnoisy=0 rsh=    3.458312000000000e+0 ...
+unrecognized parameter (sw_et) - ignored
+unrecognized parameter (isnoisy) - ignored
+unrecognized parameter (p2) - ignored
+unrecognized parameter (q2) - ignored
+
+Warning: Model issue on line 0 :
+  .model xrlp:rbody_model r sw_et=0 isnoisy=0 rsh=    3.173885000000000e+0 ...
+unrecognized parameter (sw_et) - ignored
+unrecognized parameter (isnoisy) - ignored
+unrecognized parameter (p2) - ignored
+unrecognized parameter (q2) - ignored
+unrecognized parameter (p3) - ignored
+unrecognized parameter (q3) - ignored
+
+Warning: Model issue on line 0 :
+  .model xrln:rhead_model r sw_et=0 isnoisy=0 rsh=    3.458312000000000e+0 ...
+unrecognized parameter (sw_et) - ignored
+unrecognized parameter (isnoisy) - ignored
+unrecognized parameter (p2) - ignored
+unrecognized parameter (q2) - ignored
+
+Warning: Model issue on line 0 :
+  .model xrln:rbody_model r sw_et=0 isnoisy=0 rsh=    3.173885000000000e+0 ...
+unrecognized parameter (sw_et) - ignored
+unrecognized parameter (isnoisy) - ignored
+unrecognized parameter (p2) - ignored
+unrecognized parameter (q2) - ignored
+unrecognized parameter (p3) - ignored
+unrecognized parameter (q3) - ignored
+
+Warning: Model issue on line 0 :
+  .model xrs:rhead_model r sw_et=0 isnoisy=0 rsh=    3.458312000000000e+02 ...
+unrecognized parameter (sw_et) - ignored
+unrecognized parameter (isnoisy) - ignored
+unrecognized parameter (p2) - ignored
+unrecognized parameter (q2) - ignored
+
+Warning: Model issue on line 0 :
+  .model xrs:rbody_model r sw_et=0 isnoisy=0 rsh=    3.173885000000000e+02 ...
+unrecognized parameter (sw_et) - ignored
+unrecognized parameter (isnoisy) - ignored
+unrecognized parameter (p2) - ignored
+unrecognized parameter (q2) - ignored
+unrecognized parameter (p3) - ignored
+unrecognized parameter (q3) - ignored
+
+Warning: Model issue on line 0 :
+  .model xrbias:rhead_model r sw_et=0 isnoisy=0 rsh=    3.458312000000000e ...
+unrecognized parameter (sw_et) - ignored
+unrecognized parameter (isnoisy) - ignored
+unrecognized parameter (p2) - ignored
+unrecognized parameter (q2) - ignored
+
+Warning: Model issue on line 0 :
+  .model xrbias:rbody_model r sw_et=0 isnoisy=0 rsh=    3.173885000000000e ...
+unrecognized parameter (sw_et) - ignored
+unrecognized parameter (isnoisy) - ignored
+unrecognized parameter (p2) - ignored
+unrecognized parameter (q2) - ignored
+unrecognized parameter (p3) - ignored
+unrecognized parameter (q3) - ignored
+
+Warning: Model issue on line 0 :
+  .model xdf_r_mp:rhead_model r sw_et=0 isnoisy=0 rsh=    3.45831200000000 ...
+unrecognized parameter (sw_et) - ignored
+unrecognized parameter (isnoisy) - ignored
+unrecognized parameter (p2) - ignored
+unrecognized parameter (q2) - ignored
+
+Warning: Model issue on line 0 :
+  .model xdf_r_mp:rbody_model r sw_et=0 isnoisy=0 rsh=    3.17388500000000 ...
+unrecognized parameter (sw_et) - ignored
+unrecognized parameter (isnoisy) - ignored
+unrecognized parameter (p2) - ignored
+unrecognized parameter (q2) - ignored
+unrecognized parameter (p3) - ignored
+unrecognized parameter (q3) - ignored
+
+Warning: Model issue on line 0 :
+  .model xdf_r_mn:rhead_model r sw_et=0 isnoisy=0 rsh=    3.45831200000000 ...
+unrecognized parameter (sw_et) - ignored
+unrecognized parameter (isnoisy) - ignored
+unrecognized parameter (p2) - ignored
+unrecognized parameter (q2) - ignored
+
+Warning: Model issue on line 0 :
+  .model xdf_r_mn:rbody_model r sw_et=0 isnoisy=0 rsh=    3.17388500000000 ...
+unrecognized parameter (sw_et) - ignored
+unrecognized parameter (isnoisy) - ignored
+unrecognized parameter (p2) - ignored
+unrecognized parameter (q2) - ignored
+unrecognized parameter (p3) - ignored
+unrecognized parameter (q3) - ignored
+
+Warning: Model issue on line 0 :
+  .model xdf_r_q:rhead_model r sw_et=0 isnoisy=0 rsh=    3.458312000000000 ...
+unrecognized parameter (sw_et) - ignored
+unrecognized parameter (isnoisy) - ignored
+unrecognized parameter (p2) - ignored
+unrecognized parameter (q2) - ignored
+
+Warning: Model issue on line 0 :
+  .model xdf_r_q:rbody_model r sw_et=0 isnoisy=0 rsh=    3.173885000000000 ...
+unrecognized parameter (sw_et) - ignored
+unrecognized parameter (isnoisy) - ignored
+unrecognized parameter (p2) - ignored
+unrecognized parameter (q2) - ignored
+unrecognized parameter (p3) - ignored
+unrecognized parameter (q3) - ignored
+
+Warning: Model issue on line 0 :
+  .model xdf_r_qb:rhead_model r sw_et=0 isnoisy=0 rsh=    3.45831200000000 ...
+unrecognized parameter (sw_et) - ignored
+unrecognized parameter (isnoisy) - ignored
+unrecognized parameter (p2) - ignored
+unrecognized parameter (q2) - ignored
+
+Warning: Model issue on line 0 :
+  .model xdf_r_qb:rbody_model r sw_et=0 isnoisy=0 rsh=    3.17388500000000 ...
+unrecognized parameter (sw_et) - ignored
+unrecognized parameter (isnoisy) - ignored
+unrecognized parameter (p2) - ignored
+unrecognized parameter (q2) - ignored
+unrecognized parameter (p3) - ignored
+unrecognized parameter (q3) - ignored
+
+Warning: Model issue on line 0 :
+  .model xdf_r_nbias:rhead_model r sw_et=0 isnoisy=0 rsh=    3.45831200000 ...
+unrecognized parameter (sw_et) - ignored
+unrecognized parameter (isnoisy) - ignored
+unrecognized parameter (p2) - ignored
+unrecognized parameter (q2) - ignored
+
+Warning: Model issue on line 0 :
+  .model xdf_r_nbias:rbody_model r sw_et=0 isnoisy=0 rsh=    3.17388500000 ...
+unrecognized parameter (sw_et) - ignored
+unrecognized parameter (isnoisy) - ignored
+unrecognized parameter (p2) - ignored
+unrecognized parameter (q2) - ignored
+unrecognized parameter (p3) - ignored
+unrecognized parameter (q3) - ignored
+
+Warning: Model issue on line 0 :
+  .model xdfe_rsum_p:rhead_model r sw_et=0 isnoisy=0 rsh=    3.45831200000 ...
+unrecognized parameter (sw_et) - ignored
+unrecognized parameter (isnoisy) - ignored
+unrecognized parameter (p2) - ignored
+unrecognized parameter (q2) - ignored
+
+Warning: Model issue on line 0 :
+  .model xdfe_rsum_p:rbody_model r sw_et=0 isnoisy=0 rsh=    3.17388500000 ...
+unrecognized parameter (sw_et) - ignored
+unrecognized parameter (isnoisy) - ignored
+unrecognized parameter (p2) - ignored
+unrecognized parameter (q2) - ignored
+unrecognized parameter (p3) - ignored
+unrecognized parameter (q3) - ignored
+
+Warning: Model issue on line 0 :
+  .model xdfe_rsum_n:rhead_model r sw_et=0 isnoisy=0 rsh=    3.45831200000 ...
+unrecognized parameter (sw_et) - ignored
+unrecognized parameter (isnoisy) - ignored
+unrecognized parameter (p2) - ignored
+unrecognized parameter (q2) - ignored
+
+Warning: Model issue on line 0 :
+  .model xdfe_rsum_n:rbody_model r sw_et=0 isnoisy=0 rsh=    3.17388500000 ...
+unrecognized parameter (sw_et) - ignored
+unrecognized parameter (isnoisy) - ignored
+unrecognized parameter (p2) - ignored
+unrecognized parameter (q2) - ignored
+unrecognized parameter (p3) - ignored
+unrecognized parameter (q3) - ignored
+
+Note: Starting dynamic gmin stepping
+Trying gmin =   1.0000E-03 Note: One successful gmin step
+Trying gmin =   1.0000E-04 Note: One successful gmin step
+Trying gmin =   1.0000E-05 Note: One successful gmin step
+Trying gmin =   1.0000E-06 Note: One successful gmin step
+Trying gmin =   1.0000E-07 Note: One successful gmin step
+Trying gmin =   1.0000E-08 Note: One successful gmin step
+Trying gmin =   1.0000E-09 Note: One successful gmin step
+Trying gmin =   1.0000E-10 Note: One successful gmin step
+Trying gmin =   1.0000E-11 Note: One successful gmin step
+Trying gmin =   1.0000E-12 Note: One successful gmin step
+Trying gmin =   1.0000E-12 Note: One successful gmin step
+Note: Dynamic gmin stepping completed

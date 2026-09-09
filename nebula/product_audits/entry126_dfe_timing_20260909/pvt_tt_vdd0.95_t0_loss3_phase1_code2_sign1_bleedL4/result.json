@@ -1,0 +1,3416 @@
+{
+  "logic_pass": true,
+  "stimulus_valid": true,
+  "stimulus_max_error_v": [
+    4.702904732312163e-13,
+    4.699574063238288e-13,
+    8.817946373085306e-14,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+  ],
+  "correct_bits": 64,
+  "scored_bits": 64,
+  "bits": [
+    {
+      "bit_index": 16,
+      "expected_bit": 0,
+      "master_min_differential_v": 0.23042706380505695,
+      "held_min_differential_v": 0.1791925236037899,
+      "previous_min_differential_v": 0.22468001209033206,
+      "sample_min_signed_v": 0.33234977815773203,
+      "pass": true
+    },
+    {
+      "bit_index": 17,
+      "expected_bit": 0,
+      "master_min_differential_v": 0.24108724737429,
+      "held_min_differential_v": 0.18050509869242903,
+      "previous_min_differential_v": 0.24372321248829398,
+      "sample_min_signed_v": 0.19354050543808698,
+      "pass": true
+    },
+    {
+      "bit_index": 18,
+      "expected_bit": 1,
+      "master_min_differential_v": 0.23058978724978219,
+      "held_min_differential_v": 0.17927829336567003,
+      "previous_min_differential_v": 0.2230769341068879,
+      "sample_min_signed_v": 0.3381042783481141,
+      "pass": true
+    },
+    {
+      "bit_index": 19,
+      "expected_bit": 1,
+      "master_min_differential_v": 0.24426868191510298,
+      "held_min_differential_v": 0.181028891045943,
+      "previous_min_differential_v": 0.24392329646384203,
+      "sample_min_signed_v": 0.20812125154831707,
+      "pass": true
+    },
+    {
+      "bit_index": 20,
+      "expected_bit": 0,
+      "master_min_differential_v": 0.246981652184465,
+      "held_min_differential_v": 0.18422670441963507,
+      "previous_min_differential_v": 0.2231819038783469,
+      "sample_min_signed_v": 0.336593196042815,
+      "pass": true
+    },
+    {
+      "bit_index": 21,
+      "expected_bit": 1,
+      "master_min_differential_v": 0.24751028150898113,
+      "held_min_differential_v": 0.184519070358385,
+      "previous_min_differential_v": 0.22472347447614793,
+      "sample_min_signed_v": 0.3282443776149999,
+      "pass": true
+    },
+    {
+      "bit_index": 22,
+      "expected_bit": 0,
+      "master_min_differential_v": 0.24721465238987306,
+      "held_min_differential_v": 0.18435763871673183,
+      "previous_min_differential_v": 0.22462233794316,
+      "sample_min_signed_v": 0.3334165772139981,
+      "pass": true
+    },
+    {
+      "bit_index": 23,
+      "expected_bit": 1,
+      "master_min_differential_v": 0.24743046381033307,
+      "held_min_differential_v": 0.1844730658055569,
+      "previous_min_differential_v": 0.22470370916767402,
+      "sample_min_signed_v": 0.3306535980975651,
+      "pass": true
+    },
+    {
+      "bit_index": 24,
+      "expected_bit": 0,
+      "master_min_differential_v": 0.2304255809151161,
+      "held_min_differential_v": 0.17919148799137097,
+      "previous_min_differential_v": 0.22467816118203787,
+      "sample_min_signed_v": 0.33234582452055905,
+      "pass": true
+    },
+    {
+      "bit_index": 25,
+      "expected_bit": 0,
+      "master_min_differential_v": 0.24108467447348692,
+      "held_min_differential_v": 0.18050413333141213,
+      "previous_min_differential_v": 0.24372194867226504,
+      "sample_min_signed_v": 0.19353370543667192,
+      "pass": true
+    },
+    {
+      "bit_index": 26,
+      "expected_bit": 1,
+      "master_min_differential_v": 0.23058909705605202,
+      "held_min_differential_v": 0.17927782421515603,
+      "previous_min_differential_v": 0.22307598461344202,
+      "sample_min_signed_v": 0.3381038128707319,
+      "pass": true
+    },
+    {
+      "bit_index": 27,
+      "expected_bit": 1,
+      "master_min_differential_v": 0.2442693496474131,
+      "held_min_differential_v": 0.18102874865974594,
+      "previous_min_differential_v": 0.24392280964415392,
+      "sample_min_signed_v": 0.20812568844088686,
+      "pass": true
+    },
+    {
+      "bit_index": 28,
+      "expected_bit": 0,
+      "master_min_differential_v": 0.24698139979743705,
+      "held_min_differential_v": 0.18422654715665,
+      "previous_min_differential_v": 0.22318152988740003,
+      "sample_min_signed_v": 0.336591269253687,
+      "pass": true
+    },
+    {
+      "bit_index": 29,
+      "expected_bit": 1,
+      "master_min_differential_v": 0.24750977727982915,
+      "held_min_differential_v": 0.1845188217823721,
+      "previous_min_differential_v": 0.2247231617452159,
+      "sample_min_signed_v": 0.3282453041052671,
+      "pass": true
+    },
+    {
+      "bit_index": 30,
+      "expected_bit": 0,
+      "master_min_differential_v": 0.24721454073280902,
+      "held_min_differential_v": 0.18435758946869396,
+      "previous_min_differential_v": 0.22462215118912598,
+      "sample_min_signed_v": 0.333414551478201,
+      "pass": true
+    },
+    {
+      "bit_index": 31,
+      "expected_bit": 1,
+      "master_min_differential_v": 0.24743008682885503,
+      "held_min_differential_v": 0.18447290335440703,
+      "previous_min_differential_v": 0.22470354694322014,
+      "sample_min_signed_v": 0.330654442541612,
+      "pass": true
+    },
+    {
+      "bit_index": 32,
+      "expected_bit": 0,
+      "master_min_differential_v": 0.24732977982056403,
+      "held_min_differential_v": 0.18441988175413404,
+      "previous_min_differential_v": 0.224678076836057,
+      "sample_min_signed_v": 0.3323439595830351,
+      "pass": true
+    },
+    {
+      "bit_index": 33,
+      "expected_bit": 1,
+      "master_min_differential_v": 0.23043062430468386,
+      "held_min_differential_v": 0.17919356561376598,
+      "previous_min_differential_v": 0.22470796652177794,
+      "sample_min_signed_v": 0.33140919131578084,
+      "pass": true
+    },
+    {
+      "bit_index": 34,
+      "expected_bit": 1,
+      "master_min_differential_v": 0.23199870441074988,
+      "held_min_differential_v": 0.17592527310942785,
+      "previous_min_differential_v": 0.24369467330290684,
+      "sample_min_signed_v": 0.19146558965845917,
+      "pass": true
+    },
+    {
+      "bit_index": 35,
+      "expected_bit": 1,
+      "master_min_differential_v": 0.23034071563762804,
+      "held_min_differential_v": 0.17823976088466997,
+      "previous_min_differential_v": 0.242462542589732,
+      "sample_min_signed_v": 0.15478842644409507,
+      "pass": true
+    },
+    {
+      "bit_index": 36,
+      "expected_bit": 0,
+      "master_min_differential_v": 0.23077575362512892,
+      "held_min_differential_v": 0.17940248416842408,
+      "previous_min_differential_v": 0.22266332508974807,
+      "sample_min_signed_v": 0.3405401518964448,
+      "pass": true
+    },
+    {
+      "bit_index": 37,
+      "expected_bit": 0,
+      "master_min_differential_v": 0.2460460136205278,
+      "held_min_differential_v": 0.18131816647846,
+      "previous_min_differential_v": 0.24412321744189613,
+      "sample_min_signed_v": 0.21706629091485397,
+      "pass": true
+    },
+    {
+      "bit_index": 38,
+      "expected_bit": 1,
+      "master_min_differential_v": 0.2304952153456099,
+      "held_min_differential_v": 0.17921417984605115,
+      "previous_min_differential_v": 0.22330002385873704,
+      "sample_min_signed_v": 0.3355022150913829,
+      "pass": true
+    },
+    {
+      "bit_index": 39,
+      "expected_bit": 1,
+      "master_min_differential_v": 0.24257152557636497,
+      "held_min_differential_v": 0.18074122206299004,
+      "previous_min_differential_v": 0.24377475020573502,
+      "sample_min_signed_v": 0.2002105442434039,
+      "pass": true
+    },
+    {
+      "bit_index": 40,
+      "expected_bit": 0,
+      "master_min_differential_v": 0.23052675567455405,
+      "held_min_differential_v": 0.17923492514961392,
+      "previous_min_differential_v": 0.2230956974965841,
+      "sample_min_signed_v": 0.3374120227636941,
+      "pass": true
+    },
+    {
+      "bit_index": 41,
+      "expected_bit": 0,
+      "master_min_differential_v": 0.24380120434836505,
+      "held_min_differential_v": 0.18093989911473507,
+      "previous_min_differential_v": 0.24385526742407704,
+      "sample_min_signed_v": 0.20598931323051994,
+      "pass": true
+    },
+    {
+      "bit_index": 42,
+      "expected_bit": 1,
+      "master_min_differential_v": 0.24693292772188502,
+      "held_min_differential_v": 0.18420182419207287,
+      "previous_min_differential_v": 0.22313832400750488,
+      "sample_min_signed_v": 0.336804101390374,
+      "pass": true
+    },
+    {
+      "bit_index": 43,
+      "expected_bit": 0,
+      "master_min_differential_v": 0.2303640908045581,
+      "held_min_differential_v": 0.17914425536852896,
+      "previous_min_differential_v": 0.22471674641036588,
+      "sample_min_signed_v": 0.327962774827109,
+      "pass": true
+    },
+    {
+      "bit_index": 44,
+      "expected_bit": 0,
+      "master_min_differential_v": 0.23886376373181295,
+      "held_min_differential_v": 0.18007070117242496,
+      "previous_min_differential_v": 0.24353602818459819,
+      "sample_min_signed_v": 0.18473714504981298,
+      "pass": true
+    },
+    {
+      "bit_index": 45,
+      "expected_bit": 1,
+      "master_min_differential_v": 0.24668013923038212,
+      "held_min_differential_v": 0.1841095168945821,
+      "previous_min_differential_v": 0.22295954189242706,
+      "sample_min_signed_v": 0.33879124126486104,
+      "pass": true
+    },
+    {
+      "bit_index": 46,
+      "expected_bit": 0,
+      "master_min_differential_v": 0.23040026947035486,
+      "held_min_differential_v": 0.17916856525666902,
+      "previous_min_differential_v": 0.22482535190073794,
+      "sample_min_signed_v": 0.325516345542179,
+      "pass": true
+    },
+    {
+      "bit_index": 47,
+      "expected_bit": 0,
+      "master_min_differential_v": 0.237720670851435,
+      "held_min_differential_v": 0.17985615426580592,
+      "previous_min_differential_v": 0.24348991427975486,
+      "sample_min_signed_v": 0.18033811031256497,
+      "pass": true
+    },
+    {
+      "bit_index": 48,
+      "expected_bit": 1,
+      "master_min_differential_v": 0.23063958350979186,
+      "held_min_differential_v": 0.17931171006595892,
+      "previous_min_differential_v": 0.22293376911685492,
+      "sample_min_signed_v": 0.33914091932366985,
+      "pass": true
+    },
+    {
+      "bit_index": 49,
+      "expected_bit": 1,
+      "master_min_differential_v": 0.24500748109372705,
+      "held_min_differential_v": 0.1811458298039661,
+      "previous_min_differential_v": 0.243989643749561,
+      "sample_min_signed_v": 0.2117953028402879,
+      "pass": true
+    },
+    {
+      "bit_index": 50,
+      "expected_bit": 0,
+      "master_min_differential_v": 0.23049182232297905,
+      "held_min_differential_v": 0.179211599847253,
+      "previous_min_differential_v": 0.22321935856883401,
+      "sample_min_signed_v": 0.33615759947420787,
+      "pass": true
+    },
+    {
+      "bit_index": 51,
+      "expected_bit": 0,
+      "master_min_differential_v": 0.24298943759403913,
+      "held_min_differential_v": 0.18080607897578393,
+      "previous_min_differential_v": 0.24379241850077804,
+      "sample_min_signed_v": 0.20216624514110193,
+      "pass": true
+    },
+    {
+      "bit_index": 52,
+      "expected_bit": 1,
+      "master_min_differential_v": 0.23051038387105383,
+      "held_min_differential_v": 0.17922376941992502,
+      "previous_min_differential_v": 0.22310352738174788,
+      "sample_min_signed_v": 0.33720238941622616,
+      "pass": true
+    },
+    {
+      "bit_index": 53,
+      "expected_bit": 1,
+      "master_min_differential_v": 0.23365941749195307,
+      "held_min_differential_v": 0.17621844572863887,
+      "previous_min_differential_v": 0.24383711356875892,
+      "sample_min_signed_v": 0.2053743877562959,
+      "pass": true
+    },
+    {
+      "bit_index": 54,
+      "expected_bit": 1,
+      "master_min_differential_v": 0.22736941150108403,
+      "held_min_differential_v": 0.1748647766801219,
+      "previous_min_differential_v": 0.24259208952199507,
+      "sample_min_signed_v": 0.16475108084748502,
+      "pass": true
+    },
+    {
+      "bit_index": 55,
+      "expected_bit": 1,
+      "master_min_differential_v": 0.2207904494989732,
+      "held_min_differential_v": 0.17317731677316983,
+      "previous_min_differential_v": 0.24210821472439092,
+      "sample_min_signed_v": 0.13945658783070702,
+      "pass": true
+    },
+    {
+      "bit_index": 56,
+      "expected_bit": 1,
+      "master_min_differential_v": 0.21780554618123982,
+      "held_min_differential_v": 0.17483808973771087,
+      "previous_min_differential_v": 0.2417952255709961,
+      "sample_min_signed_v": 0.12396876514637611,
+      "pass": true
+    },
+    {
+      "bit_index": 57,
+      "expected_bit": 0,
+      "master_min_differential_v": 0.2309942294193621,
+      "held_min_differential_v": 0.17954903014383206,
+      "previous_min_differential_v": 0.22215031436549504,
+      "sample_min_signed_v": 0.3420621518130418,
+      "pass": true
+    },
+    {
+      "bit_index": 58,
+      "expected_bit": 0,
+      "master_min_differential_v": 0.24722216311248602,
+      "held_min_differential_v": 0.18151396702940992,
+      "previous_min_differential_v": 0.24431343658484694,
+      "sample_min_signed_v": 0.22332435275165397,
+      "pass": true
+    },
+    {
+      "bit_index": 59,
+      "expected_bit": 1,
+      "master_min_differential_v": 0.24725499653751704,
+      "held_min_differential_v": 0.18436279158540292,
+      "previous_min_differential_v": 0.22341684851425292,
+      "sample_min_signed_v": 0.334637413163712,
+      "pass": true
+    },
+    {
+      "bit_index": 60,
+      "expected_bit": 0,
+      "master_min_differential_v": 0.23040659472599812,
+      "held_min_differential_v": 0.179175331579023,
+      "previous_min_differential_v": 0.22471693714963603,
+      "sample_min_signed_v": 0.3301608659145798,
+      "pass": true
+    },
+    {
+      "bit_index": 61,
+      "expected_bit": 0,
+      "master_min_differential_v": 0.231611311583805,
+      "held_min_differential_v": 0.17583825965161104,
+      "previous_min_differential_v": 0.243635659412752,
+      "sample_min_signed_v": 0.188859811851376,
+      "pass": true
+    },
+    {
+      "bit_index": 62,
+      "expected_bit": 0,
+      "master_min_differential_v": 0.22465662786072316,
+      "held_min_differential_v": 0.17421606639617981,
+      "previous_min_differential_v": 0.24241379689518205,
+      "sample_min_signed_v": 0.15291040901529684,
+      "pass": true
+    },
+    {
+      "bit_index": 63,
+      "expected_bit": 0,
+      "master_min_differential_v": 0.2215406958283661,
+      "held_min_differential_v": 0.17593973185691603,
+      "previous_min_differential_v": 0.24198962424703296,
+      "sample_min_signed_v": 0.13207338626100906,
+      "pass": true
+    },
+    {
+      "bit_index": 64,
+      "expected_bit": 1,
+      "master_min_differential_v": 0.24620721244339294,
+      "held_min_differential_v": 0.18398409457908804,
+      "previous_min_differential_v": 0.2223196593592911,
+      "sample_min_signed_v": 0.3416990440600949,
+      "pass": true
+    },
+    {
+      "bit_index": 65,
+      "expected_bit": 0,
+      "master_min_differential_v": 0.230519450833774,
+      "held_min_differential_v": 0.17925419615249183,
+      "previous_min_differential_v": 0.22513258852057794,
+      "sample_min_signed_v": 0.3201803587316401,
+      "pass": true
+    },
+    {
+      "bit_index": 66,
+      "expected_bit": 0,
+      "master_min_differential_v": 0.22880041717962807,
+      "held_min_differential_v": 0.17525065071007995,
+      "previous_min_differential_v": 0.243430124761586,
+      "sample_min_signed_v": 0.17173871319310807,
+      "pass": true
+    },
+    {
+      "bit_index": 67,
+      "expected_bit": 0,
+      "master_min_differential_v": 0.22552967594043105,
+      "held_min_differential_v": 0.17704607107121406,
+      "previous_min_differential_v": 0.24223331846386098,
+      "sample_min_signed_v": 0.1415965389360201,
+      "pass": true
+    },
+    {
+      "bit_index": 68,
+      "expected_bit": 1,
+      "master_min_differential_v": 0.2463189969390711,
+      "held_min_differential_v": 0.18401859021203615,
+      "previous_min_differential_v": 0.22250885949050003,
+      "sample_min_signed_v": 0.34126893623768395,
+      "pass": true
+    },
+    {
+      "bit_index": 69,
+      "expected_bit": 0,
+      "master_min_differential_v": 0.24780759731680102,
+      "held_min_differential_v": 0.18476009247857306,
+      "previous_min_differential_v": 0.225084444804021,
+      "sample_min_signed_v": 0.321277200628598,
+      "pass": true
+    },
+    {
+      "bit_index": 70,
+      "expected_bit": 1,
+      "master_min_differential_v": 0.2470608850184599,
+      "held_min_differential_v": 0.18430138869172796,
+      "previous_min_differential_v": 0.22467027498497005,
+      "sample_min_signed_v": 0.33590597073845596,
+      "pass": true
+    },
+    {
+      "bit_index": 71,
+      "expected_bit": 0,
+      "master_min_differential_v": 0.230466009914859,
+      "held_min_differential_v": 0.17921535715078196,
+      "previous_min_differential_v": 0.22481574042818497,
+      "sample_min_signed_v": 0.328874141891355,
+      "pass": true
+    },
+    {
+      "bit_index": 72,
+      "expected_bit": 0,
+      "master_min_differential_v": 0.2393462370408599,
+      "held_min_differential_v": 0.18019563503831493,
+      "previous_min_differential_v": 0.24364063322086293,
+      "sample_min_signed_v": 0.18633765064841,
+      "pass": true
+    },
+    {
+      "bit_index": 73,
+      "expected_bit": 1,
+      "master_min_differential_v": 0.24675321280488416,
+      "held_min_differential_v": 0.18414999567926804,
+      "previous_min_differential_v": 0.22303259134507702,
+      "sample_min_signed_v": 0.33872705507298706,
+      "pass": true
+    },
+    {
+      "bit_index": 74,
+      "expected_bit": 0,
+      "master_min_differential_v": 0.23042830597710595,
+      "held_min_differential_v": 0.17918818545093385,
+      "previous_min_differential_v": 0.22485493596067507,
+      "sample_min_signed_v": 0.32580076001714486,
+      "pass": true
+    },
+    {
+      "bit_index": 75,
+      "expected_bit": 0,
+      "master_min_differential_v": 0.23038311982503812,
+      "held_min_differential_v": 0.17558256724321497,
+      "previous_min_differential_v": 0.2435205123260591,
+      "sample_min_signed_v": 0.18086315919182394,
+      "pass": true
+    },
+    {
+      "bit_index": 76,
+      "expected_bit": 0,
+      "master_min_differential_v": 0.22327221816311593,
+      "held_min_differential_v": 0.17386243986190708,
+      "previous_min_differential_v": 0.2423192540983039,
+      "sample_min_signed_v": 0.14767537975741285,
+      "pass": true
+    },
+    {
+      "bit_index": 77,
+      "expected_bit": 0,
+      "master_min_differential_v": 0.21723182560968413,
+      "held_min_differential_v": 0.1721761169456002,
+      "previous_min_differential_v": 0.24193389635495,
+      "sample_min_signed_v": 0.12907075007367208,
+      "pass": true
+    },
+    {
+      "bit_index": 78,
+      "expected_bit": 0,
+      "master_min_differential_v": 0.21487360834328917,
+      "held_min_differential_v": 0.17394241115436304,
+      "previous_min_differential_v": 0.241697871841551,
+      "sample_min_signed_v": 0.11799643860376707,
+      "pass": true
+    },
+    {
+      "bit_index": 79,
+      "expected_bit": 1,
+      "master_min_differential_v": 0.231076573387885,
+      "held_min_differential_v": 0.17960461879915912,
+      "previous_min_differential_v": 0.22204902773858404,
+      "sample_min_signed_v": 0.3423682794176819,
+      "pass": true
+    }
+  ],
+  "sampled_eye_height_v": 0.2419652037501432,
+  "minimum_sample_signed_v": 0.11799643860376707,
+  "ctle_plus_dfe_vdd_power_w": 0.007346505266563693,
+  "external_clock_net_power_w": 6.497067956814369e-06,
+  "external_clock_positive_supplied_power_w": 9.695697583689321e-05,
+  "external_tap_control_positive_supplied_power_w": 1.4252280572084562e-07,
+  "ideal_signal_source_net_power_w": 0.0,
+  "ideal_common_mode_source_net_power_w": -4.60212041358471e-08,
+  "full_receiver_verified": false,
+  "scope": "finite noiseless transistor transient, not BER or full S3-S9 signoff",
+  "instrument_ok": true,
+  "new_dfe_voltage_audit": {
+    "documented_ranges_ok": true,
+    "out_of_range_device_quantity_samples": 0,
+    "max_abs_vds_vgs_v": 1.71,
+    "devices": [
+      {
+        "instance": "Xdf_mip",
+        "model": "sky130_fd_pr__nfet_01v8",
+        "vds": {
+          "min_v": 0.4506834434486211,
+          "max_v": 1.1398622554419862,
+          "documented_min_v": 0,
+          "documented_max_v": 1.95,
+          "below_samples": 0,
+          "above_samples": 0
+        },
+        "vgs": {
+          "min_v": 0.398614550445225,
+          "max_v": 1.0164391967487845,
+          "documented_min_v": 0,
+          "documented_max_v": 1.95,
+          "below_samples": 0,
+          "above_samples": 0
+        },
+        "vbs": {
+          "min_v": -1.030690031255038,
+          "max_v": -0.6138959484572828,
+          "documented_min_v": -1.95,
+          "documented_max_v": 0.3,
+          "below_samples": 0,
+          "above_samples": 0
+        }
+      },
+      {
+        "instance": "Xdf_min",
+        "model": "sky130_fd_pr__nfet_01v8",
+        "vds": {
+          "min_v": 0.45084485197951296,
+          "max_v": 1.1397775505492231,
+          "documented_min_v": 0,
+          "documented_max_v": 1.95,
+          "below_samples": 0,
+          "above_samples": 0
+        },
+        "vgs": {
+          "min_v": 0.3981541844327481,
+          "max_v": 1.0163920410345053,
+          "documented_min_v": 0,
+          "documented_max_v": 1.95,
+          "below_samples": 0,
+          "above_samples": 0
+        },
+        "vbs": {
+          "min_v": -1.030690031255038,
+          "max_v": -0.6138959484572828,
+          "documented_min_v": -1.95,
+          "documented_max_v": 0.3,
+          "below_samples": 0,
+          "above_samples": 0
+        }
+      },
+      {
+        "instance": "Xdf_mrp",
+        "model": "sky130_fd_pr__nfet_01v8",
+        "vds": {
+          "min_v": 0.27764359849739284,
+          "max_v": 1.0114473583021555,
+          "documented_min_v": 0,
+          "documented_max_v": 1.95,
+          "below_samples": 0,
+          "above_samples": 0
+        },
+        "vgs": {
+          "min_v": 0.43162319096050505,
+          "max_v": 1.011460807423255,
+          "documented_min_v": 0,
+          "documented_max_v": 1.95,
+          "below_samples": 0,
+          "above_samples": 0
+        },
+        "vbs": {
+          "min_v": -1.204721614872316,
+          "max_v": -0.6327786012064494,
+          "documented_min_v": -1.95,
+          "documented_max_v": 0.3,
+          "below_samples": 0,
+          "above_samples": 0
+        }
+      },
+      {
+        "instance": "Xdf_mrn",
+        "model": "sky130_fd_pr__nfet_01v8",
+        "vds": {
+          "min_v": 0.43162319096050505,
+          "max_v": 1.011460807423255,
+          "documented_min_v": 0,
+          "documented_max_v": 1.95,
+          "below_samples": 0,
+          "above_samples": 0
+        },
+        "vgs": {
+          "min_v": 0.27764359849739284,
+          "max_v": 1.0114473583021555,
+          "documented_min_v": 0,
+          "documented_max_v": 1.95,
+          "below_samples": 0,
+          "above_samples": 0
+        },
+        "vbs": {
+          "min_v": -1.204721614872316,
+          "max_v": -0.6327786012064494,
+          "documented_min_v": -1.95,
+          "documented_max_v": 0.3,
+          "below_samples": 0,
+          "above_samples": 0
+        }
+      },
+      {
+        "instance": "Xdf_mtrack",
+        "model": "sky130_fd_pr__nfet_01v8",
+        "vds": {
+          "min_v": 0.44282159911281527,
+          "max_v": 0.8998700654423507,
+          "documented_min_v": 0,
+          "documented_max_v": 1.95,
+          "below_samples": 0,
+          "above_samples": 0
+        },
+        "vgs": {
+          "min_v": 0.3919493416719909,
+          "max_v": 0.9963234526725886,
+          "documented_min_v": 0,
+          "documented_max_v": 1.95,
+          "below_samples": 0,
+          "above_samples": 0
+        },
+        "vbs": {
+          "min_v": -0.1780506583280261,
+          "max_v": -0.1291377210419259,
+          "documented_min_v": -1.95,
+          "documented_max_v": 0.3,
+          "below_samples": 0,
+          "above_samples": 0
+        }
+      },
+      {
+        "instance": "Xdf_mhold",
+        "model": "sky130_fd_pr__nfet_01v8",
+        "vds": {
+          "min_v": 0.4598497223456335,
+          "max_v": 1.07291400395145,
+          "documented_min_v": 0,
+          "documented_max_v": 1.95,
+          "below_samples": 0,
+          "above_samples": 0
+        },
+        "vgs": {
+          "min_v": 0.3923257737573628,
+          "max_v": 0.9967585544435489,
+          "documented_min_v": 0,
+          "documented_max_v": 1.95,
+          "below_samples": 0,
+          "above_samples": 0
+        },
+        "vbs": {
+          "min_v": -0.1780506583280261,
+          "max_v": -0.1291377210419259,
+          "documented_min_v": -1.95,
+          "documented_max_v": 0.3,
+          "below_samples": 0,
+          "above_samples": 0
+        }
+      },
+      {
+        "instance": "Xdf_mtail",
+        "model": "sky130_fd_pr__nfet_01v8",
+        "vds": {
+          "min_v": 0.1291377210419259,
+          "max_v": 0.1780506583280261,
+          "documented_min_v": 0,
+          "documented_max_v": 1.95,
+          "below_samples": 0,
+          "above_samples": 0
+        },
+        "vgs": {
+          "min_v": 0.9097821410255268,
+          "max_v": 0.9175829639291587,
+          "documented_min_v": 0,
+          "documented_max_v": 1.95,
+          "below_samples": 0,
+          "above_samples": 0
+        },
+        "vbs": {
+          "min_v": 0.0,
+          "max_v": 0.0,
+          "documented_min_v": -1.95,
+          "documented_max_v": 0.3,
+          "below_samples": 0,
+          "above_samples": 0
+        }
+      },
+      {
+        "instance": "Xdf_sip",
+        "model": "sky130_fd_pr__nfet_01v8",
+        "vds": {
+          "min_v": 0.3205026390263799,
+          "max_v": 1.0904754103716126,
+          "documented_min_v": 0,
+          "documented_max_v": 1.95,
+          "below_samples": 0,
+          "above_samples": 0
+        },
+        "vgs": {
+          "min_v": 0.27565974911081104,
+          "max_v": 1.0111332620860154,
+          "documented_min_v": 0,
+          "documented_max_v": 1.95,
+          "below_samples": 0,
+          "above_samples": 0
+        },
+        "vbs": {
+          "min_v": -1.206705464258898,
+          "max_v": -0.6371761247510496,
+          "documented_min_v": -1.95,
+          "documented_max_v": 0.3,
+          "below_samples": 0,
+          "above_samples": 0
+        }
+      },
+      {
+        "instance": "Xdf_sin",
+        "model": "sky130_fd_pr__nfet_01v8",
+        "vds": {
+          "min_v": 0.4134797633945,
+          "max_v": 1.0900796182430637,
+          "documented_min_v": 0,
+          "documented_max_v": 1.95,
+          "below_samples": 0,
+          "above_samples": 0
+        },
+        "vgs": {
+          "min_v": 0.420583843352049,
+          "max_v": 1.011137117098233,
+          "documented_min_v": 0,
+          "documented_max_v": 1.95,
+          "below_samples": 0,
+          "above_samples": 0
+        },
+        "vbs": {
+          "min_v": -1.206705464258898,
+          "max_v": -0.6371761247510496,
+          "documented_min_v": -1.95,
+          "documented_max_v": 0.3,
+          "below_samples": 0,
+          "above_samples": 0
+        }
+      },
+      {
+        "instance": "Xdf_srp",
+        "model": "sky130_fd_pr__nfet_01v8",
+        "vds": {
+          "min_v": 0.4428846623972762,
+          "max_v": 1.0111001010809217,
+          "documented_min_v": 0,
+          "documented_max_v": 1.95,
+          "below_samples": 0,
+          "above_samples": 0
+        },
+        "vgs": {
+          "min_v": 0.44345357078939585,
+          "max_v": 1.0110871604512228,
+          "documented_min_v": 0,
+          "documented_max_v": 1.95,
+          "below_samples": 0,
+          "above_samples": 0
+        },
+        "vbs": {
+          "min_v": -1.033007634340361,
+          "max_v": -0.6573454550909484,
+          "documented_min_v": -1.95,
+          "documented_max_v": 0.3,
+          "below_samples": 0,
+          "above_samples": 0
+        }
+      },
+      {
+        "instance": "Xdf_srn",
+        "model": "sky130_fd_pr__nfet_01v8",
+        "vds": {
+          "min_v": 0.44345357078939585,
+          "max_v": 1.0110871604512228,
+          "documented_min_v": 0,
+          "documented_max_v": 1.95,
+          "below_samples": 0,
+          "above_samples": 0
+        },
+        "vgs": {
+          "min_v": 0.4428846623972762,
+          "max_v": 1.0111001010809217,
+          "documented_min_v": 0,
+          "documented_max_v": 1.95,
+          "below_samples": 0,
+          "above_samples": 0
+        },
+        "vbs": {
+          "min_v": -1.033007634340361,
+          "max_v": -0.6573454550909484,
+          "documented_min_v": -1.95,
+          "documented_max_v": 0.3,
+          "below_samples": 0,
+          "above_samples": 0
+        }
+      },
+      {
+        "instance": "Xdf_strack",
+        "model": "sky130_fd_pr__nfet_01v8",
+        "vds": {
+          "min_v": 0.46373051439304025,
+          "max_v": 1.075307804753428,
+          "documented_min_v": 0,
+          "documented_max_v": 1.95,
+          "below_samples": 0,
+          "above_samples": 0
+        },
+        "vgs": {
+          "min_v": 0.3920219023359548,
+          "max_v": 0.9953808441690949,
+          "documented_min_v": 0,
+          "documented_max_v": 1.95,
+          "below_samples": 0,
+          "above_samples": 0
+        },
+        "vbs": {
+          "min_v": -0.1780780297389619,
+          "max_v": -0.1305642354690288,
+          "documented_min_v": -1.95,
+          "documented_max_v": 0.3,
+          "below_samples": 0,
+          "above_samples": 0
+        }
+      },
+      {
+        "instance": "Xdf_shold",
+        "model": "sky130_fd_pr__nfet_01v8",
+        "vds": {
+          "min_v": 0.48477840947566075,
+          "max_v": 0.9017853360742915,
+          "documented_min_v": 0,
+          "documented_max_v": 1.95,
+          "below_samples": 0,
+          "above_samples": 0
+        },
+        "vgs": {
+          "min_v": 0.39192197026105513,
+          "max_v": 0.9958353821551249,
+          "documented_min_v": 0,
+          "documented_max_v": 1.95,
+          "below_samples": 0,
+          "above_samples": 0
+        },
+        "vbs": {
+          "min_v": -0.1780780297389619,
+          "max_v": -0.1305642354690288,
+          "documented_min_v": -1.95,
+          "documented_max_v": 0.3,
+          "below_samples": 0,
+          "above_samples": 0
+        }
+      },
+      {
+        "instance": "Xdf_stail",
+        "model": "sky130_fd_pr__nfet_01v8",
+        "vds": {
+          "min_v": 0.1305642354690288,
+          "max_v": 0.1780780297389619,
+          "documented_min_v": 0,
+          "documented_max_v": 1.95,
+          "below_samples": 0,
+          "above_samples": 0
+        },
+        "vgs": {
+          "min_v": 0.9097821410255268,
+          "max_v": 0.9175829639291587,
+          "documented_min_v": 0,
+          "documented_max_v": 1.95,
+          "below_samples": 0,
+          "above_samples": 0
+        },
+        "vbs": {
+          "min_v": 0.0,
+          "max_v": 0.0,
+          "documented_min_v": -1.95,
+          "documented_max_v": 0.3,
+          "below_samples": 0,
+          "above_samples": 0
+        }
+      },
+      {
+        "instance": "Xdf_ref",
+        "model": "sky130_fd_pr__nfet_01v8",
+        "vds": {
+          "min_v": 0.9097821410255268,
+          "max_v": 0.9175829639291587,
+          "documented_min_v": 0,
+          "documented_max_v": 1.95,
+          "below_samples": 0,
+          "above_samples": 0
+        },
+        "vgs": {
+          "min_v": 0.9097821410255268,
+          "max_v": 0.9175829639291587,
+          "documented_min_v": 0,
+          "documented_max_v": 1.95,
+          "below_samples": 0,
+          "above_samples": 0
+        },
+        "vbs": {
+          "min_v": 0.0,
+          "max_v": 0.0,
+          "documented_min_v": -1.95,
+          "documented_max_v": 0.3,
+          "below_samples": 0,
+          "above_samples": 0
+        }
+      },
+      {
+        "instance": "Xdfe_sump",
+        "model": "sky130_fd_pr__nfet_01v8",
+        "vds": {
+          "min_v": 0.8309154811292123,
+          "max_v": 1.2339599394939231,
+          "documented_min_v": 0,
+          "documented_max_v": 1.95,
+          "below_samples": 0,
+          "above_samples": 0
+        },
+        "vgs": {
+          "min_v": 0.6415168175986847,
+          "max_v": 1.0121533089274675,
+          "documented_min_v": 0,
+          "documented_max_v": 1.95,
+          "below_samples": 0,
+          "above_samples": 0
+        },
+        "vbs": {
+          "min_v": -0.5375518677380458,
+          "max_v": -0.4533818911592223,
+          "documented_min_v": -1.95,
+          "documented_max_v": 0.3,
+          "below_samples": 0,
+          "above_samples": 0
+        }
+      },
+      {
+        "instance": "Xdfe_sumn",
+        "model": "sky130_fd_pr__nfet_01v8",
+        "vds": {
+          "min_v": 0.8319967397114554,
+          "max_v": 1.2293479507567884,
+          "documented_min_v": 0,
+          "documented_max_v": 1.95,
+          "below_samples": 0,
+          "above_samples": 0
+        },
+        "vgs": {
+          "min_v": 0.6396199626139889,
+          "max_v": 1.0119020297650472,
+          "documented_min_v": 0,
+          "documented_max_v": 1.95,
+          "below_samples": 0,
+          "above_samples": 0
+        },
+        "vbs": {
+          "min_v": -0.5375518677380458,
+          "max_v": -0.4533818911592223,
+          "documented_min_v": -1.95,
+          "documented_max_v": 0.3,
+          "below_samples": 0,
+          "above_samples": 0
+        }
+      },
+      {
+        "instance": "Xdfe_sumtail",
+        "model": "sky130_fd_pr__nfet_01v8",
+        "vds": {
+          "min_v": 0.4533818911592223,
+          "max_v": 0.5375518677380458,
+          "documented_min_v": 0,
+          "documented_max_v": 1.95,
+          "below_samples": 0,
+          "above_samples": 0
+        },
+        "vgs": {
+          "min_v": 0.9097821410255268,
+          "max_v": 0.9175829639291587,
+          "documented_min_v": 0,
+          "documented_max_v": 1.95,
+          "below_samples": 0,
+          "above_samples": 0
+        },
+        "vbs": {
+          "min_v": 0.0,
+          "max_v": 0.0,
+          "documented_min_v": -1.95,
+          "documented_max_v": 0.3,
+          "below_samples": 0,
+          "above_samples": 0
+        }
+      },
+      {
+        "instance": "Xdfe_dacp",
+        "model": "sky130_fd_pr__nfet_01v8",
+        "vds": {
+          "min_v": 0.603623997111924,
+          "max_v": 0.9895100601692973,
+          "documented_min_v": 0,
+          "documented_max_v": 1.95,
+          "below_samples": 0,
+          "above_samples": 0
+        },
+        "vgs": {
+          "min_v": 0.6908958129819226,
+          "max_v": 0.9747158240015152,
+          "documented_min_v": 0,
+          "documented_max_v": 1.95,
+          "below_samples": 0,
+          "above_samples": 0
+        },
+        "vbs": {
+          "min_v": -0.7998909767162379,
+          "max_v": -0.7021513162199897,
+          "documented_min_v": -1.95,
+          "documented_max_v": 0.3,
+          "below_samples": 0,
+          "above_samples": 0
+        }
+      },
+      {
+        "instance": "Xdfe_dacn",
+        "model": "sky130_fd_pr__nfet_01v8",
+        "vds": {
+          "min_v": 0.603273690051634,
+          "max_v": 0.9905385055954968,
+          "documented_min_v": 0,
+          "documented_max_v": 1.95,
+          "below_samples": 0,
+          "above_samples": 0
+        },
+        "vgs": {
+          "min_v": 0.6908289135426943,
+          "max_v": 0.9747864965725129,
+          "documented_min_v": 0,
+          "documented_max_v": 1.95,
+          "below_samples": 0,
+          "above_samples": 0
+        },
+        "vbs": {
+          "min_v": -0.7998909767162379,
+          "max_v": -0.7021513162199897,
+          "documented_min_v": -1.95,
+          "documented_max_v": 0.3,
+          "below_samples": 0,
+          "above_samples": 0
+        }
+      },
+      {
+        "instance": "Xdfe_tail0",
+        "model": "sky130_fd_pr__nfet_01v8",
+        "vds": {
+          "min_v": 0.5146070396964653,
+          "max_v": 0.6118318132973694,
+          "documented_min_v": 0,
+          "documented_max_v": 1.95,
+          "below_samples": 0,
+          "above_samples": 0
+        },
+        "vgs": {
+          "min_v": 0.7268440915459915,
+          "max_v": 0.7292005156023282,
+          "documented_min_v": 0,
+          "documented_max_v": 1.95,
+          "below_samples": 0,
+          "above_samples": 0
+        },
+        "vbs": {
+          "min_v": -0.1886652184946243,
+          "max_v": -0.1828419806008535,
+          "documented_min_v": -1.95,
+          "documented_max_v": 0.3,
+          "below_samples": 0,
+          "above_samples": 0
+        }
+      },
+      {
+        "instance": "Xdfe_en0",
+        "model": "sky130_fd_pr__nfet_01v8",
+        "vds": {
+          "min_v": 0.1828419806008535,
+          "max_v": 0.1886652184946243,
+          "documented_min_v": 0,
+          "documented_max_v": 1.95,
+          "below_samples": 0,
+          "above_samples": 0
+        },
+        "vgs": {
+          "min_v": 0.0,
+          "max_v": 0.0,
+          "documented_min_v": 0,
+          "documented_max_v": 1.95,
+          "below_samples": 0,
+          "above_samples": 0
+        },
+        "vbs": {
+          "min_v": 0.0,
+          "max_v": 0.0,
+          "documented_min_v": -1.95,
+          "documented_max_v": 0.3,
+          "below_samples": 0,
+          "above_samples": 0
+        }
+      },
+      {
+        "instance": "Xdfe_tail1",
+        "model": "sky130_fd_pr__nfet_01v8",
+        "vds": {
+          "min_v": 0.6992097789945707,
+          "max_v": 0.7968575770481569,
+          "documented_min_v": 0,
+          "documented_max_v": 1.95,
+          "below_samples": 0,
+          "above_samples": 0
+        },
+        "vgs": {
+          "min_v": 0.9072707166170146,
+          "max_v": 0.91461502897551,
+          "documented_min_v": 0,
+          "documented_max_v": 1.95,
+          "below_samples": 0,
+          "above_samples": 0
+        },
+        "vbs": {
+          "min_v": -0.003561826031426796,
+          "max_v": -0.002102342761359621,
+          "documented_min_v": -1.95,
+          "documented_max_v": 0.3,
+          "below_samples": 0,
+          "above_samples": 0
+        }
+      },
+      {
+        "instance": "Xdfe_en1",
+        "model": "sky130_fd_pr__nfet_01v8",
+        "vds": {
+          "min_v": 0.002102342761359621,
+          "max_v": 0.003561826031426796,
+          "documented_min_v": 0,
+          "documented_max_v": 1.95,
+          "below_samples": 0,
+          "above_samples": 0
+        },
+        "vgs": {
+          "min_v": 1.71,
+          "max_v": 1.71,
+          "documented_min_v": 0,
+          "documented_max_v": 1.95,
+          "below_samples": 0,
+          "above_samples": 0
+        },
+        "vbs": {
+          "min_v": 0.0,
+          "max_v": 0.0,
+          "documented_min_v": -1.95,
+          "documented_max_v": 0.3,
+          "below_samples": 0,
+          "above_samples": 0
+        }
+      },
+      {
+        "instance": "Xdfe_tail2",
+        "model": "sky130_fd_pr__nfet_01v8",
+        "vds": {
+          "min_v": 0.46170470210455417,
+          "max_v": 0.5589671931882954,
+          "documented_min_v": 0,
+          "documented_max_v": 1.95,
+          "below_samples": 0,
+          "above_samples": 0
+        },
+        "vgs": {
+          "min_v": 0.6741913538289505,
+          "max_v": 0.6762541641513374,
+          "documented_min_v": 0,
+          "documented_max_v": 1.95,
+          "below_samples": 0,
+          "above_samples": 0
+        },
+        "vbs": {
+          "min_v": -0.2415233767369141,
+          "max_v": -0.2355543576401835,
+          "documented_min_v": -1.95,
+          "documented_max_v": 0.3,
+          "below_samples": 0,
+          "above_samples": 0
+        }
+      },
+      {
+        "instance": "Xdfe_en2",
+        "model": "sky130_fd_pr__nfet_01v8",
+        "vds": {
+          "min_v": 0.2355543576401835,
+          "max_v": 0.2415233767369141,
+          "documented_min_v": 0,
+          "documented_max_v": 1.95,
+          "below_samples": 0,
+          "above_samples": 0
+        },
+        "vgs": {
+          "min_v": 0.0,
+          "max_v": 0.0,
+          "documented_min_v": 0,
+          "documented_max_v": 1.95,
+          "below_samples": 0,
+          "above_samples": 0
+        },
+        "vbs": {
+          "min_v": 0.0,
+          "max_v": 0.0,
+          "documented_min_v": -1.95,
+          "documented_max_v": 0.3,
+          "below_samples": 0,
+          "above_samples": 0
+        }
+      },
+      {
+        "instance": "Xdfe_tail3",
+        "model": "sky130_fd_pr__nfet_01v8",
+        "vds": {
+          "min_v": 0.438702987251822,
+          "max_v": 0.5359409454035055,
+          "documented_min_v": 0,
+          "documented_max_v": 1.95,
+          "below_samples": 0,
+          "above_samples": 0
+        },
+        "vgs": {
+          "min_v": 0.651186263742688,
+          "max_v": 0.6532391499715836,
+          "documented_min_v": 0,
+          "documented_max_v": 1.95,
+          "below_samples": 0,
+          "above_samples": 0
+        },
+        "vbs": {
+          "min_v": -0.26453145251121,
+          "max_v": -0.2585699130937227,
+          "documented_min_v": -1.95,
+          "documented_max_v": 0.3,
+          "below_samples": 0,
+          "above_samples": 0
+        }
+      },
+      {
+        "instance": "Xdfe_en3",
+        "model": "sky130_fd_pr__nfet_01v8",
+        "vds": {
+          "min_v": 0.2585699130937227,
+          "max_v": 0.26453145251121,
+          "documented_min_v": 0,
+          "documented_max_v": 1.95,
+          "below_samples": 0,
+          "above_samples": 0
+        },
+        "vgs": {
+          "min_v": 0.0,
+          "max_v": 0.0,
+          "documented_min_v": 0,
+          "documented_max_v": 1.95,
+          "below_samples": 0,
+          "above_samples": 0
+        },
+        "vbs": {
+          "min_v": 0.0,
+          "max_v": 0.0,
+          "documented_min_v": -1.95,
+          "documented_max_v": 0.3,
+          "below_samples": 0,
+          "above_samples": 0
+        }
+      },
+      {
+        "instance": "Xdfe_bleed0",
+        "model": "sky130_fd_pr__nfet_01v8",
+        "vds": {
+          "min_v": 0.1828419806008535,
+          "max_v": 0.1886652184946243,
+          "documented_min_v": 0,
+          "documented_max_v": 1.95,
+          "below_samples": 0,
+          "above_samples": 0
+        },
+        "vgs": {
+          "min_v": 0.9097821410255268,
+          "max_v": 0.9175829639291587,
+          "documented_min_v": 0,
+          "documented_max_v": 1.95,
+          "below_samples": 0,
+          "above_samples": 0
+        },
+        "vbs": {
+          "min_v": 0.0,
+          "max_v": 0.0,
+          "documented_min_v": -1.95,
+          "documented_max_v": 0.3,
+          "below_samples": 0,
+          "above_samples": 0
+        }
+      },
+      {
+        "instance": "Xdfe_bleed1",
+        "model": "sky130_fd_pr__nfet_01v8",
+        "vds": {
+          "min_v": 0.002102342761359621,
+          "max_v": 0.003561826031426796,
+          "documented_min_v": 0,
+          "documented_max_v": 1.95,
+          "below_samples": 0,
+          "above_samples": 0
+        },
+        "vgs": {
+          "min_v": 0.9097821410255268,
+          "max_v": 0.9175829639291587,
+          "documented_min_v": 0,
+          "documented_max_v": 1.95,
+          "below_samples": 0,
+          "above_samples": 0
+        },
+        "vbs": {
+          "min_v": 0.0,
+          "max_v": 0.0,
+          "documented_min_v": -1.95,
+          "documented_max_v": 0.3,
+          "below_samples": 0,
+          "above_samples": 0
+        }
+      },
+      {
+        "instance": "Xdfe_bleed2",
+        "model": "sky130_fd_pr__nfet_01v8",
+        "vds": {
+          "min_v": 0.2355543576401835,
+          "max_v": 0.2415233767369141,
+          "documented_min_v": 0,
+          "documented_max_v": 1.95,
+          "below_samples": 0,
+          "above_samples": 0
+        },
+        "vgs": {
+          "min_v": 0.9097821410255268,
+          "max_v": 0.9175829639291587,
+          "documented_min_v": 0,
+          "documented_max_v": 1.95,
+          "below_samples": 0,
+          "above_samples": 0
+        },
+        "vbs": {
+          "min_v": 0.0,
+          "max_v": 0.0,
+          "documented_min_v": -1.95,
+          "documented_max_v": 0.3,
+          "below_samples": 0,
+          "above_samples": 0
+        }
+      },
+      {
+        "instance": "Xdfe_bleed3",
+        "model": "sky130_fd_pr__nfet_01v8",
+        "vds": {
+          "min_v": 0.2585699130937227,
+          "max_v": 0.26453145251121,
+          "documented_min_v": 0,
+          "documented_max_v": 1.95,
+          "below_samples": 0,
+          "above_samples": 0
+        },
+        "vgs": {
+          "min_v": 0.9097821410255268,
+          "max_v": 0.9175829639291587,
+          "documented_min_v": 0,
+          "documented_max_v": 1.95,
+          "below_samples": 0,
+          "above_samples": 0
+        },
+        "vbs": {
+          "min_v": 0.0,
+          "max_v": 0.0,
+          "documented_min_v": -1.95,
+          "documented_max_v": 0.3,
+          "below_samples": 0,
+          "above_samples": 0
+        }
+      }
+    ],
+    "reliability_verified": false,
+    "scope": "signed drawn-terminal model-domain check, not absolute-maximum or lifetime signoff"
+  },
+  "whole_circuit_voltage_audit": {
+    "documented_ranges_ok": false,
+    "out_of_range_device_quantity_samples": 166595,
+    "max_abs_vds_vgs_v": 1.71,
+    "devices": [
+      {
+        "instance": "Xatt_swp0",
+        "model": "sky130_fd_pr__pfet_01v8",
+        "vds": {
+          "min_v": -0.009407015034361033,
+          "max_v": 0.00917531935446303,
+          "documented_min_v": -1.95,
+          "documented_max_v": 0,
+          "below_samples": 0,
+          "above_samples": 25735
+        },
+        "vgs": {
+          "min_v": -1.501022973219767,
+          "max_v": -1.501022973219767,
+          "documented_min_v": -1.95,
+          "documented_max_v": 0,
+          "below_samples": 0,
+          "above_samples": 0
+        },
+        "vbs": {
+          "min_v": 0.2089770267802329,
+          "max_v": 0.2089770267802329,
+          "documented_min_v": -0.1,
+          "documented_max_v": 1.95,
+          "below_samples": 0,
+          "above_samples": 0
+        }
+      },
+      {
+        "instance": "Xatt_swn0",
+        "model": "sky130_fd_pr__pfet_01v8",
+        "vds": {
+          "min_v": -0.009309101761214134,
+          "max_v": 0.00927752897338796,
+          "documented_min_v": -1.95,
+          "documented_max_v": 0,
+          "below_samples": 0,
+          "above_samples": 29818
+        },
+        "vgs": {
+          "min_v": -1.501022973219767,
+          "max_v": -1.501022973219767,
+          "documented_min_v": -1.95,
+          "documented_max_v": 0,
+          "below_samples": 0,
+          "above_samples": 0
+        },
+        "vbs": {
+          "min_v": 0.2089770267802329,
+          "max_v": 0.2089770267802329,
+          "documented_min_v": -0.1,
+          "documented_max_v": 1.95,
+          "below_samples": 0,
+          "above_samples": 0
+        }
+      },
+      {
+        "instance": "Xatt_swp1",
+        "model": "sky130_fd_pr__pfet_01v8",
+        "vds": {
+          "min_v": -0.00937841243544213,
+          "max_v": 0.009148014163912865,
+          "documented_min_v": -1.95,
+          "documented_max_v": 0,
+          "below_samples": 0,
+          "above_samples": 25735
+        },
+        "vgs": {
+          "min_v": -1.501022973219767,
+          "max_v": -1.501022973219767,
+          "documented_min_v": -1.95,
+          "documented_max_v": 0,
+          "below_samples": 0,
+          "above_samples": 0
+        },
+        "vbs": {
+          "min_v": 0.2089770267802329,
+          "max_v": 0.2089770267802329,
+          "documented_min_v": -0.1,
+          "documented_max_v": 1.95,
+          "below_samples": 0,
+          "above_samples": 0
+        }
+      },
+      {
+        "instance": "Xatt_swn1",
+        "model": "sky130_fd_pr__pfet_01v8",
+        "vds": {
+          "min_v": -0.009280685155920176,
+          "max_v": 0.00924998678154898,
+          "documented_min_v": -1.95,
+          "documented_max_v": 0,
+          "below_samples": 0,
+          "above_samples": 29789
+        },
+        "vgs": {
+          "min_v": -1.501022973219767,
+          "max_v": -1.501022973219767,
+          "documented_min_v": -1.95,
+          "documented_max_v": 0,
+          "below_samples": 0,
+          "above_samples": 0
+        },
+        "vbs": {
+          "min_v": 0.2089770267802329,
+          "max_v": 0.2089770267802329,
+          "documented_min_v": -0.1,
+          "documented_max_v": 1.95,
+          "below_samples": 0,
+          "above_samples": 0
+        }
+      },
+      {
+        "instance": "Xatt_swp2",
+        "model": "sky130_fd_pr__pfet_01v8",
+        "vds": {
+          "min_v": -0.00937779871274902,
+          "max_v": 0.009147867753075856,
+          "documented_min_v": -1.95,
+          "documented_max_v": 0,
+          "below_samples": 0,
+          "above_samples": 25729
+        },
+        "vgs": {
+          "min_v": -1.501022973219767,
+          "max_v": -1.501022973219767,
+          "documented_min_v": -1.95,
+          "documented_max_v": 0,
+          "below_samples": 0,
+          "above_samples": 0
+        },
+        "vbs": {
+          "min_v": 0.2089770267802329,
+          "max_v": 0.2089770267802329,
+          "documented_min_v": -0.1,
+          "documented_max_v": 1.95,
+          "below_samples": 0,
+          "above_samples": 0
+        }
+      },
+      {
+        "instance": "Xatt_swn2",
+        "model": "sky130_fd_pr__pfet_01v8",
+        "vds": {
+          "min_v": -0.009280069546869107,
+          "max_v": 0.009249778892974847,
+          "documented_min_v": -1.95,
+          "documented_max_v": 0,
+          "below_samples": 0,
+          "above_samples": 29789
+        },
+        "vgs": {
+          "min_v": -1.501022973219767,
+          "max_v": -1.501022973219767,
+          "documented_min_v": -1.95,
+          "documented_max_v": 0,
+          "below_samples": 0,
+          "above_samples": 0
+        },
+        "vbs": {
+          "min_v": 0.2089770267802329,
+          "max_v": 0.2089770267802329,
+          "documented_min_v": -0.1,
+          "documented_max_v": 1.95,
+          "below_samples": 0,
+          "above_samples": 0
+        }
+      },
+      {
+        "instance": "XM1",
+        "model": "sky130_fd_pr__nfet_01v8",
+        "vds": {
+          "min_v": 0.6513533769887873,
+          "max_v": 1.0070176251454694,
+          "documented_min_v": 0,
+          "documented_max_v": 1.95,
+          "below_samples": 0,
+          "above_samples": 0
+        },
+        "vgs": {
+          "min_v": 0.8947021394080412,
+          "max_v": 1.0477794152303566,
+          "documented_min_v": 0,
+          "documented_max_v": 1.95,
+          "below_samples": 0,
+          "above_samples": 0
+        },
+        "vbs": {
+          "min_v": -0.5525591622425883,
+          "max_v": -0.4956647430142032,
+          "documented_min_v": -1.95,
+          "documented_max_v": 0.3,
+          "below_samples": 0,
+          "above_samples": 0
+        }
+      },
+      {
+        "instance": "XM2",
+        "model": "sky130_fd_pr__nfet_01v8",
+        "vds": {
+          "min_v": 0.651721513363926,
+          "max_v": 1.0081377506747145,
+          "documented_min_v": 0,
+          "documented_max_v": 1.95,
+          "below_samples": 0,
+          "above_samples": 0
+        },
+        "vgs": {
+          "min_v": 0.8942474110198141,
+          "max_v": 1.047503990601893,
+          "documented_min_v": 0,
+          "documented_max_v": 1.95,
+          "below_samples": 0,
+          "above_samples": 0
+        },
+        "vbs": {
+          "min_v": -0.5537095442852237,
+          "max_v": -0.4968466985348961,
+          "documented_min_v": -1.95,
+          "documented_max_v": 0.3,
+          "below_samples": 0,
+          "above_samples": 0
+        }
+      },
+      {
+        "instance": "Xbpref",
+        "model": "sky130_fd_pr__pfet_01v8",
+        "vds": {
+          "min_v": -1.328784538883811,
+          "max_v": -1.3287837761729908,
+          "documented_min_v": -1.95,
+          "documented_max_v": 0,
+          "below_samples": 0,
+          "above_samples": 0
+        },
+        "vgs": {
+          "min_v": -1.328784538883811,
+          "max_v": -1.3287837761729908,
+          "documented_min_v": -1.95,
+          "documented_max_v": 0,
+          "below_samples": 0,
+          "above_samples": 0
+        },
+        "vbs": {
+          "min_v": 0.0,
+          "max_v": 0.0,
+          "documented_min_v": -0.1,
+          "documented_max_v": 1.95,
+          "below_samples": 0,
+          "above_samples": 0
+        }
+      },
+      {
+        "instance": "Xbpfeed",
+        "model": "sky130_fd_pr__pfet_01v8",
+        "vds": {
+          "min_v": -0.9468763793259709,
+          "max_v": -0.9468180174600443,
+          "documented_min_v": -1.95,
+          "documented_max_v": 0,
+          "below_samples": 0,
+          "above_samples": 0
+        },
+        "vgs": {
+          "min_v": -1.328784538883811,
+          "max_v": -1.3287837761729908,
+          "documented_min_v": -1.95,
+          "documented_max_v": 0,
+          "below_samples": 0,
+          "above_samples": 0
+        },
+        "vbs": {
+          "min_v": 0.0,
+          "max_v": 0.0,
+          "documented_min_v": -0.1,
+          "documented_max_v": 1.95,
+          "below_samples": 0,
+          "above_samples": 0
+        }
+      },
+      {
+        "instance": "XMR",
+        "model": "sky130_fd_pr__nfet_01v8",
+        "vds": {
+          "min_v": 0.7631236206740291,
+          "max_v": 0.7631819825399556,
+          "documented_min_v": 0,
+          "documented_max_v": 1.95,
+          "below_samples": 0,
+          "above_samples": 0
+        },
+        "vgs": {
+          "min_v": 0.7631236206740291,
+          "max_v": 0.7631819825399556,
+          "documented_min_v": 0,
+          "documented_max_v": 1.95,
+          "below_samples": 0,
+          "above_samples": 0
+        },
+        "vbs": {
+          "min_v": 0.0,
+          "max_v": 0.0,
+          "documented_min_v": -1.95,
+          "documented_max_v": 0.3,
+          "below_samples": 0,
+          "above_samples": 0
+        }
+      },
+      {
+        "instance": "XMT1",
+        "model": "sky130_fd_pr__nfet_01v8",
+        "vds": {
+          "min_v": 0.4956647430142032,
+          "max_v": 0.5525591622425883,
+          "documented_min_v": 0,
+          "documented_max_v": 1.95,
+          "below_samples": 0,
+          "above_samples": 0
+        },
+        "vgs": {
+          "min_v": 0.7631236206740291,
+          "max_v": 0.7631819825399556,
+          "documented_min_v": 0,
+          "documented_max_v": 1.95,
+          "below_samples": 0,
+          "above_samples": 0
+        },
+        "vbs": {
+          "min_v": 0.0,
+          "max_v": 0.0,
+          "documented_min_v": -1.95,
+          "documented_max_v": 0.3,
+          "below_samples": 0,
+          "above_samples": 0
+        }
+      },
+      {
+        "instance": "XMT2",
+        "model": "sky130_fd_pr__nfet_01v8",
+        "vds": {
+          "min_v": 0.4968466985348961,
+          "max_v": 0.5537095442852237,
+          "documented_min_v": 0,
+          "documented_max_v": 1.95,
+          "below_samples": 0,
+          "above_samples": 0
+        },
+        "vgs": {
+          "min_v": 0.7631236206740291,
+          "max_v": 0.7631819825399556,
+          "documented_min_v": 0,
+          "documented_max_v": 1.95,
+          "below_samples": 0,
+          "above_samples": 0
+        },
+        "vbs": {
+          "min_v": 0.0,
+          "max_v": 0.0,
+          "documented_min_v": -1.95,
+          "documented_max_v": 0.3,
+          "below_samples": 0,
+          "above_samples": 0
+        }
+      },
+      {
+        "instance": "Xdf_mip",
+        "model": "sky130_fd_pr__nfet_01v8",
+        "vds": {
+          "min_v": 0.4506834434486211,
+          "max_v": 1.1398622554419862,
+          "documented_min_v": 0,
+          "documented_max_v": 1.95,
+          "below_samples": 0,
+          "above_samples": 0
+        },
+        "vgs": {
+          "min_v": 0.398614550445225,
+          "max_v": 1.0164391967487845,
+          "documented_min_v": 0,
+          "documented_max_v": 1.95,
+          "below_samples": 0,
+          "above_samples": 0
+        },
+        "vbs": {
+          "min_v": -1.030690031255038,
+          "max_v": -0.6138959484572828,
+          "documented_min_v": -1.95,
+          "documented_max_v": 0.3,
+          "below_samples": 0,
+          "above_samples": 0
+        }
+      },
+      {
+        "instance": "Xdf_min",
+        "model": "sky130_fd_pr__nfet_01v8",
+        "vds": {
+          "min_v": 0.45084485197951296,
+          "max_v": 1.1397775505492231,
+          "documented_min_v": 0,
+          "documented_max_v": 1.95,
+          "below_samples": 0,
+          "above_samples": 0
+        },
+        "vgs": {
+          "min_v": 0.3981541844327481,
+          "max_v": 1.0163920410345053,
+          "documented_min_v": 0,
+          "documented_max_v": 1.95,
+          "below_samples": 0,
+          "above_samples": 0
+        },
+        "vbs": {
+          "min_v": -1.030690031255038,
+          "max_v": -0.6138959484572828,
+          "documented_min_v": -1.95,
+          "documented_max_v": 0.3,
+          "below_samples": 0,
+          "above_samples": 0
+        }
+      },
+      {
+        "instance": "Xdf_mrp",
+        "model": "sky130_fd_pr__nfet_01v8",
+        "vds": {
+          "min_v": 0.27764359849739284,
+          "max_v": 1.0114473583021555,
+          "documented_min_v": 0,
+          "documented_max_v": 1.95,
+          "below_samples": 0,
+          "above_samples": 0
+        },
+        "vgs": {
+          "min_v": 0.43162319096050505,
+          "max_v": 1.011460807423255,
+          "documented_min_v": 0,
+          "documented_max_v": 1.95,
+          "below_samples": 0,
+          "above_samples": 0
+        },
+        "vbs": {
+          "min_v": -1.204721614872316,
+          "max_v": -0.6327786012064494,
+          "documented_min_v": -1.95,
+          "documented_max_v": 0.3,
+          "below_samples": 0,
+          "above_samples": 0
+        }
+      },
+      {
+        "instance": "Xdf_mrn",
+        "model": "sky130_fd_pr__nfet_01v8",
+        "vds": {
+          "min_v": 0.43162319096050505,
+          "max_v": 1.011460807423255,
+          "documented_min_v": 0,
+          "documented_max_v": 1.95,
+          "below_samples": 0,
+          "above_samples": 0
+        },
+        "vgs": {
+          "min_v": 0.27764359849739284,
+          "max_v": 1.0114473583021555,
+          "documented_min_v": 0,
+          "documented_max_v": 1.95,
+          "below_samples": 0,
+          "above_samples": 0
+        },
+        "vbs": {
+          "min_v": -1.204721614872316,
+          "max_v": -0.6327786012064494,
+          "documented_min_v": -1.95,
+          "documented_max_v": 0.3,
+          "below_samples": 0,
+          "above_samples": 0
+        }
+      },
+      {
+        "instance": "Xdf_mtrack",
+        "model": "sky130_fd_pr__nfet_01v8",
+        "vds": {
+          "min_v": 0.44282159911281527,
+          "max_v": 0.8998700654423507,
+          "documented_min_v": 0,
+          "documented_max_v": 1.95,
+          "below_samples": 0,
+          "above_samples": 0
+        },
+        "vgs": {
+          "min_v": 0.3919493416719909,
+          "max_v": 0.9963234526725886,
+          "documented_min_v": 0,
+          "documented_max_v": 1.95,
+          "below_samples": 0,
+          "above_samples": 0
+        },
+        "vbs": {
+          "min_v": -0.1780506583280261,
+          "max_v": -0.1291377210419259,
+          "documented_min_v": -1.95,
+          "documented_max_v": 0.3,
+          "below_samples": 0,
+          "above_samples": 0
+        }
+      },
+      {
+        "instance": "Xdf_mhold",
+        "model": "sky130_fd_pr__nfet_01v8",
+        "vds": {
+          "min_v": 0.4598497223456335,
+          "max_v": 1.07291400395145,
+          "documented_min_v": 0,
+          "documented_max_v": 1.95,
+          "below_samples": 0,
+          "above_samples": 0
+        },
+        "vgs": {
+          "min_v": 0.3923257737573628,
+          "max_v": 0.9967585544435489,
+          "documented_min_v": 0,
+          "documented_max_v": 1.95,
+          "below_samples": 0,
+          "above_samples": 0
+        },
+        "vbs": {
+          "min_v": -0.1780506583280261,
+          "max_v": -0.1291377210419259,
+          "documented_min_v": -1.95,
+          "documented_max_v": 0.3,
+          "below_samples": 0,
+          "above_samples": 0
+        }
+      },
+      {
+        "instance": "Xdf_mtail",
+        "model": "sky130_fd_pr__nfet_01v8",
+        "vds": {
+          "min_v": 0.1291377210419259,
+          "max_v": 0.1780506583280261,
+          "documented_min_v": 0,
+          "documented_max_v": 1.95,
+          "below_samples": 0,
+          "above_samples": 0
+        },
+        "vgs": {
+          "min_v": 0.9097821410255268,
+          "max_v": 0.9175829639291587,
+          "documented_min_v": 0,
+          "documented_max_v": 1.95,
+          "below_samples": 0,
+          "above_samples": 0
+        },
+        "vbs": {
+          "min_v": 0.0,
+          "max_v": 0.0,
+          "documented_min_v": -1.95,
+          "documented_max_v": 0.3,
+          "below_samples": 0,
+          "above_samples": 0
+        }
+      },
+      {
+        "instance": "Xdf_sip",
+        "model": "sky130_fd_pr__nfet_01v8",
+        "vds": {
+          "min_v": 0.3205026390263799,
+          "max_v": 1.0904754103716126,
+          "documented_min_v": 0,
+          "documented_max_v": 1.95,
+          "below_samples": 0,
+          "above_samples": 0
+        },
+        "vgs": {
+          "min_v": 0.27565974911081104,
+          "max_v": 1.0111332620860154,
+          "documented_min_v": 0,
+          "documented_max_v": 1.95,
+          "below_samples": 0,
+          "above_samples": 0
+        },
+        "vbs": {
+          "min_v": -1.206705464258898,
+          "max_v": -0.6371761247510496,
+          "documented_min_v": -1.95,
+          "documented_max_v": 0.3,
+          "below_samples": 0,
+          "above_samples": 0
+        }
+      },
+      {
+        "instance": "Xdf_sin",
+        "model": "sky130_fd_pr__nfet_01v8",
+        "vds": {
+          "min_v": 0.4134797633945,
+          "max_v": 1.0900796182430637,
+          "documented_min_v": 0,
+          "documented_max_v": 1.95,
+          "below_samples": 0,
+          "above_samples": 0
+        },
+        "vgs": {
+          "min_v": 0.420583843352049,
+          "max_v": 1.011137117098233,
+          "documented_min_v": 0,
+          "documented_max_v": 1.95,
+          "below_samples": 0,
+          "above_samples": 0
+        },
+        "vbs": {
+          "min_v": -1.206705464258898,
+          "max_v": -0.6371761247510496,
+          "documented_min_v": -1.95,
+          "documented_max_v": 0.3,
+          "below_samples": 0,
+          "above_samples": 0
+        }
+      },
+      {
+        "instance": "Xdf_srp",
+        "model": "sky130_fd_pr__nfet_01v8",
+        "vds": {
+          "min_v": 0.4428846623972762,
+          "max_v": 1.0111001010809217,
+          "documented_min_v": 0,
+          "documented_max_v": 1.95,
+          "below_samples": 0,
+          "above_samples": 0
+        },
+        "vgs": {
+          "min_v": 0.44345357078939585,
+          "max_v": 1.0110871604512228,
+          "documented_min_v": 0,
+          "documented_max_v": 1.95,
+          "below_samples": 0,
+          "above_samples": 0
+        },
+        "vbs": {
+          "min_v": -1.033007634340361,
+          "max_v": -0.6573454550909484,
+          "documented_min_v": -1.95,
+          "documented_max_v": 0.3,
+          "below_samples": 0,
+          "above_samples": 0
+        }
+      },
+      {
+        "instance": "Xdf_srn",
+        "model": "sky130_fd_pr__nfet_01v8",
+        "vds": {
+          "min_v": 0.44345357078939585,
+          "max_v": 1.0110871604512228,
+          "documented_min_v": 0,
+          "documented_max_v": 1.95,
+          "below_samples": 0,
+          "above_samples": 0
+        },
+        "vgs": {
+          "min_v": 0.4428846623972762,
+          "max_v": 1.0111001010809217,
+          "documented_min_v": 0,
+          "documented_max_v": 1.95,
+          "below_samples": 0,
+          "above_samples": 0
+        },
+        "vbs": {
+          "min_v": -1.033007634340361,
+          "max_v": -0.6573454550909484,
+          "documented_min_v": -1.95,
+          "documented_max_v": 0.3,
+          "below_samples": 0,
+          "above_samples": 0
+        }
+      },
+      {
+        "instance": "Xdf_strack",
+        "model": "sky130_fd_pr__nfet_01v8",
+        "vds": {
+          "min_v": 0.46373051439304025,
+          "max_v": 1.075307804753428,
+          "documented_min_v": 0,
+          "documented_max_v": 1.95,
+          "below_samples": 0,
+          "above_samples": 0
+        },
+        "vgs": {
+          "min_v": 0.3920219023359548,
+          "max_v": 0.9953808441690949,
+          "documented_min_v": 0,
+          "documented_max_v": 1.95,
+          "below_samples": 0,
+          "above_samples": 0
+        },
+        "vbs": {
+          "min_v": -0.1780780297389619,
+          "max_v": -0.1305642354690288,
+          "documented_min_v": -1.95,
+          "documented_max_v": 0.3,
+          "below_samples": 0,
+          "above_samples": 0
+        }
+      },
+      {
+        "instance": "Xdf_shold",
+        "model": "sky130_fd_pr__nfet_01v8",
+        "vds": {
+          "min_v": 0.48477840947566075,
+          "max_v": 0.9017853360742915,
+          "documented_min_v": 0,
+          "documented_max_v": 1.95,
+          "below_samples": 0,
+          "above_samples": 0
+        },
+        "vgs": {
+          "min_v": 0.39192197026105513,
+          "max_v": 0.9958353821551249,
+          "documented_min_v": 0,
+          "documented_max_v": 1.95,
+          "below_samples": 0,
+          "above_samples": 0
+        },
+        "vbs": {
+          "min_v": -0.1780780297389619,
+          "max_v": -0.1305642354690288,
+          "documented_min_v": -1.95,
+          "documented_max_v": 0.3,
+          "below_samples": 0,
+          "above_samples": 0
+        }
+      },
+      {
+        "instance": "Xdf_stail",
+        "model": "sky130_fd_pr__nfet_01v8",
+        "vds": {
+          "min_v": 0.1305642354690288,
+          "max_v": 0.1780780297389619,
+          "documented_min_v": 0,
+          "documented_max_v": 1.95,
+          "below_samples": 0,
+          "above_samples": 0
+        },
+        "vgs": {
+          "min_v": 0.9097821410255268,
+          "max_v": 0.9175829639291587,
+          "documented_min_v": 0,
+          "documented_max_v": 1.95,
+          "below_samples": 0,
+          "above_samples": 0
+        },
+        "vbs": {
+          "min_v": 0.0,
+          "max_v": 0.0,
+          "documented_min_v": -1.95,
+          "documented_max_v": 0.3,
+          "below_samples": 0,
+          "above_samples": 0
+        }
+      },
+      {
+        "instance": "Xdf_ref",
+        "model": "sky130_fd_pr__nfet_01v8",
+        "vds": {
+          "min_v": 0.9097821410255268,
+          "max_v": 0.9175829639291587,
+          "documented_min_v": 0,
+          "documented_max_v": 1.95,
+          "below_samples": 0,
+          "above_samples": 0
+        },
+        "vgs": {
+          "min_v": 0.9097821410255268,
+          "max_v": 0.9175829639291587,
+          "documented_min_v": 0,
+          "documented_max_v": 1.95,
+          "below_samples": 0,
+          "above_samples": 0
+        },
+        "vbs": {
+          "min_v": 0.0,
+          "max_v": 0.0,
+          "documented_min_v": -1.95,
+          "documented_max_v": 0.3,
+          "below_samples": 0,
+          "above_samples": 0
+        }
+      },
+      {
+        "instance": "Xdfe_sump",
+        "model": "sky130_fd_pr__nfet_01v8",
+        "vds": {
+          "min_v": 0.8309154811292123,
+          "max_v": 1.2339599394939231,
+          "documented_min_v": 0,
+          "documented_max_v": 1.95,
+          "below_samples": 0,
+          "above_samples": 0
+        },
+        "vgs": {
+          "min_v": 0.6415168175986847,
+          "max_v": 1.0121533089274675,
+          "documented_min_v": 0,
+          "documented_max_v": 1.95,
+          "below_samples": 0,
+          "above_samples": 0
+        },
+        "vbs": {
+          "min_v": -0.5375518677380458,
+          "max_v": -0.4533818911592223,
+          "documented_min_v": -1.95,
+          "documented_max_v": 0.3,
+          "below_samples": 0,
+          "above_samples": 0
+        }
+      },
+      {
+        "instance": "Xdfe_sumn",
+        "model": "sky130_fd_pr__nfet_01v8",
+        "vds": {
+          "min_v": 0.8319967397114554,
+          "max_v": 1.2293479507567884,
+          "documented_min_v": 0,
+          "documented_max_v": 1.95,
+          "below_samples": 0,
+          "above_samples": 0
+        },
+        "vgs": {
+          "min_v": 0.6396199626139889,
+          "max_v": 1.0119020297650472,
+          "documented_min_v": 0,
+          "documented_max_v": 1.95,
+          "below_samples": 0,
+          "above_samples": 0
+        },
+        "vbs": {
+          "min_v": -0.5375518677380458,
+          "max_v": -0.4533818911592223,
+          "documented_min_v": -1.95,
+          "documented_max_v": 0.3,
+          "below_samples": 0,
+          "above_samples": 0
+        }
+      },
+      {
+        "instance": "Xdfe_sumtail",
+        "model": "sky130_fd_pr__nfet_01v8",
+        "vds": {
+          "min_v": 0.4533818911592223,
+          "max_v": 0.5375518677380458,
+          "documented_min_v": 0,
+          "documented_max_v": 1.95,
+          "below_samples": 0,
+          "above_samples": 0
+        },
+        "vgs": {
+          "min_v": 0.9097821410255268,
+          "max_v": 0.9175829639291587,
+          "documented_min_v": 0,
+          "documented_max_v": 1.95,
+          "below_samples": 0,
+          "above_samples": 0
+        },
+        "vbs": {
+          "min_v": 0.0,
+          "max_v": 0.0,
+          "documented_min_v": -1.95,
+          "documented_max_v": 0.3,
+          "below_samples": 0,
+          "above_samples": 0
+        }
+      },
+      {
+        "instance": "Xdfe_dacp",
+        "model": "sky130_fd_pr__nfet_01v8",
+        "vds": {
+          "min_v": 0.603623997111924,
+          "max_v": 0.9895100601692973,
+          "documented_min_v": 0,
+          "documented_max_v": 1.95,
+          "below_samples": 0,
+          "above_samples": 0
+        },
+        "vgs": {
+          "min_v": 0.6908958129819226,
+          "max_v": 0.9747158240015152,
+          "documented_min_v": 0,
+          "documented_max_v": 1.95,
+          "below_samples": 0,
+          "above_samples": 0
+        },
+        "vbs": {
+          "min_v": -0.7998909767162379,
+          "max_v": -0.7021513162199897,
+          "documented_min_v": -1.95,
+          "documented_max_v": 0.3,
+          "below_samples": 0,
+          "above_samples": 0
+        }
+      },
+      {
+        "instance": "Xdfe_dacn",
+        "model": "sky130_fd_pr__nfet_01v8",
+        "vds": {
+          "min_v": 0.603273690051634,
+          "max_v": 0.9905385055954968,
+          "documented_min_v": 0,
+          "documented_max_v": 1.95,
+          "below_samples": 0,
+          "above_samples": 0
+        },
+        "vgs": {
+          "min_v": 0.6908289135426943,
+          "max_v": 0.9747864965725129,
+          "documented_min_v": 0,
+          "documented_max_v": 1.95,
+          "below_samples": 0,
+          "above_samples": 0
+        },
+        "vbs": {
+          "min_v": -0.7998909767162379,
+          "max_v": -0.7021513162199897,
+          "documented_min_v": -1.95,
+          "documented_max_v": 0.3,
+          "below_samples": 0,
+          "above_samples": 0
+        }
+      },
+      {
+        "instance": "Xdfe_tail0",
+        "model": "sky130_fd_pr__nfet_01v8",
+        "vds": {
+          "min_v": 0.5146070396964653,
+          "max_v": 0.6118318132973694,
+          "documented_min_v": 0,
+          "documented_max_v": 1.95,
+          "below_samples": 0,
+          "above_samples": 0
+        },
+        "vgs": {
+          "min_v": 0.7268440915459915,
+          "max_v": 0.7292005156023282,
+          "documented_min_v": 0,
+          "documented_max_v": 1.95,
+          "below_samples": 0,
+          "above_samples": 0
+        },
+        "vbs": {
+          "min_v": -0.1886652184946243,
+          "max_v": -0.1828419806008535,
+          "documented_min_v": -1.95,
+          "documented_max_v": 0.3,
+          "below_samples": 0,
+          "above_samples": 0
+        }
+      },
+      {
+        "instance": "Xdfe_en0",
+        "model": "sky130_fd_pr__nfet_01v8",
+        "vds": {
+          "min_v": 0.1828419806008535,
+          "max_v": 0.1886652184946243,
+          "documented_min_v": 0,
+          "documented_max_v": 1.95,
+          "below_samples": 0,
+          "above_samples": 0
+        },
+        "vgs": {
+          "min_v": 0.0,
+          "max_v": 0.0,
+          "documented_min_v": 0,
+          "documented_max_v": 1.95,
+          "below_samples": 0,
+          "above_samples": 0
+        },
+        "vbs": {
+          "min_v": 0.0,
+          "max_v": 0.0,
+          "documented_min_v": -1.95,
+          "documented_max_v": 0.3,
+          "below_samples": 0,
+          "above_samples": 0
+        }
+      },
+      {
+        "instance": "Xdfe_tail1",
+        "model": "sky130_fd_pr__nfet_01v8",
+        "vds": {
+          "min_v": 0.6992097789945707,
+          "max_v": 0.7968575770481569,
+          "documented_min_v": 0,
+          "documented_max_v": 1.95,
+          "below_samples": 0,
+          "above_samples": 0
+        },
+        "vgs": {
+          "min_v": 0.9072707166170146,
+          "max_v": 0.91461502897551,
+          "documented_min_v": 0,
+          "documented_max_v": 1.95,
+          "below_samples": 0,
+          "above_samples": 0
+        },
+        "vbs": {
+          "min_v": -0.003561826031426796,
+          "max_v": -0.002102342761359621,
+          "documented_min_v": -1.95,
+          "documented_max_v": 0.3,
+          "below_samples": 0,
+          "above_samples": 0
+        }
+      },
+      {
+        "instance": "Xdfe_en1",
+        "model": "sky130_fd_pr__nfet_01v8",
+        "vds": {
+          "min_v": 0.002102342761359621,
+          "max_v": 0.003561826031426796,
+          "documented_min_v": 0,
+          "documented_max_v": 1.95,
+          "below_samples": 0,
+          "above_samples": 0
+        },
+        "vgs": {
+          "min_v": 1.71,
+          "max_v": 1.71,
+          "documented_min_v": 0,
+          "documented_max_v": 1.95,
+          "below_samples": 0,
+          "above_samples": 0
+        },
+        "vbs": {
+          "min_v": 0.0,
+          "max_v": 0.0,
+          "documented_min_v": -1.95,
+          "documented_max_v": 0.3,
+          "below_samples": 0,
+          "above_samples": 0
+        }
+      },
+      {
+        "instance": "Xdfe_tail2",
+        "model": "sky130_fd_pr__nfet_01v8",
+        "vds": {
+          "min_v": 0.46170470210455417,
+          "max_v": 0.5589671931882954,
+          "documented_min_v": 0,
+          "documented_max_v": 1.95,
+          "below_samples": 0,
+          "above_samples": 0
+        },
+        "vgs": {
+          "min_v": 0.6741913538289505,
+          "max_v": 0.6762541641513374,
+          "documented_min_v": 0,
+          "documented_max_v": 1.95,
+          "below_samples": 0,
+          "above_samples": 0
+        },
+        "vbs": {
+          "min_v": -0.2415233767369141,
+          "max_v": -0.2355543576401835,
+          "documented_min_v": -1.95,
+          "documented_max_v": 0.3,
+          "below_samples": 0,
+          "above_samples": 0
+        }
+      },
+      {
+        "instance": "Xdfe_en2",
+        "model": "sky130_fd_pr__nfet_01v8",
+        "vds": {
+          "min_v": 0.2355543576401835,
+          "max_v": 0.2415233767369141,
+          "documented_min_v": 0,
+          "documented_max_v": 1.95,
+          "below_samples": 0,
+          "above_samples": 0
+        },
+        "vgs": {
+          "min_v": 0.0,
+          "max_v": 0.0,
+          "documented_min_v": 0,
+          "documented_max_v": 1.95,
+          "below_samples": 0,
+          "above_samples": 0
+        },
+        "vbs": {
+          "min_v": 0.0,
+          "max_v": 0.0,
+          "documented_min_v": -1.95,
+          "documented_max_v": 0.3,
+          "below_samples": 0,
+          "above_samples": 0
+        }
+      },
+      {
+        "instance": "Xdfe_tail3",
+        "model": "sky130_fd_pr__nfet_01v8",
+        "vds": {
+          "min_v": 0.438702987251822,
+          "max_v": 0.5359409454035055,
+          "documented_min_v": 0,
+          "documented_max_v": 1.95,
+          "below_samples": 0,
+          "above_samples": 0
+        },
+        "vgs": {
+          "min_v": 0.651186263742688,
+          "max_v": 0.6532391499715836,
+          "documented_min_v": 0,
+          "documented_max_v": 1.95,
+          "below_samples": 0,
+          "above_samples": 0
+        },
+        "vbs": {
+          "min_v": -0.26453145251121,
+          "max_v": -0.2585699130937227,
+          "documented_min_v": -1.95,
+          "documented_max_v": 0.3,
+          "below_samples": 0,
+          "above_samples": 0
+        }
+      },
+      {
+        "instance": "Xdfe_en3",
+        "model": "sky130_fd_pr__nfet_01v8",
+        "vds": {
+          "min_v": 0.2585699130937227,
+          "max_v": 0.26453145251121,
+          "documented_min_v": 0,
+          "documented_max_v": 1.95,
+          "below_samples": 0,
+          "above_samples": 0
+        },
+        "vgs": {
+          "min_v": 0.0,
+          "max_v": 0.0,
+          "documented_min_v": 0,
+          "documented_max_v": 1.95,
+          "below_samples": 0,
+          "above_samples": 0
+        },
+        "vbs": {
+          "min_v": 0.0,
+          "max_v": 0.0,
+          "documented_min_v": -1.95,
+          "documented_max_v": 0.3,
+          "below_samples": 0,
+          "above_samples": 0
+        }
+      },
+      {
+        "instance": "Xdfe_bleed0",
+        "model": "sky130_fd_pr__nfet_01v8",
+        "vds": {
+          "min_v": 0.1828419806008535,
+          "max_v": 0.1886652184946243,
+          "documented_min_v": 0,
+          "documented_max_v": 1.95,
+          "below_samples": 0,
+          "above_samples": 0
+        },
+        "vgs": {
+          "min_v": 0.9097821410255268,
+          "max_v": 0.9175829639291587,
+          "documented_min_v": 0,
+          "documented_max_v": 1.95,
+          "below_samples": 0,
+          "above_samples": 0
+        },
+        "vbs": {
+          "min_v": 0.0,
+          "max_v": 0.0,
+          "documented_min_v": -1.95,
+          "documented_max_v": 0.3,
+          "below_samples": 0,
+          "above_samples": 0
+        }
+      },
+      {
+        "instance": "Xdfe_bleed1",
+        "model": "sky130_fd_pr__nfet_01v8",
+        "vds": {
+          "min_v": 0.002102342761359621,
+          "max_v": 0.003561826031426796,
+          "documented_min_v": 0,
+          "documented_max_v": 1.95,
+          "below_samples": 0,
+          "above_samples": 0
+        },
+        "vgs": {
+          "min_v": 0.9097821410255268,
+          "max_v": 0.9175829639291587,
+          "documented_min_v": 0,
+          "documented_max_v": 1.95,
+          "below_samples": 0,
+          "above_samples": 0
+        },
+        "vbs": {
+          "min_v": 0.0,
+          "max_v": 0.0,
+          "documented_min_v": -1.95,
+          "documented_max_v": 0.3,
+          "below_samples": 0,
+          "above_samples": 0
+        }
+      },
+      {
+        "instance": "Xdfe_bleed2",
+        "model": "sky130_fd_pr__nfet_01v8",
+        "vds": {
+          "min_v": 0.2355543576401835,
+          "max_v": 0.2415233767369141,
+          "documented_min_v": 0,
+          "documented_max_v": 1.95,
+          "below_samples": 0,
+          "above_samples": 0
+        },
+        "vgs": {
+          "min_v": 0.9097821410255268,
+          "max_v": 0.9175829639291587,
+          "documented_min_v": 0,
+          "documented_max_v": 1.95,
+          "below_samples": 0,
+          "above_samples": 0
+        },
+        "vbs": {
+          "min_v": 0.0,
+          "max_v": 0.0,
+          "documented_min_v": -1.95,
+          "documented_max_v": 0.3,
+          "below_samples": 0,
+          "above_samples": 0
+        }
+      },
+      {
+        "instance": "Xdfe_bleed3",
+        "model": "sky130_fd_pr__nfet_01v8",
+        "vds": {
+          "min_v": 0.2585699130937227,
+          "max_v": 0.26453145251121,
+          "documented_min_v": 0,
+          "documented_max_v": 1.95,
+          "below_samples": 0,
+          "above_samples": 0
+        },
+        "vgs": {
+          "min_v": 0.9097821410255268,
+          "max_v": 0.9175829639291587,
+          "documented_min_v": 0,
+          "documented_max_v": 1.95,
+          "below_samples": 0,
+          "above_samples": 0
+        },
+        "vbs": {
+          "min_v": 0.0,
+          "max_v": 0.0,
+          "documented_min_v": -1.95,
+          "documented_max_v": 0.3,
+          "below_samples": 0,
+          "above_samples": 0
+        }
+      }
+    ],
+    "reliability_verified": false,
+    "scope": "signed drawn-terminal model-domain check, not absolute-maximum or lifetime signoff"
+  },
+  "whole_circuit_voltage_envelope_pass": true,
+  "aperture": {
+    "eye_width_ui": 0.775,
+    "eye_width_at_100mv_ui": 0.75,
+    "positive_eye_interval": {
+      "width_ui": 0.775,
+      "left_ui": -0.5,
+      "right_ui": 0.275,
+      "scan_limited": true
+    },
+    "height_100mv_interval": {
+      "width_ui": 0.75,
+      "left_ui": -0.5,
+      "right_ui": 0.25,
+      "scan_limited": true
+    },
+    "passes_0p4ui": true,
+    "grid_step_ui": 0.005,
+    "sample_anchor_ui": -0.025,
+    "offsets_ui": [
+      -0.5,
+      -0.495,
+      -0.49,
+      -0.485,
+      -0.48,
+      -0.47500000000000003,
+      -0.47000000000000003,
+      -0.465,
+      -0.46,
+      -0.455,
+      -0.45,
+      -0.445,
+      -0.44,
+      -0.435,
+      -0.43,
+      -0.425,
+      -0.42,
+      -0.41500000000000004,
+      -0.41000000000000003,
+      -0.405,
+      -0.4,
+      -0.395,
+      -0.39,
+      -0.385,
+      -0.38,
+      -0.375,
+      -0.37,
+      -0.365,
+      -0.36,
+      -0.355,
+      -0.35000000000000003,
+      -0.34500000000000003,
+      -0.34,
+      -0.335,
+      -0.33,
+      -0.325,
+      -0.32,
+      -0.315,
+      -0.31,
+      -0.305,
+      -0.3,
+      -0.295,
+      -0.29,
+      -0.28500000000000003,
+      -0.28,
+      -0.275,
+      -0.27,
+      -0.265,
+      -0.26,
+      -0.255,
+      -0.25,
+      -0.245,
+      -0.24,
+      -0.23500000000000001,
+      -0.23,
+      -0.225,
+      -0.22,
+      -0.215,
+      -0.21,
+      -0.20500000000000002,
+      -0.2,
+      -0.195,
+      -0.19,
+      -0.185,
+      -0.18,
+      -0.17500000000000002,
+      -0.17,
+      -0.165,
+      -0.16,
+      -0.155,
+      -0.15,
+      -0.145,
+      -0.14,
+      -0.135,
+      -0.13,
+      -0.125,
+      -0.12,
+      -0.115,
+      -0.11,
+      -0.105,
+      -0.1,
+      -0.095,
+      -0.09,
+      -0.085,
+      -0.08,
+      -0.075,
+      -0.07,
+      -0.065,
+      -0.06,
+      -0.055,
+      -0.05,
+      -0.045,
+      -0.04,
+      -0.035,
+      -0.03,
+      -0.025,
+      -0.02,
+      -0.015,
+      -0.01,
+      -0.005,
+      0.0,
+      0.005,
+      0.01,
+      0.015,
+      0.02,
+      0.025,
+      0.03,
+      0.035,
+      0.04,
+      0.045,
+      0.05,
+      0.055,
+      0.06,
+      0.065,
+      0.07,
+      0.075,
+      0.08,
+      0.085,
+      0.09,
+      0.095,
+      0.1,
+      0.105,
+      0.11,
+      0.115,
+      0.12,
+      0.125,
+      0.13,
+      0.135,
+      0.14,
+      0.145,
+      0.15,
+      0.155,
+      0.16,
+      0.165,
+      0.17,
+      0.17500000000000002,
+      0.18,
+      0.185,
+      0.19,
+      0.195,
+      0.2,
+      0.20500000000000002,
+      0.21,
+      0.215,
+      0.22,
+      0.225,
+      0.23,
+      0.23500000000000001,
+      0.24,
+      0.245,
+      0.25,
+      0.255,
+      0.26,
+      0.265,
+      0.27,
+      0.275,
+      0.28,
+      0.28500000000000003,
+      0.29,
+      0.295,
+      0.3,
+      0.305,
+      0.31,
+      0.315,
+      0.32,
+      0.325,
+      0.33,
+      0.335,
+      0.34,
+      0.34500000000000003,
+      0.35000000000000003,
+      0.355,
+      0.36,
+      0.365,
+      0.37,
+      0.375,
+      0.38,
+      0.385,
+      0.39,
+      0.395,
+      0.4,
+      0.405,
+      0.41000000000000003,
+      0.41500000000000004,
+      0.42,
+      0.425,
+      0.43,
+      0.435,
+      0.44,
+      0.445,
+      0.45,
+      0.455,
+      0.46,
+      0.465,
+      0.47000000000000003,
+      0.47500000000000003,
+      0.48,
+      0.485,
+      0.49,
+      0.495,
+      0.5
+    ],
+    "positive_min_v": [
+      0.1299837774087571,
+      0.12508995564443626,
+      0.12127809284999418,
+      0.11862961581590188,
+      0.11699045892730683,
+      0.11611648003296544,
+      0.11597832980036234,
+      0.11629719424559862,
+      0.11699844418653843,
+      0.11796336527100454,
+      0.11906137860683644,
+      0.12025050607464438,
+      0.12146855937258907,
+      0.12267575179881605,
+      0.12384227193304409,
+      0.12494039077766225,
+      0.12597037442803902,
+      0.12690646616997756,
+      0.12775182854157222,
+      0.12850403812330788,
+      0.12915045510752865,
+      0.12971373013746146,
+      0.1301787822420842,
+      0.13055011967435318,
+      0.13085015960408422,
+      0.1310703283928889,
+      0.1312135471621458,
+      0.13130148493953062,
+      0.1313285611998604,
+      0.13130332077998474,
+      0.13123704250421214,
+      0.13112815426624508,
+      0.1309892782229816,
+      0.1308217626903413,
+      0.13062981116511105,
+      0.13042194903926957,
+      0.13019890369493656,
+      0.1299645295862407,
+      0.12972392347018882,
+      0.12947863403526294,
+      0.12923141804861638,
+      0.12898459412384275,
+      0.12874020775616446,
+      0.1284996533686615,
+      0.12826413447174487,
+      0.12803558998780556,
+      0.12781336651858413,
+      0.12759956162005662,
+      0.1273948367789152,
+      0.1271977436227377,
+      0.12701002578093182,
+      0.12683235874516738,
+      0.12666265241370642,
+      0.12650256664154239,
+      0.12635171407850074,
+      0.1262088871027743,
+      0.12607543083334688,
+      0.12594945201733235,
+      0.12583157244720278,
+      0.12572182266549978,
+      0.1256183147378475,
+      0.1255219789366574,
+      0.1254326121822687,
+      0.12534846638474856,
+      0.12527019499577396,
+      0.12519767738340262,
+      0.12512946601197011,
+      0.12506617077318186,
+      0.12500694113486463,
+      0.12495145936337844,
+      0.12489983473595383,
+      0.12485102185974048,
+      0.12480533531544169,
+      0.12476246145795356,
+      0.12472163418282695,
+      0.12468301892336003,
+      0.12464645526379624,
+      0.12461132082813493,
+      0.124577719615277,
+      0.12454539806323969,
+      0.12451405460931239,
+      0.12448369646469652,
+      0.12445400707618592,
+      0.12442493086859255,
+      0.12439634454930967,
+      0.12436804971647064,
+      0.12433999652882669,
+      0.12431207159720152,
+      0.12428416993588601,
+      0.12425621644830898,
+      0.12422811817481273,
+      0.1241998438804856,
+      0.12417129061487703,
+      0.12414243110155214,
+      0.12411322343315553,
+      0.12408357379617248,
+      0.12405354047489729,
+      0.1240230074011763,
+      0.12399194060840728,
+      0.12396042194784808,
+      0.12392834135003694,
+      0.12332463363175644,
+      0.12326549156317429,
+      0.12352380875191159,
+      0.12386550751364868,
+      0.1241741642168915,
+      0.12438883483604914,
+      0.12452387066863276,
+      0.12459062447358521,
+      0.12461255355556977,
+      0.12461974180062496,
+      0.1254072314229179,
+      0.12583489817474133,
+      0.12598843906105803,
+      0.12590756085908295,
+      0.1256375913572625,
+      0.1252745703553246,
+      0.12486312781261477,
+      0.12446735217904986,
+      0.1241273585492823,
+      0.1238861701131204,
+      0.12373825235636028,
+      0.12370466845551151,
+      0.12377199744990862,
+      0.12390186773847214,
+      0.12407676001359103,
+      0.1242558214447884,
+      0.12440416347766406,
+      0.12447487366321082,
+      0.12442514051794884,
+      0.12423445590565332,
+      0.12383265447108403,
+      0.12322427441958919,
+      0.12235341030030897,
+      0.12117306565665306,
+      0.11972225251892041,
+      0.11792304506474043,
+      0.11574125928768786,
+      0.11324174670545319,
+      0.1103511422342058,
+      0.10703668631810408,
+      0.10337547933508352,
+      0.09928505988797606,
+      0.09480773046584094,
+      0.08994646229195326,
+      0.08465702854467631,
+      0.07903194214362147,
+      0.07300713951460823,
+      0.06659430905850981,
+      0.059879763855499264,
+      0.05281856960588294,
+      0.045412168974584305,
+      0.037749052758137044,
+      0.0297933352420612,
+      0.021575925198505434,
+      0.013145633903252291,
+      0.00448571893127608,
+      -0.004342056423745728,
+      -0.013335502538077606,
+      -0.022475121579701135,
+      -0.031712142583552025,
+      -0.041043112518608725,
+      -0.050443059520747964,
+      -0.05987814275358188,
+      -0.06933364604707248,
+      -0.07878445200197257,
+      -0.08821287243133966,
+      -0.09759252826769696,
+      -0.10690815028897047,
+      -0.11614316432431263,
+      -0.1252665114633925,
+      -0.13428639097415104,
+      -0.143164201055819,
+      -0.15188212933120723,
+      -0.16045962629420918,
+      -0.16885723105920603,
+      -0.177050994026065,
+      -0.18507517527215409,
+      -0.19288425293289985,
+      -0.20047458620191103,
+      -0.20786511901462149,
+      -0.21500905025459024,
+      -0.22194476559326184,
+      -0.22864326190439752,
+      -0.23508896014649797,
+      -0.24132967459553917,
+      -0.2473223556628123,
+      -0.2530586244786525,
+      -0.2585917501260639,
+      -0.26388413335026706,
+      -0.2689404182758081,
+      -0.2758118346367657,
+      -0.28284894822572704,
+      -0.29003988936829417,
+      -0.29729875943125234,
+      -0.30437484038255874,
+      -0.31082692966495723,
+      -0.31597006579895964,
+      -0.31898284960530726,
+      -0.31982851732480155,
+      -0.31778552177672403
+    ],
+    "negative_max_v": [
+      -0.12187598575275846,
+      -0.11725924632854198,
+      -0.11370636874530014,
+      -0.1112846700420225,
+      -0.10983149224342349,
+      -0.10910617724802248,
+      -0.10907514206723251,
+      -0.10947208090394864,
+      -0.11022449357196659,
+      -0.11121908842286879,
+      -0.11233368939233207,
+      -0.1135273906644164,
+      -0.11474129405723167,
+      -0.11593934184604349,
+      -0.11709239736187425,
+      -0.11817410605594285,
+      -0.11918620693452797,
+      -0.1201034450369155,
+      -0.12092973830204096,
+      -0.12166312752351306,
+      -0.12229148175597283,
+      -0.12283757318628577,
+      -0.12328677105025954,
+      -0.123643813420487,
+      -0.12393092873281249,
+      -0.1241399042046698,
+      -0.12427382187803916,
+      -0.12435397251778332,
+      -0.1243750970661081,
+      -0.12434566365169832,
+      -0.12427671443598486,
+      -0.12416691749351201,
+      -0.12402852357755569,
+      -0.12386297910920734,
+      -0.12367446980134417,
+      -0.12347116209423896,
+      -0.12325392900375429,
+      -0.1230265654726489,
+      -0.12279385141741544,
+      -0.12255742873610598,
+      -0.12232001435639507,
+      -0.12208367836542247,
+      -0.12185054931798826,
+      -0.12162187621106495,
+      -0.12139880435043064,
+      -0.12118327885599084,
+      -0.12097448507670527,
+      -0.12077456065311072,
+      -0.1205841167650574,
+      -0.12040159356842532,
+      -0.12022875651065501,
+      -0.12006625818890072,
+      -0.11991192189458028,
+      -0.1197674241957547,
+      -0.11963234524486925,
+      -0.11950543745277672,
+      -0.11938805323814518,
+      -0.11927825657592432,
+      -0.11917666800708271,
+      -0.11908330771389222,
+      -0.11899625832503842,
+      -0.11891645381224342,
+      -0.11884368227090542,
+      -0.11877617544594998,
+      -0.11871458828654013,
+      -0.11865879499435045,
+      -0.1186073351933976,
+      -0.1185608198345212,
+      -0.11851839107741974,
+      -0.11847972762572648,
+      -0.11844493706730339,
+      -0.11841296828784764,
+      -0.11838413536280051,
+      -0.11835812194004268,
+      -0.11833415888935991,
+      -0.11831241060072095,
+      -0.11829271483720781,
+      -0.11827444772878087,
+      -0.11825771180375975,
+      -0.11824225219396231,
+      -0.11822776670864475,
+      -0.11821426055202561,
+      -0.11820141730466899,
+      -0.11818917975704699,
+      -0.11817742317156382,
+      -0.11816595019805863,
+      -0.11815470854392454,
+      -0.11814358353351646,
+      -0.1181324719236725,
+      -0.11812129598269694,
+      -0.11810996122826047,
+      -0.11809843854132802,
+      -0.11808662152668734,
+      -0.11807448377148609,
+      -0.1180619827986985,
+      -0.11804902205949287,
+      -0.11803566289844923,
+      -0.11802178533467174,
+      -0.11800735453320571,
+      -0.11799245561238761,
+      -0.11797697467343693,
+      -0.11741910367943806,
+      -0.11738346378835755,
+      -0.11764761606478191,
+      -0.1179846126816831,
+      -0.11828329121805689,
+      -0.11848508028795102,
+      -0.11860676675876031,
+      -0.11866111583897059,
+      -0.11867317633552361,
+      -0.11867310776156104,
+      -0.11941917159623984,
+      -0.11981453882117928,
+      -0.11994402088607903,
+      -0.11984809801126706,
+      -0.11957331692627247,
+      -0.1192133206668026,
+      -0.1188137686096639,
+      -0.11843689426871246,
+      -0.1181219259628053,
+      -0.11791149027119799,
+      -0.1177979906267433,
+      -0.11780219702983163,
+      -0.11790943853599997,
+      -0.11808007666926887,
+      -0.11829586352334998,
+      -0.11851496381566809,
+      -0.11870207049986506,
+      -0.11880944007657047,
+      -0.11879381538575981,
+      -0.11863467898334398,
+      -0.1182610691350351,
+      -0.11767795142967691,
+      -0.11682896991113256,
+      -0.11566691304647969,
+      -0.114231518274781,
+      -0.11244434871372068,
+      -0.11027126209555824,
+      -0.107777948125797,
+      -0.104890773190077,
+      -0.10157713968522618,
+      -0.09791492502587232,
+      -0.09382160047163242,
+      -0.08934002894152461,
+      -0.0844735342980335,
+      -0.07917822253005591,
+      -0.07354708401512702,
+      -0.06751643533741217,
+      -0.06109843090851436,
+      -0.05437958152445099,
+      -0.04731547970286187,
+      -0.0399080111303289,
+      -0.03224569225634175,
+      -0.02429328710839987,
+      -0.016081808937041354,
+      -0.007659988665752843,
+      0.0009881705227145227,
+      0.009801300075978622,
+      0.018776708000372237,
+      0.027894587965076434,
+      0.037106807691436386,
+      0.04640922298242775,
+      0.0557766906755771,
+      0.06517614929442153,
+      0.07459228038301902,
+      0.08399976289324089,
+      0.09338170665092174,
+      0.10271105505841212,
+      0.11197295755616712,
+      0.12115090676286261,
+      0.13021348541752856,
+      0.1391696920259341,
+      0.14798037901595446,
+      0.15662782306835218,
+      0.1651322011317429,
+      0.173453649089298,
+      0.18156818705771657,
+      0.18951084455926917,
+      0.19723575688594133,
+      0.20473952616312963,
+      0.21204152973508847,
+      0.21909478908402116,
+      0.2259382506047921,
+      0.23254292915376876,
+      0.23889342619537834,
+      0.24503802157568466,
+      0.2509337132483513,
+      0.2565723773838009,
+      0.26200761468667433,
+      0.2672019981995266,
+      0.2721604149187161,
+      0.27895553738535045,
+      0.2859109870649229,
+      0.2930186706145188,
+      0.300193520583031,
+      0.30718424301393493,
+      0.31354774792000356,
+      0.31859628211048185,
+      0.3215061741237778,
+      0.3222419029437556,
+      0.32008137901231803
+    ],
+    "ber_verified": false,
+    "scope": "finite noiseless waveform aperture at one clock phase, not BER or phase-sweep proof"
+  },
+  "length_um": 4.0,
+  "corner": "tt_vdd0.95_t0",
+  "loss_db": 3.0,
+  "phase_ui": 1.0,
+  "code": 2,
+  "sign": 1,
+  "signal_gate_pass": true
+}
