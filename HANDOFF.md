@@ -17,13 +17,20 @@
 > decisions that are OPEN and human-only, and what to do next. It supersedes
 > `nebula/NEXT_STEPS.md`. This file remains the full state of record.
 
-Last updated: **2026-09-09**, Entry 120 complete. The unchanged 20-page
+Last updated: **2026-09-09**, Entry 122 hardware development authorized.
+The organiser requires a transistor-level CTLE plus DFE and configurable
+Rs/Cs. The owner authorizes bounded agent-selected experiments for both;
+DFE is first. The CML plan and instrument are being frozen before simulation.
+Existing reports and fixed-passive circuit evidence remain unchanged.
+
+Previous report snapshot, Entry 121: The unchanged 20-page
 competition report is preserved byte-for-byte in a dated archive, while a
 separate 22-page academic/competition edition adds an abstract, contents and
 evidence map, chapter ordering, and a less crowded cover. The new PDF passes
 source-hash, outline, extraction, figure-sequence, bounds and all-page visual
 checks. No simulation, policy training or evidence generation was run.
 Entry 120 fills pages 1-3 with a circuit visual and evidence guides.
+Entry 121 adds NEXT_AGENT_PROMPT.md as the self-contained continuation brief.
 
 Previous status snapshot: **2026-09-06**, session 60 / Entry 112: owner freezes further
 DFE pursuit and requests a polished, current competition report. Revised
@@ -1010,6 +1017,15 @@ signaling, ADC-based DSP receiver, 28 nm CMOS reference parameters).
 
 ## 2. Repository map (what every file/folder is)
 
+Entry 122 adds the isolated hardware-development files `nebula/DFE_CML_PLAN.md`,
+`nebula/device/dfe_cml.py`, `nebula/experiments/exp_dfe_cml.py`, and
+`nebula/tests/test_dfe_cml.py`. They do not modify the deployed physical path.
+
+Entry 121: NEXT_AGENT_PROMPT.md is the self-contained operational handoff
+for a new agent. It records reading order, verified product state, evidence
+boundaries, report variants, Git policy, tests and user preferences.
+
+
 Entry 120: competition_academic.py now fills pages 1-3 with a circuit visual, an input/decision/output table and an evidence guide. The PDF checker gates front-matter depth and the cover image.
 
 
@@ -1950,6 +1966,10 @@ PRBS → scramble → Gray/PAM4 → TX-FFE → ZOH ×OSR(8) → TX pole (0.75·f
 
 ## 5. Complete history (what was done, in order, with the WHY)
 
+2026-09-09 / Entry 122: organiser clarification prompted the owner to reopen
+hardware work and authorize bounded agent-selected experiments. CML
+master/slave decision storage is the first new architecture; see Session Log.
+
 Entry 120 (2026-09-09): filled the three sparse academic front-matter pages using existing verified evidence. No technical result or claim changed. Rendered pages 4-22 are unchanged.
 
 
@@ -2172,7 +2192,11 @@ Plus: git init, .gitignore, 28 tests, Wilson-bound BER reporting.
 
 ## 6. Key numbers & validated behavior (current state)
 
-Entry 120: current academic PDF SHA-256 is a573db02335879e0a6a0b3feb2c9eeea87098bfc7d0f1f9462db691334a9449a6711. Pages 1-3 pass visual review; pages 4-22 match Entry 119.
+Entry 122 active work: transistor DFE and configurable Rs/Cs are now required
+by organiser clarification. The new CML experiment is preregistered, not yet
+measured. Existing physical product counts and RL results remain unchanged.
+
+Entry 120: current academic PDF SHA-256 is a573db02335879e0a6a0b3feb2c9eeea2172c2f3f4b4e4699dfc8123c8f90670. Pages 1-3 pass visual review; pages 4-22 match Entry 119.
 
 
 Entry 119 report state: two authored submission choices are retained. The
@@ -2805,6 +2829,11 @@ still NOT full area. The 12-request replay is fully supported at eight requests;
 
 ## 7. Known model limitations (honest list — do not overclaim)
 
+Entry 122: a standalone CML decision/hold pass, if achieved, will not establish
+a complete DFE. Physical feedback, CTLE loading, closed-loop timing and
+receiver metrics require subsequent measured integration. External clock and
+common-mode sources are explicitly testbench assumptions.
+
 Entry 116 (2026-09-08): the final competition report has a dedicated team/
 institution cover and a prioritized future-development page. The 20-page
 artifact passes source-hash, outline, extraction, bounds and visual checks.
@@ -3020,6 +3049,18 @@ variation, mismatch and layout remain open. Old production evidence is unchanged
   untrusted until proven (the Phase-0 experience says assume bugs).
 
 ## 8. Next steps (prioritized backlog with context)
+
+**Entry 122 active objective:** implement transistor-level DFE first, then
+configurable Rs/Cs. Owner authorization covers bounded architecture/sizing
+experiments; register membership and gates before each run, preserve failed
+trials, and do not re-ask approval for ordinary in-scope iterations. Current
+first trial: `nebula/DFE_CML_PLAN.md`. Do not inherit fixed-circuit PVT or
+frozen RL coverage for a new hardware topology.
+
+**Entry 121 continuation:** the next agent should read NEXT_AGENT_PROMPT.md
+and the mandated source files, then execute the user's new request without
+restarting completed work.
+
 
 **Entry 120 report status:** use the filled academic version for review. Keep the unchanged 20-page archive as the fallback submission.
 
@@ -17706,4 +17747,42 @@ Focused report regression: 13 passed. Pre-change full baseline: 2999 passed,
 
 The owner found the lower halves of pages 1-3 visually empty. The academic cover now previews the netlist-derived CTLE core. Page 2 adds an input/decision/output summary and evidence boundary. Page 3 adds an evidence hierarchy.
 
-The report remains 22 pages. All PDF checks pass. Pages 1-3 were inspected at full resolution; pages 4-22 are raster-identical to Entry 119. Current PDF SHA-256: a573db02335879e0a6a0b3feb2c9eeea87098bfc7d0f1f9462db691334a9449a6711. The 20-page report and archive remain unchanged. Pre-change full regression: 3001 passed, 13 deselected, two known warnings. Post-change full regression: 3001 passed, 13 deselected and two known warnings in 433.91 s. No simulation or training ran.
+The report remains 22 pages. All PDF checks pass. Pages 1-3 were inspected at full resolution; pages 4-22 are raster-identical to Entry 119. Current PDF SHA-256: a573db02335879e0a6a0b3feb2c9eeea2172c2f3f4b4e4699dfc8123c8f90670. The 20-page report and archive remain unchanged. Pre-change full regression: 3001 passed, 13 deselected, two known warnings. Post-change full regression: 3001 passed, 13 deselected and two known warnings in 433.91 s. No simulation or training ran.
+
+### 2026-09-09 - Entry 121 / self-contained next-agent prompt
+
+Added NEXT_AGENT_PROMPT.md at repository root. It captures the mandatory
+reading order, two-project boundary, current Nebula implementation, analog and
+RL evidence, report variants and hashes, Git backup instructions, simulator
+footguns, test baseline and the owner's communication preferences. It directs
+a new agent to verify live Git state and act on the next user request without
+redoing completed work.
+
+Corrected two Entry 120 HANDOFF references to the measured academic PDF hash:
+a573db02335879e0a6a0b3feb2c9eeea2172c2f3f4b4e4699dfc8123c8f90670.
+The PDFs and scientific evidence were not changed. Pre-change baseline: 3001
+passed, 13 deselected and two known warnings. Post-change full regression:
+3001 passed, 13 deselected, two known warnings in 329.29 s, before Entry 122
+implementation. The inherited prompt and hash corrections were preserved.
+
+### 2026-09-09 - Entry 122 / authorized transistor hardware development
+
+The owner supplied organiser clarification: final CTLE plus DFE must be
+transistor-level and Rs/Cs must be configurable. The owner explicitly
+authorized agent-selected bounded hardware architecture/sizing experiments.
+Work order is DFE decision/hold, physical feedback and CTLE integration,
+then configurable Rs/Cs. Existing fixed-passive exports, reports and frozen
+RL evidence must not inherit unverified new hardware claims.
+
+Added `nebula/DFE_CML_PLAN.md`, `nebula/device/dfe_cml.py`,
+`nebula/experiments/exp_dfe_cml.py`, and `nebula/tests/test_dfe_cml.py`.
+This is a three-width differential current-mode latch-pair screen with
+conditional fixed-geometry 45-point PVT, not a complete DFE. All failures,
+signed terminal voltage checks and external-clock accounting are retained.
+The late StrongARM buffered path from Entry 111 remains a measured failure.
+
+Pre-change full suite: 3001 passed, 13 deselected, two known warnings in
+329.29 s. New tests were first run before implementation and failed import
+as expected. Focused tests: 18 passed. Post-change full suite: 3019 passed,
+13 deselected, two known warnings in 398.72 s. Source, tests and plan are
+ready for the pre-experiment freeze commit. No new SPICE run yet.
