@@ -18135,3 +18135,30 @@ models or credentials. Push additive checkpoints by normal fast-forwards,
 then verify both main and nebula/winning-sprint-20260908 at the final commit.
 Remote backup verification is PENDING here. No Rs/Cs simulation may start
 until that verification succeeds.
+
+### 2026-09-10 - DFE backup verified on both GitHub branches
+
+Completed checkpoint 6f6ffe3b9b91e6d1c89af1f5d4717d191de35e3b is now
+verified by live ls-remote on BOTH main and nebula/winning-sprint-20260908
+at https://github.com/jaikaushik-prog/nebula-ctle-rl.git. All uploads were
+normal fast-forwards through the existing additive checkpoints. A safety
+review initially misidentified 14bcdaa as a rollback; read-only parent and
+merge-base checks proved it directly descends from the then-remote bbf0281,
+and the unchanged forward push was subsequently approved and completed.
+No force-push, visibility change or alternate upload route was used.
+
+Final evidence batch audit: 327 intended staged files, 319 exact evidence
+blobs, 1,179,256,280 bytes; no credentials, forbidden references/model files,
+oversized individual files or source whitespace errors. Both report hashes
+remain unchanged and all seven outgoing implementation commits use the
+required Jai Kaushik noreply identity. Working tree was clean after the
+checkpoint. This final documentation-only record is backed up next by the
+same normal fast-forward procedure; scientific/test sources are unchanged
+since the passing 51-focused / 3107-full validation recorded above.
+
+The user's backup-before-Rs/Cs condition is satisfied for the complete DFE
+checkpoint. Entry 127 is frozen and tested but still UNRUN; no capacitor or
+resistor simulation was started during backup. Next technical work is the
+registered official-varactor feasibility probe, followed by a separately
+registered physical configurable-Rs/Cs integration experiment if warranted
+by its measurements. DFE scope limits in DFE_TIMING_RESULTS.md still apply.
