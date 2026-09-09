@@ -17,7 +17,7 @@
 > decisions that are OPEN and human-only, and what to do next. It supersedes
 > `nebula/NEXT_STEPS.md`. This file remains the full state of record.
 
-Last updated: **2026-09-10**, Entry 131 nine targets measured; Entry 132 awaits freeze.
+Last updated: **2026-09-10**, Entry 132 connected tunable DUT passes TT; Entry 133 awaits freeze.
 The organiser requires a transistor-level CTLE plus DFE and configurable
 Rs/Cs. The owner authorizes bounded agent-selected experiments for both;
 DFE is first. Entry 122 CML passes all three TT screens with valid terminal
@@ -45,7 +45,9 @@ electrical passes. Tighter precision closes reference drift without changing
 any gate. Both controls work electrically, but the delivered DFE still has
 fixed Rs/Cs. Entry 131 now measures 882 finer controls: one N500/no-fixed-MIM
 circuit reaches all nine declared 3/6/9 dB x 1.5/1.9/2.25 GHz target identities
-within .5 dB/.1 GHz. Entry 132 prepares its first transistor DFE connection.
+within .5 dB/.1 GHz. Entry 132 now passes the connected transistor DFE gate
+at the primary TT point: 64/64 bits, 223.974919 mV eye, .690 UI width and
+9.263703 mW VDD power. Entry 133 prepares fixed-setting electrical PVT.
 Existing reports and fixed-passive circuit evidence remain unchanged.
 
 Previous report snapshot, Entry 121: The unchanged 20-page
@@ -1083,6 +1085,10 @@ Its result is `CONFIGURABLE_RC_FINE_RESULTS.md` with full raw replay in
 `tests/test_configurable_rc_fine_evidence.py`. Entry 132 adds
 `DFE_CONFIGURABLE_PLAN.md`, `device/dfe_configurable.py`,
 `experiments/exp_dfe_configurable.py` and `tests/test_dfe_configurable.py`.
+Its result is `DFE_CONFIGURABLE_RESULTS.md`, with compressed raw replay in
+`tests/test_dfe_configurable_evidence.py`. Entry 133 adds
+`DFE_CONFIGURABLE_PVT_PLAN.md`, `device/dfe_configurable_pvt.py`,
+`experiments/exp_dfe_configurable_pvt.py` and `tests/test_dfe_configurable_pvt.py`.
 
 Entry 121: NEXT_AGENT_PROMPT.md is the self-contained operational handoff
 for a new agent. It records reading order, verified product state, evidence
@@ -2063,6 +2069,9 @@ Entry 131 completes two calls in 191.949657 s: 882 valid OP/AC pairs. N250
 reaches 5/9 target identities; the selected unchanged N500 circuit reaches
 9/9 within preregistered tolerances. Entry 132 registers at most seven TT
 transients to connect its measured primary setting to the unchanged DFE.
+Entry 132 completes seven calls and passes that first connected gate; the
+latest phase fails and remains retained. Entry 133 registers an early-gated
+45-point electrical PVT sweep with fixed hardware, controls, DAC and phase.
 
 Entry 120 (2026-09-09): filled the three sparse academic front-matter pages using existing verified evidence. No technical result or claim changed. Rendered pages 4-22 are unchanged.
 
@@ -2325,7 +2334,9 @@ Entry 131 now measures 882 finer OP/AC pairs in two calls, 395 standalone
 passing settings. Selected N500/no-fixed-MIM reaches 9/9 declared target
 identities; N250 reaches 5/9. The near-9 dB/1.9 GHz setting is R=.7 VDD,
 C=.165 VDD, measured 8.909067327 dB / 1.857653018 GHz. Entry 132's connected
-TT DFE experiment is prepared but unrun; no old PVT/receiver proof transfers.
+TT DFE now passes: 64/64, 223.974919 mV eye, .690 UI positive width, .650 UI
+above-100-mV width, 9.263703 mW VDD power. Normal feedback beats minimum-
+current and reversed controls. New PVT is unrun; old PVT proof does not transfer.
 Entry 126: 95 calls, 1522.135503 s trial time; 45/45 at 3 dB and 45/45 at
 12 dB. Minimum sampled eyes 191.307321/133.817900 mV; finite positive-eye
 apertures 0.755/0.710 UI. Combined 135-PVT coverage includes the separately
@@ -2986,9 +2997,13 @@ bypass, but initially screens standalone CTLE AC, not the loaded DFE. See G179.
 Its simultaneous-copy instrument timed out; missing timeout logs cannot be
 reconstructed (G180). Entries 130/131 now establish sampled standalone CTLE
 voltage tunability, including nine target identities on one N500 circuit.
-They do NOT establish transient reconfiguration settling, DFE-loaded
-performance, new PVT, loaded noise/HD3 or the entire target rectangle. Entry
-132 is a separately registered first loaded TT gate, not yet measured.
+They do NOT establish transient reconfiguration settling, new PVT, loaded
+noise/HD3 or the entire target rectangle. Entry 132 now establishes first
+DFE-loaded TT bit/eye/power behavior at the primary controls, not the other
+eight targets or PVT. Its bilateral Rs MOS reaches -50.453 mV signed Vds;
+this exact finding remains reported separately from the passing magnitude/
+body envelope. Strict new-DFE signed gates stay unchanged and pass all seven
+calls. External clock/control/common-mode sources remain testbench devices.
 
 Entry 116 (2026-09-08): the final competition report has a dedicated team/
 institution cover and a prioritized future-development page. The 20-page
@@ -3210,13 +3225,14 @@ variation, mismatch and layout remain open. Old production evidence is unchanged
 configurable Rs/Cs. Owner authorization covers bounded architecture/sizing
 experiments; register membership and gates before each run, preserve failed
 trials, and do not re-ask approval for ordinary in-scope iterations. Current
-completed trial: `nebula/CONFIGURABLE_RC_FINE_PLAN.md` (Entry 131, two calls,
-882 valid OP/AC pairs, nine declared target identities on one N500 circuit).
+completed trial: `nebula/DFE_CONFIGURABLE_PLAN.md` (Entry 132, seven calls,
+first connected configurable CTLE + transistor DFE gate passes at TT).
 DFE backup was verified on both GitHub branches at fa5fbed before any Rs/Cs
 simulation. Preserve all prior successes/failures, then freeze/test
-`DFE_CONFIGURABLE_PLAN.md` before its seven-call maximum connected TT test.
-Rs/Cs remain fixed in the delivered DFE
-until the new physical configuration and connected behavior are measured.
+`DFE_CONFIGURABLE_PVT_PLAN.md` before its 45-call maximum, early-gated PVT run.
+The new experimental DUT has physical configurable Rs/Cs and passes one
+connected TT point. The old production export/registry and PDFs are unchanged;
+do not label their fixed-passive artifacts as the new circuit.
 Do not inherit fixed-circuit PVT or
 frozen RL coverage for a new hardware topology.
 
@@ -18492,3 +18508,54 @@ Entry 132 pre-run full regression passes: 3191 passed, 13 deselected, two
 known warnings in 574.55 s. Focused checks: 84 passed in 21.68 s. No SPICE
 ran concurrently. Freeze the local source/evidence checkpoint before the
 seven-call connected test; public/private backup clarification remains pending.
+
+### 2026-09-10 - Entry 132 connected tunable DUT passes; Entry 133 PVT registered
+
+Checkpoint 5360e9f4e342ae1fbd126aa2f8fa6c76702c271b preserves Entry 131 and
+the tested first connected experiment. Audit: 1822 intended files, 1813 exact
+evidence blobs, 98,557,589 staged bytes; correct identity, no detected secrets
+or prohibited files, both PDFs unchanged. Validation: 84 focused and 3191
+full tests, 13 deselected/two known warnings, 574.55 s. New backups remain
+local pending the public/private instruction clarification.
+
+Entry 132 completes seven calls, 382.673750 s including 47.852153 s prior
+verification. The unchanged fixed-DFE/full-PDK calibration reproduces the
+old nominal result exactly. New configurable phases 1/1.25/1.5 pass; phase
+1.75 fails with 28/64 bits and -264.396607 mV eye. The frozen rule selects
+phase 1: 64/64 bits, sampled eye 223.974919 mV, positive width .690 UI,
+width above 100 mV .650 UI, VDD power 9.263703 mW. Minimum-current code 0
+has 206.602668 mV eye; reversed code 2 has 125.400432 mV. Both controls are
+valid, so physical feedback benefit is measured at this declared TT point.
+
+All seven strict signed new-DFE audits pass, as do the whole magnitude/body
+and varactor-control envelopes. New bilateral Rs switch signed Vds spans
+-.050453..+.046570 V; do not hide this separate model-domain qualification.
+External-clock positive power is .108293 mW and R/C-control positive power
+1.415724 nW. Geometry subtotal .014715765982 mm2 is not routed area. Other
+targets, PVT, runtime setting changes, noise/HD3 and BER remain unverified.
+Results: DFE_CONFIGURABLE_RESULTS.md. The delivered registry/PDFs stay old.
+
+Original manifest: 104 entries, SHA-256
+cf349cc4fc451e16ffe99348a9be7e0ee8805ad02c08497e7e8e1070bae06e46.
+Summary: 73f15bc9b236f1ee404ed2a40ce667ad2f78e9963c78a611f8909eade81e879a.
+Lossless archival preserves 658,278,760 raw bytes in 14 gzip siblings totaling
+185,722,916 bytes, maximum 16,024,884 bytes each; all originals retained.
+Eight new tests verify the complete archive and replay all seven raw cases,
+including the failing phase and signed Rs-switch finding.
+
+Entry 133 registers the SAME .7/.165 controls, phase 1, code 2, normal sign
+on the same constructed 7.5 dB channel at 45 unique PVT points. First require
+exact nominal replay, then four declared difficult corners; only all-five
+success promotes the remaining 40. No per-corner retuning and no retries.
+This gate covers bit/eye/power/voltage behavior, not PVT AC peak/noise/HD3 or
+other tuning targets. Tests first fail on absent source, then check one/five/
+45-case stopping, late failure retention, unchanged geometry, scaled external
+controls, exact nominal raw replay and prior source continuity.
+Focused checks: 100 passed in 49.71 s. Before-change full baseline: 3191
+passed in 574.55 s. Post-change full suite is RUNNING without concurrent SPICE
+or archival work. Entry 133 is UNRUN; freeze after the full suite passes.
+
+Entry 133 pre-run full regression passes: 3207 passed, 13 deselected, two
+known warnings in 621.77 s. Focused checks: 100 passed in 49.71 s. No SPICE
+or archival job ran alongside the suite. Save the verified local checkpoint
+before the registered PVT run; remote backup clarification remains pending.
