@@ -1,0 +1,128 @@
+
+Note: Compatibility modes selected: hs a
+
+
+Circuit: * entry 122 cml master/slave; external differential clock, no feedback dac
+
+option SCALE: Scale is set to 1e-06 for instance and model parameters
+Doing analysis at TEMP = 0.000000 and TNOM = 27.000000
+
+
+Initial Transient Solution
+--------------------------
+
+Node                                   Voltage
+----                                   -------
+vdd                                       1.89
+clk                                       0.63
+clkb                                      1.26
+inp                                    1.36431
+inn                                    1.41431
+mn                                     1.74388
+ma                                    0.491551
+mp                                     1.68157
+mb                                     1.23498
+mtail                                   0.2724
+nbias                                 0.908942
+qb                                     1.70953
+sa                                     1.26478
+q                                      1.70954
+sb                                    0.762347
+stail                                 0.303784
+xr_mp.rb                               1.81017
+xr_mn.rb                               1.83404
+xr_q.rb                                1.82088
+xr_qb.rb                               1.82088
+xr_nbias.rb                            1.85956
+vinn#branch                                  0
+vinp#branch                                  0
+vclkb#branch                                 0
+vclk#branch                                  0
+vdd#branch                        -0.000993152
+
+ Reference value :  9.84500e-10
+ Reference value :  4.85550e-09
+
+No. of Data Rows : 8154
+ngspice-41 done
+
+Warning: Model issue on line 0 :
+  .model xr_mp:rhead_model r sw_et=0 isnoisy=0 rsh=    3.458312000000000e+ ...
+unrecognized parameter (sw_et) - ignored
+unrecognized parameter (isnoisy) - ignored
+unrecognized parameter (p2) - ignored
+unrecognized parameter (q2) - ignored
+
+Warning: Model issue on line 0 :
+  .model xr_mp:rbody_model r sw_et=0 isnoisy=0 rsh=    3.173885000000000e+ ...
+unrecognized parameter (sw_et) - ignored
+unrecognized parameter (isnoisy) - ignored
+unrecognized parameter (p2) - ignored
+unrecognized parameter (q2) - ignored
+unrecognized parameter (p3) - ignored
+unrecognized parameter (q3) - ignored
+
+Warning: Model issue on line 0 :
+  .model xr_mn:rhead_model r sw_et=0 isnoisy=0 rsh=    3.458312000000000e+ ...
+unrecognized parameter (sw_et) - ignored
+unrecognized parameter (isnoisy) - ignored
+unrecognized parameter (p2) - ignored
+unrecognized parameter (q2) - ignored
+
+Warning: Model issue on line 0 :
+  .model xr_mn:rbody_model r sw_et=0 isnoisy=0 rsh=    3.173885000000000e+ ...
+unrecognized parameter (sw_et) - ignored
+unrecognized parameter (isnoisy) - ignored
+unrecognized parameter (p2) - ignored
+unrecognized parameter (q2) - ignored
+unrecognized parameter (p3) - ignored
+unrecognized parameter (q3) - ignored
+
+Warning: Model issue on line 0 :
+  .model xr_q:rhead_model r sw_et=0 isnoisy=0 rsh=    3.458312000000000e+0 ...
+unrecognized parameter (sw_et) - ignored
+unrecognized parameter (isnoisy) - ignored
+unrecognized parameter (p2) - ignored
+unrecognized parameter (q2) - ignored
+
+Warning: Model issue on line 0 :
+  .model xr_q:rbody_model r sw_et=0 isnoisy=0 rsh=    3.173885000000000e+0 ...
+unrecognized parameter (sw_et) - ignored
+unrecognized parameter (isnoisy) - ignored
+unrecognized parameter (p2) - ignored
+unrecognized parameter (q2) - ignored
+unrecognized parameter (p3) - ignored
+unrecognized parameter (q3) - ignored
+
+Warning: Model issue on line 0 :
+  .model xr_qb:rhead_model r sw_et=0 isnoisy=0 rsh=    3.458312000000000e+ ...
+unrecognized parameter (sw_et) - ignored
+unrecognized parameter (isnoisy) - ignored
+unrecognized parameter (p2) - ignored
+unrecognized parameter (q2) - ignored
+
+Warning: Model issue on line 0 :
+  .model xr_qb:rbody_model r sw_et=0 isnoisy=0 rsh=    3.173885000000000e+ ...
+unrecognized parameter (sw_et) - ignored
+unrecognized parameter (isnoisy) - ignored
+unrecognized parameter (p2) - ignored
+unrecognized parameter (q2) - ignored
+unrecognized parameter (p3) - ignored
+unrecognized parameter (q3) - ignored
+
+Warning: Model issue on line 0 :
+  .model xr_nbias:rhead_model r sw_et=0 isnoisy=0 rsh=    3.45831200000000 ...
+unrecognized parameter (sw_et) - ignored
+unrecognized parameter (isnoisy) - ignored
+unrecognized parameter (p2) - ignored
+unrecognized parameter (q2) - ignored
+
+Warning: Model issue on line 0 :
+  .model xr_nbias:rbody_model r sw_et=0 isnoisy=0 rsh=    3.17388500000000 ...
+unrecognized parameter (sw_et) - ignored
+unrecognized parameter (isnoisy) - ignored
+unrecognized parameter (p2) - ignored
+unrecognized parameter (q2) - ignored
+unrecognized parameter (p3) - ignored
+unrecognized parameter (q3) - ignored
+

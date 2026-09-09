@@ -27,10 +27,25 @@ def schedule(evaluate):
             'hardware_dfe_complete': False, 'full_receiver_verified': False}
 
 
-def run(out):
+def recovery_schedule(evaluate):
+    corners = (Corner('ss', .95, 125), Corner('fs', .95, 125), Corner('ff', 1.05, 0))
+    rows = [{'width_um': w, 'corners': [
+        {'corner': str(c), 'result': evaluate(w, c, 'screen')} for c in corners]}
+        for w in (8, 16)]
+    selected = next((r['width_um'] for r in rows
+                     if all(accepted(c['result']) for c in r['corners'])), None)
+    pvt = [] if selected is None else [
+        {'corner': str(c), 'result': evaluate(selected, c, 'pvt')} for c in all_corners()]
+    return {'entry': 123, 'screening': rows, 'selected_width_um': selected, 'pvt': pvt,
+            'standalone_pvt_pass': len(pvt) == 45 and all(accepted(r['result']) for r in pvt),
+            'hardware_dfe_complete': False, 'full_receiver_verified': False}
+
+
+def run(out, *, recovery=False):
     out = Path(out).resolve()
     out.mkdir(parents=True, exist_ok=False)
     with hold('dfe_slicer'):
+        entry, budget = (123, 51) if recovery else (122, 48)
         cfg = LinkConfig(channel_loss_db_at_nyquist=7.5)
         bits = D.pattern(cfg)
         paths = ('nebula/DFE_CML_PLAN.md', 'nebula/device/dfe_cml.py',
@@ -41,19 +56,21 @@ def run(out):
                  'nebula/device/crosscheck.py', 'nebula/device/sky130_runner.py',
                  'nebula/device/ngspice_runner.py', 'nebula/common/types.py',
                  'nebula/link/config.py', 'nebula/device/spice/.spiceinit')
+        if recovery:
+            paths += ('nebula/DFE_CML_RECOVERY_PLAN.md', 'nebula/tests/test_dfe_cml_recovery.py')
         for rel in paths:
             dest = out / 'sources' / rel
             dest.parent.mkdir(parents=True, exist_ok=True)
             shutil.copyfile(ROOT / rel, dest)
-        P.write_json(out/'config.json', {'entry': 122, 'max_calls': 48,
-            'bits': bits.tolist(), 'seed': cfg.seed, 'widths_um': C.WIDTHS_UM,
+        P.write_json(out/'config.json', {'entry': entry, 'max_calls': budget,
+            'bits': bits.tolist(), 'seed': cfg.seed, 'widths_um': (8, 16) if recovery else C.WIDTHS_UM,
             'source_manifest_sha256': digest(SOURCE/'evidence_sha256.json'),
             'clock_external': True, 'ctle_connected': False, **stamp()})
         started, calls = time.perf_counter(), 0
         def evaluate(width, corner, phase):
             nonlocal calls
             calls += 1
-            if calls > 48:
+            if calls > budget:
                 raise RuntimeError('registered call budget exhausted')
             folder = out / f'{phase}_w{width}_{corner}'
             try:
@@ -74,10 +91,10 @@ def run(out):
             r.update(width_um=width, geometry=C.geometry(width),
                      hardware_dfe_complete=False, full_receiver_verified=False)
             P.write_json(folder/'result.json', r)
-            print(f'{calls}/48 {phase} W={width} {corner}: accepted={accepted(r)}, '
+            print(f'{calls}/{budget} {phase} W={width} {corner}: accepted={accepted(r)}, '
                   f'bits={r.get("correct_bits")}/32 error={r.get("fail_reason")}', flush=True)
             return r
-        result = schedule(evaluate)
+        result = (recovery_schedule if recovery else schedule)(evaluate)
         result.update(spice_calls=calls, wall_seconds=time.perf_counter()-started)
         P.write_json(out/'summary.json', result)
         P.write_json(out/'evidence_sha256.json', {
@@ -88,4 +105,6 @@ def run(out):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--out', type=Path, required=True)
-    raise SystemExit(0 if run(parser.parse_args().out)['standalone_pvt_pass'] else 1)
+    parser.add_argument('--recovery', action='store_true', help='Entry 123 registered corner screen')
+    args = parser.parse_args()
+    raise SystemExit(0 if run(args.out, recovery=args.recovery)['standalone_pvt_pass'] else 1)

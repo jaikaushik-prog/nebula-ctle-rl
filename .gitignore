@@ -214,3 +214,12 @@ session25_desktop_transcript.jsonl
 /gmcmp.pkl
 /tmp/
 /output/release/
+
+# Hardware transient evidence: byte-verified gzip siblings are committed;
+# originals remain locally and their hashes remain in the original manifest.
+/nebula/product_audits/entry122_dfe_cml_20260909/*/trace.txt
+/nebula/product_audits/entry122_dfe_cml_20260909/*/terminals.txt
+/nebula/product_audits/entry123_dfe_cml_recovery_20260909/*/trace.txt
+/nebula/product_audits/entry123_dfe_cml_recovery_20260909/*/terminals.txt
+!nebula/product_audits/entry122_dfe_cml_20260909/**/*.log
+!nebula/product_audits/entry123_dfe_cml_recovery_20260909/**/*.log

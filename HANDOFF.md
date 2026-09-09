@@ -20,7 +20,9 @@
 Last updated: **2026-09-09**, Entry 122 hardware development authorized.
 The organiser requires a transistor-level CTLE plus DFE and configurable
 Rs/Cs. The owner authorizes bounded agent-selected experiments for both;
-DFE is first. The CML plan and instrument are being frozen before simulation.
+DFE is first. Entry 122 CML passes all three TT screens with valid terminal
+voltages, but W=4 passes only 34/45 PVT. Entry 123 registers a wider-device
+corner screen without changing the failed Entry 122 evidence.
 Existing reports and fixed-passive circuit evidence remain unchanged.
 
 Previous report snapshot, Entry 121: The unchanged 20-page
@@ -1020,6 +1022,9 @@ signaling, ADC-based DSP receiver, 28 nm CMOS reference parameters).
 Entry 122 adds the isolated hardware-development files `nebula/DFE_CML_PLAN.md`,
 `nebula/device/dfe_cml.py`, `nebula/experiments/exp_dfe_cml.py`, and
 `nebula/tests/test_dfe_cml.py`. They do not modify the deployed physical path.
+Entry 123 adds `nebula/DFE_CML_RECOVERY_PLAN.md`, `nebula/DFE_CML_RESULTS.md`,
+`nebula/experiments/archive_traces.py`, `nebula/tests/test_dfe_cml_recovery.py`,
+and byte-addressed Entry 122 artifacts under `nebula/product_audits/`.
 
 Entry 121: NEXT_AGENT_PROMPT.md is the self-contained operational handoff
 for a new agent. It records reading order, verified product state, evidence
@@ -1969,6 +1974,8 @@ PRBS → scramble → Gray/PAM4 → TX-FFE → ZOH ×OSR(8) → TX pole (0.75·f
 2026-09-09 / Entry 122: organiser clarification prompted the owner to reopen
 hardware work and authorize bounded agent-selected experiments. CML
 master/slave decision storage is the first new architecture; see Session Log.
+Entry 123 retains Entry 122's 34/45 result and registers a bounded 8/16 um
+corner screen, leaving all existing circuit, timing and voltage gates fixed.
 
 Entry 120 (2026-09-09): filled the three sparse academic front-matter pages using existing verified evidence. No technical result or claim changed. Rendered pages 4-22 are unchanged.
 
@@ -2192,9 +2199,11 @@ Plus: git init, .gitignore, 28 tests, Wilson-bound BER reporting.
 
 ## 6. Key numbers & validated behavior (current state)
 
-Entry 122 active work: transistor DFE and configurable Rs/Cs are now required
-by organiser clarification. The new CML experiment is preregistered, not yet
-measured. Existing physical product counts and RL results remain unchanged.
+Entry 122: all 4/8/16 um CML sizes pass TT 32/32 and signed model-domain
+checks. The selected 4 um size passes 34/45 PVT, with weak hold at eleven
+hot/low-supply points. All 48 calls have valid terminal voltages. See
+`nebula/DFE_CML_RESULTS.md`. Entry 123 is a preregistered fixed-width recovery.
+Existing physical product counts and RL results remain unchanged.
 
 Entry 120: current academic PDF SHA-256 is a573db02335879e0a6a0b3feb2c9eeea2172c2f3f4b4e4699dfc8123c8f90670. Pages 1-3 pass visual review; pages 4-22 match Entry 119.
 
@@ -3054,7 +3063,8 @@ variation, mismatch and layout remain open. Old production evidence is unchanged
 configurable Rs/Cs. Owner authorization covers bounded architecture/sizing
 experiments; register membership and gates before each run, preserve failed
 trials, and do not re-ask approval for ordinary in-scope iterations. Current
-first trial: `nebula/DFE_CML_PLAN.md`. Do not inherit fixed-circuit PVT or
+next trial: `nebula/DFE_CML_RECOVERY_PLAN.md` after Entry 122's 34/45 result.
+Do not inherit fixed-circuit PVT or
 frozen RL coverage for a new hardware topology.
 
 **Entry 121 continuation:** the next agent should read NEXT_AGENT_PROMPT.md
@@ -6531,6 +6541,17 @@ rerun simulation or training, and tests must verify the archived PDF hash.
 General page checks excluded the cover, abstract and contents pages, so all three could pass while leaving large unused lower halves.
 
 **Rule:** set explicit lower-content bounds for front matter, require the planned cover visual, and compare untouched page renders after a local edit.
+
+### G176. Resistance accuracy is not a high-speed load-sizing objective
+
+The general `resistor_geometry(800)` selector returned W=10/L=23.92 um
+for 800.0386 ohm. Entry 122 instead preregistered W=1/L=1.33 um for
+800.1471 ohm, using the same validated poly model and .005 um grid.
+The tiny resistance-error trade-off changes drawn body area from 239.2 to
+1.33 um2 per load. Do not blindly use an accuracy-prioritized geometry
+selector on a sensitive high-speed node. Record actual resistance and
+physical dimensions before simulation; do not silently substitute ideal R.
+The global selector and all existing delivered circuits remain unchanged.
 
 ## 10. Environment
 
@@ -17786,3 +17807,29 @@ Pre-change full suite: 3001 passed, 13 deselected, two known warnings in
 as expected. Focused tests: 18 passed. Post-change full suite: 3019 passed,
 13 deselected, two known warnings in 398.72 s. Source, tests and plan are
 ready for the pre-experiment freeze commit. No new SPICE run yet.
+
+Entry 122 measured after freeze b11fb22: 48 calls, 56.5842271 s, three
+TT passes but only 34/45 for selected W=4. All 48 signed voltage audits pass.
+Raw evidence has 354 hashed files; uncompressed traces total about 509 MB
+with other evidence. Byte-verified gzip siblings preserve exact raw bytes
+for Git; local originals are retained. No full DFE or CTLE integration claim.
+The attempted backup push was rejected by auto-review due to the conflict
+between old private-repository instructions and public-backup authorization.
+A fresh explicit confirmation of destination/visibility was requested while
+local hardware work continues; no alternate upload was attempted.
+
+### 2026-09-09 - Entry 123 / bounded CML PVT recovery registration
+
+Added `nebula/DFE_CML_RECOVERY_PLAN.md`: 8/16 um at SS/0.95/125,
+FS/0.95/125 and FF/1.05/0; choose smaller passing width and verify that one
+geometry at 45 PVT points, maximum 51 calls. The circuit and gates are
+unchanged from Entry 122. Added failure-first schedule/archive tests and a
+lossless gzip-sibling archival utility (no raw deletion or manifest rewrite).
+Pre-change full suite: 3019 passed, 13 deselected, two warnings (398.72 s).
+Focused tests: 24 passed, including exact replay of all 48 Entry 122 cases
+from gzip traces. Post-change full suite: 3025 passed, 13 deselected, two
+known warnings in 372.57 s. Entry 123 measurements: PENDING, freeze first.
+Entry 122 gzip traces total 102.743187 MB (original traces 505.678464 MB),
+largest gzip 1.147356 MB; all raw and compressed hashes are checked.
+Source diff/credential checks pass. Immutable simulator evidence preserves
+its CRLF bytes; whitespace normalization must not invalidate those hashes.
