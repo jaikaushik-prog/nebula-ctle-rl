@@ -17,9 +17,12 @@
 > decisions that are OPEN and human-only, and what to do next. It supersedes
 > `nebula/NEXT_STEPS.md`. This file remains the full state of record.
 
-Last updated: **2026-09-08**, Entry 116 complete. The competition report now
-opens with the named BITS Pilani team and closes with a prioritized future-
-development roadmap; the 20-page PDF and complete regression pass.
+Last updated: **2026-09-09**, Entry 119 complete. The unchanged 20-page
+competition report is preserved byte-for-byte in a dated archive, while a
+separate 22-page academic/competition edition adds an abstract, contents and
+evidence map, chapter ordering, and a less crowded cover. The new PDF passes
+source-hash, outline, extraction, figure-sequence, bounds and all-page visual
+checks. No simulation, policy training or evidence generation was run.
 
 Previous status snapshot: **2026-09-06**, session 60 / Entry 112: owner freezes further
 DFE pursuit and requests a polished, current competition report. Revised
@@ -1006,6 +1009,16 @@ signaling, ADC-based DSP receiver, 28 nm CMOS reference parameters).
 
 ## 2. Repository map (what every file/folder is)
 
+Entry 119 (2026-09-09): nebula/report/competition_academic.py builds a
+separate academic/competition report without changing the established
+competition_submission.py output. check_academic_pdf.py validates its
+22-page structure, source hashes, outline, extraction, sequential figures and
+bounds; test_academic_report.py also locks the previous report's archived
+SHA-256. Outputs are output/pdf/Nebula_Competition_Report_Academic.*.
+output/pdf/archive_before_academic_restructure_20260909/ preserves the
+previous 20-page PDF, manifests and builder snapshot.
+
+
 Entry 116 (2026-09-08): the final competition report has a dedicated team/
 institution cover and a prioritized future-development page. The 20-page
 artifact passes source-hash, outline, extraction, bounds and visual checks.
@@ -1933,6 +1946,15 @@ PRBS → scramble → Gray/PAM4 → TX-FFE → ZOH ×OSR(8) → TX pole (0.75·f
 
 ## 5. Complete history (what was done, in order, with the WHY)
 
+Entry 119 (2026-09-09): the owner's AAPMS internship report was used only as a
+read-only structural reference. A new 22-page Nebula edition adopts the useful
+academic ordering: formal cover, abstract/objectives, contents/evidence map,
+problem and theory, automated framework, analog validation, RL evaluation,
+product/reproducibility, conclusions and future work. It reuses the existing
+Nebula figures and saved evidence; no claim, circuit, policy or measurement
+changed. The prior 20-page version remains byte-identical in a dated archive.
+
+
 Entry 116 (2026-09-08): the final competition report has a dedicated team/
 institution cover and a prioritized future-development page. The 20-page
 artifact passes source-hash, outline, extraction, bounds and visual checks.
@@ -2142,6 +2164,15 @@ Plus: git init, .gitignore, 28 tests, Wilson-bound BER reporting.
   rectangle and is now an explicit limitation, not a hidden traceback.
 
 ## 6. Key numbers & validated behavior (current state)
+
+Entry 119 report state: two authored submission choices are retained. The
+established 20-page PDF has SHA-256
+3cd67ffc933b8f369d601a72f16e39295542780777ca5bccc797135278faf43b;
+the separate 22-page academic PDF has SHA-256
+799917cb10ac37193e2644d2cc2b90f962431a5fd9657b3c4422274fcd28226e.
+Both present the same saved product evidence. The academic edition changes
+organization and page composition only.
+
 
 Entry 116 (2026-09-08): the final competition report has a dedicated team/
 institution cover and a prioritized future-development page. The 20-page
@@ -2979,6 +3010,15 @@ variation, mismatch and layout remain open. Old production evidence is unchanged
   untrusted until proven (the Phase-0 experience says assume bugs).
 
 ## 8. Next steps (prioritized backlog with context)
+
+**Entry 119 submission-document status:** compare the preserved 20-page report
+and the new 22-page academic edition for final submission choice. The academic
+edition is the recommended formal version because its theory-to-product order
+is easier to judge and its cover is less crowded. Keep the dated archive and
+do not overwrite it during later editorial work. Future evidence or claim
+changes must be applied deliberately to whichever version is selected and
+must regenerate that version's source manifest and QA record.
+
 
 Entry 118 (2026-09-08): the complete recoverable local project state is backed
 up to GitHub after an explicit owner request prompted by laptop battery failure.
@@ -6419,6 +6459,18 @@ backups, commit the underlying project files, trained policies, authored
 reports and audit evidence; keep output/release, tmp and the machine-local
 gmcmp.pkl out of Git. Use a release-asset service if a generated bundle itself
 must later be distributed.
+
+
+### G174. Preserve an accepted report before trying a structural rewrite
+
+A large report reordering can improve navigation while still being a worse
+submission choice after review. Overwriting the only accepted PDF makes that
+editorial experiment irreversible and also obscures whether evidence changed.
+
+**Rule:** create a dated, hash-recorded archive before a structural rewrite;
+build the alternate version under a distinct filename and entry point; keep
+source manifests and QA records beside both. A report-only revision must not
+rerun simulation or training, and tests must verify the archived PDF hash.
 
 ## 10. Environment
 
@@ -17604,3 +17656,29 @@ all three exclusions duplicate or regenerate from the committed project state.
 The latest complete verification before this backup remains 2999 passed, 13
 deselected and two known warnings in 412.22 s; no training or circuit
 simulation was launched for the backup itself.
+
+### 2026-09-09 - Entry 119 / preserved academic report variant
+
+The owner requested an AAPMS-style academic structure while keeping the latest
+Nebula report recoverable. The existing 20-page PDF, review, source manifest
+and builder snapshot are copied to
+output/pdf/archive_before_academic_restructure_20260909/; its PDF SHA-256 is
+3cd67ffc933b8f369d601a72f16e39295542780777ca5bccc797135278faf43b,
+identical to the unchanged live report.
+
+Added the independent 22-page
+output/pdf/Nebula_Competition_Report_Academic.pdf. It uses a quiet formal
+cover with the BITS Pilani team, then abstract/objectives, contents/evidence
+map, problem and theory, automation/circuit design, analog/link/DFE evidence,
+RL method and controlled comparisons, implementation/reproducibility,
+conclusions and future work. The AAPMS document was a read-only organization
+reference and is not included in Git. The established report generator and
+PDF were not modified.
+
+The academic checker passes all 22 pages: exact source hashes, outline and text
+extraction, Figures 1-12 in sequence, body-depth and page-bound checks, and
+visual inspection of every Poppler render. Academic PDF SHA-256:
+799917cb10ac37193e2644d2cc2b90f962431a5fd9657b3c4422274fcd28226e.
+Focused report regression: 13 passed. Pre-change full baseline: 2999 passed,
+13 deselected and two known warnings in 412.22 s. Post-change full regression:
+3001 passed, 13 deselected and two known warnings in 390.04 s. No SPICE simulation, training or new scientific measurement ran.
