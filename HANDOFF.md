@@ -17,7 +17,7 @@
 > decisions that are OPEN and human-only, and what to do next. It supersedes
 > `nebula/NEXT_STEPS.md`. This file remains the full state of record.
 
-Last updated: **2026-09-10**, Entry 132 connected tunable DUT passes TT; Entry 133 awaits freeze.
+Last updated: **2026-09-10**, Entry 133 configurable CTLE + transistor DFE passes 45/45 electrical PVT.
 The organiser requires a transistor-level CTLE plus DFE and configurable
 Rs/Cs. The owner authorizes bounded agent-selected experiments for both;
 DFE is first. Entry 122 CML passes all three TT screens with valid terminal
@@ -47,7 +47,9 @@ fixed Rs/Cs. Entry 131 now measures 882 finer controls: one N500/no-fixed-MIM
 circuit reaches all nine declared 3/6/9 dB x 1.5/1.9/2.25 GHz target identities
 within .5 dB/.1 GHz. Entry 132 now passes the connected transistor DFE gate
 at the primary TT point: 64/64 bits, 223.974919 mV eye, .690 UI width and
-9.263703 mW VDD power. Entry 133 prepares fixed-setting electrical PVT.
+9.263703 mW VDD power. Entry 133 now passes 45/45 fixed-setting electrical
+PVT points on the primary 7.5 dB channel: minimum eye 109.757616 mV,
+minimum positive width .630 UI, maximum VDD power 12.524099 mW. No retuning.
 Existing reports and fixed-passive circuit evidence remain unchanged.
 
 Previous report snapshot, Entry 121: The unchanged 20-page
@@ -1089,6 +1091,8 @@ Its result is `DFE_CONFIGURABLE_RESULTS.md`, with compressed raw replay in
 `tests/test_dfe_configurable_evidence.py`. Entry 133 adds
 `DFE_CONFIGURABLE_PVT_PLAN.md`, `device/dfe_configurable_pvt.py`,
 `experiments/exp_dfe_configurable_pvt.py` and `tests/test_dfe_configurable_pvt.py`.
+Its completed result is `DFE_CONFIGURABLE_PVT_RESULTS.md`; every raw corner
+is replayed by `tests/test_dfe_configurable_pvt_evidence.py`.
 
 Entry 121: NEXT_AGENT_PROMPT.md is the self-contained operational handoff
 for a new agent. It records reading order, verified product state, evidence
@@ -2072,6 +2076,8 @@ transients to connect its measured primary setting to the unchanged DFE.
 Entry 132 completes seven calls and passes that first connected gate; the
 latest phase fails and remains retained. Entry 133 registers an early-gated
 45-point electrical PVT sweep with fixed hardware, controls, DAC and phase.
+Entry 133 completes exactly 45 calls in 2065.701124 s, all accepted with
+64/64 scored bits each. Sources/PDK are unchanged; no retries or retuning.
 
 Entry 120 (2026-09-09): filled the three sparse academic front-matter pages using existing verified evidence. No technical result or claim changed. Rendered pages 4-22 are unchanged.
 
@@ -2336,7 +2342,10 @@ identities; N250 reaches 5/9. The near-9 dB/1.9 GHz setting is R=.7 VDD,
 C=.165 VDD, measured 8.909067327 dB / 1.857653018 GHz. Entry 132's connected
 TT DFE now passes: 64/64, 223.974919 mV eye, .690 UI positive width, .650 UI
 above-100-mV width, 9.263703 mW VDD power. Normal feedback beats minimum-
-current and reversed controls. New PVT is unrun; old PVT proof does not transfer.
+current and reversed controls. Entry 133 independently passes 45/45 new
+electrical PVT points on the primary channel. Minimum eye 109.757616 mV,
+positive width .630 UI, width above 100 mV .555 UI; maximum VDD power
+12.524099 mW. Old fixed-passive multi-channel proof does not transfer.
 Entry 126: 95 calls, 1522.135503 s trial time; 45/45 at 3 dB and 45/45 at
 12 dB. Minimum sampled eyes 191.307321/133.817900 mV; finite positive-eye
 apertures 0.755/0.710 UI. Combined 135-PVT coverage includes the separately
@@ -3000,10 +3009,14 @@ voltage tunability, including nine target identities on one N500 circuit.
 They do NOT establish transient reconfiguration settling, new PVT, loaded
 noise/HD3 or the entire target rectangle. Entry 132 now establishes first
 DFE-loaded TT bit/eye/power behavior at the primary controls, not the other
-eight targets or PVT. Its bilateral Rs MOS reaches -50.453 mV signed Vds;
+eight targets. Entry 133 now independently establishes 45/45 electrical PVT
+points at those primary controls/channel, not PVT AC peak/frequency or
+loaded noise/HD3. Minimum sampled eye margin is only 9.757616 mV above the
+100 mV gate. Its bilateral Rs MOS reaches -67.479 mV signed Vds across PVT;
 this exact finding remains reported separately from the passing magnitude/
 body envelope. Strict new-DFE signed gates stay unchanged and pass all seven
-calls. External clock/control/common-mode sources remain testbench devices.
+connected nominal calls and all 45 new PVT points. External clock/control/
+common-mode sources remain testbench devices.
 
 Entry 116 (2026-09-08): the final competition report has a dedicated team/
 institution cover and a prioritized future-development page. The 20-page
@@ -3225,13 +3238,17 @@ variation, mismatch and layout remain open. Old production evidence is unchanged
 configurable Rs/Cs. Owner authorization covers bounded architecture/sizing
 experiments; register membership and gates before each run, preserve failed
 trials, and do not re-ask approval for ordinary in-scope iterations. Current
-completed trial: `nebula/DFE_CONFIGURABLE_PLAN.md` (Entry 132, seven calls,
-first connected configurable CTLE + transistor DFE gate passes at TT).
+completed trial: `nebula/DFE_CONFIGURABLE_PVT_PLAN.md` (Entry 133, 45 calls,
+45/45 primary-channel electrical PVT points pass without retuning).
 DFE backup was verified on both GitHub branches at fa5fbed before any Rs/Cs
-simulation. Preserve all prior successes/failures, then freeze/test
-`DFE_CONFIGURABLE_PVT_PLAN.md` before its 45-call maximum, early-gated PVT run.
-The new experimental DUT has physical configurable Rs/Cs and passes one
-connected TT point. The old production export/registry and PDFs are unchanged;
+simulation. Preserve all prior successes/failures. Entry 133 raw archival,
+all-corner replay tests and full regression are complete; save its local
+checkpoint and resolve the pending public/private backup instruction conflict.
+Runtime control changes, other loaded tuning identities/channels and loaded
+noise/HD3 need separate bounded registered checks; do not silently extend
+this one-channel gate. The new experimental DUT has physical configurable
+Rs/Cs and passes 45 connected PVT points. Production integration/presentation
+must explicitly reference the new evidence. The old export/registry and PDFs are unchanged;
 do not label their fixed-passive artifacts as the new circuit.
 Do not inherit fixed-circuit PVT or
 frozen RL coverage for a new hardware topology.
@@ -6783,6 +6800,17 @@ the batch. Do not change the gate after seeing this failure or promote AC
 results alone. Entry 130 preregisters only tighter reltol/vntol/abstol, with
 the same circuit, controls, parsers and gates. Its nine calls now pass all
 reference checks: maximum DC drift 2.6841e-12 V. Entry 129 remains failed.
+
+### G183. A new tuning network needs its own loaded PVT evidence
+
+Do not carry the fixed-passive DFE's 135/135 result into the configurable
+topology. Entry 133 independently measures the same N500/.7/.165 control
+setting, phase 1 and DAC code 2 at 45 unique PVT points on one 7.5 dB channel.
+All pass, but the worst sampled eye is 109.757616 mV, only 9.757616 mV above
+the gate. Static controls and finite noiseless bit/eye checks do not prove
+runtime settling, other tuning identities, PVT peak/frequency, loaded
+noise/HD3 or BER. Preserve the bilateral Rs switch's negative signed Vds
+separately from its passed magnitude/body envelope and the strict DFE audit.
 
 ## 10. Environment
 
@@ -18559,3 +18587,64 @@ Entry 133 pre-run full regression passes: 3207 passed, 13 deselected, two
 known warnings in 621.77 s. Focused checks: 100 passed in 49.71 s. No SPICE
 or archival job ran alongside the suite. Save the verified local checkpoint
 before the registered PVT run; remote backup clarification remains pending.
+
+### 2026-09-10 - Entry 133 combined configurable hardware passes electrical PVT
+
+Checkpoint 3e4dfcedc19afd8202458ed1155138c6bb4a2134 preserves Entry 132
+evidence and the tested Entry 133 instrument. Audit: 115 intended files,
+106 exact evidence blobs, 192,235,335 bytes; correct identity, no detected
+secrets/prohibited material and both PDFs unchanged. Pre-run validation:
+100 focused tests, 3207 full tests, 13 deselected/two known warnings in
+621.77 s. New uploads remain local pending public/private clarification.
+
+Entry 133 completes 45 calls in 2065.701124 s including 5.440404 s complete
+prior-evidence verification. Nominal replay agrees, all five initial screens
+pass, and all remaining 40 unique PVT points pass. Exactly 64/64 bits at each;
+no retries or per-corner hardware/control/phase/DAC retuning. All 62 scientific
+source files and 319 external PDK dependencies remain unchanged.
+
+Minimum sampled eye 109.757616 mV at FS/.95/125 C; minimum positive width
+.630 UI at FS/.95/0 C, minimum above-100-mV width .555 UI at FS/.95/125 C.
+Maximum circuit VDD power 12.524099 mW at FF/1.05/125 C. External-clock
+positive power is separately at most .128163 mW, R/C-control positive power
+17.052511 nW. Strict new-DFE signed audits and whole-circuit magnitude/body
+and tuning-control envelopes pass 45/45. Bilateral Rs switch signed Vds
+spans -.067479..+.064297 V; its separate signed audit remains false 45/45,
+not hidden or swapped. Geometry remains .014715765982 mm2, not routed area.
+
+Results: nebula/DFE_CONFIGURABLE_PVT_RESULTS.md. This independently verifies
+the primary configurable-DUT channel, not the older fixed-passive 135 cases,
+other loaded tuning identities/channels, runtime settling, PVT AC peak,
+loaded noise/HD3, BER or full receiver signoff. Old exports/registry/PDFs and
+frozen RL results remain unchanged. See G183 for the evidence boundary.
+
+Summary SHA-256 17887e5aa9e10fe7692e0c12fe103d7a4588432061f4dae9be4286062081f09d.
+Original manifest: 336 entries; SHA-256
+01083693b0c963b62789d96584470d3918ab844c313debfc21ea3daa0bfd1585.
+Lossless archival completes: 90 gzip siblings preserve 4,296,306,960 raw bytes
+in 1,212,259,908 compressed bytes; largest 16,092,813 bytes, originals retained.
+A new complete-bundle
+test and 45 parameterized corner tests reproduce the frozen schedule,
+exact circuit deck and all waveform-derived metrics/audits. Post-change
+focused regression is RUNNING and mandatory full regression is pending;
+no new simulation runs.
+
+Initial new replay checks find five deck-string mismatches: the scheduler's
+five screen objects contain integer temperatures (for example `.temp 27`),
+whereas the generic all_corners objects contain floats (`.temp 27.0`).
+The other 141 focused tests pass in 188.71 s, including archive integrity
+and the 40 remaining raw corner replays. Fix only the new test to use the
+actual frozen scheduler objects/order; retain exact deck equality. No saved
+deck, waveform, source, simulator setting or electrical gate is changed.
+
+Final Entry 133 validation passes: 146 focused tests in 216.81 s; mandatory
+full suite 3253 passed, 13 deselected, two known warnings in 739.41 s.
+Before-change baseline was 3207 passed in 621.77 s. All 45 raw corner
+replays, exact regenerated decks and complete archive integrity now pass.
+No simulation or archival job ran alongside the full regression.
+Pre-final-log staged audit: 341 intended files, 338 exact evidence blobs,
+1,243,560,227 bytes, correct Jai Kaushik noreply identity, no detected
+credentials or prohibited material, both original PDF hashes unchanged.
+Save this verified checkpoint locally. No upload or visibility change is
+authorized until the conflicting new private-only instruction is resolved;
+the earlier DFE-before-Rs/Cs backup was already completed and verified.
