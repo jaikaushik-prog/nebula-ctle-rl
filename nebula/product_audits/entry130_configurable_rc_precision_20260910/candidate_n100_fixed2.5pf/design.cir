@@ -1,0 +1,593 @@
+* Entry 128 physical configurable RC screening, standalone CTLE
+.lib "C:/Users/DELL/sky130A/libs.tech/ngspice/sky130.lib.spice" tt
+.temp 27
+.subckt rc_fixed inx iny cm vdd outp outn rctrl cctrl
+.param W=57.97671772296124 L=0.3911493163378813 NF=4
+.param RL=254.6329712064977 RS=356.81770148453967 CS=2.8515485554341908e-12 IT=0.001813449296655868 CL=3.262805963205924e-14
+.param VDD=1.8 VCM=1.5010229732197666
+Xatt_sp inx inp 0 sky130_fd_pr__res_high_po w=10 l=3.41
+Xatt_sn iny inn 0 sky130_fd_pr__res_high_po w=10 l=3.41
+Xatt_rp0 inp att_p0 0 sky130_fd_pr__res_high_po w=8 l=16.22
+Xatt_swp0 att_p0 0 cm vdd sky130_fd_pr__pfet_01v8 W=40 L=0.15 nf=1
+Xatt_rn0 inn att_n0 0 sky130_fd_pr__res_high_po w=8 l=16.22
+Xatt_swn0 att_n0 0 cm vdd sky130_fd_pr__pfet_01v8 W=40 L=0.15 nf=1
+Xatt_rp1 inp att_p1 0 sky130_fd_pr__res_high_po w=5.73 l=4.97
+Xatt_swp1 att_p1 0 cm vdd sky130_fd_pr__pfet_01v8 W=80 L=0.15 nf=2
+Xatt_rn1 inn att_n1 0 sky130_fd_pr__res_high_po w=5.73 l=4.97
+Xatt_swn1 att_n1 0 cm vdd sky130_fd_pr__pfet_01v8 W=80 L=0.15 nf=2
+Xatt_rp2 inp att_p2 0 sky130_fd_pr__res_high_po w=5.73 l=4.97 m=2
+Xatt_swp2 att_p2 0 cm vdd sky130_fd_pr__pfet_01v8 W=160 L=0.15 nf=4
+Xatt_rn2 inn att_n2 0 sky130_fd_pr__res_high_po w=5.73 l=4.97 m=2
+Xatt_swn2 att_n2 0 cm vdd sky130_fd_pr__pfet_01v8 W=160 L=0.15 nf=4
+XM1   outp inp s1 0 sky130_fd_pr__nfet_01v8 W={W} L={L} nf={NF}
+XM2   outn inn s2 0 sky130_fd_pr__nfet_01v8 W={W} L={L} nf={NF}
+Xrlp  vdd outp 0 sky130_fd_pr__res_high_po w=10 l=14.745 m=2
+Xrln  vdd outn 0 sky130_fd_pr__res_high_po w=10 l=14.745 m=2
+Xrs   s1 s2 0 sky130_fd_pr__res_high_po w=2 l=0.99
+Xcs   s1 s2 sky130_fd_pr__cap_mim_m3_1 w=37.595 l=37.595
+.param WT=201.656 LT=0.5 NFT=8
+.param WREF=25.2069 NFREF=1 IREF=0.000226681162 CBYP=1e-11
+Xbpref p_bias p_bias vdd vdd sky130_fd_pr__pfet_01v8 W=25.2069 L=0.5 nf=1
+Xbpfeed nbias p_bias vdd vdd sky130_fd_pr__pfet_01v8 W=25.2069 L=0.5 nf=1
+Xrbias p_bias 0 0 sky130_fd_pr__res_high_po w=1 l=5.34 m=1
+XMR   nbias nbias 0 0 sky130_fd_pr__nfet_01v8 W={WREF} L={LT} nf={NFREF}
+XMT1  s1    nbias 0 0 sky130_fd_pr__nfet_01v8 W={WT} L={LT} nf={NFT}
+XMT2  s2    nbias 0 0 sky130_fd_pr__nfet_01v8 W={WT} L={LT} nf={NFT}
+Xcbyp nbias 0 sky130_fd_pr__cap_mim_m3_1 w=70.545 l=70.545 m=1
+CLp   outp 0 {CL}
+CLn   outn 0 {CL}
+.ends rc_fixed
+.subckt rc_tuned inx iny cm vdd outp outn rctrl cctrl
+.param W=57.97671772296124 L=0.3911493163378813 NF=4
+.param RL=254.6329712064977 IT=0.001813449296655868 CL=3.262805963205924e-14
+.param VDD=1.8 VCM=1.5010229732197666
+Xatt_sp inx inp 0 sky130_fd_pr__res_high_po w=10 l=3.41
+Xatt_sn iny inn 0 sky130_fd_pr__res_high_po w=10 l=3.41
+Xatt_rp0 inp att_p0 0 sky130_fd_pr__res_high_po w=8 l=16.22
+Xatt_swp0 att_p0 0 cm vdd sky130_fd_pr__pfet_01v8 W=40 L=0.15 nf=1
+Xatt_rn0 inn att_n0 0 sky130_fd_pr__res_high_po w=8 l=16.22
+Xatt_swn0 att_n0 0 cm vdd sky130_fd_pr__pfet_01v8 W=40 L=0.15 nf=1
+Xatt_rp1 inp att_p1 0 sky130_fd_pr__res_high_po w=5.73 l=4.97
+Xatt_swp1 att_p1 0 cm vdd sky130_fd_pr__pfet_01v8 W=80 L=0.15 nf=2
+Xatt_rn1 inn att_n1 0 sky130_fd_pr__res_high_po w=5.73 l=4.97
+Xatt_swn1 att_n1 0 cm vdd sky130_fd_pr__pfet_01v8 W=80 L=0.15 nf=2
+Xatt_rp2 inp att_p2 0 sky130_fd_pr__res_high_po w=5.73 l=4.97 m=2
+Xatt_swp2 att_p2 0 cm vdd sky130_fd_pr__pfet_01v8 W=160 L=0.15 nf=4
+Xatt_rn2 inn att_n2 0 sky130_fd_pr__res_high_po w=5.73 l=4.97 m=2
+Xatt_swn2 att_n2 0 cm vdd sky130_fd_pr__pfet_01v8 W=160 L=0.15 nf=4
+XM1   outp inp s1 0 sky130_fd_pr__nfet_01v8 W={W} L={L} nf={NF}
+XM2   outn inn s2 0 sky130_fd_pr__nfet_01v8 W={W} L={L} nf={NF}
+Xrlp  vdd outp 0 sky130_fd_pr__res_high_po w=10 l=14.745 m=2
+Xrln  vdd outn 0 sky130_fd_pr__res_high_po w=10 l=14.745 m=2
+.param WT=201.656 LT=0.5 NFT=8
+.param WREF=25.2069 NFREF=1 IREF=0.000226681162 CBYP=1e-11
+Xbpref p_bias p_bias vdd vdd sky130_fd_pr__pfet_01v8 W=25.2069 L=0.5 nf=1
+Xbpfeed nbias p_bias vdd vdd sky130_fd_pr__pfet_01v8 W=25.2069 L=0.5 nf=1
+Xrbias p_bias 0 0 sky130_fd_pr__res_high_po w=1 l=5.34 m=1
+XMR   nbias nbias 0 0 sky130_fd_pr__nfet_01v8 W={WREF} L={LT} nf={NFREF}
+XMT1  s1    nbias 0 0 sky130_fd_pr__nfet_01v8 W={WT} L={LT} nf={NFT}
+XMT2  s2    nbias 0 0 sky130_fd_pr__nfet_01v8 W={WT} L={LT} nf={NFT}
+Xcbyp nbias 0 sky130_fd_pr__cap_mim_m3_1 w=70.545 l=70.545 m=1
+CLp   outp 0 {CL}
+CLn   outn 0 {CL}
+Xrc_rmax s1 s2 0 sky130_fd_pr__res_high_po w=2.85 l=4.865
+Xrc_branch s1 rc_mid 0 sky130_fd_pr__res_high_po w=10 l=2.645 m=2
+Xrc_switch rc_mid rc_gate s2 0 sky130_fd_pr__nfet_01v8 W=80 L=0.15 nf=2
+Xrc_rfeed rctrl rc_gate 0 sky130_fd_pr__res_high_po w=1.41 l=43.23
+Xrc_cfeed cctrl rc_ct 0 sky130_fd_pr__res_high_po w=1.41 l=43.23
+Xrc_rbypass rc_gate 0 sky130_fd_pr__cap_mim_m3_1 w=22.195 l=22.195
+Xrc_cbypass rc_ct 0 sky130_fd_pr__cap_mim_m3_1 w=70.545 l=70.545
+Xrc_var_s1 s1 rc_ct 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=100
+Xrc_var_s2 s2 rc_ct 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=100
+Xrc_fixedc s1 s2 sky130_fd_pr__cap_mim_m3_1 w=35.19 l=35.19
+.ends rc_tuned
+Vsupply0 vdd0 0 1.8
+Vcm0 cm0 0 1.501022973219767
+Vid0 vid0 0 dc 0 ac 1
+Einp0 inx0 cm0 vid0 0 0.5
+Einn0 iny0 cm0 vid0 0 -0.5
+Vr0 rctrl0 0 0
+Vc0 cctrl0 0 0
+Xcase0 inx0 iny0 cm0 vdd0 outp0 outn0 rctrl0 cctrl0 rc_tuned
+Vsupply81 vdd81 0 1.8
+Vcm81 cm81 0 1.501022973219767
+Vid81 vid81 0 dc 0 ac 1
+Einp81 inx81 cm81 vid81 0 0.5
+Einn81 iny81 cm81 vid81 0 -0.5
+Vr81 rctrl81 0 0
+Vc81 cctrl81 0 0
+Xcase81 inx81 iny81 cm81 vdd81 outp81 outn81 rctrl81 cctrl81 rc_fixed
+.options reltol=1e-9 vntol=1e-12 abstol=1e-15
+.control
+set noaskquit
+set numdgt=15
+set wr_singlescale
+alter Vr0 0
+alter Vc0 0
+op
+wrdata op_000.txt i(vsupply0) v(xcase0.att_n0) v(xcase0.att_n1) v(xcase0.att_n2) v(xcase0.att_p0) v(xcase0.att_p1) v(xcase0.att_p2) v(cctrl0) v(cm0) v(xcase0.inn) v(xcase0.inp) v(inx0) v(iny0) v(xcase0.nbias) v(outn0) v(outp0) v(xcase0.p_bias) v(xcase0.rc_ct) v(xcase0.rc_gate) v(xcase0.rc_mid) v(rctrl0) v(xcase0.s1) v(xcase0.s2) v(vdd0) i(vsupply81) v(xcase81.att_n0) v(xcase81.att_n1) v(xcase81.att_n2) v(xcase81.att_p0) v(xcase81.att_p1) v(xcase81.att_p2) v(cctrl81) v(cm81) v(xcase81.inn) v(xcase81.inp) v(inx81) v(iny81) v(xcase81.nbias) v(outn81) v(outp81) v(xcase81.p_bias) v(rctrl81) v(xcase81.s1) v(xcase81.s2) v(vdd81)
+ac dec 50 1meg 100g
+wrdata ac_000.txt v(outp0) v(outn0) v(vid0) v(outp81) v(outn81) v(vid81)
+alter Vr0 0
+alter Vc0 0.09000000000000001
+op
+wrdata op_001.txt i(vsupply0) v(xcase0.att_n0) v(xcase0.att_n1) v(xcase0.att_n2) v(xcase0.att_p0) v(xcase0.att_p1) v(xcase0.att_p2) v(cctrl0) v(cm0) v(xcase0.inn) v(xcase0.inp) v(inx0) v(iny0) v(xcase0.nbias) v(outn0) v(outp0) v(xcase0.p_bias) v(xcase0.rc_ct) v(xcase0.rc_gate) v(xcase0.rc_mid) v(rctrl0) v(xcase0.s1) v(xcase0.s2) v(vdd0) i(vsupply81) v(xcase81.att_n0) v(xcase81.att_n1) v(xcase81.att_n2) v(xcase81.att_p0) v(xcase81.att_p1) v(xcase81.att_p2) v(cctrl81) v(cm81) v(xcase81.inn) v(xcase81.inp) v(inx81) v(iny81) v(xcase81.nbias) v(outn81) v(outp81) v(xcase81.p_bias) v(rctrl81) v(xcase81.s1) v(xcase81.s2) v(vdd81)
+ac dec 50 1meg 100g
+wrdata ac_001.txt v(outp0) v(outn0) v(vid0) v(outp81) v(outn81) v(vid81)
+alter Vr0 0
+alter Vc0 0.18
+op
+wrdata op_002.txt i(vsupply0) v(xcase0.att_n0) v(xcase0.att_n1) v(xcase0.att_n2) v(xcase0.att_p0) v(xcase0.att_p1) v(xcase0.att_p2) v(cctrl0) v(cm0) v(xcase0.inn) v(xcase0.inp) v(inx0) v(iny0) v(xcase0.nbias) v(outn0) v(outp0) v(xcase0.p_bias) v(xcase0.rc_ct) v(xcase0.rc_gate) v(xcase0.rc_mid) v(rctrl0) v(xcase0.s1) v(xcase0.s2) v(vdd0) i(vsupply81) v(xcase81.att_n0) v(xcase81.att_n1) v(xcase81.att_n2) v(xcase81.att_p0) v(xcase81.att_p1) v(xcase81.att_p2) v(cctrl81) v(cm81) v(xcase81.inn) v(xcase81.inp) v(inx81) v(iny81) v(xcase81.nbias) v(outn81) v(outp81) v(xcase81.p_bias) v(rctrl81) v(xcase81.s1) v(xcase81.s2) v(vdd81)
+ac dec 50 1meg 100g
+wrdata ac_002.txt v(outp0) v(outn0) v(vid0) v(outp81) v(outn81) v(vid81)
+alter Vr0 0
+alter Vc0 0.27
+op
+wrdata op_003.txt i(vsupply0) v(xcase0.att_n0) v(xcase0.att_n1) v(xcase0.att_n2) v(xcase0.att_p0) v(xcase0.att_p1) v(xcase0.att_p2) v(cctrl0) v(cm0) v(xcase0.inn) v(xcase0.inp) v(inx0) v(iny0) v(xcase0.nbias) v(outn0) v(outp0) v(xcase0.p_bias) v(xcase0.rc_ct) v(xcase0.rc_gate) v(xcase0.rc_mid) v(rctrl0) v(xcase0.s1) v(xcase0.s2) v(vdd0) i(vsupply81) v(xcase81.att_n0) v(xcase81.att_n1) v(xcase81.att_n2) v(xcase81.att_p0) v(xcase81.att_p1) v(xcase81.att_p2) v(cctrl81) v(cm81) v(xcase81.inn) v(xcase81.inp) v(inx81) v(iny81) v(xcase81.nbias) v(outn81) v(outp81) v(xcase81.p_bias) v(rctrl81) v(xcase81.s1) v(xcase81.s2) v(vdd81)
+ac dec 50 1meg 100g
+wrdata ac_003.txt v(outp0) v(outn0) v(vid0) v(outp81) v(outn81) v(vid81)
+alter Vr0 0
+alter Vc0 0.36
+op
+wrdata op_004.txt i(vsupply0) v(xcase0.att_n0) v(xcase0.att_n1) v(xcase0.att_n2) v(xcase0.att_p0) v(xcase0.att_p1) v(xcase0.att_p2) v(cctrl0) v(cm0) v(xcase0.inn) v(xcase0.inp) v(inx0) v(iny0) v(xcase0.nbias) v(outn0) v(outp0) v(xcase0.p_bias) v(xcase0.rc_ct) v(xcase0.rc_gate) v(xcase0.rc_mid) v(rctrl0) v(xcase0.s1) v(xcase0.s2) v(vdd0) i(vsupply81) v(xcase81.att_n0) v(xcase81.att_n1) v(xcase81.att_n2) v(xcase81.att_p0) v(xcase81.att_p1) v(xcase81.att_p2) v(cctrl81) v(cm81) v(xcase81.inn) v(xcase81.inp) v(inx81) v(iny81) v(xcase81.nbias) v(outn81) v(outp81) v(xcase81.p_bias) v(rctrl81) v(xcase81.s1) v(xcase81.s2) v(vdd81)
+ac dec 50 1meg 100g
+wrdata ac_004.txt v(outp0) v(outn0) v(vid0) v(outp81) v(outn81) v(vid81)
+alter Vr0 0
+alter Vc0 0.54
+op
+wrdata op_005.txt i(vsupply0) v(xcase0.att_n0) v(xcase0.att_n1) v(xcase0.att_n2) v(xcase0.att_p0) v(xcase0.att_p1) v(xcase0.att_p2) v(cctrl0) v(cm0) v(xcase0.inn) v(xcase0.inp) v(inx0) v(iny0) v(xcase0.nbias) v(outn0) v(outp0) v(xcase0.p_bias) v(xcase0.rc_ct) v(xcase0.rc_gate) v(xcase0.rc_mid) v(rctrl0) v(xcase0.s1) v(xcase0.s2) v(vdd0) i(vsupply81) v(xcase81.att_n0) v(xcase81.att_n1) v(xcase81.att_n2) v(xcase81.att_p0) v(xcase81.att_p1) v(xcase81.att_p2) v(cctrl81) v(cm81) v(xcase81.inn) v(xcase81.inp) v(inx81) v(iny81) v(xcase81.nbias) v(outn81) v(outp81) v(xcase81.p_bias) v(rctrl81) v(xcase81.s1) v(xcase81.s2) v(vdd81)
+ac dec 50 1meg 100g
+wrdata ac_005.txt v(outp0) v(outn0) v(vid0) v(outp81) v(outn81) v(vid81)
+alter Vr0 0
+alter Vc0 0.7200000000000001
+op
+wrdata op_006.txt i(vsupply0) v(xcase0.att_n0) v(xcase0.att_n1) v(xcase0.att_n2) v(xcase0.att_p0) v(xcase0.att_p1) v(xcase0.att_p2) v(cctrl0) v(cm0) v(xcase0.inn) v(xcase0.inp) v(inx0) v(iny0) v(xcase0.nbias) v(outn0) v(outp0) v(xcase0.p_bias) v(xcase0.rc_ct) v(xcase0.rc_gate) v(xcase0.rc_mid) v(rctrl0) v(xcase0.s1) v(xcase0.s2) v(vdd0) i(vsupply81) v(xcase81.att_n0) v(xcase81.att_n1) v(xcase81.att_n2) v(xcase81.att_p0) v(xcase81.att_p1) v(xcase81.att_p2) v(cctrl81) v(cm81) v(xcase81.inn) v(xcase81.inp) v(inx81) v(iny81) v(xcase81.nbias) v(outn81) v(outp81) v(xcase81.p_bias) v(rctrl81) v(xcase81.s1) v(xcase81.s2) v(vdd81)
+ac dec 50 1meg 100g
+wrdata ac_006.txt v(outp0) v(outn0) v(vid0) v(outp81) v(outn81) v(vid81)
+alter Vr0 0
+alter Vc0 1.08
+op
+wrdata op_007.txt i(vsupply0) v(xcase0.att_n0) v(xcase0.att_n1) v(xcase0.att_n2) v(xcase0.att_p0) v(xcase0.att_p1) v(xcase0.att_p2) v(cctrl0) v(cm0) v(xcase0.inn) v(xcase0.inp) v(inx0) v(iny0) v(xcase0.nbias) v(outn0) v(outp0) v(xcase0.p_bias) v(xcase0.rc_ct) v(xcase0.rc_gate) v(xcase0.rc_mid) v(rctrl0) v(xcase0.s1) v(xcase0.s2) v(vdd0) i(vsupply81) v(xcase81.att_n0) v(xcase81.att_n1) v(xcase81.att_n2) v(xcase81.att_p0) v(xcase81.att_p1) v(xcase81.att_p2) v(cctrl81) v(cm81) v(xcase81.inn) v(xcase81.inp) v(inx81) v(iny81) v(xcase81.nbias) v(outn81) v(outp81) v(xcase81.p_bias) v(rctrl81) v(xcase81.s1) v(xcase81.s2) v(vdd81)
+ac dec 50 1meg 100g
+wrdata ac_007.txt v(outp0) v(outn0) v(vid0) v(outp81) v(outn81) v(vid81)
+alter Vr0 0
+alter Vc0 1.8
+op
+wrdata op_008.txt i(vsupply0) v(xcase0.att_n0) v(xcase0.att_n1) v(xcase0.att_n2) v(xcase0.att_p0) v(xcase0.att_p1) v(xcase0.att_p2) v(cctrl0) v(cm0) v(xcase0.inn) v(xcase0.inp) v(inx0) v(iny0) v(xcase0.nbias) v(outn0) v(outp0) v(xcase0.p_bias) v(xcase0.rc_ct) v(xcase0.rc_gate) v(xcase0.rc_mid) v(rctrl0) v(xcase0.s1) v(xcase0.s2) v(vdd0) i(vsupply81) v(xcase81.att_n0) v(xcase81.att_n1) v(xcase81.att_n2) v(xcase81.att_p0) v(xcase81.att_p1) v(xcase81.att_p2) v(cctrl81) v(cm81) v(xcase81.inn) v(xcase81.inp) v(inx81) v(iny81) v(xcase81.nbias) v(outn81) v(outp81) v(xcase81.p_bias) v(rctrl81) v(xcase81.s1) v(xcase81.s2) v(vdd81)
+ac dec 50 1meg 100g
+wrdata ac_008.txt v(outp0) v(outn0) v(vid0) v(outp81) v(outn81) v(vid81)
+alter Vr0 0.7200000000000001
+alter Vc0 0
+op
+wrdata op_009.txt i(vsupply0) v(xcase0.att_n0) v(xcase0.att_n1) v(xcase0.att_n2) v(xcase0.att_p0) v(xcase0.att_p1) v(xcase0.att_p2) v(cctrl0) v(cm0) v(xcase0.inn) v(xcase0.inp) v(inx0) v(iny0) v(xcase0.nbias) v(outn0) v(outp0) v(xcase0.p_bias) v(xcase0.rc_ct) v(xcase0.rc_gate) v(xcase0.rc_mid) v(rctrl0) v(xcase0.s1) v(xcase0.s2) v(vdd0) i(vsupply81) v(xcase81.att_n0) v(xcase81.att_n1) v(xcase81.att_n2) v(xcase81.att_p0) v(xcase81.att_p1) v(xcase81.att_p2) v(cctrl81) v(cm81) v(xcase81.inn) v(xcase81.inp) v(inx81) v(iny81) v(xcase81.nbias) v(outn81) v(outp81) v(xcase81.p_bias) v(rctrl81) v(xcase81.s1) v(xcase81.s2) v(vdd81)
+ac dec 50 1meg 100g
+wrdata ac_009.txt v(outp0) v(outn0) v(vid0) v(outp81) v(outn81) v(vid81)
+alter Vr0 0.7200000000000001
+alter Vc0 0.09000000000000001
+op
+wrdata op_010.txt i(vsupply0) v(xcase0.att_n0) v(xcase0.att_n1) v(xcase0.att_n2) v(xcase0.att_p0) v(xcase0.att_p1) v(xcase0.att_p2) v(cctrl0) v(cm0) v(xcase0.inn) v(xcase0.inp) v(inx0) v(iny0) v(xcase0.nbias) v(outn0) v(outp0) v(xcase0.p_bias) v(xcase0.rc_ct) v(xcase0.rc_gate) v(xcase0.rc_mid) v(rctrl0) v(xcase0.s1) v(xcase0.s2) v(vdd0) i(vsupply81) v(xcase81.att_n0) v(xcase81.att_n1) v(xcase81.att_n2) v(xcase81.att_p0) v(xcase81.att_p1) v(xcase81.att_p2) v(cctrl81) v(cm81) v(xcase81.inn) v(xcase81.inp) v(inx81) v(iny81) v(xcase81.nbias) v(outn81) v(outp81) v(xcase81.p_bias) v(rctrl81) v(xcase81.s1) v(xcase81.s2) v(vdd81)
+ac dec 50 1meg 100g
+wrdata ac_010.txt v(outp0) v(outn0) v(vid0) v(outp81) v(outn81) v(vid81)
+alter Vr0 0.7200000000000001
+alter Vc0 0.18
+op
+wrdata op_011.txt i(vsupply0) v(xcase0.att_n0) v(xcase0.att_n1) v(xcase0.att_n2) v(xcase0.att_p0) v(xcase0.att_p1) v(xcase0.att_p2) v(cctrl0) v(cm0) v(xcase0.inn) v(xcase0.inp) v(inx0) v(iny0) v(xcase0.nbias) v(outn0) v(outp0) v(xcase0.p_bias) v(xcase0.rc_ct) v(xcase0.rc_gate) v(xcase0.rc_mid) v(rctrl0) v(xcase0.s1) v(xcase0.s2) v(vdd0) i(vsupply81) v(xcase81.att_n0) v(xcase81.att_n1) v(xcase81.att_n2) v(xcase81.att_p0) v(xcase81.att_p1) v(xcase81.att_p2) v(cctrl81) v(cm81) v(xcase81.inn) v(xcase81.inp) v(inx81) v(iny81) v(xcase81.nbias) v(outn81) v(outp81) v(xcase81.p_bias) v(rctrl81) v(xcase81.s1) v(xcase81.s2) v(vdd81)
+ac dec 50 1meg 100g
+wrdata ac_011.txt v(outp0) v(outn0) v(vid0) v(outp81) v(outn81) v(vid81)
+alter Vr0 0.7200000000000001
+alter Vc0 0.27
+op
+wrdata op_012.txt i(vsupply0) v(xcase0.att_n0) v(xcase0.att_n1) v(xcase0.att_n2) v(xcase0.att_p0) v(xcase0.att_p1) v(xcase0.att_p2) v(cctrl0) v(cm0) v(xcase0.inn) v(xcase0.inp) v(inx0) v(iny0) v(xcase0.nbias) v(outn0) v(outp0) v(xcase0.p_bias) v(xcase0.rc_ct) v(xcase0.rc_gate) v(xcase0.rc_mid) v(rctrl0) v(xcase0.s1) v(xcase0.s2) v(vdd0) i(vsupply81) v(xcase81.att_n0) v(xcase81.att_n1) v(xcase81.att_n2) v(xcase81.att_p0) v(xcase81.att_p1) v(xcase81.att_p2) v(cctrl81) v(cm81) v(xcase81.inn) v(xcase81.inp) v(inx81) v(iny81) v(xcase81.nbias) v(outn81) v(outp81) v(xcase81.p_bias) v(rctrl81) v(xcase81.s1) v(xcase81.s2) v(vdd81)
+ac dec 50 1meg 100g
+wrdata ac_012.txt v(outp0) v(outn0) v(vid0) v(outp81) v(outn81) v(vid81)
+alter Vr0 0.7200000000000001
+alter Vc0 0.36
+op
+wrdata op_013.txt i(vsupply0) v(xcase0.att_n0) v(xcase0.att_n1) v(xcase0.att_n2) v(xcase0.att_p0) v(xcase0.att_p1) v(xcase0.att_p2) v(cctrl0) v(cm0) v(xcase0.inn) v(xcase0.inp) v(inx0) v(iny0) v(xcase0.nbias) v(outn0) v(outp0) v(xcase0.p_bias) v(xcase0.rc_ct) v(xcase0.rc_gate) v(xcase0.rc_mid) v(rctrl0) v(xcase0.s1) v(xcase0.s2) v(vdd0) i(vsupply81) v(xcase81.att_n0) v(xcase81.att_n1) v(xcase81.att_n2) v(xcase81.att_p0) v(xcase81.att_p1) v(xcase81.att_p2) v(cctrl81) v(cm81) v(xcase81.inn) v(xcase81.inp) v(inx81) v(iny81) v(xcase81.nbias) v(outn81) v(outp81) v(xcase81.p_bias) v(rctrl81) v(xcase81.s1) v(xcase81.s2) v(vdd81)
+ac dec 50 1meg 100g
+wrdata ac_013.txt v(outp0) v(outn0) v(vid0) v(outp81) v(outn81) v(vid81)
+alter Vr0 0.7200000000000001
+alter Vc0 0.54
+op
+wrdata op_014.txt i(vsupply0) v(xcase0.att_n0) v(xcase0.att_n1) v(xcase0.att_n2) v(xcase0.att_p0) v(xcase0.att_p1) v(xcase0.att_p2) v(cctrl0) v(cm0) v(xcase0.inn) v(xcase0.inp) v(inx0) v(iny0) v(xcase0.nbias) v(outn0) v(outp0) v(xcase0.p_bias) v(xcase0.rc_ct) v(xcase0.rc_gate) v(xcase0.rc_mid) v(rctrl0) v(xcase0.s1) v(xcase0.s2) v(vdd0) i(vsupply81) v(xcase81.att_n0) v(xcase81.att_n1) v(xcase81.att_n2) v(xcase81.att_p0) v(xcase81.att_p1) v(xcase81.att_p2) v(cctrl81) v(cm81) v(xcase81.inn) v(xcase81.inp) v(inx81) v(iny81) v(xcase81.nbias) v(outn81) v(outp81) v(xcase81.p_bias) v(rctrl81) v(xcase81.s1) v(xcase81.s2) v(vdd81)
+ac dec 50 1meg 100g
+wrdata ac_014.txt v(outp0) v(outn0) v(vid0) v(outp81) v(outn81) v(vid81)
+alter Vr0 0.7200000000000001
+alter Vc0 0.7200000000000001
+op
+wrdata op_015.txt i(vsupply0) v(xcase0.att_n0) v(xcase0.att_n1) v(xcase0.att_n2) v(xcase0.att_p0) v(xcase0.att_p1) v(xcase0.att_p2) v(cctrl0) v(cm0) v(xcase0.inn) v(xcase0.inp) v(inx0) v(iny0) v(xcase0.nbias) v(outn0) v(outp0) v(xcase0.p_bias) v(xcase0.rc_ct) v(xcase0.rc_gate) v(xcase0.rc_mid) v(rctrl0) v(xcase0.s1) v(xcase0.s2) v(vdd0) i(vsupply81) v(xcase81.att_n0) v(xcase81.att_n1) v(xcase81.att_n2) v(xcase81.att_p0) v(xcase81.att_p1) v(xcase81.att_p2) v(cctrl81) v(cm81) v(xcase81.inn) v(xcase81.inp) v(inx81) v(iny81) v(xcase81.nbias) v(outn81) v(outp81) v(xcase81.p_bias) v(rctrl81) v(xcase81.s1) v(xcase81.s2) v(vdd81)
+ac dec 50 1meg 100g
+wrdata ac_015.txt v(outp0) v(outn0) v(vid0) v(outp81) v(outn81) v(vid81)
+alter Vr0 0.7200000000000001
+alter Vc0 1.08
+op
+wrdata op_016.txt i(vsupply0) v(xcase0.att_n0) v(xcase0.att_n1) v(xcase0.att_n2) v(xcase0.att_p0) v(xcase0.att_p1) v(xcase0.att_p2) v(cctrl0) v(cm0) v(xcase0.inn) v(xcase0.inp) v(inx0) v(iny0) v(xcase0.nbias) v(outn0) v(outp0) v(xcase0.p_bias) v(xcase0.rc_ct) v(xcase0.rc_gate) v(xcase0.rc_mid) v(rctrl0) v(xcase0.s1) v(xcase0.s2) v(vdd0) i(vsupply81) v(xcase81.att_n0) v(xcase81.att_n1) v(xcase81.att_n2) v(xcase81.att_p0) v(xcase81.att_p1) v(xcase81.att_p2) v(cctrl81) v(cm81) v(xcase81.inn) v(xcase81.inp) v(inx81) v(iny81) v(xcase81.nbias) v(outn81) v(outp81) v(xcase81.p_bias) v(rctrl81) v(xcase81.s1) v(xcase81.s2) v(vdd81)
+ac dec 50 1meg 100g
+wrdata ac_016.txt v(outp0) v(outn0) v(vid0) v(outp81) v(outn81) v(vid81)
+alter Vr0 0.7200000000000001
+alter Vc0 1.8
+op
+wrdata op_017.txt i(vsupply0) v(xcase0.att_n0) v(xcase0.att_n1) v(xcase0.att_n2) v(xcase0.att_p0) v(xcase0.att_p1) v(xcase0.att_p2) v(cctrl0) v(cm0) v(xcase0.inn) v(xcase0.inp) v(inx0) v(iny0) v(xcase0.nbias) v(outn0) v(outp0) v(xcase0.p_bias) v(xcase0.rc_ct) v(xcase0.rc_gate) v(xcase0.rc_mid) v(rctrl0) v(xcase0.s1) v(xcase0.s2) v(vdd0) i(vsupply81) v(xcase81.att_n0) v(xcase81.att_n1) v(xcase81.att_n2) v(xcase81.att_p0) v(xcase81.att_p1) v(xcase81.att_p2) v(cctrl81) v(cm81) v(xcase81.inn) v(xcase81.inp) v(inx81) v(iny81) v(xcase81.nbias) v(outn81) v(outp81) v(xcase81.p_bias) v(rctrl81) v(xcase81.s1) v(xcase81.s2) v(vdd81)
+ac dec 50 1meg 100g
+wrdata ac_017.txt v(outp0) v(outn0) v(vid0) v(outp81) v(outn81) v(vid81)
+alter Vr0 0.8100000000000001
+alter Vc0 0
+op
+wrdata op_018.txt i(vsupply0) v(xcase0.att_n0) v(xcase0.att_n1) v(xcase0.att_n2) v(xcase0.att_p0) v(xcase0.att_p1) v(xcase0.att_p2) v(cctrl0) v(cm0) v(xcase0.inn) v(xcase0.inp) v(inx0) v(iny0) v(xcase0.nbias) v(outn0) v(outp0) v(xcase0.p_bias) v(xcase0.rc_ct) v(xcase0.rc_gate) v(xcase0.rc_mid) v(rctrl0) v(xcase0.s1) v(xcase0.s2) v(vdd0) i(vsupply81) v(xcase81.att_n0) v(xcase81.att_n1) v(xcase81.att_n2) v(xcase81.att_p0) v(xcase81.att_p1) v(xcase81.att_p2) v(cctrl81) v(cm81) v(xcase81.inn) v(xcase81.inp) v(inx81) v(iny81) v(xcase81.nbias) v(outn81) v(outp81) v(xcase81.p_bias) v(rctrl81) v(xcase81.s1) v(xcase81.s2) v(vdd81)
+ac dec 50 1meg 100g
+wrdata ac_018.txt v(outp0) v(outn0) v(vid0) v(outp81) v(outn81) v(vid81)
+alter Vr0 0.8100000000000001
+alter Vc0 0.09000000000000001
+op
+wrdata op_019.txt i(vsupply0) v(xcase0.att_n0) v(xcase0.att_n1) v(xcase0.att_n2) v(xcase0.att_p0) v(xcase0.att_p1) v(xcase0.att_p2) v(cctrl0) v(cm0) v(xcase0.inn) v(xcase0.inp) v(inx0) v(iny0) v(xcase0.nbias) v(outn0) v(outp0) v(xcase0.p_bias) v(xcase0.rc_ct) v(xcase0.rc_gate) v(xcase0.rc_mid) v(rctrl0) v(xcase0.s1) v(xcase0.s2) v(vdd0) i(vsupply81) v(xcase81.att_n0) v(xcase81.att_n1) v(xcase81.att_n2) v(xcase81.att_p0) v(xcase81.att_p1) v(xcase81.att_p2) v(cctrl81) v(cm81) v(xcase81.inn) v(xcase81.inp) v(inx81) v(iny81) v(xcase81.nbias) v(outn81) v(outp81) v(xcase81.p_bias) v(rctrl81) v(xcase81.s1) v(xcase81.s2) v(vdd81)
+ac dec 50 1meg 100g
+wrdata ac_019.txt v(outp0) v(outn0) v(vid0) v(outp81) v(outn81) v(vid81)
+alter Vr0 0.8100000000000001
+alter Vc0 0.18
+op
+wrdata op_020.txt i(vsupply0) v(xcase0.att_n0) v(xcase0.att_n1) v(xcase0.att_n2) v(xcase0.att_p0) v(xcase0.att_p1) v(xcase0.att_p2) v(cctrl0) v(cm0) v(xcase0.inn) v(xcase0.inp) v(inx0) v(iny0) v(xcase0.nbias) v(outn0) v(outp0) v(xcase0.p_bias) v(xcase0.rc_ct) v(xcase0.rc_gate) v(xcase0.rc_mid) v(rctrl0) v(xcase0.s1) v(xcase0.s2) v(vdd0) i(vsupply81) v(xcase81.att_n0) v(xcase81.att_n1) v(xcase81.att_n2) v(xcase81.att_p0) v(xcase81.att_p1) v(xcase81.att_p2) v(cctrl81) v(cm81) v(xcase81.inn) v(xcase81.inp) v(inx81) v(iny81) v(xcase81.nbias) v(outn81) v(outp81) v(xcase81.p_bias) v(rctrl81) v(xcase81.s1) v(xcase81.s2) v(vdd81)
+ac dec 50 1meg 100g
+wrdata ac_020.txt v(outp0) v(outn0) v(vid0) v(outp81) v(outn81) v(vid81)
+alter Vr0 0.8100000000000001
+alter Vc0 0.27
+op
+wrdata op_021.txt i(vsupply0) v(xcase0.att_n0) v(xcase0.att_n1) v(xcase0.att_n2) v(xcase0.att_p0) v(xcase0.att_p1) v(xcase0.att_p2) v(cctrl0) v(cm0) v(xcase0.inn) v(xcase0.inp) v(inx0) v(iny0) v(xcase0.nbias) v(outn0) v(outp0) v(xcase0.p_bias) v(xcase0.rc_ct) v(xcase0.rc_gate) v(xcase0.rc_mid) v(rctrl0) v(xcase0.s1) v(xcase0.s2) v(vdd0) i(vsupply81) v(xcase81.att_n0) v(xcase81.att_n1) v(xcase81.att_n2) v(xcase81.att_p0) v(xcase81.att_p1) v(xcase81.att_p2) v(cctrl81) v(cm81) v(xcase81.inn) v(xcase81.inp) v(inx81) v(iny81) v(xcase81.nbias) v(outn81) v(outp81) v(xcase81.p_bias) v(rctrl81) v(xcase81.s1) v(xcase81.s2) v(vdd81)
+ac dec 50 1meg 100g
+wrdata ac_021.txt v(outp0) v(outn0) v(vid0) v(outp81) v(outn81) v(vid81)
+alter Vr0 0.8100000000000001
+alter Vc0 0.36
+op
+wrdata op_022.txt i(vsupply0) v(xcase0.att_n0) v(xcase0.att_n1) v(xcase0.att_n2) v(xcase0.att_p0) v(xcase0.att_p1) v(xcase0.att_p2) v(cctrl0) v(cm0) v(xcase0.inn) v(xcase0.inp) v(inx0) v(iny0) v(xcase0.nbias) v(outn0) v(outp0) v(xcase0.p_bias) v(xcase0.rc_ct) v(xcase0.rc_gate) v(xcase0.rc_mid) v(rctrl0) v(xcase0.s1) v(xcase0.s2) v(vdd0) i(vsupply81) v(xcase81.att_n0) v(xcase81.att_n1) v(xcase81.att_n2) v(xcase81.att_p0) v(xcase81.att_p1) v(xcase81.att_p2) v(cctrl81) v(cm81) v(xcase81.inn) v(xcase81.inp) v(inx81) v(iny81) v(xcase81.nbias) v(outn81) v(outp81) v(xcase81.p_bias) v(rctrl81) v(xcase81.s1) v(xcase81.s2) v(vdd81)
+ac dec 50 1meg 100g
+wrdata ac_022.txt v(outp0) v(outn0) v(vid0) v(outp81) v(outn81) v(vid81)
+alter Vr0 0.8100000000000001
+alter Vc0 0.54
+op
+wrdata op_023.txt i(vsupply0) v(xcase0.att_n0) v(xcase0.att_n1) v(xcase0.att_n2) v(xcase0.att_p0) v(xcase0.att_p1) v(xcase0.att_p2) v(cctrl0) v(cm0) v(xcase0.inn) v(xcase0.inp) v(inx0) v(iny0) v(xcase0.nbias) v(outn0) v(outp0) v(xcase0.p_bias) v(xcase0.rc_ct) v(xcase0.rc_gate) v(xcase0.rc_mid) v(rctrl0) v(xcase0.s1) v(xcase0.s2) v(vdd0) i(vsupply81) v(xcase81.att_n0) v(xcase81.att_n1) v(xcase81.att_n2) v(xcase81.att_p0) v(xcase81.att_p1) v(xcase81.att_p2) v(cctrl81) v(cm81) v(xcase81.inn) v(xcase81.inp) v(inx81) v(iny81) v(xcase81.nbias) v(outn81) v(outp81) v(xcase81.p_bias) v(rctrl81) v(xcase81.s1) v(xcase81.s2) v(vdd81)
+ac dec 50 1meg 100g
+wrdata ac_023.txt v(outp0) v(outn0) v(vid0) v(outp81) v(outn81) v(vid81)
+alter Vr0 0.8100000000000001
+alter Vc0 0.7200000000000001
+op
+wrdata op_024.txt i(vsupply0) v(xcase0.att_n0) v(xcase0.att_n1) v(xcase0.att_n2) v(xcase0.att_p0) v(xcase0.att_p1) v(xcase0.att_p2) v(cctrl0) v(cm0) v(xcase0.inn) v(xcase0.inp) v(inx0) v(iny0) v(xcase0.nbias) v(outn0) v(outp0) v(xcase0.p_bias) v(xcase0.rc_ct) v(xcase0.rc_gate) v(xcase0.rc_mid) v(rctrl0) v(xcase0.s1) v(xcase0.s2) v(vdd0) i(vsupply81) v(xcase81.att_n0) v(xcase81.att_n1) v(xcase81.att_n2) v(xcase81.att_p0) v(xcase81.att_p1) v(xcase81.att_p2) v(cctrl81) v(cm81) v(xcase81.inn) v(xcase81.inp) v(inx81) v(iny81) v(xcase81.nbias) v(outn81) v(outp81) v(xcase81.p_bias) v(rctrl81) v(xcase81.s1) v(xcase81.s2) v(vdd81)
+ac dec 50 1meg 100g
+wrdata ac_024.txt v(outp0) v(outn0) v(vid0) v(outp81) v(outn81) v(vid81)
+alter Vr0 0.8100000000000001
+alter Vc0 1.08
+op
+wrdata op_025.txt i(vsupply0) v(xcase0.att_n0) v(xcase0.att_n1) v(xcase0.att_n2) v(xcase0.att_p0) v(xcase0.att_p1) v(xcase0.att_p2) v(cctrl0) v(cm0) v(xcase0.inn) v(xcase0.inp) v(inx0) v(iny0) v(xcase0.nbias) v(outn0) v(outp0) v(xcase0.p_bias) v(xcase0.rc_ct) v(xcase0.rc_gate) v(xcase0.rc_mid) v(rctrl0) v(xcase0.s1) v(xcase0.s2) v(vdd0) i(vsupply81) v(xcase81.att_n0) v(xcase81.att_n1) v(xcase81.att_n2) v(xcase81.att_p0) v(xcase81.att_p1) v(xcase81.att_p2) v(cctrl81) v(cm81) v(xcase81.inn) v(xcase81.inp) v(inx81) v(iny81) v(xcase81.nbias) v(outn81) v(outp81) v(xcase81.p_bias) v(rctrl81) v(xcase81.s1) v(xcase81.s2) v(vdd81)
+ac dec 50 1meg 100g
+wrdata ac_025.txt v(outp0) v(outn0) v(vid0) v(outp81) v(outn81) v(vid81)
+alter Vr0 0.8100000000000001
+alter Vc0 1.8
+op
+wrdata op_026.txt i(vsupply0) v(xcase0.att_n0) v(xcase0.att_n1) v(xcase0.att_n2) v(xcase0.att_p0) v(xcase0.att_p1) v(xcase0.att_p2) v(cctrl0) v(cm0) v(xcase0.inn) v(xcase0.inp) v(inx0) v(iny0) v(xcase0.nbias) v(outn0) v(outp0) v(xcase0.p_bias) v(xcase0.rc_ct) v(xcase0.rc_gate) v(xcase0.rc_mid) v(rctrl0) v(xcase0.s1) v(xcase0.s2) v(vdd0) i(vsupply81) v(xcase81.att_n0) v(xcase81.att_n1) v(xcase81.att_n2) v(xcase81.att_p0) v(xcase81.att_p1) v(xcase81.att_p2) v(cctrl81) v(cm81) v(xcase81.inn) v(xcase81.inp) v(inx81) v(iny81) v(xcase81.nbias) v(outn81) v(outp81) v(xcase81.p_bias) v(rctrl81) v(xcase81.s1) v(xcase81.s2) v(vdd81)
+ac dec 50 1meg 100g
+wrdata ac_026.txt v(outp0) v(outn0) v(vid0) v(outp81) v(outn81) v(vid81)
+alter Vr0 0.9
+alter Vc0 0
+op
+wrdata op_027.txt i(vsupply0) v(xcase0.att_n0) v(xcase0.att_n1) v(xcase0.att_n2) v(xcase0.att_p0) v(xcase0.att_p1) v(xcase0.att_p2) v(cctrl0) v(cm0) v(xcase0.inn) v(xcase0.inp) v(inx0) v(iny0) v(xcase0.nbias) v(outn0) v(outp0) v(xcase0.p_bias) v(xcase0.rc_ct) v(xcase0.rc_gate) v(xcase0.rc_mid) v(rctrl0) v(xcase0.s1) v(xcase0.s2) v(vdd0) i(vsupply81) v(xcase81.att_n0) v(xcase81.att_n1) v(xcase81.att_n2) v(xcase81.att_p0) v(xcase81.att_p1) v(xcase81.att_p2) v(cctrl81) v(cm81) v(xcase81.inn) v(xcase81.inp) v(inx81) v(iny81) v(xcase81.nbias) v(outn81) v(outp81) v(xcase81.p_bias) v(rctrl81) v(xcase81.s1) v(xcase81.s2) v(vdd81)
+ac dec 50 1meg 100g
+wrdata ac_027.txt v(outp0) v(outn0) v(vid0) v(outp81) v(outn81) v(vid81)
+alter Vr0 0.9
+alter Vc0 0.09000000000000001
+op
+wrdata op_028.txt i(vsupply0) v(xcase0.att_n0) v(xcase0.att_n1) v(xcase0.att_n2) v(xcase0.att_p0) v(xcase0.att_p1) v(xcase0.att_p2) v(cctrl0) v(cm0) v(xcase0.inn) v(xcase0.inp) v(inx0) v(iny0) v(xcase0.nbias) v(outn0) v(outp0) v(xcase0.p_bias) v(xcase0.rc_ct) v(xcase0.rc_gate) v(xcase0.rc_mid) v(rctrl0) v(xcase0.s1) v(xcase0.s2) v(vdd0) i(vsupply81) v(xcase81.att_n0) v(xcase81.att_n1) v(xcase81.att_n2) v(xcase81.att_p0) v(xcase81.att_p1) v(xcase81.att_p2) v(cctrl81) v(cm81) v(xcase81.inn) v(xcase81.inp) v(inx81) v(iny81) v(xcase81.nbias) v(outn81) v(outp81) v(xcase81.p_bias) v(rctrl81) v(xcase81.s1) v(xcase81.s2) v(vdd81)
+ac dec 50 1meg 100g
+wrdata ac_028.txt v(outp0) v(outn0) v(vid0) v(outp81) v(outn81) v(vid81)
+alter Vr0 0.9
+alter Vc0 0.18
+op
+wrdata op_029.txt i(vsupply0) v(xcase0.att_n0) v(xcase0.att_n1) v(xcase0.att_n2) v(xcase0.att_p0) v(xcase0.att_p1) v(xcase0.att_p2) v(cctrl0) v(cm0) v(xcase0.inn) v(xcase0.inp) v(inx0) v(iny0) v(xcase0.nbias) v(outn0) v(outp0) v(xcase0.p_bias) v(xcase0.rc_ct) v(xcase0.rc_gate) v(xcase0.rc_mid) v(rctrl0) v(xcase0.s1) v(xcase0.s2) v(vdd0) i(vsupply81) v(xcase81.att_n0) v(xcase81.att_n1) v(xcase81.att_n2) v(xcase81.att_p0) v(xcase81.att_p1) v(xcase81.att_p2) v(cctrl81) v(cm81) v(xcase81.inn) v(xcase81.inp) v(inx81) v(iny81) v(xcase81.nbias) v(outn81) v(outp81) v(xcase81.p_bias) v(rctrl81) v(xcase81.s1) v(xcase81.s2) v(vdd81)
+ac dec 50 1meg 100g
+wrdata ac_029.txt v(outp0) v(outn0) v(vid0) v(outp81) v(outn81) v(vid81)
+alter Vr0 0.9
+alter Vc0 0.27
+op
+wrdata op_030.txt i(vsupply0) v(xcase0.att_n0) v(xcase0.att_n1) v(xcase0.att_n2) v(xcase0.att_p0) v(xcase0.att_p1) v(xcase0.att_p2) v(cctrl0) v(cm0) v(xcase0.inn) v(xcase0.inp) v(inx0) v(iny0) v(xcase0.nbias) v(outn0) v(outp0) v(xcase0.p_bias) v(xcase0.rc_ct) v(xcase0.rc_gate) v(xcase0.rc_mid) v(rctrl0) v(xcase0.s1) v(xcase0.s2) v(vdd0) i(vsupply81) v(xcase81.att_n0) v(xcase81.att_n1) v(xcase81.att_n2) v(xcase81.att_p0) v(xcase81.att_p1) v(xcase81.att_p2) v(cctrl81) v(cm81) v(xcase81.inn) v(xcase81.inp) v(inx81) v(iny81) v(xcase81.nbias) v(outn81) v(outp81) v(xcase81.p_bias) v(rctrl81) v(xcase81.s1) v(xcase81.s2) v(vdd81)
+ac dec 50 1meg 100g
+wrdata ac_030.txt v(outp0) v(outn0) v(vid0) v(outp81) v(outn81) v(vid81)
+alter Vr0 0.9
+alter Vc0 0.36
+op
+wrdata op_031.txt i(vsupply0) v(xcase0.att_n0) v(xcase0.att_n1) v(xcase0.att_n2) v(xcase0.att_p0) v(xcase0.att_p1) v(xcase0.att_p2) v(cctrl0) v(cm0) v(xcase0.inn) v(xcase0.inp) v(inx0) v(iny0) v(xcase0.nbias) v(outn0) v(outp0) v(xcase0.p_bias) v(xcase0.rc_ct) v(xcase0.rc_gate) v(xcase0.rc_mid) v(rctrl0) v(xcase0.s1) v(xcase0.s2) v(vdd0) i(vsupply81) v(xcase81.att_n0) v(xcase81.att_n1) v(xcase81.att_n2) v(xcase81.att_p0) v(xcase81.att_p1) v(xcase81.att_p2) v(cctrl81) v(cm81) v(xcase81.inn) v(xcase81.inp) v(inx81) v(iny81) v(xcase81.nbias) v(outn81) v(outp81) v(xcase81.p_bias) v(rctrl81) v(xcase81.s1) v(xcase81.s2) v(vdd81)
+ac dec 50 1meg 100g
+wrdata ac_031.txt v(outp0) v(outn0) v(vid0) v(outp81) v(outn81) v(vid81)
+alter Vr0 0.9
+alter Vc0 0.54
+op
+wrdata op_032.txt i(vsupply0) v(xcase0.att_n0) v(xcase0.att_n1) v(xcase0.att_n2) v(xcase0.att_p0) v(xcase0.att_p1) v(xcase0.att_p2) v(cctrl0) v(cm0) v(xcase0.inn) v(xcase0.inp) v(inx0) v(iny0) v(xcase0.nbias) v(outn0) v(outp0) v(xcase0.p_bias) v(xcase0.rc_ct) v(xcase0.rc_gate) v(xcase0.rc_mid) v(rctrl0) v(xcase0.s1) v(xcase0.s2) v(vdd0) i(vsupply81) v(xcase81.att_n0) v(xcase81.att_n1) v(xcase81.att_n2) v(xcase81.att_p0) v(xcase81.att_p1) v(xcase81.att_p2) v(cctrl81) v(cm81) v(xcase81.inn) v(xcase81.inp) v(inx81) v(iny81) v(xcase81.nbias) v(outn81) v(outp81) v(xcase81.p_bias) v(rctrl81) v(xcase81.s1) v(xcase81.s2) v(vdd81)
+ac dec 50 1meg 100g
+wrdata ac_032.txt v(outp0) v(outn0) v(vid0) v(outp81) v(outn81) v(vid81)
+alter Vr0 0.9
+alter Vc0 0.7200000000000001
+op
+wrdata op_033.txt i(vsupply0) v(xcase0.att_n0) v(xcase0.att_n1) v(xcase0.att_n2) v(xcase0.att_p0) v(xcase0.att_p1) v(xcase0.att_p2) v(cctrl0) v(cm0) v(xcase0.inn) v(xcase0.inp) v(inx0) v(iny0) v(xcase0.nbias) v(outn0) v(outp0) v(xcase0.p_bias) v(xcase0.rc_ct) v(xcase0.rc_gate) v(xcase0.rc_mid) v(rctrl0) v(xcase0.s1) v(xcase0.s2) v(vdd0) i(vsupply81) v(xcase81.att_n0) v(xcase81.att_n1) v(xcase81.att_n2) v(xcase81.att_p0) v(xcase81.att_p1) v(xcase81.att_p2) v(cctrl81) v(cm81) v(xcase81.inn) v(xcase81.inp) v(inx81) v(iny81) v(xcase81.nbias) v(outn81) v(outp81) v(xcase81.p_bias) v(rctrl81) v(xcase81.s1) v(xcase81.s2) v(vdd81)
+ac dec 50 1meg 100g
+wrdata ac_033.txt v(outp0) v(outn0) v(vid0) v(outp81) v(outn81) v(vid81)
+alter Vr0 0.9
+alter Vc0 1.08
+op
+wrdata op_034.txt i(vsupply0) v(xcase0.att_n0) v(xcase0.att_n1) v(xcase0.att_n2) v(xcase0.att_p0) v(xcase0.att_p1) v(xcase0.att_p2) v(cctrl0) v(cm0) v(xcase0.inn) v(xcase0.inp) v(inx0) v(iny0) v(xcase0.nbias) v(outn0) v(outp0) v(xcase0.p_bias) v(xcase0.rc_ct) v(xcase0.rc_gate) v(xcase0.rc_mid) v(rctrl0) v(xcase0.s1) v(xcase0.s2) v(vdd0) i(vsupply81) v(xcase81.att_n0) v(xcase81.att_n1) v(xcase81.att_n2) v(xcase81.att_p0) v(xcase81.att_p1) v(xcase81.att_p2) v(cctrl81) v(cm81) v(xcase81.inn) v(xcase81.inp) v(inx81) v(iny81) v(xcase81.nbias) v(outn81) v(outp81) v(xcase81.p_bias) v(rctrl81) v(xcase81.s1) v(xcase81.s2) v(vdd81)
+ac dec 50 1meg 100g
+wrdata ac_034.txt v(outp0) v(outn0) v(vid0) v(outp81) v(outn81) v(vid81)
+alter Vr0 0.9
+alter Vc0 1.8
+op
+wrdata op_035.txt i(vsupply0) v(xcase0.att_n0) v(xcase0.att_n1) v(xcase0.att_n2) v(xcase0.att_p0) v(xcase0.att_p1) v(xcase0.att_p2) v(cctrl0) v(cm0) v(xcase0.inn) v(xcase0.inp) v(inx0) v(iny0) v(xcase0.nbias) v(outn0) v(outp0) v(xcase0.p_bias) v(xcase0.rc_ct) v(xcase0.rc_gate) v(xcase0.rc_mid) v(rctrl0) v(xcase0.s1) v(xcase0.s2) v(vdd0) i(vsupply81) v(xcase81.att_n0) v(xcase81.att_n1) v(xcase81.att_n2) v(xcase81.att_p0) v(xcase81.att_p1) v(xcase81.att_p2) v(cctrl81) v(cm81) v(xcase81.inn) v(xcase81.inp) v(inx81) v(iny81) v(xcase81.nbias) v(outn81) v(outp81) v(xcase81.p_bias) v(rctrl81) v(xcase81.s1) v(xcase81.s2) v(vdd81)
+ac dec 50 1meg 100g
+wrdata ac_035.txt v(outp0) v(outn0) v(vid0) v(outp81) v(outn81) v(vid81)
+alter Vr0 0.9900000000000001
+alter Vc0 0
+op
+wrdata op_036.txt i(vsupply0) v(xcase0.att_n0) v(xcase0.att_n1) v(xcase0.att_n2) v(xcase0.att_p0) v(xcase0.att_p1) v(xcase0.att_p2) v(cctrl0) v(cm0) v(xcase0.inn) v(xcase0.inp) v(inx0) v(iny0) v(xcase0.nbias) v(outn0) v(outp0) v(xcase0.p_bias) v(xcase0.rc_ct) v(xcase0.rc_gate) v(xcase0.rc_mid) v(rctrl0) v(xcase0.s1) v(xcase0.s2) v(vdd0) i(vsupply81) v(xcase81.att_n0) v(xcase81.att_n1) v(xcase81.att_n2) v(xcase81.att_p0) v(xcase81.att_p1) v(xcase81.att_p2) v(cctrl81) v(cm81) v(xcase81.inn) v(xcase81.inp) v(inx81) v(iny81) v(xcase81.nbias) v(outn81) v(outp81) v(xcase81.p_bias) v(rctrl81) v(xcase81.s1) v(xcase81.s2) v(vdd81)
+ac dec 50 1meg 100g
+wrdata ac_036.txt v(outp0) v(outn0) v(vid0) v(outp81) v(outn81) v(vid81)
+alter Vr0 0.9900000000000001
+alter Vc0 0.09000000000000001
+op
+wrdata op_037.txt i(vsupply0) v(xcase0.att_n0) v(xcase0.att_n1) v(xcase0.att_n2) v(xcase0.att_p0) v(xcase0.att_p1) v(xcase0.att_p2) v(cctrl0) v(cm0) v(xcase0.inn) v(xcase0.inp) v(inx0) v(iny0) v(xcase0.nbias) v(outn0) v(outp0) v(xcase0.p_bias) v(xcase0.rc_ct) v(xcase0.rc_gate) v(xcase0.rc_mid) v(rctrl0) v(xcase0.s1) v(xcase0.s2) v(vdd0) i(vsupply81) v(xcase81.att_n0) v(xcase81.att_n1) v(xcase81.att_n2) v(xcase81.att_p0) v(xcase81.att_p1) v(xcase81.att_p2) v(cctrl81) v(cm81) v(xcase81.inn) v(xcase81.inp) v(inx81) v(iny81) v(xcase81.nbias) v(outn81) v(outp81) v(xcase81.p_bias) v(rctrl81) v(xcase81.s1) v(xcase81.s2) v(vdd81)
+ac dec 50 1meg 100g
+wrdata ac_037.txt v(outp0) v(outn0) v(vid0) v(outp81) v(outn81) v(vid81)
+alter Vr0 0.9900000000000001
+alter Vc0 0.18
+op
+wrdata op_038.txt i(vsupply0) v(xcase0.att_n0) v(xcase0.att_n1) v(xcase0.att_n2) v(xcase0.att_p0) v(xcase0.att_p1) v(xcase0.att_p2) v(cctrl0) v(cm0) v(xcase0.inn) v(xcase0.inp) v(inx0) v(iny0) v(xcase0.nbias) v(outn0) v(outp0) v(xcase0.p_bias) v(xcase0.rc_ct) v(xcase0.rc_gate) v(xcase0.rc_mid) v(rctrl0) v(xcase0.s1) v(xcase0.s2) v(vdd0) i(vsupply81) v(xcase81.att_n0) v(xcase81.att_n1) v(xcase81.att_n2) v(xcase81.att_p0) v(xcase81.att_p1) v(xcase81.att_p2) v(cctrl81) v(cm81) v(xcase81.inn) v(xcase81.inp) v(inx81) v(iny81) v(xcase81.nbias) v(outn81) v(outp81) v(xcase81.p_bias) v(rctrl81) v(xcase81.s1) v(xcase81.s2) v(vdd81)
+ac dec 50 1meg 100g
+wrdata ac_038.txt v(outp0) v(outn0) v(vid0) v(outp81) v(outn81) v(vid81)
+alter Vr0 0.9900000000000001
+alter Vc0 0.27
+op
+wrdata op_039.txt i(vsupply0) v(xcase0.att_n0) v(xcase0.att_n1) v(xcase0.att_n2) v(xcase0.att_p0) v(xcase0.att_p1) v(xcase0.att_p2) v(cctrl0) v(cm0) v(xcase0.inn) v(xcase0.inp) v(inx0) v(iny0) v(xcase0.nbias) v(outn0) v(outp0) v(xcase0.p_bias) v(xcase0.rc_ct) v(xcase0.rc_gate) v(xcase0.rc_mid) v(rctrl0) v(xcase0.s1) v(xcase0.s2) v(vdd0) i(vsupply81) v(xcase81.att_n0) v(xcase81.att_n1) v(xcase81.att_n2) v(xcase81.att_p0) v(xcase81.att_p1) v(xcase81.att_p2) v(cctrl81) v(cm81) v(xcase81.inn) v(xcase81.inp) v(inx81) v(iny81) v(xcase81.nbias) v(outn81) v(outp81) v(xcase81.p_bias) v(rctrl81) v(xcase81.s1) v(xcase81.s2) v(vdd81)
+ac dec 50 1meg 100g
+wrdata ac_039.txt v(outp0) v(outn0) v(vid0) v(outp81) v(outn81) v(vid81)
+alter Vr0 0.9900000000000001
+alter Vc0 0.36
+op
+wrdata op_040.txt i(vsupply0) v(xcase0.att_n0) v(xcase0.att_n1) v(xcase0.att_n2) v(xcase0.att_p0) v(xcase0.att_p1) v(xcase0.att_p2) v(cctrl0) v(cm0) v(xcase0.inn) v(xcase0.inp) v(inx0) v(iny0) v(xcase0.nbias) v(outn0) v(outp0) v(xcase0.p_bias) v(xcase0.rc_ct) v(xcase0.rc_gate) v(xcase0.rc_mid) v(rctrl0) v(xcase0.s1) v(xcase0.s2) v(vdd0) i(vsupply81) v(xcase81.att_n0) v(xcase81.att_n1) v(xcase81.att_n2) v(xcase81.att_p0) v(xcase81.att_p1) v(xcase81.att_p2) v(cctrl81) v(cm81) v(xcase81.inn) v(xcase81.inp) v(inx81) v(iny81) v(xcase81.nbias) v(outn81) v(outp81) v(xcase81.p_bias) v(rctrl81) v(xcase81.s1) v(xcase81.s2) v(vdd81)
+ac dec 50 1meg 100g
+wrdata ac_040.txt v(outp0) v(outn0) v(vid0) v(outp81) v(outn81) v(vid81)
+alter Vr0 0.9900000000000001
+alter Vc0 0.54
+op
+wrdata op_041.txt i(vsupply0) v(xcase0.att_n0) v(xcase0.att_n1) v(xcase0.att_n2) v(xcase0.att_p0) v(xcase0.att_p1) v(xcase0.att_p2) v(cctrl0) v(cm0) v(xcase0.inn) v(xcase0.inp) v(inx0) v(iny0) v(xcase0.nbias) v(outn0) v(outp0) v(xcase0.p_bias) v(xcase0.rc_ct) v(xcase0.rc_gate) v(xcase0.rc_mid) v(rctrl0) v(xcase0.s1) v(xcase0.s2) v(vdd0) i(vsupply81) v(xcase81.att_n0) v(xcase81.att_n1) v(xcase81.att_n2) v(xcase81.att_p0) v(xcase81.att_p1) v(xcase81.att_p2) v(cctrl81) v(cm81) v(xcase81.inn) v(xcase81.inp) v(inx81) v(iny81) v(xcase81.nbias) v(outn81) v(outp81) v(xcase81.p_bias) v(rctrl81) v(xcase81.s1) v(xcase81.s2) v(vdd81)
+ac dec 50 1meg 100g
+wrdata ac_041.txt v(outp0) v(outn0) v(vid0) v(outp81) v(outn81) v(vid81)
+alter Vr0 0.9900000000000001
+alter Vc0 0.7200000000000001
+op
+wrdata op_042.txt i(vsupply0) v(xcase0.att_n0) v(xcase0.att_n1) v(xcase0.att_n2) v(xcase0.att_p0) v(xcase0.att_p1) v(xcase0.att_p2) v(cctrl0) v(cm0) v(xcase0.inn) v(xcase0.inp) v(inx0) v(iny0) v(xcase0.nbias) v(outn0) v(outp0) v(xcase0.p_bias) v(xcase0.rc_ct) v(xcase0.rc_gate) v(xcase0.rc_mid) v(rctrl0) v(xcase0.s1) v(xcase0.s2) v(vdd0) i(vsupply81) v(xcase81.att_n0) v(xcase81.att_n1) v(xcase81.att_n2) v(xcase81.att_p0) v(xcase81.att_p1) v(xcase81.att_p2) v(cctrl81) v(cm81) v(xcase81.inn) v(xcase81.inp) v(inx81) v(iny81) v(xcase81.nbias) v(outn81) v(outp81) v(xcase81.p_bias) v(rctrl81) v(xcase81.s1) v(xcase81.s2) v(vdd81)
+ac dec 50 1meg 100g
+wrdata ac_042.txt v(outp0) v(outn0) v(vid0) v(outp81) v(outn81) v(vid81)
+alter Vr0 0.9900000000000001
+alter Vc0 1.08
+op
+wrdata op_043.txt i(vsupply0) v(xcase0.att_n0) v(xcase0.att_n1) v(xcase0.att_n2) v(xcase0.att_p0) v(xcase0.att_p1) v(xcase0.att_p2) v(cctrl0) v(cm0) v(xcase0.inn) v(xcase0.inp) v(inx0) v(iny0) v(xcase0.nbias) v(outn0) v(outp0) v(xcase0.p_bias) v(xcase0.rc_ct) v(xcase0.rc_gate) v(xcase0.rc_mid) v(rctrl0) v(xcase0.s1) v(xcase0.s2) v(vdd0) i(vsupply81) v(xcase81.att_n0) v(xcase81.att_n1) v(xcase81.att_n2) v(xcase81.att_p0) v(xcase81.att_p1) v(xcase81.att_p2) v(cctrl81) v(cm81) v(xcase81.inn) v(xcase81.inp) v(inx81) v(iny81) v(xcase81.nbias) v(outn81) v(outp81) v(xcase81.p_bias) v(rctrl81) v(xcase81.s1) v(xcase81.s2) v(vdd81)
+ac dec 50 1meg 100g
+wrdata ac_043.txt v(outp0) v(outn0) v(vid0) v(outp81) v(outn81) v(vid81)
+alter Vr0 0.9900000000000001
+alter Vc0 1.8
+op
+wrdata op_044.txt i(vsupply0) v(xcase0.att_n0) v(xcase0.att_n1) v(xcase0.att_n2) v(xcase0.att_p0) v(xcase0.att_p1) v(xcase0.att_p2) v(cctrl0) v(cm0) v(xcase0.inn) v(xcase0.inp) v(inx0) v(iny0) v(xcase0.nbias) v(outn0) v(outp0) v(xcase0.p_bias) v(xcase0.rc_ct) v(xcase0.rc_gate) v(xcase0.rc_mid) v(rctrl0) v(xcase0.s1) v(xcase0.s2) v(vdd0) i(vsupply81) v(xcase81.att_n0) v(xcase81.att_n1) v(xcase81.att_n2) v(xcase81.att_p0) v(xcase81.att_p1) v(xcase81.att_p2) v(cctrl81) v(cm81) v(xcase81.inn) v(xcase81.inp) v(inx81) v(iny81) v(xcase81.nbias) v(outn81) v(outp81) v(xcase81.p_bias) v(rctrl81) v(xcase81.s1) v(xcase81.s2) v(vdd81)
+ac dec 50 1meg 100g
+wrdata ac_044.txt v(outp0) v(outn0) v(vid0) v(outp81) v(outn81) v(vid81)
+alter Vr0 1.08
+alter Vc0 0
+op
+wrdata op_045.txt i(vsupply0) v(xcase0.att_n0) v(xcase0.att_n1) v(xcase0.att_n2) v(xcase0.att_p0) v(xcase0.att_p1) v(xcase0.att_p2) v(cctrl0) v(cm0) v(xcase0.inn) v(xcase0.inp) v(inx0) v(iny0) v(xcase0.nbias) v(outn0) v(outp0) v(xcase0.p_bias) v(xcase0.rc_ct) v(xcase0.rc_gate) v(xcase0.rc_mid) v(rctrl0) v(xcase0.s1) v(xcase0.s2) v(vdd0) i(vsupply81) v(xcase81.att_n0) v(xcase81.att_n1) v(xcase81.att_n2) v(xcase81.att_p0) v(xcase81.att_p1) v(xcase81.att_p2) v(cctrl81) v(cm81) v(xcase81.inn) v(xcase81.inp) v(inx81) v(iny81) v(xcase81.nbias) v(outn81) v(outp81) v(xcase81.p_bias) v(rctrl81) v(xcase81.s1) v(xcase81.s2) v(vdd81)
+ac dec 50 1meg 100g
+wrdata ac_045.txt v(outp0) v(outn0) v(vid0) v(outp81) v(outn81) v(vid81)
+alter Vr0 1.08
+alter Vc0 0.09000000000000001
+op
+wrdata op_046.txt i(vsupply0) v(xcase0.att_n0) v(xcase0.att_n1) v(xcase0.att_n2) v(xcase0.att_p0) v(xcase0.att_p1) v(xcase0.att_p2) v(cctrl0) v(cm0) v(xcase0.inn) v(xcase0.inp) v(inx0) v(iny0) v(xcase0.nbias) v(outn0) v(outp0) v(xcase0.p_bias) v(xcase0.rc_ct) v(xcase0.rc_gate) v(xcase0.rc_mid) v(rctrl0) v(xcase0.s1) v(xcase0.s2) v(vdd0) i(vsupply81) v(xcase81.att_n0) v(xcase81.att_n1) v(xcase81.att_n2) v(xcase81.att_p0) v(xcase81.att_p1) v(xcase81.att_p2) v(cctrl81) v(cm81) v(xcase81.inn) v(xcase81.inp) v(inx81) v(iny81) v(xcase81.nbias) v(outn81) v(outp81) v(xcase81.p_bias) v(rctrl81) v(xcase81.s1) v(xcase81.s2) v(vdd81)
+ac dec 50 1meg 100g
+wrdata ac_046.txt v(outp0) v(outn0) v(vid0) v(outp81) v(outn81) v(vid81)
+alter Vr0 1.08
+alter Vc0 0.18
+op
+wrdata op_047.txt i(vsupply0) v(xcase0.att_n0) v(xcase0.att_n1) v(xcase0.att_n2) v(xcase0.att_p0) v(xcase0.att_p1) v(xcase0.att_p2) v(cctrl0) v(cm0) v(xcase0.inn) v(xcase0.inp) v(inx0) v(iny0) v(xcase0.nbias) v(outn0) v(outp0) v(xcase0.p_bias) v(xcase0.rc_ct) v(xcase0.rc_gate) v(xcase0.rc_mid) v(rctrl0) v(xcase0.s1) v(xcase0.s2) v(vdd0) i(vsupply81) v(xcase81.att_n0) v(xcase81.att_n1) v(xcase81.att_n2) v(xcase81.att_p0) v(xcase81.att_p1) v(xcase81.att_p2) v(cctrl81) v(cm81) v(xcase81.inn) v(xcase81.inp) v(inx81) v(iny81) v(xcase81.nbias) v(outn81) v(outp81) v(xcase81.p_bias) v(rctrl81) v(xcase81.s1) v(xcase81.s2) v(vdd81)
+ac dec 50 1meg 100g
+wrdata ac_047.txt v(outp0) v(outn0) v(vid0) v(outp81) v(outn81) v(vid81)
+alter Vr0 1.08
+alter Vc0 0.27
+op
+wrdata op_048.txt i(vsupply0) v(xcase0.att_n0) v(xcase0.att_n1) v(xcase0.att_n2) v(xcase0.att_p0) v(xcase0.att_p1) v(xcase0.att_p2) v(cctrl0) v(cm0) v(xcase0.inn) v(xcase0.inp) v(inx0) v(iny0) v(xcase0.nbias) v(outn0) v(outp0) v(xcase0.p_bias) v(xcase0.rc_ct) v(xcase0.rc_gate) v(xcase0.rc_mid) v(rctrl0) v(xcase0.s1) v(xcase0.s2) v(vdd0) i(vsupply81) v(xcase81.att_n0) v(xcase81.att_n1) v(xcase81.att_n2) v(xcase81.att_p0) v(xcase81.att_p1) v(xcase81.att_p2) v(cctrl81) v(cm81) v(xcase81.inn) v(xcase81.inp) v(inx81) v(iny81) v(xcase81.nbias) v(outn81) v(outp81) v(xcase81.p_bias) v(rctrl81) v(xcase81.s1) v(xcase81.s2) v(vdd81)
+ac dec 50 1meg 100g
+wrdata ac_048.txt v(outp0) v(outn0) v(vid0) v(outp81) v(outn81) v(vid81)
+alter Vr0 1.08
+alter Vc0 0.36
+op
+wrdata op_049.txt i(vsupply0) v(xcase0.att_n0) v(xcase0.att_n1) v(xcase0.att_n2) v(xcase0.att_p0) v(xcase0.att_p1) v(xcase0.att_p2) v(cctrl0) v(cm0) v(xcase0.inn) v(xcase0.inp) v(inx0) v(iny0) v(xcase0.nbias) v(outn0) v(outp0) v(xcase0.p_bias) v(xcase0.rc_ct) v(xcase0.rc_gate) v(xcase0.rc_mid) v(rctrl0) v(xcase0.s1) v(xcase0.s2) v(vdd0) i(vsupply81) v(xcase81.att_n0) v(xcase81.att_n1) v(xcase81.att_n2) v(xcase81.att_p0) v(xcase81.att_p1) v(xcase81.att_p2) v(cctrl81) v(cm81) v(xcase81.inn) v(xcase81.inp) v(inx81) v(iny81) v(xcase81.nbias) v(outn81) v(outp81) v(xcase81.p_bias) v(rctrl81) v(xcase81.s1) v(xcase81.s2) v(vdd81)
+ac dec 50 1meg 100g
+wrdata ac_049.txt v(outp0) v(outn0) v(vid0) v(outp81) v(outn81) v(vid81)
+alter Vr0 1.08
+alter Vc0 0.54
+op
+wrdata op_050.txt i(vsupply0) v(xcase0.att_n0) v(xcase0.att_n1) v(xcase0.att_n2) v(xcase0.att_p0) v(xcase0.att_p1) v(xcase0.att_p2) v(cctrl0) v(cm0) v(xcase0.inn) v(xcase0.inp) v(inx0) v(iny0) v(xcase0.nbias) v(outn0) v(outp0) v(xcase0.p_bias) v(xcase0.rc_ct) v(xcase0.rc_gate) v(xcase0.rc_mid) v(rctrl0) v(xcase0.s1) v(xcase0.s2) v(vdd0) i(vsupply81) v(xcase81.att_n0) v(xcase81.att_n1) v(xcase81.att_n2) v(xcase81.att_p0) v(xcase81.att_p1) v(xcase81.att_p2) v(cctrl81) v(cm81) v(xcase81.inn) v(xcase81.inp) v(inx81) v(iny81) v(xcase81.nbias) v(outn81) v(outp81) v(xcase81.p_bias) v(rctrl81) v(xcase81.s1) v(xcase81.s2) v(vdd81)
+ac dec 50 1meg 100g
+wrdata ac_050.txt v(outp0) v(outn0) v(vid0) v(outp81) v(outn81) v(vid81)
+alter Vr0 1.08
+alter Vc0 0.7200000000000001
+op
+wrdata op_051.txt i(vsupply0) v(xcase0.att_n0) v(xcase0.att_n1) v(xcase0.att_n2) v(xcase0.att_p0) v(xcase0.att_p1) v(xcase0.att_p2) v(cctrl0) v(cm0) v(xcase0.inn) v(xcase0.inp) v(inx0) v(iny0) v(xcase0.nbias) v(outn0) v(outp0) v(xcase0.p_bias) v(xcase0.rc_ct) v(xcase0.rc_gate) v(xcase0.rc_mid) v(rctrl0) v(xcase0.s1) v(xcase0.s2) v(vdd0) i(vsupply81) v(xcase81.att_n0) v(xcase81.att_n1) v(xcase81.att_n2) v(xcase81.att_p0) v(xcase81.att_p1) v(xcase81.att_p2) v(cctrl81) v(cm81) v(xcase81.inn) v(xcase81.inp) v(inx81) v(iny81) v(xcase81.nbias) v(outn81) v(outp81) v(xcase81.p_bias) v(rctrl81) v(xcase81.s1) v(xcase81.s2) v(vdd81)
+ac dec 50 1meg 100g
+wrdata ac_051.txt v(outp0) v(outn0) v(vid0) v(outp81) v(outn81) v(vid81)
+alter Vr0 1.08
+alter Vc0 1.08
+op
+wrdata op_052.txt i(vsupply0) v(xcase0.att_n0) v(xcase0.att_n1) v(xcase0.att_n2) v(xcase0.att_p0) v(xcase0.att_p1) v(xcase0.att_p2) v(cctrl0) v(cm0) v(xcase0.inn) v(xcase0.inp) v(inx0) v(iny0) v(xcase0.nbias) v(outn0) v(outp0) v(xcase0.p_bias) v(xcase0.rc_ct) v(xcase0.rc_gate) v(xcase0.rc_mid) v(rctrl0) v(xcase0.s1) v(xcase0.s2) v(vdd0) i(vsupply81) v(xcase81.att_n0) v(xcase81.att_n1) v(xcase81.att_n2) v(xcase81.att_p0) v(xcase81.att_p1) v(xcase81.att_p2) v(cctrl81) v(cm81) v(xcase81.inn) v(xcase81.inp) v(inx81) v(iny81) v(xcase81.nbias) v(outn81) v(outp81) v(xcase81.p_bias) v(rctrl81) v(xcase81.s1) v(xcase81.s2) v(vdd81)
+ac dec 50 1meg 100g
+wrdata ac_052.txt v(outp0) v(outn0) v(vid0) v(outp81) v(outn81) v(vid81)
+alter Vr0 1.08
+alter Vc0 1.8
+op
+wrdata op_053.txt i(vsupply0) v(xcase0.att_n0) v(xcase0.att_n1) v(xcase0.att_n2) v(xcase0.att_p0) v(xcase0.att_p1) v(xcase0.att_p2) v(cctrl0) v(cm0) v(xcase0.inn) v(xcase0.inp) v(inx0) v(iny0) v(xcase0.nbias) v(outn0) v(outp0) v(xcase0.p_bias) v(xcase0.rc_ct) v(xcase0.rc_gate) v(xcase0.rc_mid) v(rctrl0) v(xcase0.s1) v(xcase0.s2) v(vdd0) i(vsupply81) v(xcase81.att_n0) v(xcase81.att_n1) v(xcase81.att_n2) v(xcase81.att_p0) v(xcase81.att_p1) v(xcase81.att_p2) v(cctrl81) v(cm81) v(xcase81.inn) v(xcase81.inp) v(inx81) v(iny81) v(xcase81.nbias) v(outn81) v(outp81) v(xcase81.p_bias) v(rctrl81) v(xcase81.s1) v(xcase81.s2) v(vdd81)
+ac dec 50 1meg 100g
+wrdata ac_053.txt v(outp0) v(outn0) v(vid0) v(outp81) v(outn81) v(vid81)
+alter Vr0 1.26
+alter Vc0 0
+op
+wrdata op_054.txt i(vsupply0) v(xcase0.att_n0) v(xcase0.att_n1) v(xcase0.att_n2) v(xcase0.att_p0) v(xcase0.att_p1) v(xcase0.att_p2) v(cctrl0) v(cm0) v(xcase0.inn) v(xcase0.inp) v(inx0) v(iny0) v(xcase0.nbias) v(outn0) v(outp0) v(xcase0.p_bias) v(xcase0.rc_ct) v(xcase0.rc_gate) v(xcase0.rc_mid) v(rctrl0) v(xcase0.s1) v(xcase0.s2) v(vdd0) i(vsupply81) v(xcase81.att_n0) v(xcase81.att_n1) v(xcase81.att_n2) v(xcase81.att_p0) v(xcase81.att_p1) v(xcase81.att_p2) v(cctrl81) v(cm81) v(xcase81.inn) v(xcase81.inp) v(inx81) v(iny81) v(xcase81.nbias) v(outn81) v(outp81) v(xcase81.p_bias) v(rctrl81) v(xcase81.s1) v(xcase81.s2) v(vdd81)
+ac dec 50 1meg 100g
+wrdata ac_054.txt v(outp0) v(outn0) v(vid0) v(outp81) v(outn81) v(vid81)
+alter Vr0 1.26
+alter Vc0 0.09000000000000001
+op
+wrdata op_055.txt i(vsupply0) v(xcase0.att_n0) v(xcase0.att_n1) v(xcase0.att_n2) v(xcase0.att_p0) v(xcase0.att_p1) v(xcase0.att_p2) v(cctrl0) v(cm0) v(xcase0.inn) v(xcase0.inp) v(inx0) v(iny0) v(xcase0.nbias) v(outn0) v(outp0) v(xcase0.p_bias) v(xcase0.rc_ct) v(xcase0.rc_gate) v(xcase0.rc_mid) v(rctrl0) v(xcase0.s1) v(xcase0.s2) v(vdd0) i(vsupply81) v(xcase81.att_n0) v(xcase81.att_n1) v(xcase81.att_n2) v(xcase81.att_p0) v(xcase81.att_p1) v(xcase81.att_p2) v(cctrl81) v(cm81) v(xcase81.inn) v(xcase81.inp) v(inx81) v(iny81) v(xcase81.nbias) v(outn81) v(outp81) v(xcase81.p_bias) v(rctrl81) v(xcase81.s1) v(xcase81.s2) v(vdd81)
+ac dec 50 1meg 100g
+wrdata ac_055.txt v(outp0) v(outn0) v(vid0) v(outp81) v(outn81) v(vid81)
+alter Vr0 1.26
+alter Vc0 0.18
+op
+wrdata op_056.txt i(vsupply0) v(xcase0.att_n0) v(xcase0.att_n1) v(xcase0.att_n2) v(xcase0.att_p0) v(xcase0.att_p1) v(xcase0.att_p2) v(cctrl0) v(cm0) v(xcase0.inn) v(xcase0.inp) v(inx0) v(iny0) v(xcase0.nbias) v(outn0) v(outp0) v(xcase0.p_bias) v(xcase0.rc_ct) v(xcase0.rc_gate) v(xcase0.rc_mid) v(rctrl0) v(xcase0.s1) v(xcase0.s2) v(vdd0) i(vsupply81) v(xcase81.att_n0) v(xcase81.att_n1) v(xcase81.att_n2) v(xcase81.att_p0) v(xcase81.att_p1) v(xcase81.att_p2) v(cctrl81) v(cm81) v(xcase81.inn) v(xcase81.inp) v(inx81) v(iny81) v(xcase81.nbias) v(outn81) v(outp81) v(xcase81.p_bias) v(rctrl81) v(xcase81.s1) v(xcase81.s2) v(vdd81)
+ac dec 50 1meg 100g
+wrdata ac_056.txt v(outp0) v(outn0) v(vid0) v(outp81) v(outn81) v(vid81)
+alter Vr0 1.26
+alter Vc0 0.27
+op
+wrdata op_057.txt i(vsupply0) v(xcase0.att_n0) v(xcase0.att_n1) v(xcase0.att_n2) v(xcase0.att_p0) v(xcase0.att_p1) v(xcase0.att_p2) v(cctrl0) v(cm0) v(xcase0.inn) v(xcase0.inp) v(inx0) v(iny0) v(xcase0.nbias) v(outn0) v(outp0) v(xcase0.p_bias) v(xcase0.rc_ct) v(xcase0.rc_gate) v(xcase0.rc_mid) v(rctrl0) v(xcase0.s1) v(xcase0.s2) v(vdd0) i(vsupply81) v(xcase81.att_n0) v(xcase81.att_n1) v(xcase81.att_n2) v(xcase81.att_p0) v(xcase81.att_p1) v(xcase81.att_p2) v(cctrl81) v(cm81) v(xcase81.inn) v(xcase81.inp) v(inx81) v(iny81) v(xcase81.nbias) v(outn81) v(outp81) v(xcase81.p_bias) v(rctrl81) v(xcase81.s1) v(xcase81.s2) v(vdd81)
+ac dec 50 1meg 100g
+wrdata ac_057.txt v(outp0) v(outn0) v(vid0) v(outp81) v(outn81) v(vid81)
+alter Vr0 1.26
+alter Vc0 0.36
+op
+wrdata op_058.txt i(vsupply0) v(xcase0.att_n0) v(xcase0.att_n1) v(xcase0.att_n2) v(xcase0.att_p0) v(xcase0.att_p1) v(xcase0.att_p2) v(cctrl0) v(cm0) v(xcase0.inn) v(xcase0.inp) v(inx0) v(iny0) v(xcase0.nbias) v(outn0) v(outp0) v(xcase0.p_bias) v(xcase0.rc_ct) v(xcase0.rc_gate) v(xcase0.rc_mid) v(rctrl0) v(xcase0.s1) v(xcase0.s2) v(vdd0) i(vsupply81) v(xcase81.att_n0) v(xcase81.att_n1) v(xcase81.att_n2) v(xcase81.att_p0) v(xcase81.att_p1) v(xcase81.att_p2) v(cctrl81) v(cm81) v(xcase81.inn) v(xcase81.inp) v(inx81) v(iny81) v(xcase81.nbias) v(outn81) v(outp81) v(xcase81.p_bias) v(rctrl81) v(xcase81.s1) v(xcase81.s2) v(vdd81)
+ac dec 50 1meg 100g
+wrdata ac_058.txt v(outp0) v(outn0) v(vid0) v(outp81) v(outn81) v(vid81)
+alter Vr0 1.26
+alter Vc0 0.54
+op
+wrdata op_059.txt i(vsupply0) v(xcase0.att_n0) v(xcase0.att_n1) v(xcase0.att_n2) v(xcase0.att_p0) v(xcase0.att_p1) v(xcase0.att_p2) v(cctrl0) v(cm0) v(xcase0.inn) v(xcase0.inp) v(inx0) v(iny0) v(xcase0.nbias) v(outn0) v(outp0) v(xcase0.p_bias) v(xcase0.rc_ct) v(xcase0.rc_gate) v(xcase0.rc_mid) v(rctrl0) v(xcase0.s1) v(xcase0.s2) v(vdd0) i(vsupply81) v(xcase81.att_n0) v(xcase81.att_n1) v(xcase81.att_n2) v(xcase81.att_p0) v(xcase81.att_p1) v(xcase81.att_p2) v(cctrl81) v(cm81) v(xcase81.inn) v(xcase81.inp) v(inx81) v(iny81) v(xcase81.nbias) v(outn81) v(outp81) v(xcase81.p_bias) v(rctrl81) v(xcase81.s1) v(xcase81.s2) v(vdd81)
+ac dec 50 1meg 100g
+wrdata ac_059.txt v(outp0) v(outn0) v(vid0) v(outp81) v(outn81) v(vid81)
+alter Vr0 1.26
+alter Vc0 0.7200000000000001
+op
+wrdata op_060.txt i(vsupply0) v(xcase0.att_n0) v(xcase0.att_n1) v(xcase0.att_n2) v(xcase0.att_p0) v(xcase0.att_p1) v(xcase0.att_p2) v(cctrl0) v(cm0) v(xcase0.inn) v(xcase0.inp) v(inx0) v(iny0) v(xcase0.nbias) v(outn0) v(outp0) v(xcase0.p_bias) v(xcase0.rc_ct) v(xcase0.rc_gate) v(xcase0.rc_mid) v(rctrl0) v(xcase0.s1) v(xcase0.s2) v(vdd0) i(vsupply81) v(xcase81.att_n0) v(xcase81.att_n1) v(xcase81.att_n2) v(xcase81.att_p0) v(xcase81.att_p1) v(xcase81.att_p2) v(cctrl81) v(cm81) v(xcase81.inn) v(xcase81.inp) v(inx81) v(iny81) v(xcase81.nbias) v(outn81) v(outp81) v(xcase81.p_bias) v(rctrl81) v(xcase81.s1) v(xcase81.s2) v(vdd81)
+ac dec 50 1meg 100g
+wrdata ac_060.txt v(outp0) v(outn0) v(vid0) v(outp81) v(outn81) v(vid81)
+alter Vr0 1.26
+alter Vc0 1.08
+op
+wrdata op_061.txt i(vsupply0) v(xcase0.att_n0) v(xcase0.att_n1) v(xcase0.att_n2) v(xcase0.att_p0) v(xcase0.att_p1) v(xcase0.att_p2) v(cctrl0) v(cm0) v(xcase0.inn) v(xcase0.inp) v(inx0) v(iny0) v(xcase0.nbias) v(outn0) v(outp0) v(xcase0.p_bias) v(xcase0.rc_ct) v(xcase0.rc_gate) v(xcase0.rc_mid) v(rctrl0) v(xcase0.s1) v(xcase0.s2) v(vdd0) i(vsupply81) v(xcase81.att_n0) v(xcase81.att_n1) v(xcase81.att_n2) v(xcase81.att_p0) v(xcase81.att_p1) v(xcase81.att_p2) v(cctrl81) v(cm81) v(xcase81.inn) v(xcase81.inp) v(inx81) v(iny81) v(xcase81.nbias) v(outn81) v(outp81) v(xcase81.p_bias) v(rctrl81) v(xcase81.s1) v(xcase81.s2) v(vdd81)
+ac dec 50 1meg 100g
+wrdata ac_061.txt v(outp0) v(outn0) v(vid0) v(outp81) v(outn81) v(vid81)
+alter Vr0 1.26
+alter Vc0 1.8
+op
+wrdata op_062.txt i(vsupply0) v(xcase0.att_n0) v(xcase0.att_n1) v(xcase0.att_n2) v(xcase0.att_p0) v(xcase0.att_p1) v(xcase0.att_p2) v(cctrl0) v(cm0) v(xcase0.inn) v(xcase0.inp) v(inx0) v(iny0) v(xcase0.nbias) v(outn0) v(outp0) v(xcase0.p_bias) v(xcase0.rc_ct) v(xcase0.rc_gate) v(xcase0.rc_mid) v(rctrl0) v(xcase0.s1) v(xcase0.s2) v(vdd0) i(vsupply81) v(xcase81.att_n0) v(xcase81.att_n1) v(xcase81.att_n2) v(xcase81.att_p0) v(xcase81.att_p1) v(xcase81.att_p2) v(cctrl81) v(cm81) v(xcase81.inn) v(xcase81.inp) v(inx81) v(iny81) v(xcase81.nbias) v(outn81) v(outp81) v(xcase81.p_bias) v(rctrl81) v(xcase81.s1) v(xcase81.s2) v(vdd81)
+ac dec 50 1meg 100g
+wrdata ac_062.txt v(outp0) v(outn0) v(vid0) v(outp81) v(outn81) v(vid81)
+alter Vr0 1.53
+alter Vc0 0
+op
+wrdata op_063.txt i(vsupply0) v(xcase0.att_n0) v(xcase0.att_n1) v(xcase0.att_n2) v(xcase0.att_p0) v(xcase0.att_p1) v(xcase0.att_p2) v(cctrl0) v(cm0) v(xcase0.inn) v(xcase0.inp) v(inx0) v(iny0) v(xcase0.nbias) v(outn0) v(outp0) v(xcase0.p_bias) v(xcase0.rc_ct) v(xcase0.rc_gate) v(xcase0.rc_mid) v(rctrl0) v(xcase0.s1) v(xcase0.s2) v(vdd0) i(vsupply81) v(xcase81.att_n0) v(xcase81.att_n1) v(xcase81.att_n2) v(xcase81.att_p0) v(xcase81.att_p1) v(xcase81.att_p2) v(cctrl81) v(cm81) v(xcase81.inn) v(xcase81.inp) v(inx81) v(iny81) v(xcase81.nbias) v(outn81) v(outp81) v(xcase81.p_bias) v(rctrl81) v(xcase81.s1) v(xcase81.s2) v(vdd81)
+ac dec 50 1meg 100g
+wrdata ac_063.txt v(outp0) v(outn0) v(vid0) v(outp81) v(outn81) v(vid81)
+alter Vr0 1.53
+alter Vc0 0.09000000000000001
+op
+wrdata op_064.txt i(vsupply0) v(xcase0.att_n0) v(xcase0.att_n1) v(xcase0.att_n2) v(xcase0.att_p0) v(xcase0.att_p1) v(xcase0.att_p2) v(cctrl0) v(cm0) v(xcase0.inn) v(xcase0.inp) v(inx0) v(iny0) v(xcase0.nbias) v(outn0) v(outp0) v(xcase0.p_bias) v(xcase0.rc_ct) v(xcase0.rc_gate) v(xcase0.rc_mid) v(rctrl0) v(xcase0.s1) v(xcase0.s2) v(vdd0) i(vsupply81) v(xcase81.att_n0) v(xcase81.att_n1) v(xcase81.att_n2) v(xcase81.att_p0) v(xcase81.att_p1) v(xcase81.att_p2) v(cctrl81) v(cm81) v(xcase81.inn) v(xcase81.inp) v(inx81) v(iny81) v(xcase81.nbias) v(outn81) v(outp81) v(xcase81.p_bias) v(rctrl81) v(xcase81.s1) v(xcase81.s2) v(vdd81)
+ac dec 50 1meg 100g
+wrdata ac_064.txt v(outp0) v(outn0) v(vid0) v(outp81) v(outn81) v(vid81)
+alter Vr0 1.53
+alter Vc0 0.18
+op
+wrdata op_065.txt i(vsupply0) v(xcase0.att_n0) v(xcase0.att_n1) v(xcase0.att_n2) v(xcase0.att_p0) v(xcase0.att_p1) v(xcase0.att_p2) v(cctrl0) v(cm0) v(xcase0.inn) v(xcase0.inp) v(inx0) v(iny0) v(xcase0.nbias) v(outn0) v(outp0) v(xcase0.p_bias) v(xcase0.rc_ct) v(xcase0.rc_gate) v(xcase0.rc_mid) v(rctrl0) v(xcase0.s1) v(xcase0.s2) v(vdd0) i(vsupply81) v(xcase81.att_n0) v(xcase81.att_n1) v(xcase81.att_n2) v(xcase81.att_p0) v(xcase81.att_p1) v(xcase81.att_p2) v(cctrl81) v(cm81) v(xcase81.inn) v(xcase81.inp) v(inx81) v(iny81) v(xcase81.nbias) v(outn81) v(outp81) v(xcase81.p_bias) v(rctrl81) v(xcase81.s1) v(xcase81.s2) v(vdd81)
+ac dec 50 1meg 100g
+wrdata ac_065.txt v(outp0) v(outn0) v(vid0) v(outp81) v(outn81) v(vid81)
+alter Vr0 1.53
+alter Vc0 0.27
+op
+wrdata op_066.txt i(vsupply0) v(xcase0.att_n0) v(xcase0.att_n1) v(xcase0.att_n2) v(xcase0.att_p0) v(xcase0.att_p1) v(xcase0.att_p2) v(cctrl0) v(cm0) v(xcase0.inn) v(xcase0.inp) v(inx0) v(iny0) v(xcase0.nbias) v(outn0) v(outp0) v(xcase0.p_bias) v(xcase0.rc_ct) v(xcase0.rc_gate) v(xcase0.rc_mid) v(rctrl0) v(xcase0.s1) v(xcase0.s2) v(vdd0) i(vsupply81) v(xcase81.att_n0) v(xcase81.att_n1) v(xcase81.att_n2) v(xcase81.att_p0) v(xcase81.att_p1) v(xcase81.att_p2) v(cctrl81) v(cm81) v(xcase81.inn) v(xcase81.inp) v(inx81) v(iny81) v(xcase81.nbias) v(outn81) v(outp81) v(xcase81.p_bias) v(rctrl81) v(xcase81.s1) v(xcase81.s2) v(vdd81)
+ac dec 50 1meg 100g
+wrdata ac_066.txt v(outp0) v(outn0) v(vid0) v(outp81) v(outn81) v(vid81)
+alter Vr0 1.53
+alter Vc0 0.36
+op
+wrdata op_067.txt i(vsupply0) v(xcase0.att_n0) v(xcase0.att_n1) v(xcase0.att_n2) v(xcase0.att_p0) v(xcase0.att_p1) v(xcase0.att_p2) v(cctrl0) v(cm0) v(xcase0.inn) v(xcase0.inp) v(inx0) v(iny0) v(xcase0.nbias) v(outn0) v(outp0) v(xcase0.p_bias) v(xcase0.rc_ct) v(xcase0.rc_gate) v(xcase0.rc_mid) v(rctrl0) v(xcase0.s1) v(xcase0.s2) v(vdd0) i(vsupply81) v(xcase81.att_n0) v(xcase81.att_n1) v(xcase81.att_n2) v(xcase81.att_p0) v(xcase81.att_p1) v(xcase81.att_p2) v(cctrl81) v(cm81) v(xcase81.inn) v(xcase81.inp) v(inx81) v(iny81) v(xcase81.nbias) v(outn81) v(outp81) v(xcase81.p_bias) v(rctrl81) v(xcase81.s1) v(xcase81.s2) v(vdd81)
+ac dec 50 1meg 100g
+wrdata ac_067.txt v(outp0) v(outn0) v(vid0) v(outp81) v(outn81) v(vid81)
+alter Vr0 1.53
+alter Vc0 0.54
+op
+wrdata op_068.txt i(vsupply0) v(xcase0.att_n0) v(xcase0.att_n1) v(xcase0.att_n2) v(xcase0.att_p0) v(xcase0.att_p1) v(xcase0.att_p2) v(cctrl0) v(cm0) v(xcase0.inn) v(xcase0.inp) v(inx0) v(iny0) v(xcase0.nbias) v(outn0) v(outp0) v(xcase0.p_bias) v(xcase0.rc_ct) v(xcase0.rc_gate) v(xcase0.rc_mid) v(rctrl0) v(xcase0.s1) v(xcase0.s2) v(vdd0) i(vsupply81) v(xcase81.att_n0) v(xcase81.att_n1) v(xcase81.att_n2) v(xcase81.att_p0) v(xcase81.att_p1) v(xcase81.att_p2) v(cctrl81) v(cm81) v(xcase81.inn) v(xcase81.inp) v(inx81) v(iny81) v(xcase81.nbias) v(outn81) v(outp81) v(xcase81.p_bias) v(rctrl81) v(xcase81.s1) v(xcase81.s2) v(vdd81)
+ac dec 50 1meg 100g
+wrdata ac_068.txt v(outp0) v(outn0) v(vid0) v(outp81) v(outn81) v(vid81)
+alter Vr0 1.53
+alter Vc0 0.7200000000000001
+op
+wrdata op_069.txt i(vsupply0) v(xcase0.att_n0) v(xcase0.att_n1) v(xcase0.att_n2) v(xcase0.att_p0) v(xcase0.att_p1) v(xcase0.att_p2) v(cctrl0) v(cm0) v(xcase0.inn) v(xcase0.inp) v(inx0) v(iny0) v(xcase0.nbias) v(outn0) v(outp0) v(xcase0.p_bias) v(xcase0.rc_ct) v(xcase0.rc_gate) v(xcase0.rc_mid) v(rctrl0) v(xcase0.s1) v(xcase0.s2) v(vdd0) i(vsupply81) v(xcase81.att_n0) v(xcase81.att_n1) v(xcase81.att_n2) v(xcase81.att_p0) v(xcase81.att_p1) v(xcase81.att_p2) v(cctrl81) v(cm81) v(xcase81.inn) v(xcase81.inp) v(inx81) v(iny81) v(xcase81.nbias) v(outn81) v(outp81) v(xcase81.p_bias) v(rctrl81) v(xcase81.s1) v(xcase81.s2) v(vdd81)
+ac dec 50 1meg 100g
+wrdata ac_069.txt v(outp0) v(outn0) v(vid0) v(outp81) v(outn81) v(vid81)
+alter Vr0 1.53
+alter Vc0 1.08
+op
+wrdata op_070.txt i(vsupply0) v(xcase0.att_n0) v(xcase0.att_n1) v(xcase0.att_n2) v(xcase0.att_p0) v(xcase0.att_p1) v(xcase0.att_p2) v(cctrl0) v(cm0) v(xcase0.inn) v(xcase0.inp) v(inx0) v(iny0) v(xcase0.nbias) v(outn0) v(outp0) v(xcase0.p_bias) v(xcase0.rc_ct) v(xcase0.rc_gate) v(xcase0.rc_mid) v(rctrl0) v(xcase0.s1) v(xcase0.s2) v(vdd0) i(vsupply81) v(xcase81.att_n0) v(xcase81.att_n1) v(xcase81.att_n2) v(xcase81.att_p0) v(xcase81.att_p1) v(xcase81.att_p2) v(cctrl81) v(cm81) v(xcase81.inn) v(xcase81.inp) v(inx81) v(iny81) v(xcase81.nbias) v(outn81) v(outp81) v(xcase81.p_bias) v(rctrl81) v(xcase81.s1) v(xcase81.s2) v(vdd81)
+ac dec 50 1meg 100g
+wrdata ac_070.txt v(outp0) v(outn0) v(vid0) v(outp81) v(outn81) v(vid81)
+alter Vr0 1.53
+alter Vc0 1.8
+op
+wrdata op_071.txt i(vsupply0) v(xcase0.att_n0) v(xcase0.att_n1) v(xcase0.att_n2) v(xcase0.att_p0) v(xcase0.att_p1) v(xcase0.att_p2) v(cctrl0) v(cm0) v(xcase0.inn) v(xcase0.inp) v(inx0) v(iny0) v(xcase0.nbias) v(outn0) v(outp0) v(xcase0.p_bias) v(xcase0.rc_ct) v(xcase0.rc_gate) v(xcase0.rc_mid) v(rctrl0) v(xcase0.s1) v(xcase0.s2) v(vdd0) i(vsupply81) v(xcase81.att_n0) v(xcase81.att_n1) v(xcase81.att_n2) v(xcase81.att_p0) v(xcase81.att_p1) v(xcase81.att_p2) v(cctrl81) v(cm81) v(xcase81.inn) v(xcase81.inp) v(inx81) v(iny81) v(xcase81.nbias) v(outn81) v(outp81) v(xcase81.p_bias) v(rctrl81) v(xcase81.s1) v(xcase81.s2) v(vdd81)
+ac dec 50 1meg 100g
+wrdata ac_071.txt v(outp0) v(outn0) v(vid0) v(outp81) v(outn81) v(vid81)
+alter Vr0 1.8
+alter Vc0 0
+op
+wrdata op_072.txt i(vsupply0) v(xcase0.att_n0) v(xcase0.att_n1) v(xcase0.att_n2) v(xcase0.att_p0) v(xcase0.att_p1) v(xcase0.att_p2) v(cctrl0) v(cm0) v(xcase0.inn) v(xcase0.inp) v(inx0) v(iny0) v(xcase0.nbias) v(outn0) v(outp0) v(xcase0.p_bias) v(xcase0.rc_ct) v(xcase0.rc_gate) v(xcase0.rc_mid) v(rctrl0) v(xcase0.s1) v(xcase0.s2) v(vdd0) i(vsupply81) v(xcase81.att_n0) v(xcase81.att_n1) v(xcase81.att_n2) v(xcase81.att_p0) v(xcase81.att_p1) v(xcase81.att_p2) v(cctrl81) v(cm81) v(xcase81.inn) v(xcase81.inp) v(inx81) v(iny81) v(xcase81.nbias) v(outn81) v(outp81) v(xcase81.p_bias) v(rctrl81) v(xcase81.s1) v(xcase81.s2) v(vdd81)
+ac dec 50 1meg 100g
+wrdata ac_072.txt v(outp0) v(outn0) v(vid0) v(outp81) v(outn81) v(vid81)
+alter Vr0 1.8
+alter Vc0 0.09000000000000001
+op
+wrdata op_073.txt i(vsupply0) v(xcase0.att_n0) v(xcase0.att_n1) v(xcase0.att_n2) v(xcase0.att_p0) v(xcase0.att_p1) v(xcase0.att_p2) v(cctrl0) v(cm0) v(xcase0.inn) v(xcase0.inp) v(inx0) v(iny0) v(xcase0.nbias) v(outn0) v(outp0) v(xcase0.p_bias) v(xcase0.rc_ct) v(xcase0.rc_gate) v(xcase0.rc_mid) v(rctrl0) v(xcase0.s1) v(xcase0.s2) v(vdd0) i(vsupply81) v(xcase81.att_n0) v(xcase81.att_n1) v(xcase81.att_n2) v(xcase81.att_p0) v(xcase81.att_p1) v(xcase81.att_p2) v(cctrl81) v(cm81) v(xcase81.inn) v(xcase81.inp) v(inx81) v(iny81) v(xcase81.nbias) v(outn81) v(outp81) v(xcase81.p_bias) v(rctrl81) v(xcase81.s1) v(xcase81.s2) v(vdd81)
+ac dec 50 1meg 100g
+wrdata ac_073.txt v(outp0) v(outn0) v(vid0) v(outp81) v(outn81) v(vid81)
+alter Vr0 1.8
+alter Vc0 0.18
+op
+wrdata op_074.txt i(vsupply0) v(xcase0.att_n0) v(xcase0.att_n1) v(xcase0.att_n2) v(xcase0.att_p0) v(xcase0.att_p1) v(xcase0.att_p2) v(cctrl0) v(cm0) v(xcase0.inn) v(xcase0.inp) v(inx0) v(iny0) v(xcase0.nbias) v(outn0) v(outp0) v(xcase0.p_bias) v(xcase0.rc_ct) v(xcase0.rc_gate) v(xcase0.rc_mid) v(rctrl0) v(xcase0.s1) v(xcase0.s2) v(vdd0) i(vsupply81) v(xcase81.att_n0) v(xcase81.att_n1) v(xcase81.att_n2) v(xcase81.att_p0) v(xcase81.att_p1) v(xcase81.att_p2) v(cctrl81) v(cm81) v(xcase81.inn) v(xcase81.inp) v(inx81) v(iny81) v(xcase81.nbias) v(outn81) v(outp81) v(xcase81.p_bias) v(rctrl81) v(xcase81.s1) v(xcase81.s2) v(vdd81)
+ac dec 50 1meg 100g
+wrdata ac_074.txt v(outp0) v(outn0) v(vid0) v(outp81) v(outn81) v(vid81)
+alter Vr0 1.8
+alter Vc0 0.27
+op
+wrdata op_075.txt i(vsupply0) v(xcase0.att_n0) v(xcase0.att_n1) v(xcase0.att_n2) v(xcase0.att_p0) v(xcase0.att_p1) v(xcase0.att_p2) v(cctrl0) v(cm0) v(xcase0.inn) v(xcase0.inp) v(inx0) v(iny0) v(xcase0.nbias) v(outn0) v(outp0) v(xcase0.p_bias) v(xcase0.rc_ct) v(xcase0.rc_gate) v(xcase0.rc_mid) v(rctrl0) v(xcase0.s1) v(xcase0.s2) v(vdd0) i(vsupply81) v(xcase81.att_n0) v(xcase81.att_n1) v(xcase81.att_n2) v(xcase81.att_p0) v(xcase81.att_p1) v(xcase81.att_p2) v(cctrl81) v(cm81) v(xcase81.inn) v(xcase81.inp) v(inx81) v(iny81) v(xcase81.nbias) v(outn81) v(outp81) v(xcase81.p_bias) v(rctrl81) v(xcase81.s1) v(xcase81.s2) v(vdd81)
+ac dec 50 1meg 100g
+wrdata ac_075.txt v(outp0) v(outn0) v(vid0) v(outp81) v(outn81) v(vid81)
+alter Vr0 1.8
+alter Vc0 0.36
+op
+wrdata op_076.txt i(vsupply0) v(xcase0.att_n0) v(xcase0.att_n1) v(xcase0.att_n2) v(xcase0.att_p0) v(xcase0.att_p1) v(xcase0.att_p2) v(cctrl0) v(cm0) v(xcase0.inn) v(xcase0.inp) v(inx0) v(iny0) v(xcase0.nbias) v(outn0) v(outp0) v(xcase0.p_bias) v(xcase0.rc_ct) v(xcase0.rc_gate) v(xcase0.rc_mid) v(rctrl0) v(xcase0.s1) v(xcase0.s2) v(vdd0) i(vsupply81) v(xcase81.att_n0) v(xcase81.att_n1) v(xcase81.att_n2) v(xcase81.att_p0) v(xcase81.att_p1) v(xcase81.att_p2) v(cctrl81) v(cm81) v(xcase81.inn) v(xcase81.inp) v(inx81) v(iny81) v(xcase81.nbias) v(outn81) v(outp81) v(xcase81.p_bias) v(rctrl81) v(xcase81.s1) v(xcase81.s2) v(vdd81)
+ac dec 50 1meg 100g
+wrdata ac_076.txt v(outp0) v(outn0) v(vid0) v(outp81) v(outn81) v(vid81)
+alter Vr0 1.8
+alter Vc0 0.54
+op
+wrdata op_077.txt i(vsupply0) v(xcase0.att_n0) v(xcase0.att_n1) v(xcase0.att_n2) v(xcase0.att_p0) v(xcase0.att_p1) v(xcase0.att_p2) v(cctrl0) v(cm0) v(xcase0.inn) v(xcase0.inp) v(inx0) v(iny0) v(xcase0.nbias) v(outn0) v(outp0) v(xcase0.p_bias) v(xcase0.rc_ct) v(xcase0.rc_gate) v(xcase0.rc_mid) v(rctrl0) v(xcase0.s1) v(xcase0.s2) v(vdd0) i(vsupply81) v(xcase81.att_n0) v(xcase81.att_n1) v(xcase81.att_n2) v(xcase81.att_p0) v(xcase81.att_p1) v(xcase81.att_p2) v(cctrl81) v(cm81) v(xcase81.inn) v(xcase81.inp) v(inx81) v(iny81) v(xcase81.nbias) v(outn81) v(outp81) v(xcase81.p_bias) v(rctrl81) v(xcase81.s1) v(xcase81.s2) v(vdd81)
+ac dec 50 1meg 100g
+wrdata ac_077.txt v(outp0) v(outn0) v(vid0) v(outp81) v(outn81) v(vid81)
+alter Vr0 1.8
+alter Vc0 0.7200000000000001
+op
+wrdata op_078.txt i(vsupply0) v(xcase0.att_n0) v(xcase0.att_n1) v(xcase0.att_n2) v(xcase0.att_p0) v(xcase0.att_p1) v(xcase0.att_p2) v(cctrl0) v(cm0) v(xcase0.inn) v(xcase0.inp) v(inx0) v(iny0) v(xcase0.nbias) v(outn0) v(outp0) v(xcase0.p_bias) v(xcase0.rc_ct) v(xcase0.rc_gate) v(xcase0.rc_mid) v(rctrl0) v(xcase0.s1) v(xcase0.s2) v(vdd0) i(vsupply81) v(xcase81.att_n0) v(xcase81.att_n1) v(xcase81.att_n2) v(xcase81.att_p0) v(xcase81.att_p1) v(xcase81.att_p2) v(cctrl81) v(cm81) v(xcase81.inn) v(xcase81.inp) v(inx81) v(iny81) v(xcase81.nbias) v(outn81) v(outp81) v(xcase81.p_bias) v(rctrl81) v(xcase81.s1) v(xcase81.s2) v(vdd81)
+ac dec 50 1meg 100g
+wrdata ac_078.txt v(outp0) v(outn0) v(vid0) v(outp81) v(outn81) v(vid81)
+alter Vr0 1.8
+alter Vc0 1.08
+op
+wrdata op_079.txt i(vsupply0) v(xcase0.att_n0) v(xcase0.att_n1) v(xcase0.att_n2) v(xcase0.att_p0) v(xcase0.att_p1) v(xcase0.att_p2) v(cctrl0) v(cm0) v(xcase0.inn) v(xcase0.inp) v(inx0) v(iny0) v(xcase0.nbias) v(outn0) v(outp0) v(xcase0.p_bias) v(xcase0.rc_ct) v(xcase0.rc_gate) v(xcase0.rc_mid) v(rctrl0) v(xcase0.s1) v(xcase0.s2) v(vdd0) i(vsupply81) v(xcase81.att_n0) v(xcase81.att_n1) v(xcase81.att_n2) v(xcase81.att_p0) v(xcase81.att_p1) v(xcase81.att_p2) v(cctrl81) v(cm81) v(xcase81.inn) v(xcase81.inp) v(inx81) v(iny81) v(xcase81.nbias) v(outn81) v(outp81) v(xcase81.p_bias) v(rctrl81) v(xcase81.s1) v(xcase81.s2) v(vdd81)
+ac dec 50 1meg 100g
+wrdata ac_079.txt v(outp0) v(outn0) v(vid0) v(outp81) v(outn81) v(vid81)
+alter Vr0 1.8
+alter Vc0 1.8
+op
+wrdata op_080.txt i(vsupply0) v(xcase0.att_n0) v(xcase0.att_n1) v(xcase0.att_n2) v(xcase0.att_p0) v(xcase0.att_p1) v(xcase0.att_p2) v(cctrl0) v(cm0) v(xcase0.inn) v(xcase0.inp) v(inx0) v(iny0) v(xcase0.nbias) v(outn0) v(outp0) v(xcase0.p_bias) v(xcase0.rc_ct) v(xcase0.rc_gate) v(xcase0.rc_mid) v(rctrl0) v(xcase0.s1) v(xcase0.s2) v(vdd0) i(vsupply81) v(xcase81.att_n0) v(xcase81.att_n1) v(xcase81.att_n2) v(xcase81.att_p0) v(xcase81.att_p1) v(xcase81.att_p2) v(cctrl81) v(cm81) v(xcase81.inn) v(xcase81.inp) v(inx81) v(iny81) v(xcase81.nbias) v(outn81) v(outp81) v(xcase81.p_bias) v(rctrl81) v(xcase81.s1) v(xcase81.s2) v(vdd81)
+ac dec 50 1meg 100g
+wrdata ac_080.txt v(outp0) v(outn0) v(vid0) v(outp81) v(outn81) v(vid81)
+quit
+.endc
+.end

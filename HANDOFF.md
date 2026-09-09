@@ -17,7 +17,7 @@
 > decisions that are OPEN and human-only, and what to do next. It supersedes
 > `nebula/NEXT_STEPS.md`. This file remains the full state of record.
 
-Last updated: **2026-09-10**, Entry 129 DC validation failure; Entry 130 awaits freeze.
+Last updated: **2026-09-10**, Entry 130 tuning measured; Entry 131 awaits freeze.
 The organiser requires a transistor-level CTLE plus DFE and configurable
 Rs/Cs. The owner authorizes bounded agent-selected experiments for both;
 DFE is first. Entry 122 CML passes all three TT screens with valid terminal
@@ -40,7 +40,10 @@ passes, but all nine simultaneous-copy candidate calls time out without
 OP/AC measurements. Entry 129 produces 81 OP/AC pairs in one 51.303298 s
 call but stops on fixed-reference DC drift (15.7923 nV versus the 1 nV gate).
 All 81 reference AC curves pass; the experiment remains failed. Entry 130
-registers tighter solver precision with the SAME circuits/gates; not run yet.
+now measures all nine geometries: 729 valid OP/AC pairs, 65 standalone AC/
+electrical passes. Tighter precision closes reference drift without changing
+any gate. Both controls work electrically, but the delivered DFE still has
+fixed Rs/Cs. Entry 131 registers a finer voltage map on two measured circuits.
 Existing reports and fixed-passive circuit evidence remain unchanged.
 
 Previous report snapshot, Entry 121: The unchanged 20-page
@@ -1070,6 +1073,10 @@ Entry 130 adds `CONFIGURABLE_RC_PRECISION_PLAN.md`,
 `device/configurable_rc_precision.py`, `experiments/exp_configurable_rc_precision.py`
 and `tests/test_configurable_rc_precision.py`; previous scientific sources
 remain byte-identical.
+Its measured result is `CONFIGURABLE_RC_PRECISION_RESULTS.md`, with complete
+raw replay in `tests/test_configurable_rc_precision_evidence.py`. Entry 131
+adds `CONFIGURABLE_RC_FINE_PLAN.md`, `device/configurable_rc_fine.py`,
+`experiments/exp_configurable_rc_fine.py` and `tests/test_configurable_rc_fine.py`.
 
 Entry 121: NEXT_AGENT_PROMPT.md is the self-contained operational handoff
 for a new agent. It records reading order, verified product state, evidence
@@ -2042,6 +2049,10 @@ Its first call completes in 51.303298 s but fails reference DC consistency;
 all 81 OP/AC pairs remain retained and the other eight calls are not run.
 Entry 130 preregisters tighter solver tolerances, keeping every circuit and
 validation threshold unchanged. It awaits full-suite validation and freeze.
+Entry 130 subsequently completes all nine calls in 309.915343 s: 729 valid
+OP/AC pairs, 65 standalone passing controls. Entry 131 registers 441 finer
+control pairs on each of the already measured N250/N500 no-fixed-MIM circuits.
+No connected configurable DFE has yet been measured.
 
 Entry 120 (2026-09-09): filled the three sparse academic front-matter pages using existing verified evidence. No technical result or claim changed. Rendered pages 4-22 are unchanged.
 
@@ -2298,7 +2309,9 @@ VDD power 6.965786645 mW. All nine tunable candidate attempts produce no
 OP/AC measurements; their timing/capture failure is NOT a physical failure
 or pass. Entry 129 now stops after one call: 81 raw OP/AC pairs retained,
 but fixed-reference DC drift fails its unchanged consistency gate. Entry 130
-registers precision-only recovery; no candidate is promoted to the DFE.
+now passes all nine instrument checks and has 65 standalone passing settings.
+Max reference DC drift 2.6840751843337785e-12 V; AC error 2.81224355e-7 dB.
+Entry 131 is a finer control map only; no candidate is promoted to the DFE.
 Entry 126: 95 calls, 1522.135503 s trial time; 45/45 at 3 dB and 45/45 at
 12 dB. Minimum sampled eyes 191.307321/133.817900 mV; finite positive-eye
 apertures 0.755/0.710 UI. Combined 135-PVT coverage includes the separately
@@ -3181,11 +3194,11 @@ variation, mismatch and layout remain open. Old production evidence is unchanged
 configurable Rs/Cs. Owner authorization covers bounded architecture/sizing
 experiments; register membership and gates before each run, preserve failed
 trials, and do not re-ask approval for ordinary in-scope iterations. Current
-completed trial: `nebula/CONFIGURABLE_RC_SERIAL_PLAN.md` (Entry 129, one
-call with 81 retained OP/AC pairs; fixed-reference DC consistency fails).
+completed trial: `nebula/CONFIGURABLE_RC_PRECISION_PLAN.md` (Entry 130,
+nine calls, 729 valid OP/AC pairs, 65 standalone AC/electrical passes).
 DFE backup was verified on both GitHub branches at fa5fbed before any Rs/Cs
-simulation. Preserve Entries 128/129, then freeze/test
-`CONFIGURABLE_RC_PRECISION_PLAN.md` before its nine-call maximum recovery.
+simulation. Preserve all prior successes/failures, then freeze/test
+`CONFIGURABLE_RC_FINE_PLAN.md` before its two-call maximum finer control map.
 Rs/Cs remain fixed in the delivered DFE
 until the new physical configuration and connected behavior are measured.
 Do not inherit fixed-circuit PVT or
@@ -18371,3 +18384,46 @@ known warnings in 525.75 s. Focused checks: 51 passed in 2.66 s. No SPICE
 ran alongside the suite. Freeze the unchanged tested scientific sources
 before invoking the registered experiment; remote backup clarification is
 still pending, so this checkpoint remains local for now.
+
+### 2026-09-10 - Entry 130 physical tuning measured; Entry 131 fine map registered
+
+Local checkpoint 23d8efbcb547562871ccf31dabdf9f9b1fe9636c freezes Entry 130
+after 51 focused and 3158 full tests, 13 deselected/two known warnings,
+525.75 s. Audit: 207 intended files, 199 exact evidence blobs, 7,990,067
+staged bytes; required identity, no detected credentials/prohibited files,
+unchanged report hashes. Remote backup remains pending user clarification.
+
+Entry 130 runs once: nine calls, 309.915343 s, no retries, all 729 OP/AC pairs
+validated and source/PDK hashes unchanged. Per-geometry standalone gate counts
+are 0,9,9,11,9,9,5,7,6 (65 total). Reference DC drift falls to at most
+2.6840751843337785e-12 V, with AC error at most 2.8122435474786656e-7 dB.
+The original thresholds are unchanged; Entry 129 remains a failed run.
+Both physical controls affect measured response: N250/no-fixed-MIM at C=.15
+VDD changes peaking 11.7088 to 8.2921 dB for R=.6 to .7 VDD. N100/1.5pF at
+R=.7 moves peak 1.836014 to 2.222265 GHz via C=0..1 VDD near 9 dB boost.
+N500/no-fixed-MIM offers a wider frequency span and reaches 1.301117 GHz at
+the high-C endpoint with 9.316740 dB boost. These are sampled TT standalone
+results, not a full target rectangle, DFE loading, runtime/PVT/noise/HD3 proof.
+
+Raw bundle: 1530 manifest entries, 81,670,967 bytes including the manifest.
+Summary SHA-256 5285ad72e81dda0e5ff85acbcad7ed4d29f7f6ad09d72cc297a87ac51d96fbfa;
+manifest 407e9ffa00af20cb3f3275b372d4089655d1430bc26c0ddc637778fc7c5d5ee7.
+Results are in CONFIGURABLE_RC_PRECISION_RESULTS.md; ten new evidence tests
+verify the complete bundle and replay every raw OP/AC pair with old parsers.
+
+Entry 131 preregisters two calls, N250/N500 without fixed MIM; 441 R/C pairs
+each (R=.65..85 step .01, C=0...30 step .015). Same physical circuit, precision,
+output load and gates. Nine declared target identities (3/6/9 dB x
+1.5/1.9/2.25 GHz) require measured errors <=.5 dB AND <=.1 GHz. Deterministic
+geometry selection favors coverage, then error and area, and requires the
+9 dB/1.9 GHz identity. This is characterization, not frozen RL evaluation.
+Tests first fail on missing modules, then confirm strict per-step parsing
+and exact agreement with the prior parser on real shared-control data.
+Focused validation: 71 passed in 6.62 s. Before-change full baseline: 3158
+passed in 525.75 s. Post-change full suite is RUNNING without concurrent SPICE.
+Entry 131 is not run; freeze after the full suite before invoking it.
+
+Entry 131 pre-run full regression passes: 3178 passed, 13 deselected, two
+known warnings in 554.11 s. Focused checks: 71 passed in 6.62 s. No SPICE
+ran alongside the suite. Save the tested local checkpoint before its two
+registered calls; public/private backup clarification is still unanswered.
