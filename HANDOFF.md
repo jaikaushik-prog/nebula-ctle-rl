@@ -17,7 +17,7 @@
 > decisions that are OPEN and human-only, and what to do next. It supersedes
 > `nebula/NEXT_STEPS.md`. This file remains the full state of record.
 
-Last updated: **2026-09-09**, Entry 124 measured; Entries 125/126 registered.
+Last updated: **2026-09-09**, Entry 125 recovery measured; Entry 126 registered.
 The organiser requires a transistor-level CTLE plus DFE and configurable
 Rs/Cs. The owner authorizes bounded agent-selected experiments for both;
 DFE is first. Entry 122 CML passes all three TT screens with valid terminal
@@ -27,7 +27,9 @@ now measured: W=8 passes 45/45, with all signed terminal checks passing.
 Entry 124 connects the CTLE, CML summer and real feedback DAC: 45/45 PVT
 decode all 64 scored bits, but 44/45 pass the complete registered gate.
 An inactive DAC tail floats into -2.451 mV Vds at FS/0.95/125. Entry 125
-registers physical discharge-path recovery, before Entry 126 channel retiming.
+now closes this failure with four real discharge transistors: 45/45 primary-
+channel PVT pass, including finite-pattern eye width and strict new-device
+voltage checks. Entry 126 channel retiming remains the next registered trial.
 Existing reports and fixed-passive circuit evidence remain unchanged.
 
 Previous report snapshot, Entry 121: The unchanged 20-page
@@ -1036,6 +1038,8 @@ and now `nebula/DFE_CONNECTED_RESULTS.md` plus exact archived-waveform tests.
 Entries 125/126 add `dfe_tail_bleed.py`, `dfe_timing.py`, their bounded runners,
 `DFE_TAIL_BLEED_PLAN.md`, `DFE_TIMING_PLAN.md`, streaming `evidence_archive.py`
 verification and failure-first tests. Existing source snapshots are immutable.
+Entry 125 also has `DFE_TAIL_BLEED_RESULTS.md` and separate archived-evidence
+replay tests; its measured circuit is still outside the production registry.
 
 Entry 121: NEXT_AGENT_PROMPT.md is the self-contained operational handoff
 for a new agent. It records reading order, verified product state, evidence
@@ -1990,6 +1994,8 @@ corner screen, leaving all existing circuit, timing and voltage gates fixed.
 Entry 124 then measures connected physical feedback: 44/45 electrical PVT
 passes, 45/45 bit-decode passes. Entries 125/126 register a physical inactive-
 branch discharge fix followed by conditional high-loss clock retiming.
+Entry 125 measures a successful fixed L=4 um recovery: 57 calls, 45/45 PVT
+including finite-pattern aperture >0.4 UI and all new-device signed bounds.
 
 Entry 120 (2026-09-09): filled the three sparse academic front-matter pages using existing verified evidence. No technical result or claim changed. Rendered pages 4-22 are unchanged.
 
@@ -2229,6 +2235,12 @@ gates. Worst eye 109.682577 mV; maximum combined VDD power 12.514816 mW.
 FS/0.95/125 fails inactive Xdfe_tail3 signed Vds (-2.451058 mV), not logic.
 TT 12 dB at the same clock phase fails 15/64; do not inherit 315/315.
 See `nebula/DFE_CONNECTED_RESULTS.md` and its 372-file original manifest.
+Entry 125: 57 calls in 988.869287 s, selected bleeder W=.42/L=4 um.
+45/45 registered PVT passes at 7.5 dB; all 57 signed DFE audits pass.
+Worst sampled eye 111.169499 mV, finite positive-eye aperture at least
+0.635 UI, max combined VDD power 12.523549 mW. Geometry subtotal
+0.007961241107 mm2. Minimum inactive-tail3 Vds is now +351.003594 mV.
+See `nebula/DFE_TAIL_BLEED_RESULTS.md`; no BER or whole-receiver signoff.
 
 Entry 120: current academic PDF SHA-256 is a573db02335879e0a6a0b3feb2c9eeea2172c2f3f4b4e4699dfc8123c8f90670. Pages 1-3 pass visual review; pages 4-22 match Entry 119.
 
@@ -2872,6 +2884,9 @@ electrical PVT points, not full receiver signoff. Legacy PMOS attenuator
 reverse-Vds findings remain explicit. Clock/common-mode drivers, physical
 Rs/Cs configuration, loaded noise/HD3 and broad-channel timing are not closed.
 Entry 125's added bleeders imply code 0 is minimum current, NOT feedback off.
+Entry 125 now passes all 45 primary-channel electrical gates, but the
+finite-pattern/aperture, external-source and whole-circuit model-domain
+boundaries remain; channel extremes are not yet verified for this recovery.
 
 Entry 116 (2026-09-08): the final competition report has a dedicated team/
 institution cover and a prioritized future-development page. The 20-page
@@ -3093,9 +3108,8 @@ variation, mismatch and layout remain open. Old production evidence is unchanged
 configurable Rs/Cs. Owner authorization covers bounded architecture/sizing
 experiments; register membership and gates before each run, preserve failed
 trials, and do not re-ask approval for ordinary in-scope iterations. Current
-next trial: `nebula/DFE_TAIL_BLEED_PLAN.md` (maximum 57 calls) to fix the
-measured inactive-DAC voltage failure. Only after its fixed-circuit 45-PVT
-pass, run `nebula/DFE_TIMING_PLAN.md` (Entry 126, maximum 95 new calls).
+next trial: `nebula/DFE_TIMING_PLAN.md` (Entry 126, maximum 95 new calls),
+after preserving and replay-checking Entry 125's measured 45/45 recovery.
 Do not inherit fixed-circuit PVT or
 frozen RL coverage for a new hardware topology.
 
@@ -17962,3 +17976,24 @@ Final focused checks: 55 passed in 79.04 s, including all 372 original hashes,
 116 gzip archives, exact schedule replay and six waveform/terminal replays.
 Both PDF hashes remain unchanged. New Python-source checkout rules preserve
 frozen source hashes under core.autocrlf (G178); archived bytes remain -text.
+
+Entry 125 measured after freeze 14bcdaa: 57 calls in 988.869287 s. Both
+registered bleeder sizes pass all four screens and matched controls; the
+longer L=4 um is selected and passes 45/45 PVT at code 2/phase 1.0/7.5 dB.
+Every call passes the unchanged signed DFE voltage gate. Original failed
+tail3 now has minimum Vds +351.003594 mV across all 45 PVT. Worst eye is
+111.169499 mV, positive-eye aperture at least 0.635 UI, aperture above
+100 mV at least 0.555 UI, maximum VDD power 12.523549 mW. Whole-circuit
+legacy switch findings remain visible; this is not full receiver signoff.
+
+Added measured results and separate replay tests for the 377-file manifest,
+114 gzip traces, exact frozen schedule and four raw waveform/voltage cases.
+Pre-change full suite: 3081 passed, 13 deselected, two known warnings in
+405.63 s. Post-change focused validation: 35 passed in 84.97 s. Full suite:
+3086 passed, 13 deselected, two known warnings in 1156.06 s, with no concurrent
+SPICE, archival job or heavy Git staging. No Entry 126 call has run yet.
+Source for both stages was frozen in 14bcdaa; prior failures,
+reports, registry and frozen RL remain unchanged.
+Archival completed: 114 gzip siblings, 1,383,204,851 compressed bytes,
+preserving 4,870,455,744 raw bytes. Largest archive 15,254,468 bytes; all
+local originals remain intact and the original manifest is unchanged.
