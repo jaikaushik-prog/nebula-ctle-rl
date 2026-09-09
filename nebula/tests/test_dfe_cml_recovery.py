@@ -58,17 +58,20 @@ def test_archive_rejects_escape(tmp_path):
         archive(tmp_path)
 
 
-def test_real_entry122_reproduces_all_corners_from_archived_traces():
+@pytest.mark.parametrize('directory,files,traces,calls,width,passes', [
+    ('entry122_dfe_cml_20260909',354,96,48,4,34),
+    ('entry123_dfe_cml_recovery_20260909',377,102,51,8,45)])
+def test_real_cml_reproduces_all_corners_from_archived_traces(directory, files, traces, calls, width, passes):
     from nebula.common.types import Corner
     from nebula.device import dfe_cml as C, dfe_hardware as D, dfe_voltage_audit as V
-    root = Path(__file__).resolve().parents[1]/'product_audits/entry122_dfe_cml_20260909'
+    root = Path(__file__).resolve().parents[1]/'product_audits'/directory
     config = json.loads((root/'config.json').read_text())
     summary = json.loads((root/'summary.json').read_text())
     manifest = json.loads((root/'evidence_sha256.json').read_text())
     archives = json.loads((root/'trace_archives.json').read_text())
     assert E.digest(root/'evidence_sha256.json') == archives['original_manifest_sha256']
     by_raw = {r['raw']: r for r in archives['archives']}
-    assert len(manifest) == 354 and len(by_raw) == 96
+    assert len(manifest) == files and len(by_raw) == traces
     for key, expected in manifest.items():
         if key in by_raw:
             row = by_raw[key]
@@ -77,9 +80,9 @@ def test_real_entry122_reproduces_all_corners_from_archived_traces():
             assert hashlib.sha256(gzip.decompress(compressed)).hexdigest() == expected == row['raw_sha256']
         else:
             assert E.digest(root/key) == expected
-    assert summary['spice_calls'] == 48 and summary['selected_width_um'] == 4
-    assert not summary['standalone_pvt_pass']
-    assert sum(r['result']['block_pass'] for r in summary['pvt']) == 34
+    assert summary['spice_calls'] == calls and summary['selected_width_um'] == width
+    assert summary['standalone_pvt_pass'] == (passes == 45)
+    assert sum(r['result']['block_pass'] for r in summary['pvt']) == passes
     for folder in sorted(root.glob('*_w*')):
         saved = json.loads((folder/'result.json').read_text())
         key = saved['common_mode_source_key'].split('/')[0].split('_')

@@ -34,3 +34,20 @@ receiver power, loaded eyes, mismatch, BER and physical clock remain unverified.
 The old fixed-passive physical export and frozen RL evidence are unchanged.
 
 Next bounded trial: `DFE_CML_RECOVERY_PLAN.md`; no change to Entry 122 results.
+
+## Entry 123: fixed-width PVT recovery
+
+Registration commit: a932bae. Measured 51 calls in 62.768497 s, no retries.
+Evidence: `product_audits/entry123_dfe_cml_recovery_20260909/`, 377 original
+hash entries and 102 lossless gzip trace siblings. Both 8 and 16 um sizes
+pass the three registered difficult-corner screens; the smaller 8 um size
+was then frozen for all 45 PVT points and passes **45/45**, 32/32 bits each.
+Every one of the 51 runs passes the original signed terminal-voltage gate.
+
+Across the 45 points, minimum held margin is 32.5049 mV, minimum previous-bit
+margin 30.7134 mV, worst stable clock-to-output delay 46.5 ps, and maximum
+VDD power 1.9190684 mW. The W=8 geometry subtotal is 0.00007205 mm2.
+This proves the registered finite-pattern decision/hold function, not a
+complete DFE. The transient starts from a DC operating point: it is not a
+supply-ramp startup test. External clock, ideal sensitivity stimulus and
+common-mode source assumptions remain. Next: `DFE_CONNECTED_PLAN.md`.

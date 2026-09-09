@@ -17,12 +17,14 @@
 > decisions that are OPEN and human-only, and what to do next. It supersedes
 > `nebula/NEXT_STEPS.md`. This file remains the full state of record.
 
-Last updated: **2026-09-09**, Entry 122 hardware development authorized.
+Last updated: **2026-09-09**, Entry 124 connected DFE experiment registered.
 The organiser requires a transistor-level CTLE plus DFE and configurable
 Rs/Cs. The owner authorizes bounded agent-selected experiments for both;
 DFE is first. Entry 122 CML passes all three TT screens with valid terminal
 voltages, but W=4 passes only 34/45 PVT. Entry 123 registers a wider-device
-corner screen without changing the failed Entry 122 evidence.
+corner screen without changing the failed Entry 122 evidence. Entry 123 is
+now measured: W=8 passes 45/45, with all signed terminal checks passing.
+Entry 124 registers the connected CTLE, CML summer and real feedback DAC.
 Existing reports and fixed-passive circuit evidence remain unchanged.
 
 Previous report snapshot, Entry 121: The unchanged 20-page
@@ -1024,7 +1026,9 @@ Entry 122 adds the isolated hardware-development files `nebula/DFE_CML_PLAN.md`,
 `nebula/tests/test_dfe_cml.py`. They do not modify the deployed physical path.
 Entry 123 adds `nebula/DFE_CML_RECOVERY_PLAN.md`, `nebula/DFE_CML_RESULTS.md`,
 `nebula/experiments/archive_traces.py`, `nebula/tests/test_dfe_cml_recovery.py`,
-and byte-addressed Entry 122 artifacts under `nebula/product_audits/`.
+and byte-addressed Entry 122/123 artifacts under `nebula/product_audits/`.
+Entry 124 adds `nebula/DFE_CONNECTED_PLAN.md`, `nebula/device/dfe_connected.py`,
+`nebula/experiments/exp_dfe_connected.py` and `nebula/tests/test_dfe_connected.py`.
 
 Entry 121: NEXT_AGENT_PROMPT.md is the self-contained operational handoff
 for a new agent. It records reading order, verified product state, evidence
@@ -2203,6 +2207,10 @@ Entry 122: all 4/8/16 um CML sizes pass TT 32/32 and signed model-domain
 checks. The selected 4 um size passes 34/45 PVT, with weak hold at eleven
 hot/low-supply points. All 48 calls have valid terminal voltages. See
 `nebula/DFE_CML_RESULTS.md`. Entry 123 is a preregistered fixed-width recovery.
+Entry 123 measured: 51 calls, 62.768497 s; W=8 passes all 45 PVT points,
+32/32 scored bits each, with strict signed terminal bounds intact. Worst
+held margin 32.5049 mV, previous-bit margin 30.7134 mV, clock-to-output
+46.5 ps, VDD power 1.9190684 mW. This is still a standalone storage block.
 Existing physical product counts and RL results remain unchanged.
 
 Entry 120: current academic PDF SHA-256 is a573db02335879e0a6a0b3feb2c9eeea2172c2f3f4b4e4699dfc8123c8f90670. Pages 1-3 pass visual review; pages 4-22 match Entry 119.
@@ -3063,7 +3071,7 @@ variation, mismatch and layout remain open. Old production evidence is unchanged
 configurable Rs/Cs. Owner authorization covers bounded architecture/sizing
 experiments; register membership and gates before each run, preserve failed
 trials, and do not re-ask approval for ordinary in-scope iterations. Current
-next trial: `nebula/DFE_CML_RECOVERY_PLAN.md` after Entry 122's 34/45 result.
+next trial: `nebula/DFE_CONNECTED_PLAN.md` after Entry 123's 45/45 recovery.
 Do not inherit fixed-circuit PVT or
 frozen RL coverage for a new hardware topology.
 
@@ -17833,3 +17841,34 @@ Entry 122 gzip traces total 102.743187 MB (original traces 505.678464 MB),
 largest gzip 1.147356 MB; all raw and compressed hashes are checked.
 Source diff/credential checks pass. Immutable simulator evidence preserves
 its CRLF bytes; whitespace normalization must not invalidate those hashes.
+
+Entry 123 measured after freeze a932bae: 51 calls, 62.7684968 s. Both larger
+sizes pass all three screens; selected W=8 passes 45/45 PVT and all 32 bits
+at each point. All 51 signed terminal audits pass. Evidence has 377 original
+hash entries; 102 byte-verified gzip siblings retain portable traces and all
+raw originals remain local. No CTLE connection or feedback is inferred from
+this block result. See `nebula/DFE_CML_RESULTS.md` for exact margins/power.
+
+### 2026-09-09 - Entry 124 / connected transistor CTLE plus DFE registration
+
+Added a real current-mode summer and four-branch switched-current DAC driven
+only by the stored CML q/qb, connected to the unchanged physical CTLE export.
+External clock/control/common-mode remain declared testbench sources. Three
+clock phases, four one-hot current codes and both fixed wiring polarities
+are preregistered, with matched opposite-polarity controls, two diagnostic
+channel extremes, and conditional fixed-code/phase 45-PVT at 7.5 dB.
+Maximum 58 calls. A signal-function gate is not full S3-S9/receiver signoff;
+all signed terminal findings, including legacy reverse switch Vds, are saved.
+
+Tests first (expected missing-module import failure). Pre-change full suite:
+3025 passed, 13 deselected, two known warnings in 372.57 s. Focused checks:
+43 passed in 33.78 s, including exact archived reanalysis of Entries 122/123.
+First full run: 3043 passed, 1 failed, 13 deselected, two warnings in 361.30 s.
+The sole failure was the existing `test_pdk_trim.py` ss_hh wall-time comparison
+(trim 3.25 s versus reference 3.06 s); its bit-identical numerical comparison
+passed. Isolated unchanged rerun: 1 passed in 5.07 s. No threshold was changed.
+Clean unchanged full rerun: 3044 passed, 13 deselected, two known warnings in
+677.37 s. The stage is ready for its freeze commit and first connected SPICE
+measurements. No test threshold, circuit size or gate was changed to clear
+the timing-sensitive library check. GitHub push remains blocked pending the
+requested explicit destination/visibility confirmation; local work continues.
