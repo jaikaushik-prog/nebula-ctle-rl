@@ -17,14 +17,17 @@
 > decisions that are OPEN and human-only, and what to do next. It supersedes
 > `nebula/NEXT_STEPS.md`. This file remains the full state of record.
 
-Last updated: **2026-09-09**, Entry 124 connected DFE experiment registered.
+Last updated: **2026-09-09**, Entry 124 measured; Entries 125/126 registered.
 The organiser requires a transistor-level CTLE plus DFE and configurable
 Rs/Cs. The owner authorizes bounded agent-selected experiments for both;
 DFE is first. Entry 122 CML passes all three TT screens with valid terminal
 voltages, but W=4 passes only 34/45 PVT. Entry 123 registers a wider-device
 corner screen without changing the failed Entry 122 evidence. Entry 123 is
 now measured: W=8 passes 45/45, with all signed terminal checks passing.
-Entry 124 registers the connected CTLE, CML summer and real feedback DAC.
+Entry 124 connects the CTLE, CML summer and real feedback DAC: 45/45 PVT
+decode all 64 scored bits, but 44/45 pass the complete registered gate.
+An inactive DAC tail floats into -2.451 mV Vds at FS/0.95/125. Entry 125
+registers physical discharge-path recovery, before Entry 126 channel retiming.
 Existing reports and fixed-passive circuit evidence remain unchanged.
 
 Previous report snapshot, Entry 121: The unchanged 20-page
@@ -1028,7 +1031,11 @@ Entry 123 adds `nebula/DFE_CML_RECOVERY_PLAN.md`, `nebula/DFE_CML_RESULTS.md`,
 `nebula/experiments/archive_traces.py`, `nebula/tests/test_dfe_cml_recovery.py`,
 and byte-addressed Entry 122/123 artifacts under `nebula/product_audits/`.
 Entry 124 adds `nebula/DFE_CONNECTED_PLAN.md`, `nebula/device/dfe_connected.py`,
-`nebula/experiments/exp_dfe_connected.py` and `nebula/tests/test_dfe_connected.py`.
+`nebula/experiments/exp_dfe_connected.py`, `nebula/tests/test_dfe_connected.py`,
+and now `nebula/DFE_CONNECTED_RESULTS.md` plus exact archived-waveform tests.
+Entries 125/126 add `dfe_tail_bleed.py`, `dfe_timing.py`, their bounded runners,
+`DFE_TAIL_BLEED_PLAN.md`, `DFE_TIMING_PLAN.md`, streaming `evidence_archive.py`
+verification and failure-first tests. Existing source snapshots are immutable.
 
 Entry 121: NEXT_AGENT_PROMPT.md is the self-contained operational handoff
 for a new agent. It records reading order, verified product state, evidence
@@ -1980,6 +1987,9 @@ hardware work and authorize bounded agent-selected experiments. CML
 master/slave decision storage is the first new architecture; see Session Log.
 Entry 123 retains Entry 122's 34/45 result and registers a bounded 8/16 um
 corner screen, leaving all existing circuit, timing and voltage gates fixed.
+Entry 124 then measures connected physical feedback: 44/45 electrical PVT
+passes, 45/45 bit-decode passes. Entries 125/126 register a physical inactive-
+branch discharge fix followed by conditional high-loss clock retiming.
 
 Entry 120 (2026-09-09): filled the three sparse academic front-matter pages using existing verified evidence. No technical result or claim changed. Rendered pages 4-22 are unchanged.
 
@@ -2212,6 +2222,13 @@ Entry 123 measured: 51 calls, 62.768497 s; W=8 passes all 45 PVT points,
 held margin 32.5049 mV, previous-bit margin 30.7134 mV, clock-to-output
 46.5 ps, VDD power 1.9190684 mW. This is still a standalone storage block.
 Existing physical product counts and RL results remain unchanged.
+Entry 124: 58 calls in 1328.832334 s. TT sampled eye is 237.761878 mV
+versus 195.188973 mV at code 0 and 128.803924 mV with reversed code 2.
+One fixed setting decodes 64/64 at all 45 PVT, but passes 44/45 electrical
+gates. Worst eye 109.682577 mV; maximum combined VDD power 12.514816 mW.
+FS/0.95/125 fails inactive Xdfe_tail3 signed Vds (-2.451058 mV), not logic.
+TT 12 dB at the same clock phase fails 15/64; do not inherit 315/315.
+See `nebula/DFE_CONNECTED_RESULTS.md` and its 372-file original manifest.
 
 Entry 120: current academic PDF SHA-256 is a573db02335879e0a6a0b3feb2c9eeea2172c2f3f4b4e4699dfc8123c8f90670. Pages 1-3 pass visual review; pages 4-22 match Entry 119.
 
@@ -2850,6 +2867,11 @@ Entry 122: a standalone CML decision/hold pass, if achieved, will not establish
 a complete DFE. Physical feedback, CTLE loading, closed-loop timing and
 receiver metrics require subsequent measured integration. External clock and
 common-mode sources are explicitly testbench assumptions.
+Entry 124 now demonstrates connected transistor feedback at TT and 44/45
+electrical PVT points, not full receiver signoff. Legacy PMOS attenuator
+reverse-Vds findings remain explicit. Clock/common-mode drivers, physical
+Rs/Cs configuration, loaded noise/HD3 and broad-channel timing are not closed.
+Entry 125's added bleeders imply code 0 is minimum current, NOT feedback off.
 
 Entry 116 (2026-09-08): the final competition report has a dedicated team/
 institution cover and a prioritized future-development page. The 20-page
@@ -3071,7 +3093,9 @@ variation, mismatch and layout remain open. Old production evidence is unchanged
 configurable Rs/Cs. Owner authorization covers bounded architecture/sizing
 experiments; register membership and gates before each run, preserve failed
 trials, and do not re-ask approval for ordinary in-scope iterations. Current
-next trial: `nebula/DFE_CONNECTED_PLAN.md` after Entry 123's 45/45 recovery.
+next trial: `nebula/DFE_TAIL_BLEED_PLAN.md` (maximum 57 calls) to fix the
+measured inactive-DAC voltage failure. Only after its fixed-circuit 45-PVT
+pass, run `nebula/DFE_TIMING_PLAN.md` (Entry 126, maximum 95 new calls).
 Do not inherit fixed-circuit PVT or
 frozen RL coverage for a new hardware topology.
 
@@ -6560,6 +6584,24 @@ The tiny resistance-error trade-off changes drawn body area from 239.2 to
 selector on a sensitive high-speed node. Record actual resistance and
 physical dimensions before simulation; do not silently substitute ideal R.
 The global selector and all existing delivered circuits remain unchanged.
+
+### G177. Correct bits do not clear a floating inactive DAC node
+
+Entry 124 decodes 64/64 at all 45 PVT points, yet FS/0.95/125 fails exact
+signed Vds: inactive Xdfe_tail3's source floats above its drain by 2.451 mV
+over 3,620 samples. Audit OFF branches and the full transient, not only
+active signal paths. Do not waive the registered signed gate because logic,
+power and sampled eye pass. A physical discharge path can introduce residual
+current: if added, code 0 is minimum feedback, not feedback disabled.
+
+### G178. Frozen Python source hashes need explicit checkout newlines
+
+This Windows repository has core.autocrlf=true, but newly authored hardware
+Python files and their frozen source snapshots are LF-only. Default checkout
+conversion would change live source hashes without a scientific edit.
+`.gitattributes` now sets Python source to text/eol=lf. The later byte-
+preserving product_audits/product_demo/archive rules still override text
+conversion for immutable evidence. No raw artifact is normalized or changed.
 
 ## 10. Environment
 
@@ -17872,3 +17914,51 @@ Clean unchanged full rerun: 3044 passed, 13 deselected, two known warnings in
 measurements. No test threshold, circuit size or gate was changed to clear
 the timing-sensitive library check. GitHub push remains blocked pending the
 requested explicit destination/visibility confirmation; local work continues.
+
+Entry 124 measured after freeze bbf0281: 58 calls, 1328.832334 s; 44/45
+electrical-function PVT passes and 64/64 scored decisions at all 45 points.
+Only FS/0.95/125 fails: inactive Xdfe_tail3 reaches -2.451058 mV signed Vds
+over 3,620 saved samples. TT selected feedback improves sampled eye from
+195.188973 to 237.761878 mV; reversed code 2 gives 128.803924 mV.
+Worst PVT eye 109.682577 mV, max combined VDD power 12.514816 mW. The
+same-clock TT 12 dB diagnostic fails 15/64, while 3 dB passes 64/64.
+See `nebula/DFE_CONNECTED_RESULTS.md`; no whole-circuit model-domain, BER,
+horizontal-eye or full receiver signoff is inferred. Original reports,
+registry, fixed-passive exports and frozen RL are unchanged.
+
+All 372 original hashes are retained; 116 byte-verified gzip siblings
+preserve 9,608,421,600 raw bytes in 1,887,188,425 compressed bytes. Largest
+gzip is 20,346,341 bytes. Raw originals remain local. Added streaming archive
+verification and exact representative waveform/voltage/deck regressions.
+
+### 2026-09-09 - Entries 125/126 / discharge recovery then channel timing
+
+Entry 125 preregisters two four-device NMOS discharge-path candidates:
+W=.42/L=4 or 2 um, gate at existing physical df_nbias, from each inactive
+DAC tail node to ground. Eight corner screens plus matched minimum-code/
+reverse controls, then one fixed geometry at 45 PVT, maximum 57 calls.
+The strict signed gate is unchanged. Code 0 now has residual feedback and
+is explicitly minimum current, NOT feedback disabled. See G177.
+
+Entry 126 is conditional on Entry 125's verified 45-PVT pass. It tests
+three later phases at 12 dB, matched minimum-current/reversed controls, then
+90 fixed-geometry points across 3 and 12 dB, maximum 95 new calls. No
+per-corner retuning or fabricated CDR is claimed. Both stages add a finite,
+noiseless waveform aperture >0.4 UI gate; this is not BER. Single-scale
+wrdata removes repeated time columns without discarding solver samples.
+
+Pre-change full suite: 3044 passed, 13 deselected, two known warnings in
+677.37 s. Failure-first imports rejected the missing implementations.
+New focused unit tests: 30 passed in 5.59 s. Initial evidence replay had
+five exact-deck spelling failures (27.0 versus the frozen screen's integer
+27); all numerical metrics, signed audits and all original hashes passed.
+The replay fixture now preserves the scheduler's original input types.
+Final full validation: 3081 passed, 13 deselected, two known warnings in
+405.63 s, with no concurrent SPICE, archival job or heavy Git staging.
+Freeze commit: next; do not simulate either new stage until frozen.
+GitHub push remains unapproved after
+the earlier auto-review rejection; no retry or alternate upload was made.
+Final focused checks: 55 passed in 79.04 s, including all 372 original hashes,
+116 gzip archives, exact schedule replay and six waveform/terminal replays.
+Both PDF hashes remain unchanged. New Python-source checkout rules preserve
+frozen source hashes under core.autocrlf (G178); archived bytes remain -text.

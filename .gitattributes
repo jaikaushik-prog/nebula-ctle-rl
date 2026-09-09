@@ -1,3 +1,6 @@
+# Scientific source hashes must survive a Windows checkout (core.autocrlf).
+*.py text eol=lf
+
 # Simulator evidence is content-addressed. Git must preserve its exact bytes.
 nebula/product_audits/** -text
 nebula/product_demo/** -text
