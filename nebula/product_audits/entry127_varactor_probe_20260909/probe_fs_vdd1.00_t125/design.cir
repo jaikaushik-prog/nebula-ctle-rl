@@ -1,0 +1,1039 @@
+* Entry 127 isolated official SKY130 varactor probes
+.lib "C:/Users/DELL/sky130A/libs.tech/ngspice/sky130.lib.spice" fs
+.temp 125
+Vp0 p0 0 dc 0.35 ac 0.5
+Vn0 n0 0 dc 0.35 ac -0.5
+Vc0 c0 0 0
+Xvarp0_0 p0 c0 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn0_0 n0 c0 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp1 p1 0 dc 0.35 ac 0.5
+Vn1 n1 0 dc 0.35 ac -0.5
+Vc1 c1 0 0.04500000000000001
+Xvarp1_0 p1 c1 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn1_0 n1 c1 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp2 p2 0 dc 0.35 ac 0.5
+Vn2 n2 0 dc 0.35 ac -0.5
+Vc2 c2 0 0.09000000000000001
+Xvarp2_0 p2 c2 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn2_0 n2 c2 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp3 p3 0 dc 0.35 ac 0.5
+Vn3 n3 0 dc 0.35 ac -0.5
+Vc3 c3 0 0.135
+Xvarp3_0 p3 c3 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn3_0 n3 c3 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp4 p4 0 dc 0.35 ac 0.5
+Vn4 n4 0 dc 0.35 ac -0.5
+Vc4 c4 0 0.18
+Xvarp4_0 p4 c4 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn4_0 n4 c4 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp5 p5 0 dc 0.35 ac 0.5
+Vn5 n5 0 dc 0.35 ac -0.5
+Vc5 c5 0 0.225
+Xvarp5_0 p5 c5 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn5_0 n5 c5 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp6 p6 0 dc 0.35 ac 0.5
+Vn6 n6 0 dc 0.35 ac -0.5
+Vc6 c6 0 0.27
+Xvarp6_0 p6 c6 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn6_0 n6 c6 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp7 p7 0 dc 0.35 ac 0.5
+Vn7 n7 0 dc 0.35 ac -0.5
+Vc7 c7 0 0.315
+Xvarp7_0 p7 c7 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn7_0 n7 c7 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp8 p8 0 dc 0.35 ac 0.5
+Vn8 n8 0 dc 0.35 ac -0.5
+Vc8 c8 0 0.36
+Xvarp8_0 p8 c8 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn8_0 n8 c8 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp9 p9 0 dc 0.35 ac 0.5
+Vn9 n9 0 dc 0.35 ac -0.5
+Vc9 c9 0 0.405
+Xvarp9_0 p9 c9 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn9_0 n9 c9 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp10 p10 0 dc 0.35 ac 0.5
+Vn10 n10 0 dc 0.35 ac -0.5
+Vc10 c10 0 0.45
+Xvarp10_0 p10 c10 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn10_0 n10 c10 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp11 p11 0 dc 0.35 ac 0.5
+Vn11 n11 0 dc 0.35 ac -0.5
+Vc11 c11 0 0.4950000000000001
+Xvarp11_0 p11 c11 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn11_0 n11 c11 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp12 p12 0 dc 0.35 ac 0.5
+Vn12 n12 0 dc 0.35 ac -0.5
+Vc12 c12 0 0.54
+Xvarp12_0 p12 c12 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn12_0 n12 c12 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp13 p13 0 dc 0.35 ac 0.5
+Vn13 n13 0 dc 0.35 ac -0.5
+Vc13 c13 0 0.5850000000000001
+Xvarp13_0 p13 c13 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn13_0 n13 c13 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp14 p14 0 dc 0.35 ac 0.5
+Vn14 n14 0 dc 0.35 ac -0.5
+Vc14 c14 0 0.63
+Xvarp14_0 p14 c14 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn14_0 n14 c14 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp15 p15 0 dc 0.35 ac 0.5
+Vn15 n15 0 dc 0.35 ac -0.5
+Vc15 c15 0 0.675
+Xvarp15_0 p15 c15 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn15_0 n15 c15 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp16 p16 0 dc 0.35 ac 0.5
+Vn16 n16 0 dc 0.35 ac -0.5
+Vc16 c16 0 0.7200000000000001
+Xvarp16_0 p16 c16 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn16_0 n16 c16 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp17 p17 0 dc 0.35 ac 0.5
+Vn17 n17 0 dc 0.35 ac -0.5
+Vc17 c17 0 0.765
+Xvarp17_0 p17 c17 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn17_0 n17 c17 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp18 p18 0 dc 0.35 ac 0.5
+Vn18 n18 0 dc 0.35 ac -0.5
+Vc18 c18 0 0.8100000000000001
+Xvarp18_0 p18 c18 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn18_0 n18 c18 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp19 p19 0 dc 0.35 ac 0.5
+Vn19 n19 0 dc 0.35 ac -0.5
+Vc19 c19 0 0.855
+Xvarp19_0 p19 c19 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn19_0 n19 c19 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp20 p20 0 dc 0.35 ac 0.5
+Vn20 n20 0 dc 0.35 ac -0.5
+Vc20 c20 0 0.9
+Xvarp20_0 p20 c20 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn20_0 n20 c20 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp21 p21 0 dc 0.35 ac 0.5
+Vn21 n21 0 dc 0.35 ac -0.5
+Vc21 c21 0 0.9450000000000001
+Xvarp21_0 p21 c21 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn21_0 n21 c21 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp22 p22 0 dc 0.35 ac 0.5
+Vn22 n22 0 dc 0.35 ac -0.5
+Vc22 c22 0 0.9900000000000001
+Xvarp22_0 p22 c22 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn22_0 n22 c22 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp23 p23 0 dc 0.35 ac 0.5
+Vn23 n23 0 dc 0.35 ac -0.5
+Vc23 c23 0 1.035
+Xvarp23_0 p23 c23 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn23_0 n23 c23 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp24 p24 0 dc 0.35 ac 0.5
+Vn24 n24 0 dc 0.35 ac -0.5
+Vc24 c24 0 1.08
+Xvarp24_0 p24 c24 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn24_0 n24 c24 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp25 p25 0 dc 0.35 ac 0.5
+Vn25 n25 0 dc 0.35 ac -0.5
+Vc25 c25 0 1.125
+Xvarp25_0 p25 c25 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn25_0 n25 c25 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp26 p26 0 dc 0.35 ac 0.5
+Vn26 n26 0 dc 0.35 ac -0.5
+Vc26 c26 0 1.17
+Xvarp26_0 p26 c26 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn26_0 n26 c26 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp27 p27 0 dc 0.35 ac 0.5
+Vn27 n27 0 dc 0.35 ac -0.5
+Vc27 c27 0 1.215
+Xvarp27_0 p27 c27 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn27_0 n27 c27 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp28 p28 0 dc 0.35 ac 0.5
+Vn28 n28 0 dc 0.35 ac -0.5
+Vc28 c28 0 1.26
+Xvarp28_0 p28 c28 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn28_0 n28 c28 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp29 p29 0 dc 0.35 ac 0.5
+Vn29 n29 0 dc 0.35 ac -0.5
+Vc29 c29 0 1.305
+Xvarp29_0 p29 c29 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn29_0 n29 c29 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp30 p30 0 dc 0.35 ac 0.5
+Vn30 n30 0 dc 0.35 ac -0.5
+Vc30 c30 0 1.35
+Xvarp30_0 p30 c30 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn30_0 n30 c30 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp31 p31 0 dc 0.35 ac 0.5
+Vn31 n31 0 dc 0.35 ac -0.5
+Vc31 c31 0 1.395
+Xvarp31_0 p31 c31 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn31_0 n31 c31 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp32 p32 0 dc 0.35 ac 0.5
+Vn32 n32 0 dc 0.35 ac -0.5
+Vc32 c32 0 1.44
+Xvarp32_0 p32 c32 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn32_0 n32 c32 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp33 p33 0 dc 0.35 ac 0.5
+Vn33 n33 0 dc 0.35 ac -0.5
+Vc33 c33 0 1.485
+Xvarp33_0 p33 c33 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn33_0 n33 c33 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp34 p34 0 dc 0.35 ac 0.5
+Vn34 n34 0 dc 0.35 ac -0.5
+Vc34 c34 0 1.53
+Xvarp34_0 p34 c34 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn34_0 n34 c34 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp35 p35 0 dc 0.35 ac 0.5
+Vn35 n35 0 dc 0.35 ac -0.5
+Vc35 c35 0 1.575
+Xvarp35_0 p35 c35 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn35_0 n35 c35 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp36 p36 0 dc 0.35 ac 0.5
+Vn36 n36 0 dc 0.35 ac -0.5
+Vc36 c36 0 1.62
+Xvarp36_0 p36 c36 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn36_0 n36 c36 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp37 p37 0 dc 0.35 ac 0.5
+Vn37 n37 0 dc 0.35 ac -0.5
+Vc37 c37 0 1.665
+Xvarp37_0 p37 c37 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn37_0 n37 c37 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp38 p38 0 dc 0.35 ac 0.5
+Vn38 n38 0 dc 0.35 ac -0.5
+Vc38 c38 0 1.71
+Xvarp38_0 p38 c38 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn38_0 n38 c38 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp39 p39 0 dc 0.35 ac 0.5
+Vn39 n39 0 dc 0.35 ac -0.5
+Vc39 c39 0 1.755
+Xvarp39_0 p39 c39 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn39_0 n39 c39 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp40 p40 0 dc 0.35 ac 0.5
+Vn40 n40 0 dc 0.35 ac -0.5
+Vc40 c40 0 1.8
+Xvarp40_0 p40 c40 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn40_0 n40 c40 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp41 p41 0 dc 0.5 ac 0.5
+Vn41 n41 0 dc 0.5 ac -0.5
+Vc41 c41 0 0
+Xvarp41_0 p41 c41 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn41_0 n41 c41 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp42 p42 0 dc 0.5 ac 0.5
+Vn42 n42 0 dc 0.5 ac -0.5
+Vc42 c42 0 0.04500000000000001
+Xvarp42_0 p42 c42 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn42_0 n42 c42 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp43 p43 0 dc 0.5 ac 0.5
+Vn43 n43 0 dc 0.5 ac -0.5
+Vc43 c43 0 0.09000000000000001
+Xvarp43_0 p43 c43 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn43_0 n43 c43 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp44 p44 0 dc 0.5 ac 0.5
+Vn44 n44 0 dc 0.5 ac -0.5
+Vc44 c44 0 0.135
+Xvarp44_0 p44 c44 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn44_0 n44 c44 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp45 p45 0 dc 0.5 ac 0.5
+Vn45 n45 0 dc 0.5 ac -0.5
+Vc45 c45 0 0.18
+Xvarp45_0 p45 c45 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn45_0 n45 c45 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp46 p46 0 dc 0.5 ac 0.5
+Vn46 n46 0 dc 0.5 ac -0.5
+Vc46 c46 0 0.225
+Xvarp46_0 p46 c46 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn46_0 n46 c46 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp47 p47 0 dc 0.5 ac 0.5
+Vn47 n47 0 dc 0.5 ac -0.5
+Vc47 c47 0 0.27
+Xvarp47_0 p47 c47 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn47_0 n47 c47 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp48 p48 0 dc 0.5 ac 0.5
+Vn48 n48 0 dc 0.5 ac -0.5
+Vc48 c48 0 0.315
+Xvarp48_0 p48 c48 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn48_0 n48 c48 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp49 p49 0 dc 0.5 ac 0.5
+Vn49 n49 0 dc 0.5 ac -0.5
+Vc49 c49 0 0.36
+Xvarp49_0 p49 c49 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn49_0 n49 c49 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp50 p50 0 dc 0.5 ac 0.5
+Vn50 n50 0 dc 0.5 ac -0.5
+Vc50 c50 0 0.405
+Xvarp50_0 p50 c50 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn50_0 n50 c50 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp51 p51 0 dc 0.5 ac 0.5
+Vn51 n51 0 dc 0.5 ac -0.5
+Vc51 c51 0 0.45
+Xvarp51_0 p51 c51 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn51_0 n51 c51 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp52 p52 0 dc 0.5 ac 0.5
+Vn52 n52 0 dc 0.5 ac -0.5
+Vc52 c52 0 0.4950000000000001
+Xvarp52_0 p52 c52 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn52_0 n52 c52 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp53 p53 0 dc 0.5 ac 0.5
+Vn53 n53 0 dc 0.5 ac -0.5
+Vc53 c53 0 0.54
+Xvarp53_0 p53 c53 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn53_0 n53 c53 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp54 p54 0 dc 0.5 ac 0.5
+Vn54 n54 0 dc 0.5 ac -0.5
+Vc54 c54 0 0.5850000000000001
+Xvarp54_0 p54 c54 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn54_0 n54 c54 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp55 p55 0 dc 0.5 ac 0.5
+Vn55 n55 0 dc 0.5 ac -0.5
+Vc55 c55 0 0.63
+Xvarp55_0 p55 c55 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn55_0 n55 c55 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp56 p56 0 dc 0.5 ac 0.5
+Vn56 n56 0 dc 0.5 ac -0.5
+Vc56 c56 0 0.675
+Xvarp56_0 p56 c56 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn56_0 n56 c56 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp57 p57 0 dc 0.5 ac 0.5
+Vn57 n57 0 dc 0.5 ac -0.5
+Vc57 c57 0 0.7200000000000001
+Xvarp57_0 p57 c57 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn57_0 n57 c57 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp58 p58 0 dc 0.5 ac 0.5
+Vn58 n58 0 dc 0.5 ac -0.5
+Vc58 c58 0 0.765
+Xvarp58_0 p58 c58 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn58_0 n58 c58 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp59 p59 0 dc 0.5 ac 0.5
+Vn59 n59 0 dc 0.5 ac -0.5
+Vc59 c59 0 0.8100000000000001
+Xvarp59_0 p59 c59 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn59_0 n59 c59 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp60 p60 0 dc 0.5 ac 0.5
+Vn60 n60 0 dc 0.5 ac -0.5
+Vc60 c60 0 0.855
+Xvarp60_0 p60 c60 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn60_0 n60 c60 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp61 p61 0 dc 0.5 ac 0.5
+Vn61 n61 0 dc 0.5 ac -0.5
+Vc61 c61 0 0.9
+Xvarp61_0 p61 c61 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn61_0 n61 c61 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp62 p62 0 dc 0.5 ac 0.5
+Vn62 n62 0 dc 0.5 ac -0.5
+Vc62 c62 0 0.9450000000000001
+Xvarp62_0 p62 c62 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn62_0 n62 c62 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp63 p63 0 dc 0.5 ac 0.5
+Vn63 n63 0 dc 0.5 ac -0.5
+Vc63 c63 0 0.9900000000000001
+Xvarp63_0 p63 c63 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn63_0 n63 c63 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp64 p64 0 dc 0.5 ac 0.5
+Vn64 n64 0 dc 0.5 ac -0.5
+Vc64 c64 0 1.035
+Xvarp64_0 p64 c64 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn64_0 n64 c64 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp65 p65 0 dc 0.5 ac 0.5
+Vn65 n65 0 dc 0.5 ac -0.5
+Vc65 c65 0 1.08
+Xvarp65_0 p65 c65 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn65_0 n65 c65 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp66 p66 0 dc 0.5 ac 0.5
+Vn66 n66 0 dc 0.5 ac -0.5
+Vc66 c66 0 1.125
+Xvarp66_0 p66 c66 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn66_0 n66 c66 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp67 p67 0 dc 0.5 ac 0.5
+Vn67 n67 0 dc 0.5 ac -0.5
+Vc67 c67 0 1.17
+Xvarp67_0 p67 c67 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn67_0 n67 c67 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp68 p68 0 dc 0.5 ac 0.5
+Vn68 n68 0 dc 0.5 ac -0.5
+Vc68 c68 0 1.215
+Xvarp68_0 p68 c68 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn68_0 n68 c68 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp69 p69 0 dc 0.5 ac 0.5
+Vn69 n69 0 dc 0.5 ac -0.5
+Vc69 c69 0 1.26
+Xvarp69_0 p69 c69 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn69_0 n69 c69 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp70 p70 0 dc 0.5 ac 0.5
+Vn70 n70 0 dc 0.5 ac -0.5
+Vc70 c70 0 1.305
+Xvarp70_0 p70 c70 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn70_0 n70 c70 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp71 p71 0 dc 0.5 ac 0.5
+Vn71 n71 0 dc 0.5 ac -0.5
+Vc71 c71 0 1.35
+Xvarp71_0 p71 c71 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn71_0 n71 c71 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp72 p72 0 dc 0.5 ac 0.5
+Vn72 n72 0 dc 0.5 ac -0.5
+Vc72 c72 0 1.395
+Xvarp72_0 p72 c72 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn72_0 n72 c72 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp73 p73 0 dc 0.5 ac 0.5
+Vn73 n73 0 dc 0.5 ac -0.5
+Vc73 c73 0 1.44
+Xvarp73_0 p73 c73 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn73_0 n73 c73 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp74 p74 0 dc 0.5 ac 0.5
+Vn74 n74 0 dc 0.5 ac -0.5
+Vc74 c74 0 1.485
+Xvarp74_0 p74 c74 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn74_0 n74 c74 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp75 p75 0 dc 0.5 ac 0.5
+Vn75 n75 0 dc 0.5 ac -0.5
+Vc75 c75 0 1.53
+Xvarp75_0 p75 c75 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn75_0 n75 c75 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp76 p76 0 dc 0.5 ac 0.5
+Vn76 n76 0 dc 0.5 ac -0.5
+Vc76 c76 0 1.575
+Xvarp76_0 p76 c76 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn76_0 n76 c76 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp77 p77 0 dc 0.5 ac 0.5
+Vn77 n77 0 dc 0.5 ac -0.5
+Vc77 c77 0 1.62
+Xvarp77_0 p77 c77 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn77_0 n77 c77 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp78 p78 0 dc 0.5 ac 0.5
+Vn78 n78 0 dc 0.5 ac -0.5
+Vc78 c78 0 1.665
+Xvarp78_0 p78 c78 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn78_0 n78 c78 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp79 p79 0 dc 0.5 ac 0.5
+Vn79 n79 0 dc 0.5 ac -0.5
+Vc79 c79 0 1.71
+Xvarp79_0 p79 c79 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn79_0 n79 c79 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp80 p80 0 dc 0.5 ac 0.5
+Vn80 n80 0 dc 0.5 ac -0.5
+Vc80 c80 0 1.755
+Xvarp80_0 p80 c80 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn80_0 n80 c80 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp81 p81 0 dc 0.5 ac 0.5
+Vn81 n81 0 dc 0.5 ac -0.5
+Vc81 c81 0 1.8
+Xvarp81_0 p81 c81 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn81_0 n81 c81 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp82 p82 0 dc 0.65 ac 0.5
+Vn82 n82 0 dc 0.65 ac -0.5
+Vc82 c82 0 0
+Xvarp82_0 p82 c82 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn82_0 n82 c82 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp83 p83 0 dc 0.65 ac 0.5
+Vn83 n83 0 dc 0.65 ac -0.5
+Vc83 c83 0 0.04500000000000001
+Xvarp83_0 p83 c83 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn83_0 n83 c83 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp84 p84 0 dc 0.65 ac 0.5
+Vn84 n84 0 dc 0.65 ac -0.5
+Vc84 c84 0 0.09000000000000001
+Xvarp84_0 p84 c84 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn84_0 n84 c84 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp85 p85 0 dc 0.65 ac 0.5
+Vn85 n85 0 dc 0.65 ac -0.5
+Vc85 c85 0 0.135
+Xvarp85_0 p85 c85 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn85_0 n85 c85 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp86 p86 0 dc 0.65 ac 0.5
+Vn86 n86 0 dc 0.65 ac -0.5
+Vc86 c86 0 0.18
+Xvarp86_0 p86 c86 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn86_0 n86 c86 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp87 p87 0 dc 0.65 ac 0.5
+Vn87 n87 0 dc 0.65 ac -0.5
+Vc87 c87 0 0.225
+Xvarp87_0 p87 c87 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn87_0 n87 c87 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp88 p88 0 dc 0.65 ac 0.5
+Vn88 n88 0 dc 0.65 ac -0.5
+Vc88 c88 0 0.27
+Xvarp88_0 p88 c88 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn88_0 n88 c88 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp89 p89 0 dc 0.65 ac 0.5
+Vn89 n89 0 dc 0.65 ac -0.5
+Vc89 c89 0 0.315
+Xvarp89_0 p89 c89 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn89_0 n89 c89 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp90 p90 0 dc 0.65 ac 0.5
+Vn90 n90 0 dc 0.65 ac -0.5
+Vc90 c90 0 0.36
+Xvarp90_0 p90 c90 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn90_0 n90 c90 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp91 p91 0 dc 0.65 ac 0.5
+Vn91 n91 0 dc 0.65 ac -0.5
+Vc91 c91 0 0.405
+Xvarp91_0 p91 c91 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn91_0 n91 c91 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp92 p92 0 dc 0.65 ac 0.5
+Vn92 n92 0 dc 0.65 ac -0.5
+Vc92 c92 0 0.45
+Xvarp92_0 p92 c92 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn92_0 n92 c92 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp93 p93 0 dc 0.65 ac 0.5
+Vn93 n93 0 dc 0.65 ac -0.5
+Vc93 c93 0 0.4950000000000001
+Xvarp93_0 p93 c93 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn93_0 n93 c93 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp94 p94 0 dc 0.65 ac 0.5
+Vn94 n94 0 dc 0.65 ac -0.5
+Vc94 c94 0 0.54
+Xvarp94_0 p94 c94 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn94_0 n94 c94 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp95 p95 0 dc 0.65 ac 0.5
+Vn95 n95 0 dc 0.65 ac -0.5
+Vc95 c95 0 0.5850000000000001
+Xvarp95_0 p95 c95 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn95_0 n95 c95 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp96 p96 0 dc 0.65 ac 0.5
+Vn96 n96 0 dc 0.65 ac -0.5
+Vc96 c96 0 0.63
+Xvarp96_0 p96 c96 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn96_0 n96 c96 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp97 p97 0 dc 0.65 ac 0.5
+Vn97 n97 0 dc 0.65 ac -0.5
+Vc97 c97 0 0.675
+Xvarp97_0 p97 c97 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn97_0 n97 c97 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp98 p98 0 dc 0.65 ac 0.5
+Vn98 n98 0 dc 0.65 ac -0.5
+Vc98 c98 0 0.7200000000000001
+Xvarp98_0 p98 c98 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn98_0 n98 c98 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp99 p99 0 dc 0.65 ac 0.5
+Vn99 n99 0 dc 0.65 ac -0.5
+Vc99 c99 0 0.765
+Xvarp99_0 p99 c99 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn99_0 n99 c99 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp100 p100 0 dc 0.65 ac 0.5
+Vn100 n100 0 dc 0.65 ac -0.5
+Vc100 c100 0 0.8100000000000001
+Xvarp100_0 p100 c100 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn100_0 n100 c100 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp101 p101 0 dc 0.65 ac 0.5
+Vn101 n101 0 dc 0.65 ac -0.5
+Vc101 c101 0 0.855
+Xvarp101_0 p101 c101 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn101_0 n101 c101 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp102 p102 0 dc 0.65 ac 0.5
+Vn102 n102 0 dc 0.65 ac -0.5
+Vc102 c102 0 0.9
+Xvarp102_0 p102 c102 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn102_0 n102 c102 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp103 p103 0 dc 0.65 ac 0.5
+Vn103 n103 0 dc 0.65 ac -0.5
+Vc103 c103 0 0.9450000000000001
+Xvarp103_0 p103 c103 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn103_0 n103 c103 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp104 p104 0 dc 0.65 ac 0.5
+Vn104 n104 0 dc 0.65 ac -0.5
+Vc104 c104 0 0.9900000000000001
+Xvarp104_0 p104 c104 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn104_0 n104 c104 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp105 p105 0 dc 0.65 ac 0.5
+Vn105 n105 0 dc 0.65 ac -0.5
+Vc105 c105 0 1.035
+Xvarp105_0 p105 c105 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn105_0 n105 c105 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp106 p106 0 dc 0.65 ac 0.5
+Vn106 n106 0 dc 0.65 ac -0.5
+Vc106 c106 0 1.08
+Xvarp106_0 p106 c106 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn106_0 n106 c106 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp107 p107 0 dc 0.65 ac 0.5
+Vn107 n107 0 dc 0.65 ac -0.5
+Vc107 c107 0 1.125
+Xvarp107_0 p107 c107 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn107_0 n107 c107 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp108 p108 0 dc 0.65 ac 0.5
+Vn108 n108 0 dc 0.65 ac -0.5
+Vc108 c108 0 1.17
+Xvarp108_0 p108 c108 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn108_0 n108 c108 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp109 p109 0 dc 0.65 ac 0.5
+Vn109 n109 0 dc 0.65 ac -0.5
+Vc109 c109 0 1.215
+Xvarp109_0 p109 c109 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn109_0 n109 c109 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp110 p110 0 dc 0.65 ac 0.5
+Vn110 n110 0 dc 0.65 ac -0.5
+Vc110 c110 0 1.26
+Xvarp110_0 p110 c110 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn110_0 n110 c110 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp111 p111 0 dc 0.65 ac 0.5
+Vn111 n111 0 dc 0.65 ac -0.5
+Vc111 c111 0 1.305
+Xvarp111_0 p111 c111 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn111_0 n111 c111 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp112 p112 0 dc 0.65 ac 0.5
+Vn112 n112 0 dc 0.65 ac -0.5
+Vc112 c112 0 1.35
+Xvarp112_0 p112 c112 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn112_0 n112 c112 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp113 p113 0 dc 0.65 ac 0.5
+Vn113 n113 0 dc 0.65 ac -0.5
+Vc113 c113 0 1.395
+Xvarp113_0 p113 c113 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn113_0 n113 c113 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp114 p114 0 dc 0.65 ac 0.5
+Vn114 n114 0 dc 0.65 ac -0.5
+Vc114 c114 0 1.44
+Xvarp114_0 p114 c114 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn114_0 n114 c114 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp115 p115 0 dc 0.65 ac 0.5
+Vn115 n115 0 dc 0.65 ac -0.5
+Vc115 c115 0 1.485
+Xvarp115_0 p115 c115 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn115_0 n115 c115 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp116 p116 0 dc 0.65 ac 0.5
+Vn116 n116 0 dc 0.65 ac -0.5
+Vc116 c116 0 1.53
+Xvarp116_0 p116 c116 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn116_0 n116 c116 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp117 p117 0 dc 0.65 ac 0.5
+Vn117 n117 0 dc 0.65 ac -0.5
+Vc117 c117 0 1.575
+Xvarp117_0 p117 c117 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn117_0 n117 c117 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp118 p118 0 dc 0.65 ac 0.5
+Vn118 n118 0 dc 0.65 ac -0.5
+Vc118 c118 0 1.62
+Xvarp118_0 p118 c118 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn118_0 n118 c118 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp119 p119 0 dc 0.65 ac 0.5
+Vn119 n119 0 dc 0.65 ac -0.5
+Vc119 c119 0 1.665
+Xvarp119_0 p119 c119 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn119_0 n119 c119 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp120 p120 0 dc 0.65 ac 0.5
+Vn120 n120 0 dc 0.65 ac -0.5
+Vc120 c120 0 1.71
+Xvarp120_0 p120 c120 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn120_0 n120 c120 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp121 p121 0 dc 0.65 ac 0.5
+Vn121 n121 0 dc 0.65 ac -0.5
+Vc121 c121 0 1.755
+Xvarp121_0 p121 c121 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn121_0 n121 c121 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp122 p122 0 dc 0.65 ac 0.5
+Vn122 n122 0 dc 0.65 ac -0.5
+Vc122 c122 0 1.8
+Xvarp122_0 p122 c122 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn122_0 n122 c122 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp123 p123 0 dc 0.8 ac 0.5
+Vn123 n123 0 dc 0.8 ac -0.5
+Vc123 c123 0 0
+Xvarp123_0 p123 c123 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn123_0 n123 c123 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp124 p124 0 dc 0.8 ac 0.5
+Vn124 n124 0 dc 0.8 ac -0.5
+Vc124 c124 0 0.04500000000000001
+Xvarp124_0 p124 c124 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn124_0 n124 c124 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp125 p125 0 dc 0.8 ac 0.5
+Vn125 n125 0 dc 0.8 ac -0.5
+Vc125 c125 0 0.09000000000000001
+Xvarp125_0 p125 c125 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn125_0 n125 c125 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp126 p126 0 dc 0.8 ac 0.5
+Vn126 n126 0 dc 0.8 ac -0.5
+Vc126 c126 0 0.135
+Xvarp126_0 p126 c126 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn126_0 n126 c126 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp127 p127 0 dc 0.8 ac 0.5
+Vn127 n127 0 dc 0.8 ac -0.5
+Vc127 c127 0 0.18
+Xvarp127_0 p127 c127 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn127_0 n127 c127 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp128 p128 0 dc 0.8 ac 0.5
+Vn128 n128 0 dc 0.8 ac -0.5
+Vc128 c128 0 0.225
+Xvarp128_0 p128 c128 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn128_0 n128 c128 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp129 p129 0 dc 0.8 ac 0.5
+Vn129 n129 0 dc 0.8 ac -0.5
+Vc129 c129 0 0.27
+Xvarp129_0 p129 c129 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn129_0 n129 c129 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp130 p130 0 dc 0.8 ac 0.5
+Vn130 n130 0 dc 0.8 ac -0.5
+Vc130 c130 0 0.315
+Xvarp130_0 p130 c130 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn130_0 n130 c130 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp131 p131 0 dc 0.8 ac 0.5
+Vn131 n131 0 dc 0.8 ac -0.5
+Vc131 c131 0 0.36
+Xvarp131_0 p131 c131 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn131_0 n131 c131 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp132 p132 0 dc 0.8 ac 0.5
+Vn132 n132 0 dc 0.8 ac -0.5
+Vc132 c132 0 0.405
+Xvarp132_0 p132 c132 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn132_0 n132 c132 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp133 p133 0 dc 0.8 ac 0.5
+Vn133 n133 0 dc 0.8 ac -0.5
+Vc133 c133 0 0.45
+Xvarp133_0 p133 c133 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn133_0 n133 c133 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp134 p134 0 dc 0.8 ac 0.5
+Vn134 n134 0 dc 0.8 ac -0.5
+Vc134 c134 0 0.4950000000000001
+Xvarp134_0 p134 c134 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn134_0 n134 c134 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp135 p135 0 dc 0.8 ac 0.5
+Vn135 n135 0 dc 0.8 ac -0.5
+Vc135 c135 0 0.54
+Xvarp135_0 p135 c135 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn135_0 n135 c135 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp136 p136 0 dc 0.8 ac 0.5
+Vn136 n136 0 dc 0.8 ac -0.5
+Vc136 c136 0 0.5850000000000001
+Xvarp136_0 p136 c136 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn136_0 n136 c136 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp137 p137 0 dc 0.8 ac 0.5
+Vn137 n137 0 dc 0.8 ac -0.5
+Vc137 c137 0 0.63
+Xvarp137_0 p137 c137 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn137_0 n137 c137 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp138 p138 0 dc 0.8 ac 0.5
+Vn138 n138 0 dc 0.8 ac -0.5
+Vc138 c138 0 0.675
+Xvarp138_0 p138 c138 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn138_0 n138 c138 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp139 p139 0 dc 0.8 ac 0.5
+Vn139 n139 0 dc 0.8 ac -0.5
+Vc139 c139 0 0.7200000000000001
+Xvarp139_0 p139 c139 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn139_0 n139 c139 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp140 p140 0 dc 0.8 ac 0.5
+Vn140 n140 0 dc 0.8 ac -0.5
+Vc140 c140 0 0.765
+Xvarp140_0 p140 c140 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn140_0 n140 c140 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp141 p141 0 dc 0.8 ac 0.5
+Vn141 n141 0 dc 0.8 ac -0.5
+Vc141 c141 0 0.8100000000000001
+Xvarp141_0 p141 c141 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn141_0 n141 c141 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp142 p142 0 dc 0.8 ac 0.5
+Vn142 n142 0 dc 0.8 ac -0.5
+Vc142 c142 0 0.855
+Xvarp142_0 p142 c142 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn142_0 n142 c142 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp143 p143 0 dc 0.8 ac 0.5
+Vn143 n143 0 dc 0.8 ac -0.5
+Vc143 c143 0 0.9
+Xvarp143_0 p143 c143 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn143_0 n143 c143 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp144 p144 0 dc 0.8 ac 0.5
+Vn144 n144 0 dc 0.8 ac -0.5
+Vc144 c144 0 0.9450000000000001
+Xvarp144_0 p144 c144 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn144_0 n144 c144 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp145 p145 0 dc 0.8 ac 0.5
+Vn145 n145 0 dc 0.8 ac -0.5
+Vc145 c145 0 0.9900000000000001
+Xvarp145_0 p145 c145 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn145_0 n145 c145 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp146 p146 0 dc 0.8 ac 0.5
+Vn146 n146 0 dc 0.8 ac -0.5
+Vc146 c146 0 1.035
+Xvarp146_0 p146 c146 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn146_0 n146 c146 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp147 p147 0 dc 0.8 ac 0.5
+Vn147 n147 0 dc 0.8 ac -0.5
+Vc147 c147 0 1.08
+Xvarp147_0 p147 c147 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn147_0 n147 c147 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp148 p148 0 dc 0.8 ac 0.5
+Vn148 n148 0 dc 0.8 ac -0.5
+Vc148 c148 0 1.125
+Xvarp148_0 p148 c148 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn148_0 n148 c148 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp149 p149 0 dc 0.8 ac 0.5
+Vn149 n149 0 dc 0.8 ac -0.5
+Vc149 c149 0 1.17
+Xvarp149_0 p149 c149 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn149_0 n149 c149 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp150 p150 0 dc 0.8 ac 0.5
+Vn150 n150 0 dc 0.8 ac -0.5
+Vc150 c150 0 1.215
+Xvarp150_0 p150 c150 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn150_0 n150 c150 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp151 p151 0 dc 0.8 ac 0.5
+Vn151 n151 0 dc 0.8 ac -0.5
+Vc151 c151 0 1.26
+Xvarp151_0 p151 c151 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn151_0 n151 c151 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp152 p152 0 dc 0.8 ac 0.5
+Vn152 n152 0 dc 0.8 ac -0.5
+Vc152 c152 0 1.305
+Xvarp152_0 p152 c152 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn152_0 n152 c152 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp153 p153 0 dc 0.8 ac 0.5
+Vn153 n153 0 dc 0.8 ac -0.5
+Vc153 c153 0 1.35
+Xvarp153_0 p153 c153 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn153_0 n153 c153 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp154 p154 0 dc 0.8 ac 0.5
+Vn154 n154 0 dc 0.8 ac -0.5
+Vc154 c154 0 1.395
+Xvarp154_0 p154 c154 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn154_0 n154 c154 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp155 p155 0 dc 0.8 ac 0.5
+Vn155 n155 0 dc 0.8 ac -0.5
+Vc155 c155 0 1.44
+Xvarp155_0 p155 c155 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn155_0 n155 c155 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp156 p156 0 dc 0.8 ac 0.5
+Vn156 n156 0 dc 0.8 ac -0.5
+Vc156 c156 0 1.485
+Xvarp156_0 p156 c156 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn156_0 n156 c156 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp157 p157 0 dc 0.8 ac 0.5
+Vn157 n157 0 dc 0.8 ac -0.5
+Vc157 c157 0 1.53
+Xvarp157_0 p157 c157 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn157_0 n157 c157 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp158 p158 0 dc 0.8 ac 0.5
+Vn158 n158 0 dc 0.8 ac -0.5
+Vc158 c158 0 1.575
+Xvarp158_0 p158 c158 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn158_0 n158 c158 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp159 p159 0 dc 0.8 ac 0.5
+Vn159 n159 0 dc 0.8 ac -0.5
+Vc159 c159 0 1.62
+Xvarp159_0 p159 c159 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn159_0 n159 c159 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp160 p160 0 dc 0.8 ac 0.5
+Vn160 n160 0 dc 0.8 ac -0.5
+Vc160 c160 0 1.665
+Xvarp160_0 p160 c160 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn160_0 n160 c160 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp161 p161 0 dc 0.8 ac 0.5
+Vn161 n161 0 dc 0.8 ac -0.5
+Vc161 c161 0 1.71
+Xvarp161_0 p161 c161 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn161_0 n161 c161 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp162 p162 0 dc 0.8 ac 0.5
+Vn162 n162 0 dc 0.8 ac -0.5
+Vc162 c162 0 1.755
+Xvarp162_0 p162 c162 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn162_0 n162 c162 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp163 p163 0 dc 0.8 ac 0.5
+Vn163 n163 0 dc 0.8 ac -0.5
+Vc163 c163 0 1.8
+Xvarp163_0 p163 c163 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn163_0 n163 c163 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp164 p164 0 dc 0.95 ac 0.5
+Vn164 n164 0 dc 0.95 ac -0.5
+Vc164 c164 0 0
+Xvarp164_0 p164 c164 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn164_0 n164 c164 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp165 p165 0 dc 0.95 ac 0.5
+Vn165 n165 0 dc 0.95 ac -0.5
+Vc165 c165 0 0.04500000000000001
+Xvarp165_0 p165 c165 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn165_0 n165 c165 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp166 p166 0 dc 0.95 ac 0.5
+Vn166 n166 0 dc 0.95 ac -0.5
+Vc166 c166 0 0.09000000000000001
+Xvarp166_0 p166 c166 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn166_0 n166 c166 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp167 p167 0 dc 0.95 ac 0.5
+Vn167 n167 0 dc 0.95 ac -0.5
+Vc167 c167 0 0.135
+Xvarp167_0 p167 c167 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn167_0 n167 c167 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp168 p168 0 dc 0.95 ac 0.5
+Vn168 n168 0 dc 0.95 ac -0.5
+Vc168 c168 0 0.18
+Xvarp168_0 p168 c168 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn168_0 n168 c168 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp169 p169 0 dc 0.95 ac 0.5
+Vn169 n169 0 dc 0.95 ac -0.5
+Vc169 c169 0 0.225
+Xvarp169_0 p169 c169 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn169_0 n169 c169 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp170 p170 0 dc 0.95 ac 0.5
+Vn170 n170 0 dc 0.95 ac -0.5
+Vc170 c170 0 0.27
+Xvarp170_0 p170 c170 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn170_0 n170 c170 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp171 p171 0 dc 0.95 ac 0.5
+Vn171 n171 0 dc 0.95 ac -0.5
+Vc171 c171 0 0.315
+Xvarp171_0 p171 c171 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn171_0 n171 c171 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp172 p172 0 dc 0.95 ac 0.5
+Vn172 n172 0 dc 0.95 ac -0.5
+Vc172 c172 0 0.36
+Xvarp172_0 p172 c172 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn172_0 n172 c172 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp173 p173 0 dc 0.95 ac 0.5
+Vn173 n173 0 dc 0.95 ac -0.5
+Vc173 c173 0 0.405
+Xvarp173_0 p173 c173 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn173_0 n173 c173 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp174 p174 0 dc 0.95 ac 0.5
+Vn174 n174 0 dc 0.95 ac -0.5
+Vc174 c174 0 0.45
+Xvarp174_0 p174 c174 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn174_0 n174 c174 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp175 p175 0 dc 0.95 ac 0.5
+Vn175 n175 0 dc 0.95 ac -0.5
+Vc175 c175 0 0.4950000000000001
+Xvarp175_0 p175 c175 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn175_0 n175 c175 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp176 p176 0 dc 0.95 ac 0.5
+Vn176 n176 0 dc 0.95 ac -0.5
+Vc176 c176 0 0.54
+Xvarp176_0 p176 c176 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn176_0 n176 c176 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp177 p177 0 dc 0.95 ac 0.5
+Vn177 n177 0 dc 0.95 ac -0.5
+Vc177 c177 0 0.5850000000000001
+Xvarp177_0 p177 c177 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn177_0 n177 c177 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp178 p178 0 dc 0.95 ac 0.5
+Vn178 n178 0 dc 0.95 ac -0.5
+Vc178 c178 0 0.63
+Xvarp178_0 p178 c178 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn178_0 n178 c178 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp179 p179 0 dc 0.95 ac 0.5
+Vn179 n179 0 dc 0.95 ac -0.5
+Vc179 c179 0 0.675
+Xvarp179_0 p179 c179 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn179_0 n179 c179 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp180 p180 0 dc 0.95 ac 0.5
+Vn180 n180 0 dc 0.95 ac -0.5
+Vc180 c180 0 0.7200000000000001
+Xvarp180_0 p180 c180 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn180_0 n180 c180 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp181 p181 0 dc 0.95 ac 0.5
+Vn181 n181 0 dc 0.95 ac -0.5
+Vc181 c181 0 0.765
+Xvarp181_0 p181 c181 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn181_0 n181 c181 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp182 p182 0 dc 0.95 ac 0.5
+Vn182 n182 0 dc 0.95 ac -0.5
+Vc182 c182 0 0.8100000000000001
+Xvarp182_0 p182 c182 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn182_0 n182 c182 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp183 p183 0 dc 0.95 ac 0.5
+Vn183 n183 0 dc 0.95 ac -0.5
+Vc183 c183 0 0.855
+Xvarp183_0 p183 c183 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn183_0 n183 c183 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp184 p184 0 dc 0.95 ac 0.5
+Vn184 n184 0 dc 0.95 ac -0.5
+Vc184 c184 0 0.9
+Xvarp184_0 p184 c184 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn184_0 n184 c184 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp185 p185 0 dc 0.95 ac 0.5
+Vn185 n185 0 dc 0.95 ac -0.5
+Vc185 c185 0 0.9450000000000001
+Xvarp185_0 p185 c185 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn185_0 n185 c185 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp186 p186 0 dc 0.95 ac 0.5
+Vn186 n186 0 dc 0.95 ac -0.5
+Vc186 c186 0 0.9900000000000001
+Xvarp186_0 p186 c186 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn186_0 n186 c186 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp187 p187 0 dc 0.95 ac 0.5
+Vn187 n187 0 dc 0.95 ac -0.5
+Vc187 c187 0 1.035
+Xvarp187_0 p187 c187 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn187_0 n187 c187 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp188 p188 0 dc 0.95 ac 0.5
+Vn188 n188 0 dc 0.95 ac -0.5
+Vc188 c188 0 1.08
+Xvarp188_0 p188 c188 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn188_0 n188 c188 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp189 p189 0 dc 0.95 ac 0.5
+Vn189 n189 0 dc 0.95 ac -0.5
+Vc189 c189 0 1.125
+Xvarp189_0 p189 c189 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn189_0 n189 c189 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp190 p190 0 dc 0.95 ac 0.5
+Vn190 n190 0 dc 0.95 ac -0.5
+Vc190 c190 0 1.17
+Xvarp190_0 p190 c190 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn190_0 n190 c190 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp191 p191 0 dc 0.95 ac 0.5
+Vn191 n191 0 dc 0.95 ac -0.5
+Vc191 c191 0 1.215
+Xvarp191_0 p191 c191 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn191_0 n191 c191 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp192 p192 0 dc 0.95 ac 0.5
+Vn192 n192 0 dc 0.95 ac -0.5
+Vc192 c192 0 1.26
+Xvarp192_0 p192 c192 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn192_0 n192 c192 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp193 p193 0 dc 0.95 ac 0.5
+Vn193 n193 0 dc 0.95 ac -0.5
+Vc193 c193 0 1.305
+Xvarp193_0 p193 c193 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn193_0 n193 c193 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp194 p194 0 dc 0.95 ac 0.5
+Vn194 n194 0 dc 0.95 ac -0.5
+Vc194 c194 0 1.35
+Xvarp194_0 p194 c194 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn194_0 n194 c194 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp195 p195 0 dc 0.95 ac 0.5
+Vn195 n195 0 dc 0.95 ac -0.5
+Vc195 c195 0 1.395
+Xvarp195_0 p195 c195 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn195_0 n195 c195 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp196 p196 0 dc 0.95 ac 0.5
+Vn196 n196 0 dc 0.95 ac -0.5
+Vc196 c196 0 1.44
+Xvarp196_0 p196 c196 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn196_0 n196 c196 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp197 p197 0 dc 0.95 ac 0.5
+Vn197 n197 0 dc 0.95 ac -0.5
+Vc197 c197 0 1.485
+Xvarp197_0 p197 c197 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn197_0 n197 c197 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp198 p198 0 dc 0.95 ac 0.5
+Vn198 n198 0 dc 0.95 ac -0.5
+Vc198 c198 0 1.53
+Xvarp198_0 p198 c198 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn198_0 n198 c198 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp199 p199 0 dc 0.95 ac 0.5
+Vn199 n199 0 dc 0.95 ac -0.5
+Vc199 c199 0 1.575
+Xvarp199_0 p199 c199 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn199_0 n199 c199 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp200 p200 0 dc 0.95 ac 0.5
+Vn200 n200 0 dc 0.95 ac -0.5
+Vc200 c200 0 1.62
+Xvarp200_0 p200 c200 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn200_0 n200 c200 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp201 p201 0 dc 0.95 ac 0.5
+Vn201 n201 0 dc 0.95 ac -0.5
+Vc201 c201 0 1.665
+Xvarp201_0 p201 c201 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn201_0 n201 c201 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp202 p202 0 dc 0.95 ac 0.5
+Vn202 n202 0 dc 0.95 ac -0.5
+Vc202 c202 0 1.71
+Xvarp202_0 p202 c202 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn202_0 n202 c202 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp203 p203 0 dc 0.95 ac 0.5
+Vn203 n203 0 dc 0.95 ac -0.5
+Vc203 c203 0 1.755
+Xvarp203_0 p203 c203 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn203_0 n203 c203 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vp204 p204 0 dc 0.95 ac 0.5
+Vn204 n204 0 dc 0.95 ac -0.5
+Vc204 c204 0 1.8
+Xvarp204_0 p204 c204 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xvarn204_0 n204 c204 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+.control
+set noaskquit
+set numdgt=15
+set wr_singlescale
+op
+wrdata op.txt v(p0) v(n0) v(c0) v(p1) v(n1) v(c1) v(p2) v(n2) v(c2) v(p3) v(n3) v(c3) v(p4) v(n4) v(c4) v(p5) v(n5) v(c5) v(p6) v(n6) v(c6) v(p7) v(n7) v(c7) v(p8) v(n8) v(c8) v(p9) v(n9) v(c9) v(p10) v(n10) v(c10) v(p11) v(n11) v(c11) v(p12) v(n12) v(c12) v(p13) v(n13) v(c13) v(p14) v(n14) v(c14) v(p15) v(n15) v(c15) v(p16) v(n16) v(c16) v(p17) v(n17) v(c17) v(p18) v(n18) v(c18) v(p19) v(n19) v(c19) v(p20) v(n20) v(c20) v(p21) v(n21) v(c21) v(p22) v(n22) v(c22) v(p23) v(n23) v(c23) v(p24) v(n24) v(c24) v(p25) v(n25) v(c25) v(p26) v(n26) v(c26) v(p27) v(n27) v(c27) v(p28) v(n28) v(c28) v(p29) v(n29) v(c29) v(p30) v(n30) v(c30) v(p31) v(n31) v(c31) v(p32) v(n32) v(c32) v(p33) v(n33) v(c33) v(p34) v(n34) v(c34) v(p35) v(n35) v(c35) v(p36) v(n36) v(c36) v(p37) v(n37) v(c37) v(p38) v(n38) v(c38) v(p39) v(n39) v(c39) v(p40) v(n40) v(c40) v(p41) v(n41) v(c41) v(p42) v(n42) v(c42) v(p43) v(n43) v(c43) v(p44) v(n44) v(c44) v(p45) v(n45) v(c45) v(p46) v(n46) v(c46) v(p47) v(n47) v(c47) v(p48) v(n48) v(c48) v(p49) v(n49) v(c49) v(p50) v(n50) v(c50) v(p51) v(n51) v(c51) v(p52) v(n52) v(c52) v(p53) v(n53) v(c53) v(p54) v(n54) v(c54) v(p55) v(n55) v(c55) v(p56) v(n56) v(c56) v(p57) v(n57) v(c57) v(p58) v(n58) v(c58) v(p59) v(n59) v(c59) v(p60) v(n60) v(c60) v(p61) v(n61) v(c61) v(p62) v(n62) v(c62) v(p63) v(n63) v(c63) v(p64) v(n64) v(c64) v(p65) v(n65) v(c65) v(p66) v(n66) v(c66) v(p67) v(n67) v(c67) v(p68) v(n68) v(c68) v(p69) v(n69) v(c69) v(p70) v(n70) v(c70) v(p71) v(n71) v(c71) v(p72) v(n72) v(c72) v(p73) v(n73) v(c73) v(p74) v(n74) v(c74) v(p75) v(n75) v(c75) v(p76) v(n76) v(c76) v(p77) v(n77) v(c77) v(p78) v(n78) v(c78) v(p79) v(n79) v(c79) v(p80) v(n80) v(c80) v(p81) v(n81) v(c81) v(p82) v(n82) v(c82) v(p83) v(n83) v(c83) v(p84) v(n84) v(c84) v(p85) v(n85) v(c85) v(p86) v(n86) v(c86) v(p87) v(n87) v(c87) v(p88) v(n88) v(c88) v(p89) v(n89) v(c89) v(p90) v(n90) v(c90) v(p91) v(n91) v(c91) v(p92) v(n92) v(c92) v(p93) v(n93) v(c93) v(p94) v(n94) v(c94) v(p95) v(n95) v(c95) v(p96) v(n96) v(c96) v(p97) v(n97) v(c97) v(p98) v(n98) v(c98) v(p99) v(n99) v(c99) v(p100) v(n100) v(c100) v(p101) v(n101) v(c101) v(p102) v(n102) v(c102) v(p103) v(n103) v(c103) v(p104) v(n104) v(c104) v(p105) v(n105) v(c105) v(p106) v(n106) v(c106) v(p107) v(n107) v(c107) v(p108) v(n108) v(c108) v(p109) v(n109) v(c109) v(p110) v(n110) v(c110) v(p111) v(n111) v(c111) v(p112) v(n112) v(c112) v(p113) v(n113) v(c113) v(p114) v(n114) v(c114) v(p115) v(n115) v(c115) v(p116) v(n116) v(c116) v(p117) v(n117) v(c117) v(p118) v(n118) v(c118) v(p119) v(n119) v(c119) v(p120) v(n120) v(c120) v(p121) v(n121) v(c121) v(p122) v(n122) v(c122) v(p123) v(n123) v(c123) v(p124) v(n124) v(c124) v(p125) v(n125) v(c125) v(p126) v(n126) v(c126) v(p127) v(n127) v(c127) v(p128) v(n128) v(c128) v(p129) v(n129) v(c129) v(p130) v(n130) v(c130) v(p131) v(n131) v(c131) v(p132) v(n132) v(c132) v(p133) v(n133) v(c133) v(p134) v(n134) v(c134) v(p135) v(n135) v(c135) v(p136) v(n136) v(c136) v(p137) v(n137) v(c137) v(p138) v(n138) v(c138) v(p139) v(n139) v(c139) v(p140) v(n140) v(c140) v(p141) v(n141) v(c141) v(p142) v(n142) v(c142) v(p143) v(n143) v(c143) v(p144) v(n144) v(c144) v(p145) v(n145) v(c145) v(p146) v(n146) v(c146) v(p147) v(n147) v(c147) v(p148) v(n148) v(c148) v(p149) v(n149) v(c149) v(p150) v(n150) v(c150) v(p151) v(n151) v(c151) v(p152) v(n152) v(c152) v(p153) v(n153) v(c153) v(p154) v(n154) v(c154) v(p155) v(n155) v(c155) v(p156) v(n156) v(c156) v(p157) v(n157) v(c157) v(p158) v(n158) v(c158) v(p159) v(n159) v(c159) v(p160) v(n160) v(c160) v(p161) v(n161) v(c161) v(p162) v(n162) v(c162) v(p163) v(n163) v(c163) v(p164) v(n164) v(c164) v(p165) v(n165) v(c165) v(p166) v(n166) v(c166) v(p167) v(n167) v(c167) v(p168) v(n168) v(c168) v(p169) v(n169) v(c169) v(p170) v(n170) v(c170) v(p171) v(n171) v(c171) v(p172) v(n172) v(c172) v(p173) v(n173) v(c173) v(p174) v(n174) v(c174) v(p175) v(n175) v(c175) v(p176) v(n176) v(c176) v(p177) v(n177) v(c177) v(p178) v(n178) v(c178) v(p179) v(n179) v(c179) v(p180) v(n180) v(c180) v(p181) v(n181) v(c181) v(p182) v(n182) v(c182) v(p183) v(n183) v(c183) v(p184) v(n184) v(c184) v(p185) v(n185) v(c185) v(p186) v(n186) v(c186) v(p187) v(n187) v(c187) v(p188) v(n188) v(c188) v(p189) v(n189) v(c189) v(p190) v(n190) v(c190) v(p191) v(n191) v(c191) v(p192) v(n192) v(c192) v(p193) v(n193) v(c193) v(p194) v(n194) v(c194) v(p195) v(n195) v(c195) v(p196) v(n196) v(c196) v(p197) v(n197) v(c197) v(p198) v(n198) v(c198) v(p199) v(n199) v(c199) v(p200) v(n200) v(c200) v(p201) v(n201) v(c201) v(p202) v(n202) v(c202) v(p203) v(n203) v(c203) v(p204) v(n204) v(c204)
+ac lin 4 1250000000 5000000000
+wrdata admittance.txt i(Vp0) i(Vn0) i(Vp1) i(Vn1) i(Vp2) i(Vn2) i(Vp3) i(Vn3) i(Vp4) i(Vn4) i(Vp5) i(Vn5) i(Vp6) i(Vn6) i(Vp7) i(Vn7) i(Vp8) i(Vn8) i(Vp9) i(Vn9) i(Vp10) i(Vn10) i(Vp11) i(Vn11) i(Vp12) i(Vn12) i(Vp13) i(Vn13) i(Vp14) i(Vn14) i(Vp15) i(Vn15) i(Vp16) i(Vn16) i(Vp17) i(Vn17) i(Vp18) i(Vn18) i(Vp19) i(Vn19) i(Vp20) i(Vn20) i(Vp21) i(Vn21) i(Vp22) i(Vn22) i(Vp23) i(Vn23) i(Vp24) i(Vn24) i(Vp25) i(Vn25) i(Vp26) i(Vn26) i(Vp27) i(Vn27) i(Vp28) i(Vn28) i(Vp29) i(Vn29) i(Vp30) i(Vn30) i(Vp31) i(Vn31) i(Vp32) i(Vn32) i(Vp33) i(Vn33) i(Vp34) i(Vn34) i(Vp35) i(Vn35) i(Vp36) i(Vn36) i(Vp37) i(Vn37) i(Vp38) i(Vn38) i(Vp39) i(Vn39) i(Vp40) i(Vn40) i(Vp41) i(Vn41) i(Vp42) i(Vn42) i(Vp43) i(Vn43) i(Vp44) i(Vn44) i(Vp45) i(Vn45) i(Vp46) i(Vn46) i(Vp47) i(Vn47) i(Vp48) i(Vn48) i(Vp49) i(Vn49) i(Vp50) i(Vn50) i(Vp51) i(Vn51) i(Vp52) i(Vn52) i(Vp53) i(Vn53) i(Vp54) i(Vn54) i(Vp55) i(Vn55) i(Vp56) i(Vn56) i(Vp57) i(Vn57) i(Vp58) i(Vn58) i(Vp59) i(Vn59) i(Vp60) i(Vn60) i(Vp61) i(Vn61) i(Vp62) i(Vn62) i(Vp63) i(Vn63) i(Vp64) i(Vn64) i(Vp65) i(Vn65) i(Vp66) i(Vn66) i(Vp67) i(Vn67) i(Vp68) i(Vn68) i(Vp69) i(Vn69) i(Vp70) i(Vn70) i(Vp71) i(Vn71) i(Vp72) i(Vn72) i(Vp73) i(Vn73) i(Vp74) i(Vn74) i(Vp75) i(Vn75) i(Vp76) i(Vn76) i(Vp77) i(Vn77) i(Vp78) i(Vn78) i(Vp79) i(Vn79) i(Vp80) i(Vn80) i(Vp81) i(Vn81) i(Vp82) i(Vn82) i(Vp83) i(Vn83) i(Vp84) i(Vn84) i(Vp85) i(Vn85) i(Vp86) i(Vn86) i(Vp87) i(Vn87) i(Vp88) i(Vn88) i(Vp89) i(Vn89) i(Vp90) i(Vn90) i(Vp91) i(Vn91) i(Vp92) i(Vn92) i(Vp93) i(Vn93) i(Vp94) i(Vn94) i(Vp95) i(Vn95) i(Vp96) i(Vn96) i(Vp97) i(Vn97) i(Vp98) i(Vn98) i(Vp99) i(Vn99) i(Vp100) i(Vn100) i(Vp101) i(Vn101) i(Vp102) i(Vn102) i(Vp103) i(Vn103) i(Vp104) i(Vn104) i(Vp105) i(Vn105) i(Vp106) i(Vn106) i(Vp107) i(Vn107) i(Vp108) i(Vn108) i(Vp109) i(Vn109) i(Vp110) i(Vn110) i(Vp111) i(Vn111) i(Vp112) i(Vn112) i(Vp113) i(Vn113) i(Vp114) i(Vn114) i(Vp115) i(Vn115) i(Vp116) i(Vn116) i(Vp117) i(Vn117) i(Vp118) i(Vn118) i(Vp119) i(Vn119) i(Vp120) i(Vn120) i(Vp121) i(Vn121) i(Vp122) i(Vn122) i(Vp123) i(Vn123) i(Vp124) i(Vn124) i(Vp125) i(Vn125) i(Vp126) i(Vn126) i(Vp127) i(Vn127) i(Vp128) i(Vn128) i(Vp129) i(Vn129) i(Vp130) i(Vn130) i(Vp131) i(Vn131) i(Vp132) i(Vn132) i(Vp133) i(Vn133) i(Vp134) i(Vn134) i(Vp135) i(Vn135) i(Vp136) i(Vn136) i(Vp137) i(Vn137) i(Vp138) i(Vn138) i(Vp139) i(Vn139) i(Vp140) i(Vn140) i(Vp141) i(Vn141) i(Vp142) i(Vn142) i(Vp143) i(Vn143) i(Vp144) i(Vn144) i(Vp145) i(Vn145) i(Vp146) i(Vn146) i(Vp147) i(Vn147) i(Vp148) i(Vn148) i(Vp149) i(Vn149) i(Vp150) i(Vn150) i(Vp151) i(Vn151) i(Vp152) i(Vn152) i(Vp153) i(Vn153) i(Vp154) i(Vn154) i(Vp155) i(Vn155) i(Vp156) i(Vn156) i(Vp157) i(Vn157) i(Vp158) i(Vn158) i(Vp159) i(Vn159) i(Vp160) i(Vn160) i(Vp161) i(Vn161) i(Vp162) i(Vn162) i(Vp163) i(Vn163) i(Vp164) i(Vn164) i(Vp165) i(Vn165) i(Vp166) i(Vn166) i(Vp167) i(Vn167) i(Vp168) i(Vn168) i(Vp169) i(Vn169) i(Vp170) i(Vn170) i(Vp171) i(Vn171) i(Vp172) i(Vn172) i(Vp173) i(Vn173) i(Vp174) i(Vn174) i(Vp175) i(Vn175) i(Vp176) i(Vn176) i(Vp177) i(Vn177) i(Vp178) i(Vn178) i(Vp179) i(Vn179) i(Vp180) i(Vn180) i(Vp181) i(Vn181) i(Vp182) i(Vn182) i(Vp183) i(Vn183) i(Vp184) i(Vn184) i(Vp185) i(Vn185) i(Vp186) i(Vn186) i(Vp187) i(Vn187) i(Vp188) i(Vn188) i(Vp189) i(Vn189) i(Vp190) i(Vn190) i(Vp191) i(Vn191) i(Vp192) i(Vn192) i(Vp193) i(Vn193) i(Vp194) i(Vn194) i(Vp195) i(Vn195) i(Vp196) i(Vn196) i(Vp197) i(Vn197) i(Vp198) i(Vn198) i(Vp199) i(Vn199) i(Vp200) i(Vn200) i(Vp201) i(Vn201) i(Vp202) i(Vn202) i(Vp203) i(Vn203) i(Vp204) i(Vn204)
+quit
+.endc
+.end

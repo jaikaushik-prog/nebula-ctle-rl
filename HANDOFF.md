@@ -17,7 +17,7 @@
 > decisions that are OPEN and human-only, and what to do next. It supersedes
 > `nebula/NEXT_STEPS.md`. This file remains the full state of record.
 
-Last updated: **2026-09-10**, Entry 126 verified; Entry 127 awaits freeze.
+Last updated: **2026-09-10**, Entry 127 measured; Entry 128 awaits freeze.
 The organiser requires a transistor-level CTLE plus DFE and configurable
 Rs/Cs. The owner authorizes bounded agent-selected experiments for both;
 DFE is first. Entry 122 CML passes all three TT screens with valid terminal
@@ -32,8 +32,10 @@ channel PVT pass, including finite-pattern eye width and strict new-device
 voltage checks. Entry 126 now passes 45/45 at each of 3 and 12 dB: together
 with Entry 125, 135/135 declared channel/PVT cases pass on one geometry/code,
 with a later external clock for the high-loss channel and no PVT retuning.
-Entry 127 prepares a separately registered official-varactor feasibility
-probe for configurable Cs; no varactor simulation or CTLE insertion yet.
+Entry 127 now completes all 46 registered capacitor calls, including 45 PVT
+cases and complete-cell multiplicity calibration. Electrical C tuning works,
+but the high-C end has substantial GHz loss. Entry 128 prepares a separate
+physical voltage-configurable Rs/Cs CTLE screen; no CTLE insertion run yet.
 Existing reports and fixed-passive circuit evidence remain unchanged.
 
 Previous report snapshot, Entry 121: The unchanged 20-page
@@ -1049,6 +1051,11 @@ and exact archived waveform/voltage/deck replay tests.
 Entry 127 adds `VARACTOR_PROBE_PLAN.md`, `device/varactor_probe.py`,
 `experiments/exp_varactor_probe.py` and `tests/test_varactor_probe.py` under
 `nebula/`. It uses the external full PDK and never copies model cards.
+Its result is in `VARACTOR_PROBE_RESULTS.md`, 291-entry raw evidence and
+`tests/test_varactor_evidence.py`. `experiments/raw_manifest.py` verifies
+complete uncompressed bundles without requiring a DFE gzip archive index.
+Entry 128 adds `CONFIGURABLE_RC_SCREEN_PLAN.md`, `device/configurable_rc.py`,
+`experiments/exp_configurable_rc.py` and `tests/test_configurable_rc.py`.
 
 Entry 121: NEXT_AGENT_PROMPT.md is the self-contained operational handoff
 for a new agent. It records reading order, verified product state, evidence
@@ -2007,9 +2014,10 @@ Entry 125 measures a successful fixed L=4 um recovery: 57 calls, 45/45 PVT
 including finite-pattern aperture >0.4 UI and all new-device signed bounds.
 Entry 126 then measures 95 calls, 90/90 new PVT passes across 3 and 12 dB,
 with fixed external phases 1.0 and 1.5 UI. All 95 new-DFE signed audits pass.
-Entry 127 registers capacitor characterization after Entry 126 completes:
-calibrate complete-cell multiplicity, then conditional 45-PVT isolated C-V/
-GHz-loss measurements. The previous series-switch failures remain failed.
+Entry 127 completes native-m calibration and all 45-PVT isolated C-V/GHz-loss
+measurements in 46 calls / 1656.665651 s. Entry 128 registers a new physical
+analog-control Rs plus varactor/MIM CTLE screen, maximum ten calls. The
+previous series-switch failures remain failed under their original gates.
 
 Entry 120 (2026-09-09): filled the three sparse academic front-matter pages using existing verified evidence. No technical result or claim changed. Rendered pages 4-22 are unchanged.
 
@@ -2257,7 +2265,10 @@ Worst sampled eye 111.169499 mV, finite positive-eye aperture at least
 See `nebula/DFE_TAIL_BLEED_RESULTS.md`; no BER or whole-receiver signoff.
 Entry 125 local checkpoint f2e0519: 35 focused tests passed in 84.97 s;
 3086 full tests passed, 13 deselected, two known warnings in 1156.06 s.
-Entry 127 has no measured result yet and cannot establish tunable CTLE specs.
+Entry 127: 46/46 valid calls, 45/45 PVT characterizations, unchanged PDK.
+At TT/.5 V source/2.5 GHz, control 0 -> .45 -> 1.8 V changes C from
+4.680496 -> 1.326954 -> 1.064084 pF, with G 21.583813 -> .672394 -> .272366 mS.
+The high-C end is lossy; this is not tunable CTLE specification compliance.
 Entry 126: 95 calls, 1522.135503 s trial time; 45/45 at 3 dB and 45/45 at
 12 dB. Minimum sampled eyes 191.307321/133.817900 mV; finite positive-eye
 apertures 0.755/0.710 UI. Combined 135-PVT coverage includes the separately
@@ -2911,9 +2922,10 @@ Entry 125 now passes all 45 primary-channel electrical gates, but the
 finite-pattern/aperture, external-source and whole-circuit model-domain
 boundaries remain. Entry 126 now verifies the two declared channel extremes
 at fixed channel-specific external clock phases, not arbitrary channels/CDR.
-Entry 127's proposed varactor probe uses external ideal tuning-voltage AC
-grounds. Device characterization alone would not verify a physical bias
-feed, runtime reconfiguration or connected-amplifier performance. See G179.
+Entry 127's completed varactor probe uses external ideal tuning-voltage AC
+grounds. It does not verify a physical bias feed, runtime reconfiguration or
+connected-amplifier performance. Entry 128 includes drawn control feed and
+bypass, but initially screens standalone CTLE AC, not the loaded DFE. See G179.
 
 Entry 116 (2026-09-08): the final competition report has a dedicated team/
 institution cover and a prioritized future-development page. The 20-page
@@ -3135,10 +3147,11 @@ variation, mismatch and layout remain open. Old production evidence is unchanged
 configurable Rs/Cs. Owner authorization covers bounded architecture/sizing
 experiments; register membership and gates before each run, preserve failed
 trials, and do not re-ask approval for ordinary in-scope iterations. Current
-completed trial: `nebula/DFE_TIMING_PLAN.md` (Entry 126, 95 calls, 90/90 new
-PVT passes). Archive/replay-check it, then freeze/test `VARACTOR_PROBE_PLAN.md`
-before any varactor SPICE call. Rs/Cs remain fixed until a later connected
-physical implementation is measured; this probe alone cannot close that task.
+completed trial: `nebula/VARACTOR_PROBE_PLAN.md` (Entry 127, 46/46 valid calls).
+DFE backup was verified on both GitHub branches at fa5fbed before any Rs/Cs
+simulation. Preserve Entry 127, then freeze/test `CONFIGURABLE_RC_SCREEN_PLAN.md`
+before its ten-call maximum screen. Rs/Cs remain fixed in the delivered DFE
+until the new physical configuration and connected behavior are measured.
 Do not inherit fixed-circuit PVT or
 frozen RL coverage for a new hardware topology.
 
@@ -6653,6 +6666,9 @@ series resistance with vm, but its two literal 0.15 fF substrate capacitors
 do not reference vm. This is a source-code finding, not a measured GHz error.
 Entry 127 must compare native ngspice m=4/500 against explicit complete unit
 instances, including substrate loading, before using compact m=500 pairs.
+That registered comparison now passes at both electrodes; vm=4 fails the
+complete-cell equivalence comparison as predicted. Use the measured native-m
+result, not an assumed vm scaling rule, for new physical arrays.
 Do not silently turn vm=500 into a claim of 500 complete physical cells, and
 do not replace the official C-V/loss model with an ideal tunable capacitor.
 
@@ -18162,3 +18178,48 @@ resistor simulation was started during backup. Next technical work is the
 registered official-varactor feasibility probe, followed by a separately
 registered physical configurable-Rs/Cs integration experiment if warranted
 by its measurements. DFE scope limits in DFE_TIMING_RESULTS.md still apply.
+
+### 2026-09-10 - Entry 127 measured and Entry 128 physical tuning registration
+
+The user requests continuing the hardware implementation after the verified
+DFE backup. Entry 127 runs once from fa5fbed: all 46 calls produce valid
+measurements, including 45/45 PVT; no retry and no concurrent SPICE job.
+Wall time 1656.665651 s excludes the preceding DFE archive verification.
+Native m=4/500 matches explicit complete cells at both electrodes; vm=4 does
+not. All 319 external PDK dependency hashes remain unchanged. At 2.5 GHz,
+global C spans .970218..5.946816 pF and G .207065..31.557674 mS across the
+declared probes; these are not a guaranteed one-corner tuning range. The
+high-C loss motivates carrying smaller varactor arrays plus fixed MIM into
+an actual CTLE screen. No model file is copied and no old failure is erased.
+
+Entry 128 preregisters at most ten calls: one full-library fixed-CTLE
+calibration against the saved 251-point TT spectrum, then nine fixed physical
+Rs/Cs geometries with 81 voltage settings each and same-deck fixed controls.
+Real poly/NMOS implements voltage-controlled Rs; real varactor/MIM implements
+Cs, with physical poly feeds/MIM bypasses. This first screen is standalone
+CTLE AC/DC, explicitly excluding DFE loading and full receiver signoff.
+Exact signed terminal audits remain visible; no frozen DFE gate is changed.
+No Entry 128 simulation has run. Freeze after validation before invoking it.
+
+Tests were written before the circuit implementation and first failed on
+the absent module. Focused tests then exposed the full-report geometry
+inventory's fixed-deck assumptions; the new instrument now counts exact
+drawn dimensions without inventing fixed Rs/Cs metadata. Raw replay exposed
+the old verifier's required gzip index; a separately tested uncompressed
+manifest verifier now rejects hash/membership/path corruption. Frozen archive
+verification code and prior evidence are unchanged.
+
+Before-change full baseline: 3107 passed, 13 deselected, two known warnings
+in 1025.08 s from the clean DFE checkpoint. Current focused validation:
+41 passed in 3.64 s. Mandatory post-change full regression is RUNNING;
+no SPICE or heavy Git job runs alongside it. Both PDFs remain untouched.
+
+Final full regression completed: 3132 passed, 13 deselected, two known
+warnings in 818.01 s; focused checks 41 passed in 3.64 s. No experiment ran
+alongside this suite. Entry 127's 291-entry raw manifest is verified; total
+bundle size including manifest is 22,284,472 bytes. All 45 PVT cases show
+strictly decreasing C versus increasing control at all four frequencies.
+The retained full-library multiplier warning is qualified by the successful
+two-electrode explicit/native calibration, not ignored as proof of success.
+Entry 128 remains unrun at this freeze checkpoint; no source used by the
+completed capacitor experiment has been modified.
