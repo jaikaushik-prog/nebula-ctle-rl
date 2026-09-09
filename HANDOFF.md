@@ -17,7 +17,7 @@
 > decisions that are OPEN and human-only, and what to do next. It supersedes
 > `nebula/NEXT_STEPS.md`. This file remains the full state of record.
 
-Last updated: **2026-09-10**, Entry 127 measured; Entry 128 awaits freeze.
+Last updated: **2026-09-10**, Entry 128 instrument failure; Entry 129 awaits freeze.
 The organiser requires a transistor-level CTLE plus DFE and configurable
 Rs/Cs. The owner authorizes bounded agent-selected experiments for both;
 DFE is first. Entry 122 CML passes all three TT screens with valid terminal
@@ -35,7 +35,10 @@ with a later external clock for the high-loss channel and no PVT retuning.
 Entry 127 now completes all 46 registered capacitor calls, including 45 PVT
 cases and complete-cell multiplicity calibration. Electrical C tuning works,
 but the high-C end has substantial GHz loss. Entry 128 prepares a separate
-physical voltage-configurable Rs/Cs CTLE screen; no CTLE insertion run yet.
+physical voltage-configurable Rs/Cs CTLE screen. Its unchanged-CTLE calibration
+passes, but all nine simultaneous-copy candidate calls time out without
+OP/AC measurements. Entry 129 prepares serial control-voltage stepping with
+the SAME geometries/gates and durable timeout logs; no recovery run yet.
 Existing reports and fixed-passive circuit evidence remain unchanged.
 
 Previous report snapshot, Entry 121: The unchanged 20-page
@@ -1056,6 +1059,10 @@ Its result is in `VARACTOR_PROBE_RESULTS.md`, 291-entry raw evidence and
 complete uncompressed bundles without requiring a DFE gzip archive index.
 Entry 128 adds `CONFIGURABLE_RC_SCREEN_PLAN.md`, `device/configurable_rc.py`,
 `experiments/exp_configurable_rc.py` and `tests/test_configurable_rc.py`.
+Entry 128 now has `CONFIGURABLE_RC_SCREEN_RESULTS.md` and raw evidence replay
+tests. Entry 129 adds `CONFIGURABLE_RC_SERIAL_PLAN.md`,
+`device/configurable_rc_serial.py`, `experiments/exp_configurable_rc_serial.py`,
+`experiments/spice_capture.py` and `tests/test_configurable_rc_serial.py`.
 
 Entry 121: NEXT_AGENT_PROMPT.md is the self-contained operational handoff
 for a new agent. It records reading order, verified product state, evidence
@@ -2018,6 +2025,12 @@ Entry 127 completes native-m calibration and all 45-PVT isolated C-V/GHz-loss
 measurements in 46 calls / 1656.665651 s. Entry 128 registers a new physical
 analog-control Rs plus varactor/MIM CTLE screen, maximum ten calls. The
 previous series-switch failures remain failed under their original gates.
+Entry 128 then completes ten attempts in 600.551942 s: fixed calibration
+passes, but all nine large simultaneous-copy calls time out. The old frozen
+capture helper also raises a str/bytes TypeError and loses captured logs.
+Entry 129 preregisters one physical candidate plus a fixed control, all 81
+DC control pairs in serial, 180 s/call, at most nine calls with an initial
+instrument gate. This changes batching/capture, not circuit geometry or gates.
 
 Entry 120 (2026-09-09): filled the three sparse academic front-matter pages using existing verified evidence. No technical result or claim changed. Rendered pages 4-22 are unchanged.
 
@@ -2269,6 +2282,10 @@ Entry 127: 46/46 valid calls, 45/45 PVT characterizations, unchanged PDK.
 At TT/.5 V source/2.5 GHz, control 0 -> .45 -> 1.8 V changes C from
 4.680496 -> 1.326954 -> 1.064084 pF, with G 21.583813 -> .672394 -> .272366 mS.
 The high-C end is lossy; this is not tunable CTLE specification compliance.
+Entry 128 fixed calibration maximum AC error 5.4361848356165865e-11 dB,
+VDD power 6.965786645 mW. All nine tunable candidate attempts produce no
+OP/AC measurements; their timing/capture failure is NOT a physical failure
+or pass. Entry 129 is tested but awaits full-regression freeze before SPICE.
 Entry 126: 95 calls, 1522.135503 s trial time; 45/45 at 3 dB and 45/45 at
 12 dB. Minimum sampled eyes 191.307321/133.817900 mV; finite positive-eye
 apertures 0.755/0.710 UI. Combined 135-PVT coverage includes the separately
@@ -2926,6 +2943,10 @@ Entry 127's completed varactor probe uses external ideal tuning-voltage AC
 grounds. It does not verify a physical bias feed, runtime reconfiguration or
 connected-amplifier performance. Entry 128 includes drawn control feed and
 bypass, but initially screens standalone CTLE AC, not the loaded DFE. See G179.
+Its simultaneous-copy instrument timed out, so no tunable CTLE response is
+yet measured. Missing timeout logs cannot be reconstructed (G180). Serial
+steady-state controls in Entry 129 will still not establish transient
+reconfiguration settling or connected DFE performance.
 
 Entry 116 (2026-09-08): the final competition report has a dedicated team/
 institution cover and a prioritized future-development page. The 20-page
@@ -3147,10 +3168,11 @@ variation, mismatch and layout remain open. Old production evidence is unchanged
 configurable Rs/Cs. Owner authorization covers bounded architecture/sizing
 experiments; register membership and gates before each run, preserve failed
 trials, and do not re-ask approval for ordinary in-scope iterations. Current
-completed trial: `nebula/VARACTOR_PROBE_PLAN.md` (Entry 127, 46/46 valid calls).
+completed trial: `nebula/CONFIGURABLE_RC_SCREEN_PLAN.md` (Entry 128, fixed
+calibration passes; nine instrument timeouts, no candidate measurements).
 DFE backup was verified on both GitHub branches at fa5fbed before any Rs/Cs
-simulation. Preserve Entry 127, then freeze/test `CONFIGURABLE_RC_SCREEN_PLAN.md`
-before its ten-call maximum screen. Rs/Cs remain fixed in the delivered DFE
+simulation. Preserve Entry 128, then freeze/test `CONFIGURABLE_RC_SERIAL_PLAN.md`
+before its nine-call maximum recovery. Rs/Cs remain fixed in the delivered DFE
 until the new physical configuration and connected behavior are measured.
 Do not inherit fixed-circuit PVT or
 frozen RL coverage for a new hardware topology.
@@ -6671,6 +6693,27 @@ complete-cell equivalence comparison as predicted. Use the measured native-m
 result, not an assumed vm scaling rule, for new physical arrays.
 Do not silently turn vm=500 into a claim of 500 complete physical cells, and
 do not replace the official C-V/loss model with an ideal tunable capacitor.
+
+### G180. Preserve timeout diagnostics before starting the simulator
+
+Entry 128's 81-copy decks hit their 60 s bound before producing any OP/AC
+tables. The frozen exp_physical_bias.invoke timeout branch concatenates
+`exc.stdout or b''` and `exc.stderr or b''`; text/byte combinations raise a
+TypeError before the log can be written. A zero or nonzero exit is irrelevant
+when capture itself fails. Tests reproduce this old failure without SPICE.
+Do not rewrite old failure files or invent missing logs. New experiments use
+spice_capture.invoke: stdout/stderr stream directly to the retained log file
+and timeout is an explicit failed result. A simulator budget failure before
+measurements is not evidence that a physical circuit fails specifications.
+
+### G181. Hash-gated plans and simulator init need fixed checkout bytes too
+
+The new scientific source manifests hash Markdown plans and .spiceinit as
+well as Python. All currently have LF bytes; Windows core.autocrlf could
+change them on a fresh checkout. Explicit eol=lf rules now protect the three
+new Rs/Cs plans and the shared simulator init, without changing their current
+bytes. A failure-first test checks these rules. Existing immutable evidence
+snapshots remain -text. Do not repair a hash mismatch by rewriting a manifest.
 
 ## 10. Environment
 
@@ -18223,3 +18266,47 @@ The retained full-library multiplier warning is qualified by the successful
 two-electrode explicit/native calibration, not ignored as proof of success.
 Entry 128 remains unrun at this freeze checkpoint; no source used by the
 completed capacitor experiment has been modified.
+
+### 2026-09-10 - Entry 128 instrument failure and Entry 129 serial recovery
+
+Checkpoint 952a648 (302 audited files, 292 exact evidence blobs, 23,494,406
+staged bytes) passed 41 focused and 3132 full tests, 13 deselected/two known
+warnings, 818.01 s. Both GitHub branches were verified at that commit before
+Entry 128 started. No prohibited references, model files or credentials were
+staged; both PDFs stayed byte-identical.
+
+Entry 128 runs once from 952a648. All ten calls are retained, 600.551942 s;
+PDK and source hashes remain unchanged. The unchanged CTLE calibration
+matches the saved 251-point AC curve to 5.4361848356165865e-11 dB maximum
+error and 6.965786645 mW VDD power. Every 81-copy candidate deck then hits
+the 60 s bound before OP/AC tables. The old capture bug records a TypeError
+and loses the captured logs. No physical candidate metrics are available.
+The 60-entry manifest preserves all files that actually exist; it does not
+pretend missing logs were saved. Summary SHA-256:
+eb2a01bf10c47d9af5b372668d64c819b28c84461caec9e359d936fffb51a67b.
+
+Entry 129 changes the instrument only: one unchanged candidate geometry plus
+one fixed control, external voltage steps for the same 81 pairs, separate
+raw OP/AC tables per pair, baseline comparison at every step. At most nine
+180 s processes, first-call instrument failure stops promotion; count 81 OP
+and 81 AC analyses per completed process, not a single evaluation. New direct
+file capture keeps partial logs on timeout. Frozen physical sources, gates,
+old capture helper and both failed/pass evidence sets remain unchanged.
+
+Tests precede implementation, initially failing on the absent module. Exact
+calibration and all nine failure decks replay; the old timeout bug is
+reproduced without SPICE and the new handler retains mixed-capture timeout
+diagnostics. Checkout-protection test first fails, then passes with scoped
+LF rules. Focused validation: 38 passed in 4.94 s. Before-change full baseline
+3132 passed (818.01 s); mandatory after-suite is RUNNING with no SPICE or
+heavy Git job alongside. No Entry 129 simulator call has run; freeze the
+verified checkpoint before starting it.
+
+Final Entry 129 pre-run regression: 3145 passed, 13 deselected, two known
+warnings in 578.66 s. Focused checks remain 38 passed in 4.94 s; the prior
+full baseline was 3132 passed. No SPICE ran concurrently. Save this tested
+source checkpoint locally before the registered serial experiment.
+The newly supplied AGENTS.md repeats a private-repository requirement that
+conflicts with the earlier explicit public-destination backup authorization.
+Clarification is requested; do not change visibility or push new checkpoints
+pending that answer. This does not prevent the authorized local experiments.

@@ -1,0 +1,749 @@
+* Entry 128 physical configurable RC screening, standalone CTLE
+.lib "C:/Users/DELL/sky130A/libs.tech/ngspice/sky130.lib.spice" tt
+.temp 27
+.subckt rc_fixed inx iny cm vdd outp outn rctrl cctrl
+.param W=57.97671772296124 L=0.3911493163378813 NF=4
+.param RL=254.6329712064977 RS=356.81770148453967 CS=2.8515485554341908e-12 IT=0.001813449296655868 CL=3.262805963205924e-14
+.param VDD=1.8 VCM=1.5010229732197666
+Xatt_sp inx inp 0 sky130_fd_pr__res_high_po w=10 l=3.41
+Xatt_sn iny inn 0 sky130_fd_pr__res_high_po w=10 l=3.41
+Xatt_rp0 inp att_p0 0 sky130_fd_pr__res_high_po w=8 l=16.22
+Xatt_swp0 att_p0 0 cm vdd sky130_fd_pr__pfet_01v8 W=40 L=0.15 nf=1
+Xatt_rn0 inn att_n0 0 sky130_fd_pr__res_high_po w=8 l=16.22
+Xatt_swn0 att_n0 0 cm vdd sky130_fd_pr__pfet_01v8 W=40 L=0.15 nf=1
+Xatt_rp1 inp att_p1 0 sky130_fd_pr__res_high_po w=5.73 l=4.97
+Xatt_swp1 att_p1 0 cm vdd sky130_fd_pr__pfet_01v8 W=80 L=0.15 nf=2
+Xatt_rn1 inn att_n1 0 sky130_fd_pr__res_high_po w=5.73 l=4.97
+Xatt_swn1 att_n1 0 cm vdd sky130_fd_pr__pfet_01v8 W=80 L=0.15 nf=2
+Xatt_rp2 inp att_p2 0 sky130_fd_pr__res_high_po w=5.73 l=4.97 m=2
+Xatt_swp2 att_p2 0 cm vdd sky130_fd_pr__pfet_01v8 W=160 L=0.15 nf=4
+Xatt_rn2 inn att_n2 0 sky130_fd_pr__res_high_po w=5.73 l=4.97 m=2
+Xatt_swn2 att_n2 0 cm vdd sky130_fd_pr__pfet_01v8 W=160 L=0.15 nf=4
+XM1   outp inp s1 0 sky130_fd_pr__nfet_01v8 W={W} L={L} nf={NF}
+XM2   outn inn s2 0 sky130_fd_pr__nfet_01v8 W={W} L={L} nf={NF}
+Xrlp  vdd outp 0 sky130_fd_pr__res_high_po w=10 l=14.745 m=2
+Xrln  vdd outn 0 sky130_fd_pr__res_high_po w=10 l=14.745 m=2
+Xrs   s1 s2 0 sky130_fd_pr__res_high_po w=2 l=0.99
+Xcs   s1 s2 sky130_fd_pr__cap_mim_m3_1 w=37.595 l=37.595
+.param WT=201.656 LT=0.5 NFT=8
+.param WREF=25.2069 NFREF=1 IREF=0.000226681162 CBYP=1e-11
+Xbpref p_bias p_bias vdd vdd sky130_fd_pr__pfet_01v8 W=25.2069 L=0.5 nf=1
+Xbpfeed nbias p_bias vdd vdd sky130_fd_pr__pfet_01v8 W=25.2069 L=0.5 nf=1
+Xrbias p_bias 0 0 sky130_fd_pr__res_high_po w=1 l=5.34 m=1
+XMR   nbias nbias 0 0 sky130_fd_pr__nfet_01v8 W={WREF} L={LT} nf={NFREF}
+XMT1  s1    nbias 0 0 sky130_fd_pr__nfet_01v8 W={WT} L={LT} nf={NFT}
+XMT2  s2    nbias 0 0 sky130_fd_pr__nfet_01v8 W={WT} L={LT} nf={NFT}
+Xcbyp nbias 0 sky130_fd_pr__cap_mim_m3_1 w=70.545 l=70.545 m=1
+CLp   outp 0 {CL}
+CLn   outn 0 {CL}
+.ends rc_fixed
+.subckt rc_tuned inx iny cm vdd outp outn rctrl cctrl
+.param W=57.97671772296124 L=0.3911493163378813 NF=4
+.param RL=254.6329712064977 IT=0.001813449296655868 CL=3.262805963205924e-14
+.param VDD=1.8 VCM=1.5010229732197666
+Xatt_sp inx inp 0 sky130_fd_pr__res_high_po w=10 l=3.41
+Xatt_sn iny inn 0 sky130_fd_pr__res_high_po w=10 l=3.41
+Xatt_rp0 inp att_p0 0 sky130_fd_pr__res_high_po w=8 l=16.22
+Xatt_swp0 att_p0 0 cm vdd sky130_fd_pr__pfet_01v8 W=40 L=0.15 nf=1
+Xatt_rn0 inn att_n0 0 sky130_fd_pr__res_high_po w=8 l=16.22
+Xatt_swn0 att_n0 0 cm vdd sky130_fd_pr__pfet_01v8 W=40 L=0.15 nf=1
+Xatt_rp1 inp att_p1 0 sky130_fd_pr__res_high_po w=5.73 l=4.97
+Xatt_swp1 att_p1 0 cm vdd sky130_fd_pr__pfet_01v8 W=80 L=0.15 nf=2
+Xatt_rn1 inn att_n1 0 sky130_fd_pr__res_high_po w=5.73 l=4.97
+Xatt_swn1 att_n1 0 cm vdd sky130_fd_pr__pfet_01v8 W=80 L=0.15 nf=2
+Xatt_rp2 inp att_p2 0 sky130_fd_pr__res_high_po w=5.73 l=4.97 m=2
+Xatt_swp2 att_p2 0 cm vdd sky130_fd_pr__pfet_01v8 W=160 L=0.15 nf=4
+Xatt_rn2 inn att_n2 0 sky130_fd_pr__res_high_po w=5.73 l=4.97 m=2
+Xatt_swn2 att_n2 0 cm vdd sky130_fd_pr__pfet_01v8 W=160 L=0.15 nf=4
+XM1   outp inp s1 0 sky130_fd_pr__nfet_01v8 W={W} L={L} nf={NF}
+XM2   outn inn s2 0 sky130_fd_pr__nfet_01v8 W={W} L={L} nf={NF}
+Xrlp  vdd outp 0 sky130_fd_pr__res_high_po w=10 l=14.745 m=2
+Xrln  vdd outn 0 sky130_fd_pr__res_high_po w=10 l=14.745 m=2
+.param WT=201.656 LT=0.5 NFT=8
+.param WREF=25.2069 NFREF=1 IREF=0.000226681162 CBYP=1e-11
+Xbpref p_bias p_bias vdd vdd sky130_fd_pr__pfet_01v8 W=25.2069 L=0.5 nf=1
+Xbpfeed nbias p_bias vdd vdd sky130_fd_pr__pfet_01v8 W=25.2069 L=0.5 nf=1
+Xrbias p_bias 0 0 sky130_fd_pr__res_high_po w=1 l=5.34 m=1
+XMR   nbias nbias 0 0 sky130_fd_pr__nfet_01v8 W={WREF} L={LT} nf={NFREF}
+XMT1  s1    nbias 0 0 sky130_fd_pr__nfet_01v8 W={WT} L={LT} nf={NFT}
+XMT2  s2    nbias 0 0 sky130_fd_pr__nfet_01v8 W={WT} L={LT} nf={NFT}
+Xcbyp nbias 0 sky130_fd_pr__cap_mim_m3_1 w=70.545 l=70.545 m=1
+CLp   outp 0 {CL}
+CLn   outn 0 {CL}
+Xrc_rmax s1 s2 0 sky130_fd_pr__res_high_po w=2.85 l=4.865
+Xrc_branch s1 rc_mid 0 sky130_fd_pr__res_high_po w=10 l=2.645 m=2
+Xrc_switch rc_mid rc_gate s2 0 sky130_fd_pr__nfet_01v8 W=80 L=0.15 nf=2
+Xrc_rfeed rctrl rc_gate 0 sky130_fd_pr__res_high_po w=1.41 l=43.23
+Xrc_cfeed cctrl rc_ct 0 sky130_fd_pr__res_high_po w=1.41 l=43.23
+Xrc_rbypass rc_gate 0 sky130_fd_pr__cap_mim_m3_1 w=22.195 l=22.195
+Xrc_cbypass rc_ct 0 sky130_fd_pr__cap_mim_m3_1 w=70.545 l=70.545
+Xrc_var_s1 s1 rc_ct 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=250
+Xrc_var_s2 s2 rc_ct 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=250
+.ends rc_tuned
+Vsupply0 vdd0 0 1.8
+Vcm0 cm0 0 1.501022973219767
+Vid0 vid0 0 dc 0 ac 1
+Einp0 inx0 cm0 vid0 0 0.5
+Einn0 iny0 cm0 vid0 0 -0.5
+Vr0 rctrl0 0 0
+Vc0 cctrl0 0 0
+Xcase0 inx0 iny0 cm0 vdd0 outp0 outn0 rctrl0 cctrl0 rc_tuned
+Vsupply1 vdd1 0 1.8
+Vcm1 cm1 0 1.501022973219767
+Vid1 vid1 0 dc 0 ac 1
+Einp1 inx1 cm1 vid1 0 0.5
+Einn1 iny1 cm1 vid1 0 -0.5
+Vr1 rctrl1 0 0
+Vc1 cctrl1 0 0.09000000000000001
+Xcase1 inx1 iny1 cm1 vdd1 outp1 outn1 rctrl1 cctrl1 rc_tuned
+Vsupply2 vdd2 0 1.8
+Vcm2 cm2 0 1.501022973219767
+Vid2 vid2 0 dc 0 ac 1
+Einp2 inx2 cm2 vid2 0 0.5
+Einn2 iny2 cm2 vid2 0 -0.5
+Vr2 rctrl2 0 0
+Vc2 cctrl2 0 0.18
+Xcase2 inx2 iny2 cm2 vdd2 outp2 outn2 rctrl2 cctrl2 rc_tuned
+Vsupply3 vdd3 0 1.8
+Vcm3 cm3 0 1.501022973219767
+Vid3 vid3 0 dc 0 ac 1
+Einp3 inx3 cm3 vid3 0 0.5
+Einn3 iny3 cm3 vid3 0 -0.5
+Vr3 rctrl3 0 0
+Vc3 cctrl3 0 0.27
+Xcase3 inx3 iny3 cm3 vdd3 outp3 outn3 rctrl3 cctrl3 rc_tuned
+Vsupply4 vdd4 0 1.8
+Vcm4 cm4 0 1.501022973219767
+Vid4 vid4 0 dc 0 ac 1
+Einp4 inx4 cm4 vid4 0 0.5
+Einn4 iny4 cm4 vid4 0 -0.5
+Vr4 rctrl4 0 0
+Vc4 cctrl4 0 0.36
+Xcase4 inx4 iny4 cm4 vdd4 outp4 outn4 rctrl4 cctrl4 rc_tuned
+Vsupply5 vdd5 0 1.8
+Vcm5 cm5 0 1.501022973219767
+Vid5 vid5 0 dc 0 ac 1
+Einp5 inx5 cm5 vid5 0 0.5
+Einn5 iny5 cm5 vid5 0 -0.5
+Vr5 rctrl5 0 0
+Vc5 cctrl5 0 0.54
+Xcase5 inx5 iny5 cm5 vdd5 outp5 outn5 rctrl5 cctrl5 rc_tuned
+Vsupply6 vdd6 0 1.8
+Vcm6 cm6 0 1.501022973219767
+Vid6 vid6 0 dc 0 ac 1
+Einp6 inx6 cm6 vid6 0 0.5
+Einn6 iny6 cm6 vid6 0 -0.5
+Vr6 rctrl6 0 0
+Vc6 cctrl6 0 0.7200000000000001
+Xcase6 inx6 iny6 cm6 vdd6 outp6 outn6 rctrl6 cctrl6 rc_tuned
+Vsupply7 vdd7 0 1.8
+Vcm7 cm7 0 1.501022973219767
+Vid7 vid7 0 dc 0 ac 1
+Einp7 inx7 cm7 vid7 0 0.5
+Einn7 iny7 cm7 vid7 0 -0.5
+Vr7 rctrl7 0 0
+Vc7 cctrl7 0 1.08
+Xcase7 inx7 iny7 cm7 vdd7 outp7 outn7 rctrl7 cctrl7 rc_tuned
+Vsupply8 vdd8 0 1.8
+Vcm8 cm8 0 1.501022973219767
+Vid8 vid8 0 dc 0 ac 1
+Einp8 inx8 cm8 vid8 0 0.5
+Einn8 iny8 cm8 vid8 0 -0.5
+Vr8 rctrl8 0 0
+Vc8 cctrl8 0 1.8
+Xcase8 inx8 iny8 cm8 vdd8 outp8 outn8 rctrl8 cctrl8 rc_tuned
+Vsupply9 vdd9 0 1.8
+Vcm9 cm9 0 1.501022973219767
+Vid9 vid9 0 dc 0 ac 1
+Einp9 inx9 cm9 vid9 0 0.5
+Einn9 iny9 cm9 vid9 0 -0.5
+Vr9 rctrl9 0 0.7200000000000001
+Vc9 cctrl9 0 0
+Xcase9 inx9 iny9 cm9 vdd9 outp9 outn9 rctrl9 cctrl9 rc_tuned
+Vsupply10 vdd10 0 1.8
+Vcm10 cm10 0 1.501022973219767
+Vid10 vid10 0 dc 0 ac 1
+Einp10 inx10 cm10 vid10 0 0.5
+Einn10 iny10 cm10 vid10 0 -0.5
+Vr10 rctrl10 0 0.7200000000000001
+Vc10 cctrl10 0 0.09000000000000001
+Xcase10 inx10 iny10 cm10 vdd10 outp10 outn10 rctrl10 cctrl10 rc_tuned
+Vsupply11 vdd11 0 1.8
+Vcm11 cm11 0 1.501022973219767
+Vid11 vid11 0 dc 0 ac 1
+Einp11 inx11 cm11 vid11 0 0.5
+Einn11 iny11 cm11 vid11 0 -0.5
+Vr11 rctrl11 0 0.7200000000000001
+Vc11 cctrl11 0 0.18
+Xcase11 inx11 iny11 cm11 vdd11 outp11 outn11 rctrl11 cctrl11 rc_tuned
+Vsupply12 vdd12 0 1.8
+Vcm12 cm12 0 1.501022973219767
+Vid12 vid12 0 dc 0 ac 1
+Einp12 inx12 cm12 vid12 0 0.5
+Einn12 iny12 cm12 vid12 0 -0.5
+Vr12 rctrl12 0 0.7200000000000001
+Vc12 cctrl12 0 0.27
+Xcase12 inx12 iny12 cm12 vdd12 outp12 outn12 rctrl12 cctrl12 rc_tuned
+Vsupply13 vdd13 0 1.8
+Vcm13 cm13 0 1.501022973219767
+Vid13 vid13 0 dc 0 ac 1
+Einp13 inx13 cm13 vid13 0 0.5
+Einn13 iny13 cm13 vid13 0 -0.5
+Vr13 rctrl13 0 0.7200000000000001
+Vc13 cctrl13 0 0.36
+Xcase13 inx13 iny13 cm13 vdd13 outp13 outn13 rctrl13 cctrl13 rc_tuned
+Vsupply14 vdd14 0 1.8
+Vcm14 cm14 0 1.501022973219767
+Vid14 vid14 0 dc 0 ac 1
+Einp14 inx14 cm14 vid14 0 0.5
+Einn14 iny14 cm14 vid14 0 -0.5
+Vr14 rctrl14 0 0.7200000000000001
+Vc14 cctrl14 0 0.54
+Xcase14 inx14 iny14 cm14 vdd14 outp14 outn14 rctrl14 cctrl14 rc_tuned
+Vsupply15 vdd15 0 1.8
+Vcm15 cm15 0 1.501022973219767
+Vid15 vid15 0 dc 0 ac 1
+Einp15 inx15 cm15 vid15 0 0.5
+Einn15 iny15 cm15 vid15 0 -0.5
+Vr15 rctrl15 0 0.7200000000000001
+Vc15 cctrl15 0 0.7200000000000001
+Xcase15 inx15 iny15 cm15 vdd15 outp15 outn15 rctrl15 cctrl15 rc_tuned
+Vsupply16 vdd16 0 1.8
+Vcm16 cm16 0 1.501022973219767
+Vid16 vid16 0 dc 0 ac 1
+Einp16 inx16 cm16 vid16 0 0.5
+Einn16 iny16 cm16 vid16 0 -0.5
+Vr16 rctrl16 0 0.7200000000000001
+Vc16 cctrl16 0 1.08
+Xcase16 inx16 iny16 cm16 vdd16 outp16 outn16 rctrl16 cctrl16 rc_tuned
+Vsupply17 vdd17 0 1.8
+Vcm17 cm17 0 1.501022973219767
+Vid17 vid17 0 dc 0 ac 1
+Einp17 inx17 cm17 vid17 0 0.5
+Einn17 iny17 cm17 vid17 0 -0.5
+Vr17 rctrl17 0 0.7200000000000001
+Vc17 cctrl17 0 1.8
+Xcase17 inx17 iny17 cm17 vdd17 outp17 outn17 rctrl17 cctrl17 rc_tuned
+Vsupply18 vdd18 0 1.8
+Vcm18 cm18 0 1.501022973219767
+Vid18 vid18 0 dc 0 ac 1
+Einp18 inx18 cm18 vid18 0 0.5
+Einn18 iny18 cm18 vid18 0 -0.5
+Vr18 rctrl18 0 0.8100000000000001
+Vc18 cctrl18 0 0
+Xcase18 inx18 iny18 cm18 vdd18 outp18 outn18 rctrl18 cctrl18 rc_tuned
+Vsupply19 vdd19 0 1.8
+Vcm19 cm19 0 1.501022973219767
+Vid19 vid19 0 dc 0 ac 1
+Einp19 inx19 cm19 vid19 0 0.5
+Einn19 iny19 cm19 vid19 0 -0.5
+Vr19 rctrl19 0 0.8100000000000001
+Vc19 cctrl19 0 0.09000000000000001
+Xcase19 inx19 iny19 cm19 vdd19 outp19 outn19 rctrl19 cctrl19 rc_tuned
+Vsupply20 vdd20 0 1.8
+Vcm20 cm20 0 1.501022973219767
+Vid20 vid20 0 dc 0 ac 1
+Einp20 inx20 cm20 vid20 0 0.5
+Einn20 iny20 cm20 vid20 0 -0.5
+Vr20 rctrl20 0 0.8100000000000001
+Vc20 cctrl20 0 0.18
+Xcase20 inx20 iny20 cm20 vdd20 outp20 outn20 rctrl20 cctrl20 rc_tuned
+Vsupply21 vdd21 0 1.8
+Vcm21 cm21 0 1.501022973219767
+Vid21 vid21 0 dc 0 ac 1
+Einp21 inx21 cm21 vid21 0 0.5
+Einn21 iny21 cm21 vid21 0 -0.5
+Vr21 rctrl21 0 0.8100000000000001
+Vc21 cctrl21 0 0.27
+Xcase21 inx21 iny21 cm21 vdd21 outp21 outn21 rctrl21 cctrl21 rc_tuned
+Vsupply22 vdd22 0 1.8
+Vcm22 cm22 0 1.501022973219767
+Vid22 vid22 0 dc 0 ac 1
+Einp22 inx22 cm22 vid22 0 0.5
+Einn22 iny22 cm22 vid22 0 -0.5
+Vr22 rctrl22 0 0.8100000000000001
+Vc22 cctrl22 0 0.36
+Xcase22 inx22 iny22 cm22 vdd22 outp22 outn22 rctrl22 cctrl22 rc_tuned
+Vsupply23 vdd23 0 1.8
+Vcm23 cm23 0 1.501022973219767
+Vid23 vid23 0 dc 0 ac 1
+Einp23 inx23 cm23 vid23 0 0.5
+Einn23 iny23 cm23 vid23 0 -0.5
+Vr23 rctrl23 0 0.8100000000000001
+Vc23 cctrl23 0 0.54
+Xcase23 inx23 iny23 cm23 vdd23 outp23 outn23 rctrl23 cctrl23 rc_tuned
+Vsupply24 vdd24 0 1.8
+Vcm24 cm24 0 1.501022973219767
+Vid24 vid24 0 dc 0 ac 1
+Einp24 inx24 cm24 vid24 0 0.5
+Einn24 iny24 cm24 vid24 0 -0.5
+Vr24 rctrl24 0 0.8100000000000001
+Vc24 cctrl24 0 0.7200000000000001
+Xcase24 inx24 iny24 cm24 vdd24 outp24 outn24 rctrl24 cctrl24 rc_tuned
+Vsupply25 vdd25 0 1.8
+Vcm25 cm25 0 1.501022973219767
+Vid25 vid25 0 dc 0 ac 1
+Einp25 inx25 cm25 vid25 0 0.5
+Einn25 iny25 cm25 vid25 0 -0.5
+Vr25 rctrl25 0 0.8100000000000001
+Vc25 cctrl25 0 1.08
+Xcase25 inx25 iny25 cm25 vdd25 outp25 outn25 rctrl25 cctrl25 rc_tuned
+Vsupply26 vdd26 0 1.8
+Vcm26 cm26 0 1.501022973219767
+Vid26 vid26 0 dc 0 ac 1
+Einp26 inx26 cm26 vid26 0 0.5
+Einn26 iny26 cm26 vid26 0 -0.5
+Vr26 rctrl26 0 0.8100000000000001
+Vc26 cctrl26 0 1.8
+Xcase26 inx26 iny26 cm26 vdd26 outp26 outn26 rctrl26 cctrl26 rc_tuned
+Vsupply27 vdd27 0 1.8
+Vcm27 cm27 0 1.501022973219767
+Vid27 vid27 0 dc 0 ac 1
+Einp27 inx27 cm27 vid27 0 0.5
+Einn27 iny27 cm27 vid27 0 -0.5
+Vr27 rctrl27 0 0.9
+Vc27 cctrl27 0 0
+Xcase27 inx27 iny27 cm27 vdd27 outp27 outn27 rctrl27 cctrl27 rc_tuned
+Vsupply28 vdd28 0 1.8
+Vcm28 cm28 0 1.501022973219767
+Vid28 vid28 0 dc 0 ac 1
+Einp28 inx28 cm28 vid28 0 0.5
+Einn28 iny28 cm28 vid28 0 -0.5
+Vr28 rctrl28 0 0.9
+Vc28 cctrl28 0 0.09000000000000001
+Xcase28 inx28 iny28 cm28 vdd28 outp28 outn28 rctrl28 cctrl28 rc_tuned
+Vsupply29 vdd29 0 1.8
+Vcm29 cm29 0 1.501022973219767
+Vid29 vid29 0 dc 0 ac 1
+Einp29 inx29 cm29 vid29 0 0.5
+Einn29 iny29 cm29 vid29 0 -0.5
+Vr29 rctrl29 0 0.9
+Vc29 cctrl29 0 0.18
+Xcase29 inx29 iny29 cm29 vdd29 outp29 outn29 rctrl29 cctrl29 rc_tuned
+Vsupply30 vdd30 0 1.8
+Vcm30 cm30 0 1.501022973219767
+Vid30 vid30 0 dc 0 ac 1
+Einp30 inx30 cm30 vid30 0 0.5
+Einn30 iny30 cm30 vid30 0 -0.5
+Vr30 rctrl30 0 0.9
+Vc30 cctrl30 0 0.27
+Xcase30 inx30 iny30 cm30 vdd30 outp30 outn30 rctrl30 cctrl30 rc_tuned
+Vsupply31 vdd31 0 1.8
+Vcm31 cm31 0 1.501022973219767
+Vid31 vid31 0 dc 0 ac 1
+Einp31 inx31 cm31 vid31 0 0.5
+Einn31 iny31 cm31 vid31 0 -0.5
+Vr31 rctrl31 0 0.9
+Vc31 cctrl31 0 0.36
+Xcase31 inx31 iny31 cm31 vdd31 outp31 outn31 rctrl31 cctrl31 rc_tuned
+Vsupply32 vdd32 0 1.8
+Vcm32 cm32 0 1.501022973219767
+Vid32 vid32 0 dc 0 ac 1
+Einp32 inx32 cm32 vid32 0 0.5
+Einn32 iny32 cm32 vid32 0 -0.5
+Vr32 rctrl32 0 0.9
+Vc32 cctrl32 0 0.54
+Xcase32 inx32 iny32 cm32 vdd32 outp32 outn32 rctrl32 cctrl32 rc_tuned
+Vsupply33 vdd33 0 1.8
+Vcm33 cm33 0 1.501022973219767
+Vid33 vid33 0 dc 0 ac 1
+Einp33 inx33 cm33 vid33 0 0.5
+Einn33 iny33 cm33 vid33 0 -0.5
+Vr33 rctrl33 0 0.9
+Vc33 cctrl33 0 0.7200000000000001
+Xcase33 inx33 iny33 cm33 vdd33 outp33 outn33 rctrl33 cctrl33 rc_tuned
+Vsupply34 vdd34 0 1.8
+Vcm34 cm34 0 1.501022973219767
+Vid34 vid34 0 dc 0 ac 1
+Einp34 inx34 cm34 vid34 0 0.5
+Einn34 iny34 cm34 vid34 0 -0.5
+Vr34 rctrl34 0 0.9
+Vc34 cctrl34 0 1.08
+Xcase34 inx34 iny34 cm34 vdd34 outp34 outn34 rctrl34 cctrl34 rc_tuned
+Vsupply35 vdd35 0 1.8
+Vcm35 cm35 0 1.501022973219767
+Vid35 vid35 0 dc 0 ac 1
+Einp35 inx35 cm35 vid35 0 0.5
+Einn35 iny35 cm35 vid35 0 -0.5
+Vr35 rctrl35 0 0.9
+Vc35 cctrl35 0 1.8
+Xcase35 inx35 iny35 cm35 vdd35 outp35 outn35 rctrl35 cctrl35 rc_tuned
+Vsupply36 vdd36 0 1.8
+Vcm36 cm36 0 1.501022973219767
+Vid36 vid36 0 dc 0 ac 1
+Einp36 inx36 cm36 vid36 0 0.5
+Einn36 iny36 cm36 vid36 0 -0.5
+Vr36 rctrl36 0 0.9900000000000001
+Vc36 cctrl36 0 0
+Xcase36 inx36 iny36 cm36 vdd36 outp36 outn36 rctrl36 cctrl36 rc_tuned
+Vsupply37 vdd37 0 1.8
+Vcm37 cm37 0 1.501022973219767
+Vid37 vid37 0 dc 0 ac 1
+Einp37 inx37 cm37 vid37 0 0.5
+Einn37 iny37 cm37 vid37 0 -0.5
+Vr37 rctrl37 0 0.9900000000000001
+Vc37 cctrl37 0 0.09000000000000001
+Xcase37 inx37 iny37 cm37 vdd37 outp37 outn37 rctrl37 cctrl37 rc_tuned
+Vsupply38 vdd38 0 1.8
+Vcm38 cm38 0 1.501022973219767
+Vid38 vid38 0 dc 0 ac 1
+Einp38 inx38 cm38 vid38 0 0.5
+Einn38 iny38 cm38 vid38 0 -0.5
+Vr38 rctrl38 0 0.9900000000000001
+Vc38 cctrl38 0 0.18
+Xcase38 inx38 iny38 cm38 vdd38 outp38 outn38 rctrl38 cctrl38 rc_tuned
+Vsupply39 vdd39 0 1.8
+Vcm39 cm39 0 1.501022973219767
+Vid39 vid39 0 dc 0 ac 1
+Einp39 inx39 cm39 vid39 0 0.5
+Einn39 iny39 cm39 vid39 0 -0.5
+Vr39 rctrl39 0 0.9900000000000001
+Vc39 cctrl39 0 0.27
+Xcase39 inx39 iny39 cm39 vdd39 outp39 outn39 rctrl39 cctrl39 rc_tuned
+Vsupply40 vdd40 0 1.8
+Vcm40 cm40 0 1.501022973219767
+Vid40 vid40 0 dc 0 ac 1
+Einp40 inx40 cm40 vid40 0 0.5
+Einn40 iny40 cm40 vid40 0 -0.5
+Vr40 rctrl40 0 0.9900000000000001
+Vc40 cctrl40 0 0.36
+Xcase40 inx40 iny40 cm40 vdd40 outp40 outn40 rctrl40 cctrl40 rc_tuned
+Vsupply41 vdd41 0 1.8
+Vcm41 cm41 0 1.501022973219767
+Vid41 vid41 0 dc 0 ac 1
+Einp41 inx41 cm41 vid41 0 0.5
+Einn41 iny41 cm41 vid41 0 -0.5
+Vr41 rctrl41 0 0.9900000000000001
+Vc41 cctrl41 0 0.54
+Xcase41 inx41 iny41 cm41 vdd41 outp41 outn41 rctrl41 cctrl41 rc_tuned
+Vsupply42 vdd42 0 1.8
+Vcm42 cm42 0 1.501022973219767
+Vid42 vid42 0 dc 0 ac 1
+Einp42 inx42 cm42 vid42 0 0.5
+Einn42 iny42 cm42 vid42 0 -0.5
+Vr42 rctrl42 0 0.9900000000000001
+Vc42 cctrl42 0 0.7200000000000001
+Xcase42 inx42 iny42 cm42 vdd42 outp42 outn42 rctrl42 cctrl42 rc_tuned
+Vsupply43 vdd43 0 1.8
+Vcm43 cm43 0 1.501022973219767
+Vid43 vid43 0 dc 0 ac 1
+Einp43 inx43 cm43 vid43 0 0.5
+Einn43 iny43 cm43 vid43 0 -0.5
+Vr43 rctrl43 0 0.9900000000000001
+Vc43 cctrl43 0 1.08
+Xcase43 inx43 iny43 cm43 vdd43 outp43 outn43 rctrl43 cctrl43 rc_tuned
+Vsupply44 vdd44 0 1.8
+Vcm44 cm44 0 1.501022973219767
+Vid44 vid44 0 dc 0 ac 1
+Einp44 inx44 cm44 vid44 0 0.5
+Einn44 iny44 cm44 vid44 0 -0.5
+Vr44 rctrl44 0 0.9900000000000001
+Vc44 cctrl44 0 1.8
+Xcase44 inx44 iny44 cm44 vdd44 outp44 outn44 rctrl44 cctrl44 rc_tuned
+Vsupply45 vdd45 0 1.8
+Vcm45 cm45 0 1.501022973219767
+Vid45 vid45 0 dc 0 ac 1
+Einp45 inx45 cm45 vid45 0 0.5
+Einn45 iny45 cm45 vid45 0 -0.5
+Vr45 rctrl45 0 1.08
+Vc45 cctrl45 0 0
+Xcase45 inx45 iny45 cm45 vdd45 outp45 outn45 rctrl45 cctrl45 rc_tuned
+Vsupply46 vdd46 0 1.8
+Vcm46 cm46 0 1.501022973219767
+Vid46 vid46 0 dc 0 ac 1
+Einp46 inx46 cm46 vid46 0 0.5
+Einn46 iny46 cm46 vid46 0 -0.5
+Vr46 rctrl46 0 1.08
+Vc46 cctrl46 0 0.09000000000000001
+Xcase46 inx46 iny46 cm46 vdd46 outp46 outn46 rctrl46 cctrl46 rc_tuned
+Vsupply47 vdd47 0 1.8
+Vcm47 cm47 0 1.501022973219767
+Vid47 vid47 0 dc 0 ac 1
+Einp47 inx47 cm47 vid47 0 0.5
+Einn47 iny47 cm47 vid47 0 -0.5
+Vr47 rctrl47 0 1.08
+Vc47 cctrl47 0 0.18
+Xcase47 inx47 iny47 cm47 vdd47 outp47 outn47 rctrl47 cctrl47 rc_tuned
+Vsupply48 vdd48 0 1.8
+Vcm48 cm48 0 1.501022973219767
+Vid48 vid48 0 dc 0 ac 1
+Einp48 inx48 cm48 vid48 0 0.5
+Einn48 iny48 cm48 vid48 0 -0.5
+Vr48 rctrl48 0 1.08
+Vc48 cctrl48 0 0.27
+Xcase48 inx48 iny48 cm48 vdd48 outp48 outn48 rctrl48 cctrl48 rc_tuned
+Vsupply49 vdd49 0 1.8
+Vcm49 cm49 0 1.501022973219767
+Vid49 vid49 0 dc 0 ac 1
+Einp49 inx49 cm49 vid49 0 0.5
+Einn49 iny49 cm49 vid49 0 -0.5
+Vr49 rctrl49 0 1.08
+Vc49 cctrl49 0 0.36
+Xcase49 inx49 iny49 cm49 vdd49 outp49 outn49 rctrl49 cctrl49 rc_tuned
+Vsupply50 vdd50 0 1.8
+Vcm50 cm50 0 1.501022973219767
+Vid50 vid50 0 dc 0 ac 1
+Einp50 inx50 cm50 vid50 0 0.5
+Einn50 iny50 cm50 vid50 0 -0.5
+Vr50 rctrl50 0 1.08
+Vc50 cctrl50 0 0.54
+Xcase50 inx50 iny50 cm50 vdd50 outp50 outn50 rctrl50 cctrl50 rc_tuned
+Vsupply51 vdd51 0 1.8
+Vcm51 cm51 0 1.501022973219767
+Vid51 vid51 0 dc 0 ac 1
+Einp51 inx51 cm51 vid51 0 0.5
+Einn51 iny51 cm51 vid51 0 -0.5
+Vr51 rctrl51 0 1.08
+Vc51 cctrl51 0 0.7200000000000001
+Xcase51 inx51 iny51 cm51 vdd51 outp51 outn51 rctrl51 cctrl51 rc_tuned
+Vsupply52 vdd52 0 1.8
+Vcm52 cm52 0 1.501022973219767
+Vid52 vid52 0 dc 0 ac 1
+Einp52 inx52 cm52 vid52 0 0.5
+Einn52 iny52 cm52 vid52 0 -0.5
+Vr52 rctrl52 0 1.08
+Vc52 cctrl52 0 1.08
+Xcase52 inx52 iny52 cm52 vdd52 outp52 outn52 rctrl52 cctrl52 rc_tuned
+Vsupply53 vdd53 0 1.8
+Vcm53 cm53 0 1.501022973219767
+Vid53 vid53 0 dc 0 ac 1
+Einp53 inx53 cm53 vid53 0 0.5
+Einn53 iny53 cm53 vid53 0 -0.5
+Vr53 rctrl53 0 1.08
+Vc53 cctrl53 0 1.8
+Xcase53 inx53 iny53 cm53 vdd53 outp53 outn53 rctrl53 cctrl53 rc_tuned
+Vsupply54 vdd54 0 1.8
+Vcm54 cm54 0 1.501022973219767
+Vid54 vid54 0 dc 0 ac 1
+Einp54 inx54 cm54 vid54 0 0.5
+Einn54 iny54 cm54 vid54 0 -0.5
+Vr54 rctrl54 0 1.26
+Vc54 cctrl54 0 0
+Xcase54 inx54 iny54 cm54 vdd54 outp54 outn54 rctrl54 cctrl54 rc_tuned
+Vsupply55 vdd55 0 1.8
+Vcm55 cm55 0 1.501022973219767
+Vid55 vid55 0 dc 0 ac 1
+Einp55 inx55 cm55 vid55 0 0.5
+Einn55 iny55 cm55 vid55 0 -0.5
+Vr55 rctrl55 0 1.26
+Vc55 cctrl55 0 0.09000000000000001
+Xcase55 inx55 iny55 cm55 vdd55 outp55 outn55 rctrl55 cctrl55 rc_tuned
+Vsupply56 vdd56 0 1.8
+Vcm56 cm56 0 1.501022973219767
+Vid56 vid56 0 dc 0 ac 1
+Einp56 inx56 cm56 vid56 0 0.5
+Einn56 iny56 cm56 vid56 0 -0.5
+Vr56 rctrl56 0 1.26
+Vc56 cctrl56 0 0.18
+Xcase56 inx56 iny56 cm56 vdd56 outp56 outn56 rctrl56 cctrl56 rc_tuned
+Vsupply57 vdd57 0 1.8
+Vcm57 cm57 0 1.501022973219767
+Vid57 vid57 0 dc 0 ac 1
+Einp57 inx57 cm57 vid57 0 0.5
+Einn57 iny57 cm57 vid57 0 -0.5
+Vr57 rctrl57 0 1.26
+Vc57 cctrl57 0 0.27
+Xcase57 inx57 iny57 cm57 vdd57 outp57 outn57 rctrl57 cctrl57 rc_tuned
+Vsupply58 vdd58 0 1.8
+Vcm58 cm58 0 1.501022973219767
+Vid58 vid58 0 dc 0 ac 1
+Einp58 inx58 cm58 vid58 0 0.5
+Einn58 iny58 cm58 vid58 0 -0.5
+Vr58 rctrl58 0 1.26
+Vc58 cctrl58 0 0.36
+Xcase58 inx58 iny58 cm58 vdd58 outp58 outn58 rctrl58 cctrl58 rc_tuned
+Vsupply59 vdd59 0 1.8
+Vcm59 cm59 0 1.501022973219767
+Vid59 vid59 0 dc 0 ac 1
+Einp59 inx59 cm59 vid59 0 0.5
+Einn59 iny59 cm59 vid59 0 -0.5
+Vr59 rctrl59 0 1.26
+Vc59 cctrl59 0 0.54
+Xcase59 inx59 iny59 cm59 vdd59 outp59 outn59 rctrl59 cctrl59 rc_tuned
+Vsupply60 vdd60 0 1.8
+Vcm60 cm60 0 1.501022973219767
+Vid60 vid60 0 dc 0 ac 1
+Einp60 inx60 cm60 vid60 0 0.5
+Einn60 iny60 cm60 vid60 0 -0.5
+Vr60 rctrl60 0 1.26
+Vc60 cctrl60 0 0.7200000000000001
+Xcase60 inx60 iny60 cm60 vdd60 outp60 outn60 rctrl60 cctrl60 rc_tuned
+Vsupply61 vdd61 0 1.8
+Vcm61 cm61 0 1.501022973219767
+Vid61 vid61 0 dc 0 ac 1
+Einp61 inx61 cm61 vid61 0 0.5
+Einn61 iny61 cm61 vid61 0 -0.5
+Vr61 rctrl61 0 1.26
+Vc61 cctrl61 0 1.08
+Xcase61 inx61 iny61 cm61 vdd61 outp61 outn61 rctrl61 cctrl61 rc_tuned
+Vsupply62 vdd62 0 1.8
+Vcm62 cm62 0 1.501022973219767
+Vid62 vid62 0 dc 0 ac 1
+Einp62 inx62 cm62 vid62 0 0.5
+Einn62 iny62 cm62 vid62 0 -0.5
+Vr62 rctrl62 0 1.26
+Vc62 cctrl62 0 1.8
+Xcase62 inx62 iny62 cm62 vdd62 outp62 outn62 rctrl62 cctrl62 rc_tuned
+Vsupply63 vdd63 0 1.8
+Vcm63 cm63 0 1.501022973219767
+Vid63 vid63 0 dc 0 ac 1
+Einp63 inx63 cm63 vid63 0 0.5
+Einn63 iny63 cm63 vid63 0 -0.5
+Vr63 rctrl63 0 1.53
+Vc63 cctrl63 0 0
+Xcase63 inx63 iny63 cm63 vdd63 outp63 outn63 rctrl63 cctrl63 rc_tuned
+Vsupply64 vdd64 0 1.8
+Vcm64 cm64 0 1.501022973219767
+Vid64 vid64 0 dc 0 ac 1
+Einp64 inx64 cm64 vid64 0 0.5
+Einn64 iny64 cm64 vid64 0 -0.5
+Vr64 rctrl64 0 1.53
+Vc64 cctrl64 0 0.09000000000000001
+Xcase64 inx64 iny64 cm64 vdd64 outp64 outn64 rctrl64 cctrl64 rc_tuned
+Vsupply65 vdd65 0 1.8
+Vcm65 cm65 0 1.501022973219767
+Vid65 vid65 0 dc 0 ac 1
+Einp65 inx65 cm65 vid65 0 0.5
+Einn65 iny65 cm65 vid65 0 -0.5
+Vr65 rctrl65 0 1.53
+Vc65 cctrl65 0 0.18
+Xcase65 inx65 iny65 cm65 vdd65 outp65 outn65 rctrl65 cctrl65 rc_tuned
+Vsupply66 vdd66 0 1.8
+Vcm66 cm66 0 1.501022973219767
+Vid66 vid66 0 dc 0 ac 1
+Einp66 inx66 cm66 vid66 0 0.5
+Einn66 iny66 cm66 vid66 0 -0.5
+Vr66 rctrl66 0 1.53
+Vc66 cctrl66 0 0.27
+Xcase66 inx66 iny66 cm66 vdd66 outp66 outn66 rctrl66 cctrl66 rc_tuned
+Vsupply67 vdd67 0 1.8
+Vcm67 cm67 0 1.501022973219767
+Vid67 vid67 0 dc 0 ac 1
+Einp67 inx67 cm67 vid67 0 0.5
+Einn67 iny67 cm67 vid67 0 -0.5
+Vr67 rctrl67 0 1.53
+Vc67 cctrl67 0 0.36
+Xcase67 inx67 iny67 cm67 vdd67 outp67 outn67 rctrl67 cctrl67 rc_tuned
+Vsupply68 vdd68 0 1.8
+Vcm68 cm68 0 1.501022973219767
+Vid68 vid68 0 dc 0 ac 1
+Einp68 inx68 cm68 vid68 0 0.5
+Einn68 iny68 cm68 vid68 0 -0.5
+Vr68 rctrl68 0 1.53
+Vc68 cctrl68 0 0.54
+Xcase68 inx68 iny68 cm68 vdd68 outp68 outn68 rctrl68 cctrl68 rc_tuned
+Vsupply69 vdd69 0 1.8
+Vcm69 cm69 0 1.501022973219767
+Vid69 vid69 0 dc 0 ac 1
+Einp69 inx69 cm69 vid69 0 0.5
+Einn69 iny69 cm69 vid69 0 -0.5
+Vr69 rctrl69 0 1.53
+Vc69 cctrl69 0 0.7200000000000001
+Xcase69 inx69 iny69 cm69 vdd69 outp69 outn69 rctrl69 cctrl69 rc_tuned
+Vsupply70 vdd70 0 1.8
+Vcm70 cm70 0 1.501022973219767
+Vid70 vid70 0 dc 0 ac 1
+Einp70 inx70 cm70 vid70 0 0.5
+Einn70 iny70 cm70 vid70 0 -0.5
+Vr70 rctrl70 0 1.53
+Vc70 cctrl70 0 1.08
+Xcase70 inx70 iny70 cm70 vdd70 outp70 outn70 rctrl70 cctrl70 rc_tuned
+Vsupply71 vdd71 0 1.8
+Vcm71 cm71 0 1.501022973219767
+Vid71 vid71 0 dc 0 ac 1
+Einp71 inx71 cm71 vid71 0 0.5
+Einn71 iny71 cm71 vid71 0 -0.5
+Vr71 rctrl71 0 1.53
+Vc71 cctrl71 0 1.8
+Xcase71 inx71 iny71 cm71 vdd71 outp71 outn71 rctrl71 cctrl71 rc_tuned
+Vsupply72 vdd72 0 1.8
+Vcm72 cm72 0 1.501022973219767
+Vid72 vid72 0 dc 0 ac 1
+Einp72 inx72 cm72 vid72 0 0.5
+Einn72 iny72 cm72 vid72 0 -0.5
+Vr72 rctrl72 0 1.8
+Vc72 cctrl72 0 0
+Xcase72 inx72 iny72 cm72 vdd72 outp72 outn72 rctrl72 cctrl72 rc_tuned
+Vsupply73 vdd73 0 1.8
+Vcm73 cm73 0 1.501022973219767
+Vid73 vid73 0 dc 0 ac 1
+Einp73 inx73 cm73 vid73 0 0.5
+Einn73 iny73 cm73 vid73 0 -0.5
+Vr73 rctrl73 0 1.8
+Vc73 cctrl73 0 0.09000000000000001
+Xcase73 inx73 iny73 cm73 vdd73 outp73 outn73 rctrl73 cctrl73 rc_tuned
+Vsupply74 vdd74 0 1.8
+Vcm74 cm74 0 1.501022973219767
+Vid74 vid74 0 dc 0 ac 1
+Einp74 inx74 cm74 vid74 0 0.5
+Einn74 iny74 cm74 vid74 0 -0.5
+Vr74 rctrl74 0 1.8
+Vc74 cctrl74 0 0.18
+Xcase74 inx74 iny74 cm74 vdd74 outp74 outn74 rctrl74 cctrl74 rc_tuned
+Vsupply75 vdd75 0 1.8
+Vcm75 cm75 0 1.501022973219767
+Vid75 vid75 0 dc 0 ac 1
+Einp75 inx75 cm75 vid75 0 0.5
+Einn75 iny75 cm75 vid75 0 -0.5
+Vr75 rctrl75 0 1.8
+Vc75 cctrl75 0 0.27
+Xcase75 inx75 iny75 cm75 vdd75 outp75 outn75 rctrl75 cctrl75 rc_tuned
+Vsupply76 vdd76 0 1.8
+Vcm76 cm76 0 1.501022973219767
+Vid76 vid76 0 dc 0 ac 1
+Einp76 inx76 cm76 vid76 0 0.5
+Einn76 iny76 cm76 vid76 0 -0.5
+Vr76 rctrl76 0 1.8
+Vc76 cctrl76 0 0.36
+Xcase76 inx76 iny76 cm76 vdd76 outp76 outn76 rctrl76 cctrl76 rc_tuned
+Vsupply77 vdd77 0 1.8
+Vcm77 cm77 0 1.501022973219767
+Vid77 vid77 0 dc 0 ac 1
+Einp77 inx77 cm77 vid77 0 0.5
+Einn77 iny77 cm77 vid77 0 -0.5
+Vr77 rctrl77 0 1.8
+Vc77 cctrl77 0 0.54
+Xcase77 inx77 iny77 cm77 vdd77 outp77 outn77 rctrl77 cctrl77 rc_tuned
+Vsupply78 vdd78 0 1.8
+Vcm78 cm78 0 1.501022973219767
+Vid78 vid78 0 dc 0 ac 1
+Einp78 inx78 cm78 vid78 0 0.5
+Einn78 iny78 cm78 vid78 0 -0.5
+Vr78 rctrl78 0 1.8
+Vc78 cctrl78 0 0.7200000000000001
+Xcase78 inx78 iny78 cm78 vdd78 outp78 outn78 rctrl78 cctrl78 rc_tuned
+Vsupply79 vdd79 0 1.8
+Vcm79 cm79 0 1.501022973219767
+Vid79 vid79 0 dc 0 ac 1
+Einp79 inx79 cm79 vid79 0 0.5
+Einn79 iny79 cm79 vid79 0 -0.5
+Vr79 rctrl79 0 1.8
+Vc79 cctrl79 0 1.08
+Xcase79 inx79 iny79 cm79 vdd79 outp79 outn79 rctrl79 cctrl79 rc_tuned
+Vsupply80 vdd80 0 1.8
+Vcm80 cm80 0 1.501022973219767
+Vid80 vid80 0 dc 0 ac 1
+Einp80 inx80 cm80 vid80 0 0.5
+Einn80 iny80 cm80 vid80 0 -0.5
+Vr80 rctrl80 0 1.8
+Vc80 cctrl80 0 1.8
+Xcase80 inx80 iny80 cm80 vdd80 outp80 outn80 rctrl80 cctrl80 rc_tuned
+Vsupply81 vdd81 0 1.8
+Vcm81 cm81 0 1.501022973219767
+Vid81 vid81 0 dc 0 ac 1
+Einp81 inx81 cm81 vid81 0 0.5
+Einn81 iny81 cm81 vid81 0 -0.5
+Vr81 rctrl81 0 0
+Vc81 cctrl81 0 0
+Xcase81 inx81 iny81 cm81 vdd81 outp81 outn81 rctrl81 cctrl81 rc_fixed
+.control
+set noaskquit
+set numdgt=15
+set wr_singlescale
+op
+wrdata op.txt i(vsupply0) v(xcase0.att_n0) v(xcase0.att_n1) v(xcase0.att_n2) v(xcase0.att_p0) v(xcase0.att_p1) v(xcase0.att_p2) v(cctrl0) v(cm0) v(xcase0.inn) v(xcase0.inp) v(inx0) v(iny0) v(xcase0.nbias) v(outn0) v(outp0) v(xcase0.p_bias) v(xcase0.rc_ct) v(xcase0.rc_gate) v(xcase0.rc_mid) v(rctrl0) v(xcase0.s1) v(xcase0.s2) v(vdd0) i(vsupply1) v(xcase1.att_n0) v(xcase1.att_n1) v(xcase1.att_n2) v(xcase1.att_p0) v(xcase1.att_p1) v(xcase1.att_p2) v(cctrl1) v(cm1) v(xcase1.inn) v(xcase1.inp) v(inx1) v(iny1) v(xcase1.nbias) v(outn1) v(outp1) v(xcase1.p_bias) v(xcase1.rc_ct) v(xcase1.rc_gate) v(xcase1.rc_mid) v(rctrl1) v(xcase1.s1) v(xcase1.s2) v(vdd1) i(vsupply2) v(xcase2.att_n0) v(xcase2.att_n1) v(xcase2.att_n2) v(xcase2.att_p0) v(xcase2.att_p1) v(xcase2.att_p2) v(cctrl2) v(cm2) v(xcase2.inn) v(xcase2.inp) v(inx2) v(iny2) v(xcase2.nbias) v(outn2) v(outp2) v(xcase2.p_bias) v(xcase2.rc_ct) v(xcase2.rc_gate) v(xcase2.rc_mid) v(rctrl2) v(xcase2.s1) v(xcase2.s2) v(vdd2) i(vsupply3) v(xcase3.att_n0) v(xcase3.att_n1) v(xcase3.att_n2) v(xcase3.att_p0) v(xcase3.att_p1) v(xcase3.att_p2) v(cctrl3) v(cm3) v(xcase3.inn) v(xcase3.inp) v(inx3) v(iny3) v(xcase3.nbias) v(outn3) v(outp3) v(xcase3.p_bias) v(xcase3.rc_ct) v(xcase3.rc_gate) v(xcase3.rc_mid) v(rctrl3) v(xcase3.s1) v(xcase3.s2) v(vdd3) i(vsupply4) v(xcase4.att_n0) v(xcase4.att_n1) v(xcase4.att_n2) v(xcase4.att_p0) v(xcase4.att_p1) v(xcase4.att_p2) v(cctrl4) v(cm4) v(xcase4.inn) v(xcase4.inp) v(inx4) v(iny4) v(xcase4.nbias) v(outn4) v(outp4) v(xcase4.p_bias) v(xcase4.rc_ct) v(xcase4.rc_gate) v(xcase4.rc_mid) v(rctrl4) v(xcase4.s1) v(xcase4.s2) v(vdd4) i(vsupply5) v(xcase5.att_n0) v(xcase5.att_n1) v(xcase5.att_n2) v(xcase5.att_p0) v(xcase5.att_p1) v(xcase5.att_p2) v(cctrl5) v(cm5) v(xcase5.inn) v(xcase5.inp) v(inx5) v(iny5) v(xcase5.nbias) v(outn5) v(outp5) v(xcase5.p_bias) v(xcase5.rc_ct) v(xcase5.rc_gate) v(xcase5.rc_mid) v(rctrl5) v(xcase5.s1) v(xcase5.s2) v(vdd5) i(vsupply6) v(xcase6.att_n0) v(xcase6.att_n1) v(xcase6.att_n2) v(xcase6.att_p0) v(xcase6.att_p1) v(xcase6.att_p2) v(cctrl6) v(cm6) v(xcase6.inn) v(xcase6.inp) v(inx6) v(iny6) v(xcase6.nbias) v(outn6) v(outp6) v(xcase6.p_bias) v(xcase6.rc_ct) v(xcase6.rc_gate) v(xcase6.rc_mid) v(rctrl6) v(xcase6.s1) v(xcase6.s2) v(vdd6) i(vsupply7) v(xcase7.att_n0) v(xcase7.att_n1) v(xcase7.att_n2) v(xcase7.att_p0) v(xcase7.att_p1) v(xcase7.att_p2) v(cctrl7) v(cm7) v(xcase7.inn) v(xcase7.inp) v(inx7) v(iny7) v(xcase7.nbias) v(outn7) v(outp7) v(xcase7.p_bias) v(xcase7.rc_ct) v(xcase7.rc_gate) v(xcase7.rc_mid) v(rctrl7) v(xcase7.s1) v(xcase7.s2) v(vdd7) i(vsupply8) v(xcase8.att_n0) v(xcase8.att_n1) v(xcase8.att_n2) v(xcase8.att_p0) v(xcase8.att_p1) v(xcase8.att_p2) v(cctrl8) v(cm8) v(xcase8.inn) v(xcase8.inp) v(inx8) v(iny8) v(xcase8.nbias) v(outn8) v(outp8) v(xcase8.p_bias) v(xcase8.rc_ct) v(xcase8.rc_gate) v(xcase8.rc_mid) v(rctrl8) v(xcase8.s1) v(xcase8.s2) v(vdd8) i(vsupply9) v(xcase9.att_n0) v(xcase9.att_n1) v(xcase9.att_n2) v(xcase9.att_p0) v(xcase9.att_p1) v(xcase9.att_p2) v(cctrl9) v(cm9) v(xcase9.inn) v(xcase9.inp) v(inx9) v(iny9) v(xcase9.nbias) v(outn9) v(outp9) v(xcase9.p_bias) v(xcase9.rc_ct) v(xcase9.rc_gate) v(xcase9.rc_mid) v(rctrl9) v(xcase9.s1) v(xcase9.s2) v(vdd9) i(vsupply10) v(xcase10.att_n0) v(xcase10.att_n1) v(xcase10.att_n2) v(xcase10.att_p0) v(xcase10.att_p1) v(xcase10.att_p2) v(cctrl10) v(cm10) v(xcase10.inn) v(xcase10.inp) v(inx10) v(iny10) v(xcase10.nbias) v(outn10) v(outp10) v(xcase10.p_bias) v(xcase10.rc_ct) v(xcase10.rc_gate) v(xcase10.rc_mid) v(rctrl10) v(xcase10.s1) v(xcase10.s2) v(vdd10) i(vsupply11) v(xcase11.att_n0) v(xcase11.att_n1) v(xcase11.att_n2) v(xcase11.att_p0) v(xcase11.att_p1) v(xcase11.att_p2) v(cctrl11) v(cm11) v(xcase11.inn) v(xcase11.inp) v(inx11) v(iny11) v(xcase11.nbias) v(outn11) v(outp11) v(xcase11.p_bias) v(xcase11.rc_ct) v(xcase11.rc_gate) v(xcase11.rc_mid) v(rctrl11) v(xcase11.s1) v(xcase11.s2) v(vdd11) i(vsupply12) v(xcase12.att_n0) v(xcase12.att_n1) v(xcase12.att_n2) v(xcase12.att_p0) v(xcase12.att_p1) v(xcase12.att_p2) v(cctrl12) v(cm12) v(xcase12.inn) v(xcase12.inp) v(inx12) v(iny12) v(xcase12.nbias) v(outn12) v(outp12) v(xcase12.p_bias) v(xcase12.rc_ct) v(xcase12.rc_gate) v(xcase12.rc_mid) v(rctrl12) v(xcase12.s1) v(xcase12.s2) v(vdd12) i(vsupply13) v(xcase13.att_n0) v(xcase13.att_n1) v(xcase13.att_n2) v(xcase13.att_p0) v(xcase13.att_p1) v(xcase13.att_p2) v(cctrl13) v(cm13) v(xcase13.inn) v(xcase13.inp) v(inx13) v(iny13) v(xcase13.nbias) v(outn13) v(outp13) v(xcase13.p_bias) v(xcase13.rc_ct) v(xcase13.rc_gate) v(xcase13.rc_mid) v(rctrl13) v(xcase13.s1) v(xcase13.s2) v(vdd13) i(vsupply14) v(xcase14.att_n0) v(xcase14.att_n1) v(xcase14.att_n2) v(xcase14.att_p0) v(xcase14.att_p1) v(xcase14.att_p2) v(cctrl14) v(cm14) v(xcase14.inn) v(xcase14.inp) v(inx14) v(iny14) v(xcase14.nbias) v(outn14) v(outp14) v(xcase14.p_bias) v(xcase14.rc_ct) v(xcase14.rc_gate) v(xcase14.rc_mid) v(rctrl14) v(xcase14.s1) v(xcase14.s2) v(vdd14) i(vsupply15) v(xcase15.att_n0) v(xcase15.att_n1) v(xcase15.att_n2) v(xcase15.att_p0) v(xcase15.att_p1) v(xcase15.att_p2) v(cctrl15) v(cm15) v(xcase15.inn) v(xcase15.inp) v(inx15) v(iny15) v(xcase15.nbias) v(outn15) v(outp15) v(xcase15.p_bias) v(xcase15.rc_ct) v(xcase15.rc_gate) v(xcase15.rc_mid) v(rctrl15) v(xcase15.s1) v(xcase15.s2) v(vdd15) i(vsupply16) v(xcase16.att_n0) v(xcase16.att_n1) v(xcase16.att_n2) v(xcase16.att_p0) v(xcase16.att_p1) v(xcase16.att_p2) v(cctrl16) v(cm16) v(xcase16.inn) v(xcase16.inp) v(inx16) v(iny16) v(xcase16.nbias) v(outn16) v(outp16) v(xcase16.p_bias) v(xcase16.rc_ct) v(xcase16.rc_gate) v(xcase16.rc_mid) v(rctrl16) v(xcase16.s1) v(xcase16.s2) v(vdd16) i(vsupply17) v(xcase17.att_n0) v(xcase17.att_n1) v(xcase17.att_n2) v(xcase17.att_p0) v(xcase17.att_p1) v(xcase17.att_p2) v(cctrl17) v(cm17) v(xcase17.inn) v(xcase17.inp) v(inx17) v(iny17) v(xcase17.nbias) v(outn17) v(outp17) v(xcase17.p_bias) v(xcase17.rc_ct) v(xcase17.rc_gate) v(xcase17.rc_mid) v(rctrl17) v(xcase17.s1) v(xcase17.s2) v(vdd17) i(vsupply18) v(xcase18.att_n0) v(xcase18.att_n1) v(xcase18.att_n2) v(xcase18.att_p0) v(xcase18.att_p1) v(xcase18.att_p2) v(cctrl18) v(cm18) v(xcase18.inn) v(xcase18.inp) v(inx18) v(iny18) v(xcase18.nbias) v(outn18) v(outp18) v(xcase18.p_bias) v(xcase18.rc_ct) v(xcase18.rc_gate) v(xcase18.rc_mid) v(rctrl18) v(xcase18.s1) v(xcase18.s2) v(vdd18) i(vsupply19) v(xcase19.att_n0) v(xcase19.att_n1) v(xcase19.att_n2) v(xcase19.att_p0) v(xcase19.att_p1) v(xcase19.att_p2) v(cctrl19) v(cm19) v(xcase19.inn) v(xcase19.inp) v(inx19) v(iny19) v(xcase19.nbias) v(outn19) v(outp19) v(xcase19.p_bias) v(xcase19.rc_ct) v(xcase19.rc_gate) v(xcase19.rc_mid) v(rctrl19) v(xcase19.s1) v(xcase19.s2) v(vdd19) i(vsupply20) v(xcase20.att_n0) v(xcase20.att_n1) v(xcase20.att_n2) v(xcase20.att_p0) v(xcase20.att_p1) v(xcase20.att_p2) v(cctrl20) v(cm20) v(xcase20.inn) v(xcase20.inp) v(inx20) v(iny20) v(xcase20.nbias) v(outn20) v(outp20) v(xcase20.p_bias) v(xcase20.rc_ct) v(xcase20.rc_gate) v(xcase20.rc_mid) v(rctrl20) v(xcase20.s1) v(xcase20.s2) v(vdd20) i(vsupply21) v(xcase21.att_n0) v(xcase21.att_n1) v(xcase21.att_n2) v(xcase21.att_p0) v(xcase21.att_p1) v(xcase21.att_p2) v(cctrl21) v(cm21) v(xcase21.inn) v(xcase21.inp) v(inx21) v(iny21) v(xcase21.nbias) v(outn21) v(outp21) v(xcase21.p_bias) v(xcase21.rc_ct) v(xcase21.rc_gate) v(xcase21.rc_mid) v(rctrl21) v(xcase21.s1) v(xcase21.s2) v(vdd21) i(vsupply22) v(xcase22.att_n0) v(xcase22.att_n1) v(xcase22.att_n2) v(xcase22.att_p0) v(xcase22.att_p1) v(xcase22.att_p2) v(cctrl22) v(cm22) v(xcase22.inn) v(xcase22.inp) v(inx22) v(iny22) v(xcase22.nbias) v(outn22) v(outp22) v(xcase22.p_bias) v(xcase22.rc_ct) v(xcase22.rc_gate) v(xcase22.rc_mid) v(rctrl22) v(xcase22.s1) v(xcase22.s2) v(vdd22) i(vsupply23) v(xcase23.att_n0) v(xcase23.att_n1) v(xcase23.att_n2) v(xcase23.att_p0) v(xcase23.att_p1) v(xcase23.att_p2) v(cctrl23) v(cm23) v(xcase23.inn) v(xcase23.inp) v(inx23) v(iny23) v(xcase23.nbias) v(outn23) v(outp23) v(xcase23.p_bias) v(xcase23.rc_ct) v(xcase23.rc_gate) v(xcase23.rc_mid) v(rctrl23) v(xcase23.s1) v(xcase23.s2) v(vdd23) i(vsupply24) v(xcase24.att_n0) v(xcase24.att_n1) v(xcase24.att_n2) v(xcase24.att_p0) v(xcase24.att_p1) v(xcase24.att_p2) v(cctrl24) v(cm24) v(xcase24.inn) v(xcase24.inp) v(inx24) v(iny24) v(xcase24.nbias) v(outn24) v(outp24) v(xcase24.p_bias) v(xcase24.rc_ct) v(xcase24.rc_gate) v(xcase24.rc_mid) v(rctrl24) v(xcase24.s1) v(xcase24.s2) v(vdd24) i(vsupply25) v(xcase25.att_n0) v(xcase25.att_n1) v(xcase25.att_n2) v(xcase25.att_p0) v(xcase25.att_p1) v(xcase25.att_p2) v(cctrl25) v(cm25) v(xcase25.inn) v(xcase25.inp) v(inx25) v(iny25) v(xcase25.nbias) v(outn25) v(outp25) v(xcase25.p_bias) v(xcase25.rc_ct) v(xcase25.rc_gate) v(xcase25.rc_mid) v(rctrl25) v(xcase25.s1) v(xcase25.s2) v(vdd25) i(vsupply26) v(xcase26.att_n0) v(xcase26.att_n1) v(xcase26.att_n2) v(xcase26.att_p0) v(xcase26.att_p1) v(xcase26.att_p2) v(cctrl26) v(cm26) v(xcase26.inn) v(xcase26.inp) v(inx26) v(iny26) v(xcase26.nbias) v(outn26) v(outp26) v(xcase26.p_bias) v(xcase26.rc_ct) v(xcase26.rc_gate) v(xcase26.rc_mid) v(rctrl26) v(xcase26.s1) v(xcase26.s2) v(vdd26) i(vsupply27) v(xcase27.att_n0) v(xcase27.att_n1) v(xcase27.att_n2) v(xcase27.att_p0) v(xcase27.att_p1) v(xcase27.att_p2) v(cctrl27) v(cm27) v(xcase27.inn) v(xcase27.inp) v(inx27) v(iny27) v(xcase27.nbias) v(outn27) v(outp27) v(xcase27.p_bias) v(xcase27.rc_ct) v(xcase27.rc_gate) v(xcase27.rc_mid) v(rctrl27) v(xcase27.s1) v(xcase27.s2) v(vdd27) i(vsupply28) v(xcase28.att_n0) v(xcase28.att_n1) v(xcase28.att_n2) v(xcase28.att_p0) v(xcase28.att_p1) v(xcase28.att_p2) v(cctrl28) v(cm28) v(xcase28.inn) v(xcase28.inp) v(inx28) v(iny28) v(xcase28.nbias) v(outn28) v(outp28) v(xcase28.p_bias) v(xcase28.rc_ct) v(xcase28.rc_gate) v(xcase28.rc_mid) v(rctrl28) v(xcase28.s1) v(xcase28.s2) v(vdd28) i(vsupply29) v(xcase29.att_n0) v(xcase29.att_n1) v(xcase29.att_n2) v(xcase29.att_p0) v(xcase29.att_p1) v(xcase29.att_p2) v(cctrl29) v(cm29) v(xcase29.inn) v(xcase29.inp) v(inx29) v(iny29) v(xcase29.nbias) v(outn29) v(outp29) v(xcase29.p_bias) v(xcase29.rc_ct) v(xcase29.rc_gate) v(xcase29.rc_mid) v(rctrl29) v(xcase29.s1) v(xcase29.s2) v(vdd29) i(vsupply30) v(xcase30.att_n0) v(xcase30.att_n1) v(xcase30.att_n2) v(xcase30.att_p0) v(xcase30.att_p1) v(xcase30.att_p2) v(cctrl30) v(cm30) v(xcase30.inn) v(xcase30.inp) v(inx30) v(iny30) v(xcase30.nbias) v(outn30) v(outp30) v(xcase30.p_bias) v(xcase30.rc_ct) v(xcase30.rc_gate) v(xcase30.rc_mid) v(rctrl30) v(xcase30.s1) v(xcase30.s2) v(vdd30) i(vsupply31) v(xcase31.att_n0) v(xcase31.att_n1) v(xcase31.att_n2) v(xcase31.att_p0) v(xcase31.att_p1) v(xcase31.att_p2) v(cctrl31) v(cm31) v(xcase31.inn) v(xcase31.inp) v(inx31) v(iny31) v(xcase31.nbias) v(outn31) v(outp31) v(xcase31.p_bias) v(xcase31.rc_ct) v(xcase31.rc_gate) v(xcase31.rc_mid) v(rctrl31) v(xcase31.s1) v(xcase31.s2) v(vdd31) i(vsupply32) v(xcase32.att_n0) v(xcase32.att_n1) v(xcase32.att_n2) v(xcase32.att_p0) v(xcase32.att_p1) v(xcase32.att_p2) v(cctrl32) v(cm32) v(xcase32.inn) v(xcase32.inp) v(inx32) v(iny32) v(xcase32.nbias) v(outn32) v(outp32) v(xcase32.p_bias) v(xcase32.rc_ct) v(xcase32.rc_gate) v(xcase32.rc_mid) v(rctrl32) v(xcase32.s1) v(xcase32.s2) v(vdd32) i(vsupply33) v(xcase33.att_n0) v(xcase33.att_n1) v(xcase33.att_n2) v(xcase33.att_p0) v(xcase33.att_p1) v(xcase33.att_p2) v(cctrl33) v(cm33) v(xcase33.inn) v(xcase33.inp) v(inx33) v(iny33) v(xcase33.nbias) v(outn33) v(outp33) v(xcase33.p_bias) v(xcase33.rc_ct) v(xcase33.rc_gate) v(xcase33.rc_mid) v(rctrl33) v(xcase33.s1) v(xcase33.s2) v(vdd33) i(vsupply34) v(xcase34.att_n0) v(xcase34.att_n1) v(xcase34.att_n2) v(xcase34.att_p0) v(xcase34.att_p1) v(xcase34.att_p2) v(cctrl34) v(cm34) v(xcase34.inn) v(xcase34.inp) v(inx34) v(iny34) v(xcase34.nbias) v(outn34) v(outp34) v(xcase34.p_bias) v(xcase34.rc_ct) v(xcase34.rc_gate) v(xcase34.rc_mid) v(rctrl34) v(xcase34.s1) v(xcase34.s2) v(vdd34) i(vsupply35) v(xcase35.att_n0) v(xcase35.att_n1) v(xcase35.att_n2) v(xcase35.att_p0) v(xcase35.att_p1) v(xcase35.att_p2) v(cctrl35) v(cm35) v(xcase35.inn) v(xcase35.inp) v(inx35) v(iny35) v(xcase35.nbias) v(outn35) v(outp35) v(xcase35.p_bias) v(xcase35.rc_ct) v(xcase35.rc_gate) v(xcase35.rc_mid) v(rctrl35) v(xcase35.s1) v(xcase35.s2) v(vdd35) i(vsupply36) v(xcase36.att_n0) v(xcase36.att_n1) v(xcase36.att_n2) v(xcase36.att_p0) v(xcase36.att_p1) v(xcase36.att_p2) v(cctrl36) v(cm36) v(xcase36.inn) v(xcase36.inp) v(inx36) v(iny36) v(xcase36.nbias) v(outn36) v(outp36) v(xcase36.p_bias) v(xcase36.rc_ct) v(xcase36.rc_gate) v(xcase36.rc_mid) v(rctrl36) v(xcase36.s1) v(xcase36.s2) v(vdd36) i(vsupply37) v(xcase37.att_n0) v(xcase37.att_n1) v(xcase37.att_n2) v(xcase37.att_p0) v(xcase37.att_p1) v(xcase37.att_p2) v(cctrl37) v(cm37) v(xcase37.inn) v(xcase37.inp) v(inx37) v(iny37) v(xcase37.nbias) v(outn37) v(outp37) v(xcase37.p_bias) v(xcase37.rc_ct) v(xcase37.rc_gate) v(xcase37.rc_mid) v(rctrl37) v(xcase37.s1) v(xcase37.s2) v(vdd37) i(vsupply38) v(xcase38.att_n0) v(xcase38.att_n1) v(xcase38.att_n2) v(xcase38.att_p0) v(xcase38.att_p1) v(xcase38.att_p2) v(cctrl38) v(cm38) v(xcase38.inn) v(xcase38.inp) v(inx38) v(iny38) v(xcase38.nbias) v(outn38) v(outp38) v(xcase38.p_bias) v(xcase38.rc_ct) v(xcase38.rc_gate) v(xcase38.rc_mid) v(rctrl38) v(xcase38.s1) v(xcase38.s2) v(vdd38) i(vsupply39) v(xcase39.att_n0) v(xcase39.att_n1) v(xcase39.att_n2) v(xcase39.att_p0) v(xcase39.att_p1) v(xcase39.att_p2) v(cctrl39) v(cm39) v(xcase39.inn) v(xcase39.inp) v(inx39) v(iny39) v(xcase39.nbias) v(outn39) v(outp39) v(xcase39.p_bias) v(xcase39.rc_ct) v(xcase39.rc_gate) v(xcase39.rc_mid) v(rctrl39) v(xcase39.s1) v(xcase39.s2) v(vdd39) i(vsupply40) v(xcase40.att_n0) v(xcase40.att_n1) v(xcase40.att_n2) v(xcase40.att_p0) v(xcase40.att_p1) v(xcase40.att_p2) v(cctrl40) v(cm40) v(xcase40.inn) v(xcase40.inp) v(inx40) v(iny40) v(xcase40.nbias) v(outn40) v(outp40) v(xcase40.p_bias) v(xcase40.rc_ct) v(xcase40.rc_gate) v(xcase40.rc_mid) v(rctrl40) v(xcase40.s1) v(xcase40.s2) v(vdd40) i(vsupply41) v(xcase41.att_n0) v(xcase41.att_n1) v(xcase41.att_n2) v(xcase41.att_p0) v(xcase41.att_p1) v(xcase41.att_p2) v(cctrl41) v(cm41) v(xcase41.inn) v(xcase41.inp) v(inx41) v(iny41) v(xcase41.nbias) v(outn41) v(outp41) v(xcase41.p_bias) v(xcase41.rc_ct) v(xcase41.rc_gate) v(xcase41.rc_mid) v(rctrl41) v(xcase41.s1) v(xcase41.s2) v(vdd41) i(vsupply42) v(xcase42.att_n0) v(xcase42.att_n1) v(xcase42.att_n2) v(xcase42.att_p0) v(xcase42.att_p1) v(xcase42.att_p2) v(cctrl42) v(cm42) v(xcase42.inn) v(xcase42.inp) v(inx42) v(iny42) v(xcase42.nbias) v(outn42) v(outp42) v(xcase42.p_bias) v(xcase42.rc_ct) v(xcase42.rc_gate) v(xcase42.rc_mid) v(rctrl42) v(xcase42.s1) v(xcase42.s2) v(vdd42) i(vsupply43) v(xcase43.att_n0) v(xcase43.att_n1) v(xcase43.att_n2) v(xcase43.att_p0) v(xcase43.att_p1) v(xcase43.att_p2) v(cctrl43) v(cm43) v(xcase43.inn) v(xcase43.inp) v(inx43) v(iny43) v(xcase43.nbias) v(outn43) v(outp43) v(xcase43.p_bias) v(xcase43.rc_ct) v(xcase43.rc_gate) v(xcase43.rc_mid) v(rctrl43) v(xcase43.s1) v(xcase43.s2) v(vdd43) i(vsupply44) v(xcase44.att_n0) v(xcase44.att_n1) v(xcase44.att_n2) v(xcase44.att_p0) v(xcase44.att_p1) v(xcase44.att_p2) v(cctrl44) v(cm44) v(xcase44.inn) v(xcase44.inp) v(inx44) v(iny44) v(xcase44.nbias) v(outn44) v(outp44) v(xcase44.p_bias) v(xcase44.rc_ct) v(xcase44.rc_gate) v(xcase44.rc_mid) v(rctrl44) v(xcase44.s1) v(xcase44.s2) v(vdd44) i(vsupply45) v(xcase45.att_n0) v(xcase45.att_n1) v(xcase45.att_n2) v(xcase45.att_p0) v(xcase45.att_p1) v(xcase45.att_p2) v(cctrl45) v(cm45) v(xcase45.inn) v(xcase45.inp) v(inx45) v(iny45) v(xcase45.nbias) v(outn45) v(outp45) v(xcase45.p_bias) v(xcase45.rc_ct) v(xcase45.rc_gate) v(xcase45.rc_mid) v(rctrl45) v(xcase45.s1) v(xcase45.s2) v(vdd45) i(vsupply46) v(xcase46.att_n0) v(xcase46.att_n1) v(xcase46.att_n2) v(xcase46.att_p0) v(xcase46.att_p1) v(xcase46.att_p2) v(cctrl46) v(cm46) v(xcase46.inn) v(xcase46.inp) v(inx46) v(iny46) v(xcase46.nbias) v(outn46) v(outp46) v(xcase46.p_bias) v(xcase46.rc_ct) v(xcase46.rc_gate) v(xcase46.rc_mid) v(rctrl46) v(xcase46.s1) v(xcase46.s2) v(vdd46) i(vsupply47) v(xcase47.att_n0) v(xcase47.att_n1) v(xcase47.att_n2) v(xcase47.att_p0) v(xcase47.att_p1) v(xcase47.att_p2) v(cctrl47) v(cm47) v(xcase47.inn) v(xcase47.inp) v(inx47) v(iny47) v(xcase47.nbias) v(outn47) v(outp47) v(xcase47.p_bias) v(xcase47.rc_ct) v(xcase47.rc_gate) v(xcase47.rc_mid) v(rctrl47) v(xcase47.s1) v(xcase47.s2) v(vdd47) i(vsupply48) v(xcase48.att_n0) v(xcase48.att_n1) v(xcase48.att_n2) v(xcase48.att_p0) v(xcase48.att_p1) v(xcase48.att_p2) v(cctrl48) v(cm48) v(xcase48.inn) v(xcase48.inp) v(inx48) v(iny48) v(xcase48.nbias) v(outn48) v(outp48) v(xcase48.p_bias) v(xcase48.rc_ct) v(xcase48.rc_gate) v(xcase48.rc_mid) v(rctrl48) v(xcase48.s1) v(xcase48.s2) v(vdd48) i(vsupply49) v(xcase49.att_n0) v(xcase49.att_n1) v(xcase49.att_n2) v(xcase49.att_p0) v(xcase49.att_p1) v(xcase49.att_p2) v(cctrl49) v(cm49) v(xcase49.inn) v(xcase49.inp) v(inx49) v(iny49) v(xcase49.nbias) v(outn49) v(outp49) v(xcase49.p_bias) v(xcase49.rc_ct) v(xcase49.rc_gate) v(xcase49.rc_mid) v(rctrl49) v(xcase49.s1) v(xcase49.s2) v(vdd49) i(vsupply50) v(xcase50.att_n0) v(xcase50.att_n1) v(xcase50.att_n2) v(xcase50.att_p0) v(xcase50.att_p1) v(xcase50.att_p2) v(cctrl50) v(cm50) v(xcase50.inn) v(xcase50.inp) v(inx50) v(iny50) v(xcase50.nbias) v(outn50) v(outp50) v(xcase50.p_bias) v(xcase50.rc_ct) v(xcase50.rc_gate) v(xcase50.rc_mid) v(rctrl50) v(xcase50.s1) v(xcase50.s2) v(vdd50) i(vsupply51) v(xcase51.att_n0) v(xcase51.att_n1) v(xcase51.att_n2) v(xcase51.att_p0) v(xcase51.att_p1) v(xcase51.att_p2) v(cctrl51) v(cm51) v(xcase51.inn) v(xcase51.inp) v(inx51) v(iny51) v(xcase51.nbias) v(outn51) v(outp51) v(xcase51.p_bias) v(xcase51.rc_ct) v(xcase51.rc_gate) v(xcase51.rc_mid) v(rctrl51) v(xcase51.s1) v(xcase51.s2) v(vdd51) i(vsupply52) v(xcase52.att_n0) v(xcase52.att_n1) v(xcase52.att_n2) v(xcase52.att_p0) v(xcase52.att_p1) v(xcase52.att_p2) v(cctrl52) v(cm52) v(xcase52.inn) v(xcase52.inp) v(inx52) v(iny52) v(xcase52.nbias) v(outn52) v(outp52) v(xcase52.p_bias) v(xcase52.rc_ct) v(xcase52.rc_gate) v(xcase52.rc_mid) v(rctrl52) v(xcase52.s1) v(xcase52.s2) v(vdd52) i(vsupply53) v(xcase53.att_n0) v(xcase53.att_n1) v(xcase53.att_n2) v(xcase53.att_p0) v(xcase53.att_p1) v(xcase53.att_p2) v(cctrl53) v(cm53) v(xcase53.inn) v(xcase53.inp) v(inx53) v(iny53) v(xcase53.nbias) v(outn53) v(outp53) v(xcase53.p_bias) v(xcase53.rc_ct) v(xcase53.rc_gate) v(xcase53.rc_mid) v(rctrl53) v(xcase53.s1) v(xcase53.s2) v(vdd53) i(vsupply54) v(xcase54.att_n0) v(xcase54.att_n1) v(xcase54.att_n2) v(xcase54.att_p0) v(xcase54.att_p1) v(xcase54.att_p2) v(cctrl54) v(cm54) v(xcase54.inn) v(xcase54.inp) v(inx54) v(iny54) v(xcase54.nbias) v(outn54) v(outp54) v(xcase54.p_bias) v(xcase54.rc_ct) v(xcase54.rc_gate) v(xcase54.rc_mid) v(rctrl54) v(xcase54.s1) v(xcase54.s2) v(vdd54) i(vsupply55) v(xcase55.att_n0) v(xcase55.att_n1) v(xcase55.att_n2) v(xcase55.att_p0) v(xcase55.att_p1) v(xcase55.att_p2) v(cctrl55) v(cm55) v(xcase55.inn) v(xcase55.inp) v(inx55) v(iny55) v(xcase55.nbias) v(outn55) v(outp55) v(xcase55.p_bias) v(xcase55.rc_ct) v(xcase55.rc_gate) v(xcase55.rc_mid) v(rctrl55) v(xcase55.s1) v(xcase55.s2) v(vdd55) i(vsupply56) v(xcase56.att_n0) v(xcase56.att_n1) v(xcase56.att_n2) v(xcase56.att_p0) v(xcase56.att_p1) v(xcase56.att_p2) v(cctrl56) v(cm56) v(xcase56.inn) v(xcase56.inp) v(inx56) v(iny56) v(xcase56.nbias) v(outn56) v(outp56) v(xcase56.p_bias) v(xcase56.rc_ct) v(xcase56.rc_gate) v(xcase56.rc_mid) v(rctrl56) v(xcase56.s1) v(xcase56.s2) v(vdd56) i(vsupply57) v(xcase57.att_n0) v(xcase57.att_n1) v(xcase57.att_n2) v(xcase57.att_p0) v(xcase57.att_p1) v(xcase57.att_p2) v(cctrl57) v(cm57) v(xcase57.inn) v(xcase57.inp) v(inx57) v(iny57) v(xcase57.nbias) v(outn57) v(outp57) v(xcase57.p_bias) v(xcase57.rc_ct) v(xcase57.rc_gate) v(xcase57.rc_mid) v(rctrl57) v(xcase57.s1) v(xcase57.s2) v(vdd57) i(vsupply58) v(xcase58.att_n0) v(xcase58.att_n1) v(xcase58.att_n2) v(xcase58.att_p0) v(xcase58.att_p1) v(xcase58.att_p2) v(cctrl58) v(cm58) v(xcase58.inn) v(xcase58.inp) v(inx58) v(iny58) v(xcase58.nbias) v(outn58) v(outp58) v(xcase58.p_bias) v(xcase58.rc_ct) v(xcase58.rc_gate) v(xcase58.rc_mid) v(rctrl58) v(xcase58.s1) v(xcase58.s2) v(vdd58) i(vsupply59) v(xcase59.att_n0) v(xcase59.att_n1) v(xcase59.att_n2) v(xcase59.att_p0) v(xcase59.att_p1) v(xcase59.att_p2) v(cctrl59) v(cm59) v(xcase59.inn) v(xcase59.inp) v(inx59) v(iny59) v(xcase59.nbias) v(outn59) v(outp59) v(xcase59.p_bias) v(xcase59.rc_ct) v(xcase59.rc_gate) v(xcase59.rc_mid) v(rctrl59) v(xcase59.s1) v(xcase59.s2) v(vdd59) i(vsupply60) v(xcase60.att_n0) v(xcase60.att_n1) v(xcase60.att_n2) v(xcase60.att_p0) v(xcase60.att_p1) v(xcase60.att_p2) v(cctrl60) v(cm60) v(xcase60.inn) v(xcase60.inp) v(inx60) v(iny60) v(xcase60.nbias) v(outn60) v(outp60) v(xcase60.p_bias) v(xcase60.rc_ct) v(xcase60.rc_gate) v(xcase60.rc_mid) v(rctrl60) v(xcase60.s1) v(xcase60.s2) v(vdd60) i(vsupply61) v(xcase61.att_n0) v(xcase61.att_n1) v(xcase61.att_n2) v(xcase61.att_p0) v(xcase61.att_p1) v(xcase61.att_p2) v(cctrl61) v(cm61) v(xcase61.inn) v(xcase61.inp) v(inx61) v(iny61) v(xcase61.nbias) v(outn61) v(outp61) v(xcase61.p_bias) v(xcase61.rc_ct) v(xcase61.rc_gate) v(xcase61.rc_mid) v(rctrl61) v(xcase61.s1) v(xcase61.s2) v(vdd61) i(vsupply62) v(xcase62.att_n0) v(xcase62.att_n1) v(xcase62.att_n2) v(xcase62.att_p0) v(xcase62.att_p1) v(xcase62.att_p2) v(cctrl62) v(cm62) v(xcase62.inn) v(xcase62.inp) v(inx62) v(iny62) v(xcase62.nbias) v(outn62) v(outp62) v(xcase62.p_bias) v(xcase62.rc_ct) v(xcase62.rc_gate) v(xcase62.rc_mid) v(rctrl62) v(xcase62.s1) v(xcase62.s2) v(vdd62) i(vsupply63) v(xcase63.att_n0) v(xcase63.att_n1) v(xcase63.att_n2) v(xcase63.att_p0) v(xcase63.att_p1) v(xcase63.att_p2) v(cctrl63) v(cm63) v(xcase63.inn) v(xcase63.inp) v(inx63) v(iny63) v(xcase63.nbias) v(outn63) v(outp63) v(xcase63.p_bias) v(xcase63.rc_ct) v(xcase63.rc_gate) v(xcase63.rc_mid) v(rctrl63) v(xcase63.s1) v(xcase63.s2) v(vdd63) i(vsupply64) v(xcase64.att_n0) v(xcase64.att_n1) v(xcase64.att_n2) v(xcase64.att_p0) v(xcase64.att_p1) v(xcase64.att_p2) v(cctrl64) v(cm64) v(xcase64.inn) v(xcase64.inp) v(inx64) v(iny64) v(xcase64.nbias) v(outn64) v(outp64) v(xcase64.p_bias) v(xcase64.rc_ct) v(xcase64.rc_gate) v(xcase64.rc_mid) v(rctrl64) v(xcase64.s1) v(xcase64.s2) v(vdd64) i(vsupply65) v(xcase65.att_n0) v(xcase65.att_n1) v(xcase65.att_n2) v(xcase65.att_p0) v(xcase65.att_p1) v(xcase65.att_p2) v(cctrl65) v(cm65) v(xcase65.inn) v(xcase65.inp) v(inx65) v(iny65) v(xcase65.nbias) v(outn65) v(outp65) v(xcase65.p_bias) v(xcase65.rc_ct) v(xcase65.rc_gate) v(xcase65.rc_mid) v(rctrl65) v(xcase65.s1) v(xcase65.s2) v(vdd65) i(vsupply66) v(xcase66.att_n0) v(xcase66.att_n1) v(xcase66.att_n2) v(xcase66.att_p0) v(xcase66.att_p1) v(xcase66.att_p2) v(cctrl66) v(cm66) v(xcase66.inn) v(xcase66.inp) v(inx66) v(iny66) v(xcase66.nbias) v(outn66) v(outp66) v(xcase66.p_bias) v(xcase66.rc_ct) v(xcase66.rc_gate) v(xcase66.rc_mid) v(rctrl66) v(xcase66.s1) v(xcase66.s2) v(vdd66) i(vsupply67) v(xcase67.att_n0) v(xcase67.att_n1) v(xcase67.att_n2) v(xcase67.att_p0) v(xcase67.att_p1) v(xcase67.att_p2) v(cctrl67) v(cm67) v(xcase67.inn) v(xcase67.inp) v(inx67) v(iny67) v(xcase67.nbias) v(outn67) v(outp67) v(xcase67.p_bias) v(xcase67.rc_ct) v(xcase67.rc_gate) v(xcase67.rc_mid) v(rctrl67) v(xcase67.s1) v(xcase67.s2) v(vdd67) i(vsupply68) v(xcase68.att_n0) v(xcase68.att_n1) v(xcase68.att_n2) v(xcase68.att_p0) v(xcase68.att_p1) v(xcase68.att_p2) v(cctrl68) v(cm68) v(xcase68.inn) v(xcase68.inp) v(inx68) v(iny68) v(xcase68.nbias) v(outn68) v(outp68) v(xcase68.p_bias) v(xcase68.rc_ct) v(xcase68.rc_gate) v(xcase68.rc_mid) v(rctrl68) v(xcase68.s1) v(xcase68.s2) v(vdd68) i(vsupply69) v(xcase69.att_n0) v(xcase69.att_n1) v(xcase69.att_n2) v(xcase69.att_p0) v(xcase69.att_p1) v(xcase69.att_p2) v(cctrl69) v(cm69) v(xcase69.inn) v(xcase69.inp) v(inx69) v(iny69) v(xcase69.nbias) v(outn69) v(outp69) v(xcase69.p_bias) v(xcase69.rc_ct) v(xcase69.rc_gate) v(xcase69.rc_mid) v(rctrl69) v(xcase69.s1) v(xcase69.s2) v(vdd69) i(vsupply70) v(xcase70.att_n0) v(xcase70.att_n1) v(xcase70.att_n2) v(xcase70.att_p0) v(xcase70.att_p1) v(xcase70.att_p2) v(cctrl70) v(cm70) v(xcase70.inn) v(xcase70.inp) v(inx70) v(iny70) v(xcase70.nbias) v(outn70) v(outp70) v(xcase70.p_bias) v(xcase70.rc_ct) v(xcase70.rc_gate) v(xcase70.rc_mid) v(rctrl70) v(xcase70.s1) v(xcase70.s2) v(vdd70) i(vsupply71) v(xcase71.att_n0) v(xcase71.att_n1) v(xcase71.att_n2) v(xcase71.att_p0) v(xcase71.att_p1) v(xcase71.att_p2) v(cctrl71) v(cm71) v(xcase71.inn) v(xcase71.inp) v(inx71) v(iny71) v(xcase71.nbias) v(outn71) v(outp71) v(xcase71.p_bias) v(xcase71.rc_ct) v(xcase71.rc_gate) v(xcase71.rc_mid) v(rctrl71) v(xcase71.s1) v(xcase71.s2) v(vdd71) i(vsupply72) v(xcase72.att_n0) v(xcase72.att_n1) v(xcase72.att_n2) v(xcase72.att_p0) v(xcase72.att_p1) v(xcase72.att_p2) v(cctrl72) v(cm72) v(xcase72.inn) v(xcase72.inp) v(inx72) v(iny72) v(xcase72.nbias) v(outn72) v(outp72) v(xcase72.p_bias) v(xcase72.rc_ct) v(xcase72.rc_gate) v(xcase72.rc_mid) v(rctrl72) v(xcase72.s1) v(xcase72.s2) v(vdd72) i(vsupply73) v(xcase73.att_n0) v(xcase73.att_n1) v(xcase73.att_n2) v(xcase73.att_p0) v(xcase73.att_p1) v(xcase73.att_p2) v(cctrl73) v(cm73) v(xcase73.inn) v(xcase73.inp) v(inx73) v(iny73) v(xcase73.nbias) v(outn73) v(outp73) v(xcase73.p_bias) v(xcase73.rc_ct) v(xcase73.rc_gate) v(xcase73.rc_mid) v(rctrl73) v(xcase73.s1) v(xcase73.s2) v(vdd73) i(vsupply74) v(xcase74.att_n0) v(xcase74.att_n1) v(xcase74.att_n2) v(xcase74.att_p0) v(xcase74.att_p1) v(xcase74.att_p2) v(cctrl74) v(cm74) v(xcase74.inn) v(xcase74.inp) v(inx74) v(iny74) v(xcase74.nbias) v(outn74) v(outp74) v(xcase74.p_bias) v(xcase74.rc_ct) v(xcase74.rc_gate) v(xcase74.rc_mid) v(rctrl74) v(xcase74.s1) v(xcase74.s2) v(vdd74) i(vsupply75) v(xcase75.att_n0) v(xcase75.att_n1) v(xcase75.att_n2) v(xcase75.att_p0) v(xcase75.att_p1) v(xcase75.att_p2) v(cctrl75) v(cm75) v(xcase75.inn) v(xcase75.inp) v(inx75) v(iny75) v(xcase75.nbias) v(outn75) v(outp75) v(xcase75.p_bias) v(xcase75.rc_ct) v(xcase75.rc_gate) v(xcase75.rc_mid) v(rctrl75) v(xcase75.s1) v(xcase75.s2) v(vdd75) i(vsupply76) v(xcase76.att_n0) v(xcase76.att_n1) v(xcase76.att_n2) v(xcase76.att_p0) v(xcase76.att_p1) v(xcase76.att_p2) v(cctrl76) v(cm76) v(xcase76.inn) v(xcase76.inp) v(inx76) v(iny76) v(xcase76.nbias) v(outn76) v(outp76) v(xcase76.p_bias) v(xcase76.rc_ct) v(xcase76.rc_gate) v(xcase76.rc_mid) v(rctrl76) v(xcase76.s1) v(xcase76.s2) v(vdd76) i(vsupply77) v(xcase77.att_n0) v(xcase77.att_n1) v(xcase77.att_n2) v(xcase77.att_p0) v(xcase77.att_p1) v(xcase77.att_p2) v(cctrl77) v(cm77) v(xcase77.inn) v(xcase77.inp) v(inx77) v(iny77) v(xcase77.nbias) v(outn77) v(outp77) v(xcase77.p_bias) v(xcase77.rc_ct) v(xcase77.rc_gate) v(xcase77.rc_mid) v(rctrl77) v(xcase77.s1) v(xcase77.s2) v(vdd77) i(vsupply78) v(xcase78.att_n0) v(xcase78.att_n1) v(xcase78.att_n2) v(xcase78.att_p0) v(xcase78.att_p1) v(xcase78.att_p2) v(cctrl78) v(cm78) v(xcase78.inn) v(xcase78.inp) v(inx78) v(iny78) v(xcase78.nbias) v(outn78) v(outp78) v(xcase78.p_bias) v(xcase78.rc_ct) v(xcase78.rc_gate) v(xcase78.rc_mid) v(rctrl78) v(xcase78.s1) v(xcase78.s2) v(vdd78) i(vsupply79) v(xcase79.att_n0) v(xcase79.att_n1) v(xcase79.att_n2) v(xcase79.att_p0) v(xcase79.att_p1) v(xcase79.att_p2) v(cctrl79) v(cm79) v(xcase79.inn) v(xcase79.inp) v(inx79) v(iny79) v(xcase79.nbias) v(outn79) v(outp79) v(xcase79.p_bias) v(xcase79.rc_ct) v(xcase79.rc_gate) v(xcase79.rc_mid) v(rctrl79) v(xcase79.s1) v(xcase79.s2) v(vdd79) i(vsupply80) v(xcase80.att_n0) v(xcase80.att_n1) v(xcase80.att_n2) v(xcase80.att_p0) v(xcase80.att_p1) v(xcase80.att_p2) v(cctrl80) v(cm80) v(xcase80.inn) v(xcase80.inp) v(inx80) v(iny80) v(xcase80.nbias) v(outn80) v(outp80) v(xcase80.p_bias) v(xcase80.rc_ct) v(xcase80.rc_gate) v(xcase80.rc_mid) v(rctrl80) v(xcase80.s1) v(xcase80.s2) v(vdd80) i(vsupply81) v(xcase81.att_n0) v(xcase81.att_n1) v(xcase81.att_n2) v(xcase81.att_p0) v(xcase81.att_p1) v(xcase81.att_p2) v(cctrl81) v(cm81) v(xcase81.inn) v(xcase81.inp) v(inx81) v(iny81) v(xcase81.nbias) v(outn81) v(outp81) v(xcase81.p_bias) v(rctrl81) v(xcase81.s1) v(xcase81.s2) v(vdd81)
+ac dec 50 1meg 100g
+wrdata ac.txt v(outp0) v(outn0) v(vid0) v(outp1) v(outn1) v(vid1) v(outp2) v(outn2) v(vid2) v(outp3) v(outn3) v(vid3) v(outp4) v(outn4) v(vid4) v(outp5) v(outn5) v(vid5) v(outp6) v(outn6) v(vid6) v(outp7) v(outn7) v(vid7) v(outp8) v(outn8) v(vid8) v(outp9) v(outn9) v(vid9) v(outp10) v(outn10) v(vid10) v(outp11) v(outn11) v(vid11) v(outp12) v(outn12) v(vid12) v(outp13) v(outn13) v(vid13) v(outp14) v(outn14) v(vid14) v(outp15) v(outn15) v(vid15) v(outp16) v(outn16) v(vid16) v(outp17) v(outn17) v(vid17) v(outp18) v(outn18) v(vid18) v(outp19) v(outn19) v(vid19) v(outp20) v(outn20) v(vid20) v(outp21) v(outn21) v(vid21) v(outp22) v(outn22) v(vid22) v(outp23) v(outn23) v(vid23) v(outp24) v(outn24) v(vid24) v(outp25) v(outn25) v(vid25) v(outp26) v(outn26) v(vid26) v(outp27) v(outn27) v(vid27) v(outp28) v(outn28) v(vid28) v(outp29) v(outn29) v(vid29) v(outp30) v(outn30) v(vid30) v(outp31) v(outn31) v(vid31) v(outp32) v(outn32) v(vid32) v(outp33) v(outn33) v(vid33) v(outp34) v(outn34) v(vid34) v(outp35) v(outn35) v(vid35) v(outp36) v(outn36) v(vid36) v(outp37) v(outn37) v(vid37) v(outp38) v(outn38) v(vid38) v(outp39) v(outn39) v(vid39) v(outp40) v(outn40) v(vid40) v(outp41) v(outn41) v(vid41) v(outp42) v(outn42) v(vid42) v(outp43) v(outn43) v(vid43) v(outp44) v(outn44) v(vid44) v(outp45) v(outn45) v(vid45) v(outp46) v(outn46) v(vid46) v(outp47) v(outn47) v(vid47) v(outp48) v(outn48) v(vid48) v(outp49) v(outn49) v(vid49) v(outp50) v(outn50) v(vid50) v(outp51) v(outn51) v(vid51) v(outp52) v(outn52) v(vid52) v(outp53) v(outn53) v(vid53) v(outp54) v(outn54) v(vid54) v(outp55) v(outn55) v(vid55) v(outp56) v(outn56) v(vid56) v(outp57) v(outn57) v(vid57) v(outp58) v(outn58) v(vid58) v(outp59) v(outn59) v(vid59) v(outp60) v(outn60) v(vid60) v(outp61) v(outn61) v(vid61) v(outp62) v(outn62) v(vid62) v(outp63) v(outn63) v(vid63) v(outp64) v(outn64) v(vid64) v(outp65) v(outn65) v(vid65) v(outp66) v(outn66) v(vid66) v(outp67) v(outn67) v(vid67) v(outp68) v(outn68) v(vid68) v(outp69) v(outn69) v(vid69) v(outp70) v(outn70) v(vid70) v(outp71) v(outn71) v(vid71) v(outp72) v(outn72) v(vid72) v(outp73) v(outn73) v(vid73) v(outp74) v(outn74) v(vid74) v(outp75) v(outn75) v(vid75) v(outp76) v(outn76) v(vid76) v(outp77) v(outn77) v(vid77) v(outp78) v(outn78) v(vid78) v(outp79) v(outn79) v(vid79) v(outp80) v(outn80) v(vid80) v(outp81) v(outn81) v(vid81)
+quit
+.endc
+.end

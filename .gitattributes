@@ -1,5 +1,9 @@
 # Scientific source hashes must survive a Windows checkout (core.autocrlf).
 *.py text eol=lf
+nebula/VARACTOR_PROBE_PLAN.md text eol=lf
+nebula/CONFIGURABLE_RC_SCREEN_PLAN.md text eol=lf
+nebula/CONFIGURABLE_RC_SERIAL_PLAN.md text eol=lf
+nebula/device/spice/.spiceinit text eol=lf
 
 # Simulator evidence is content-addressed. Git must preserve its exact bytes.
 nebula/product_audits/** -text
