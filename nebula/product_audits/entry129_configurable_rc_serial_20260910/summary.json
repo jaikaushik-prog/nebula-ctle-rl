@@ -1,0 +1,28 @@
+{
+  "entry": 129,
+  "candidates": [
+    {
+      "geometry": [
+        100,
+        0.0
+      ],
+      "result": {
+        "instrument_ok": false,
+        "baseline_matches": false,
+        "fail_reason": "ValueError: fixed baseline DC changed across serial controls",
+        "validated_op_ac_pairs": 0,
+        "connected_dfe_verified": false,
+        "op_tables_retained": 81,
+        "ac_tables_retained": 81
+      }
+    }
+  ],
+  "characterization_complete": false,
+  "connected_dfe_verified": false,
+  "pdk_unchanged": true,
+  "sources_unchanged": true,
+  "validated_op_ac_pairs": 0,
+  "spice_calls": 1,
+  "attempted_cases": 1,
+  "wall_seconds": 51.30329800000618
+}

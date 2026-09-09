@@ -17,7 +17,7 @@
 > decisions that are OPEN and human-only, and what to do next. It supersedes
 > `nebula/NEXT_STEPS.md`. This file remains the full state of record.
 
-Last updated: **2026-09-10**, Entry 128 instrument failure; Entry 129 awaits freeze.
+Last updated: **2026-09-10**, Entry 129 DC validation failure; Entry 130 awaits freeze.
 The organiser requires a transistor-level CTLE plus DFE and configurable
 Rs/Cs. The owner authorizes bounded agent-selected experiments for both;
 DFE is first. Entry 122 CML passes all three TT screens with valid terminal
@@ -37,8 +37,10 @@ cases and complete-cell multiplicity calibration. Electrical C tuning works,
 but the high-C end has substantial GHz loss. Entry 128 prepares a separate
 physical voltage-configurable Rs/Cs CTLE screen. Its unchanged-CTLE calibration
 passes, but all nine simultaneous-copy candidate calls time out without
-OP/AC measurements. Entry 129 prepares serial control-voltage stepping with
-the SAME geometries/gates and durable timeout logs; no recovery run yet.
+OP/AC measurements. Entry 129 produces 81 OP/AC pairs in one 51.303298 s
+call but stops on fixed-reference DC drift (15.7923 nV versus the 1 nV gate).
+All 81 reference AC curves pass; the experiment remains failed. Entry 130
+registers tighter solver precision with the SAME circuits/gates; not run yet.
 Existing reports and fixed-passive circuit evidence remain unchanged.
 
 Previous report snapshot, Entry 121: The unchanged 20-page
@@ -1063,6 +1065,11 @@ Entry 128 now has `CONFIGURABLE_RC_SCREEN_RESULTS.md` and raw evidence replay
 tests. Entry 129 adds `CONFIGURABLE_RC_SERIAL_PLAN.md`,
 `device/configurable_rc_serial.py`, `experiments/exp_configurable_rc_serial.py`,
 `experiments/spice_capture.py` and `tests/test_configurable_rc_serial.py`.
+Its measured validation failure is in `CONFIGURABLE_RC_SERIAL_RESULTS.md`.
+Entry 130 adds `CONFIGURABLE_RC_PRECISION_PLAN.md`,
+`device/configurable_rc_precision.py`, `experiments/exp_configurable_rc_precision.py`
+and `tests/test_configurable_rc_precision.py`; previous scientific sources
+remain byte-identical.
 
 Entry 121: NEXT_AGENT_PROMPT.md is the self-contained operational handoff
 for a new agent. It records reading order, verified product state, evidence
@@ -2031,6 +2038,10 @@ capture helper also raises a str/bytes TypeError and loses captured logs.
 Entry 129 preregisters one physical candidate plus a fixed control, all 81
 DC control pairs in serial, 180 s/call, at most nine calls with an initial
 instrument gate. This changes batching/capture, not circuit geometry or gates.
+Its first call completes in 51.303298 s but fails reference DC consistency;
+all 81 OP/AC pairs remain retained and the other eight calls are not run.
+Entry 130 preregisters tighter solver tolerances, keeping every circuit and
+validation threshold unchanged. It awaits full-suite validation and freeze.
 
 Entry 120 (2026-09-09): filled the three sparse academic front-matter pages using existing verified evidence. No technical result or claim changed. Rendered pages 4-22 are unchanged.
 
@@ -2285,7 +2296,9 @@ The high-C end is lossy; this is not tunable CTLE specification compliance.
 Entry 128 fixed calibration maximum AC error 5.4361848356165865e-11 dB,
 VDD power 6.965786645 mW. All nine tunable candidate attempts produce no
 OP/AC measurements; their timing/capture failure is NOT a physical failure
-or pass. Entry 129 is tested but awaits full-regression freeze before SPICE.
+or pass. Entry 129 now stops after one call: 81 raw OP/AC pairs retained,
+but fixed-reference DC drift fails its unchanged consistency gate. Entry 130
+registers precision-only recovery; no candidate is promoted to the DFE.
 Entry 126: 95 calls, 1522.135503 s trial time; 45/45 at 3 dB and 45/45 at
 12 dB. Minimum sampled eyes 191.307321/133.817900 mV; finite positive-eye
 apertures 0.755/0.710 UI. Combined 135-PVT coverage includes the separately
@@ -3168,11 +3181,12 @@ variation, mismatch and layout remain open. Old production evidence is unchanged
 configurable Rs/Cs. Owner authorization covers bounded architecture/sizing
 experiments; register membership and gates before each run, preserve failed
 trials, and do not re-ask approval for ordinary in-scope iterations. Current
-completed trial: `nebula/CONFIGURABLE_RC_SCREEN_PLAN.md` (Entry 128, fixed
-calibration passes; nine instrument timeouts, no candidate measurements).
+completed trial: `nebula/CONFIGURABLE_RC_SERIAL_PLAN.md` (Entry 129, one
+call with 81 retained OP/AC pairs; fixed-reference DC consistency fails).
 DFE backup was verified on both GitHub branches at fa5fbed before any Rs/Cs
-simulation. Preserve Entry 128, then freeze/test `CONFIGURABLE_RC_SERIAL_PLAN.md`
-before its nine-call maximum recovery. Rs/Cs remain fixed in the delivered DFE
+simulation. Preserve Entries 128/129, then freeze/test
+`CONFIGURABLE_RC_PRECISION_PLAN.md` before its nine-call maximum recovery.
+Rs/Cs remain fixed in the delivered DFE
 until the new physical configuration and connected behavior are measured.
 Do not inherit fixed-circuit PVT or
 frozen RL coverage for a new hardware topology.
@@ -6714,6 +6728,15 @@ change them on a fresh checkout. Explicit eol=lf rules now protect the three
 new Rs/Cs plans and the shared simulator init, without changing their current
 bytes. A failure-first test checks these rules. Existing immutable evidence
 snapshots remain -text. Do not repair a hash mismatch by rewriting a manifest.
+
+### G182. Numerical consistency gates require commensurate solver precision
+
+Entry 129 serial control stepping yields all 81 OP/AC pairs, but its isolated
+fixed reference drifts by 15.7923 nV at a source node under default convergence.
+All reference AC comparisons pass, yet the 1 nV DC gate correctly rejects
+the batch. Do not change the gate after seeing this failure or promote AC
+results alone. Entry 130 preregisters only tighter reltol/vntol/abstol, with
+the same circuit, controls, parsers and gates; its outcome is not yet known.
 
 ## 10. Environment
 
@@ -18310,3 +18333,41 @@ The newly supplied AGENTS.md repeats a private-repository requirement that
 conflicts with the earlier explicit public-destination backup authorization.
 Clarification is requested; do not change visibility or push new checkpoints
 pending that answer. This does not prevent the authorized local experiments.
+
+### 2026-09-10 - Entry 129 retained failure and Entry 130 precision registration
+
+Local checkpoint 4b16c5faf772e53a1700271a883e03daab15dcfe preserves Entry 128
+and the tested Entry 129 instrument: 71 audited files, 61 exact evidence blobs,
+2,249,764 staged bytes; required identity, no detected credentials/prohibited
+files, and both report hashes unchanged. New remote backup remains pending
+the public/private instruction clarification; no visibility change is made.
+
+Entry 129 runs once from that checkpoint. Its first N100/fixed0pF geometry
+finishes all 81 OP and 81 AC analyses in 51.303298 s. Fixed-reference source
+node s1 drifts 1.579230290982281e-8 V, exceeding the unchanged 1e-9 DC gate.
+All 81 reference AC comparisons pass (max 2.812165408039302e-7 dB), but the
+batch remains failed and the registered schedule stops after one call.
+All source/PDK hashes stay unchanged. Manifest: 198 entries, SHA-256
+ee32dd501afab1813e373aaba63574a46ba334bda8296f8bc392d30d3e1c15e0.
+Summary SHA-256 3f4c1536754a27eadd661b3e2dc7536d6e53c9b2e217a5bf4bb027fe797bfdb8.
+New results: nebula/CONFIGURABLE_RC_SERIAL_RESULTS.md; raw replay retains
+the exact failed parser result rather than softening it.
+
+Entry 130's CONFIGURABLE_RC_PRECISION_PLAN.md registers only solver options
+reltol=1e-9, vntol=1e-12, abstol=1e-15. device/configurable_rc_precision.py
+wraps the frozen serial deck; experiments/exp_configurable_rc_precision.py
+reuses its parser and stop/promotion schedule. At most nine 180 s processes,
+81 OP and AC analyses per completed geometry, no retries. All physical and
+comparison gates are unchanged. Prior failures and costs remain billed.
+Tests first fail on the absent wrapper, then 51 focused tests pass in 2.66 s.
+The new replay checks all 81 AC controls and the actual rejected DC batch.
+Before-change full baseline is 3145 passed/13 deselected/two known warnings
+in 578.66 s. Post-change full regression is RUNNING; no SPICE concurrently.
+Entry 130 has not run. No configurable receiver, runtime tuning, new PVT,
+noise/HD3, report update or full target-range claim is established here.
+
+Entry 130 pre-run full regression passes: 3158 passed, 13 deselected, two
+known warnings in 525.75 s. Focused checks: 51 passed in 2.66 s. No SPICE
+ran alongside the suite. Freeze the unchanged tested scientific sources
+before invoking the registered experiment; remote backup clarification is
+still pending, so this checkpoint remains local for now.
