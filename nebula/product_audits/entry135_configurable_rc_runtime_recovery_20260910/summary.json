@@ -1,0 +1,4770 @@
+{
+  "entry": 135,
+  "static": [
+    {
+      "reference_matches": true,
+      "reference_max_dc_drift_v": 8.881784197001252e-16,
+      "reference_max_ac_magnitude_error_db": 1.1571929598639454e-14,
+      "reference_max_ac_phase_error_rad": 7.376280517458642e-16,
+      "op_nodes_v": {
+        "att_n0": 1.501022973248117,
+        "att_n1": 1.50102297323443,
+        "att_n2": 1.501022973227586,
+        "att_p0": 1.501022973248117,
+        "att_p1": 1.50102297323443,
+        "att_p2": 1.501022973227586,
+        "cctrl": 0.297,
+        "cm": 1.501022973219767,
+        "inn": 1.501022973227415,
+        "inp": 1.501022973227415,
+        "inx": 1.501022973219767,
+        "iny": 1.501022973219767,
+        "nbias": 0.7709919215872111,
+        "outn": 1.36448667968835,
+        "outp": 1.364486679700981,
+        "p_bias": 0.4697349222088273,
+        "rc_ct": 0.2969999999998757,
+        "rc_gate": 1.26,
+        "rc_mid": 0.5006852338614123,
+        "rctrl": 1.26,
+        "s1": 0.500685233891527,
+        "s2": 0.500685233887221,
+        "vdd": 1.8
+      },
+      "op_vdd_power_w": 0.006965786650049752,
+      "tone_real": [
+        0.37007292354911114,
+        0.9312317893616524
+      ],
+      "tone_imag": [
+        0.11713342632508356,
+        -0.2253724242183619
+      ],
+      "low_frequency_gain": 0.3881677579434439,
+      "instrument_ok": true,
+      "stimulus_max_errors_v": [
+        2.404218317486606e-16,
+        0.0,
+        0.0,
+        5.551115123125783e-17
+      ],
+      "whole_mos_signed_audit": {
+        "documented_ranges_ok": false,
+        "out_of_range_device_quantity_samples": 72220,
+        "max_abs_vds_vgs_v": 1.501022973219767,
+        "devices": [
+          {
+            "instance": "Xatt_swp0",
+            "model": "sky130_fd_pr__pfet_01v8",
+            "vds": {
+              "min_v": -5.458780382316952e-05,
+              "max_v": 5.4598345057943476e-05,
+              "documented_min_v": -1.95,
+              "documented_max_v": 0,
+              "below_samples": 0,
+              "above_samples": 10308
+            },
+            "vgs": {
+              "min_v": -1.501022973219767,
+              "max_v": -1.501022973219767,
+              "documented_min_v": -1.95,
+              "documented_max_v": 0,
+              "below_samples": 0,
+              "above_samples": 0
+            },
+            "vbs": {
+              "min_v": 0.29897702678023297,
+              "max_v": 0.29897702678023297,
+              "documented_min_v": -0.1,
+              "documented_max_v": 1.95,
+              "below_samples": 0,
+              "above_samples": 0
+            }
+          },
+          {
+            "instance": "Xatt_swn0",
+            "model": "sky130_fd_pr__pfet_01v8",
+            "vds": {
+              "min_v": -5.458861492302347e-05,
+              "max_v": 5.459863592882641e-05,
+              "documented_min_v": -1.95,
+              "documented_max_v": 0,
+              "below_samples": 0,
+              "above_samples": 10336
+            },
+            "vgs": {
+              "min_v": -1.501022973219767,
+              "max_v": -1.501022973219767,
+              "documented_min_v": -1.95,
+              "documented_max_v": 0,
+              "below_samples": 0,
+              "above_samples": 0
+            },
+            "vbs": {
+              "min_v": 0.29897702678023297,
+              "max_v": 0.29897702678023297,
+              "documented_min_v": -0.1,
+              "documented_max_v": 1.95,
+              "below_samples": 0,
+              "above_samples": 0
+            }
+          },
+          {
+            "instance": "Xatt_swp1",
+            "model": "sky130_fd_pr__pfet_01v8",
+            "vds": {
+              "min_v": -5.45966090481631e-05,
+              "max_v": 5.460246286692616e-05,
+              "documented_min_v": -1.95,
+              "documented_max_v": 0,
+              "below_samples": 0,
+              "above_samples": 10300
+            },
+            "vgs": {
+              "min_v": -1.501022973219767,
+              "max_v": -1.501022973219767,
+              "documented_min_v": -1.95,
+              "documented_max_v": 0,
+              "below_samples": 0,
+              "above_samples": 0
+            },
+            "vbs": {
+              "min_v": 0.29897702678023297,
+              "max_v": 0.29897702678023297,
+              "documented_min_v": -0.1,
+              "documented_max_v": 1.95,
+              "below_samples": 0,
+              "above_samples": 0
+            }
+          },
+          {
+            "instance": "Xatt_swn1",
+            "model": "sky130_fd_pr__pfet_01v8",
+            "vds": {
+              "min_v": -5.4596976207133e-05,
+              "max_v": 5.460301455384453e-05,
+              "documented_min_v": -1.95,
+              "documented_max_v": 0,
+              "below_samples": 0,
+              "above_samples": 10336
+            },
+            "vgs": {
+              "min_v": -1.501022973219767,
+              "max_v": -1.501022973219767,
+              "documented_min_v": -1.95,
+              "documented_max_v": 0,
+              "below_samples": 0,
+              "above_samples": 0
+            },
+            "vbs": {
+              "min_v": 0.29897702678023297,
+              "max_v": 0.29897702678023297,
+              "documented_min_v": -0.1,
+              "documented_max_v": 1.95,
+              "below_samples": 0,
+              "above_samples": 0
+            }
+          },
+          {
+            "instance": "Xatt_swp2",
+            "model": "sky130_fd_pr__pfet_01v8",
+            "vds": {
+              "min_v": -5.459311447197912e-05,
+              "max_v": 5.460131698997728e-05,
+              "documented_min_v": -1.95,
+              "documented_max_v": 0,
+              "below_samples": 0,
+              "above_samples": 10300
+            },
+            "vgs": {
+              "min_v": -1.501022973219767,
+              "max_v": -1.501022973219767,
+              "documented_min_v": -1.95,
+              "documented_max_v": 0,
+              "below_samples": 0,
+              "above_samples": 0
+            },
+            "vbs": {
+              "min_v": 0.29897702678023297,
+              "max_v": 0.29897702678023297,
+              "documented_min_v": -0.1,
+              "documented_max_v": 1.95,
+              "below_samples": 0,
+              "above_samples": 0
+            }
+          },
+          {
+            "instance": "Xatt_swn2",
+            "model": "sky130_fd_pr__pfet_01v8",
+            "vds": {
+              "min_v": -5.459345417002659e-05,
+              "max_v": 5.4601896555928064e-05,
+              "documented_min_v": -1.95,
+              "documented_max_v": 0,
+              "below_samples": 0,
+              "above_samples": 10330
+            },
+            "vgs": {
+              "min_v": -1.501022973219767,
+              "max_v": -1.501022973219767,
+              "documented_min_v": -1.95,
+              "documented_max_v": 0,
+              "below_samples": 0,
+              "above_samples": 0
+            },
+            "vbs": {
+              "min_v": 0.29897702678023297,
+              "max_v": 0.29897702678023297,
+              "documented_min_v": -0.1,
+              "documented_max_v": 1.95,
+              "below_samples": 0,
+              "above_samples": 0
+            }
+          },
+          {
+            "instance": "XM1",
+            "model": "sky130_fd_pr__nfet_01v8",
+            "vds": {
+              "min_v": 0.8629970499142139,
+              "max_v": 0.8646047198028297,
+              "documented_min_v": 0,
+              "documented_max_v": 1.95,
+              "below_samples": 0,
+              "above_samples": 0
+            },
+            "vgs": {
+              "min_v": 1.000037609389675,
+              "max_v": 1.0006383846577414,
+              "documented_min_v": 0,
+              "documented_max_v": 1.95,
+              "below_samples": 0,
+              "above_samples": 0
+            },
+            "vbs": {
+              "min_v": -0.5008375545412438,
+              "max_v": -0.5005323284708405,
+              "documented_min_v": -1.95,
+              "documented_max_v": 0.3,
+              "below_samples": 0,
+              "above_samples": 0
+            }
+          },
+          {
+            "instance": "XM2",
+            "model": "sky130_fd_pr__nfet_01v8",
+            "vds": {
+              "min_v": 0.862996930943094,
+              "max_v": 0.8646047273841355,
+              "documented_min_v": 0,
+              "documented_max_v": 1.95,
+              "below_samples": 0,
+              "above_samples": 0
+            },
+            "vgs": {
+              "min_v": 1.0000376083627405,
+              "max_v": 1.0006384418879635,
+              "documented_min_v": 0,
+              "documented_max_v": 1.95,
+              "below_samples": 0,
+              "above_samples": 0
+            },
+            "vbs": {
+              "min_v": -0.5008375460059598,
+              "max_v": -0.500532305725799,
+              "documented_min_v": -1.95,
+              "documented_max_v": 0.3,
+              "below_samples": 0,
+              "above_samples": 0
+            }
+          },
+          {
+            "instance": "Xbpref",
+            "model": "sky130_fd_pr__pfet_01v8",
+            "vds": {
+              "min_v": -1.3302650778148246,
+              "max_v": -1.3302650777645586,
+              "documented_min_v": -1.95,
+              "documented_max_v": 0,
+              "below_samples": 0,
+              "above_samples": 0
+            },
+            "vgs": {
+              "min_v": -1.3302650778148246,
+              "max_v": -1.3302650777645586,
+              "documented_min_v": -1.95,
+              "documented_max_v": 0,
+              "below_samples": 0,
+              "above_samples": 0
+            },
+            "vbs": {
+              "min_v": 0.0,
+              "max_v": 0.0,
+              "documented_min_v": -0.1,
+              "documented_max_v": 1.95,
+              "below_samples": 0,
+              "above_samples": 0
+            }
+          },
+          {
+            "instance": "Xbpfeed",
+            "model": "sky130_fd_pr__pfet_01v8",
+            "vds": {
+              "min_v": -1.0290080824671848,
+              "max_v": -1.0290080742088765,
+              "documented_min_v": -1.95,
+              "documented_max_v": 0,
+              "below_samples": 0,
+              "above_samples": 0
+            },
+            "vgs": {
+              "min_v": -1.3302650778148246,
+              "max_v": -1.3302650777645586,
+              "documented_min_v": -1.95,
+              "documented_max_v": 0,
+              "below_samples": 0,
+              "above_samples": 0
+            },
+            "vbs": {
+              "min_v": 0.0,
+              "max_v": 0.0,
+              "documented_min_v": -0.1,
+              "documented_max_v": 1.95,
+              "below_samples": 0,
+              "above_samples": 0
+            }
+          },
+          {
+            "instance": "XMR",
+            "model": "sky130_fd_pr__nfet_01v8",
+            "vds": {
+              "min_v": 0.7709919175328153,
+              "max_v": 0.7709919257911235,
+              "documented_min_v": 0,
+              "documented_max_v": 1.95,
+              "below_samples": 0,
+              "above_samples": 0
+            },
+            "vgs": {
+              "min_v": 0.7709919175328153,
+              "max_v": 0.7709919257911235,
+              "documented_min_v": 0,
+              "documented_max_v": 1.95,
+              "below_samples": 0,
+              "above_samples": 0
+            },
+            "vbs": {
+              "min_v": 0.0,
+              "max_v": 0.0,
+              "documented_min_v": -1.95,
+              "documented_max_v": 0.3,
+              "below_samples": 0,
+              "above_samples": 0
+            }
+          },
+          {
+            "instance": "XMT1",
+            "model": "sky130_fd_pr__nfet_01v8",
+            "vds": {
+              "min_v": 0.5005323284708405,
+              "max_v": 0.5008375545412438,
+              "documented_min_v": 0,
+              "documented_max_v": 1.95,
+              "below_samples": 0,
+              "above_samples": 0
+            },
+            "vgs": {
+              "min_v": 0.7709919175328153,
+              "max_v": 0.7709919257911235,
+              "documented_min_v": 0,
+              "documented_max_v": 1.95,
+              "below_samples": 0,
+              "above_samples": 0
+            },
+            "vbs": {
+              "min_v": 0.0,
+              "max_v": 0.0,
+              "documented_min_v": -1.95,
+              "documented_max_v": 0.3,
+              "below_samples": 0,
+              "above_samples": 0
+            }
+          },
+          {
+            "instance": "XMT2",
+            "model": "sky130_fd_pr__nfet_01v8",
+            "vds": {
+              "min_v": 0.500532305725799,
+              "max_v": 0.5008375460059598,
+              "documented_min_v": 0,
+              "documented_max_v": 1.95,
+              "below_samples": 0,
+              "above_samples": 0
+            },
+            "vgs": {
+              "min_v": 0.7709919175328153,
+              "max_v": 0.7709919257911235,
+              "documented_min_v": 0,
+              "documented_max_v": 1.95,
+              "below_samples": 0,
+              "above_samples": 0
+            },
+            "vbs": {
+              "min_v": 0.0,
+              "max_v": 0.0,
+              "documented_min_v": -1.95,
+              "documented_max_v": 0.3,
+              "below_samples": 0,
+              "above_samples": 0
+            }
+          },
+          {
+            "instance": "Xrc_switch",
+            "model": "sky130_fd_pr__nfet_01v8",
+            "vds": {
+              "min_v": -0.0002832700687031009,
+              "max_v": 0.0002832276343561757,
+              "documented_min_v": 0,
+              "documented_max_v": 1.95,
+              "below_samples": 10310,
+              "above_samples": 0
+            },
+            "vgs": {
+              "min_v": 0.7591641197987054,
+              "max_v": 0.759468359411024,
+              "documented_min_v": 0,
+              "documented_max_v": 1.95,
+              "below_samples": 0,
+              "above_samples": 0
+            },
+            "vbs": {
+              "min_v": -0.5008375460059598,
+              "max_v": -0.500532305725799,
+              "documented_min_v": -1.95,
+              "documented_max_v": 0.3,
+              "below_samples": 0,
+              "above_samples": 0
+            }
+          }
+        ],
+        "reliability_verified": false,
+        "scope": "signed drawn-terminal model-domain check, not absolute-maximum or lifetime signoff"
+      },
+      "whole_magnitude_body_envelope_pass": true,
+      "varactor_envelope_pass": true,
+      "initial_windows": [
+        {
+          "start_s": 6.000000000000001e-08,
+          "transfer_real": [
+            0.3700996738401055,
+            0.9309192080931956
+          ],
+          "transfer_imag": [
+            0.11705916608985888,
+            -0.22589517937452877
+          ],
+          "residual_fraction": 0.00012955587474760053,
+          "output_dc_v": 7.798075016613991e-09,
+          "vdd_power_w": 0.006965786665278988,
+          "control_mean_error_v": 1.0707810194077183e-08,
+          "pass": true
+        },
+        {
+          "start_s": 8e-08,
+          "transfer_real": [
+            0.37010292955413987,
+            0.9309191270538157
+          ],
+          "transfer_imag": [
+            0.11706106933934492,
+            -0.2258955726154755
+          ],
+          "residual_fraction": 0.00013205711034763,
+          "output_dc_v": 8.070196596156426e-09,
+          "vdd_power_w": 0.006965786656531917,
+          "control_mean_error_v": 9.667878109187455e-09,
+          "pass": true
+        }
+      ],
+      "transitions": [],
+      "runtime_pass": false,
+      "connected_dfe_runtime_verified": false,
+      "full_receiver_verified": false,
+      "static_transient_pass": true,
+      "baseline_pass": true,
+      "kind": "static",
+      "index": 0
+    },
+    {
+      "reference_matches": true,
+      "reference_max_dc_drift_v": 1.3489209749195652e-13,
+      "reference_max_ac_magnitude_error_db": 1.030866061745525e-12,
+      "reference_max_ac_phase_error_rad": 5.989550711327152e-14,
+      "op_nodes_v": {
+        "att_n0": 1.501022973248117,
+        "att_n1": 1.50102297323443,
+        "att_n2": 1.501022973227586,
+        "att_p0": 1.501022973248117,
+        "att_p1": 1.50102297323443,
+        "att_p2": 1.501022973227586,
+        "cctrl": 0.243,
+        "cm": 1.501022973219767,
+        "inn": 1.501022973227415,
+        "inp": 1.501022973227415,
+        "inx": 1.501022973219767,
+        "iny": 1.501022973219767,
+        "nbias": 0.7709919215872111,
+        "outn": 1.364486679669839,
+        "outp": 1.364486679719492,
+        "p_bias": 0.4697349222088273,
+        "rc_ct": 0.2429999999998983,
+        "rc_gate": 1.422,
+        "rc_mid": 0.500685233873579,
+        "rctrl": 1.422,
+        "s1": 0.5006852338978388,
+        "s2": 0.5006852338809094,
+        "vdd": 1.8
+      },
+      "op_vdd_power_w": 0.006965786650049752,
+      "tone_real": [
+        0.6766415157478469,
+        0.9129542106851724
+      ],
+      "tone_imag": [
+        0.03346247901257911,
+        -0.2762206195355344
+      ],
+      "low_frequency_gain": 0.6774684334603429,
+      "instrument_ok": true,
+      "stimulus_max_errors_v": [
+        2.411536682150883e-16,
+        0.0,
+        2.220446049250313e-16,
+        2.7755575615628914e-17
+      ],
+      "whole_mos_signed_audit": {
+        "documented_ranges_ok": false,
+        "out_of_range_device_quantity_samples": 71568,
+        "max_abs_vds_vgs_v": 1.501022973219767,
+        "devices": [
+          {
+            "instance": "Xatt_swp0",
+            "model": "sky130_fd_pr__pfet_01v8",
+            "vds": {
+              "min_v": -5.441227569003004e-05,
+              "max_v": 5.4429233802943955e-05,
+              "documented_min_v": -1.95,
+              "documented_max_v": 0,
+              "below_samples": 0,
+              "above_samples": 10230
+            },
+            "vgs": {
+              "min_v": -1.501022973219767,
+              "max_v": -1.501022973219767,
+              "documented_min_v": -1.95,
+              "documented_max_v": 0,
+              "below_samples": 0,
+              "above_samples": 0
+            },
+            "vbs": {
+              "min_v": 0.29897702678023297,
+              "max_v": 0.29897702678023297,
+              "documented_min_v": -0.1,
+              "documented_max_v": 1.95,
+              "below_samples": 0,
+              "above_samples": 0
+            }
+          },
+          {
+            "instance": "Xatt_swn0",
+            "model": "sky130_fd_pr__pfet_01v8",
+            "vds": {
+              "min_v": -5.4405390359058003e-05,
+              "max_v": 5.4423966813876845e-05,
+              "documented_min_v": -1.95,
+              "documented_max_v": 0,
+              "below_samples": 0,
+              "above_samples": 10229
+            },
+            "vgs": {
+              "min_v": -1.501022973219767,
+              "max_v": -1.501022973219767,
+              "documented_min_v": -1.95,
+              "documented_max_v": 0,
+              "below_samples": 0,
+              "above_samples": 0
+            },
+            "vbs": {
+              "min_v": 0.29897702678023297,
+              "max_v": 0.29897702678023297,
+              "documented_min_v": -0.1,
+              "documented_max_v": 1.95,
+              "below_samples": 0,
+              "above_samples": 0
+            }
+          },
+          {
+            "instance": "Xatt_swp1",
+            "model": "sky130_fd_pr__pfet_01v8",
+            "vds": {
+              "min_v": -5.4421044365149385e-05,
+              "max_v": 5.443635436885863e-05,
+              "documented_min_v": -1.95,
+              "documented_max_v": 0,
+              "below_samples": 0,
+              "above_samples": 10216
+            },
+            "vgs": {
+              "min_v": -1.501022973219767,
+              "max_v": -1.501022973219767,
+              "documented_min_v": -1.95,
+              "documented_max_v": 0,
+              "below_samples": 0,
+              "above_samples": 0
+            },
+            "vbs": {
+              "min_v": 0.29897702678023297,
+              "max_v": 0.29897702678023297,
+              "documented_min_v": -0.1,
+              "documented_max_v": 1.95,
+              "below_samples": 0,
+              "above_samples": 0
+            }
+          },
+          {
+            "instance": "Xatt_swn1",
+            "model": "sky130_fd_pr__pfet_01v8",
+            "vds": {
+              "min_v": -5.4416148880021e-05,
+              "max_v": 5.443106484182003e-05,
+              "documented_min_v": -1.95,
+              "documented_max_v": 0,
+              "below_samples": 0,
+              "above_samples": 10224
+            },
+            "vgs": {
+              "min_v": -1.501022973219767,
+              "max_v": -1.501022973219767,
+              "documented_min_v": -1.95,
+              "documented_max_v": 0,
+              "below_samples": 0,
+              "above_samples": 0
+            },
+            "vbs": {
+              "min_v": 0.29897702678023297,
+              "max_v": 0.29897702678023297,
+              "documented_min_v": -0.1,
+              "documented_max_v": 1.95,
+              "below_samples": 0,
+              "above_samples": 0
+            }
+          },
+          {
+            "instance": "Xatt_swp2",
+            "model": "sky130_fd_pr__pfet_01v8",
+            "vds": {
+              "min_v": -5.4417653179150705e-05,
+              "max_v": 5.443561741502734e-05,
+              "documented_min_v": -1.95,
+              "documented_max_v": 0,
+              "below_samples": 0,
+              "above_samples": 10218
+            },
+            "vgs": {
+              "min_v": -1.501022973219767,
+              "max_v": -1.501022973219767,
+              "documented_min_v": -1.95,
+              "documented_max_v": 0,
+              "below_samples": 0,
+              "above_samples": 0
+            },
+            "vbs": {
+              "min_v": 0.29897702678023297,
+              "max_v": 0.29897702678023297,
+              "documented_min_v": -0.1,
+              "documented_max_v": 1.95,
+              "below_samples": 0,
+              "above_samples": 0
+            }
+          },
+          {
+            "instance": "Xatt_swn2",
+            "model": "sky130_fd_pr__pfet_01v8",
+            "vds": {
+              "min_v": -5.44128816100109e-05,
+              "max_v": 5.44303060989737e-05,
+              "documented_min_v": -1.95,
+              "documented_max_v": 0,
+              "below_samples": 0,
+              "above_samples": 10223
+            },
+            "vgs": {
+              "min_v": -1.501022973219767,
+              "max_v": -1.501022973219767,
+              "documented_min_v": -1.95,
+              "documented_max_v": 0,
+              "below_samples": 0,
+              "above_samples": 0
+            },
+            "vbs": {
+              "min_v": 0.29897702678023297,
+              "max_v": 0.29897702678023297,
+              "documented_min_v": -0.1,
+              "documented_max_v": 1.95,
+              "below_samples": 0,
+              "above_samples": 0
+            }
+          },
+          {
+            "instance": "XM1",
+            "model": "sky130_fd_pr__nfet_01v8",
+            "vds": {
+              "min_v": 0.862906130845692,
+              "max_v": 0.8646961891996854,
+              "documented_min_v": 0,
+              "documented_max_v": 1.95,
+              "below_samples": 0,
+              "above_samples": 0
+            },
+            "vgs": {
+              "min_v": 0.9999889746753603,
+              "max_v": 1.0006866419086986,
+              "documented_min_v": 0,
+              "documented_max_v": 1.95,
+              "below_samples": 0,
+              "above_samples": 0
+            },
+            "vbs": {
+              "min_v": -0.5007753565949331,
+              "max_v": -0.5005949991094312,
+              "documented_min_v": -1.95,
+              "documented_max_v": 0.3,
+              "below_samples": 0,
+              "above_samples": 0
+            }
+          },
+          {
+            "instance": "XM2",
+            "model": "sky130_fd_pr__nfet_01v8",
+            "vds": {
+              "min_v": 0.8629051858021057,
+              "max_v": 0.8646969215772828,
+              "documented_min_v": 0,
+              "documented_max_v": 1.95,
+              "below_samples": 0,
+              "above_samples": 0
+            },
+            "vgs": {
+              "min_v": 0.9999885450352664,
+              "max_v": 1.0006871559168964,
+              "documented_min_v": 0,
+              "documented_max_v": 1.95,
+              "below_samples": 0,
+              "above_samples": 0
+            },
+            "vbs": {
+              "min_v": -0.5007748561372052,
+              "max_v": -0.5005954422598433,
+              "documented_min_v": -1.95,
+              "documented_max_v": 0.3,
+              "below_samples": 0,
+              "above_samples": 0
+            }
+          },
+          {
+            "instance": "Xbpref",
+            "model": "sky130_fd_pr__pfet_01v8",
+            "vds": {
+              "min_v": -1.3302650778172653,
+              "max_v": -1.3302650777624887,
+              "documented_min_v": -1.95,
+              "documented_max_v": 0,
+              "below_samples": 0,
+              "above_samples": 0
+            },
+            "vgs": {
+              "min_v": -1.3302650778172653,
+              "max_v": -1.3302650777624887,
+              "documented_min_v": -1.95,
+              "documented_max_v": 0,
+              "below_samples": 0,
+              "above_samples": 0
+            },
+            "vbs": {
+              "min_v": 0.0,
+              "max_v": 0.0,
+              "documented_min_v": -0.1,
+              "documented_max_v": 1.95,
+              "below_samples": 0,
+              "above_samples": 0
+            }
+          },
+          {
+            "instance": "Xbpfeed",
+            "model": "sky130_fd_pr__pfet_01v8",
+            "vds": {
+              "min_v": -1.0290080824144638,
+              "max_v": -1.0290080739421517,
+              "documented_min_v": -1.95,
+              "documented_max_v": 0,
+              "below_samples": 0,
+              "above_samples": 0
+            },
+            "vgs": {
+              "min_v": -1.3302650778172653,
+              "max_v": -1.3302650777624887,
+              "documented_min_v": -1.95,
+              "documented_max_v": 0,
+              "below_samples": 0,
+              "above_samples": 0
+            },
+            "vbs": {
+              "min_v": 0.0,
+              "max_v": 0.0,
+              "documented_min_v": -0.1,
+              "documented_max_v": 1.95,
+              "below_samples": 0,
+              "above_samples": 0
+            }
+          },
+          {
+            "instance": "XMR",
+            "model": "sky130_fd_pr__nfet_01v8",
+            "vds": {
+              "min_v": 0.7709919175855361,
+              "max_v": 0.7709919260578485,
+              "documented_min_v": 0,
+              "documented_max_v": 1.95,
+              "below_samples": 0,
+              "above_samples": 0
+            },
+            "vgs": {
+              "min_v": 0.7709919175855361,
+              "max_v": 0.7709919260578485,
+              "documented_min_v": 0,
+              "documented_max_v": 1.95,
+              "below_samples": 0,
+              "above_samples": 0
+            },
+            "vbs": {
+              "min_v": 0.0,
+              "max_v": 0.0,
+              "documented_min_v": -1.95,
+              "documented_max_v": 0.3,
+              "below_samples": 0,
+              "above_samples": 0
+            }
+          },
+          {
+            "instance": "XMT1",
+            "model": "sky130_fd_pr__nfet_01v8",
+            "vds": {
+              "min_v": 0.5005949991094312,
+              "max_v": 0.5007753565949331,
+              "documented_min_v": 0,
+              "documented_max_v": 1.95,
+              "below_samples": 0,
+              "above_samples": 0
+            },
+            "vgs": {
+              "min_v": 0.7709919175855361,
+              "max_v": 0.7709919260578485,
+              "documented_min_v": 0,
+              "documented_max_v": 1.95,
+              "below_samples": 0,
+              "above_samples": 0
+            },
+            "vbs": {
+              "min_v": 0.0,
+              "max_v": 0.0,
+              "documented_min_v": -1.95,
+              "documented_max_v": 0.3,
+              "below_samples": 0,
+              "above_samples": 0
+            }
+          },
+          {
+            "instance": "XMT2",
+            "model": "sky130_fd_pr__nfet_01v8",
+            "vds": {
+              "min_v": 0.5005954422598433,
+              "max_v": 0.5007748561372052,
+              "documented_min_v": 0,
+              "documented_max_v": 1.95,
+              "below_samples": 0,
+              "above_samples": 0
+            },
+            "vgs": {
+              "min_v": 0.7709919175855361,
+              "max_v": 0.7709919260578485,
+              "documented_min_v": 0,
+              "documented_max_v": 1.95,
+              "below_samples": 0,
+              "above_samples": 0
+            },
+            "vbs": {
+              "min_v": 0.0,
+              "max_v": 0.0,
+              "documented_min_v": -1.95,
+              "documented_max_v": 0.3,
+              "below_samples": 0,
+              "above_samples": 0
+            }
+          },
+          {
+            "instance": "Xrc_switch",
+            "model": "sky130_fd_pr__nfet_01v8",
+            "vds": {
+              "min_v": -8.686418808512286e-05,
+              "max_v": 8.684288093330217e-05,
+              "documented_min_v": 0,
+              "documented_max_v": 1.95,
+              "below_samples": 10228,
+              "above_samples": 0
+            },
+            "vgs": {
+              "min_v": 0.9212294685852922,
+              "max_v": 0.9214009916863048,
+              "documented_min_v": 0,
+              "documented_max_v": 1.95,
+              "below_samples": 0,
+              "above_samples": 0
+            },
+            "vbs": {
+              "min_v": -0.5007748561372052,
+              "max_v": -0.5005954422598433,
+              "documented_min_v": -1.95,
+              "documented_max_v": 0.3,
+              "below_samples": 0,
+              "above_samples": 0
+            }
+          }
+        ],
+        "reliability_verified": false,
+        "scope": "signed drawn-terminal model-domain check, not absolute-maximum or lifetime signoff"
+      },
+      "whole_magnitude_body_envelope_pass": true,
+      "varactor_envelope_pass": true,
+      "initial_windows": [
+        {
+          "start_s": 6.000000000000001e-08,
+          "transfer_real": [
+            0.6766265224826319,
+            0.912576479939417
+          ],
+          "transfer_imag": [
+            0.033383154064892694,
+            -0.2766583719631405
+          ],
+          "residual_fraction": 0.00016351535548910423,
+          "output_dc_v": 1.535068609317368e-08,
+          "vdd_power_w": 0.006965786647218898,
+          "control_mean_error_v": 7.98299293336413e-09,
+          "pass": true
+        },
+        {
+          "start_s": 8e-08,
+          "transfer_real": [
+            0.6766246788940161,
+            0.912576676344407
+          ],
+          "transfer_imag": [
+            0.033383188807889715,
+            -0.27665621145575714
+          ],
+          "residual_fraction": 0.0001590026053871796,
+          "output_dc_v": 1.8735002693985654e-08,
+          "vdd_power_w": 0.006965786645118127,
+          "control_mean_error_v": 7.300576310154128e-09,
+          "pass": true
+        }
+      ],
+      "transitions": [],
+      "runtime_pass": false,
+      "connected_dfe_runtime_verified": false,
+      "full_receiver_verified": false,
+      "static_transient_pass": true,
+      "baseline_pass": true,
+      "kind": "static",
+      "index": 1
+    },
+    {
+      "reference_matches": true,
+      "reference_max_dc_drift_v": 1.1102230246251565e-15,
+      "reference_max_ac_magnitude_error_db": 2.5072514130385426e-14,
+      "reference_max_ac_phase_error_rad": 1.4602686453253454e-15,
+      "op_nodes_v": {
+        "att_n0": 1.501022973248117,
+        "att_n1": 1.50102297323443,
+        "att_n2": 1.501022973227586,
+        "att_p0": 1.501022973248117,
+        "att_p1": 1.50102297323443,
+        "att_p2": 1.501022973227586,
+        "cctrl": 0.27,
+        "cm": 1.501022973219767,
+        "inn": 1.501022973227415,
+        "inp": 1.501022973227415,
+        "inx": 1.501022973219767,
+        "iny": 1.501022973219767,
+        "nbias": 0.7709919215872111,
+        "outn": 1.364486679680836,
+        "outp": 1.364486679708495,
+        "p_bias": 0.4697349222088273,
+        "rc_ct": 0.2699999999997371,
+        "rc_gate": 1.314,
+        "rc_mid": 0.5006852338663504,
+        "rctrl": 1.314,
+        "s1": 0.5006852338940886,
+        "s2": 0.5006852338846584,
+        "vdd": 1.8
+      },
+      "op_vdd_power_w": 0.006965786650049752,
+      "tone_real": [
+        0.4945781518340227,
+        0.9245136086246841
+      ],
+      "tone_imag": [
+        0.08400055769251336,
+        -0.2496125564876315
+      ],
+      "low_frequency_gain": 0.5016608834304414,
+      "instrument_ok": true,
+      "stimulus_max_errors_v": [
+        2.411265631607762e-16,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "whole_mos_signed_audit": {
+        "documented_ranges_ok": false,
+        "out_of_range_device_quantity_samples": 71999,
+        "max_abs_vds_vgs_v": 1.501022973219767,
+        "devices": [
+          {
+            "instance": "Xatt_swp0",
+            "model": "sky130_fd_pr__pfet_01v8",
+            "vds": {
+              "min_v": -5.450733282108544e-05,
+              "max_v": 5.452102660896685e-05,
+              "documented_min_v": -1.95,
+              "documented_max_v": 0,
+              "below_samples": 0,
+              "above_samples": 10274
+            },
+            "vgs": {
+              "min_v": -1.501022973219767,
+              "max_v": -1.501022973219767,
+              "documented_min_v": -1.95,
+              "documented_max_v": 0,
+              "below_samples": 0,
+              "above_samples": 0
+            },
+            "vbs": {
+              "min_v": 0.29897702678023297,
+              "max_v": 0.29897702678023297,
+              "documented_min_v": -0.1,
+              "documented_max_v": 1.95,
+              "below_samples": 0,
+              "above_samples": 0
+            }
+          },
+          {
+            "instance": "Xatt_swn0",
+            "model": "sky130_fd_pr__pfet_01v8",
+            "vds": {
+              "min_v": -5.4506010980004405e-05,
+              "max_v": 5.451910526499404e-05,
+              "documented_min_v": -1.95,
+              "documented_max_v": 0,
+              "below_samples": 0,
+              "above_samples": 10312
+            },
+            "vgs": {
+              "min_v": -1.501022973219767,
+              "max_v": -1.501022973219767,
+              "documented_min_v": -1.95,
+              "documented_max_v": 0,
+              "below_samples": 0,
+              "above_samples": 0
+            },
+            "vbs": {
+              "min_v": 0.29897702678023297,
+              "max_v": 0.29897702678023297,
+              "documented_min_v": -0.1,
+              "documented_max_v": 1.95,
+              "below_samples": 0,
+              "above_samples": 0
+            }
+          },
+          {
+            "instance": "Xatt_swp1",
+            "model": "sky130_fd_pr__pfet_01v8",
+            "vds": {
+              "min_v": -5.4515869255089555e-05,
+              "max_v": 5.4527630833911545e-05,
+              "documented_min_v": -1.95,
+              "documented_max_v": 0,
+              "below_samples": 0,
+              "above_samples": 10257
+            },
+            "vgs": {
+              "min_v": -1.501022973219767,
+              "max_v": -1.501022973219767,
+              "documented_min_v": -1.95,
+              "documented_max_v": 0,
+              "below_samples": 0,
+              "above_samples": 0
+            },
+            "vbs": {
+              "min_v": 0.29897702678023297,
+              "max_v": 0.29897702678023297,
+              "documented_min_v": -0.1,
+              "documented_max_v": 1.95,
+              "below_samples": 0,
+              "above_samples": 0
+            }
+          },
+          {
+            "instance": "Xatt_swn1",
+            "model": "sky130_fd_pr__pfet_01v8",
+            "vds": {
+              "min_v": -5.4514694497020955e-05,
+              "max_v": 5.452505114500461e-05,
+              "documented_min_v": -1.95,
+              "documented_max_v": 0,
+              "below_samples": 0,
+              "above_samples": 10299
+            },
+            "vgs": {
+              "min_v": -1.501022973219767,
+              "max_v": -1.501022973219767,
+              "documented_min_v": -1.95,
+              "documented_max_v": 0,
+              "below_samples": 0,
+              "above_samples": 0
+            },
+            "vbs": {
+              "min_v": 0.29897702678023297,
+              "max_v": 0.29897702678023297,
+              "documented_min_v": -0.1,
+              "documented_max_v": 1.95,
+              "below_samples": 0,
+              "above_samples": 0
+            }
+          },
+          {
+            "instance": "Xatt_swp2",
+            "model": "sky130_fd_pr__pfet_01v8",
+            "vds": {
+              "min_v": -5.45124386890361e-05,
+              "max_v": 5.452675319883582e-05,
+              "documented_min_v": -1.95,
+              "documented_max_v": 0,
+              "below_samples": 0,
+              "above_samples": 10257
+            },
+            "vgs": {
+              "min_v": -1.501022973219767,
+              "max_v": -1.501022973219767,
+              "documented_min_v": -1.95,
+              "documented_max_v": 0,
+              "below_samples": 0,
+              "above_samples": 0
+            },
+            "vbs": {
+              "min_v": 0.29897702678023297,
+              "max_v": 0.29897702678023297,
+              "documented_min_v": -0.1,
+              "documented_max_v": 1.95,
+              "below_samples": 0,
+              "above_samples": 0
+            }
+          },
+          {
+            "instance": "Xatt_swn2",
+            "model": "sky130_fd_pr__pfet_01v8",
+            "vds": {
+              "min_v": -5.451130352107647e-05,
+              "max_v": 5.452410364181759e-05,
+              "documented_min_v": -1.95,
+              "documented_max_v": 0,
+              "below_samples": 0,
+              "above_samples": 10294
+            },
+            "vgs": {
+              "min_v": -1.501022973219767,
+              "max_v": -1.501022973219767,
+              "documented_min_v": -1.95,
+              "documented_max_v": 0,
+              "below_samples": 0,
+              "above_samples": 0
+            },
+            "vbs": {
+              "min_v": 0.29897702678023297,
+              "max_v": 0.29897702678023297,
+              "documented_min_v": -0.1,
+              "documented_max_v": 1.95,
+              "below_samples": 0,
+              "above_samples": 0
+            }
+          },
+          {
+            "instance": "XM1",
+            "model": "sky130_fd_pr__nfet_01v8",
+            "vds": {
+              "min_v": 0.8629597456718996,
+              "max_v": 0.8646422095668602,
+              "documented_min_v": 0,
+              "documented_max_v": 1.95,
+              "below_samples": 0,
+              "above_samples": 0
+            },
+            "vgs": {
+              "min_v": 1.0000175923994614,
+              "max_v": 1.0006582493216383,
+              "documented_min_v": 0,
+              "documented_max_v": 1.95,
+              "below_samples": 0,
+              "above_samples": 0
+            },
+            "vbs": {
+              "min_v": -0.5008115986209027,
+              "max_v": -0.5005584906498566,
+              "documented_min_v": -1.95,
+              "documented_max_v": 0.3,
+              "below_samples": 0,
+              "above_samples": 0
+            }
+          },
+          {
+            "instance": "XM2",
+            "model": "sky130_fd_pr__nfet_01v8",
+            "vds": {
+              "min_v": 0.8629594013143441,
+              "max_v": 0.8646424641701624,
+              "documented_min_v": 0,
+              "documented_max_v": 1.95,
+              "below_samples": 0,
+              "above_samples": 0
+            },
+            "vgs": {
+              "min_v": 1.0000174612161836,
+              "max_v": 1.0006584480927427,
+              "documented_min_v": 0,
+              "documented_max_v": 1.95,
+              "below_samples": 0,
+              "above_samples": 0
+            },
+            "vbs": {
+              "min_v": -0.5008114248243998,
+              "max_v": -0.5005586176662732,
+              "documented_min_v": -1.95,
+              "documented_max_v": 0.3,
+              "below_samples": 0,
+              "above_samples": 0
+            }
+          },
+          {
+            "instance": "Xbpref",
+            "model": "sky130_fd_pr__pfet_01v8",
+            "vds": {
+              "min_v": -1.3302650778137886,
+              "max_v": -1.3302650777658163,
+              "documented_min_v": -1.95,
+              "documented_max_v": 0,
+              "below_samples": 0,
+              "above_samples": 0
+            },
+            "vgs": {
+              "min_v": -1.3302650778137886,
+              "max_v": -1.3302650777658163,
+              "documented_min_v": -1.95,
+              "documented_max_v": 0,
+              "below_samples": 0,
+              "above_samples": 0
+            },
+            "vbs": {
+              "min_v": 0.0,
+              "max_v": 0.0,
+              "documented_min_v": -0.1,
+              "documented_max_v": 1.95,
+              "below_samples": 0,
+              "above_samples": 0
+            }
+          },
+          {
+            "instance": "Xbpfeed",
+            "model": "sky130_fd_pr__pfet_01v8",
+            "vds": {
+              "min_v": -1.029008082184878,
+              "max_v": -1.0290080743733463,
+              "documented_min_v": -1.95,
+              "documented_max_v": 0,
+              "below_samples": 0,
+              "above_samples": 0
+            },
+            "vgs": {
+              "min_v": -1.3302650778137886,
+              "max_v": -1.3302650777658163,
+              "documented_min_v": -1.95,
+              "documented_max_v": 0,
+              "below_samples": 0,
+              "above_samples": 0
+            },
+            "vbs": {
+              "min_v": 0.0,
+              "max_v": 0.0,
+              "documented_min_v": -0.1,
+              "documented_max_v": 1.95,
+              "below_samples": 0,
+              "above_samples": 0
+            }
+          },
+          {
+            "instance": "XMR",
+            "model": "sky130_fd_pr__nfet_01v8",
+            "vds": {
+              "min_v": 0.7709919178151221,
+              "max_v": 0.7709919256266538,
+              "documented_min_v": 0,
+              "documented_max_v": 1.95,
+              "below_samples": 0,
+              "above_samples": 0
+            },
+            "vgs": {
+              "min_v": 0.7709919178151221,
+              "max_v": 0.7709919256266538,
+              "documented_min_v": 0,
+              "documented_max_v": 1.95,
+              "below_samples": 0,
+              "above_samples": 0
+            },
+            "vbs": {
+              "min_v": 0.0,
+              "max_v": 0.0,
+              "documented_min_v": -1.95,
+              "documented_max_v": 0.3,
+              "below_samples": 0,
+              "above_samples": 0
+            }
+          },
+          {
+            "instance": "XMT1",
+            "model": "sky130_fd_pr__nfet_01v8",
+            "vds": {
+              "min_v": 0.5005584906498566,
+              "max_v": 0.5008115986209027,
+              "documented_min_v": 0,
+              "documented_max_v": 1.95,
+              "below_samples": 0,
+              "above_samples": 0
+            },
+            "vgs": {
+              "min_v": 0.7709919178151221,
+              "max_v": 0.7709919256266538,
+              "documented_min_v": 0,
+              "documented_max_v": 1.95,
+              "below_samples": 0,
+              "above_samples": 0
+            },
+            "vbs": {
+              "min_v": 0.0,
+              "max_v": 0.0,
+              "documented_min_v": -1.95,
+              "documented_max_v": 0.3,
+              "below_samples": 0,
+              "above_samples": 0
+            }
+          },
+          {
+            "instance": "XMT2",
+            "model": "sky130_fd_pr__nfet_01v8",
+            "vds": {
+              "min_v": 0.5005586176662732,
+              "max_v": 0.5008114248243998,
+              "documented_min_v": 0,
+              "documented_max_v": 1.95,
+              "below_samples": 0,
+              "above_samples": 0
+            },
+            "vgs": {
+              "min_v": 0.7709919178151221,
+              "max_v": 0.7709919256266538,
+              "documented_min_v": 0,
+              "documented_max_v": 1.95,
+              "below_samples": 0,
+              "above_samples": 0
+            },
+            "vbs": {
+              "min_v": 0.0,
+              "max_v": 0.0,
+              "documented_min_v": -1.95,
+              "documented_max_v": 0.3,
+              "below_samples": 0,
+              "above_samples": 0
+            }
+          },
+          {
+            "instance": "Xrc_switch",
+            "model": "sky130_fd_pr__nfet_01v8",
+            "vds": {
+              "min_v": -0.00020416167491410508,
+              "max_v": 0.0002041204745378833,
+              "documented_min_v": 0,
+              "documented_max_v": 1.95,
+              "below_samples": 10306,
+              "above_samples": 0
+            },
+            "vgs": {
+              "min_v": 0.8131910863216922,
+              "max_v": 0.8134403728718528,
+              "documented_min_v": 0,
+              "documented_max_v": 1.95,
+              "below_samples": 0,
+              "above_samples": 0
+            },
+            "vbs": {
+              "min_v": -0.5008114248243998,
+              "max_v": -0.5005586176662732,
+              "documented_min_v": -1.95,
+              "documented_max_v": 0.3,
+              "below_samples": 0,
+              "above_samples": 0
+            }
+          }
+        ],
+        "reliability_verified": false,
+        "scope": "signed drawn-terminal model-domain check, not absolute-maximum or lifetime signoff"
+      },
+      "whole_magnitude_body_envelope_pass": true,
+      "varactor_envelope_pass": true,
+      "initial_windows": [
+        {
+          "start_s": 6.000000000000001e-08,
+          "transfer_real": [
+            0.4945954081602179,
+            0.9241649950425037
+          ],
+          "transfer_imag": [
+            0.0839056761093277,
+            -0.25007711850724185
+          ],
+          "residual_fraction": 0.0001674229236565187,
+          "output_dc_v": 1.904936320875102e-08,
+          "vdd_power_w": 0.006965786689564668,
+          "control_mean_error_v": 9.393694377912709e-09,
+          "pass": true
+        },
+        {
+          "start_s": 8e-08,
+          "transfer_real": [
+            0.49459422178270146,
+            0.9241653077086984
+          ],
+          "transfer_imag": [
+            0.08389495001266847,
+            -0.2500771405458625
+          ],
+          "residual_fraction": 0.00017183899177837883,
+          "output_dc_v": 2.41845902485908e-08,
+          "vdd_power_w": 0.006965786667801495,
+          "control_mean_error_v": 8.53766490838126e-09,
+          "pass": true
+        }
+      ],
+      "transitions": [],
+      "runtime_pass": false,
+      "connected_dfe_runtime_verified": false,
+      "full_receiver_verified": false,
+      "static_transient_pass": true,
+      "baseline_pass": true,
+      "kind": "static",
+      "index": 2
+    }
+  ],
+  "runtime": {
+    "instrument_ok": true,
+    "stimulus_max_errors_v": [
+      1.0758971838442655e-14,
+      0.0,
+      3.9968028886505635e-15,
+      1.7763568394002505e-15
+    ],
+    "whole_mos_signed_audit": {
+      "documented_ranges_ok": false,
+      "out_of_range_device_quantity_samples": 1367364,
+      "max_abs_vds_vgs_v": 1.501022973219767,
+      "devices": [
+        {
+          "instance": "Xatt_swp0",
+          "model": "sky130_fd_pr__pfet_01v8",
+          "vds": {
+            "min_v": -5.458780382316952e-05,
+            "max_v": 5.4598345057943476e-05,
+            "documented_min_v": -1.95,
+            "documented_max_v": 0,
+            "below_samples": 0,
+            "above_samples": 194960
+          },
+          "vgs": {
+            "min_v": -1.501022973219767,
+            "max_v": -1.501022973219767,
+            "documented_min_v": -1.95,
+            "documented_max_v": 0,
+            "below_samples": 0,
+            "above_samples": 0
+          },
+          "vbs": {
+            "min_v": 0.29897702678023297,
+            "max_v": 0.29897702678023297,
+            "documented_min_v": -0.1,
+            "documented_max_v": 1.95,
+            "below_samples": 0,
+            "above_samples": 0
+          }
+        },
+        {
+          "instance": "Xatt_swn0",
+          "model": "sky130_fd_pr__pfet_01v8",
+          "vds": {
+            "min_v": -5.458861492302347e-05,
+            "max_v": 5.459863592882641e-05,
+            "documented_min_v": -1.95,
+            "documented_max_v": 0,
+            "below_samples": 0,
+            "above_samples": 195583
+          },
+          "vgs": {
+            "min_v": -1.501022973219767,
+            "max_v": -1.501022973219767,
+            "documented_min_v": -1.95,
+            "documented_max_v": 0,
+            "below_samples": 0,
+            "above_samples": 0
+          },
+          "vbs": {
+            "min_v": 0.29897702678023297,
+            "max_v": 0.29897702678023297,
+            "documented_min_v": -0.1,
+            "documented_max_v": 1.95,
+            "below_samples": 0,
+            "above_samples": 0
+          }
+        },
+        {
+          "instance": "Xatt_swp1",
+          "model": "sky130_fd_pr__pfet_01v8",
+          "vds": {
+            "min_v": -5.45966090481631e-05,
+            "max_v": 5.460246286692616e-05,
+            "documented_min_v": -1.95,
+            "documented_max_v": 0,
+            "below_samples": 0,
+            "above_samples": 194880
+          },
+          "vgs": {
+            "min_v": -1.501022973219767,
+            "max_v": -1.501022973219767,
+            "documented_min_v": -1.95,
+            "documented_max_v": 0,
+            "below_samples": 0,
+            "above_samples": 0
+          },
+          "vbs": {
+            "min_v": 0.29897702678023297,
+            "max_v": 0.29897702678023297,
+            "documented_min_v": -0.1,
+            "documented_max_v": 1.95,
+            "below_samples": 0,
+            "above_samples": 0
+          }
+        },
+        {
+          "instance": "Xatt_swn1",
+          "model": "sky130_fd_pr__pfet_01v8",
+          "vds": {
+            "min_v": -5.4599999387061615e-05,
+            "max_v": 5.460301455384453e-05,
+            "documented_min_v": -1.95,
+            "documented_max_v": 0,
+            "below_samples": 0,
+            "above_samples": 195500
+          },
+          "vgs": {
+            "min_v": -1.501022973219767,
+            "max_v": -1.501022973219767,
+            "documented_min_v": -1.95,
+            "documented_max_v": 0,
+            "below_samples": 0,
+            "above_samples": 0
+          },
+          "vbs": {
+            "min_v": 0.29897702678023297,
+            "max_v": 0.29897702678023297,
+            "documented_min_v": -0.1,
+            "documented_max_v": 1.95,
+            "below_samples": 0,
+            "above_samples": 0
+          }
+        },
+        {
+          "instance": "Xatt_swp2",
+          "model": "sky130_fd_pr__pfet_01v8",
+          "vds": {
+            "min_v": -5.459311447197912e-05,
+            "max_v": 5.4601353064898106e-05,
+            "documented_min_v": -1.95,
+            "documented_max_v": 0,
+            "below_samples": 0,
+            "above_samples": 194871
+          },
+          "vgs": {
+            "min_v": -1.501022973219767,
+            "max_v": -1.501022973219767,
+            "documented_min_v": -1.95,
+            "documented_max_v": 0,
+            "below_samples": 0,
+            "above_samples": 0
+          },
+          "vbs": {
+            "min_v": 0.29897702678023297,
+            "max_v": 0.29897702678023297,
+            "documented_min_v": -0.1,
+            "documented_max_v": 1.95,
+            "below_samples": 0,
+            "above_samples": 0
+          }
+        },
+        {
+          "instance": "Xatt_swn2",
+          "model": "sky130_fd_pr__pfet_01v8",
+          "vds": {
+            "min_v": -5.459692450116016e-05,
+            "max_v": 5.4601896555928064e-05,
+            "documented_min_v": -1.95,
+            "documented_max_v": 0,
+            "below_samples": 0,
+            "above_samples": 195500
+          },
+          "vgs": {
+            "min_v": -1.501022973219767,
+            "max_v": -1.501022973219767,
+            "documented_min_v": -1.95,
+            "documented_max_v": 0,
+            "below_samples": 0,
+            "above_samples": 0
+          },
+          "vbs": {
+            "min_v": 0.29897702678023297,
+            "max_v": 0.29897702678023297,
+            "documented_min_v": -0.1,
+            "documented_max_v": 1.95,
+            "below_samples": 0,
+            "above_samples": 0
+          }
+        },
+        {
+          "instance": "XM1",
+          "model": "sky130_fd_pr__nfet_01v8",
+          "vds": {
+            "min_v": 0.8627369267742091,
+            "max_v": 0.8647422172363044,
+            "documented_min_v": 0,
+            "documented_max_v": 1.95,
+            "below_samples": 0,
+            "above_samples": 0
+          },
+          "vgs": {
+            "min_v": 0.9999654905563979,
+            "max_v": 1.0007737017014173,
+            "documented_min_v": 0,
+            "documented_max_v": 1.95,
+            "below_samples": 0,
+            "above_samples": 0
+          },
+          "vbs": {
+            "min_v": -0.5008844983372382,
+            "max_v": -0.5004915397574408,
+            "documented_min_v": -1.95,
+            "documented_max_v": 0.3,
+            "below_samples": 0,
+            "above_samples": 0
+          }
+        },
+        {
+          "instance": "XM2",
+          "model": "sky130_fd_pr__nfet_01v8",
+          "vds": {
+            "min_v": 0.862738129218934,
+            "max_v": 0.8647361609196715,
+            "documented_min_v": 0,
+            "documented_max_v": 1.95,
+            "below_samples": 0,
+            "above_samples": 0
+          },
+          "vgs": {
+            "min_v": 0.9999685586114642,
+            "max_v": 1.0007731681794707,
+            "documented_min_v": 0,
+            "documented_max_v": 1.95,
+            "below_samples": 0,
+            "above_samples": 0
+          },
+          "vbs": {
+            "min_v": -0.5008842800953311,
+            "max_v": -0.5004979538518691,
+            "documented_min_v": -1.95,
+            "documented_max_v": 0.3,
+            "below_samples": 0,
+            "above_samples": 0
+          }
+        },
+        {
+          "instance": "Xbpref",
+          "model": "sky130_fd_pr__pfet_01v8",
+          "vds": {
+            "min_v": -1.330265077853742,
+            "max_v": -1.3302650777455187,
+            "documented_min_v": -1.95,
+            "documented_max_v": 0,
+            "below_samples": 0,
+            "above_samples": 0
+          },
+          "vgs": {
+            "min_v": -1.330265077853742,
+            "max_v": -1.3302650777455187,
+            "documented_min_v": -1.95,
+            "documented_max_v": 0,
+            "below_samples": 0,
+            "above_samples": 0
+          },
+          "vbs": {
+            "min_v": 0.0,
+            "max_v": 0.0,
+            "documented_min_v": -0.1,
+            "documented_max_v": 1.95,
+            "below_samples": 0,
+            "above_samples": 0
+          }
+        },
+        {
+          "instance": "Xbpfeed",
+          "model": "sky130_fd_pr__pfet_01v8",
+          "vds": {
+            "min_v": -1.029008332039711,
+            "max_v": -1.029007911072886,
+            "documented_min_v": -1.95,
+            "documented_max_v": 0,
+            "below_samples": 0,
+            "above_samples": 0
+          },
+          "vgs": {
+            "min_v": -1.330265077853742,
+            "max_v": -1.3302650777455187,
+            "documented_min_v": -1.95,
+            "documented_max_v": 0,
+            "below_samples": 0,
+            "above_samples": 0
+          },
+          "vbs": {
+            "min_v": 0.0,
+            "max_v": 0.0,
+            "documented_min_v": -0.1,
+            "documented_max_v": 1.95,
+            "below_samples": 0,
+            "above_samples": 0
+          }
+        },
+        {
+          "instance": "XMR",
+          "model": "sky130_fd_pr__nfet_01v8",
+          "vds": {
+            "min_v": 0.7709916679602891,
+            "max_v": 0.7709920889271141,
+            "documented_min_v": 0,
+            "documented_max_v": 1.95,
+            "below_samples": 0,
+            "above_samples": 0
+          },
+          "vgs": {
+            "min_v": 0.7709916679602891,
+            "max_v": 0.7709920889271141,
+            "documented_min_v": 0,
+            "documented_max_v": 1.95,
+            "below_samples": 0,
+            "above_samples": 0
+          },
+          "vbs": {
+            "min_v": 0.0,
+            "max_v": 0.0,
+            "documented_min_v": -1.95,
+            "documented_max_v": 0.3,
+            "below_samples": 0,
+            "above_samples": 0
+          }
+        },
+        {
+          "instance": "XMT1",
+          "model": "sky130_fd_pr__nfet_01v8",
+          "vds": {
+            "min_v": 0.5004915397574408,
+            "max_v": 0.5008844983372382,
+            "documented_min_v": 0,
+            "documented_max_v": 1.95,
+            "below_samples": 0,
+            "above_samples": 0
+          },
+          "vgs": {
+            "min_v": 0.7709916679602891,
+            "max_v": 0.7709920889271141,
+            "documented_min_v": 0,
+            "documented_max_v": 1.95,
+            "below_samples": 0,
+            "above_samples": 0
+          },
+          "vbs": {
+            "min_v": 0.0,
+            "max_v": 0.0,
+            "documented_min_v": -1.95,
+            "documented_max_v": 0.3,
+            "below_samples": 0,
+            "above_samples": 0
+          }
+        },
+        {
+          "instance": "XMT2",
+          "model": "sky130_fd_pr__nfet_01v8",
+          "vds": {
+            "min_v": 0.5004979538518691,
+            "max_v": 0.5008842800953311,
+            "documented_min_v": 0,
+            "documented_max_v": 1.95,
+            "below_samples": 0,
+            "above_samples": 0
+          },
+          "vgs": {
+            "min_v": 0.7709916679602891,
+            "max_v": 0.7709920889271141,
+            "documented_min_v": 0,
+            "documented_max_v": 1.95,
+            "below_samples": 0,
+            "above_samples": 0
+          },
+          "vbs": {
+            "min_v": 0.0,
+            "max_v": 0.0,
+            "documented_min_v": -1.95,
+            "documented_max_v": 0.3,
+            "below_samples": 0,
+            "above_samples": 0
+          }
+        },
+        {
+          "instance": "Xrc_switch",
+          "model": "sky130_fd_pr__nfet_01v8",
+          "vds": {
+            "min_v": -0.0002832700687031009,
+            "max_v": 0.0002864155986765926,
+            "documented_min_v": 0,
+            "documented_max_v": 1.95,
+            "below_samples": 196070,
+            "above_samples": 0
+          },
+          "vgs": {
+            "min_v": 0.7591335258597849,
+            "max_v": 0.921464206009155,
+            "documented_min_v": 0,
+            "documented_max_v": 1.95,
+            "below_samples": 0,
+            "above_samples": 0
+          },
+          "vbs": {
+            "min_v": -0.5008842800953311,
+            "max_v": -0.5004979538518691,
+            "documented_min_v": -1.95,
+            "documented_max_v": 0.3,
+            "below_samples": 0,
+            "above_samples": 0
+          }
+        }
+      ],
+      "reliability_verified": false,
+      "scope": "signed drawn-terminal model-domain check, not absolute-maximum or lifetime signoff"
+    },
+    "whole_magnitude_body_envelope_pass": true,
+    "varactor_envelope_pass": true,
+    "initial_windows": [
+      {
+        "start_s": 6.000000000000001e-08,
+        "transfer_real": [
+          0.3700996738401055,
+          0.9309192080931956
+        ],
+        "transfer_imag": [
+          0.11705916608985888,
+          -0.22589517937452877
+        ],
+        "residual_fraction": 0.00012955587474760053,
+        "output_dc_v": 7.798075016613991e-09,
+        "vdd_power_w": 0.006965786665278988,
+        "control_mean_error_v": 1.0707810194077183e-08,
+        "pass": true
+      },
+      {
+        "start_s": 8e-08,
+        "transfer_real": [
+          0.37010292955413987,
+          0.9309191270538157
+        ],
+        "transfer_imag": [
+          0.11706106933934492,
+          -0.2258955726154755
+        ],
+        "residual_fraction": 0.00013205711034763,
+        "output_dc_v": 8.070196596156426e-09,
+        "vdd_power_w": 0.006965786656531917,
+        "control_mean_error_v": 9.667878109187455e-09,
+        "pass": true
+      }
+    ],
+    "transitions": [
+      {
+        "from_index": 0,
+        "to_index": 1,
+        "ramp_start_s": 1.0000000000000001e-07,
+        "ramp_end_s": 1.1e-07,
+        "windows": [
+          {
+            "start_s": 1.1e-07,
+            "transfer_real": [
+              0.6115641779470757,
+              0.910680965279268
+            ],
+            "transfer_imag": [
+              0.03483157221861768,
+              -0.2430516672137506
+            ],
+            "residual_fraction": 0.03425780746015304,
+            "output_dc_v": 6.507018677004788e-06,
+            "vdd_power_w": 0.006969199911693401,
+            "control_mean_error_v": 0.050024965829725765,
+            "pass": false
+          },
+          {
+            "start_s": 1.2000000000000002e-07,
+            "transfer_real": [
+              0.6552315694811915,
+              0.9057272258989678
+            ],
+            "transfer_imag": [
+              0.02798716745745017,
+              -0.24927244289343908
+            ],
+            "residual_fraction": 0.009654312032476955,
+            "output_dc_v": 5.756796754388965e-06,
+            "vdd_power_w": 0.006969512328754529,
+            "control_mean_error_v": 0.04755919425428984,
+            "pass": false
+          },
+          {
+            "start_s": 1.3e-07,
+            "transfer_real": [
+              0.6675186123139959,
+              0.9044943594443213
+            ],
+            "transfer_imag": [
+              0.02611320695019669,
+              -0.2523749965646514
+            ],
+            "residual_fraction": 0.0035673534582573874,
+            "output_dc_v": 2.758207163946396e-06,
+            "vdd_power_w": 0.006969545160521023,
+            "control_mean_error_v": 0.045231183683750786,
+            "pass": false
+          },
+          {
+            "start_s": 1.4e-07,
+            "transfer_real": [
+              0.6718228003753834,
+              0.904375081182719
+            ],
+            "transfer_imag": [
+              0.025656034634733618,
+              -0.2542920771761109
+            ],
+            "residual_fraction": 0.0015580948868253704,
+            "output_dc_v": 1.1918762831397924e-06,
+            "vdd_power_w": 0.006969462367062093,
+            "control_mean_error_v": 0.04303031316219297,
+            "pass": false
+          },
+          {
+            "start_s": 1.5e-07,
+            "transfer_real": [
+              0.673516023171626,
+              0.9046203678745269
+            ],
+            "transfer_imag": [
+              0.025696906712420874,
+              -0.2557276941004529
+            ],
+            "residual_fraction": 0.0009102584182577017,
+            "output_dc_v": 4.966087812285555e-07,
+            "vdd_power_w": 0.006969335615479194,
+            "control_mean_error_v": 0.04094775989578753,
+            "pass": false
+          },
+          {
+            "start_s": 1.6e-07,
+            "transfer_real": [
+              0.6742405533435959,
+              0.9049837402167562
+            ],
+            "transfer_imag": [
+              0.025921780039851922,
+              -0.25693765655287015
+            ],
+            "residual_fraction": 0.0007312094429097144,
+            "output_dc_v": 1.9583948662468908e-07,
+            "vdd_power_w": 0.006969194675282067,
+            "control_mean_error_v": 0.03897582412455364,
+            "pass": false
+          },
+          {
+            "start_s": 1.7000000000000001e-07,
+            "transfer_real": [
+              0.6745831175649954,
+              0.9053760879807847
+            ],
+            "transfer_imag": [
+              0.026217926931967502,
+              -0.25801995779597775
+            ],
+            "residual_fraction": 0.0006454809369160744,
+            "output_dc_v": 7.152249055799182e-08,
+            "vdd_power_w": 0.006969051710419148,
+            "control_mean_error_v": 0.03710757750983845,
+            "pass": false
+          },
+          {
+            "start_s": 1.8000000000000002e-07,
+            "transfer_real": [
+              0.6747685860158,
+              0.9057619867439073
+            ],
+            "transfer_imag": [
+              0.026531962869116115,
+              -0.25901589020557036
+            ],
+            "residual_fraction": 0.0005946262989711348,
+            "output_dc_v": 2.8719372763283355e-08,
+            "vdd_power_w": 0.006968911584604209,
+            "control_mean_error_v": 0.035336685501825504,
+            "pass": false
+          },
+          {
+            "start_s": 1.9e-07,
+            "transfer_real": [
+              0.674891702322723,
+              0.906129796036094
+            ],
+            "transfer_imag": [
+              0.026841366218042652,
+              -0.25994596793492647
+            ],
+            "residual_fraction": 0.0005737910448467976,
+            "output_dc_v": 1.8146512031460898e-08,
+            "vdd_power_w": 0.006968776104075076,
+            "control_mean_error_v": 0.033657309022191384,
+            "pass": false
+          },
+          {
+            "start_s": 2e-07,
+            "transfer_real": [
+              0.674980988326337,
+              0.9064803020161925
+            ],
+            "transfer_imag": [
+              0.027137717360133807,
+              -0.2608154220084284
+            ],
+            "residual_fraction": 0.0005443085426780119,
+            "output_dc_v": 1.2414035288275257e-08,
+            "vdd_power_w": 0.006968645856445679,
+            "control_mean_error_v": 0.032064042006760995,
+            "pass": false
+          },
+          {
+            "start_s": 2.1e-07,
+            "transfer_real": [
+              0.6750575207886854,
+              0.9068093337731785
+            ],
+            "transfer_imag": [
+              0.027425453703639874,
+              -0.2616310010691472
+            ],
+            "residual_fraction": 0.0005284865941292004,
+            "output_dc_v": 8.45381545606115e-09,
+            "vdd_power_w": 0.006968520963886275,
+            "control_mean_error_v": 0.030551866018399543,
+            "pass": false
+          },
+          {
+            "start_s": 2.2e-07,
+            "transfer_real": [
+              0.6751301393280721,
+              0.9071163251065713
+            ],
+            "transfer_imag": [
+              0.027701159771614896,
+              -0.2624015803745279
+            ],
+            "residual_fraction": 0.0004984009764097038,
+            "output_dc_v": 4.999662042204477e-09,
+            "vdd_power_w": 0.0069684013681753035,
+            "control_mean_error_v": 0.0291161138725316,
+            "pass": false
+          },
+          {
+            "start_s": 2.3000000000000002e-07,
+            "transfer_real": [
+              0.6751935374824041,
+              0.9074066096069161
+            ],
+            "transfer_imag": [
+              0.027962716521868804,
+              -0.26312641850025303
+            ],
+            "residual_fraction": 0.00048780228113899274,
+            "output_dc_v": 2.4690864937382683e-09,
+            "vdd_power_w": 0.006968286925040374,
+            "control_mean_error_v": 0.02775243872742794,
+            "pass": false
+          },
+          {
+            "start_s": 2.4000000000000003e-07,
+            "transfer_real": [
+              0.6752552141304982,
+              0.9076786145457919
+            ],
+            "transfer_imag": [
+              0.028216418428942947,
+              -0.26380895316948483
+            ],
+            "residual_fraction": 0.00044708867575948347,
+            "output_dc_v": 2.913779905154085e-09,
+            "vdd_power_w": 0.0069681774275118895,
+            "control_mean_error_v": 0.02645678697963899,
+            "pass": false
+          },
+          {
+            "start_s": 2.5000000000000004e-07,
+            "transfer_real": [
+              0.6753161505060702,
+              0.9079335739215983
+            ],
+            "transfer_imag": [
+              0.028455909806967557,
+              -0.2644542679913062
+            ],
+            "residual_fraction": 0.00044049530196524903,
+            "output_dc_v": 9.400410330056708e-09,
+            "vdd_power_w": 0.006968072650126416,
+            "control_mean_error_v": 0.025225374121891075,
+            "pass": false
+          },
+          {
+            "start_s": 2.6e-07,
+            "transfer_real": [
+              0.6753775175753893,
+              0.9081722339727947
+            ],
+            "transfer_imag": [
+              0.02868763710293551,
+              -0.2650668282978454
+            ],
+            "residual_fraction": 0.0004294281404294298,
+            "output_dc_v": 1.4648187536312875e-08,
+            "vdd_power_w": 0.00696797241675683,
+            "control_mean_error_v": 0.024054663052681335,
+            "pass": false
+          },
+          {
+            "start_s": 2.7e-07,
+            "transfer_real": [
+              0.675431952085547,
+              0.9083981116976979
+            ],
+            "transfer_imag": [
+              0.02890702215340355,
+              -0.26564471453556915
+            ],
+            "residual_fraction": 0.00042206782630464524,
+            "output_dc_v": 5.805078354599731e-09,
+            "vdd_power_w": 0.006967876567839164,
+            "control_mean_error_v": 0.022941344505293892,
+            "pass": false
+          },
+          {
+            "start_s": 2.8e-07,
+            "transfer_real": [
+              0.6754812068114165,
+              0.9086125981251444
+            ],
+            "transfer_imag": [
+              0.029110701539400406,
+              -0.2661884007173613
+            ],
+            "residual_fraction": 0.0004003515099527071,
+            "output_dc_v": 4.542374404549005e-09,
+            "vdd_power_w": 0.006967784894445331,
+            "control_mean_error_v": 0.021882319335118472,
+            "pass": false
+          },
+          {
+            "start_s": 2.9e-07,
+            "transfer_real": [
+              0.6755322941573475,
+              0.9088120337691175
+            ],
+            "transfer_imag": [
+              0.02930378612833429,
+              -0.26670341239965056
+            ],
+            "residual_fraction": 0.0003703312103339262,
+            "output_dc_v": 1.976304313018884e-09,
+            "vdd_power_w": 0.006967697225500635,
+            "control_mean_error_v": 0.020874682445951087,
+            "pass": false
+          },
+          {
+            "start_s": 3e-07,
+            "transfer_real": [
+              0.6755806925640712,
+              0.9090004393501094
+            ],
+            "transfer_imag": [
+              0.02948650111642973,
+              -0.26719175071521006
+            ],
+            "residual_fraction": 0.00036880820597621756,
+            "output_dc_v": -6.05608279139974e-09,
+            "vdd_power_w": 0.0069676133881189945,
+            "control_mean_error_v": 0.01991570819879107,
+            "pass": false
+          },
+          {
+            "start_s": 3.1e-07,
+            "transfer_real": [
+              0.6756273212649655,
+              0.9091787322471377
+            ],
+            "transfer_imag": [
+              0.02966284996063927,
+              -0.2676540937001251
+            ],
+            "residual_fraction": 0.0003604476067996774,
+            "output_dc_v": -6.11366403553986e-09,
+            "vdd_power_w": 0.00696753320698047,
+            "control_mean_error_v": 0.019002837126546823,
+            "pass": false
+          },
+          {
+            "start_s": 3.2e-07,
+            "transfer_real": [
+              0.6756713500088516,
+              0.909348001391596
+            ],
+            "transfer_imag": [
+              0.02983590692298422,
+              -0.2680890891961056
+            ],
+            "residual_fraction": 0.00033685424577393873,
+            "output_dc_v": -2.571716109817988e-09,
+            "vdd_power_w": 0.0069674565241322145,
+            "control_mean_error_v": 0.018133663822873125,
+            "pass": false
+          },
+          {
+            "start_s": 3.3e-07,
+            "transfer_real": [
+              0.6757130923803454,
+              0.909507196463062
+            ],
+            "transfer_imag": [
+              0.029997121570330833,
+              -0.26850209338984576
+            ],
+            "residual_fraction": 0.00031580562514238746,
+            "output_dc_v": 3.665562969620054e-09,
+            "vdd_power_w": 0.006967383219667411,
+            "control_mean_error_v": 0.017305925891748175,
+            "pass": false
+          },
+          {
+            "start_s": 3.4000000000000003e-07,
+            "transfer_real": [
+              0.6757550897160476,
+              0.9096571533361562
+            ],
+            "transfer_imag": [
+              0.030150367970085395,
+              -0.2688974600007181
+            ],
+            "residual_fraction": 0.0003142314195962044,
+            "output_dc_v": 1.1899863651068493e-08,
+            "vdd_power_w": 0.006967313134987969,
+            "control_mean_error_v": 0.01651749384394824,
+            "pass": false
+          },
+          {
+            "start_s": 3.5000000000000004e-07,
+            "transfer_real": [
+              0.6757956553321146,
+              0.9097991564820638
+            ],
+            "transfer_imag": [
+              0.030299431406277246,
+              -0.26927214092454055
+            ],
+            "residual_fraction": 0.00030071136232999554,
+            "output_dc_v": 1.2521713365492143e-08,
+            "vdd_power_w": 0.006967246106622053,
+            "control_mean_error_v": 0.015766361850185207,
+            "pass": false
+          },
+          {
+            "start_s": 3.6e-07,
+            "transfer_real": [
+              0.6758312447506245,
+              0.9099339148679305
+            ],
+            "transfer_imag": [
+              0.030440862498951463,
+              -0.26962410894388567
+            ],
+            "residual_fraction": 0.0002887409881814201,
+            "output_dc_v": 7.883946684144166e-09,
+            "vdd_power_w": 0.006967182040287897,
+            "control_mean_error_v": 0.015050639264243215,
+            "pass": false
+          },
+          {
+            "start_s": 3.7e-07,
+            "transfer_real": [
+              0.6758645639448974,
+              0.9100619719100063
+            ],
+            "transfer_imag": [
+              0.030573918231062074,
+              -0.2699570031144402
+            ],
+            "residual_fraction": 0.00029659831427161147,
+            "output_dc_v": 8.275381817168857e-09,
+            "vdd_power_w": 0.006967120777814774,
+            "control_mean_error_v": 0.014368542840566045,
+            "pass": false
+          },
+          {
+            "start_s": 3.8e-07,
+            "transfer_real": [
+              0.6758980187446709,
+              0.9101828446018733
+            ],
+            "transfer_imag": [
+              0.030699384624545092,
+              -0.2702740544251868
+            ],
+            "residual_fraction": 0.00027763799874119365,
+            "output_dc_v": 8.188766091526888e-09,
+            "vdd_power_w": 0.006967062186450736,
+            "control_mean_error_v": 0.013718389578611268,
+            "pass": false
+          },
+          {
+            "start_s": 3.9e-07,
+            "transfer_real": [
+              0.6759293540174334,
+              0.9102965020665439
+            ],
+            "transfer_imag": [
+              0.030819179404626116,
+              -0.2705744242700727
+            ],
+            "residual_fraction": 0.0002607967413411757,
+            "output_dc_v": 7.554692761537195e-09,
+            "vdd_power_w": 0.006967006183577782,
+            "control_mean_error_v": 0.013098590141556954,
+            "pass": false
+          },
+          {
+            "start_s": 4.0000000000000003e-07,
+            "transfer_real": [
+              0.675960300861453,
+              0.9104048298814453
+            ],
+            "transfer_imag": [
+              0.030936294681951818,
+              -0.2708605975367676
+            ],
+            "residual_fraction": 0.0002609624250262624,
+            "output_dc_v": 6.833822054671982e-09,
+            "vdd_power_w": 0.006966952639717583,
+            "control_mean_error_v": 0.012507642787009998,
+            "pass": false
+          },
+          {
+            "start_s": 4.1e-07,
+            "transfer_real": [
+              0.6759922170684275,
+              0.9105086919888367
+            ],
+            "transfer_imag": [
+              0.031053909343997092,
+              -0.2711349611006677
+            ],
+            "residual_fraction": 0.00025394607749863274,
+            "output_dc_v": 8.644049105154174e-09,
+            "vdd_power_w": 0.006966901455298519,
+            "control_mean_error_v": 0.011944127768792556,
+            "pass": false
+          },
+          {
+            "start_s": 4.2e-07,
+            "transfer_real": [
+              0.6760208555094592,
+              0.9106063879883586
+            ],
+            "transfer_imag": [
+              0.0311576314340846,
+              -0.27139405451374105
+            ],
+            "residual_fraction": 0.0002470753461430578,
+            "output_dc_v": 1.5862948511058313e-08,
+            "vdd_power_w": 0.0069668525136346434,
+            "control_mean_error_v": 0.011406702165015381,
+            "pass": false
+          },
+          {
+            "start_s": 4.3e-07,
+            "transfer_real": [
+              0.6760468056452226,
+              0.9106997427712278
+            ],
+            "transfer_imag": [
+              0.03125092782718022,
+              -0.27163931391509927
+            ],
+            "residual_fraction": 0.0002282587993816345,
+            "output_dc_v": 1.511762445836643e-08,
+            "vdd_power_w": 0.006966805704212584,
+            "control_mean_error_v": 0.0108940950867783,
+            "pass": false
+          },
+          {
+            "start_s": 4.4e-07,
+            "transfer_real": [
+              0.6760710716469245,
+              0.9107892131444572
+            ],
+            "transfer_imag": [
+              0.03134734732446249,
+              -0.27187221677051143
+            ],
+            "residual_fraction": 0.00022602460852163517,
+            "output_dc_v": 8.596661189825848e-09,
+            "vdd_power_w": 0.006966760966404915,
+            "control_mean_error_v": 0.010405103253257109,
+            "pass": false
+          },
+          {
+            "start_s": 4.5000000000000003e-07,
+            "transfer_real": [
+              0.6760953281110309,
+              0.9108727212168279
+            ],
+            "transfer_imag": [
+              0.03143798857123184,
+              -0.272094040177513
+            ],
+            "residual_fraction": 0.0002186620285917683,
+            "output_dc_v": 5.152947369881607e-09,
+            "vdd_power_w": 0.006966718202397585,
+            "control_mean_error_v": 0.009938586880618494,
+            "pass": false
+          },
+          {
+            "start_s": 4.6e-07,
+            "transfer_real": [
+              0.6761180389931545,
+              0.9109528090248667
+            ],
+            "transfer_imag": [
+              0.031525433013651405,
+              -0.2723056018640008
+            ],
+            "residual_fraction": 0.00021875775413331198,
+            "output_dc_v": 1.0961992476487825e-08,
+            "vdd_power_w": 0.006966677310797655,
+            "control_mean_error_v": 0.009493465866066642,
+            "pass": false
+          },
+          {
+            "start_s": 4.7e-07,
+            "transfer_real": [
+              0.6761386570759204,
+              0.9110297658598705
+            ],
+            "transfer_imag": [
+              0.0316104479130377,
+              -0.27250554553263273
+            ],
+            "residual_fraction": 0.0002162632840177058,
+            "output_dc_v": 1.6701098225368928e-08,
+            "vdd_power_w": 0.006966638218433349,
+            "control_mean_error_v": 0.00906871624259642,
+            "pass": false
+          },
+          {
+            "start_s": 4.800000000000001e-07,
+            "transfer_real": [
+              0.6761609884047038,
+              0.9111009702737155
+            ],
+            "transfer_imag": [
+              0.03168726262000036,
+              -0.27269759593472165
+            ],
+            "residual_fraction": 0.00022489636158056647,
+            "output_dc_v": 8.605076882362641e-09,
+            "vdd_power_w": 0.006966600845343844,
+            "control_mean_error_v": 0.008663366882332657,
+            "pass": false
+          },
+          {
+            "start_s": 4.9e-07,
+            "transfer_real": [
+              0.6761816474999596,
+              0.911169389826797
+            ],
+            "transfer_imag": [
+              0.03176370088970899,
+              -0.27288102252066265
+            ],
+            "residual_fraction": 0.00021204057638932118,
+            "output_dc_v": 8.027761251279863e-09,
+            "vdd_power_w": 0.006966565121844838,
+            "control_mean_error_v": 0.008276496434571956,
+            "pass": false
+          },
+          {
+            "start_s": 5.000000000000001e-07,
+            "transfer_real": [
+              0.6762014266765479,
+              0.9112342638109159
+            ],
+            "transfer_imag": [
+              0.03183806598890897,
+              -0.27305444671668166
+            ],
+            "residual_fraction": 0.00020808320261435937,
+            "output_dc_v": 1.8296931588754674e-08,
+            "vdd_power_w": 0.0069665309688844435,
+            "control_mean_error_v": 0.007907230453965242,
+            "pass": false
+          },
+          {
+            "start_s": 5.1e-07,
+            "transfer_real": [
+              0.6762218032305705,
+              0.9112947097718179
+            ],
+            "transfer_imag": [
+              0.03190760346568959,
+              -0.27321965490040173
+            ],
+            "residual_fraction": 0.0001867597453758784,
+            "output_dc_v": 2.1652371101551005e-08,
+            "vdd_power_w": 0.006966498302635102,
+            "control_mean_error_v": 0.007554738731610056,
+            "pass": false
+          },
+          {
+            "start_s": 5.2e-07,
+            "transfer_real": [
+              0.6762436894190313,
+              0.9113524387034653
+            ],
+            "transfer_imag": [
+              0.03197444931484769,
+              -0.2733792084744757
+            ],
+            "residual_fraction": 0.00020432287260669006,
+            "output_dc_v": 1.5539503665915448e-08,
+            "vdd_power_w": 0.006966467061362278,
+            "control_mean_error_v": 0.007218232807577385,
+            "pass": false
+          },
+          {
+            "start_s": 5.3e-07,
+            "transfer_real": [
+              0.6762595090519717,
+              0.9114091542885613
+            ],
+            "transfer_imag": [
+              0.03203716162318527,
+              -0.27352731833325183
+            ],
+            "residual_fraction": 0.00018653322341776713,
+            "output_dc_v": 1.3719518417451837e-08,
+            "vdd_power_w": 0.006966437214714636,
+            "control_mean_error_v": 0.006896963642690657,
+            "pass": false
+          },
+          {
+            "start_s": 5.4e-07,
+            "transfer_real": [
+              0.6762727329201927,
+              0.9114629054392285
+            ],
+            "transfer_imag": [
+              0.032095297369922254,
+              -0.2736675253511788
+            ],
+            "residual_fraction": 0.0001941955671164458,
+            "output_dc_v": 1.5990242554172157e-08,
+            "vdd_power_w": 0.006966408676956363,
+            "control_mean_error_v": 0.006590219430415073,
+            "pass": false
+          },
+          {
+            "start_s": 5.5e-07,
+            "transfer_real": [
+              0.6762892678522056,
+              0.9115137617907191
+            ],
+            "transfer_imag": [
+              0.03215240569031718,
+              -0.27380501316853373
+            ],
+            "residual_fraction": 0.00018907145473546287,
+            "output_dc_v": 1.641445179066914e-08,
+            "vdd_power_w": 0.006966381393160065,
+            "control_mean_error_v": 0.0062973235575179975,
+            "pass": false
+          },
+          {
+            "start_s": 5.6e-07,
+            "transfer_real": [
+              0.6763030104229072,
+              0.911561603823716
+            ],
+            "transfer_imag": [
+              0.032209315301378,
+              -0.2739335077948195
+            ],
+            "residual_fraction": 0.00018698010148031287,
+            "output_dc_v": 1.606030866710875e-08,
+            "vdd_power_w": 0.006966355329804357,
+            "control_mean_error_v": 0.00601763269856867,
+            "pass": false
+          },
+          {
+            "start_s": 5.7e-07,
+            "transfer_real": [
+              0.676319083620723,
+              0.9116058320727651
+            ],
+            "transfer_imag": [
+              0.032258963305885104,
+              -0.27405804971933007
+            ],
+            "residual_fraction": 0.00020061808872231618,
+            "output_dc_v": 1.661819690461531e-08,
+            "vdd_power_w": 0.006966330381044476,
+            "control_mean_error_v": 0.005750535014991148,
+            "pass": false
+          },
+          {
+            "start_s": 5.8e-07,
+            "transfer_real": [
+              0.6763338212208838,
+              0.9116499876473244
+            ],
+            "transfer_imag": [
+              0.0323118689264024,
+              -0.27417637921656757
+            ],
+            "residual_fraction": 0.0001910730189227268,
+            "output_dc_v": 1.0703565919193743e-08,
+            "vdd_power_w": 0.006966306533862902,
+            "control_mean_error_v": 0.005495448475043213,
+            "pass": false
+          },
+          {
+            "start_s": 5.900000000000001e-07,
+            "transfer_real": [
+              0.6763469010455054,
+              0.9116925525612105
+            ],
+            "transfer_imag": [
+              0.03235877609403086,
+              -0.2742883901845827
+            ],
+            "residual_fraction": 0.0001969371524820848,
+            "output_dc_v": 5.3937878450920806e-09,
+            "vdd_power_w": 0.006966283730538118,
+            "control_mean_error_v": 0.005251819274546571,
+            "pass": false
+          },
+          {
+            "start_s": 6e-07,
+            "transfer_real": [
+              0.6763590830453656,
+              0.911733504037992
+            ],
+            "transfer_imag": [
+              0.032401101598117606,
+              -0.27439544273611843
+            ],
+            "residual_fraction": 0.00018680413856335382,
+            "output_dc_v": 6.833536051888854e-09,
+            "vdd_power_w": 0.006966261914103988,
+            "control_mean_error_v": 0.0050191203487046365,
+            "pass": false
+          },
+          {
+            "start_s": 6.1e-07,
+            "transfer_real": [
+              0.6763688350292671,
+              0.9117726194069694
+            ],
+            "transfer_imag": [
+              0.03244497171599963,
+              -0.27449705910076155
+            ],
+            "residual_fraction": 0.0001847421635281333,
+            "output_dc_v": 1.4724172890622583e-08,
+            "vdd_power_w": 0.006966241079464878,
+            "control_mean_error_v": 0.004796849975194584,
+            "pass": false
+          },
+          {
+            "start_s": 6.2e-07,
+            "transfer_real": [
+              0.6763834593321966,
+              0.9118063075855789
+            ],
+            "transfer_imag": [
+              0.03248632614086309,
+              -0.2745969438823355
+            ],
+            "residual_fraction": 0.00018926845220729502,
+            "output_dc_v": 2.0474073286434152e-08,
+            "vdd_power_w": 0.00696622116625611,
+            "control_mean_error_v": 0.004584530457164032,
+            "pass": false
+          },
+          {
+            "start_s": 6.3e-07,
+            "transfer_real": [
+              0.6763944309111726,
+              0.9118410770925878
+            ],
+            "transfer_imag": [
+              0.03252921663997476,
+              -0.27468873878194816
+            ],
+            "residual_fraction": 0.00018623652050646087,
+            "output_dc_v": 1.4778572882659216e-08,
+            "vdd_power_w": 0.0069662021078860555,
+            "control_mean_error_v": 0.004381706888071241,
+            "pass": false
+          },
+          {
+            "start_s": 6.4e-07,
+            "transfer_real": [
+              0.6764020251488768,
+              0.9118766202156664
+            ],
+            "transfer_imag": [
+              0.032565687568205645,
+              -0.2747757488704182
+            ],
+            "residual_fraction": 0.00017547346694176538,
+            "output_dc_v": 1.7691479715890158e-08,
+            "vdd_power_w": 0.006966183876110376,
+            "control_mean_error_v": 0.004187945986714958,
+            "pass": false
+          },
+          {
+            "start_s": 6.5e-07,
+            "transfer_real": [
+              0.6764126548259363,
+              0.9119083981279317
+            ],
+            "transfer_imag": [
+              0.03260083450488077,
+              -0.274861077227665
+            ],
+            "residual_fraction": 0.00017514491532890785,
+            "output_dc_v": 1.8974588729779487e-08,
+            "vdd_power_w": 0.006966166453585064,
+            "control_mean_error_v": 0.004002834989930454,
+            "pass": false
+          },
+          {
+            "start_s": 6.6e-07,
+            "transfer_real": [
+              0.6764242770152102,
+              0.9119370773002422
+            ],
+            "transfer_imag": [
+              0.03263524533201942,
+              -0.27494263888710807
+            ],
+            "residual_fraction": 0.0001755190269276916,
+            "output_dc_v": 1.4709952883910833e-08,
+            "vdd_power_w": 0.006966149814223981,
+            "control_mean_error_v": 0.0038259806199657798,
+            "pass": false
+          },
+          {
+            "start_s": 6.7e-07,
+            "transfer_real": [
+              0.6764345569546938,
+              0.9119638070490543
+            ],
+            "transfer_imag": [
+              0.03266727856215226,
+              -0.2750201056436931
+            ],
+            "residual_fraction": 0.00016571768296467623,
+            "output_dc_v": 1.2872360548727822e-08,
+            "vdd_power_w": 0.006966133903672099,
+            "control_mean_error_v": 0.003657008105157844,
+            "pass": false
+          },
+          {
+            "start_s": 6.800000000000001e-07,
+            "transfer_real": [
+              0.6764396042226086,
+              0.9119936154746773
+            ],
+            "transfer_imag": [
+              0.03270450205975573,
+              -0.2750912359964472
+            ],
+            "residual_fraction": 0.0001821634018593819,
+            "output_dc_v": 1.6455057533145664e-08,
+            "vdd_power_w": 0.006966118675965076,
+            "control_mean_error_v": 0.0034955602517068862,
+            "pass": false
+          }
+        ],
+        "settling_bound_s": null,
+        "pass": false,
+        "vdd_energy_j": 4.180390101511157e-09,
+        "external_rc_net_energy_j": -3.049646652584196e-15,
+        "external_rc_positive_energy_j": 2.539759961015072e-13
+      },
+      {
+        "from_index": 1,
+        "to_index": 2,
+        "ramp_start_s": 7.000000000000001e-07,
+        "ramp_end_s": 7.100000000000001e-07,
+        "windows": [
+          {
+            "start_s": 7.100000000000001e-07,
+            "transfer_real": [
+              0.5639471497753982,
+              0.920404364424625
+            ],
+            "transfer_imag": [
+              0.06934772291040368,
+              -0.26677059817256693
+            ],
+            "residual_fraction": 0.02651162919875003,
+            "output_dc_v": -3.5793628118164045e-06,
+            "vdd_power_w": 0.006964258134528775,
+            "control_mean_error_v": 0.03313567968976261,
+            "pass": false
+          },
+          {
+            "start_s": 7.200000000000001e-07,
+            "transfer_real": [
+              0.5269966984110557,
+              0.9236048708212109
+            ],
+            "transfer_imag": [
+              0.08204853177034101,
+              -0.2641370194278082
+            ],
+            "residual_fraction": 0.012640766881093751,
+            "output_dc_v": -2.8054401254811144e-08,
+            "vdd_power_w": 0.006964012674521629,
+            "control_mean_error_v": 0.021175808534140944,
+            "pass": false
+          },
+          {
+            "start_s": 7.300000000000001e-07,
+            "transfer_real": [
+              0.509906011249652,
+              0.9249173880453475
+            ],
+            "transfer_imag": [
+              0.08781905883892346,
+              -0.26281459518126116
+            ],
+            "residual_fraction": 0.005403654285359792,
+            "output_dc_v": 2.3242334401748694e-07,
+            "vdd_power_w": 0.006963969168521768,
+            "control_mean_error_v": 0.02023350404605609,
+            "pass": false
+          },
+          {
+            "start_s": 7.400000000000001e-07,
+            "transfer_real": [
+              0.5026310665215048,
+              0.9254093067996044
+            ],
+            "transfer_imag": [
+              0.09006289102120903,
+              -0.26199822659140265
+            ],
+            "residual_fraction": 0.002245164629685445,
+            "output_dc_v": 1.6208678840996684e-07,
+            "vdd_power_w": 0.006964002844094691,
+            "control_mean_error_v": 0.01933214539507727,
+            "pass": false
+          },
+          {
+            "start_s": 7.500000000000001e-07,
+            "transfer_real": [
+              0.49956377046760414,
+              0.9255678116861834
+            ],
+            "transfer_imag": [
+              0.09078884960494588,
+              -0.2613871300648097
+            ],
+            "residual_fraction": 0.0009652344688155906,
+            "output_dc_v": 1.0265686860084274e-07,
+            "vdd_power_w": 0.006964065066680755,
+            "control_mean_error_v": 0.018469538995723234,
+            "pass": false
+          },
+          {
+            "start_s": 7.600000000000001e-07,
+            "transfer_real": [
+              0.49823202790778215,
+              0.9255952583335474
+            ],
+            "transfer_imag": [
+              0.0908957729987457,
+              -0.26086547475110283
+            ],
+            "residual_fraction": 0.00048400780510571355,
+            "output_dc_v": 6.963924134774189e-08,
+            "vdd_power_w": 0.006964136568640926,
+            "control_mean_error_v": 0.017643939143361265,
+            "pass": false
+          },
+          {
+            "start_s": 7.7e-07,
+            "transfer_real": [
+              0.49761480204685443,
+              0.9255713454100803
+            ],
+            "transfer_imag": [
+              0.09074601880715301,
+              -0.26039232938742773
+            ],
+            "residual_fraction": 0.00033187631393425266,
+            "output_dc_v": 6.219168906015816e-08,
+            "vdd_power_w": 0.00696420972044285,
+            "control_mean_error_v": 0.016853804063130473,
+            "pass": false
+          },
+          {
+            "start_s": 7.8e-07,
+            "transfer_real": [
+              0.49729140923979076,
+              0.9255278539049114
+            ],
+            "transfer_imag": [
+              0.09050132503072966,
+              -0.25994907456031935
+            ],
+            "residual_fraction": 0.00028941152120367364,
+            "output_dc_v": 6.315650831416104e-08,
+            "vdd_power_w": 0.006964281500509861,
+            "control_mean_error_v": 0.01609770021305673,
+            "pass": false
+          },
+          {
+            "start_s": 7.900000000000001e-07,
+            "transfer_real": [
+              0.4970943247773215,
+              0.925475196410431
+            ],
+            "transfer_imag": [
+              0.09022664671620464,
+              -0.259528250999593
+            ],
+            "residual_fraction": 0.0002771873491676989,
+            "output_dc_v": 4.769171058007976e-08,
+            "vdd_power_w": 0.006964350787206932,
+            "control_mean_error_v": 0.015374263831963386,
+            "pass": false
+          },
+          {
+            "start_s": 8.000000000000001e-07,
+            "transfer_real": [
+              0.4969463269636561,
+              0.9254224211072452
+            ],
+            "transfer_imag": [
+              0.08994635965760953,
+              -0.25912381948271057
+            ],
+            "residual_fraction": 0.00028177281248447836,
+            "output_dc_v": 4.002200653036499e-08,
+            "vdd_power_w": 0.006964417223327965,
+            "control_mean_error_v": 0.014682185108161883,
+            "pass": false
+          },
+          {
+            "start_s": 8.100000000000001e-07,
+            "transfer_real": [
+              0.49682128953597166,
+              0.9253711440166269
+            ],
+            "transfer_imag": [
+              0.08967795387010725,
+              -0.25873471762951367
+            ],
+            "residual_fraction": 0.0002541469049753018,
+            "output_dc_v": 4.803944215490267e-08,
+            "vdd_power_w": 0.0069644807129527146,
+            "control_mean_error_v": 0.014020201394957577,
+            "pass": false
+          },
+          {
+            "start_s": 8.200000000000001e-07,
+            "transfer_real": [
+              0.4967151177839485,
+              0.9253190756181275
+            ],
+            "transfer_imag": [
+              0.08942131872882679,
+              -0.25836220537342486
+            ],
+            "residual_fraction": 0.00026636211705205617,
+            "output_dc_v": 4.423592881480969e-08,
+            "vdd_power_w": 0.006964541343252235,
+            "control_mean_error_v": 0.013387094040560266,
+            "pass": false
+          },
+          {
+            "start_s": 8.300000000000001e-07,
+            "transfer_real": [
+              0.4966146401485091,
+              0.9252696518090026
+            ],
+            "transfer_imag": [
+              0.08917022905280168,
+              -0.25800425514144165
+            ],
+            "residual_fraction": 0.0002452688414579222,
+            "output_dc_v": 4.1562009206812555e-08,
+            "vdd_power_w": 0.0069645992095451114,
+            "control_mean_error_v": 0.012781686646106238,
+            "pass": false
+          },
+          {
+            "start_s": 8.400000000000001e-07,
+            "transfer_real": [
+              0.49652004658963456,
+              0.9252228901681689
+            ],
+            "transfer_imag": [
+              0.08893016326004885,
+              -0.2576613652927506
+            ],
+            "residual_fraction": 0.00023325234430764585,
+            "output_dc_v": 4.077966484183581e-08,
+            "vdd_power_w": 0.006964654387282517,
+            "control_mean_error_v": 0.012202843887474779,
+            "pass": false
+          },
+          {
+            "start_s": 8.500000000000001e-07,
+            "transfer_real": [
+              0.49643259405763035,
+              0.9251772918529583
+            ],
+            "transfer_imag": [
+              0.08871332991995182,
+              -0.25733204358884804
+            ],
+            "residual_fraction": 0.0002308735803460645,
+            "output_dc_v": 4.998680162541111e-08,
+            "vdd_power_w": 0.006964707028346774,
+            "control_mean_error_v": 0.011649470527820227,
+            "pass": false
+          },
+          {
+            "start_s": 8.6e-07,
+            "transfer_real": [
+              0.49634645217230267,
+              0.9251323517339046
+            ],
+            "transfer_imag": [
+              0.08849740797664991,
+              -0.2570140680465273
+            ],
+            "residual_fraction": 0.00022970877594091443,
+            "output_dc_v": 5.202432738636617e-08,
+            "vdd_power_w": 0.00696475725396917,
+            "control_mean_error_v": 0.011120510501315461,
+            "pass": false
+          },
+          {
+            "start_s": 8.700000000000001e-07,
+            "transfer_real": [
+              0.49626504127458215,
+              0.9250899662174004
+            ],
+            "transfer_imag": [
+              0.08828161908810306,
+              -0.2567100391276973
+            ],
+            "residual_fraction": 0.00021341579494094762,
+            "output_dc_v": 4.1584380364115415e-08,
+            "vdd_power_w": 0.00696480513709828,
+            "control_mean_error_v": 0.010614946002455161,
+            "pass": false
+          },
+          {
+            "start_s": 8.8e-07,
+            "transfer_real": [
+              0.4961856764440289,
+              0.9250504730498351
+            ],
+            "transfer_imag": [
+              0.08807880494862963,
+              -0.256419248127901
+            ],
+            "residual_fraction": 0.00022799348845695043,
+            "output_dc_v": 3.6387690256555574e-08,
+            "vdd_power_w": 0.006964850799020191,
+            "control_mean_error_v": 0.010131796559785466,
+            "pass": false
+          },
+          {
+            "start_s": 8.900000000000001e-07,
+            "transfer_real": [
+              0.4961100814963524,
+              0.9250120475900928
+            ],
+            "transfer_imag": [
+              0.08788947391371067,
+              -0.25613939188917106
+            ],
+            "residual_fraction": 0.0001965235224968676,
+            "output_dc_v": 3.634320880682352e-08,
+            "vdd_power_w": 0.006964894354689308,
+            "control_mean_error_v": 0.009670118106225811,
+            "pass": false
+          },
+          {
+            "start_s": 9.000000000000001e-07,
+            "transfer_real": [
+              0.4960398571792344,
+              0.9249755115922856
+            ],
+            "transfer_imag": [
+              0.08771851343612898,
+              -0.25587014869684327
+            ],
+            "residual_fraction": 0.00019504794895791713,
+            "output_dc_v": 4.0602058114823204e-08,
+            "vdd_power_w": 0.006964935869077742,
+            "control_mean_error_v": 0.009229002028511957,
+            "pass": false
+          },
+          {
+            "start_s": 9.100000000000001e-07,
+            "transfer_real": [
+              0.49597091730699766,
+              0.9249399173802785
+            ],
+            "transfer_imag": [
+              0.08754392310285734,
+              -0.2556121332276974
+            ],
+            "residual_fraction": 0.00021481992342273204,
+            "output_dc_v": 3.921777257056432e-08,
+            "vdd_power_w": 0.006964975467609668,
+            "control_mean_error_v": 0.008807574208875124,
+            "pass": false
+          },
+          {
+            "start_s": 9.200000000000001e-07,
+            "transfer_real": [
+              0.4959093807743041,
+              0.9249047385648019
+            ],
+            "transfer_imag": [
+              0.08736932755426355,
+              -0.25536786158212177
+            ],
+            "residual_fraction": 0.0002112159190054161,
+            "output_dc_v": 3.4513542031797465e-08,
+            "vdd_power_w": 0.006965013247866584,
+            "control_mean_error_v": 0.00840499405840095,
+            "pass": false
+          },
+          {
+            "start_s": 9.300000000000001e-07,
+            "transfer_real": [
+              0.49584614462793625,
+              0.924872681739533
+            ],
+            "transfer_imag": [
+              0.08720315609624019,
+              -0.25513347362463124
+            ],
+            "residual_fraction": 0.00020458870102783727,
+            "output_dc_v": 3.195419883356232e-08,
+            "vdd_power_w": 0.006965049267170295,
+            "control_mean_error_v": 0.008020453543795214,
+            "pass": false
+          },
+          {
+            "start_s": 9.400000000000001e-07,
+            "transfer_real": [
+              0.49578465221080154,
+              0.9248416665289141
+            ],
+            "transfer_imag": [
+              0.08704644290444837,
+              -0.25490837687609574
+            ],
+            "residual_fraction": 0.0001875819911959868,
+            "output_dc_v": 2.7883795208687806e-08,
+            "vdd_power_w": 0.00696508361327708,
+            "control_mean_error_v": 0.00765317622257522,
+            "pass": false
+          },
+          {
+            "start_s": 9.500000000000001e-07,
+            "transfer_real": [
+              0.49573082841061367,
+              0.9248115594838862
+            ],
+            "transfer_imag": [
+              0.0869026664884692,
+              -0.2546930745640911
+            ],
+            "residual_fraction": 0.00017984434883478018,
+            "output_dc_v": 2.7337615059016117e-08,
+            "vdd_power_w": 0.006965116355341473,
+            "control_mean_error_v": 0.007302416273258616,
+            "pass": false
+          },
+          {
+            "start_s": 9.600000000000001e-07,
+            "transfer_real": [
+              0.4956800531712746,
+              0.9247837905733862
+            ],
+            "transfer_imag": [
+              0.08677085588644785,
+              -0.2544867837989523
+            ],
+            "residual_fraction": 0.00017760476757444936,
+            "output_dc_v": 3.876172258578909e-08,
+            "vdd_power_w": 0.006965147580421068,
+            "control_mean_error_v": 0.006967457530665522,
+            "pass": false
+          },
+          {
+            "start_s": 9.7e-07,
+            "transfer_real": [
+              0.49563168842396554,
+              0.9247550539390945
+            ],
+            "transfer_imag": [
+              0.08664086839803672,
+              -0.25428964803777127
+            ],
+            "residual_fraction": 0.000176671388622764,
+            "output_dc_v": 4.3142791484438955e-08,
+            "vdd_power_w": 0.006965177357237202,
+            "control_mean_error_v": 0.00664761253564472,
+            "pass": false
+          },
+          {
+            "start_s": 9.800000000000001e-07,
+            "transfer_real": [
+              0.49558295475044467,
+              0.9247267779517119
+            ],
+            "transfer_imag": [
+              0.08650969692417511,
+              -0.2541001321395371
+            ],
+            "residual_fraction": 0.00018763064538828165,
+            "output_dc_v": 3.4431418120035514e-08,
+            "vdd_power_w": 0.00696520574515621,
+            "control_mean_error_v": 0.006342221588902519,
+            "pass": false
+          },
+          {
+            "start_s": 9.9e-07,
+            "transfer_real": [
+              0.4955352038627377,
+              0.924701934699029
+            ],
+            "transfer_imag": [
+              0.08638733935880169,
+              -0.2539183717318951
+            ],
+            "residual_fraction": 0.00018532424189977162,
+            "output_dc_v": 3.2225824242927716e-08,
+            "vdd_power_w": 0.006965232822150536,
+            "control_mean_error_v": 0.006050651821786268,
+            "pass": false
+          },
+          {
+            "start_s": 1.0000000000000002e-06,
+            "transfer_real": [
+              0.49548854161479866,
+              0.9246804066692551
+            ],
+            "transfer_imag": [
+              0.08627707288623794,
+              -0.2537442202964112
+            ],
+            "residual_fraction": 0.00016677324769385934,
+            "output_dc_v": 4.197779422591841e-08,
+            "vdd_power_w": 0.006965258615263635,
+            "control_mean_error_v": 0.0057722962776963205,
+            "pass": false
+          },
+          {
+            "start_s": 1.01e-06,
+            "transfer_real": [
+              0.49544594781333573,
+              0.9246582647264754
+            ],
+            "transfer_imag": [
+              0.08617601945781757,
+              -0.2535773503533295
+            ],
+            "residual_fraction": 0.00016174775849743205,
+            "output_dc_v": 4.5085625580753344e-08,
+            "vdd_power_w": 0.0069652832219064716,
+            "control_mean_error_v": 0.005506573008682958,
+            "pass": false
+          },
+          {
+            "start_s": 1.02e-06,
+            "transfer_real": [
+              0.4954095383974283,
+              0.9246340958852296
+            ],
+            "transfer_imag": [
+              0.08607232157043568,
+              -0.2534192274023552
+            ],
+            "residual_fraction": 0.0001804407408635486,
+            "output_dc_v": 4.195851898723607e-08,
+            "vdd_power_w": 0.006965306692207198,
+            "control_mean_error_v": 0.005252924194649233,
+            "pass": false
+          },
+          {
+            "start_s": 1.03e-06,
+            "transfer_real": [
+              0.4953693370655169,
+              0.9246134728946729
+            ],
+            "transfer_imag": [
+              0.08597075407077341,
+              -0.2532671211490478
+            ],
+            "residual_fraction": 0.0001819844366926137,
+            "output_dc_v": 3.758215465345562e-08,
+            "vdd_power_w": 0.0069653290541539,
+            "control_mean_error_v": 0.005010815273068792,
+            "pass": false
+          },
+          {
+            "start_s": 1.0400000000000002e-06,
+            "transfer_real": [
+              0.4953344189519889,
+              0.9245936046826334
+            ],
+            "transfer_imag": [
+              0.08587375422220823,
+              -0.2531233890253381
+            ],
+            "residual_fraction": 0.00015780018396504793,
+            "output_dc_v": 3.6526233546203026e-08,
+            "vdd_power_w": 0.006965350387995162,
+            "control_mean_error_v": 0.004779734094900567,
+            "pass": false
+          },
+          {
+            "start_s": 1.0500000000000001e-06,
+            "transfer_real": [
+              0.4953022249801123,
+              0.9245740049443647
+            ],
+            "transfer_imag": [
+              0.08578292579261497,
+              -0.25298562244064143
+            ],
+            "residual_fraction": 0.00015744778161062815,
+            "output_dc_v": 3.4775829264719946e-08,
+            "vdd_power_w": 0.006965370717955934,
+            "control_mean_error_v": 0.004559190092513821,
+            "pass": false
+          },
+          {
+            "start_s": 1.06e-06,
+            "transfer_real": [
+              0.4952678170305427,
+              0.9245559869707113
+            ],
+            "transfer_imag": [
+              0.0856951592736629,
+              -0.25285297244290283
+            ],
+            "residual_fraction": 0.00016115563140351501,
+            "output_dc_v": 3.8634898765648925e-08,
+            "vdd_power_w": 0.006965390122786923,
+            "control_mean_error_v": 0.004348713474177035,
+            "pass": false
+          },
+          {
+            "start_s": 1.0700000000000001e-06,
+            "transfer_real": [
+              0.4952334696247017,
+              0.9245396944447496
+            ],
+            "transfer_imag": [
+              0.08560734773325646,
+              -0.2527266122299728
+            ],
+            "residual_fraction": 0.000162423575471229,
+            "output_dc_v": 4.311799784431964e-08,
+            "vdd_power_w": 0.00696540861596041,
+            "control_mean_error_v": 0.004147854440401666,
+            "pass": false
+          },
+          {
+            "start_s": 1.08e-06,
+            "transfer_real": [
+              0.49520762418358616,
+              0.9245210833345616
+            ],
+            "transfer_imag": [
+              0.08552872020684489,
+              -0.2526074670205082
+            ],
+            "residual_fraction": 0.00017267846295388164,
+            "output_dc_v": 3.418545684184944e-08,
+            "vdd_power_w": 0.006965426229614329,
+            "control_mean_error_v": 0.003956182416279208,
+            "pass": false
+          },
+          {
+            "start_s": 1.0900000000000002e-06,
+            "transfer_real": [
+              0.4951836562108559,
+              0.9245025158782353
+            ],
+            "transfer_imag": [
+              0.08545008594835957,
+              -0.25249390291591983
+            ],
+            "residual_fraction": 0.00018485374959606725,
+            "output_dc_v": 3.132008358197571e-08,
+            "vdd_power_w": 0.006965443046371446,
+            "control_mean_error_v": 0.0037732853065711724,
+            "pass": false
+          },
+          {
+            "start_s": 1.1e-06,
+            "transfer_real": [
+              0.4951558356130449,
+              0.9244879007426212
+            ],
+            "transfer_imag": [
+              0.08537735444539928,
+              -0.25238332852033435
+            ],
+            "residual_fraction": 0.0001740143737208063,
+            "output_dc_v": 2.7546872408552737e-08,
+            "vdd_power_w": 0.0069654590702749935,
+            "control_mean_error_v": 0.0035987687751046216,
+            "pass": false
+          },
+          {
+            "start_s": 1.11e-06,
+            "transfer_real": [
+              0.4951281495500921,
+              0.9244733731550511
+            ],
+            "transfer_imag": [
+              0.08531064322331877,
+              -0.2522766341246017
+            ],
+            "residual_fraction": 0.00016639477039993752,
+            "output_dc_v": 2.9191682871823896e-08,
+            "vdd_power_w": 0.006965474341266389,
+            "control_mean_error_v": 0.0034322555441919644,
+            "pass": false
+          },
+          {
+            "start_s": 1.12e-06,
+            "transfer_real": [
+              0.4950982364314159,
+              0.9244596990603993
+            ],
+            "transfer_imag": [
+              0.08524366552646277,
+              -0.25217367111192734
+            ],
+            "residual_fraction": 0.00015260865922751057,
+            "output_dc_v": 3.326700462355939e-08,
+            "vdd_power_w": 0.006965488916783064,
+            "control_mean_error_v": 0.0032733847181949383,
+            "pass": false
+          },
+          {
+            "start_s": 1.1300000000000002e-06,
+            "transfer_real": [
+              0.4950731619874506,
+              0.9244476318311169
+            ],
+            "transfer_imag": [
+              0.08518460791692326,
+              -0.25207681998012
+            ],
+            "residual_fraction": 0.00015995290755932258,
+            "output_dc_v": 2.9637468248998503e-08,
+            "vdd_power_w": 0.006965502792016755,
+            "control_mean_error_v": 0.0031218111255247316,
+            "pass": false
+          },
+          {
+            "start_s": 1.14e-06,
+            "transfer_real": [
+              0.4950542369854375,
+              0.9244344851108756
+            ],
+            "transfer_imag": [
+              0.08512834638560175,
+              -0.2519861512892783
+            ],
+            "residual_fraction": 0.00016203114364798777,
+            "output_dc_v": 2.7470316756934564e-08,
+            "vdd_power_w": 0.006965516017955839,
+            "control_mean_error_v": 0.0029772046802459817,
+            "pass": false
+          },
+          {
+            "start_s": 1.15e-06,
+            "transfer_real": [
+              0.4950354929431629,
+              0.9244203268276557
+            ],
+            "transfer_imag": [
+              0.08506643660257984,
+              -0.2518996063526816
+            ],
+            "residual_fraction": 0.00015710428754624574,
+            "output_dc_v": 2.5894905241215006e-08,
+            "vdd_power_w": 0.006965528652845033,
+            "control_mean_error_v": 0.002839249770188901,
+            "pass": false
+          },
+          {
+            "start_s": 1.1600000000000001e-06,
+            "transfer_real": [
+              0.49501057328044734,
+              0.924409639292199
+            ],
+            "transfer_imag": [
+              0.08500543377537764,
+              -0.2518155208063074
+            ],
+            "residual_fraction": 0.00016461627479769434,
+            "output_dc_v": 2.763664774127985e-08,
+            "vdd_power_w": 0.006965540698356348,
+            "control_mean_error_v": 0.002707644663033748,
+            "pass": false
+          },
+          {
+            "start_s": 1.17e-06,
+            "transfer_real": [
+              0.494994779796556,
+              0.9243985434443323
+            ],
+            "transfer_imag": [
+              0.08496007388538543,
+              -0.25173740264882855
+            ],
+            "residual_fraction": 0.00015094854634169148,
+            "output_dc_v": 2.6653909721767325e-08,
+            "vdd_power_w": 0.006965552169311543,
+            "control_mean_error_v": 0.0025821009367509307,
+            "pass": false
+          },
+          {
+            "start_s": 1.1800000000000001e-06,
+            "transfer_real": [
+              0.49497985190776256,
+              0.9243878721875136
+            ],
+            "transfer_imag": [
+              0.08491565663610465,
+              -0.2516612022196483
+            ],
+            "residual_fraction": 0.00015579964420834973,
+            "output_dc_v": 2.0101195831763112e-08,
+            "vdd_power_w": 0.006965563090282561,
+            "control_mean_error_v": 0.0024623429204728153,
+            "pass": false
+          },
+          {
+            "start_s": 1.19e-06,
+            "transfer_real": [
+              0.494955102447858,
+              0.9243789820399878
+            ],
+            "transfer_imag": [
+              0.08486527444284213,
+              -0.2515854362352763
+            ],
+            "residual_fraction": 0.0001664460261243161,
+            "output_dc_v": 2.0016079894316157e-08,
+            "vdd_power_w": 0.006965573520368697,
+            "control_mean_error_v": 0.0023481071639361306,
+            "pass": false
+          },
+          {
+            "start_s": 1.2e-06,
+            "transfer_real": [
+              0.49493656182811735,
+              0.9243693249176428
+            ],
+            "transfer_imag": [
+              0.08481646752457539,
+              -0.25151622758044506
+            ],
+            "residual_fraction": 0.00016471191611415592,
+            "output_dc_v": 2.474316276034601e-08,
+            "vdd_power_w": 0.006965583468069766,
+            "control_mean_error_v": 0.002239141930080568,
+            "pass": false
+          },
+          {
+            "start_s": 1.21e-06,
+            "transfer_real": [
+              0.49492076081760017,
+              0.9243591467994784
+            ],
+            "transfer_imag": [
+              0.08476786368395132,
+              -0.2514506399356751
+            ],
+            "residual_fraction": 0.0001623587289532452,
+            "output_dc_v": 2.7038705959739816e-08,
+            "vdd_power_w": 0.006965592952731622,
+            "control_mean_error_v": 0.0021352066930869773,
+            "pass": false
+          },
+          {
+            "start_s": 1.2200000000000002e-06,
+            "transfer_real": [
+              0.4949031479386774,
+              0.9243509200652258
+            ],
+            "transfer_imag": [
+              0.0847302899496505,
+              -0.2513859923195212
+            ],
+            "residual_fraction": 0.00014624284808992965,
+            "output_dc_v": 2.735237389897479e-08,
+            "vdd_power_w": 0.006965601987630588,
+            "control_mean_error_v": 0.0020360716655154487,
+            "pass": false
+          },
+          {
+            "start_s": 1.23e-06,
+            "transfer_real": [
+              0.4948896801839358,
+              0.9243418956216661
+            ],
+            "transfer_imag": [
+              0.08469082832810138,
+              -0.2513259370223336
+            ],
+            "residual_fraction": 0.00014269986572692934,
+            "output_dc_v": 2.5668317774715286e-08,
+            "vdd_power_w": 0.006965610600170558,
+            "control_mean_error_v": 0.0019415173410710085,
+            "pass": false
+          },
+          {
+            "start_s": 1.24e-06,
+            "transfer_real": [
+              0.4948774295396056,
+              0.9243329456254081
+            ],
+            "transfer_imag": [
+              0.08465314937039098,
+              -0.2512690106146527
+            ],
+            "residual_fraction": 0.00016260479671935952,
+            "output_dc_v": 2.7997436293993154e-08,
+            "vdd_power_w": 0.006965618807865317,
+            "control_mean_error_v": 0.00185133405156801,
+            "pass": false
+          },
+          {
+            "start_s": 1.25e-06,
+            "transfer_real": [
+              0.494864130319209,
+              0.9243265067633427
+            ],
+            "transfer_imag": [
+              0.08462554985350304,
+              -0.2512135103033781
+            ],
+            "residual_fraction": 0.00017002299216532216,
+            "output_dc_v": 2.903982186645796e-08,
+            "vdd_power_w": 0.00696562663943004,
+            "control_mean_error_v": 0.0017653215472174244,
+            "pass": false
+          },
+          {
+            "start_s": 1.2600000000000002e-06,
+            "transfer_real": [
+              0.4948518921131541,
+              0.9243187454106857
+            ],
+            "transfer_imag": [
+              0.08459213615006682,
+              -0.25116100072529607
+            ],
+            "residual_fraction": 0.00015704040328501804,
+            "output_dc_v": 2.431983100034085e-08,
+            "vdd_power_w": 0.006965634103736461,
+            "control_mean_error_v": 0.00168328858794764,
+            "pass": false
+          },
+          {
+            "start_s": 1.2700000000000001e-06,
+            "transfer_real": [
+              0.4948383177659233,
+              0.9243116245018094
+            ],
+            "transfer_imag": [
+              0.08455456202493583,
+              -0.2511111645684445
+            ],
+            "residual_fraction": 0.00015591747403012593,
+            "output_dc_v": 2.5044132518209895e-08,
+            "vdd_power_w": 0.006965641218038695,
+            "control_mean_error_v": 0.0016050525521135728,
+            "pass": false
+          },
+          {
+            "start_s": 1.28e-06,
+            "transfer_real": [
+              0.494828417299117,
+              0.9243044890632638
+            ],
+            "transfer_imag": [
+              0.08452329190954246,
+              -0.2510642631473078
+            ],
+            "residual_fraction": 0.00015859461647899206,
+            "output_dc_v": 2.2052510680778295e-08,
+            "vdd_power_w": 0.00696564801607401,
+            "control_mean_error_v": 0.0015304390652948752,
+            "pass": false
+          }
+        ],
+        "settling_bound_s": null,
+        "pass": false,
+        "vdd_energy_j": 4.179048863604832e-09,
+        "external_rc_net_energy_j": -3.142689003180612e-14,
+        "external_rc_positive_energy_j": 1.2920658992892783e-13
+      },
+      {
+        "from_index": 2,
+        "to_index": 0,
+        "ramp_start_s": 1.3e-06,
+        "ramp_end_s": 1.31e-06,
+        "windows": [
+          {
+            "start_s": 1.31e-06,
+            "transfer_real": [
+              0.4078408945742301,
+              0.9295451231441605
+            ],
+            "transfer_imag": [
+              0.11959239951806913,
+              -0.24658059771151777
+            ],
+            "residual_fraction": 0.01568725549726235,
+            "output_dc_v": 2.111254643799369e-06,
+            "vdd_power_w": 0.006963669161825661,
+            "control_mean_error_v": 0.026446178353521366,
+            "pass": false
+          },
+          {
+            "start_s": 1.3199999999999999e-06,
+            "transfer_real": [
+              0.38842655198384246,
+              0.9309224522082785
+            ],
+            "transfer_imag": [
+              0.12660165530193412,
+              -0.24509757766301268
+            ],
+            "residual_fraction": 0.005951599175256478,
+            "output_dc_v": 9.423792812917477e-07,
+            "vdd_power_w": 0.0069636260771353065,
+            "control_mean_error_v": 0.025207010827022758,
+            "pass": false
+          },
+          {
+            "start_s": 1.33e-06,
+            "transfer_real": [
+              0.3808615492725584,
+              0.9314010016552973
+            ],
+            "transfer_imag": [
+              0.12890803487480681,
+              -0.24405517430086082
+            ],
+            "residual_fraction": 0.0023695157934472293,
+            "output_dc_v": 4.2061777768156427e-07,
+            "vdd_power_w": 0.0069636749680027366,
+            "control_mean_error_v": 0.02402355443964549,
+            "pass": false
+          },
+          {
+            "start_s": 1.3399999999999999e-06,
+            "transfer_real": [
+              0.3777177730758848,
+              0.9315654167243538
+            ],
+            "transfer_imag": [
+              0.12942793835612323,
+              -0.2431808449664668
+            ],
+            "residual_fraction": 0.0010791233045625598,
+            "output_dc_v": 1.9210302652682654e-07,
+            "vdd_power_w": 0.006963756398483624,
+            "control_mean_error_v": 0.022892938924588713,
+            "pass": false
+          },
+          {
+            "start_s": 1.35e-06,
+            "transfer_real": [
+              0.3762954272665823,
+              0.9316130806750857
+            ],
+            "transfer_imag": [
+              0.12927443653051565,
+              -0.24238543390625028
+            ],
+            "residual_fraction": 0.000644278971192604,
+            "output_dc_v": 1.090301441496563e-07,
+            "vdd_power_w": 0.006963847739068747,
+            "control_mean_error_v": 0.021812829915679455,
+            "pass": false
+          },
+          {
+            "start_s": 1.36e-06,
+            "transfer_real": [
+              0.37556712358202105,
+              0.9316134185970566
+            ],
+            "transfer_imag": [
+              0.12886322254659435,
+              -0.24163943091241963
+            ],
+            "residual_fraction": 0.0005479415867990056,
+            "output_dc_v": 7.726438956129073e-08,
+            "vdd_power_w": 0.006963940202796569,
+            "control_mean_error_v": 0.02078112818071265,
+            "pass": false
+          },
+          {
+            "start_s": 1.37e-06,
+            "transfer_real": [
+              0.37511970748270057,
+              0.9315959644409589
+            ],
+            "transfer_imag": [
+              0.1283527725744683,
+              -0.24093078733770115
+            ],
+            "residual_fraction": 0.0005139488310091757,
+            "output_dc_v": 6.279808117946285e-08,
+            "vdd_power_w": 0.006964030378480293,
+            "control_mean_error_v": 0.019795860635678286,
+            "pass": false
+          },
+          {
+            "start_s": 1.38e-06,
+            "transfer_real": [
+              0.3747949421363784,
+              0.9315738399428428
+            ],
+            "transfer_imag": [
+              0.12783399920985214,
+              -0.24025163131839972
+            ],
+            "residual_fraction": 0.00048813568238933547,
+            "output_dc_v": 6.288033207802143e-08,
+            "vdd_power_w": 0.006964117001664787,
+            "control_mean_error_v": 0.018855138173830832,
+            "pass": false
+          },
+          {
+            "start_s": 1.39e-06,
+            "transfer_real": [
+              0.37452556131191794,
+              0.9315491458948089
+            ],
+            "transfer_imag": [
+              0.12732470071958538,
+              -0.23960028281147572
+            ],
+            "residual_fraction": 0.00047347162015542207,
+            "output_dc_v": 5.603864358405502e-08,
+            "vdd_power_w": 0.006964199726468459,
+            "control_mean_error_v": 0.01795713899123197,
+            "pass": false
+          },
+          {
+            "start_s": 1.4e-06,
+            "transfer_real": [
+              0.3742863099103692,
+              0.9315230902334429
+            ],
+            "transfer_imag": [
+              0.12682955329508724,
+              -0.2389759694641481
+            ],
+            "residual_fraction": 0.0004523115944077603,
+            "output_dc_v": 4.699670652044691e-08,
+            "vdd_power_w": 0.0069642785191232496,
+            "control_mean_error_v": 0.017100101876567075,
+            "pass": false
+          },
+          {
+            "start_s": 1.41e-06,
+            "transfer_real": [
+              0.3740691562673808,
+              0.9314984072733653
+            ],
+            "transfer_imag": [
+              0.1263596080112659,
+              -0.23837779728680356
+            ],
+            "residual_fraction": 0.0004227407465981723,
+            "output_dc_v": 3.6278655419541265e-08,
+            "vdd_power_w": 0.006964353461491176,
+            "control_mean_error_v": 0.016282323372100282,
+            "pass": false
+          },
+          {
+            "start_s": 1.42e-06,
+            "transfer_real": [
+              0.3738691814830045,
+              0.931473104516809
+            ],
+            "transfer_imag": [
+              0.12590337337609042,
+              -0.23780692551504085
+            ],
+            "residual_fraction": 0.00041076555836624517,
+            "output_dc_v": 4.1151529037101964e-08,
+            "vdd_power_w": 0.006964424718502059,
+            "control_mean_error_v": 0.015502156395842293,
+            "pass": false
+          },
+          {
+            "start_s": 1.4299999999999999e-06,
+            "transfer_real": [
+              0.3736748610362824,
+              0.9314490410457439
+            ],
+            "transfer_imag": [
+              0.12547034763771447,
+              -0.2372580084231481
+            ],
+            "residual_fraction": 0.00039204501888166185,
+            "output_dc_v": 4.040708133172168e-08,
+            "vdd_power_w": 0.006964492465993242,
+            "control_mean_error_v": 0.01475800936625632,
+            "pass": false
+          },
+          {
+            "start_s": 1.44e-06,
+            "transfer_real": [
+              0.3734939538090935,
+              0.9314252558740782
+            ],
+            "transfer_imag": [
+              0.1250562838549518,
+              -0.23673244325792775
+            ],
+            "residual_fraction": 0.00038003632767993667,
+            "output_dc_v": 3.228868614852789e-08,
+            "vdd_power_w": 0.006964556863337392,
+            "control_mean_error_v": 0.01404834545964545,
+            "pass": false
+          },
+          {
+            "start_s": 1.4499999999999999e-06,
+            "transfer_real": [
+              0.3733204830412383,
+              0.9314033301367948
+            ],
+            "transfer_imag": [
+              0.12466349738261026,
+              -0.23622820812096923
+            ],
+            "residual_fraction": 0.00036651394399528207,
+            "output_dc_v": 3.489158798622666e-08,
+            "vdd_power_w": 0.006964618066688971,
+            "control_mean_error_v": 0.01337168183478088,
+            "pass": false
+          },
+          {
+            "start_s": 1.46e-06,
+            "transfer_real": [
+              0.3731546931002303,
+              0.9313839596875407
+            ],
+            "transfer_imag": [
+              0.12429325168892369,
+              -0.23574573418807807
+            ],
+            "residual_fraction": 0.00033851708220597053,
+            "output_dc_v": 3.269694562347846e-08,
+            "vdd_power_w": 0.006964676206423379,
+            "control_mean_error_v": 0.012726588793777804,
+            "pass": false
+          },
+          {
+            "start_s": 1.47e-06,
+            "transfer_real": [
+              0.3730037161856256,
+              0.9313629079462741
+            ],
+            "transfer_imag": [
+              0.12393796485664249,
+              -0.2352867102775197
+            ],
+            "residual_fraction": 0.00033774268076766433,
+            "output_dc_v": 2.2780177181442845e-08,
+            "vdd_power_w": 0.006964731468514625,
+            "control_mean_error_v": 0.012111688864657633,
+            "pass": false
+          },
+          {
+            "start_s": 1.48e-06,
+            "transfer_real": [
+              0.3728613776191292,
+              0.931341339507539
+            ],
+            "transfer_imag": [
+              0.12360489427621033,
+              -0.2348468467000334
+            ],
+            "residual_fraction": 0.00031278300410668826,
+            "output_dc_v": 2.59709121597089e-08,
+            "vdd_power_w": 0.006964784007581265,
+            "control_mean_error_v": 0.01152565579771675,
+            "pass": false
+          },
+          {
+            "start_s": 1.49e-06,
+            "transfer_real": [
+              0.37272755564469173,
+              0.9313220391856708
+            ],
+            "transfer_imag": [
+              0.12328620808049597,
+              -0.23442630426472716
+            ],
+            "residual_fraction": 0.00030375928359329204,
+            "output_dc_v": 2.9506097180289845e-08,
+            "vdd_power_w": 0.006964833924777224,
+            "control_mean_error_v": 0.010967213495801764,
+            "pass": false
+          },
+          {
+            "start_s": 1.5e-06,
+            "transfer_real": [
+              0.3725964735391936,
+              0.9313050238410904
+            ],
+            "transfer_imag": [
+              0.12298125205366564,
+              -0.23402393692308707
+            ],
+            "residual_fraction": 0.00028837141957265455,
+            "output_dc_v": 2.4958811692970682e-08,
+            "vdd_power_w": 0.0069648813359117,
+            "control_mean_error_v": 0.010435134879672403,
+            "pass": false
+          },
+          {
+            "start_s": 1.51e-06,
+            "transfer_real": [
+              0.3724669359085827,
+              0.9312892672246192
+            ],
+            "transfer_imag": [
+              0.12268881930728394,
+              -0.23363894246224676
+            ],
+            "residual_fraction": 0.0002863281706741024,
+            "output_dc_v": 1.9714616307037785e-08,
+            "vdd_power_w": 0.006964926394199726,
+            "control_mean_error_v": 0.009928240705983526,
+            "pass": false
+          },
+          {
+            "start_s": 1.5199999999999998e-06,
+            "transfer_real": [
+              0.3723473957206189,
+              0.9312720033456424
+            ],
+            "transfer_imag": [
+              0.12240662356220613,
+              -0.23327226446476773
+            ],
+            "residual_fraction": 0.00027765511130759815,
+            "output_dc_v": 2.691310572126228e-08,
+            "vdd_power_w": 0.006964969236605533,
+            "control_mean_error_v": 0.0094453983386793,
+            "pass": false
+          },
+          {
+            "start_s": 1.53e-06,
+            "transfer_real": [
+              0.3722344133675141,
+              0.9312541856548985
+            ],
+            "transfer_imag": [
+              0.12213390157898375,
+              -0.2329220914341453
+            ],
+            "residual_fraction": 0.0002689553536926063,
+            "output_dc_v": 3.509264818768104e-08,
+            "vdd_power_w": 0.006965009948995903,
+            "control_mean_error_v": 0.008985520489345866,
+            "pass": false
+          },
+          {
+            "start_s": 1.5399999999999999e-06,
+            "transfer_real": [
+              0.3721259523869526,
+              0.9312389416978459
+            ],
+            "transfer_imag": [
+              0.12188220265267932,
+              -0.23258670993556546
+            ],
+            "residual_fraction": 0.0002463470782114769,
+            "output_dc_v": 3.62360733132032e-08,
+            "vdd_power_w": 0.006965048615479726,
+            "control_mean_error_v": 0.008547563935267677,
+            "pass": false
+          },
+          {
+            "start_s": 1.55e-06,
+            "transfer_real": [
+              0.37202543940434935,
+              0.9312242917697364
+            ],
+            "transfer_imag": [
+              0.12164769932452471,
+              -0.23226658632059857
+            ],
+            "residual_fraction": 0.0002456291869628636,
+            "output_dc_v": 2.3996341215647804e-08,
+            "vdd_power_w": 0.006965085362441095,
+            "control_mean_error_v": 0.008130528214670973,
+            "pass": false
+          },
+          {
+            "start_s": 1.5599999999999999e-06,
+            "transfer_real": [
+              0.37192430371867014,
+              0.9312117799883222
+            ],
+            "transfer_imag": [
+              0.12142600829925755,
+              -0.23196022800558203
+            ],
+            "residual_fraction": 0.00022720101607688766,
+            "output_dc_v": 1.7196098172601196e-08,
+            "vdd_power_w": 0.006965120292530783,
+            "control_mean_error_v": 0.007733454315932087,
+            "pass": false
+          },
+          {
+            "start_s": 1.57e-06,
+            "transfer_real": [
+              0.37183570439103397,
+              0.931198441361845
+            ],
+            "transfer_imag": [
+              0.12121951641395827,
+              -0.2316700265420984
+            ],
+            "residual_fraction": 0.00022386888804445398,
+            "output_dc_v": 2.1731129660963012e-08,
+            "vdd_power_w": 0.0069651534748552775,
+            "control_mean_error_v": 0.007355423367551683,
+            "pass": false
+          },
+          {
+            "start_s": 1.58e-06,
+            "transfer_real": [
+              0.37175077910395027,
+              0.931184722226698
+            ],
+            "transfer_imag": [
+              0.12101077926212722,
+              -0.23139329652951607
+            ],
+            "residual_fraction": 0.00023554659132851542,
+            "output_dc_v": 1.7997336765172682e-08,
+            "vdd_power_w": 0.00696518500558814,
+            "control_mean_error_v": 0.006995555316364699,
+            "pass": false
+          },
+          {
+            "start_s": 1.59e-06,
+            "transfer_real": [
+              0.3716673572035232,
+              0.9311726910086248
+            ],
+            "transfer_imag": [
+              0.1208129034842975,
+              -0.23112835491813258
+            ],
+            "residual_fraction": 0.00021169418892779773,
+            "output_dc_v": 3.024612713332331e-08,
+            "vdd_power_w": 0.0069652149539835085,
+            "control_mean_error_v": 0.00665300762290949,
+            "pass": false
+          },
+          {
+            "start_s": 1.6e-06,
+            "transfer_real": [
+              0.3715886192511951,
+              0.9311605089362439
+            ],
+            "transfer_imag": [
+              0.1206226409057121,
+              -0.2308764113498444
+            ],
+            "residual_fraction": 0.00021327648424460701,
+            "output_dc_v": 2.3147937905314637e-08,
+            "vdd_power_w": 0.006965243422332749,
+            "control_mean_error_v": 0.006326973966720106,
+            "pass": false
+          },
+          {
+            "start_s": 1.6099999999999998e-06,
+            "transfer_real": [
+              0.3715162248078807,
+              0.9311476705038334
+            ],
+            "transfer_imag": [
+              0.12044198914236365,
+              -0.2306366158507536
+            ],
+            "residual_fraction": 0.00019276142096370403,
+            "output_dc_v": 1.6773350111545742e-08,
+            "vdd_power_w": 0.006965270482455493,
+            "control_mean_error_v": 0.006016682963397413,
+            "pass": false
+          },
+          {
+            "start_s": 1.62e-06,
+            "transfer_real": [
+              0.3714471371224844,
+              0.9311368795101919
+            ],
+            "transfer_imag": [
+              0.1202756449256014,
+              -0.23040771166827312
+            ],
+            "residual_fraction": 0.0001925222614529247,
+            "output_dc_v": 2.463814386654047e-08,
+            "vdd_power_w": 0.006965296181808564,
+            "control_mean_error_v": 0.005721396899334152,
+            "pass": false
+          },
+          {
+            "start_s": 1.63e-06,
+            "transfer_real": [
+              0.371374478684849,
+              0.9311279477673353
+            ],
+            "transfer_imag": [
+              0.12012081225216861,
+              -0.230187563785976
+            ],
+            "residual_fraction": 0.00017778728270981202,
+            "output_dc_v": 2.2672539532443775e-08,
+            "vdd_power_w": 0.00696532061671309,
+            "control_mean_error_v": 0.005440410488728287,
+            "pass": false
+          },
+          {
+            "start_s": 1.64e-06,
+            "transfer_real": [
+              0.3713061764056707,
+              0.9311188356727086
+            ],
+            "transfer_imag": [
+              0.11997167155131017,
+              -0.22997775434655848
+            ],
+            "residual_fraction": 0.0001831928489848796,
+            "output_dc_v": 2.1669913360490903e-08,
+            "vdd_power_w": 0.006965343828926478,
+            "control_mean_error_v": 0.0051730496569674655,
+            "pass": false
+          },
+          {
+            "start_s": 1.6499999999999999e-06,
+            "transfer_real": [
+              0.3712498163318275,
+              0.9311090457535689
+            ],
+            "transfer_imag": [
+              0.1198223664616019,
+              -0.22978053088870964
+            ],
+            "residual_fraction": 0.00017809217766956334,
+            "output_dc_v": 2.155872998065135e-08,
+            "vdd_power_w": 0.006965365863532682,
+            "control_mean_error_v": 0.00491867034462401,
+            "pass": false
+          },
+          {
+            "start_s": 1.66e-06,
+            "transfer_real": [
+              0.37119489490645685,
+              0.9311006181439316
+            ],
+            "transfer_imag": [
+              0.11968946579048784,
+              -0.2295920622157458
+            ],
+            "residual_fraction": 0.00017225677506434636,
+            "output_dc_v": 2.1819260683671978e-08,
+            "vdd_power_w": 0.006965386803981447,
+            "control_mean_error_v": 0.004676657336985635,
+            "pass": false
+          },
+          {
+            "start_s": 1.6699999999999999e-06,
+            "transfer_real": [
+              0.37113642937619823,
+              0.931092851259103
+            ],
+            "transfer_imag": [
+              0.1195633423646838,
+              -0.2294112551313931
+            ],
+            "residual_fraction": 0.00016085073601843224,
+            "output_dc_v": 2.3773602694790088e-08,
+            "vdd_power_w": 0.006965406712189088,
+            "control_mean_error_v": 0.004446423129765176,
+            "pass": false
+          },
+          {
+            "start_s": 1.68e-06,
+            "transfer_real": [
+              0.3710893367790592,
+              0.9310829251387076
+            ],
+            "transfer_imag": [
+              0.1194328692579021,
+              -0.22924171851453057
+            ],
+            "residual_fraction": 0.00016462885611692596,
+            "output_dc_v": 2.3069421762444106e-08,
+            "vdd_power_w": 0.00696542563512304,
+            "control_mean_error_v": 0.004227406822292168,
+            "pass": false
+          },
+          {
+            "start_s": 1.69e-06,
+            "transfer_real": [
+              0.3710403659055255,
+              0.9310749924574256
+            ],
+            "transfer_imag": [
+              0.11931235839938467,
+              -0.22907904910127955
+            ],
+            "residual_fraction": 0.0001702262765199374,
+            "output_dc_v": 1.6971987759400762e-08,
+            "vdd_power_w": 0.006965443619494852,
+            "control_mean_error_v": 0.004019073033594278,
+            "pass": false
+          },
+          {
+            "start_s": 1.7e-06,
+            "transfer_real": [
+              0.3709859168787564,
+              0.931068394006933
+            ],
+            "transfer_imag": [
+              0.11920363847872278,
+              -0.22892167192183624
+            ],
+            "residual_fraction": 0.00016469905553447717,
+            "output_dc_v": 1.0193575151549527e-08,
+            "vdd_power_w": 0.006965460707317695,
+            "control_mean_error_v": 0.003820910859604565,
+            "pass": false
+          },
+          {
+            "start_s": 1.71e-06,
+            "transfer_real": [
+              0.3709388495907423,
+              0.9310616675256143
+            ],
+            "transfer_imag": [
+              0.1190951652013797,
+              -0.22877281281623268
+            ],
+            "residual_fraction": 0.00015093562457662525,
+            "output_dc_v": 1.6008676765854263e-08,
+            "vdd_power_w": 0.0069654769298476745,
+            "control_mean_error_v": 0.0036324328591921806,
+            "pass": false
+          },
+          {
+            "start_s": 1.72e-06,
+            "transfer_real": [
+              0.3709004643077152,
+              0.9310550862576776
+            ],
+            "transfer_imag": [
+              0.11899503644004752,
+              -0.22863253326919947
+            ],
+            "residual_fraction": 0.00015082020891995284,
+            "output_dc_v": 1.9428336253430512e-08,
+            "vdd_power_w": 0.006965492339319352,
+            "control_mean_error_v": 0.003453174067015785,
+            "pass": false
+          },
+          {
+            "start_s": 1.73e-06,
+            "transfer_real": [
+              0.3708593938812749,
+              0.9310484914921245
+            ],
+            "transfer_imag": [
+              0.11890097650083896,
+              -0.22849822950090112
+            ],
+            "residual_fraction": 0.00015121596844822885,
+            "output_dc_v": 1.7282212118986226e-08,
+            "vdd_power_w": 0.006965506992546128,
+            "control_mean_error_v": 0.003282691042008845,
+            "pass": false
+          },
+          {
+            "start_s": 1.7399999999999999e-06,
+            "transfer_real": [
+              0.37082073584394565,
+              0.9310413727603206
+            ],
+            "transfer_imag": [
+              0.1188112415397086,
+              -0.22837026807099006
+            ],
+            "residual_fraction": 0.0001491958316536214,
+            "output_dc_v": 1.7110997156561407e-08,
+            "vdd_power_w": 0.006965520935705958,
+            "control_mean_error_v": 0.003120560952424023,
+            "pass": false
+          },
+          {
+            "start_s": 1.75e-06,
+            "transfer_real": [
+              0.3707875824314271,
+              0.9310358182325527
+            ],
+            "transfer_imag": [
+              0.11872655175867163,
+              -0.2282489791681508
+            ],
+            "residual_fraction": 0.00014081253178243932,
+            "output_dc_v": 1.7822568653642128e-08,
+            "vdd_power_w": 0.0069655341592369455,
+            "control_mean_error_v": 0.00296638068543692,
+            "pass": false
+          },
+          {
+            "start_s": 1.76e-06,
+            "transfer_real": [
+              0.37075512985677755,
+              0.931031751599031
+            ],
+            "transfer_imag": [
+              0.11864858477232895,
+              -0.2281342768423347
+            ],
+            "residual_fraction": 0.000151000709687521,
+            "output_dc_v": 1.2513959731906518e-08,
+            "vdd_power_w": 0.006965546706386909,
+            "control_mean_error_v": 0.0028197659894924065,
+            "pass": false
+          },
+          {
+            "start_s": 1.77e-06,
+            "transfer_real": [
+              0.37072347483528933,
+              0.9310259797431285
+            ],
+            "transfer_imag": [
+              0.11856996627515277,
+              -0.22802497202890892
+            ],
+            "residual_fraction": 0.0001581078736800611,
+            "output_dc_v": 1.1343210298019217e-08,
+            "vdd_power_w": 0.0069655586488136835,
+            "control_mean_error_v": 0.0026803506491684947,
+            "pass": false
+          },
+          {
+            "start_s": 1.78e-06,
+            "transfer_real": [
+              0.37069159621026093,
+              0.9310195530599864
+            ],
+            "transfer_imag": [
+              0.11848985494679688,
+              -0.22792039044989454
+            ],
+            "residual_fraction": 0.00016055850949054168,
+            "output_dc_v": 2.3669334436276074e-08,
+            "vdd_power_w": 0.006965570012018648,
+            "control_mean_error_v": 0.002547785692756266,
+            "pass": false
+          },
+          {
+            "start_s": 1.79e-06,
+            "transfer_real": [
+              0.3706596832839969,
+              0.9310138965749247
+            ],
+            "transfer_imag": [
+              0.11841916123305853,
+              -0.22782069963569554
+            ],
+            "residual_fraction": 0.00016602300705829677,
+            "output_dc_v": 1.761406903621978e-08,
+            "vdd_power_w": 0.006965580816735707,
+            "control_mean_error_v": 0.0024217386276079167,
+            "pass": false
+          },
+          {
+            "start_s": 1.8e-06,
+            "transfer_real": [
+              0.37062883573253746,
+              0.9310105852566275
+            ],
+            "transfer_imag": [
+              0.11835128868162625,
+              -0.22772560334866376
+            ],
+            "residual_fraction": 0.00015846475526614344,
+            "output_dc_v": 1.1928481629609485e-08,
+            "vdd_power_w": 0.0069655910694111514,
+            "control_mean_error_v": 0.002301892700885655,
+            "pass": false
+          },
+          {
+            "start_s": 1.81e-06,
+            "transfer_real": [
+              0.37059989078874345,
+              0.9310076382721916
+            ],
+            "transfer_imag": [
+              0.11828512932720381,
+              -0.22763519371729427
+            ],
+            "residual_fraction": 0.00013671700924414078,
+            "output_dc_v": 1.9360282382808133e-08,
+            "vdd_power_w": 0.006965600791089095,
+            "control_mean_error_v": 0.002187946193988044,
+            "pass": false
+          },
+          {
+            "start_s": 1.82e-06,
+            "transfer_real": [
+              0.37057897008512936,
+              0.9310024458507822
+            ],
+            "transfer_imag": [
+              0.11822578799516396,
+              -0.22755004291004818
+            ],
+            "residual_fraction": 0.00013574438368174497,
+            "output_dc_v": 1.7267727475778544e-08,
+            "vdd_power_w": 0.006965610029092412,
+            "control_mean_error_v": 0.002079611746065524,
+            "pass": false
+          },
+          {
+            "start_s": 1.8299999999999998e-06,
+            "transfer_real": [
+              0.37055354823147985,
+              0.9309990469220271
+            ],
+            "transfer_imag": [
+              0.11816854649036972,
+              -0.22746799228202136
+            ],
+            "residual_fraction": 0.00014663599989153043,
+            "output_dc_v": 1.6236823889116474e-08,
+            "vdd_power_w": 0.006965618828477015,
+            "control_mean_error_v": 0.0019766156974984628,
+            "pass": false
+          },
+          {
+            "start_s": 1.84e-06,
+            "transfer_real": [
+              0.3705301781709382,
+              0.9309947938694235
+            ],
+            "transfer_imag": [
+              0.118114291024897,
+              -0.22738985387735144
+            ],
+            "residual_fraction": 0.00014747412907369962,
+            "output_dc_v": 1.6118869011540954e-08,
+            "vdd_power_w": 0.00696562719005415,
+            "control_mean_error_v": 0.0018786974700296666,
+            "pass": false
+          },
+          {
+            "start_s": 1.85e-06,
+            "transfer_real": [
+              0.37051396934956454,
+              0.9309893144733622
+            ],
+            "transfer_imag": [
+              0.11806232825027327,
+              -0.22731684606926122
+            ],
+            "residual_fraction": 0.00015478009617551428,
+            "output_dc_v": 1.452827528017345e-08,
+            "vdd_power_w": 0.006965635135193081,
+            "control_mean_error_v": 0.0017856089659553653,
+            "pass": false
+          },
+          {
+            "start_s": 1.86e-06,
+            "transfer_real": [
+              0.37049153908925003,
+              0.9309864473031049
+            ],
+            "transfer_imag": [
+              0.1180094876015331,
+              -0.22724669268917236
+            ],
+            "residual_fraction": 0.00013739693526586833,
+            "output_dc_v": 1.490475824345858e-08,
+            "vdd_power_w": 0.00696564267922062,
+            "control_mean_error_v": 0.0016971139901864607,
+            "pass": false
+          },
+          {
+            "start_s": 1.8699999999999999e-06,
+            "transfer_real": [
+              0.3704736656983087,
+              0.930983143301846
+            ],
+            "transfer_imag": [
+              0.11796542334411143,
+              -0.2271797429096922
+            ],
+            "residual_fraction": 0.00012820138215740516,
+            "output_dc_v": 1.5115718533713876e-08,
+            "vdd_power_w": 0.00696564983732965,
+            "control_mean_error_v": 0.0016129877046083263,
+            "pass": false
+          },
+          {
+            "start_s": 1.88e-06,
+            "transfer_real": [
+              0.37046003171930014,
+              0.9309782560482874
+            ],
+            "transfer_imag": [
+              0.11792448387842742,
+              -0.2271172737953618
+            ],
+            "residual_fraction": 0.00013240843681243693,
+            "output_dc_v": 1.4845920266207729e-08,
+            "vdd_power_w": 0.006965656653242663,
+            "control_mean_error_v": 0.0015330160980131513,
+            "pass": false
+          }
+        ],
+        "settling_bound_s": null,
+        "pass": false,
+        "vdd_energy_j": 4.179001218990545e-09,
+        "external_rc_net_energy_j": 8.652456074170175e-14,
+        "external_rc_positive_energy_j": 1.627199079103488e-13
+      }
+    ],
+    "runtime_pass": false,
+    "connected_dfe_runtime_verified": false,
+    "full_receiver_verified": false,
+    "kind": "runtime",
+    "index": 0
+  },
+  "runtime_demonstration_pass": false,
+  "distinct_settings_verified": true,
+  "connected_dfe_runtime_verified": false,
+  "full_receiver_verified": false,
+  "pdk_unchanged": true,
+  "sources_unchanged": true,
+  "spice_calls": 4,
+  "attempted_cases": 4,
+  "wall_seconds": 139.82461379999586,
+  "preflight_seconds": 2.1112301999964984
+}

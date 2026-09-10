@@ -17,7 +17,7 @@
 > decisions that are OPEN and human-only, and what to do next. It supersedes
 > `nebula/NEXT_STEPS.md`. This file remains the full state of record.
 
-Last updated: **2026-09-10**, Entry 134 stops on G164 AC-grid failure; Entry 135 recovery registered, UNRUN.
+Last updated: **2026-09-10**, Entry 135 misses runtime settling gate; Entry 136 longer observation registered, UNRUN.
 The organiser requires a transistor-level CTLE plus DFE and configurable
 Rs/Cs. The owner authorizes bounded agent-selected experiments for both;
 DFE is first. Entry 122 CML passes all three TT screens with valid terminal
@@ -53,6 +53,9 @@ minimum positive width .630 UI, maximum VDD power 12.524099 mW. No retuning.
 Entry 134's first static call stops on the documented G164 two-point AC
 quirk. Its DC/full-AC calibration agrees, but runtime is not measured.
 Entry 135 registers the known three-point correction with all gates unchanged.
+It now completes all four calls: static references pass, but internal control
+settling fails all three runtime transitions. Entry 136 extends observation
+on the SAME circuit and preserves the original failed 500 ns criterion.
 Existing reports and fixed-passive circuit evidence remain unchanged.
 
 Previous report snapshot, Entry 121: The unchanged 20-page
@@ -1106,6 +1109,10 @@ Its failure record is `CONFIGURABLE_RC_RUNTIME_RESULTS.md`, replayed by
 `device/configurable_rc_runtime_recovery.py`,
 `experiments/exp_configurable_rc_runtime_recovery.py` and
 `tests/test_configurable_rc_runtime_recovery.py` for the G164 AC-grid correction.
+Its result is `CONFIGURABLE_RC_RUNTIME_RECOVERY_RESULTS.md`, replayed by
+`tests/test_configurable_rc_runtime_recovery_evidence.py`. Entry 136 adds
+`CONFIGURABLE_RC_SETTLING_OBSERVATION_PLAN.md`, `device/configurable_rc_settling.py`,
+`experiments/exp_configurable_rc_settling.py` and `tests/test_configurable_rc_settling.py`.
 
 Entry 121: NEXT_AGENT_PROMPT.md is the self-contained operational handoff
 for a new agent. It records reading order, verified product state, evidence
@@ -2096,6 +2103,9 @@ transient with external controls 9 -> 3 -> 6 -> 9 dB along the measured
 1.9 GHz line. All physical device geometry remains unchanged. Its first
 call stops because `ac lin 2` emits one row (known G164); runtime is unrun.
 Entry 135 registers only the known three-point AC sampling correction.
+It completes four calls in 139.824614 s. Three static references pass; the
+valid continuous transient fails all three combined control-settling gates.
+Entry 136 registers one longer observation, not a changed latency criterion.
 
 Entry 120 (2026-09-09): filled the three sparse academic front-matter pages using existing verified evidence. No technical result or claim changed. Rendered pages 4-22 are unchanged.
 
@@ -2367,6 +2377,11 @@ positive width .630 UI, width above 100 mV .555 UI; maximum VDD power
 Entry 134 completes one call in 27.867328 s and retains its incomplete
 exact-frequency AC data. DC/full-sweep calibration agrees; no runtime pass
 is inferred. Entry 135 recovery is implemented and awaits full validation/freeze.
+Entry 135 subsequently passes static calibration at all three controls and
+completes the runtime trace. Last-window internal-control errors remain
+3.495560/1.530439/1.533016 mV, exceeding 1 mV; no combined settling bound
+is measured in its holds. Voltage envelopes pass and two-tone response
+tracks the controls, but neither result replaces the failed settling gate.
 Entry 126: 95 calls, 1522.135503 s trial time; 45/45 at 3 dB and 45/45 at
 12 dB. Minimum sampled eyes 191.307321/133.817900 mV; finite positive-eye
 apertures 0.755/0.710 UI. Combined 135-PVT coverage includes the separately
@@ -3042,6 +3057,10 @@ Entries 134/135 target continuous standalone tuning with two small tones, not
 uninterrupted DFE decoding, runtime PVT, HD3 or a new eye result. Its 500 ns
 settling bound is a preregistered demonstration criterion, not an organiser
 latency specification. Independent static OP solves do not prove runtime.
+Entry 135 now measures continuous response changes but fails combined
+settling. Entry 136 separates eventual settling under a longer observation
+from the ORIGINAL 500 ns criterion; later settling must not be relabeled as
+a pass of that criterion. Connected DFE decoding during changes is unverified.
 
 Entry 116 (2026-09-08): the final competition report has a dedicated team/
 institution cover and a prioritized future-development page. The 20-page
@@ -3270,10 +3289,12 @@ simulation. Preserve all prior successes/failures. Entry 133 raw archival,
 all-corner replay tests and full regression are complete. Its checkpoint
 0792dd5f950656f8a9a7c367c4e683e8a324ea0f is saved locally;
 resolve the pending public/private backup instruction conflict before upload.
-Entry 134 remains failed on the known G164 missing endpoint. Entry 135
-(`CONFIGURABLE_RC_RUNTIME_RECOVERY_PLAN.md`) is registered and UNRUN:
-finish focused/full validation, freeze locally, then execute its four-call
-maximum once. Never overwrite or retroactively repair a prior run.
+Entry 134 remains failed on G164; Entry 135 now measures a settling failure.
+Entry 136 (`CONFIGURABLE_RC_SETTLING_OBSERVATION_PLAN.md`) is registered,
+UNRUN, one call maximum: finish focused/full checks, freeze locally, then
+observe the SAME hardware for longer to measure its actual settling time.
+Keep the original 500 ns criterion separately reported, not relaxed.
+Never overwrite or retroactively repair a prior run.
 Runtime control changes, other loaded tuning identities/channels and loaded
 noise/HD3 need separate bounded registered checks; do not silently extend
 this one-channel gate. The new experimental DUT has physical configurable
@@ -6856,6 +6877,16 @@ Require a contiguous passing tail of response windows, not one lucky good
 window, and compare complex response to measured static references.
 Two small test tones do not establish HD3, NRZ eye or uninterrupted DFE
 decoding. Artificial analytic traces belong only in tests, never evidence.
+
+### G185. A matching AC response does not imply the control node has settled
+
+Entry 135's continuous circuit reaches its two-tone response tolerance in
+70/40/160 ns after the ramps, yet its last control-node means still miss the
+1 mV criterion by ending 1.5--3.5 mV from the static reference. Report the
+failed combined gate, not signal-only success. Entry 136 extends observation
+without changing any device or the original 500 ns criterion, and explicitly
+separates eventual settling from passing that latency target. The 500 ns
+limit is an internal registered demonstration criterion, not an organiser spec.
 
 ## 10. Environment
 
@@ -18790,3 +18821,55 @@ files, 82 exact evidence blobs, 6,865,695 bytes; correct identity, no detected
 credentials/prohibited files, prior sources and both PDFs unchanged.
 Freeze locally before the four-call recovery; no public upload is authorized
 until the instruction conflict is resolved.
+
+### 2026-09-10 - Entry 135 physical settling failure; Entry 136 extended observation
+
+Entry 135 runs from bf03238944dc15bfc0e9c14e1e924b86817c88ce after 165
+focused and 3272 full passing tests (494.73 s, 13 deselected/two warnings).
+All four calls complete in 139.824614 s including 2.111230 s prior proof.
+The G164 AC fix works: all three static references pass exact DC/full-AC
+calibration and the two-tone transient gate, with distinct 100 MHz gains.
+The continuous runtime instrument is valid, but the combined settling gate
+fails all three transitions. Last 20 ns control mean errors:
+3.495560/1.530439/1.533016 mV, versus 1 mV. No passing tail or combined
+settling bound exists in the observed holds. Whole magnitude/body and
+varactor envelopes pass; source/PDK hashes remain unchanged.
+
+Signal-response/residual/power-only tails start 70/40/160 ns after the ramps;
+these diagnostic subsets omit the failed control-voltage condition and are
+NOT substitute passes. See G185 and CONFIGURABLE_RC_RUNTIME_RECOVERY_RESULTS.md.
+The 500 ns criterion is internal, not an organiser latency requirement.
+All raw data and both prior failures remain frozen.
+
+Original manifest: 108 entries. Eight gzip siblings preserve 408,926,058 raw
+bytes in 104,741,405 bytes; originals retained. Largest 57,334,419-byte gzip
+is necessary project-owned waveform evidence and is explicitly size-audited.
+Summary 7c5b725eba0a7e6420eb7d0e2f743d14c6a4f866cab4f537199b2e39bf7b3624;
+manifest 77d99d8d188c0026e697cee01c83a6353c59cb57d63c7f131b4e030239d375ed.
+Five new tests verify the complete archive and replay every case, preserving
+the failed combined settling conclusions.
+
+Entry 136 registers one 180 s maximum call: same physical circuit, feeds,
+controls, tones, solver and window gates, only longer timing (100/1100/2100 ns
+ramps, 3100 ns stop). Reuse the three accepted static references; do not rerun
+them. Report eventual observed settling separately from the unchanged
+500 ns criterion. No hardware change means no silent replacement of the
+prior connected PVT circuit; uninterrupted DFE runtime remains unverified.
+Failure-first tests start with absent-module failure, then validate timing-
+only deck changes, retained criterion, full analytic extraction, late failures,
+source closure and rejection of shorter real traces. Before-change full
+baseline: 3272 passed in 494.73 s. Post-change validation is pending; Entry
+136 is UNRUN. No upload/visibility change while privacy clarification is pending.
+
+Entry 136 focused regression passes: 176 tests in 176.38 s. The full
+mandatory suite is RUNNING, with no concurrent simulator or archive job.
+The extended observation is still UNRUN until validation and local freeze.
+
+Entry 136 pre-run full regression passes: 3283 passed, 13 deselected,
+two known warnings in 536.52 s; focused checks 176 passed in 176.38 s.
+No simulator/archive ran concurrently. Pre-final-log staged audit: 119
+intended files, 110 exact evidence blobs, 107,283,415 bytes. The one
+57,334,419-byte terminal gzip is explicitly reviewed project-owned evidence;
+correct identity, no detected credentials/prohibited material, old scientific
+sources and both PDFs unchanged. Freeze locally before the one registered
+observation call. Upload remains paused pending privacy clarification.
