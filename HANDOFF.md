@@ -17,7 +17,7 @@
 > decisions that are OPEN and human-only, and what to do next. It supersedes
 > `nebula/NEXT_STEPS.md`. This file remains the full state of record.
 
-Last updated: **2026-09-10**, Entry 137 registers loaded analog/noise/clocked-HD3 checks; not yet run.
+Last updated: **2026-09-10**, Entry 137 retains a convergence failure and one loaded snapshot; Entry 138 initialization recovery is unrun.
 The organiser requires a transistor-level CTLE plus DFE and configurable
 Rs/Cs. The owner authorizes bounded agent-selected experiments for both;
 DFE is first. Entry 122 CML passes all three TT screens with valid terminal
@@ -1055,6 +1055,12 @@ signaling, ADC-based DSP receiver, 28 nm CMOS reference parameters).
 
 ## 2. Repository map (what every file/folder is)
 
+Entry 137 measured evidence: `product_audits/entry137_dfe_loaded_analog_20260910/`,
+`DFE_LOADED_ANALOG_RESULTS.md`, `tests/test_dfe_loaded_analog_evidence.py`.
+Entry 138: `DFE_LOADED_INITIALIZATION_PLAN.md`,
+`device/dfe_loaded_initialization.py`, `experiments/exp_dfe_loaded_initialization.py`,
+and `tests/test_dfe_loaded_initialization.py` (all paths under nebula/).
+
 Entry 137: `nebula/DFE_LOADED_ANALOG_PLAN.md`,
 `nebula/device/dfe_loaded_analog.py`,
 `nebula/experiments/exp_dfe_loaded_analog.py`, and
@@ -2073,7 +2079,9 @@ PRBS → scramble → Gray/PAM4 → TX-FFE → ZOH ×OSR(8) → TX pole (0.75·f
 Entry 137 (2026-09-10) follows the user's direction to finish actual required
 specification checks, not optimize the internal 500 ns control-settling target.
 It registers up to 20 nominal loaded OP/AC/noise and clocked distortion calls,
-with no sizing or new tuning selection. It is UNRUN until local source freeze.
+with no sizing or new tuning selection. The run stops after two calls on a
+held-state gmin warning. Entry 138 registers released initial guesses with
+the same devices and strict warning gates, then the primary HD3 measurement.
 
 2026-09-09 / Entry 122: organiser clarification prompted the owner to reopen
 hardware work and authorize bounded agent-selected experiments. CML
@@ -2347,11 +2355,15 @@ Plus: git init, .gitignore, 28 tests, Wilson-bound BER reporting.
 
 ## 6. Key numbers & validated behavior (current state)
 
-Entry 137 is UNRUN pending the local source freeze. Fresh before-change
-regression: 3285 passed, 13 deselected, two known warnings, 952.18 s.
-Focused compatibility: 46 passed in 103.17 s. Post-change full regression:
-3294 passed, 13 deselected, two known warnings, 1058.84 s.
-No new noise, HD3 or loaded tuning result may be quoted yet.
+Entry 137: one accepted TT held-clock snapshot, noise .635864655 mVrms,
+boost 8.836252475 dB at 1.750132069 GHz, VDD power 9.280663703 mW.
+Broad S3/S5/S6 model limits pass; the requested 1.9 GHz identity misses the
+existing internal .1 GHz tolerance. The other held state is rejected on
+gmin warnings. No HD3 call occurs. Complete raw manifest: 84 entries;
+source/PDK unchanged. Entry 138 is UNRUN. Current before-change baseline:
+3294 passed in 1058.84 s, 13 deselected/two warnings; new focused checks:
+54 passed in 103.44 s. New full regression: 3305 passed in 1019.90 s,
+13 deselected/two known warnings. Freeze locally before Entry 138 runs.
 
 Entry 122: all 4/8/16 um CML sizes pass TT 32/32 and signed model-domain
 checks. The selected 4 um size passes 34/45 PVT, with weak hold at eleven
@@ -3051,7 +3063,7 @@ still NOT full area. The 12-request replay is fully supported at eight requests;
 
 ## 7. Known model limitations (honest list — do not overclaim)
 
-Entry 137's held-clock noise measurements will be DC-linearized loaded-CTLE
+Entry 137's held-clock noise measurements are DC-linearized loaded-CTLE
 snapshots, NOT periodic clocked-receiver noise. Generic poly voltage-dependent
 nonlinearity remains unverified even if clocked model HD3 passes. Its nine
 preselected controls do not establish the full tuning rectangle or analog
@@ -3316,10 +3328,11 @@ variation, mismatch and layout remain open. Old production evidence is unchanged
 
 ## 8. Next steps (prioritized backlog with context)
 
-**Current authorized priority (Entry 137):** validate/freeze the loaded analog
-instrument, run its bounded experiment once, retain failures, then use actual
-required-spec results to choose a justified next step. Do not prioritize app
-integration or the internal 500 ns settling criterion over these checks.
+**Current authorized priority (Entry 138):** validate/freeze and run the
+six-call initialized primary analog instrument. Preserve Entry 137's failure.
+Then address the measured loaded-frequency shift using accepted measurements.
+Do not prioritize app integration or the internal 500 ns settling criterion
+over required-spec checks. No new HD3 or nine-target loaded map exists yet.
 Public backup remains paused pending explicit resolution of the conflicting
 new private-only instruction; local verification and commits remain authorized.
 
@@ -6946,6 +6959,15 @@ linearizes at a DC operating point. Both held clock states and a physical DFE
 load do not turn that result into noise during switching or a worst-case
 receiver-noise bound. Keep measured CTLE port, frequency band and operating
 state beside the number. Clocked HD3 uses an actual transient and is separate.
+
+### G187. Bistable operating points need a branch, not hidden warnings
+
+Entry 137 held state 0 prints gmin increments and a failed last gmin step,
+then writes finite OP/AC/noise data and exits normally. Reject it. NODESET
+supplies preliminary guesses that are released before the final solution.
+It is not .ic/UIC, a physical reset or an ideal decision source. Entry 138
+derives guesses from accepted DC primitives and checks both actual stored
+polarities. Never relax the warning gate or swap device terminals to pass.
 
 ## 10. Environment
 
@@ -19034,3 +19056,51 @@ job ran concurrently. Pre-final-log staged audit: seven intended files,
 material, old scientific sources and both PDFs unchanged. Freeze locally
 before the single registered experiment. No public upload is authorized
 until the private/public instruction conflict is explicitly resolved.
+
+### 2026-09-10 - Entry 137 failure retained; Entry 138 initialization recovery
+
+Entry 137 runs from 818806be95462519f36f4998021155515fc785a8 after 46
+focused and 3294 full passing tests (1058.84 s, 13 deselected/two warnings).
+Exactly two calls, 103.8435664 s including 39.2008146 s full prior proof.
+Held state 0 emits further gmin increments and a failed last gmin step;
+the strict warning audit rejects it despite finite files and normal exit.
+Held state 1 is accepted: noise .635864655 mVrms over exactly 10 MHz-5 GHz,
+boost 8.836252475 dB, peak 1.750132069 GHz, VDD power 9.280663703 mW.
+Voltage gates pass; independent spectrum integration differs by .330543%.
+The 1.9 GHz target identity misses the internal .1 GHz tolerance, although
+broad S3 passes. No tone or other target call runs; no retry. Sources/PDK
+unchanged. Results: DFE_LOADED_ANALOG_RESULTS.md.
+
+Original raw manifest: 84 entries, SHA-256
+1b422c6c56894809ce87adbd845ccb4b77fa0abaaaa399f2ddf05c6cab349119.
+Summary: 5a0ee9d638785de33e11c5c23e2b878c39601280354e74b04b8307987598f802.
+Only small static files exist; no waveform archive or deletion is needed.
+Three new tests verify complete membership, exact decks, accepted raw replay,
+and continued rejection of the failed warning-bearing case.
+
+Entry 138 registers six calls maximum, 180 s each, no retries. Add only a
+released .nodeset guess on four master/held output nodes, derived from
+accepted state-1 DC values. Swap guess pairs for positive polarity, never
+device terminals. First require negative state-1 calibration against all
+prior DC nodes, complex AC, noise and power; stop after one if invalid.
+Then test the other held state/polarity pairs; stop after four if any
+instrument/resolved-branch check fails. Only then run the unchanged
+5/2.5 ps clocked HD3 pair. No warning relaxation, forced ideal decision,
+device/clock/control changes or tuning selection. See G187.
+
+Failure-first tests fail on the absent module, then ten related checks pass
+in 8.28 s; a further source-closure/calibration check is added before freeze.
+Final focused compatibility: 54 passed in 103.44 s. Full regression is pending;
+before-change baseline is 3294 passed in 1058.84 s. Entry 138 is UNRUN.
+Reports, production/RL sources and old experiments remain unchanged. Keep
+new backups local pending the public/private instruction clarification.
+
+Entry 138 pre-run full regression passes: 3305 passed, 13 deselected,
+two known warnings in 1019.90 s. Focused checks: 54 passed in 103.44 s.
+No new simulator or archive job ran concurrently; the user's status check
+did not restart the test process. Pre-final-log staged audit: 94 intended
+files, 85 exact evidence blobs, 2,318,317 bytes; correct identity, no detected
+credentials or prohibited material, prior sources and both PDFs unchanged.
+Freeze this local checkpoint before the six-call recovery. Public backup
+permission was asked again while tests ran and remains unanswered; do not
+upload or change repository visibility without that clarification.
