@@ -62,10 +62,14 @@ All 45 exact decks and actual waveform measurements are regression-replayed.
 
 This is sampled **link PVT**, with nominal noise/HD3 measured separately.
 Analog PVT, a complete loaded target map, DFE-active runtime tuning,
-mismatch/passive tolerances and layout remain unverified. The production
-web/CLI registry, reports and frozen RL experiment have not been replaced
-by this prototype. The result demonstrates working calibrated transistor
-hardware without claiming complete receiver or full competition signoff.
+mismatch/passive tolerances and layout remain unverified. The local product
+frontend now opens this pinned checkpoint in its **Receiver** view, including
+the transistor device schematic, saved summer eye and 45-corner link grid;
+run `py -3.13 -m nebula.web`. Its secondary Design explorer live generator,
+CLI/registry, reports and frozen RL experiment still represent their earlier
+scoped paths and have not been relabeled as this prototype. The result
+demonstrates working calibrated transistor hardware without claiming complete
+receiver or full competition signoff.
 
 Reproduction note: Entry 143 uses one common call-label format. Its saved
 `relative_tolerance` / `max_step_s` dispatch labels are actual solver settings

@@ -3,23 +3,23 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Nebula CTLE Designer - evidence-grounded SKY130 circuit sizing">
-  <title>Nebula CTLE Designer</title>
-  <link rel="stylesheet" href="/styles.css?v=3">
+  <meta name="description" content="Nebula CTLE + DFE Designer - evidence-grounded SKY130 circuit sizing">
+  <title>Nebula CTLE + DFE Designer</title>
+  <link rel="stylesheet" href="/styles.css?v=5">
 </head>
-<body>
+<body data-view="hardware">
   <a class="skip-link" href="#workspace">Skip to workspace</a>
   <header class="topbar">
-    <a class="brand" href="/" aria-label="Nebula CTLE Designer home">
+    <a class="brand" href="/" aria-label="Nebula CTLE and DFE Designer home">
       <svg class="brand-mark" viewBox="0 0 48 32" aria-hidden="true">
         <path d="M2 22c7 0 7-17 14-17s7 22 14 22S37 10 46 10" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>
         <circle cx="16" cy="5" r="2.4" fill="currentColor"/>
         <circle cx="30" cy="27" r="2.4" fill="currentColor"/>
       </svg>
-      <span>Nebula CTLE Designer</span>
+      <span>Nebula CTLE + DFE Designer</span>
     </a>
     <div class="top-actions">
-      <span class="truth-badge">Real SKY130 data</span>
+      <span class="truth-badge">SKY130 hardware evidence</span>
       <button id="judgeButton" class="button button-secondary" type="button">Enter judge mode</button>
     </div>
   </header>
@@ -28,7 +28,8 @@
     <div><strong>Judge mode</strong><span>Preverified evidence is loaded instantly; this view does not rerun SPICE.</span></div>
     <ol>
       <li><button data-judge-target="results">See the result</button></li>
-      <li><button data-judge-target="pvt">Inspect all conditions</button></li>
+      <li><button data-judge-target="hardware">Inspect transistor hardware</button></li>
+      <li><button data-judge-target="pvt">Inspect the legacy design grid</button></li>
       <li><button data-judge-target="evidence">Download evidence</button></li>
     </ol>
     <button id="exitJudge" class="text-button" type="button">Exit</button>
@@ -37,9 +38,9 @@
   <main id="workspace" class="workspace">
     <aside class="target-panel" aria-labelledby="targetTitle">
       <div class="panel-heading">
-        <p class="eyebrow">NEW DESIGN</p>
+        <p class="eyebrow">DESIGN EXPLORER</p>
         <h1 id="targetTitle">Set the response</h1>
-        <p>Peaking and peak frequency in; a verified circuit and evidence bundle out.</p>
+        <p>Explore the original RL sizing workflow. Both paths use behavioral DFE scoring.</p>
       </div>
 
       <label for="requestText">Plain-language request</label>
@@ -59,10 +60,10 @@
       <p id="parseNote" class="field-note">Supported request: 3-12 dB at 1.25-2.50 GHz.</p>
       <label for="designMode">Design path</label>
       <select id="designMode">
-        <option value="rl-hybrid">RL + shield - adaptive bank</option>
-        <option value="rl-physical" selected>Physical - fixed circuit PVT</option>
+        <option value="rl-hybrid">Legacy RL + shield - adaptive bank</option>
+        <option value="rl-physical" selected>Legacy physical export</option>
       </select>
-      <p id="modeSummary" class="mode-summary">One fixed circuit is remeasured across 45 PVT points and seven channel losses.</p>
+      <p id="modeSummary" class="mode-summary">The live physical export is the legacy fixed Rs/Cs path. Open Hardware proof for the newer transistor DFE and configurable controls.</p>
 
       <button id="generateButton" class="button button-primary generate-button" type="button">
         <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="2"/><circle cx="18" cy="5" r="2"/><circle cx="18" cy="19" r="2"/><path d="M7 11l9-5M7 13l9 5"/></svg>
@@ -79,16 +80,18 @@
 
     <section class="main-panel">
       <nav class="tabs" aria-label="Design views">
-        <button class="tab active" data-tab="results" type="button">Design result</button>
-        <button class="tab" data-tab="pvt" type="button">PVT explorer</button>
-        <button class="tab" data-tab="compare" type="button">Compare circuits</button>
-        <button class="tab" data-tab="channel" type="button">Channel upload</button>
-        <button class="tab" data-tab="evidence" type="button">Evidence</button>
+        <button class="tab active" data-tab="hardware" type="button">Receiver</button>
+        <button class="tab" data-tab="results" type="button">Design explorer</button>
+        <button class="tab explorer-tab" data-tab="pvt" type="button">Run PVT</button>
+        <button class="tab explorer-tab" data-tab="compare" type="button">Compare</button>
+        <button class="tab explorer-tab" data-tab="channel" type="button">Channel</button>
+        <button class="tab explorer-tab" data-tab="evidence" type="button">Run files</button>
       </nav>
 
       <div id="message" class="message" hidden></div>
 
-      <section id="resultsView" class="view active" data-view="results">
+      <section id="resultsView" class="view" data-view="results">
+        <p class="explorer-scope"><strong>Legacy design explorer</strong> &middot; Both modes export the original CTLE deck with behavioral DFE scoring. The Receiver tab contains the calibrated transistor CTLE + DFE and configurable Rs/Cs evidence.</p>
         <div class="section-intro">
           <div>
             <p id="resultContext" class="context-line">Preverified judge artifact</p>
@@ -119,10 +122,19 @@
           </div>
         </div>
 
+        <button id="hardwareCallout" class="hardware-callout" data-open-tab="hardware" type="button">
+          <span class="hardware-callout-copy">
+            <small>Latest verified physical checkpoint</small>
+            <strong>Transistor-level DFE + configurable Rs/Cs</strong>
+            <span>Open the circuit path, controls, 45-corner Link PVT and exact evidence.</span>
+          </span>
+          <span id="hardwareCalloutStatus" class="hardware-callout-status">Loading evidence</span>
+        </button>
+
         <div class="result-grid">
           <article class="schematic-card">
             <div class="card-heading">
-              <div><h3>Generated circuit</h3><p>The drawing is parsed from the exact representative deck.</p></div>
+              <div><h3>Legacy generated circuit</h3><p>Behavioral DFE &middot; This drawing describes the selected explorer deck.</p></div>
               <a id="openSchematic" class="text-button" href="#" target="_blank" rel="noopener">Open full size</a>
             </div>
             <div id="schematicFrame" class="schematic-frame">
@@ -155,6 +167,78 @@
           <summary>Hardware implementation boundary</summary>
           <div id="hardwareTruth" class="truth-detail"></div>
         </details>
+      </section>
+
+      <section id="hardwareView" class="view active" data-view="hardware">
+        <div class="section-intro">
+          <div>
+            <p class="context-line">SKY130 / 5 Gbps NRZ</p>
+            <h2>Configurable CTLE + transistor DFE</h2>
+            <p>A calibrated 9 dB / 1.9 GHz receiver path with physical Rs/Cs controls, clocked decision memory and current feedback.</p>
+          </div>
+          <span id="hardwareStatusBadge" class="source-badge">Loading</span>
+        </div>
+
+        <div id="hardwareLoadError" class="message error" role="alert" hidden></div>
+        <div id="hardwareContent">
+          <section class="hardware-blueprint" aria-labelledby="hardwareBlueprintTitle">
+            <div class="hardware-blueprint-heading">
+              <div><h3 id="hardwareBlueprintTitle">Implemented signal path</h3><p>Physical controls sit inside the CTLE; the decided bit returns through a current DAC.</p></div>
+              <span>5 Gbps NRZ</span>
+            </div>
+            <div id="hardwareTopology" class="hardware-signal-chain" aria-label="Transistor CTLE and DFE topology">
+              <div class="loading-lines"><i></i><i></i><i></i></div>
+            </div>
+          </section>
+
+          <div class="hardware-control-strip" aria-label="Calibrated physical control values">
+            <div><span>Rs control</span><strong id="hardwareControlR">--</strong><small>NMOS-selected high-poly branch</small></div>
+            <div><span>Cs control</span><strong id="hardwareControlC">--</strong><small>Two N500 SKY130 varactors</small></div>
+            <p id="hardwareControlNote">Loading the calibrated control record.</p>
+          </div>
+
+          <div class="hardware-visual-grid">
+            <figure class="hardware-eye-panel">
+              <div class="card-heading"><div><h3>See the recovered signal</h3><p>Nominal transistor simulation at the DFE summer.</p></div><a class="text-button" id="openHardwareEye" target="_blank" rel="noopener">Open plot</a></div>
+              <img id="hardwareEye" alt="Eye diagram from the saved transistor DFE summer waveform" loading="lazy">
+            </figure>
+            <section class="hardware-proof" aria-labelledby="hardwareProofTitle">
+              <div class="hardware-proof-heading">
+                <div><h3 id="hardwareProofTitle">Measured performance</h3><p>Analog checks at nominal conditions.</p></div>
+              </div>
+              <div id="hardwareMetrics" class="hardware-metric-tape"></div>
+            </section>
+          </div>
+          <details class="details-card hardware-drawing">
+            <summary>Inspect the transistor device schematic <span>Exact calibrated deck</span></summary>
+            <p>Matching net labels connect devices across this sheet. The full drawing includes the CTLE, configurable Rs/Cs, decision memory, summing pair and feedback DAC.</p>
+            <a id="openHardwareSchematic" class="text-button" target="_blank" rel="noopener">Open full-size PNG</a>
+            <div class="hardware-drawing-scroll"><img id="hardwareSchematic" alt="Named-net schematic of all SKY130 devices in the calibrated CTLE and transistor DFE" loading="lazy"></div>
+          </details>
+
+          <section class="hardware-pvt-card" aria-labelledby="hardwarePvtTitle">
+            <div class="hardware-pvt-heading">
+              <div><h3 id="hardwarePvtTitle">45-corner Link PVT</h3><p>One fixed control setting, DFE code and phase across five process corners, three supplies and three temperatures.</p></div>
+              <strong id="hardwarePvtCount">--</strong>
+            </div>
+            <div class="hardware-pvt-scroll">
+              <div id="hardwarePvtGrid" class="hardware-pvt-grid"></div>
+            </div>
+            <div id="hardwareCornerDetail" class="hardware-corner-detail"><p>Select a corner to inspect its recorded eye and power.</p></div>
+          </section>
+
+          <div class="hardware-lower-grid">
+            <section class="hardware-review-panel" aria-labelledby="hardwareEvidenceTitle">
+              <h3 id="hardwareEvidenceTitle">Inspect the exact evidence</h3>
+              <div id="hardwareEvidence" class="hardware-evidence"></div>
+            </section>
+            <details class="hardware-review-panel caution">
+              <summary id="hardwareBoundaryTitle">Measurement scope</summary>
+              <p>Analog PVT is not verified. Link PVT uses a finite noiseless pattern on one constructed channel.</p>
+              <div id="hardwareBoundary" class="hardware-boundary"></div>
+            </details>
+          </div>
+        </div>
       </section>
 
       <section id="pvtView" class="view" data-view="pvt">
@@ -242,11 +326,12 @@
         <p id="hardwareNote">No hardware record loaded.</p>
       </section>
       <button class="button button-secondary side-button" data-open-tab="pvt" type="button">Explore PVT conditions</button>
+      <button class="button button-secondary side-button" data-open-tab="hardware" type="button">Open hardware proof</button>
       <button class="button button-secondary side-button" data-open-tab="evidence" type="button">Open evidence</button>
     </aside>
   </main>
 
   <template id="statusTemplate"><span class="status-dot"></span><span class="status-copy"></span></template>
-  <script src="/app.js?v=3" defer></script>
+  <script src="/app.js?v=5" defer></script>
 </body>
 </html>

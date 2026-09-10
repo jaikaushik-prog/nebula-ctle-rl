@@ -17,7 +17,7 @@
 > decisions that are OPEN and human-only, and what to do next. It supersedes
 > `nebula/NEXT_STEPS.md`. This file remains the full state of record.
 
-Last updated: **2026-09-10**, Entry 144 passes 45/45 calibrated transistor link PVT; the mandatory 3397-test regression passes and the authorized public backup is ready.
+Last updated: **2026-09-10**, Entry 145 refreshes the frontend around the verified transistor receiver, adds its device schematic and saved eye plot; 3405 full-suite tests and desktop/mobile visual QA pass.
 
 The owner explicitly reconfirmed "yes push to the public repo" on 2026-09-10.
 The old public/private permission hold is resolved. Keep copyrighted/PDK and
@@ -1298,6 +1298,19 @@ gates evidence grounding, failure visibility, Judge-mode provenance, ZIP
 contents, upload refusal, the single-worker guard and the absence of an
 algorithm leaderboard. Run with `py -3.13 -m nebula.web`.
 
+Entry 145 additions: `nebula/web/hardware_checkpoint.py` validates the pinned
+Entry 143/144 summary and nominal-netlist SHA-256 values, checks required Rs/Cs
+and DFE instances, and produces the compact `/api/hardware` display payload.
+The frontend's default Receiver view renders the physical signal chain,
+calibrated controls, nominal analog/link results, interactive 45-corner Link
+PVT matrix, exact allow-listed artifacts and scope boundaries. The old live
+generator remains explicitly labeled as the legacy fixed-Rs/Cs export.
+`nebula/web/hardware_visuals.py` renders all 73 calibrated SKY130 devices as
+a named-net schematic and the saved 64-bit summer eye; PNGs and source hashes
+live in `nebula/web/assets/` and are validated before display/download.
+`nebula/tests/test_web_hardware_checkpoint.py` gates derivation, fail-closed
+hash behavior, safe routes, topology visibility and honest copy.
+
 ```
 ├── .gitignore              ← sectioned BY REASON (copyright / redistribution /
 │                             regenerable), not by extension. Keeps the ten
@@ -2399,6 +2412,20 @@ minimum positive width .635 UI, minimum width above 100 mV .560 UI; maximum
 VDD power 12.5241 mW. Same code, phase, controls and channel at all corners.
 Noise/HD3 are nominal only; this is not analog PVT or full receiver signoff.
 
+Entry 145 promotes this checkpoint into the local product frontend without
+changing any frozen measurement. The default Receiver view shows the circuit,
+eye and measurements in a single workspace. The old generator is a secondary
+Design explorer; both of its modes explicitly retain behavioral DFE scoring.
+The Receiver distinguishes nominal analog measurements from 45-case finite/
+noiseless Link PVT and exposes eight allow-listed evidence files. Focused web/
+physical tests: 33 passed in 5.02 s. Desktop 1440 px and true 390 px mobile
+renders pass visual review; live checks verify the 73-device schematic, eye,
+45 interactive corners, parser, eight downloads and no page overflow.
+PVT headers show actual 1.71/1.80/1.89 V, not supply multipliers as volts.
+Final full regression passes: 3405 passed in 1269.25 s, 13 deselected and the
+same two known warnings. The exact pre-change baseline is 3397 passed / 13 deselected / two known
+warnings in 1816.12 s at commit 572d3b6c.
+
 Historical Entry 138 accepts three of four held-state/polarity measurements
 at the older controls. Its 1.747-1.750 GHz target mismatch and positive-held-
 state warning remain preserved, not rewritten by the later calibration.
@@ -3118,8 +3145,10 @@ The corrected calibrated prototype now has independent nominal analog proof
 and 45-case finite-pattern link PVT. Analog PVT, full loaded target map,
 periodic receiver noise, positive held branches, DFE-active runtime tuning,
 typical-passive tolerance/mismatch, layout and physical control/clock/VCM
-generators remain unverified or external. Production web/CLI registry and
-reports still describe the older delivered path; they are not silently promoted.
+generators remain unverified or external. Entry 145 adds a separate pinned
+Receiver view to the production frontend. The live generator, CLI/
+registry and reports still describe the older delivered paths; they are not
+silently promoted or attributed to the frozen RL policy.
 
 Entry 141 proves nominal clocked CTLE-output model HD3 only. Generic-poly
 nonlinearity, periodic noise and analog PVT remain unverified. Any newly
@@ -3396,11 +3425,12 @@ variation, mismatch and layout remain open. Old production evidence is unchanged
 
 ## 8. Next steps (prioritized backlog with context)
 
-Latest priority superseding older UNRUN entries: replay completed Entries
-138-144, run final mandatory full regression, audit and commit with this
-handoff, then push both branches to the verified commit. Public authorization
-is now explicit. Follow-on technical work is analog PVT and production-path
-integration with accurate scope, not another run of completed experiments.
+Latest priority superseding older UNRUN entries: Entry 145 frontend promotion
+is complete, with 33 focused tests, 3405 full-suite tests, desktop/mobile visual
+review and live interaction checks passing. The staged audit contains only
+12 intended project files, no prohibited references or detected credentials. Follow-on
+work is the separate live generator/CLI registry and report promotion, plus
+analog PVT; do not rerun completed Entries 138-144 or relabel their scope.
 
 Latest authorized priority: run registered Entry 139 once, preserve and replay
 both raw measurements, then complete mandatory post-change regression and local
@@ -4030,6 +4060,17 @@ explicit scope.
 **1-9.** (See existing backlog: .s4p, clipping disto, joint adaptation, etc.)
 
 ## 9. Gotchas & footguns (each one cost real debugging time)
+
+### G193. A new hardware checkpoint is not the older selectable design artifact
+
+The judge demo and live `rl-physical` generator still carry their own older
+fixed-Rs/Cs/behavioural-DFE provenance. Replacing their labels with Entry 144
+claims would falsely transfer evidence. Entry 145 therefore loads the new
+hardware through a separate hash-pinned API/default Receiver view. The new
+schematic depicts its actual 73 SKY130 devices; old generated PNGs retain their
+correct behavioral labels inside the secondary explorer. Keep sources distinct until the live generator
+and registry really export the calibrated transistor topology. UI screenshots
+are not provenance; the adapter must fail closed on evidence/netlist hashes.
 
 ### G192. Shared dispatch labels are not non-tone solver settings
 
@@ -7099,11 +7140,13 @@ polarities. Never relax the warning gate or swap device terminals to pass.
   numpy 2.2.6, scipy 1.15.3, pytest 9.1.1, matplotlib, pandas and PyTorch
   2.9.1+cpu under `py -3.13`. No scikit-rf. Base Anaconda Python does not have
   torch; do not let an old Anaconda dashboard process retain port 8765.
-- git 2.52 for Windows. **This checkout: `main`, initial commit 2026-08-04,
-  pushing to `origin` = https://github.com/jaikaushik-prog/nebula-ctle-rl.git —
-  a NEW, PRIVATE repo built from this clean history** (the decision session 14b
-  recorded, now carried out; verified private on 2026-08-07 and last pushed at
-  `4b63021`). The older
+- git 2.52 for Windows. The active working branch is
+  `nebula/winning-sprint-20260908`; live Git state is authoritative. `origin`
+  is https://github.com/jaikaushik-prog/nebula-ctle-rl.git. The owner explicitly
+  authorized and reconfirmed public project-owned backups on 2026-09-10; both
+  public branches were verified at `572d3b6c` before Entry 145. Do not change
+  repository visibility, force-push, or add ignored copyrighted/PDK material.
+  The older
   https://github.com/jaikaushik-prog/serdes-dsp-framework.git still exists and
   still has the PDFs in its baseline commit; it is an **unrelated history** to
   this one and must not be pushed to — see G1 as amended and G41.
@@ -19445,3 +19488,53 @@ settings. Static decks retain the registered strict 1e-7 tolerance; link
 decks use the registered unchanged 1 ps transient. The guide now says to
 read those frozen decks for non-tone settings. No scientific source, raw
 record or measured result is changed; all exact replay checks remain intact.
+
+### 2026-09-10 - Entry 145 product frontend hardware promotion
+
+The product now visibly presents the calibrated transistor checkpoint without
+rewriting the older selectable design artifact. A new fail-closed adapter pins
+Entry 143/144 summary hashes and the nominal link-netlist hash, verifies the
+physical Rs switch, two N500 varactors, CML summer, master/slave decision path
+and feedback DAC instances, then serves a compact `/api/hardware` payload plus
+eight allow-listed review artifacts. Missing/changed evidence refuses status.
+
+The default Receiver page shows
+the implemented signal path, R=.70/C=.185 VDD controls, nominal boost/peak,
+noise, clocked HD3 and fresh 64/64 decode, plus all 45 fixed-control Link PVT
+cells with per-corner eye/aperture/power details. The redesign removes the
+always-visible sidebars, redundant signal cartoons and metric cards from the
+primary view. The Design explorer retains both original generation modes with
+explicit legacy/behavioral scope; mobile controls precede the selected result.
+Analog PVT, BER, arbitrary channels, DFE-active runtime tuning, external clock/
+control/VCM generators and layout remain explicitly outside the claim. The
+live generator is labeled as a legacy explorer; CLI/registry and PDFs
+are unchanged. No SPICE or RL training runs.
+
+Failure-first test initially stops at the missing adapter; after implementation,
+31 focused web/physical tests pass in 4.24 s. `node --check` passes. All five
+artifact URLs return 200 and a traversal attempt returns 404. Desktop 1440 x
+2200 and true 390 px full-page Edge renders are visually reviewed. A live DOM
+interaction probe reports 45 PVT cells, six topology stages, five evidence
+links, correct selected-corner detail and document width exactly matching the
+390 px viewport. The Windows CUA helper failed twice before opening a browser;
+local headless Edge/CDP provided equivalent render and interaction inspection.
+The user's PNG/crowding feedback expanded this entry before commit. The new
+device schematic parses all 73 SKY130 instances from the exact Entry 143 deck;
+matching net labels connect the complete device sheet. The nominal eye folds
+the saved summer waveform over two UI for 64 scored bits, marks the original
+sample window and preserves the .705 UI scan-limited/.655 UI above-100mV
+aperture definitions. No measurements, simulator runs or frozen sources change.
+The PNG source/asset hashes are recorded and checked. A hidden-browser probe
+checks both 1440 and 390 px layouts, opening the 3000x6697 schematic, selecting
+FF/1.89V/125C, parsing 6dB/1.9GHz, and all eight artifact HTTP responses (200).
+Final focused regression: 33 passed in 5.02 s. Mandatory full regression:
+3405 passed, 13 deselected, two known warnings in 1269.25 s (21:09).
+Pre-change full baseline: 3397 passed, 13 deselected, two known warnings in
+1816.12 s. An earlier full run was interrupted when the user expanded the UI
+scope; it is not counted as final validation.
+
+Staged audit: 12 intended files, about 2.4 MB total, no prohibited references,
+oversized artifacts or detected credential patterns. Correct Jai Kaushik
+GitHub noreply identity. Both report PDF hashes remain unchanged. Remote main
+and working branch were both at 572d3b6c before the normal fast-forward backup.
+No new SPICE/training run was launched. Temporary QA files remain ignored.

@@ -40,6 +40,10 @@ from nebula.common.types import (
 )
 from nebula.llm.spec_parse import SpecOutOfRange, parse_request
 from nebula.report.product_scope import implementation_scope
+from nebula.web.hardware_checkpoint import (
+    build_hardware_checkpoint,
+    hardware_artifact as checkpoint_artifact,
+)
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -360,6 +364,14 @@ class NebulaWebApp:
             self.design_dirs[shown["id"]] = self.demo_dir
         return shown
 
+    def hardware_checkpoint(self) -> dict:
+        """Return the latest pinned transistor hardware result for the UI."""
+        return build_hardware_checkpoint()
+
+    def hardware_artifact(self, name: str) -> Optional[Path]:
+        """Resolve one allow-listed artifact from the pinned hardware result."""
+        return checkpoint_artifact(name)
+
     def start_design(self, request_text: str, method: str = "rl-hybrid") -> Job:
         # Parse before enqueueing so a malformed request fails immediately and
         # never occupies the single simulator worker.
@@ -565,6 +577,20 @@ class _Handler(BaseHTTPRequestHandler):
                 return
             if path == "/api/demo":
                 self._json(self.app.demo())
+                return
+            if path == "/api/hardware":
+                self._json(self.app.hardware_checkpoint())
+                return
+            if path.startswith("/api/hardware/artifacts/"):
+                if len(path.split("/")) != 5:
+                    self._error(HTTPStatus.NOT_FOUND, "Hardware artifact not found.")
+                    return
+                name = path.rsplit("/", 1)[-1]
+                artifact = self.app.hardware_artifact(name)
+                if artifact is None:
+                    self._error(HTTPStatus.NOT_FOUND, "Hardware artifact not found.")
+                else:
+                    self._file(artifact)
                 return
             if path == "/api/designs":
                 self._json({"designs": self.app.design_list()})

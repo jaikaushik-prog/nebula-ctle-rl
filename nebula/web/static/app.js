@@ -2,6 +2,7 @@
 
 const state = {
   current: null,
+  hardware: null,
   designs: new Map(),
   selectedCondition: null,
   judgeMode: false,
@@ -78,9 +79,17 @@ function statusNode(status, label = null) {
 }
 
 function selectTab(name, updateHash = true) {
+  if (!["hardware", "results", "pvt", "compare", "channel", "evidence"].includes(name)) name = "hardware";
   $$(".tab").forEach((button) => button.classList.toggle("active", button.dataset.tab === name));
   $$(".view").forEach((view) => view.classList.toggle("active", view.dataset.view === name));
+  document.body.dataset.view = name;
+  $(".target-panel").hidden = name !== "results";
   if (name === "compare") renderCompare();
+  if (name === "hardware" && state.hardware) renderHardwareSidebar();
+  else if (state.current) {
+    renderOutcome(state.current);
+    renderRunTruth(state.current);
+  }
   if (updateHash) history.replaceState(null, "", `#${name}`);
 }
 
@@ -98,8 +107,8 @@ function renderDesign(design) {
     ? `${number(req.peaking_db, 2)} dB CTLE at ${number(req.f_peak_ghz, 3)} GHz`
     : "Generated CTLE design";
   $("#resultContext").textContent = design.cached
-    ? "Preverified judge artifact - loaded without rerunning SPICE"
-    : "Live generated artifact";
+    ? `Saved legacy explorer artifact / ${design.method === "rl-physical" ? "physical CTLE" : "RL adaptive bank"}`
+    : `Generated legacy explorer artifact / ${design.method === "rl-physical" ? "physical CTLE" : "RL adaptive bank"}`;
   const sourceBadge = $("#sourceBadge");
   sourceBadge.textContent = design.cached ? "Preverified" : "Live run";
   sourceBadge.classList.toggle("live", !design.cached);
@@ -123,6 +132,9 @@ function renderDesign(design) {
   renderPvt(design);
   renderEvidence(design);
   refreshComparePickers();
+  if ($('.tab[data-tab="hardware"]')?.classList.contains("active") && state.hardware) {
+    renderHardwareSidebar();
+  }
 }
 
 function renderSchematic(design) {
@@ -203,9 +215,304 @@ function renderHardware(hardware) {
   });
   target.append(list);
   const incomplete = hardware.incomplete_items || [];
-  $("#hardwareNote").textContent = incomplete.length
-    ? `${incomplete.length} implementation item${incomplete.length === 1 ? "" : "s"} remain. Open the hardware boundary below for details.`
-    : "All recorded hardware items are implemented.";
+  $("#hardwareNote").textContent = state.hardware?.status === "pass"
+    ? "Latest checkpoint: transistor DFE and configurable Rs/Cs pass 45/45 Link PVT points. The selected design's older boundary remains listed separately."
+    : incomplete.length
+      ? `${incomplete.length} implementation item${incomplete.length === 1 ? "" : "s"} remain. Open the hardware boundary below for details.`
+      : "All recorded hardware items are implemented.";
+}
+
+function hardwareStage(block, extraClass = "") {
+  const article = document.createElement("article");
+  article.className = `hardware-stage ${extraClass}`.trim();
+  const heading = document.createElement("div");
+  heading.className = "hardware-stage-heading";
+  const title = document.createElement("h4");
+  title.textContent = block.label;
+  const stateMark = document.createElement("span");
+  stateMark.textContent = block.status === "implemented" ? "Implemented" : "Unverified";
+  stateMark.className = block.status === "implemented" ? "implemented" : "unverified";
+  heading.append(title, stateMark);
+  const detail = document.createElement("p");
+  detail.textContent = block.detail;
+  article.append(heading, detail);
+  return article;
+}
+
+function hardwareLink() {
+  const link = document.createElement("span");
+  link.className = "hardware-chain-link";
+  link.setAttribute("aria-hidden", "true");
+  link.append(document.createElement("i"));
+  return link;
+}
+
+function renderHardwareTopology(blocks) {
+  const target = $("#hardwareTopology");
+  target.replaceChildren();
+  const byKey = new Map((blocks || []).map((block) => [block.key, block]));
+  const required = ["ctle", "rs", "cs", "summer", "memory", "dac"];
+  if (required.some((key) => !byKey.has(key))) {
+    throw new Error("The verified topology record is incomplete.");
+  }
+
+  const chain = document.createElement("div");
+  chain.className = "hardware-chain-main";
+  const ctle = hardwareStage(byKey.get("ctle"), "ctle-stage");
+  const controls = document.createElement("div");
+  controls.className = "control-primitives";
+  controls.append(hardwareStage(byKey.get("rs"), "primitive"));
+  controls.append(hardwareStage(byKey.get("cs"), "primitive"));
+  ctle.append(controls);
+  chain.append(
+    ctle,
+    hardwareLink(),
+    hardwareStage(byKey.get("summer")),
+    hardwareLink(),
+    hardwareStage(byKey.get("memory")),
+    hardwareLink(),
+    hardwareStage(byKey.get("dac")),
+  );
+
+  const feedback = document.createElement("div");
+  feedback.className = "hardware-feedback";
+  const trace = document.createElement("span");
+  trace.setAttribute("aria-hidden", "true");
+  const label = document.createElement("strong");
+  label.textContent = "Decided bit returns through the 1-tap current DAC to the CML summer";
+  feedback.append(trace, label);
+  target.append(chain, feedback);
+}
+
+function renderHardwareMetrics(checkpoint) {
+  const nominal = checkpoint.nominal || {};
+  const pvt = checkpoint.pvt || {};
+  const rows = [
+    ["Loaded response", `${number(nominal.boost_db?.min, 3)}-${number(nominal.boost_db?.max, 3)} dB at ${number((nominal.peak_frequency_hz?.min || 0) / 1e9, 4)}-${number((nominal.peak_frequency_hz?.max || 0) / 1e9, 4)} GHz`, "Nominal held-state AC"],
+    ["Input noise", `${number((nominal.input_noise_vrms?.max || 0) * 1e3, 4)} mV rms`, "Nominal held-clock model, 10 MHz-5 GHz"],
+    ["HD3", `${number(nominal.hd3_dbc?.min, 3)} to ${number(nominal.hd3_dbc?.max, 3)} dBc`, "Clocked, 100 MHz, 100 mV differential peak"],
+    ["Fresh decode", `${number(nominal.correct_bits, 0)}/${number(nominal.scored_bits, 0)} bits`, `${number(nominal.sampled_eye_height_v * 1e3, 1)} mV sampled eye`],
+    ["Link PVT", `${number(pvt.n_pass, 0)}/${number(pvt.n_points, 0)} pass`, `${number(pvt.minimum_eye_height_v * 1e3, 1)} mV minimum eye; ${number(pvt.minimum_width_above_100mv_ui, 3)} UI above 100 mV`],
+    ["VDD power", `${number(pvt.maximum_vdd_power_w * 1e3, 3)} mW maximum`, "CTLE + transistor DFE across Link PVT"],
+  ];
+  const target = $("#hardwareMetrics");
+  target.replaceChildren();
+  rows.forEach(([label, value, scope]) => {
+    const item = document.createElement("div");
+    const name = document.createElement("span");
+    name.textContent = label;
+    const measured = document.createElement("strong");
+    measured.textContent = value;
+    const note = document.createElement("small");
+    note.textContent = scope;
+    item.append(name, measured, note);
+    target.append(item);
+  });
+}
+
+function renderHardwareCorner(row) {
+  const target = $("#hardwareCornerDetail");
+  target.replaceChildren();
+  const heading = document.createElement("div");
+  const title = document.createElement("h4");
+  title.textContent = row.label;
+  heading.append(title, statusNode(row.status === "pass", "Pass"));
+  const values = [
+    ["Decoded", `${number(row.correct_bits, 0)}/${number(row.scored_bits, 0)} bits`],
+    ["Sampled eye", `${number(row.sampled_eye_height_v * 1e3, 3)} mV`],
+    ["Positive aperture", `${number(row.positive_width_ui, 3)} UI`],
+    ["Above 100 mV", `${number(row.width_above_100mv_ui, 3)} UI`],
+    ["VDD power", `${number(row.vdd_power_w * 1e3, 3)} mW`],
+    ["External clock", `${number(row.external_clock_positive_power_w * 1e3, 4)} mW`],
+  ];
+  const dl = document.createElement("dl");
+  values.forEach(([name, value]) => {
+    const wrap = document.createElement("div");
+    const dt = document.createElement("dt");
+    const dd = document.createElement("dd");
+    dt.textContent = name;
+    dd.textContent = value;
+    wrap.append(dt, dd);
+    dl.append(wrap);
+  });
+  const scope = document.createElement("p");
+  scope.textContent = "Finite noiseless 7.5 dB constructed-channel result; not a BER measurement.";
+  target.append(heading, dl, scope);
+  $$(".hardware-cell", $("#hardwarePvtGrid")).forEach((cell) => {
+    cell.classList.toggle("selected", cell.dataset.corner === row.corner);
+  });
+}
+
+function drawHardwarePvt(checkpoint) {
+  const pvt = checkpoint.pvt || {};
+  const target = $("#hardwarePvtGrid");
+  target.replaceChildren();
+  const corners = pvt.corners || [];
+  const processes = ["ss", "sf", "tt", "fs", "ff"];
+  const supplies = [0.95, 1.00, 1.05];
+  const temperatures = [0, 27, 125];
+  const rows = new Map(corners.map((row) => [
+    `${row.process}/${Number(row.vdd).toFixed(2)}/${row.temp_c}`,
+    row,
+  ]));
+  const blank = document.createElement("div");
+  blank.className = "hardware-pvt-head";
+  blank.textContent = "PVT";
+  target.append(blank);
+  supplies.forEach((vdd) => temperatures.forEach((temp) => {
+    const head = document.createElement("div");
+    head.className = "hardware-pvt-head";
+    const supply = document.createElement("strong");
+    supply.textContent = `${(1.8 * vdd).toFixed(2)} V`;
+    const temperature = document.createElement("span");
+    temperature.textContent = `${temp} C`;
+    head.append(supply, temperature);
+    target.append(head);
+  }));
+  processes.forEach((process) => {
+    const label = document.createElement("div");
+    label.className = "hardware-pvt-row";
+    label.textContent = process.toUpperCase();
+    target.append(label);
+    supplies.forEach((vdd) => temperatures.forEach((temp) => {
+      const row = rows.get(`${process}/${vdd.toFixed(2)}/${temp}`);
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = `hardware-cell ${row?.status || "missing"}`;
+      if (!row) {
+        button.disabled = true;
+        button.textContent = "Missing";
+      } else {
+        button.dataset.corner = row.corner;
+        button.setAttribute("aria-label", `${row.label}: pass, ${number(row.sampled_eye_height_v * 1e3, 1)} millivolt eye`);
+        const result = document.createElement("strong");
+        result.textContent = "PASS";
+        const eye = document.createElement("span");
+        eye.textContent = `${number(row.sampled_eye_height_v * 1e3, 0)} mV`;
+        button.append(result, eye);
+        button.addEventListener("click", () => renderHardwareCorner(row));
+      }
+      target.append(button);
+    }));
+  });
+  $("#hardwarePvtCount").textContent = `${number(pvt.n_pass, 0)} / ${number(pvt.n_points, 0)} PASS`;
+  if (corners.length) {
+    const worst = corners.reduce((left, right) => left.sampled_eye_height_v <= right.sampled_eye_height_v ? left : right);
+    renderHardwareCorner(worst);
+  }
+}
+
+function renderHardwareEvidence(checkpoint) {
+  const evidence = $("#hardwareEvidence");
+  evidence.replaceChildren();
+  (checkpoint.evidence || []).forEach((item) => {
+    const link = document.createElement("a");
+    link.href = item.url;
+    link.target = "_blank";
+    link.rel = "noopener";
+    const label = document.createElement("strong");
+    label.textContent = item.label;
+    const detail = document.createElement("span");
+    detail.textContent = item.key;
+    link.append(label, detail);
+    evidence.append(link);
+  });
+
+  const boundary = $("#hardwareBoundary");
+  boundary.replaceChildren();
+  (checkpoint.boundaries || []).forEach((item) => {
+    const row = document.createElement("div");
+    const label = document.createElement("strong");
+    label.textContent = item.label;
+    const detail = document.createElement("p");
+    detail.textContent = item.detail;
+    row.append(label, detail);
+    boundary.append(row);
+  });
+}
+
+function renderHardwareCheckpoint(checkpoint) {
+  state.hardware = checkpoint;
+  $("#hardwareLoadError").hidden = true;
+  $("#hardwareContent").hidden = false;
+  const badge = $("#hardwareStatusBadge");
+  badge.textContent = checkpoint.status_label || "Verified checkpoint";
+  badge.className = `source-badge ${checkpoint.status === "pass" ? "pass" : ""}`;
+  $("#hardwareCalloutStatus").textContent = checkpoint.status === "pass"
+    ? checkpoint.status_label
+    : "Evidence unavailable";
+  const controls = checkpoint.controls || {};
+  $("#hardwareControlR").textContent = `${number(controls.r_fraction, 3)} VDD / ${number(controls.r_control_v_nominal, 3)} V nominal`;
+  $("#hardwareControlC").textContent = `${number(controls.c_fraction, 3)} VDD / ${number(controls.c_control_v_nominal, 3)} V nominal`;
+  $("#hardwareControlNote").textContent = controls.corner_retuning
+    ? "Corner-specific controls were used."
+    : "The same external control fractions, DFE code and clock phase are retained across all 45 Link PVT points.";
+  renderHardwareTopology(checkpoint.topology);
+  renderHardwareMetrics(checkpoint);
+  drawHardwarePvt(checkpoint);
+  renderHardwareEvidence(checkpoint);
+  for (const [imageId, linkId, key] of [
+    ["hardwareEye", "openHardwareEye", "nominal-eye"],
+    ["hardwareSchematic", "openHardwareSchematic", "hardware-schematic"],
+  ]) {
+    const visual = checkpoint.evidence.find((item) => item.key === key);
+    if (!visual) throw new Error("The hardware visual evidence is missing.");
+    document.getElementById(imageId).src = visual.url;
+    document.getElementById(linkId).href = visual.url;
+  }
+  $("#hardwareNote").textContent = "Latest checkpoint: transistor DFE and configurable Rs/Cs pass 45/45 Link PVT points. Open Hardware proof for the exact scope.";
+  if ($('.tab[data-tab="hardware"]')?.classList.contains("active")) {
+    renderHardwareSidebar();
+  }
+}
+
+function renderHardwareFailure(message) {
+  state.hardware = null;
+  $("#hardwareContent").hidden = true;
+  const error = $("#hardwareLoadError");
+  error.textContent = `Hardware evidence could not be validated: ${message}`;
+  error.hidden = false;
+  $("#hardwareStatusBadge").textContent = "Unavailable";
+  $("#hardwareStatusBadge").className = "source-badge";
+  $("#hardwareCalloutStatus").textContent = "Evidence unavailable";
+  $("#hardwareNote").textContent = "The latest hardware evidence could not be validated.";
+}
+
+function renderHardwareSidebar() {
+  const checkpoint = state.hardware;
+  if (!checkpoint) return;
+  const pvt = checkpoint.pvt || {};
+  const card = $("#outcomeCard");
+  card.className = `outcome-card ${checkpoint.status}`;
+  $("#outcomeIcon").textContent = checkpoint.status === "pass" ? "OK" : "!";
+  $("#outcomeText").textContent = checkpoint.status === "pass" ? "HARDWARE PASS" : "HARDWARE UNAVAILABLE";
+  $("#outcomeDetail").textContent = `${number(pvt.n_pass, 0)} of ${number(pvt.n_points, 0)} fixed-control Link PVT points pass; analog PVT not verified`;
+  $("#failureBox").hidden = true;
+  $("#coverageBar").style.width = pvt.all_pass ? "100%" : "0%";
+  $("#coverageText").textContent = `${number(pvt.n_pass, 0)}/${number(pvt.n_points, 0)} Link PVT points pass on one 7.5 dB constructed channel without corner retuning.`;
+  const provenance = checkpoint.provenance || {};
+  const controls = checkpoint.controls || {};
+  const values = [
+    ["Source", `Pinned Entries ${provenance.nominal_entry} + ${provenance.pvt_entry}`],
+    ["Method", "Transistor CTLE + DFE"],
+    ["PDK", provenance.pdk || "Not recorded"],
+    ["Simulator", provenance.simulator || "Not recorded"],
+    ["Controls", `${number(controls.r_fraction, 3)} / ${number(controls.c_fraction, 3)} VDD`],
+    ["Channel", `${number(pvt.channel_loss_db, 1)} dB constructed`],
+    ["Conditions", number(pvt.n_points, 0)],
+  ];
+  const dl = $("#runTruth");
+  dl.replaceChildren();
+  values.forEach(([term, value]) => {
+    const row = document.createElement("div");
+    const dt = document.createElement("dt");
+    const dd = document.createElement("dd");
+    dt.textContent = term;
+    dd.textContent = String(value);
+    row.append(dt, dd);
+    dl.append(row);
+  });
+  $("#hardwareNote").textContent = "Physical Rs/Cs controls, CML summer, master/slave decision memory and 1-tap feedback DAC are present in the pinned SKY130 netlist.";
 }
 
 function renderOutcome(design) {
@@ -484,8 +791,8 @@ async function generate() {
 function updateModeSummary() {
   const physical = $("#designMode").value === "rl-physical";
   $("#modeSummary").textContent = physical
-    ? "One fixed circuit is remeasured across 45 PVT points and seven channel losses."
-    : "The frozen RL policy proposes adaptive settings; the simulator-backed shield checks every condition.";
+    ? "The live physical export is the legacy fixed Rs/Cs path. Open Receiver for the calibrated transistor DFE and configurable controls."
+    : "Legacy adaptive bank: the frozen RL policy proposes settings and a deterministic shield checks each condition. DFE scoring is behavioral.";
 }
 
 function showProgress(job) {
@@ -499,7 +806,7 @@ async function pollJob(id, onUpdate) {
   for (;;) {
     const job = await api(`/api/jobs/${encodeURIComponent(id)}`);
     onUpdate(job);
-    if (job.status === "complete") { renderDesign(job.result); showMessage("Circuit generated and evidence recorded.", "info"); return job.result; }
+    if (job.status === "complete") { renderDesign(job.result); selectTab("results"); showMessage("Circuit generated and evidence recorded.", "info"); return job.result; }
     if (job.status === "failed") throw new Error(job.error || "The pipeline stopped without a result.");
     await new Promise((resolve) => setTimeout(resolve, 700));
   }
@@ -559,9 +866,10 @@ function renderChannel(profile) {
 
 async function enterJudgeMode() {
   try {
+    if (!state.hardware) renderHardwareCheckpoint(await api("/api/hardware"));
     const design = await api("/api/demo");
     state.judgeMode = true; $("#judgeStrip").hidden = false; $("#judgeButton").textContent = "Judge mode active";
-    renderDesign(design); selectTab("results");
+    renderDesign(design); selectTab("hardware");
   } catch (error) { showMessage(error.message, "error"); }
 }
 
@@ -589,9 +897,28 @@ function bindEvents() {
 
 async function init() {
   bindEvents();
+  const targetPanel = $(".target-panel");
+  const compactLayout = matchMedia("(max-width: 850px)");
+  const positionControls = () => {
+    if (compactLayout.matches) $(".explorer-scope").after(targetPanel);
+    else $("#workspace").prepend(targetPanel);
+  };
+  compactLayout.addEventListener("change", positionControls);
+  positionControls();
+  const runDetails = document.createElement("details");
+  runDetails.className = "details-card run-details";
+  const runSummary = document.createElement("summary");
+  runSummary.textContent = "Run verification and provenance";
+  runDetails.append(runSummary, $(".verification-panel"));
+  $("#resultsView").append(runDetails);
+  selectTab(location.hash.slice(1) || "hardware", false);
   updateModeSummary();
+  const hardwareRequest = api("/api/hardware")
+    .then(renderHardwareCheckpoint)
+    .catch((error) => renderHardwareFailure(error.message));
   try {
     renderDesign(await api("/api/demo"));
+    await hardwareRequest;
     const catalogue = await api("/api/designs");
     for (const item of catalogue.designs || []) {
       if (!state.designs.has(item.id)) {
@@ -606,7 +933,7 @@ async function init() {
     }
     refreshComparePickers();
     const requestedView = location.hash.slice(1);
-    if (["results", "pvt", "compare", "channel", "evidence"].includes(requestedView)) {
+    if (["results", "hardware", "pvt", "compare", "channel", "evidence"].includes(requestedView)) {
       selectTab(requestedView, false);
     }
   }

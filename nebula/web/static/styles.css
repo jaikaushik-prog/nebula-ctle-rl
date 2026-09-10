@@ -23,6 +23,56 @@
   font-synthesis: none;
 }
 
+/* A focused receiver workspace; exploration controls appear only when needed. */
+body[data-view] .workspace { display: grid; grid-template-columns: minmax(0, 1fr); max-width: 1340px; padding: 0 32px; }
+body[data-view] .main-panel { padding: 0 0 48px; }
+body[data-view] { background: #fff; }
+body[data-view] .target-panel { display: none; }
+body[data-view="results"] .workspace { grid-template-columns: 260px minmax(0,1fr); gap: 28px; }
+body[data-view="results"] .target-panel { display: block; border: 0; padding: 30px 18px; margin-top: 62px; border-radius: 8px; align-self: start; }
+body[data-view="hardware"] .explorer-tab { display: none; }
+body[data-view] .run-details .verification-panel { display: block; border: 0; background: #fff; padding: 20px; }
+body[data-view] .run-details .side-button, body[data-view] .run-details .hardware-side { display: none; }
+body[data-view] .signal-path, body[data-view] .hardware-callout, body[data-view] .metric-rail { display: none; }
+body[data-view] .topbar { height: 68px; padding: 0 32px; background: #fff; backdrop-filter: none; }
+body[data-view] .brand { font-size: 19px; }
+body[data-view] .truth-badge { display: none; }
+body[data-view] .section-intro { margin: 12px 0 28px; }
+body[data-view] .section-intro h2 { font-size: 30px; letter-spacing: -.035em; margin-bottom: 9px; }
+body[data-view] .hardware-blueprint { border: 0; border-radius: 0; }
+body[data-view] .hardware-blueprint-heading { padding: 0 0 14px; border: 0; }
+body[data-view] .hardware-signal-chain { border: 1px solid var(--rule-soft); border-radius: 8px; }
+body[data-view] .hardware-control-strip { border: 0; margin: 16px 0 30px; }
+body[data-view] .hardware-control-strip > p { background: #f6f9fa; color: var(--muted); }
+.hardware-visual-grid { display: grid; grid-template-columns: 1.45fr 1fr; gap: 30px; align-items: start; margin: 0 0 24px; }
+.hardware-eye-panel { margin: 0; min-width: 0; }
+.hardware-eye-panel img { width: 100%; display: block; }
+body[data-view] .hardware-visual-grid .hardware-proof { border: 0; margin: 0; }
+body[data-view] .hardware-visual-grid .hardware-proof-heading { padding: 14px 0; }
+body[data-view] .hardware-metric-tape { display: block; }
+body[data-view] .hardware-metric-tape > div { border: 0; border-bottom: 1px solid var(--rule-soft); padding: 10px 0; }
+body[data-view] .hardware-metric-tape strong { font-size: 12px; margin: 4px 0; }
+.hardware-drawing { margin: 24px 0; }
+.hardware-drawing summary span { float: right; font-size: 11px; color: var(--muted); font-weight: 400; }
+.hardware-drawing > p, .hardware-drawing > a { margin: 16px; font-size: 12px; color: var(--muted); }
+.hardware-drawing-scroll { overflow: auto; max-height: 650px; margin-top: 12px; }
+.hardware-drawing-scroll img { display: block; width: 1800px; max-width: none; }
+.explorer-scope { color: var(--muted); font-size: 12px; line-height: 1.6; padding: 12px 0; border-bottom: 1px solid var(--rule-soft); }
+body[data-view] .hardware-lower-grid { margin-top: 28px; align-items: start; }
+body[data-view] .hardware-review-panel { border: 0; padding: 0; }
+.hardware-review-panel summary { cursor: pointer; font-weight: 700; font-size: 14px; margin-bottom: 12px; }
+@media (max-width: 850px) {
+  body[data-view] .workspace { padding: 0 18px; }
+  body[data-view="results"] .workspace { grid-template-columns: minmax(0,1fr); gap: 0; }
+  body[data-view="results"] .target-panel { margin-top: 18px; order: 1; }
+  body[data-view="results"] .main-panel { order: 0; }
+  .hardware-visual-grid { grid-template-columns: 1fr; gap: 8px; }
+  body[data-view] .topbar { padding: 0 18px; }
+  body[data-view] .brand { font-size: 15px; }
+  body[data-view] .section-intro h2 { font-size: 25px; }
+  .hardware-drawing summary span { display: block; float: none; margin-top: 4px; }
+}
+
 * { box-sizing: border-box; }
 html { min-width: 320px; scroll-behavior: smooth; }
 body { margin: 0; min-height: 100vh; background: var(--canvas); }
@@ -139,6 +189,127 @@ textarea:hover, input:hover, select:hover { border-color: #9ab1c5; }
 .path-block svg .faint { stroke: #9eb1c2; }
 .path-arrow { font-size: 21px; color: #71869a; }
 
+.source-badge.pass { color: var(--pass); border-color: #8fc5a6; background: var(--pass-pale); }
+.hardware-callout {
+  width: 100%; margin: 0 0 18px; padding: 15px 17px; border: 1px solid #244b70;
+  border-radius: var(--radius); background: #102e4e; color: #fff; text-align: left;
+  display: flex; align-items: center; justify-content: space-between; gap: 20px;
+}
+.hardware-callout:hover { background: #153a60; }
+.hardware-callout-copy { display: block; }
+.hardware-callout-copy small, .hardware-callout-copy strong, .hardware-callout-copy span { display: block; }
+.hardware-callout-copy small { color: #8ed5e6; font-size: 10px; margin-bottom: 3px; }
+.hardware-callout-copy strong { font-size: 16px; letter-spacing: -0.015em; }
+.hardware-callout-copy span { color: #c7d9e8; font-size: 11px; margin-top: 4px; }
+.hardware-callout-status {
+  flex: 0 0 auto; border: 1px solid #5d8bad; border-radius: 999px;
+  padding: 7px 10px; color: #dff7ed; font-size: 10px; font-weight: 760;
+}
+
+.hardware-blueprint, .hardware-proof, .hardware-pvt-card, .hardware-review-panel {
+  border: 1px solid var(--rule); border-radius: var(--radius); background: #fff;
+}
+.hardware-blueprint { overflow: hidden; }
+.hardware-blueprint-heading, .hardware-proof-heading, .hardware-pvt-heading {
+  display: flex; align-items: start; justify-content: space-between; gap: 20px;
+  padding: 15px 17px; border-bottom: 1px solid var(--rule-soft);
+}
+.hardware-blueprint-heading h3, .hardware-blueprint-heading p,
+.hardware-proof-heading h3, .hardware-proof-heading p,
+.hardware-pvt-heading h3, .hardware-pvt-heading p { margin-bottom: 0; }
+.hardware-blueprint-heading p, .hardware-proof-heading p, .hardware-pvt-heading p {
+  color: var(--muted); font-size: 11px; line-height: 1.45;
+}
+.hardware-blueprint-heading > span {
+  color: var(--cyan-deep); font: 700 11px "Cascadia Mono", Consolas, monospace;
+  white-space: nowrap;
+}
+.hardware-signal-chain { padding: 21px; background: #f8fbfd; overflow-x: auto; }
+.hardware-chain-main {
+  display: grid; grid-template-columns: minmax(220px, 1.45fr) 34px minmax(135px, .8fr) 34px minmax(150px, .9fr) 34px minmax(145px, .85fr);
+  align-items: stretch; min-width: 840px;
+}
+.hardware-stage {
+  min-width: 0; padding: 13px; border: 1px solid #b8cad9; border-radius: 6px;
+  background: #fff; position: relative;
+}
+.hardware-stage h4 { margin: 0; font-size: 12px; }
+.hardware-stage p { margin: 7px 0 0; color: var(--muted); font-size: 10px; line-height: 1.4; }
+.hardware-stage-heading { display: flex; align-items: start; justify-content: space-between; gap: 9px; }
+.hardware-stage-heading span { font-size: 8px; font-weight: 760; white-space: nowrap; }
+.hardware-stage-heading .implemented { color: var(--pass); }
+.hardware-stage-heading .unverified { color: var(--warn); }
+.ctle-stage { border-color: var(--cyan); box-shadow: inset 0 3px 0 var(--cyan); }
+.control-primitives { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; margin-top: 12px; }
+.hardware-stage.primitive { padding: 9px; border-color: #a9cfda; background: var(--cyan-pale); }
+.hardware-stage.primitive .hardware-stage-heading { display: block; }
+.hardware-stage.primitive .hardware-stage-heading span { display: block; margin-top: 3px; }
+.hardware-chain-link { display: grid; place-items: center; }
+.hardware-chain-link i { width: 100%; height: 1px; background: #7890a5; position: relative; }
+.hardware-chain-link i::after {
+  content: ""; position: absolute; right: -1px; top: -4px; width: 7px; height: 7px;
+  border-right: 1px solid #7890a5; border-top: 1px solid #7890a5; transform: rotate(45deg);
+}
+.hardware-feedback {
+  display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 12px;
+  margin: 15px 2px 0 31%; color: var(--cyan-deep);
+}
+.hardware-feedback > span { height: 14px; border-left: 1px solid var(--cyan); border-bottom: 1px solid var(--cyan); }
+.hardware-feedback strong { font-size: 9px; font-weight: 700; }
+
+.hardware-control-strip {
+  display: grid; grid-template-columns: 1fr 1fr minmax(240px, 1.35fr); gap: 1px;
+  margin: 12px 0; border: 1px solid var(--rule); border-radius: var(--radius);
+  overflow: hidden; background: var(--rule-soft);
+}
+.hardware-control-strip > div, .hardware-control-strip > p { margin: 0; padding: 13px 15px; background: #fff; }
+.hardware-control-strip span, .hardware-control-strip small { display: block; color: var(--muted); font-size: 10px; }
+.hardware-control-strip strong { display: block; margin: 5px 0 3px; font: 700 13px "Cascadia Mono", Consolas, monospace; }
+.hardware-control-strip p { display: grid; align-items: center; color: #285d3c; background: var(--pass-pale); font-size: 11px; line-height: 1.45; }
+
+.hardware-proof { overflow: hidden; margin-bottom: 12px; }
+.hardware-metric-tape { display: grid; grid-template-columns: repeat(3, 1fr); }
+.hardware-metric-tape > div { min-width: 0; padding: 14px 16px; border-right: 1px solid var(--rule-soft); border-bottom: 1px solid var(--rule-soft); }
+.hardware-metric-tape > div:nth-child(3n) { border-right: 0; }
+.hardware-metric-tape > div:nth-last-child(-n+3) { border-bottom: 0; }
+.hardware-metric-tape span, .hardware-metric-tape small { display: block; color: var(--muted); font-size: 9px; line-height: 1.35; }
+.hardware-metric-tape strong { display: block; margin: 6px 0 4px; font: 700 13px/1.35 "Cascadia Mono", Consolas, monospace; overflow-wrap: anywhere; }
+
+.hardware-pvt-card { overflow: hidden; }
+.hardware-pvt-heading > strong { color: var(--pass); font: 750 15px "Cascadia Mono", Consolas, monospace; white-space: nowrap; }
+.hardware-pvt-scroll { overflow-x: auto; padding: 16px 16px 10px; }
+.hardware-pvt-grid { min-width: 720px; display: grid; grid-template-columns: 55px repeat(9, minmax(58px, 1fr)); gap: 4px; }
+.hardware-pvt-head { display: grid; place-content: center; min-height: 32px; text-align: center; color: var(--muted); font-size: 8px; }
+.hardware-pvt-head strong, .hardware-pvt-head span { display: block; }
+.hardware-pvt-row { display: grid; place-items: center start; font-size: 11px; font-weight: 760; }
+.hardware-cell {
+  min-height: 46px; border: 1px solid transparent; border-radius: 4px; padding: 4px;
+  display: grid; place-content: center; gap: 2px; text-align: center;
+  font-family: "Cascadia Mono", Consolas, monospace;
+}
+.hardware-cell.pass { background: var(--pass-pale); color: var(--pass); border-color: #a7cfb7; }
+.hardware-cell.missing { background: #e8edf1; color: var(--muted); }
+.hardware-cell strong { font-size: 8px; }.hardware-cell span { font-size: 8px; }
+.hardware-cell:hover, .hardware-cell.selected { border-color: var(--ink); box-shadow: 0 0 0 1px var(--ink); }
+.hardware-corner-detail { padding: 13px 16px 16px; border-top: 1px solid var(--rule-soft); background: #fbfdff; }
+.hardware-corner-detail > div { display: flex; align-items: center; justify-content: space-between; gap: 15px; }
+.hardware-corner-detail h4 { margin: 0; font-size: 12px; }
+.hardware-corner-detail dl { display: grid; grid-template-columns: repeat(6, 1fr); gap: 12px; margin: 12px 0; }
+.hardware-corner-detail dt { color: var(--muted); font-size: 9px; }
+.hardware-corner-detail dd { margin: 3px 0 0; font: 700 11px "Cascadia Mono", Consolas, monospace; }
+.hardware-corner-detail p { margin: 0; color: var(--muted); font-size: 10px; }
+
+.hardware-lower-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px; }
+.hardware-review-panel { padding: 17px; }
+.hardware-review-panel > p { color: var(--muted); font-size: 11px; line-height: 1.45; }
+.hardware-review-panel.caution { border-left: 3px solid var(--warn); }
+.hardware-evidence a { display: flex; justify-content: space-between; gap: 15px; padding: 9px 0; border-top: 1px solid var(--rule-soft); color: var(--cyan-deep); text-decoration: none; }
+.hardware-evidence a:hover strong { text-decoration: underline; }
+.hardware-evidence strong { font-size: 11px; }.hardware-evidence span { color: var(--muted); font: 9px "Cascadia Mono", Consolas, monospace; }
+.hardware-boundary > div { border-top: 1px solid var(--rule-soft); padding: 9px 0; }
+.hardware-boundary strong { font-size: 10px; }
+.hardware-boundary p { margin: 3px 0 0; color: var(--muted); font-size: 10px; line-height: 1.45; }
+
 .result-grid { display: flex; flex-direction: column; gap: 12px; }
 .schematic-card, .table-card, .pvt-card, .upload-card, .details-card, .download-panel { border: 1px solid var(--rule); border-radius: var(--radius); background: #fff; }
 .schematic-card { min-width: 0; overflow: hidden; }
@@ -253,18 +424,40 @@ td.numeric { font-family: "Cascadia Mono", Consolas, monospace; }
 @media (max-width: 820px) {
   .topbar { padding: 0 15px; }.brand { font-size: 17px; }.brand-mark { width: 34px; }.truth-badge { display: none; }
   .workspace { display: block; }.target-panel, .verification-panel { border: 0; }.main-panel { padding: 0 15px 32px; }
+  body[data-view="hardware"] .target-panel { display: none; }
   .target-panel { border-bottom: 1px solid var(--rule); }.verification-panel { display: block; border-top: 1px solid var(--rule); }
   .tabs { align-items: center; }.tab { padding: 0 10px; }
   .result-grid, .evidence-layout { grid-template-columns: 1fr; }.metric-rail { grid-template-columns: repeat(3, 1fr); }
   .signal-path { grid-template-columns: 1fr; }.path-arrow { transform: rotate(90deg); justify-self: center; }.path-block { max-width: 100%; }.path-block.compact { width: 100%; }
+  .hardware-callout { align-items: start; }.hardware-callout-status { margin-top: 2px; }
+  .hardware-chain-main { grid-template-columns: 1fr; min-width: 0; }
+  .hardware-chain-link { height: 28px; }.hardware-chain-link i { width: 1px; height: 100%; }
+  .hardware-chain-link i::after { right: -3px; top: auto; bottom: 0; transform: rotate(135deg); }
+  .hardware-feedback { margin-left: 0; }
+  .hardware-control-strip { grid-template-columns: 1fr 1fr; }.hardware-control-strip > p { grid-column: 1 / -1; }
+  .hardware-metric-tape { grid-template-columns: repeat(2, 1fr); }
+  .hardware-metric-tape > div:nth-child(3n) { border-right: 1px solid var(--rule-soft); }
+  .hardware-metric-tape > div:nth-child(2n) { border-right: 0; }
+  .hardware-metric-tape > div:nth-last-child(-n+3) { border-bottom: 1px solid var(--rule-soft); }
+  .hardware-metric-tape > div:nth-last-child(-n+2) { border-bottom: 0; }
+  .hardware-corner-detail dl { grid-template-columns: repeat(3, 1fr); }
+  .hardware-lower-grid { grid-template-columns: 1fr; }
   .judge-strip { grid-template-columns: 1fr auto; }.judge-strip ol { grid-column: 1 / -1; overflow-x: auto; }.judge-strip > div { display: block; }.judge-strip span { display: block; margin-top: 2px; }
 }
 
 @media (max-width: 560px) {
+  .topbar { gap: 8px; }.brand { min-width: 0; gap: 8px; font-size: 14px; }.brand-mark { flex: 0 0 30px; width: 30px; }
+  .top-actions { flex: 0 0 auto; }.top-actions .button { min-height: 36px; padding: 7px 9px; font-size: 11px; }
   .field-row, .metric-rail, .pvt-summary, .data-grid, .condition-detail dl, .channel-result dl { grid-template-columns: 1fr; }
   .compare-pickers { grid-template-columns: 1fr; }.swap-button { justify-self: center; transform: rotate(90deg); }
   .port-fields { grid-template-columns: 1fr 1fr; }.port-fields button { grid-column: 1 / -1; width: 100%; margin: 0; }
   .section-intro { display: block; }.select-label { width: 100%; margin-top: 14px; }
+  .hardware-callout { display: block; }.hardware-callout-status { display: inline-block; margin-top: 12px; }
+  .hardware-control-strip, .control-primitives, .hardware-metric-tape { grid-template-columns: 1fr; }
+  .hardware-control-strip > p { grid-column: auto; }
+  .hardware-metric-tape > div, .hardware-metric-tape > div:nth-child(2n), .hardware-metric-tape > div:nth-child(3n), .hardware-metric-tape > div:nth-last-child(-n+2), .hardware-metric-tape > div:nth-last-child(-n+3) { border-right: 0; border-bottom: 1px solid var(--rule-soft); }
+  .hardware-metric-tape > div:last-child { border-bottom: 0; }
+  .hardware-corner-detail dl { grid-template-columns: repeat(2, 1fr); }
 }
 
 @media (prefers-reduced-motion: reduce) {
