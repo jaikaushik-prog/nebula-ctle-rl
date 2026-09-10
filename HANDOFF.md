@@ -17,7 +17,7 @@
 > decisions that are OPEN and human-only, and what to do next. It supersedes
 > `nebula/NEXT_STEPS.md`. This file remains the full state of record.
 
-Last updated: **2026-09-10**, Entry 133 passes 45/45 electrical PVT; Entry 134 runtime test registered, UNRUN.
+Last updated: **2026-09-10**, Entry 134 stops on G164 AC-grid failure; Entry 135 recovery registered, UNRUN.
 The organiser requires a transistor-level CTLE plus DFE and configurable
 Rs/Cs. The owner authorizes bounded agent-selected experiments for both;
 DFE is first. Entry 122 CML passes all three TT screens with valid terminal
@@ -50,8 +50,9 @@ at the primary TT point: 64/64 bits, 223.974919 mV eye, .690 UI width and
 9.263703 mW VDD power. Entry 133 now passes 45/45 fixed-setting electrical
 PVT points on the primary 7.5 dB channel: minimum eye 109.757616 mV,
 minimum positive width .630 UI, maximum VDD power 12.524099 mW. No retuning.
-Entry 134 registers a separate four-call standalone runtime-control test;
-it has not run and does not extend the connected DFE result yet.
+Entry 134's first static call stops on the documented G164 two-point AC
+quirk. Its DC/full-AC calibration agrees, but runtime is not measured.
+Entry 135 registers the known three-point correction with all gates unchanged.
 Existing reports and fixed-passive circuit evidence remain unchanged.
 
 Previous report snapshot, Entry 121: The unchanged 20-page
@@ -1099,6 +1100,12 @@ Entry 134 adds `CONFIGURABLE_RC_RUNTIME_PLAN.md`,
 `device/configurable_rc_runtime.py`, `experiments/exp_configurable_rc_runtime.py`
 and `tests/test_configurable_rc_runtime.py` for a bounded continuous-control
 demonstration, initially standalone rather than DFE-loaded.
+Its failure record is `CONFIGURABLE_RC_RUNTIME_RESULTS.md`, replayed by
+`tests/test_configurable_rc_runtime_evidence.py`. Entry 135 adds
+`CONFIGURABLE_RC_RUNTIME_RECOVERY_PLAN.md`,
+`device/configurable_rc_runtime_recovery.py`,
+`experiments/exp_configurable_rc_runtime_recovery.py` and
+`tests/test_configurable_rc_runtime_recovery.py` for the G164 AC-grid correction.
 
 Entry 121: NEXT_AGENT_PROMPT.md is the self-contained operational handoff
 for a new agent. It records reading order, verified product state, evidence
@@ -2086,7 +2093,9 @@ Entry 133 completes exactly 45 calls in 2065.701124 s, all accepted with
 64/64 scored bits each. Sources/PDK are unchanged; no retries or retuning.
 Entry 134 registers three static references and one uninterrupted standalone
 transient with external controls 9 -> 3 -> 6 -> 9 dB along the measured
-1.9 GHz line. All physical device geometry remains unchanged. It is UNRUN.
+1.9 GHz line. All physical device geometry remains unchanged. Its first
+call stops because `ac lin 2` emits one row (known G164); runtime is unrun.
+Entry 135 registers only the known three-point AC sampling correction.
 
 Entry 120 (2026-09-09): filled the three sparse academic front-matter pages using existing verified evidence. No technical result or claim changed. Rendered pages 4-22 are unchanged.
 
@@ -2355,8 +2364,9 @@ current and reversed controls. Entry 133 independently passes 45/45 new
 electrical PVT points on the primary channel. Minimum eye 109.757616 mV,
 positive width .630 UI, width above 100 mV .555 UI; maximum VDD power
 12.524099 mW. Old fixed-passive multi-channel proof does not transfer.
-Entry 134's four-call maximum runtime instrument is implemented with
-failure-first tests; full validation and local freeze precede simulation.
+Entry 134 completes one call in 27.867328 s and retains its incomplete
+exact-frequency AC data. DC/full-sweep calibration agrees; no runtime pass
+is inferred. Entry 135 recovery is implemented and awaits full validation/freeze.
 Entry 126: 95 calls, 1522.135503 s trial time; 45/45 at 3 dB and 45/45 at
 12 dB. Minimum sampled eyes 191.307321/133.817900 mV; finite positive-eye
 apertures 0.755/0.710 UI. Combined 135-PVT coverage includes the separately
@@ -3028,7 +3038,7 @@ this exact finding remains reported separately from the passing magnitude/
 body envelope. Strict new-DFE signed gates stay unchanged and pass all seven
 connected nominal calls and all 45 new PVT points. External clock/control/
 common-mode sources remain testbench devices.
-Entry 134 will test continuous standalone tuning with two small tones, not
+Entries 134/135 target continuous standalone tuning with two small tones, not
 uninterrupted DFE decoding, runtime PVT, HD3 or a new eye result. Its 500 ns
 settling bound is a preregistered demonstration criterion, not an organiser
 latency specification. Independent static OP solves do not prove runtime.
@@ -3260,9 +3270,10 @@ simulation. Preserve all prior successes/failures. Entry 133 raw archival,
 all-corner replay tests and full regression are complete. Its checkpoint
 0792dd5f950656f8a9a7c367c4e683e8a324ea0f is saved locally;
 resolve the pending public/private backup instruction conflict before upload.
-Entry 134 (`CONFIGURABLE_RC_RUNTIME_PLAN.md`) is now registered and UNRUN:
+Entry 134 remains failed on the known G164 missing endpoint. Entry 135
+(`CONFIGURABLE_RC_RUNTIME_RECOVERY_PLAN.md`) is registered and UNRUN:
 finish focused/full validation, freeze locally, then execute its four-call
-maximum once. No prior simulation needs repeating or retuning.
+maximum once. Never overwrite or retroactively repair a prior run.
 Runtime control changes, other loaded tuning identities/channels and loaded
 noise/HD3 need separate bounded registered checks; do not silently extend
 this one-channel gate. The new experimental DUT has physical configurable
@@ -6606,6 +6617,10 @@ special case, not a general `N-1` rule.
 **Rule:** use `ac lin 3 lo hi`, require low/mid/high exactly, and deliberately
 select the first and last rows when exactly the two endpoints are required.
 Never infer or generalise a simulator's emitted grid without inspecting it.
+Entry 134 unfortunately repeats this documented mistake in its new runtime
+instrument; the first call stops with only 100 MHz recorded. Entry 135 uses
+the existing three-row workaround, validates the 1 GHz midpoint as well as
+both endpoints, and keeps all old sources and the failed raw data unchanged.
 
 ### G165. A capacitor value can be correct while the capacitor bank is unusably lossy
 
@@ -18726,3 +18741,52 @@ files, 1,239,993 staged bytes, no detected credentials/prohibited material,
 correct identity, prior scientific sources and both PDFs unchanged.
 Freeze locally, then run the registered four-call experiment once.
 Public/private backup clarification remains pending; no upload is performed.
+
+### 2026-09-10 - Entry 134 retained instrument failure; Entry 135 G164 correction
+
+Entry 134 runs from local freeze 67dac07ad9311d322c804793ba9fe751f0ffca25.
+Pre-run validation: 158 focused and 3265 full tests, 13 deselected/two known
+warnings, 515.17 s. It stops after one call in 27.867328 s (2.365775 s prior
+verification): `ac lin 2 100meg 1.9g` emits only the 100 MHz row. The strict
+parser rejects the missing endpoint. This is the already documented G164
+footgun, mistakenly repeated by the new instrument, not a new finding.
+
+The saved OP/full-AC calibration independently agrees with Entry 131:
+maximum DC difference 8.8817842e-16 V, AC magnitude 1.1571930e-14 dB and
+phase 7.3762805e-16 rad. The 100 ns transient has 20,710 actual rows.
+These do not repair the missing frequency or establish runtime performance.
+Sources/PDK are unchanged; no retry or control-changing call ran.
+
+Evidence: entry134_configurable_rc_runtime_20260910, 80 manifest entries.
+Two gzip siblings preserve 18,659,710 raw bytes in 4,799,373 bytes, largest
+3,025,428 bytes; originals retained. Summary SHA-256
+041f2f243634859dc4e8aa1884a2bd3b519d194de0ad65214a2d0d22c526309d;
+manifest 9cb555a0264202056e2e63e904b77bea547d3fbb2c2fd649b07c5e0d767e7140.
+Result: CONFIGURABLE_RC_RUNTIME_RESULTS.md. Two new tests verify the complete
+archive, retained one-call stop, raw calibration and strict missing-endpoint
+failure. No fake endpoint is substituted from the full AC sweep.
+
+Entry 135 preregisters the G164 correction only: `ac lin 3`, exact finite
+100 MHz/1 GHz/1.9 GHz membership and all input primitives checked, then the
+measured endpoints enter the unchanged parser/analyzer. Static decks differ
+by this one line; the runtime deck is byte-identical. All old circuit,
+control, timing, solver, power/voltage/settling gates and four-call stopping
+rules remain unchanged. The prior call stays separately billed.
+Failure-first tests initially fail on the absent recovery module; initial
+17 related checks pass in 9.16 s, with two additional prerequisite/source
+tests added before freeze. Before-change full baseline: 3265 passed in
+515.17 s. Focused/full post-change validation is pending. Entry 135 is UNRUN.
+No upload or visibility change; public/private instruction clarification
+remains unanswered.
+
+Entry 135 focused validation passes: 165 tests in 135.33 s. The mandatory
+full suite is RUNNING without concurrent SPICE or archival. The failed
+Entry 134 remains immutable and the recovery has not run.
+
+Entry 135 pre-run full validation passes: 3272 passed, 13 deselected, two
+known warnings in 494.73 s. Focused validation: 165 passed in 135.33 s.
+No SPICE/archive job ran concurrently. Pre-final-log staged audit: 91 intended
+files, 82 exact evidence blobs, 6,865,695 bytes; correct identity, no detected
+credentials/prohibited files, prior sources and both PDFs unchanged.
+Freeze locally before the four-call recovery; no public upload is authorized
+until the instruction conflict is resolved.

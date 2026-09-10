@@ -1,0 +1,69 @@
+* Entry 134 continuous physical RC control, standalone CTLE
+.lib "C:/Users/DELL/sky130A/libs.tech/ngspice/sky130.lib.spice" tt
+.temp 27
+.options reltol=1e-9 vntol=1e-12 abstol=1e-15
+.param W=57.97671772296124 L=0.3911493163378813 NF=4
+.param RL=254.6329712064977 IT=0.001813449296655868 CL=3.262805963205924e-14
+.param VDD=1.8 VCM=1.5010229732197666
+Xatt_sp inx inp 0 sky130_fd_pr__res_high_po w=10 l=3.41
+Xatt_sn iny inn 0 sky130_fd_pr__res_high_po w=10 l=3.41
+Xatt_rp0 inp att_p0 0 sky130_fd_pr__res_high_po w=8 l=16.22
+Xatt_swp0 att_p0 0 cm vdd sky130_fd_pr__pfet_01v8 W=40 L=0.15 nf=1
+Xatt_rn0 inn att_n0 0 sky130_fd_pr__res_high_po w=8 l=16.22
+Xatt_swn0 att_n0 0 cm vdd sky130_fd_pr__pfet_01v8 W=40 L=0.15 nf=1
+Xatt_rp1 inp att_p1 0 sky130_fd_pr__res_high_po w=5.73 l=4.97
+Xatt_swp1 att_p1 0 cm vdd sky130_fd_pr__pfet_01v8 W=80 L=0.15 nf=2
+Xatt_rn1 inn att_n1 0 sky130_fd_pr__res_high_po w=5.73 l=4.97
+Xatt_swn1 att_n1 0 cm vdd sky130_fd_pr__pfet_01v8 W=80 L=0.15 nf=2
+Xatt_rp2 inp att_p2 0 sky130_fd_pr__res_high_po w=5.73 l=4.97 m=2
+Xatt_swp2 att_p2 0 cm vdd sky130_fd_pr__pfet_01v8 W=160 L=0.15 nf=4
+Xatt_rn2 inn att_n2 0 sky130_fd_pr__res_high_po w=5.73 l=4.97 m=2
+Xatt_swn2 att_n2 0 cm vdd sky130_fd_pr__pfet_01v8 W=160 L=0.15 nf=4
+XM1   outp inp s1 0 sky130_fd_pr__nfet_01v8 W={W} L={L} nf={NF}
+XM2   outn inn s2 0 sky130_fd_pr__nfet_01v8 W={W} L={L} nf={NF}
+Xrlp  vdd outp 0 sky130_fd_pr__res_high_po w=10 l=14.745 m=2
+Xrln  vdd outn 0 sky130_fd_pr__res_high_po w=10 l=14.745 m=2
+.param WT=201.656 LT=0.5 NFT=8
+.param WREF=25.2069 NFREF=1 IREF=0.000226681162 CBYP=1e-11
+Xbpref p_bias p_bias vdd vdd sky130_fd_pr__pfet_01v8 W=25.2069 L=0.5 nf=1
+Xbpfeed nbias p_bias vdd vdd sky130_fd_pr__pfet_01v8 W=25.2069 L=0.5 nf=1
+Xrbias p_bias 0 0 sky130_fd_pr__res_high_po w=1 l=5.34 m=1
+XMR   nbias nbias 0 0 sky130_fd_pr__nfet_01v8 W={WREF} L={LT} nf={NFREF}
+XMT1  s1    nbias 0 0 sky130_fd_pr__nfet_01v8 W={WT} L={LT} nf={NFT}
+XMT2  s2    nbias 0 0 sky130_fd_pr__nfet_01v8 W={WT} L={LT} nf={NFT}
+Xcbyp nbias 0 sky130_fd_pr__cap_mim_m3_1 w=70.545 l=70.545 m=1
+CLp   outp 0 {CL}
+CLn   outn 0 {CL}
+Xrc_rmax s1 s2 0 sky130_fd_pr__res_high_po w=2.85 l=4.865
+Xrc_branch s1 rc_mid 0 sky130_fd_pr__res_high_po w=10 l=2.645 m=2
+Xrc_switch rc_mid rc_gate s2 0 sky130_fd_pr__nfet_01v8 W=80 L=0.15 nf=2
+Xrc_rfeed rctrl rc_gate 0 sky130_fd_pr__res_high_po w=1.41 l=43.23
+Xrc_cfeed cctrl rc_ct 0 sky130_fd_pr__res_high_po w=1.41 l=43.23
+Xrc_rbypass rc_gate 0 sky130_fd_pr__cap_mim_m3_1 w=22.195 l=22.195
+Xrc_cbypass rc_ct 0 sky130_fd_pr__cap_mim_m3_1 w=70.545 l=70.545
+Xrc_var_s1 s1 rc_ct 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xrc_var_s2 s2 rc_ct 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Vdd vdd 0 1.8
+Vcm cm 0 1.501022973219767
+Vlo mid 0 dc 0 ac 1 SIN(0 0.001 100meg)
+Vhi vid mid dc 0 ac 0 SIN(0 0.001 1.9g)
+Einp inx cm vid 0 0.5
+Einn iny cm vid 0 -0.5
+Vr rctrl 0 1.26
+Vc cctrl 0 0.297
+.control
+set noaskquit
+set numdgt=15
+set wr_singlescale
+op
+wrdata op.txt i(vdd) v(att_n0) v(att_n1) v(att_n2) v(att_p0) v(att_p1) v(att_p2) v(cctrl) v(cm) v(inn) v(inp) v(inx) v(iny) v(nbias) v(outn) v(outp) v(p_bias) v(rc_ct) v(rc_gate) v(rc_mid) v(rctrl) v(s1) v(s2) v(vdd)
+ac dec 50 1meg 100g
+wrdata ac.txt v(outp) v(outn) v(vid)
+ac lin 2 100meg 1.9g
+wrdata tones.txt v(outp) v(outn) v(vid)
+tran 5p 1e-07 0 5p
+wrdata trace.txt v(vid) v(outp) v(outn) v(vdd) i(vdd) v(rctrl) v(cctrl) v(rc_gate) v(rc_ct) i(vr) i(vc) i(vcm) i(vlo) i(vhi)
+wrdata terminals.txt v(att_n0) v(att_n1) v(att_n2) v(att_p0) v(att_p1) v(att_p2) v(cctrl) v(cm) v(inn) v(inp) v(inx) v(iny) v(nbias) v(outn) v(outp) v(p_bias) v(rc_ct) v(rc_gate) v(rc_mid) v(rctrl) v(s1) v(s2) v(vdd)
+quit
+.endc
+.end
