@@ -17,7 +17,7 @@
 > decisions that are OPEN and human-only, and what to do next. It supersedes
 > `nebula/NEXT_STEPS.md`. This file remains the full state of record.
 
-Last updated: **2026-09-10**, Entry 133 configurable CTLE + transistor DFE passes 45/45 electrical PVT.
+Last updated: **2026-09-10**, Entry 133 passes 45/45 electrical PVT; Entry 134 runtime test registered, UNRUN.
 The organiser requires a transistor-level CTLE plus DFE and configurable
 Rs/Cs. The owner authorizes bounded agent-selected experiments for both;
 DFE is first. Entry 122 CML passes all three TT screens with valid terminal
@@ -50,6 +50,8 @@ at the primary TT point: 64/64 bits, 223.974919 mV eye, .690 UI width and
 9.263703 mW VDD power. Entry 133 now passes 45/45 fixed-setting electrical
 PVT points on the primary 7.5 dB channel: minimum eye 109.757616 mV,
 minimum positive width .630 UI, maximum VDD power 12.524099 mW. No retuning.
+Entry 134 registers a separate four-call standalone runtime-control test;
+it has not run and does not extend the connected DFE result yet.
 Existing reports and fixed-passive circuit evidence remain unchanged.
 
 Previous report snapshot, Entry 121: The unchanged 20-page
@@ -1093,6 +1095,10 @@ Its result is `DFE_CONFIGURABLE_RESULTS.md`, with compressed raw replay in
 `experiments/exp_dfe_configurable_pvt.py` and `tests/test_dfe_configurable_pvt.py`.
 Its completed result is `DFE_CONFIGURABLE_PVT_RESULTS.md`; every raw corner
 is replayed by `tests/test_dfe_configurable_pvt_evidence.py`.
+Entry 134 adds `CONFIGURABLE_RC_RUNTIME_PLAN.md`,
+`device/configurable_rc_runtime.py`, `experiments/exp_configurable_rc_runtime.py`
+and `tests/test_configurable_rc_runtime.py` for a bounded continuous-control
+demonstration, initially standalone rather than DFE-loaded.
 
 Entry 121: NEXT_AGENT_PROMPT.md is the self-contained operational handoff
 for a new agent. It records reading order, verified product state, evidence
@@ -2078,6 +2084,9 @@ latest phase fails and remains retained. Entry 133 registers an early-gated
 45-point electrical PVT sweep with fixed hardware, controls, DAC and phase.
 Entry 133 completes exactly 45 calls in 2065.701124 s, all accepted with
 64/64 scored bits each. Sources/PDK are unchanged; no retries or retuning.
+Entry 134 registers three static references and one uninterrupted standalone
+transient with external controls 9 -> 3 -> 6 -> 9 dB along the measured
+1.9 GHz line. All physical device geometry remains unchanged. It is UNRUN.
 
 Entry 120 (2026-09-09): filled the three sparse academic front-matter pages using existing verified evidence. No technical result or claim changed. Rendered pages 4-22 are unchanged.
 
@@ -2346,6 +2355,8 @@ current and reversed controls. Entry 133 independently passes 45/45 new
 electrical PVT points on the primary channel. Minimum eye 109.757616 mV,
 positive width .630 UI, width above 100 mV .555 UI; maximum VDD power
 12.524099 mW. Old fixed-passive multi-channel proof does not transfer.
+Entry 134's four-call maximum runtime instrument is implemented with
+failure-first tests; full validation and local freeze precede simulation.
 Entry 126: 95 calls, 1522.135503 s trial time; 45/45 at 3 dB and 45/45 at
 12 dB. Minimum sampled eyes 191.307321/133.817900 mV; finite positive-eye
 apertures 0.755/0.710 UI. Combined 135-PVT coverage includes the separately
@@ -3017,6 +3028,10 @@ this exact finding remains reported separately from the passing magnitude/
 body envelope. Strict new-DFE signed gates stay unchanged and pass all seven
 connected nominal calls and all 45 new PVT points. External clock/control/
 common-mode sources remain testbench devices.
+Entry 134 will test continuous standalone tuning with two small tones, not
+uninterrupted DFE decoding, runtime PVT, HD3 or a new eye result. Its 500 ns
+settling bound is a preregistered demonstration criterion, not an organiser
+latency specification. Independent static OP solves do not prove runtime.
 
 Entry 116 (2026-09-08): the final competition report has a dedicated team/
 institution cover and a prioritized future-development page. The 20-page
@@ -3242,8 +3257,12 @@ completed trial: `nebula/DFE_CONFIGURABLE_PVT_PLAN.md` (Entry 133, 45 calls,
 45/45 primary-channel electrical PVT points pass without retuning).
 DFE backup was verified on both GitHub branches at fa5fbed before any Rs/Cs
 simulation. Preserve all prior successes/failures. Entry 133 raw archival,
-all-corner replay tests and full regression are complete; save its local
-checkpoint and resolve the pending public/private backup instruction conflict.
+all-corner replay tests and full regression are complete. Its checkpoint
+0792dd5f950656f8a9a7c367c4e683e8a324ea0f is saved locally;
+resolve the pending public/private backup instruction conflict before upload.
+Entry 134 (`CONFIGURABLE_RC_RUNTIME_PLAN.md`) is now registered and UNRUN:
+finish focused/full validation, freeze locally, then execute its four-call
+maximum once. No prior simulation needs repeating or retuning.
 Runtime control changes, other loaded tuning identities/channels and loaded
 noise/HD3 need separate bounded registered checks; do not silently extend
 this one-channel gate. The new experimental DUT has physical configurable
@@ -6811,6 +6830,17 @@ the gate. Static controls and finite noiseless bit/eye checks do not prove
 runtime settling, other tuning identities, PVT peak/frequency, loaded
 noise/HD3 or BER. Preserve the bilateral Rs switch's negative signed Vds
 separately from its passed magnitude/body envelope and the strict DFE audit.
+
+### G184. Static control characterization is not runtime reconfiguration
+
+An OP/AC sweep with changed external voltages can establish electrical
+tunability, but every OP solve resets the operating point. A runtime claim
+needs one continuous transient with physical control feed/bypass and no
+reset between settings. Entry 134 registers that separate instrument.
+Require a contiguous passing tail of response windows, not one lucky good
+window, and compare complex response to measured static references.
+Two small test tones do not establish HD3, NRZ eye or uninterrupted DFE
+decoding. Artificial analytic traces belong only in tests, never evidence.
 
 ## 10. Environment
 
@@ -18648,3 +18678,51 @@ credentials or prohibited material, both original PDF hashes unchanged.
 Save this verified checkpoint locally. No upload or visibility change is
 authorized until the conflicting new private-only instruction is resolved;
 the earlier DFE-before-Rs/Cs backup was already completed and verified.
+
+### 2026-09-10 - Entry 134 standalone physical runtime-control test registered
+
+User says continue. Entry 133 is committed locally as
+0792dd5f950656f8a9a7c367c4e683e8a324ea0f; working tree was clean. The newer
+private-only instruction still conflicts with the earlier public-repository
+push request, so uploads and visibility changes remain paused; ordinary
+authorized local implementation/verification continues.
+
+Entry 134 preregisters four calls maximum, 180 s each, no retries: three
+static OP/AC/two-tone references at the already measured .7/.165, .79/.135,
+.73/.15 VDD controls, then one 1900 ns continuous powered standalone CTLE
+transient stepping 9 -> 3 -> 6 -> 9 dB. Changes begin at 100/700/1300 ns
+with 10 ns ramps. Same N500/no-fixed-MIM devices, TT/1.8 V/27 C and original
+output load. The DFE is intentionally absent from this initial tuning-network
+instrument and no connected-runtime claim is made.
+
+The instrument validates all source/terminal primitives, 5 ps maximum time
+step, two 1 mV tones at 100 MHz/1.9 GHz, exact AC/DC reference agreement,
+complex response and power in 20 ns windows, and a contiguous settled tail
+within the registered 500 ns demonstration bound. Physical voltage envelopes
+are kept and bilateral signed findings remain separate. Geometry/PDK/scientific
+sources are pinned; the source closure includes the frozen DFE dependencies.
+Raw trace originals will be retained with lossless gzip siblings. No old
+scientific source, report, production export or frozen RL result is changed.
+
+Tests first fail because the new module is absent, then 12 pass in 8.24 s.
+They include all three saved AC/DC references, source closure/checkout rules,
+one/three/four-call stopping, exact control ramps, complex-phase extraction,
+malformed/missing/nonfinite/undersampled primitives, zero power, overvoltage,
+and an analytic full runtime fixture whose deliberately bad final plateau
+fails. Artificial traces are not written to any evidence directory.
+Before-change full baseline: 3253 passed, 13 deselected/two known warnings in
+739.41 s at the immediately preceding verified checkpoint. Focused/full
+post-change regression is pending. No Entry 134 SPICE call has run.
+
+Entry 134 focused regression passes: 158 tests in 141.63 s, including the
+12 new runtime checks and all 45 existing configurable-DUT raw replays.
+The mandatory full suite is RUNNING with no concurrent SPICE or archival
+job. Freeze this source checkpoint only after it passes.
+
+Entry 134 pre-run full validation passes: 3265 passed, 13 deselected,
+two known warnings in 515.17 s; focused validation 158 passed in 141.63 s.
+No SPICE or archival ran concurrently. Pre-final-log audit: seven intended
+files, 1,239,993 staged bytes, no detected credentials/prohibited material,
+correct identity, prior scientific sources and both PDFs unchanged.
+Freeze locally, then run the registered four-call experiment once.
+Public/private backup clarification remains pending; no upload is performed.
