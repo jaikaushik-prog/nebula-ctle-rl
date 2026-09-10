@@ -1,0 +1,32 @@
+{
+  "entry": 140,
+  "tones": [
+    {
+      "instrument_ok": false,
+      "initialization_valid": false,
+      "fail_reason": "ValueError: aborted transient; no distortion measurement credited",
+      "full_receiver_verified": false,
+      "max_step_s": 5e-12
+    },
+    {
+      "instrument_ok": false,
+      "initialization_valid": false,
+      "fail_reason": "ValueError: aborted transient; no distortion measurement credited",
+      "full_receiver_verified": false,
+      "max_step_s": 2.5e-12
+    }
+  ],
+  "resolution_agreement": false,
+  "clocked_ctle_hd3_model_pass": false,
+  "all_static_states_verified": false,
+  "clocked_receiver_noise_verified": false,
+  "tuning_map_verified": false,
+  "full_receiver_verified": false,
+  "integration_method": "gear",
+  "maximum_order": 2,
+  "sources_unchanged": true,
+  "pdk_unchanged": true,
+  "spice_calls": 2,
+  "wall_seconds": 80.26834909999161,
+  "preflight_seconds": 0.10280779999447986
+}

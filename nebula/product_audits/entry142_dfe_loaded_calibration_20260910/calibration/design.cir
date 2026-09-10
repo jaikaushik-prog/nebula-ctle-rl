@@ -1,0 +1,527 @@
+* nebula sky130 sizing point (auto-generated; do not edit by hand)
+.lib "C:/Users/DELL/sky130A/libs.tech/ngspice/sky130.lib.spice" tt
+.temp 27
+
+.param W=57.97671772296124 L=0.3911493163378813 NF=4
+.param RL=254.6329712064977 IT=0.001813449296655868 CL=3.262805963205924e-14
+.param VDD=1.8 VCM=1.5010229732197666
+
+Vdd   vdd 0 {VDD}
+Vcm   cm  0 {VCM}
+
+* One swept/AC source, two VCVSs: v(inp,inn) == v(vid) exactly. This makes the
+* .noise input reference DIFFERENTIAL (see the module docstring) and lets .dc
+* sweep the differential input directly.
+Vid vid 0 DC 0 AC 1
+Einp  inx cm vid 0 0.5
+Einn  iny cm vid 0 -0.5
+* Input attenuator (D16), code 7 of 7: A = 0.4315 (7.30 dB).
+* Explicit diagnostic/historical range: 2.31739x.
+* Production D16 default: 2.31739x maximum.
+Xatt_sp inx inp 0 sky130_fd_pr__res_high_po w=10 l=3.41
+Xatt_sn iny inn 0 sky130_fd_pr__res_high_po w=10 l=3.41
+Xatt_rp0 inp att_p0 0 sky130_fd_pr__res_high_po w=8 l=16.22
+Xatt_swp0 att_p0 0 cm vdd sky130_fd_pr__pfet_01v8 W=40 L=0.15 nf=1
+Xatt_rn0 inn att_n0 0 sky130_fd_pr__res_high_po w=8 l=16.22
+Xatt_swn0 att_n0 0 cm vdd sky130_fd_pr__pfet_01v8 W=40 L=0.15 nf=1
+Xatt_rp1 inp att_p1 0 sky130_fd_pr__res_high_po w=5.73 l=4.97
+Xatt_swp1 att_p1 0 cm vdd sky130_fd_pr__pfet_01v8 W=80 L=0.15 nf=2
+Xatt_rn1 inn att_n1 0 sky130_fd_pr__res_high_po w=5.73 l=4.97
+Xatt_swn1 att_n1 0 cm vdd sky130_fd_pr__pfet_01v8 W=80 L=0.15 nf=2
+Xatt_rp2 inp att_p2 0 sky130_fd_pr__res_high_po w=5.73 l=4.97 m=2
+Xatt_swp2 att_p2 0 cm vdd sky130_fd_pr__pfet_01v8 W=160 L=0.15 nf=4
+Xatt_rn2 inn att_n2 0 sky130_fd_pr__res_high_po w=5.73 l=4.97 m=2
+Xatt_swn2 att_n2 0 cm vdd sky130_fd_pr__pfet_01v8 W=160 L=0.15 nf=4
+
+XM1   outp inp s1 0 sky130_fd_pr__nfet_01v8 W={W} L={L} nf={NF}
+XM2   outn inn s2 0 sky130_fd_pr__nfet_01v8 W={W} L={L} nf={NF}
+
+* Load resistors: SKY130 poly, drawn geometry from passives.to_geometry().
+* Third terminal is the substrate -- it carries the res_po bottom-plate
+* parasitic, half of which lands on the output node (PASSIVES.md 4.4).
+Xrlp  vdd outp 0 sky130_fd_pr__res_high_po w=10 l=14.745 m=2
+Xrln  vdd outn 0 sky130_fd_pr__res_high_po w=10 l=14.745 m=2
+
+* Degeneration, between the two SOURCES (the /2 in k = 1 + (gm+gmbs)*Rs/2).
+* MIM: two terminals, no bulk node -- the model carries no bottom plate at all
+* (PASSIVES.md 4.4), which is a modelling absence, not a physical one.
+
+
+* Current-mirror tail. N = W_tail/W_ref = 8; the reference device is one
+* unit of the same finger width, so the mirror ratio is set by geometry and not
+* by a voltage that would drift against vth across corners.
+.param WT=201.656 LT=0.5 NFT=8
+.param WREF=25.2069 NFREF=1 IREF=0.000226681162 CBYP=1e-11
+
+* Physical supply-dependent reference prototype, not a precision reference.
+* IREF is the nominal sizing target below, not an ideal current source.
+Xbpref p_bias p_bias vdd vdd sky130_fd_pr__pfet_01v8 W=25.2069 L=0.5 nf=1
+Xbpfeed nbias p_bias vdd vdd sky130_fd_pr__pfet_01v8 W=25.2069 L=0.5 nf=1
+Xrbias p_bias 0 0 sky130_fd_pr__res_high_po w=1 l=5.34 m=1
+XMR   nbias nbias 0 0 sky130_fd_pr__nfet_01v8 W={WREF} L={LT} nf={NFREF}
+XMT1  s1    nbias 0 0 sky130_fd_pr__nfet_01v8 W={WT} L={LT} nf={NFT}
+XMT2  s2    nbias 0 0 sky130_fd_pr__nfet_01v8 W={WT} L={LT} nf={NFT}
+* Physical MIM bypass; body/plate area is counted, layout remains unverified.
+Xcbyp nbias 0 sky130_fd_pr__cap_mim_m3_1 w=70.545 l=70.545 m=1
+
+CLp   outp 0 {CL}
+CLn   outn 0 {CL}
+
+
+* Entry 124: real current summer, CML decision memory, switched-current DAC
+Vdfclk df_clk 0 0.6
+Vdfclkb df_clkb 0 1.2
+Vtap0 tap0 0 0
+Vtap1 tap1 0 1.8
+Vtap2 tap2 0 0
+Vtap3 tap3 0 0
+Xdf_mip df_mn sum_p df_ma 0 sky130_fd_pr__nfet_01v8 w=8 l=0.15 nf=4
+Xdf_min df_mp sum_n df_ma 0 sky130_fd_pr__nfet_01v8 w=8 l=0.15 nf=4
+Xdf_mrp df_mp df_mn df_mb 0 sky130_fd_pr__nfet_01v8 w=8 l=0.15 nf=4
+Xdf_mrn df_mn df_mp df_mb 0 sky130_fd_pr__nfet_01v8 w=8 l=0.15 nf=4
+Xdf_mtrack df_ma df_clkb df_mtail 0 sky130_fd_pr__nfet_01v8 w=8 l=0.15 nf=4
+Xdf_mhold df_mb df_clk df_mtail 0 sky130_fd_pr__nfet_01v8 w=8 l=0.15 nf=4
+Xdf_mtail df_mtail df_nbias 0 0 sky130_fd_pr__nfet_01v8 w=20 l=0.5 nf=10
+Xdf_sip df_qb df_mp df_sa 0 sky130_fd_pr__nfet_01v8 w=8 l=0.15 nf=4
+Xdf_sin df_q df_mn df_sa 0 sky130_fd_pr__nfet_01v8 w=8 l=0.15 nf=4
+Xdf_srp df_q df_qb df_sb 0 sky130_fd_pr__nfet_01v8 w=8 l=0.15 nf=4
+Xdf_srn df_qb df_q df_sb 0 sky130_fd_pr__nfet_01v8 w=8 l=0.15 nf=4
+Xdf_strack df_sa df_clk df_stail 0 sky130_fd_pr__nfet_01v8 w=8 l=0.15 nf=4
+Xdf_shold df_sb df_clkb df_stail 0 sky130_fd_pr__nfet_01v8 w=8 l=0.15 nf=4
+Xdf_stail df_stail df_nbias 0 0 sky130_fd_pr__nfet_01v8 w=20 l=0.5 nf=10
+Xdf_ref df_nbias df_nbias 0 0 sky130_fd_pr__nfet_01v8 w=4 l=0.5 nf=2
+Xdfe_sump sum_n outn sum_tail 0 sky130_fd_pr__nfet_01v8 w=8 l=0.15 nf=4
+Xdfe_sumn sum_p outp sum_tail 0 sky130_fd_pr__nfet_01v8 w=8 l=0.15 nf=4
+Xdfe_sumtail sum_tail df_nbias 0 0 sky130_fd_pr__nfet_01v8 w=20 l=0.5 nf=10
+Xdfe_dacp sum_p df_q fd_common 0 sky130_fd_pr__nfet_01v8 w=2 l=0.15 nf=1
+Xdfe_dacn sum_n df_qb fd_common 0 sky130_fd_pr__nfet_01v8 w=2 l=0.15 nf=1
+Xdfe_tail0 fd_common df_nbias fd_tail0 0 sky130_fd_pr__nfet_01v8 w=1 l=0.5 nf=1
+Xdfe_en0 fd_tail0 tap0 0 0 sky130_fd_pr__nfet_01v8 w=8 l=0.15 nf=4
+Xdfe_tail1 fd_common df_nbias fd_tail1 0 sky130_fd_pr__nfet_01v8 w=2 l=0.5 nf=1
+Xdfe_en1 fd_tail1 tap1 0 0 sky130_fd_pr__nfet_01v8 w=8 l=0.15 nf=4
+Xdfe_tail2 fd_common df_nbias fd_tail2 0 sky130_fd_pr__nfet_01v8 w=4 l=0.5 nf=2
+Xdfe_en2 fd_tail2 tap2 0 0 sky130_fd_pr__nfet_01v8 w=8 l=0.15 nf=4
+Xdfe_tail3 fd_common df_nbias fd_tail3 0 sky130_fd_pr__nfet_01v8 w=8 l=0.5 nf=4
+Xdfe_en3 fd_tail3 tap3 0 0 sky130_fd_pr__nfet_01v8 w=8 l=0.15 nf=4
+Xdf_R_mp vdd df_mp 0 sky130_fd_pr__res_high_po w=1 l=1.33 m=1
+Xdf_R_mn vdd df_mn 0 sky130_fd_pr__res_high_po w=1 l=1.33 m=1
+Xdf_R_q vdd df_q 0 sky130_fd_pr__res_high_po w=1 l=1.33 m=1
+Xdf_R_qb vdd df_qb 0 sky130_fd_pr__res_high_po w=1 l=1.33 m=1
+Xdf_R_nbias vdd df_nbias 0 sky130_fd_pr__res_high_po w=1 l=30.33 m=1
+Xdfe_Rsum_p vdd sum_p 0 sky130_fd_pr__res_high_po w=1 l=1.33 m=1
+Xdfe_Rsum_n vdd sum_n 0 sky130_fd_pr__res_high_po w=1 l=1.33 m=1
+* Entry 125 physical off-branch bleeders
+Xdfe_bleed0 fd_tail0 df_nbias 0 0 sky130_fd_pr__nfet_01v8 w=0.42 l=4 nf=1
+Xdfe_bleed1 fd_tail1 df_nbias 0 0 sky130_fd_pr__nfet_01v8 w=0.42 l=4 nf=1
+Xdfe_bleed2 fd_tail2 df_nbias 0 0 sky130_fd_pr__nfet_01v8 w=0.42 l=4 nf=1
+Xdfe_bleed3 fd_tail3 df_nbias 0 0 sky130_fd_pr__nfet_01v8 w=0.42 l=4 nf=1
+Xrc_rmax s1 s2 0 sky130_fd_pr__res_high_po w=2.85 l=4.865
+Xrc_branch s1 rc_mid 0 sky130_fd_pr__res_high_po w=10 l=2.645 m=2
+Xrc_switch rc_mid rc_gate s2 0 sky130_fd_pr__nfet_01v8 W=80 L=0.15 nf=2
+Xrc_rfeed rctrl rc_gate 0 sky130_fd_pr__res_high_po w=1.41 l=43.23
+Xrc_cfeed cctrl rc_ct 0 sky130_fd_pr__res_high_po w=1.41 l=43.23
+Xrc_rbypass rc_gate 0 sky130_fd_pr__cap_mim_m3_1 w=22.195 l=22.195
+Xrc_cbypass rc_ct 0 sky130_fd_pr__cap_mim_m3_1 w=70.545 l=70.545
+Xrc_var_s1 s1 rc_ct 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+Xrc_var_s2 s2 rc_ct 0 sky130_fd_pr__cap_var_lvt w=5 l=0.5 vm=1 m=500
+VrcR rctrl 0 1.26
+VrcC cctrl 0 0.297
+.options reltol=1e-7 vntol=1e-10 abstol=1e-13
+.nodeset v(df_q)=1.515596747714196 v(df_qb)=1.789781608720722 v(df_mp)=1.676408672663149 v(df_mn)=1.6309265915838
+.control
+set noaskquit
+set numdgt=15
+set wr_singlescale
+alter VrcR 1.26
+alter VrcC 0.297
+op
+wrdata op_000.txt v(att_n0) v(att_n1) v(att_n2) v(att_p0) v(att_p1) v(att_p2) v(cctrl) v(cm) v(df_clk) v(df_clkb) v(df_ma) v(df_mb) v(df_mn) v(df_mp) v(df_mtail) v(df_nbias) v(df_q) v(df_qb) v(df_sa) v(df_sb) v(df_stail) v(fd_common) v(fd_tail0) v(fd_tail1) v(fd_tail2) v(fd_tail3) v(inn) v(inp) v(nbias) v(outn) v(outp) v(p_bias) v(rc_ct) v(rc_gate) v(rc_mid) v(rctrl) v(s1) v(s2) v(sum_n) v(sum_p) v(sum_tail) v(tap0) v(tap1) v(tap2) v(tap3) v(vdd) v(vid) i(vdd)
+ac dec 50 1meg 100g
+wrdata ac_000.txt v(outp) v(outn) v(vid)
+alter VrcR 1.26
+alter VrcC 0.306
+op
+wrdata op_001.txt v(att_n0) v(att_n1) v(att_n2) v(att_p0) v(att_p1) v(att_p2) v(cctrl) v(cm) v(df_clk) v(df_clkb) v(df_ma) v(df_mb) v(df_mn) v(df_mp) v(df_mtail) v(df_nbias) v(df_q) v(df_qb) v(df_sa) v(df_sb) v(df_stail) v(fd_common) v(fd_tail0) v(fd_tail1) v(fd_tail2) v(fd_tail3) v(inn) v(inp) v(nbias) v(outn) v(outp) v(p_bias) v(rc_ct) v(rc_gate) v(rc_mid) v(rctrl) v(s1) v(s2) v(sum_n) v(sum_p) v(sum_tail) v(tap0) v(tap1) v(tap2) v(tap3) v(vdd) v(vid) i(vdd)
+ac dec 50 1meg 100g
+wrdata ac_001.txt v(outp) v(outn) v(vid)
+alter VrcR 1.26
+alter VrcC 0.315
+op
+wrdata op_002.txt v(att_n0) v(att_n1) v(att_n2) v(att_p0) v(att_p1) v(att_p2) v(cctrl) v(cm) v(df_clk) v(df_clkb) v(df_ma) v(df_mb) v(df_mn) v(df_mp) v(df_mtail) v(df_nbias) v(df_q) v(df_qb) v(df_sa) v(df_sb) v(df_stail) v(fd_common) v(fd_tail0) v(fd_tail1) v(fd_tail2) v(fd_tail3) v(inn) v(inp) v(nbias) v(outn) v(outp) v(p_bias) v(rc_ct) v(rc_gate) v(rc_mid) v(rctrl) v(s1) v(s2) v(sum_n) v(sum_p) v(sum_tail) v(tap0) v(tap1) v(tap2) v(tap3) v(vdd) v(vid) i(vdd)
+ac dec 50 1meg 100g
+wrdata ac_002.txt v(outp) v(outn) v(vid)
+alter VrcR 1.26
+alter VrcC 0.324
+op
+wrdata op_003.txt v(att_n0) v(att_n1) v(att_n2) v(att_p0) v(att_p1) v(att_p2) v(cctrl) v(cm) v(df_clk) v(df_clkb) v(df_ma) v(df_mb) v(df_mn) v(df_mp) v(df_mtail) v(df_nbias) v(df_q) v(df_qb) v(df_sa) v(df_sb) v(df_stail) v(fd_common) v(fd_tail0) v(fd_tail1) v(fd_tail2) v(fd_tail3) v(inn) v(inp) v(nbias) v(outn) v(outp) v(p_bias) v(rc_ct) v(rc_gate) v(rc_mid) v(rctrl) v(s1) v(s2) v(sum_n) v(sum_p) v(sum_tail) v(tap0) v(tap1) v(tap2) v(tap3) v(vdd) v(vid) i(vdd)
+ac dec 50 1meg 100g
+wrdata ac_003.txt v(outp) v(outn) v(vid)
+alter VrcR 1.26
+alter VrcC 0.333
+op
+wrdata op_004.txt v(att_n0) v(att_n1) v(att_n2) v(att_p0) v(att_p1) v(att_p2) v(cctrl) v(cm) v(df_clk) v(df_clkb) v(df_ma) v(df_mb) v(df_mn) v(df_mp) v(df_mtail) v(df_nbias) v(df_q) v(df_qb) v(df_sa) v(df_sb) v(df_stail) v(fd_common) v(fd_tail0) v(fd_tail1) v(fd_tail2) v(fd_tail3) v(inn) v(inp) v(nbias) v(outn) v(outp) v(p_bias) v(rc_ct) v(rc_gate) v(rc_mid) v(rctrl) v(s1) v(s2) v(sum_n) v(sum_p) v(sum_tail) v(tap0) v(tap1) v(tap2) v(tap3) v(vdd) v(vid) i(vdd)
+ac dec 50 1meg 100g
+wrdata ac_004.txt v(outp) v(outn) v(vid)
+alter VrcR 1.26
+alter VrcC 0.342
+op
+wrdata op_005.txt v(att_n0) v(att_n1) v(att_n2) v(att_p0) v(att_p1) v(att_p2) v(cctrl) v(cm) v(df_clk) v(df_clkb) v(df_ma) v(df_mb) v(df_mn) v(df_mp) v(df_mtail) v(df_nbias) v(df_q) v(df_qb) v(df_sa) v(df_sb) v(df_stail) v(fd_common) v(fd_tail0) v(fd_tail1) v(fd_tail2) v(fd_tail3) v(inn) v(inp) v(nbias) v(outn) v(outp) v(p_bias) v(rc_ct) v(rc_gate) v(rc_mid) v(rctrl) v(s1) v(s2) v(sum_n) v(sum_p) v(sum_tail) v(tap0) v(tap1) v(tap2) v(tap3) v(vdd) v(vid) i(vdd)
+ac dec 50 1meg 100g
+wrdata ac_005.txt v(outp) v(outn) v(vid)
+alter VrcR 1.26
+alter VrcC 0.351
+op
+wrdata op_006.txt v(att_n0) v(att_n1) v(att_n2) v(att_p0) v(att_p1) v(att_p2) v(cctrl) v(cm) v(df_clk) v(df_clkb) v(df_ma) v(df_mb) v(df_mn) v(df_mp) v(df_mtail) v(df_nbias) v(df_q) v(df_qb) v(df_sa) v(df_sb) v(df_stail) v(fd_common) v(fd_tail0) v(fd_tail1) v(fd_tail2) v(fd_tail3) v(inn) v(inp) v(nbias) v(outn) v(outp) v(p_bias) v(rc_ct) v(rc_gate) v(rc_mid) v(rctrl) v(s1) v(s2) v(sum_n) v(sum_p) v(sum_tail) v(tap0) v(tap1) v(tap2) v(tap3) v(vdd) v(vid) i(vdd)
+ac dec 50 1meg 100g
+wrdata ac_006.txt v(outp) v(outn) v(vid)
+alter VrcR 1.26
+alter VrcC 0.36
+op
+wrdata op_007.txt v(att_n0) v(att_n1) v(att_n2) v(att_p0) v(att_p1) v(att_p2) v(cctrl) v(cm) v(df_clk) v(df_clkb) v(df_ma) v(df_mb) v(df_mn) v(df_mp) v(df_mtail) v(df_nbias) v(df_q) v(df_qb) v(df_sa) v(df_sb) v(df_stail) v(fd_common) v(fd_tail0) v(fd_tail1) v(fd_tail2) v(fd_tail3) v(inn) v(inp) v(nbias) v(outn) v(outp) v(p_bias) v(rc_ct) v(rc_gate) v(rc_mid) v(rctrl) v(s1) v(s2) v(sum_n) v(sum_p) v(sum_tail) v(tap0) v(tap1) v(tap2) v(tap3) v(vdd) v(vid) i(vdd)
+ac dec 50 1meg 100g
+wrdata ac_007.txt v(outp) v(outn) v(vid)
+alter VrcR 1.26
+alter VrcC 0.369
+op
+wrdata op_008.txt v(att_n0) v(att_n1) v(att_n2) v(att_p0) v(att_p1) v(att_p2) v(cctrl) v(cm) v(df_clk) v(df_clkb) v(df_ma) v(df_mb) v(df_mn) v(df_mp) v(df_mtail) v(df_nbias) v(df_q) v(df_qb) v(df_sa) v(df_sb) v(df_stail) v(fd_common) v(fd_tail0) v(fd_tail1) v(fd_tail2) v(fd_tail3) v(inn) v(inp) v(nbias) v(outn) v(outp) v(p_bias) v(rc_ct) v(rc_gate) v(rc_mid) v(rctrl) v(s1) v(s2) v(sum_n) v(sum_p) v(sum_tail) v(tap0) v(tap1) v(tap2) v(tap3) v(vdd) v(vid) i(vdd)
+ac dec 50 1meg 100g
+wrdata ac_008.txt v(outp) v(outn) v(vid)
+alter VrcR 1.26
+alter VrcC 0.378
+op
+wrdata op_009.txt v(att_n0) v(att_n1) v(att_n2) v(att_p0) v(att_p1) v(att_p2) v(cctrl) v(cm) v(df_clk) v(df_clkb) v(df_ma) v(df_mb) v(df_mn) v(df_mp) v(df_mtail) v(df_nbias) v(df_q) v(df_qb) v(df_sa) v(df_sb) v(df_stail) v(fd_common) v(fd_tail0) v(fd_tail1) v(fd_tail2) v(fd_tail3) v(inn) v(inp) v(nbias) v(outn) v(outp) v(p_bias) v(rc_ct) v(rc_gate) v(rc_mid) v(rctrl) v(s1) v(s2) v(sum_n) v(sum_p) v(sum_tail) v(tap0) v(tap1) v(tap2) v(tap3) v(vdd) v(vid) i(vdd)
+ac dec 50 1meg 100g
+wrdata ac_009.txt v(outp) v(outn) v(vid)
+alter VrcR 1.26
+alter VrcC 0.387
+op
+wrdata op_010.txt v(att_n0) v(att_n1) v(att_n2) v(att_p0) v(att_p1) v(att_p2) v(cctrl) v(cm) v(df_clk) v(df_clkb) v(df_ma) v(df_mb) v(df_mn) v(df_mp) v(df_mtail) v(df_nbias) v(df_q) v(df_qb) v(df_sa) v(df_sb) v(df_stail) v(fd_common) v(fd_tail0) v(fd_tail1) v(fd_tail2) v(fd_tail3) v(inn) v(inp) v(nbias) v(outn) v(outp) v(p_bias) v(rc_ct) v(rc_gate) v(rc_mid) v(rctrl) v(s1) v(s2) v(sum_n) v(sum_p) v(sum_tail) v(tap0) v(tap1) v(tap2) v(tap3) v(vdd) v(vid) i(vdd)
+ac dec 50 1meg 100g
+wrdata ac_010.txt v(outp) v(outn) v(vid)
+alter VrcR 1.26
+alter VrcC 0.396
+op
+wrdata op_011.txt v(att_n0) v(att_n1) v(att_n2) v(att_p0) v(att_p1) v(att_p2) v(cctrl) v(cm) v(df_clk) v(df_clkb) v(df_ma) v(df_mb) v(df_mn) v(df_mp) v(df_mtail) v(df_nbias) v(df_q) v(df_qb) v(df_sa) v(df_sb) v(df_stail) v(fd_common) v(fd_tail0) v(fd_tail1) v(fd_tail2) v(fd_tail3) v(inn) v(inp) v(nbias) v(outn) v(outp) v(p_bias) v(rc_ct) v(rc_gate) v(rc_mid) v(rctrl) v(s1) v(s2) v(sum_n) v(sum_p) v(sum_tail) v(tap0) v(tap1) v(tap2) v(tap3) v(vdd) v(vid) i(vdd)
+ac dec 50 1meg 100g
+wrdata ac_011.txt v(outp) v(outn) v(vid)
+alter VrcR 1.26
+alter VrcC 0.405
+op
+wrdata op_012.txt v(att_n0) v(att_n1) v(att_n2) v(att_p0) v(att_p1) v(att_p2) v(cctrl) v(cm) v(df_clk) v(df_clkb) v(df_ma) v(df_mb) v(df_mn) v(df_mp) v(df_mtail) v(df_nbias) v(df_q) v(df_qb) v(df_sa) v(df_sb) v(df_stail) v(fd_common) v(fd_tail0) v(fd_tail1) v(fd_tail2) v(fd_tail3) v(inn) v(inp) v(nbias) v(outn) v(outp) v(p_bias) v(rc_ct) v(rc_gate) v(rc_mid) v(rctrl) v(s1) v(s2) v(sum_n) v(sum_p) v(sum_tail) v(tap0) v(tap1) v(tap2) v(tap3) v(vdd) v(vid) i(vdd)
+ac dec 50 1meg 100g
+wrdata ac_012.txt v(outp) v(outn) v(vid)
+alter VrcR 1.224
+alter VrcC 0.297
+op
+wrdata op_013.txt v(att_n0) v(att_n1) v(att_n2) v(att_p0) v(att_p1) v(att_p2) v(cctrl) v(cm) v(df_clk) v(df_clkb) v(df_ma) v(df_mb) v(df_mn) v(df_mp) v(df_mtail) v(df_nbias) v(df_q) v(df_qb) v(df_sa) v(df_sb) v(df_stail) v(fd_common) v(fd_tail0) v(fd_tail1) v(fd_tail2) v(fd_tail3) v(inn) v(inp) v(nbias) v(outn) v(outp) v(p_bias) v(rc_ct) v(rc_gate) v(rc_mid) v(rctrl) v(s1) v(s2) v(sum_n) v(sum_p) v(sum_tail) v(tap0) v(tap1) v(tap2) v(tap3) v(vdd) v(vid) i(vdd)
+ac dec 50 1meg 100g
+wrdata ac_013.txt v(outp) v(outn) v(vid)
+alter VrcR 1.224
+alter VrcC 0.306
+op
+wrdata op_014.txt v(att_n0) v(att_n1) v(att_n2) v(att_p0) v(att_p1) v(att_p2) v(cctrl) v(cm) v(df_clk) v(df_clkb) v(df_ma) v(df_mb) v(df_mn) v(df_mp) v(df_mtail) v(df_nbias) v(df_q) v(df_qb) v(df_sa) v(df_sb) v(df_stail) v(fd_common) v(fd_tail0) v(fd_tail1) v(fd_tail2) v(fd_tail3) v(inn) v(inp) v(nbias) v(outn) v(outp) v(p_bias) v(rc_ct) v(rc_gate) v(rc_mid) v(rctrl) v(s1) v(s2) v(sum_n) v(sum_p) v(sum_tail) v(tap0) v(tap1) v(tap2) v(tap3) v(vdd) v(vid) i(vdd)
+ac dec 50 1meg 100g
+wrdata ac_014.txt v(outp) v(outn) v(vid)
+alter VrcR 1.224
+alter VrcC 0.315
+op
+wrdata op_015.txt v(att_n0) v(att_n1) v(att_n2) v(att_p0) v(att_p1) v(att_p2) v(cctrl) v(cm) v(df_clk) v(df_clkb) v(df_ma) v(df_mb) v(df_mn) v(df_mp) v(df_mtail) v(df_nbias) v(df_q) v(df_qb) v(df_sa) v(df_sb) v(df_stail) v(fd_common) v(fd_tail0) v(fd_tail1) v(fd_tail2) v(fd_tail3) v(inn) v(inp) v(nbias) v(outn) v(outp) v(p_bias) v(rc_ct) v(rc_gate) v(rc_mid) v(rctrl) v(s1) v(s2) v(sum_n) v(sum_p) v(sum_tail) v(tap0) v(tap1) v(tap2) v(tap3) v(vdd) v(vid) i(vdd)
+ac dec 50 1meg 100g
+wrdata ac_015.txt v(outp) v(outn) v(vid)
+alter VrcR 1.224
+alter VrcC 0.324
+op
+wrdata op_016.txt v(att_n0) v(att_n1) v(att_n2) v(att_p0) v(att_p1) v(att_p2) v(cctrl) v(cm) v(df_clk) v(df_clkb) v(df_ma) v(df_mb) v(df_mn) v(df_mp) v(df_mtail) v(df_nbias) v(df_q) v(df_qb) v(df_sa) v(df_sb) v(df_stail) v(fd_common) v(fd_tail0) v(fd_tail1) v(fd_tail2) v(fd_tail3) v(inn) v(inp) v(nbias) v(outn) v(outp) v(p_bias) v(rc_ct) v(rc_gate) v(rc_mid) v(rctrl) v(s1) v(s2) v(sum_n) v(sum_p) v(sum_tail) v(tap0) v(tap1) v(tap2) v(tap3) v(vdd) v(vid) i(vdd)
+ac dec 50 1meg 100g
+wrdata ac_016.txt v(outp) v(outn) v(vid)
+alter VrcR 1.224
+alter VrcC 0.333
+op
+wrdata op_017.txt v(att_n0) v(att_n1) v(att_n2) v(att_p0) v(att_p1) v(att_p2) v(cctrl) v(cm) v(df_clk) v(df_clkb) v(df_ma) v(df_mb) v(df_mn) v(df_mp) v(df_mtail) v(df_nbias) v(df_q) v(df_qb) v(df_sa) v(df_sb) v(df_stail) v(fd_common) v(fd_tail0) v(fd_tail1) v(fd_tail2) v(fd_tail3) v(inn) v(inp) v(nbias) v(outn) v(outp) v(p_bias) v(rc_ct) v(rc_gate) v(rc_mid) v(rctrl) v(s1) v(s2) v(sum_n) v(sum_p) v(sum_tail) v(tap0) v(tap1) v(tap2) v(tap3) v(vdd) v(vid) i(vdd)
+ac dec 50 1meg 100g
+wrdata ac_017.txt v(outp) v(outn) v(vid)
+alter VrcR 1.224
+alter VrcC 0.342
+op
+wrdata op_018.txt v(att_n0) v(att_n1) v(att_n2) v(att_p0) v(att_p1) v(att_p2) v(cctrl) v(cm) v(df_clk) v(df_clkb) v(df_ma) v(df_mb) v(df_mn) v(df_mp) v(df_mtail) v(df_nbias) v(df_q) v(df_qb) v(df_sa) v(df_sb) v(df_stail) v(fd_common) v(fd_tail0) v(fd_tail1) v(fd_tail2) v(fd_tail3) v(inn) v(inp) v(nbias) v(outn) v(outp) v(p_bias) v(rc_ct) v(rc_gate) v(rc_mid) v(rctrl) v(s1) v(s2) v(sum_n) v(sum_p) v(sum_tail) v(tap0) v(tap1) v(tap2) v(tap3) v(vdd) v(vid) i(vdd)
+ac dec 50 1meg 100g
+wrdata ac_018.txt v(outp) v(outn) v(vid)
+alter VrcR 1.224
+alter VrcC 0.351
+op
+wrdata op_019.txt v(att_n0) v(att_n1) v(att_n2) v(att_p0) v(att_p1) v(att_p2) v(cctrl) v(cm) v(df_clk) v(df_clkb) v(df_ma) v(df_mb) v(df_mn) v(df_mp) v(df_mtail) v(df_nbias) v(df_q) v(df_qb) v(df_sa) v(df_sb) v(df_stail) v(fd_common) v(fd_tail0) v(fd_tail1) v(fd_tail2) v(fd_tail3) v(inn) v(inp) v(nbias) v(outn) v(outp) v(p_bias) v(rc_ct) v(rc_gate) v(rc_mid) v(rctrl) v(s1) v(s2) v(sum_n) v(sum_p) v(sum_tail) v(tap0) v(tap1) v(tap2) v(tap3) v(vdd) v(vid) i(vdd)
+ac dec 50 1meg 100g
+wrdata ac_019.txt v(outp) v(outn) v(vid)
+alter VrcR 1.224
+alter VrcC 0.36
+op
+wrdata op_020.txt v(att_n0) v(att_n1) v(att_n2) v(att_p0) v(att_p1) v(att_p2) v(cctrl) v(cm) v(df_clk) v(df_clkb) v(df_ma) v(df_mb) v(df_mn) v(df_mp) v(df_mtail) v(df_nbias) v(df_q) v(df_qb) v(df_sa) v(df_sb) v(df_stail) v(fd_common) v(fd_tail0) v(fd_tail1) v(fd_tail2) v(fd_tail3) v(inn) v(inp) v(nbias) v(outn) v(outp) v(p_bias) v(rc_ct) v(rc_gate) v(rc_mid) v(rctrl) v(s1) v(s2) v(sum_n) v(sum_p) v(sum_tail) v(tap0) v(tap1) v(tap2) v(tap3) v(vdd) v(vid) i(vdd)
+ac dec 50 1meg 100g
+wrdata ac_020.txt v(outp) v(outn) v(vid)
+alter VrcR 1.224
+alter VrcC 0.369
+op
+wrdata op_021.txt v(att_n0) v(att_n1) v(att_n2) v(att_p0) v(att_p1) v(att_p2) v(cctrl) v(cm) v(df_clk) v(df_clkb) v(df_ma) v(df_mb) v(df_mn) v(df_mp) v(df_mtail) v(df_nbias) v(df_q) v(df_qb) v(df_sa) v(df_sb) v(df_stail) v(fd_common) v(fd_tail0) v(fd_tail1) v(fd_tail2) v(fd_tail3) v(inn) v(inp) v(nbias) v(outn) v(outp) v(p_bias) v(rc_ct) v(rc_gate) v(rc_mid) v(rctrl) v(s1) v(s2) v(sum_n) v(sum_p) v(sum_tail) v(tap0) v(tap1) v(tap2) v(tap3) v(vdd) v(vid) i(vdd)
+ac dec 50 1meg 100g
+wrdata ac_021.txt v(outp) v(outn) v(vid)
+alter VrcR 1.224
+alter VrcC 0.378
+op
+wrdata op_022.txt v(att_n0) v(att_n1) v(att_n2) v(att_p0) v(att_p1) v(att_p2) v(cctrl) v(cm) v(df_clk) v(df_clkb) v(df_ma) v(df_mb) v(df_mn) v(df_mp) v(df_mtail) v(df_nbias) v(df_q) v(df_qb) v(df_sa) v(df_sb) v(df_stail) v(fd_common) v(fd_tail0) v(fd_tail1) v(fd_tail2) v(fd_tail3) v(inn) v(inp) v(nbias) v(outn) v(outp) v(p_bias) v(rc_ct) v(rc_gate) v(rc_mid) v(rctrl) v(s1) v(s2) v(sum_n) v(sum_p) v(sum_tail) v(tap0) v(tap1) v(tap2) v(tap3) v(vdd) v(vid) i(vdd)
+ac dec 50 1meg 100g
+wrdata ac_022.txt v(outp) v(outn) v(vid)
+alter VrcR 1.224
+alter VrcC 0.387
+op
+wrdata op_023.txt v(att_n0) v(att_n1) v(att_n2) v(att_p0) v(att_p1) v(att_p2) v(cctrl) v(cm) v(df_clk) v(df_clkb) v(df_ma) v(df_mb) v(df_mn) v(df_mp) v(df_mtail) v(df_nbias) v(df_q) v(df_qb) v(df_sa) v(df_sb) v(df_stail) v(fd_common) v(fd_tail0) v(fd_tail1) v(fd_tail2) v(fd_tail3) v(inn) v(inp) v(nbias) v(outn) v(outp) v(p_bias) v(rc_ct) v(rc_gate) v(rc_mid) v(rctrl) v(s1) v(s2) v(sum_n) v(sum_p) v(sum_tail) v(tap0) v(tap1) v(tap2) v(tap3) v(vdd) v(vid) i(vdd)
+ac dec 50 1meg 100g
+wrdata ac_023.txt v(outp) v(outn) v(vid)
+alter VrcR 1.224
+alter VrcC 0.396
+op
+wrdata op_024.txt v(att_n0) v(att_n1) v(att_n2) v(att_p0) v(att_p1) v(att_p2) v(cctrl) v(cm) v(df_clk) v(df_clkb) v(df_ma) v(df_mb) v(df_mn) v(df_mp) v(df_mtail) v(df_nbias) v(df_q) v(df_qb) v(df_sa) v(df_sb) v(df_stail) v(fd_common) v(fd_tail0) v(fd_tail1) v(fd_tail2) v(fd_tail3) v(inn) v(inp) v(nbias) v(outn) v(outp) v(p_bias) v(rc_ct) v(rc_gate) v(rc_mid) v(rctrl) v(s1) v(s2) v(sum_n) v(sum_p) v(sum_tail) v(tap0) v(tap1) v(tap2) v(tap3) v(vdd) v(vid) i(vdd)
+ac dec 50 1meg 100g
+wrdata ac_024.txt v(outp) v(outn) v(vid)
+alter VrcR 1.224
+alter VrcC 0.405
+op
+wrdata op_025.txt v(att_n0) v(att_n1) v(att_n2) v(att_p0) v(att_p1) v(att_p2) v(cctrl) v(cm) v(df_clk) v(df_clkb) v(df_ma) v(df_mb) v(df_mn) v(df_mp) v(df_mtail) v(df_nbias) v(df_q) v(df_qb) v(df_sa) v(df_sb) v(df_stail) v(fd_common) v(fd_tail0) v(fd_tail1) v(fd_tail2) v(fd_tail3) v(inn) v(inp) v(nbias) v(outn) v(outp) v(p_bias) v(rc_ct) v(rc_gate) v(rc_mid) v(rctrl) v(s1) v(s2) v(sum_n) v(sum_p) v(sum_tail) v(tap0) v(tap1) v(tap2) v(tap3) v(vdd) v(vid) i(vdd)
+ac dec 50 1meg 100g
+wrdata ac_025.txt v(outp) v(outn) v(vid)
+alter VrcR 1.242
+alter VrcC 0.297
+op
+wrdata op_026.txt v(att_n0) v(att_n1) v(att_n2) v(att_p0) v(att_p1) v(att_p2) v(cctrl) v(cm) v(df_clk) v(df_clkb) v(df_ma) v(df_mb) v(df_mn) v(df_mp) v(df_mtail) v(df_nbias) v(df_q) v(df_qb) v(df_sa) v(df_sb) v(df_stail) v(fd_common) v(fd_tail0) v(fd_tail1) v(fd_tail2) v(fd_tail3) v(inn) v(inp) v(nbias) v(outn) v(outp) v(p_bias) v(rc_ct) v(rc_gate) v(rc_mid) v(rctrl) v(s1) v(s2) v(sum_n) v(sum_p) v(sum_tail) v(tap0) v(tap1) v(tap2) v(tap3) v(vdd) v(vid) i(vdd)
+ac dec 50 1meg 100g
+wrdata ac_026.txt v(outp) v(outn) v(vid)
+alter VrcR 1.242
+alter VrcC 0.306
+op
+wrdata op_027.txt v(att_n0) v(att_n1) v(att_n2) v(att_p0) v(att_p1) v(att_p2) v(cctrl) v(cm) v(df_clk) v(df_clkb) v(df_ma) v(df_mb) v(df_mn) v(df_mp) v(df_mtail) v(df_nbias) v(df_q) v(df_qb) v(df_sa) v(df_sb) v(df_stail) v(fd_common) v(fd_tail0) v(fd_tail1) v(fd_tail2) v(fd_tail3) v(inn) v(inp) v(nbias) v(outn) v(outp) v(p_bias) v(rc_ct) v(rc_gate) v(rc_mid) v(rctrl) v(s1) v(s2) v(sum_n) v(sum_p) v(sum_tail) v(tap0) v(tap1) v(tap2) v(tap3) v(vdd) v(vid) i(vdd)
+ac dec 50 1meg 100g
+wrdata ac_027.txt v(outp) v(outn) v(vid)
+alter VrcR 1.242
+alter VrcC 0.315
+op
+wrdata op_028.txt v(att_n0) v(att_n1) v(att_n2) v(att_p0) v(att_p1) v(att_p2) v(cctrl) v(cm) v(df_clk) v(df_clkb) v(df_ma) v(df_mb) v(df_mn) v(df_mp) v(df_mtail) v(df_nbias) v(df_q) v(df_qb) v(df_sa) v(df_sb) v(df_stail) v(fd_common) v(fd_tail0) v(fd_tail1) v(fd_tail2) v(fd_tail3) v(inn) v(inp) v(nbias) v(outn) v(outp) v(p_bias) v(rc_ct) v(rc_gate) v(rc_mid) v(rctrl) v(s1) v(s2) v(sum_n) v(sum_p) v(sum_tail) v(tap0) v(tap1) v(tap2) v(tap3) v(vdd) v(vid) i(vdd)
+ac dec 50 1meg 100g
+wrdata ac_028.txt v(outp) v(outn) v(vid)
+alter VrcR 1.242
+alter VrcC 0.324
+op
+wrdata op_029.txt v(att_n0) v(att_n1) v(att_n2) v(att_p0) v(att_p1) v(att_p2) v(cctrl) v(cm) v(df_clk) v(df_clkb) v(df_ma) v(df_mb) v(df_mn) v(df_mp) v(df_mtail) v(df_nbias) v(df_q) v(df_qb) v(df_sa) v(df_sb) v(df_stail) v(fd_common) v(fd_tail0) v(fd_tail1) v(fd_tail2) v(fd_tail3) v(inn) v(inp) v(nbias) v(outn) v(outp) v(p_bias) v(rc_ct) v(rc_gate) v(rc_mid) v(rctrl) v(s1) v(s2) v(sum_n) v(sum_p) v(sum_tail) v(tap0) v(tap1) v(tap2) v(tap3) v(vdd) v(vid) i(vdd)
+ac dec 50 1meg 100g
+wrdata ac_029.txt v(outp) v(outn) v(vid)
+alter VrcR 1.242
+alter VrcC 0.333
+op
+wrdata op_030.txt v(att_n0) v(att_n1) v(att_n2) v(att_p0) v(att_p1) v(att_p2) v(cctrl) v(cm) v(df_clk) v(df_clkb) v(df_ma) v(df_mb) v(df_mn) v(df_mp) v(df_mtail) v(df_nbias) v(df_q) v(df_qb) v(df_sa) v(df_sb) v(df_stail) v(fd_common) v(fd_tail0) v(fd_tail1) v(fd_tail2) v(fd_tail3) v(inn) v(inp) v(nbias) v(outn) v(outp) v(p_bias) v(rc_ct) v(rc_gate) v(rc_mid) v(rctrl) v(s1) v(s2) v(sum_n) v(sum_p) v(sum_tail) v(tap0) v(tap1) v(tap2) v(tap3) v(vdd) v(vid) i(vdd)
+ac dec 50 1meg 100g
+wrdata ac_030.txt v(outp) v(outn) v(vid)
+alter VrcR 1.242
+alter VrcC 0.342
+op
+wrdata op_031.txt v(att_n0) v(att_n1) v(att_n2) v(att_p0) v(att_p1) v(att_p2) v(cctrl) v(cm) v(df_clk) v(df_clkb) v(df_ma) v(df_mb) v(df_mn) v(df_mp) v(df_mtail) v(df_nbias) v(df_q) v(df_qb) v(df_sa) v(df_sb) v(df_stail) v(fd_common) v(fd_tail0) v(fd_tail1) v(fd_tail2) v(fd_tail3) v(inn) v(inp) v(nbias) v(outn) v(outp) v(p_bias) v(rc_ct) v(rc_gate) v(rc_mid) v(rctrl) v(s1) v(s2) v(sum_n) v(sum_p) v(sum_tail) v(tap0) v(tap1) v(tap2) v(tap3) v(vdd) v(vid) i(vdd)
+ac dec 50 1meg 100g
+wrdata ac_031.txt v(outp) v(outn) v(vid)
+alter VrcR 1.242
+alter VrcC 0.351
+op
+wrdata op_032.txt v(att_n0) v(att_n1) v(att_n2) v(att_p0) v(att_p1) v(att_p2) v(cctrl) v(cm) v(df_clk) v(df_clkb) v(df_ma) v(df_mb) v(df_mn) v(df_mp) v(df_mtail) v(df_nbias) v(df_q) v(df_qb) v(df_sa) v(df_sb) v(df_stail) v(fd_common) v(fd_tail0) v(fd_tail1) v(fd_tail2) v(fd_tail3) v(inn) v(inp) v(nbias) v(outn) v(outp) v(p_bias) v(rc_ct) v(rc_gate) v(rc_mid) v(rctrl) v(s1) v(s2) v(sum_n) v(sum_p) v(sum_tail) v(tap0) v(tap1) v(tap2) v(tap3) v(vdd) v(vid) i(vdd)
+ac dec 50 1meg 100g
+wrdata ac_032.txt v(outp) v(outn) v(vid)
+alter VrcR 1.242
+alter VrcC 0.36
+op
+wrdata op_033.txt v(att_n0) v(att_n1) v(att_n2) v(att_p0) v(att_p1) v(att_p2) v(cctrl) v(cm) v(df_clk) v(df_clkb) v(df_ma) v(df_mb) v(df_mn) v(df_mp) v(df_mtail) v(df_nbias) v(df_q) v(df_qb) v(df_sa) v(df_sb) v(df_stail) v(fd_common) v(fd_tail0) v(fd_tail1) v(fd_tail2) v(fd_tail3) v(inn) v(inp) v(nbias) v(outn) v(outp) v(p_bias) v(rc_ct) v(rc_gate) v(rc_mid) v(rctrl) v(s1) v(s2) v(sum_n) v(sum_p) v(sum_tail) v(tap0) v(tap1) v(tap2) v(tap3) v(vdd) v(vid) i(vdd)
+ac dec 50 1meg 100g
+wrdata ac_033.txt v(outp) v(outn) v(vid)
+alter VrcR 1.242
+alter VrcC 0.369
+op
+wrdata op_034.txt v(att_n0) v(att_n1) v(att_n2) v(att_p0) v(att_p1) v(att_p2) v(cctrl) v(cm) v(df_clk) v(df_clkb) v(df_ma) v(df_mb) v(df_mn) v(df_mp) v(df_mtail) v(df_nbias) v(df_q) v(df_qb) v(df_sa) v(df_sb) v(df_stail) v(fd_common) v(fd_tail0) v(fd_tail1) v(fd_tail2) v(fd_tail3) v(inn) v(inp) v(nbias) v(outn) v(outp) v(p_bias) v(rc_ct) v(rc_gate) v(rc_mid) v(rctrl) v(s1) v(s2) v(sum_n) v(sum_p) v(sum_tail) v(tap0) v(tap1) v(tap2) v(tap3) v(vdd) v(vid) i(vdd)
+ac dec 50 1meg 100g
+wrdata ac_034.txt v(outp) v(outn) v(vid)
+alter VrcR 1.242
+alter VrcC 0.378
+op
+wrdata op_035.txt v(att_n0) v(att_n1) v(att_n2) v(att_p0) v(att_p1) v(att_p2) v(cctrl) v(cm) v(df_clk) v(df_clkb) v(df_ma) v(df_mb) v(df_mn) v(df_mp) v(df_mtail) v(df_nbias) v(df_q) v(df_qb) v(df_sa) v(df_sb) v(df_stail) v(fd_common) v(fd_tail0) v(fd_tail1) v(fd_tail2) v(fd_tail3) v(inn) v(inp) v(nbias) v(outn) v(outp) v(p_bias) v(rc_ct) v(rc_gate) v(rc_mid) v(rctrl) v(s1) v(s2) v(sum_n) v(sum_p) v(sum_tail) v(tap0) v(tap1) v(tap2) v(tap3) v(vdd) v(vid) i(vdd)
+ac dec 50 1meg 100g
+wrdata ac_035.txt v(outp) v(outn) v(vid)
+alter VrcR 1.242
+alter VrcC 0.387
+op
+wrdata op_036.txt v(att_n0) v(att_n1) v(att_n2) v(att_p0) v(att_p1) v(att_p2) v(cctrl) v(cm) v(df_clk) v(df_clkb) v(df_ma) v(df_mb) v(df_mn) v(df_mp) v(df_mtail) v(df_nbias) v(df_q) v(df_qb) v(df_sa) v(df_sb) v(df_stail) v(fd_common) v(fd_tail0) v(fd_tail1) v(fd_tail2) v(fd_tail3) v(inn) v(inp) v(nbias) v(outn) v(outp) v(p_bias) v(rc_ct) v(rc_gate) v(rc_mid) v(rctrl) v(s1) v(s2) v(sum_n) v(sum_p) v(sum_tail) v(tap0) v(tap1) v(tap2) v(tap3) v(vdd) v(vid) i(vdd)
+ac dec 50 1meg 100g
+wrdata ac_036.txt v(outp) v(outn) v(vid)
+alter VrcR 1.242
+alter VrcC 0.396
+op
+wrdata op_037.txt v(att_n0) v(att_n1) v(att_n2) v(att_p0) v(att_p1) v(att_p2) v(cctrl) v(cm) v(df_clk) v(df_clkb) v(df_ma) v(df_mb) v(df_mn) v(df_mp) v(df_mtail) v(df_nbias) v(df_q) v(df_qb) v(df_sa) v(df_sb) v(df_stail) v(fd_common) v(fd_tail0) v(fd_tail1) v(fd_tail2) v(fd_tail3) v(inn) v(inp) v(nbias) v(outn) v(outp) v(p_bias) v(rc_ct) v(rc_gate) v(rc_mid) v(rctrl) v(s1) v(s2) v(sum_n) v(sum_p) v(sum_tail) v(tap0) v(tap1) v(tap2) v(tap3) v(vdd) v(vid) i(vdd)
+ac dec 50 1meg 100g
+wrdata ac_037.txt v(outp) v(outn) v(vid)
+alter VrcR 1.242
+alter VrcC 0.405
+op
+wrdata op_038.txt v(att_n0) v(att_n1) v(att_n2) v(att_p0) v(att_p1) v(att_p2) v(cctrl) v(cm) v(df_clk) v(df_clkb) v(df_ma) v(df_mb) v(df_mn) v(df_mp) v(df_mtail) v(df_nbias) v(df_q) v(df_qb) v(df_sa) v(df_sb) v(df_stail) v(fd_common) v(fd_tail0) v(fd_tail1) v(fd_tail2) v(fd_tail3) v(inn) v(inp) v(nbias) v(outn) v(outp) v(p_bias) v(rc_ct) v(rc_gate) v(rc_mid) v(rctrl) v(s1) v(s2) v(sum_n) v(sum_p) v(sum_tail) v(tap0) v(tap1) v(tap2) v(tap3) v(vdd) v(vid) i(vdd)
+ac dec 50 1meg 100g
+wrdata ac_038.txt v(outp) v(outn) v(vid)
+alter VrcR 1.278
+alter VrcC 0.297
+op
+wrdata op_039.txt v(att_n0) v(att_n1) v(att_n2) v(att_p0) v(att_p1) v(att_p2) v(cctrl) v(cm) v(df_clk) v(df_clkb) v(df_ma) v(df_mb) v(df_mn) v(df_mp) v(df_mtail) v(df_nbias) v(df_q) v(df_qb) v(df_sa) v(df_sb) v(df_stail) v(fd_common) v(fd_tail0) v(fd_tail1) v(fd_tail2) v(fd_tail3) v(inn) v(inp) v(nbias) v(outn) v(outp) v(p_bias) v(rc_ct) v(rc_gate) v(rc_mid) v(rctrl) v(s1) v(s2) v(sum_n) v(sum_p) v(sum_tail) v(tap0) v(tap1) v(tap2) v(tap3) v(vdd) v(vid) i(vdd)
+ac dec 50 1meg 100g
+wrdata ac_039.txt v(outp) v(outn) v(vid)
+alter VrcR 1.278
+alter VrcC 0.306
+op
+wrdata op_040.txt v(att_n0) v(att_n1) v(att_n2) v(att_p0) v(att_p1) v(att_p2) v(cctrl) v(cm) v(df_clk) v(df_clkb) v(df_ma) v(df_mb) v(df_mn) v(df_mp) v(df_mtail) v(df_nbias) v(df_q) v(df_qb) v(df_sa) v(df_sb) v(df_stail) v(fd_common) v(fd_tail0) v(fd_tail1) v(fd_tail2) v(fd_tail3) v(inn) v(inp) v(nbias) v(outn) v(outp) v(p_bias) v(rc_ct) v(rc_gate) v(rc_mid) v(rctrl) v(s1) v(s2) v(sum_n) v(sum_p) v(sum_tail) v(tap0) v(tap1) v(tap2) v(tap3) v(vdd) v(vid) i(vdd)
+ac dec 50 1meg 100g
+wrdata ac_040.txt v(outp) v(outn) v(vid)
+alter VrcR 1.278
+alter VrcC 0.315
+op
+wrdata op_041.txt v(att_n0) v(att_n1) v(att_n2) v(att_p0) v(att_p1) v(att_p2) v(cctrl) v(cm) v(df_clk) v(df_clkb) v(df_ma) v(df_mb) v(df_mn) v(df_mp) v(df_mtail) v(df_nbias) v(df_q) v(df_qb) v(df_sa) v(df_sb) v(df_stail) v(fd_common) v(fd_tail0) v(fd_tail1) v(fd_tail2) v(fd_tail3) v(inn) v(inp) v(nbias) v(outn) v(outp) v(p_bias) v(rc_ct) v(rc_gate) v(rc_mid) v(rctrl) v(s1) v(s2) v(sum_n) v(sum_p) v(sum_tail) v(tap0) v(tap1) v(tap2) v(tap3) v(vdd) v(vid) i(vdd)
+ac dec 50 1meg 100g
+wrdata ac_041.txt v(outp) v(outn) v(vid)
+alter VrcR 1.278
+alter VrcC 0.324
+op
+wrdata op_042.txt v(att_n0) v(att_n1) v(att_n2) v(att_p0) v(att_p1) v(att_p2) v(cctrl) v(cm) v(df_clk) v(df_clkb) v(df_ma) v(df_mb) v(df_mn) v(df_mp) v(df_mtail) v(df_nbias) v(df_q) v(df_qb) v(df_sa) v(df_sb) v(df_stail) v(fd_common) v(fd_tail0) v(fd_tail1) v(fd_tail2) v(fd_tail3) v(inn) v(inp) v(nbias) v(outn) v(outp) v(p_bias) v(rc_ct) v(rc_gate) v(rc_mid) v(rctrl) v(s1) v(s2) v(sum_n) v(sum_p) v(sum_tail) v(tap0) v(tap1) v(tap2) v(tap3) v(vdd) v(vid) i(vdd)
+ac dec 50 1meg 100g
+wrdata ac_042.txt v(outp) v(outn) v(vid)
+alter VrcR 1.278
+alter VrcC 0.333
+op
+wrdata op_043.txt v(att_n0) v(att_n1) v(att_n2) v(att_p0) v(att_p1) v(att_p2) v(cctrl) v(cm) v(df_clk) v(df_clkb) v(df_ma) v(df_mb) v(df_mn) v(df_mp) v(df_mtail) v(df_nbias) v(df_q) v(df_qb) v(df_sa) v(df_sb) v(df_stail) v(fd_common) v(fd_tail0) v(fd_tail1) v(fd_tail2) v(fd_tail3) v(inn) v(inp) v(nbias) v(outn) v(outp) v(p_bias) v(rc_ct) v(rc_gate) v(rc_mid) v(rctrl) v(s1) v(s2) v(sum_n) v(sum_p) v(sum_tail) v(tap0) v(tap1) v(tap2) v(tap3) v(vdd) v(vid) i(vdd)
+ac dec 50 1meg 100g
+wrdata ac_043.txt v(outp) v(outn) v(vid)
+alter VrcR 1.278
+alter VrcC 0.342
+op
+wrdata op_044.txt v(att_n0) v(att_n1) v(att_n2) v(att_p0) v(att_p1) v(att_p2) v(cctrl) v(cm) v(df_clk) v(df_clkb) v(df_ma) v(df_mb) v(df_mn) v(df_mp) v(df_mtail) v(df_nbias) v(df_q) v(df_qb) v(df_sa) v(df_sb) v(df_stail) v(fd_common) v(fd_tail0) v(fd_tail1) v(fd_tail2) v(fd_tail3) v(inn) v(inp) v(nbias) v(outn) v(outp) v(p_bias) v(rc_ct) v(rc_gate) v(rc_mid) v(rctrl) v(s1) v(s2) v(sum_n) v(sum_p) v(sum_tail) v(tap0) v(tap1) v(tap2) v(tap3) v(vdd) v(vid) i(vdd)
+ac dec 50 1meg 100g
+wrdata ac_044.txt v(outp) v(outn) v(vid)
+alter VrcR 1.278
+alter VrcC 0.351
+op
+wrdata op_045.txt v(att_n0) v(att_n1) v(att_n2) v(att_p0) v(att_p1) v(att_p2) v(cctrl) v(cm) v(df_clk) v(df_clkb) v(df_ma) v(df_mb) v(df_mn) v(df_mp) v(df_mtail) v(df_nbias) v(df_q) v(df_qb) v(df_sa) v(df_sb) v(df_stail) v(fd_common) v(fd_tail0) v(fd_tail1) v(fd_tail2) v(fd_tail3) v(inn) v(inp) v(nbias) v(outn) v(outp) v(p_bias) v(rc_ct) v(rc_gate) v(rc_mid) v(rctrl) v(s1) v(s2) v(sum_n) v(sum_p) v(sum_tail) v(tap0) v(tap1) v(tap2) v(tap3) v(vdd) v(vid) i(vdd)
+ac dec 50 1meg 100g
+wrdata ac_045.txt v(outp) v(outn) v(vid)
+alter VrcR 1.278
+alter VrcC 0.36
+op
+wrdata op_046.txt v(att_n0) v(att_n1) v(att_n2) v(att_p0) v(att_p1) v(att_p2) v(cctrl) v(cm) v(df_clk) v(df_clkb) v(df_ma) v(df_mb) v(df_mn) v(df_mp) v(df_mtail) v(df_nbias) v(df_q) v(df_qb) v(df_sa) v(df_sb) v(df_stail) v(fd_common) v(fd_tail0) v(fd_tail1) v(fd_tail2) v(fd_tail3) v(inn) v(inp) v(nbias) v(outn) v(outp) v(p_bias) v(rc_ct) v(rc_gate) v(rc_mid) v(rctrl) v(s1) v(s2) v(sum_n) v(sum_p) v(sum_tail) v(tap0) v(tap1) v(tap2) v(tap3) v(vdd) v(vid) i(vdd)
+ac dec 50 1meg 100g
+wrdata ac_046.txt v(outp) v(outn) v(vid)
+alter VrcR 1.278
+alter VrcC 0.369
+op
+wrdata op_047.txt v(att_n0) v(att_n1) v(att_n2) v(att_p0) v(att_p1) v(att_p2) v(cctrl) v(cm) v(df_clk) v(df_clkb) v(df_ma) v(df_mb) v(df_mn) v(df_mp) v(df_mtail) v(df_nbias) v(df_q) v(df_qb) v(df_sa) v(df_sb) v(df_stail) v(fd_common) v(fd_tail0) v(fd_tail1) v(fd_tail2) v(fd_tail3) v(inn) v(inp) v(nbias) v(outn) v(outp) v(p_bias) v(rc_ct) v(rc_gate) v(rc_mid) v(rctrl) v(s1) v(s2) v(sum_n) v(sum_p) v(sum_tail) v(tap0) v(tap1) v(tap2) v(tap3) v(vdd) v(vid) i(vdd)
+ac dec 50 1meg 100g
+wrdata ac_047.txt v(outp) v(outn) v(vid)
+alter VrcR 1.278
+alter VrcC 0.378
+op
+wrdata op_048.txt v(att_n0) v(att_n1) v(att_n2) v(att_p0) v(att_p1) v(att_p2) v(cctrl) v(cm) v(df_clk) v(df_clkb) v(df_ma) v(df_mb) v(df_mn) v(df_mp) v(df_mtail) v(df_nbias) v(df_q) v(df_qb) v(df_sa) v(df_sb) v(df_stail) v(fd_common) v(fd_tail0) v(fd_tail1) v(fd_tail2) v(fd_tail3) v(inn) v(inp) v(nbias) v(outn) v(outp) v(p_bias) v(rc_ct) v(rc_gate) v(rc_mid) v(rctrl) v(s1) v(s2) v(sum_n) v(sum_p) v(sum_tail) v(tap0) v(tap1) v(tap2) v(tap3) v(vdd) v(vid) i(vdd)
+ac dec 50 1meg 100g
+wrdata ac_048.txt v(outp) v(outn) v(vid)
+alter VrcR 1.278
+alter VrcC 0.387
+op
+wrdata op_049.txt v(att_n0) v(att_n1) v(att_n2) v(att_p0) v(att_p1) v(att_p2) v(cctrl) v(cm) v(df_clk) v(df_clkb) v(df_ma) v(df_mb) v(df_mn) v(df_mp) v(df_mtail) v(df_nbias) v(df_q) v(df_qb) v(df_sa) v(df_sb) v(df_stail) v(fd_common) v(fd_tail0) v(fd_tail1) v(fd_tail2) v(fd_tail3) v(inn) v(inp) v(nbias) v(outn) v(outp) v(p_bias) v(rc_ct) v(rc_gate) v(rc_mid) v(rctrl) v(s1) v(s2) v(sum_n) v(sum_p) v(sum_tail) v(tap0) v(tap1) v(tap2) v(tap3) v(vdd) v(vid) i(vdd)
+ac dec 50 1meg 100g
+wrdata ac_049.txt v(outp) v(outn) v(vid)
+alter VrcR 1.278
+alter VrcC 0.396
+op
+wrdata op_050.txt v(att_n0) v(att_n1) v(att_n2) v(att_p0) v(att_p1) v(att_p2) v(cctrl) v(cm) v(df_clk) v(df_clkb) v(df_ma) v(df_mb) v(df_mn) v(df_mp) v(df_mtail) v(df_nbias) v(df_q) v(df_qb) v(df_sa) v(df_sb) v(df_stail) v(fd_common) v(fd_tail0) v(fd_tail1) v(fd_tail2) v(fd_tail3) v(inn) v(inp) v(nbias) v(outn) v(outp) v(p_bias) v(rc_ct) v(rc_gate) v(rc_mid) v(rctrl) v(s1) v(s2) v(sum_n) v(sum_p) v(sum_tail) v(tap0) v(tap1) v(tap2) v(tap3) v(vdd) v(vid) i(vdd)
+ac dec 50 1meg 100g
+wrdata ac_050.txt v(outp) v(outn) v(vid)
+alter VrcR 1.278
+alter VrcC 0.405
+op
+wrdata op_051.txt v(att_n0) v(att_n1) v(att_n2) v(att_p0) v(att_p1) v(att_p2) v(cctrl) v(cm) v(df_clk) v(df_clkb) v(df_ma) v(df_mb) v(df_mn) v(df_mp) v(df_mtail) v(df_nbias) v(df_q) v(df_qb) v(df_sa) v(df_sb) v(df_stail) v(fd_common) v(fd_tail0) v(fd_tail1) v(fd_tail2) v(fd_tail3) v(inn) v(inp) v(nbias) v(outn) v(outp) v(p_bias) v(rc_ct) v(rc_gate) v(rc_mid) v(rctrl) v(s1) v(s2) v(sum_n) v(sum_p) v(sum_tail) v(tap0) v(tap1) v(tap2) v(tap3) v(vdd) v(vid) i(vdd)
+ac dec 50 1meg 100g
+wrdata ac_051.txt v(outp) v(outn) v(vid)
+alter VrcR 1.296
+alter VrcC 0.297
+op
+wrdata op_052.txt v(att_n0) v(att_n1) v(att_n2) v(att_p0) v(att_p1) v(att_p2) v(cctrl) v(cm) v(df_clk) v(df_clkb) v(df_ma) v(df_mb) v(df_mn) v(df_mp) v(df_mtail) v(df_nbias) v(df_q) v(df_qb) v(df_sa) v(df_sb) v(df_stail) v(fd_common) v(fd_tail0) v(fd_tail1) v(fd_tail2) v(fd_tail3) v(inn) v(inp) v(nbias) v(outn) v(outp) v(p_bias) v(rc_ct) v(rc_gate) v(rc_mid) v(rctrl) v(s1) v(s2) v(sum_n) v(sum_p) v(sum_tail) v(tap0) v(tap1) v(tap2) v(tap3) v(vdd) v(vid) i(vdd)
+ac dec 50 1meg 100g
+wrdata ac_052.txt v(outp) v(outn) v(vid)
+alter VrcR 1.296
+alter VrcC 0.306
+op
+wrdata op_053.txt v(att_n0) v(att_n1) v(att_n2) v(att_p0) v(att_p1) v(att_p2) v(cctrl) v(cm) v(df_clk) v(df_clkb) v(df_ma) v(df_mb) v(df_mn) v(df_mp) v(df_mtail) v(df_nbias) v(df_q) v(df_qb) v(df_sa) v(df_sb) v(df_stail) v(fd_common) v(fd_tail0) v(fd_tail1) v(fd_tail2) v(fd_tail3) v(inn) v(inp) v(nbias) v(outn) v(outp) v(p_bias) v(rc_ct) v(rc_gate) v(rc_mid) v(rctrl) v(s1) v(s2) v(sum_n) v(sum_p) v(sum_tail) v(tap0) v(tap1) v(tap2) v(tap3) v(vdd) v(vid) i(vdd)
+ac dec 50 1meg 100g
+wrdata ac_053.txt v(outp) v(outn) v(vid)
+alter VrcR 1.296
+alter VrcC 0.315
+op
+wrdata op_054.txt v(att_n0) v(att_n1) v(att_n2) v(att_p0) v(att_p1) v(att_p2) v(cctrl) v(cm) v(df_clk) v(df_clkb) v(df_ma) v(df_mb) v(df_mn) v(df_mp) v(df_mtail) v(df_nbias) v(df_q) v(df_qb) v(df_sa) v(df_sb) v(df_stail) v(fd_common) v(fd_tail0) v(fd_tail1) v(fd_tail2) v(fd_tail3) v(inn) v(inp) v(nbias) v(outn) v(outp) v(p_bias) v(rc_ct) v(rc_gate) v(rc_mid) v(rctrl) v(s1) v(s2) v(sum_n) v(sum_p) v(sum_tail) v(tap0) v(tap1) v(tap2) v(tap3) v(vdd) v(vid) i(vdd)
+ac dec 50 1meg 100g
+wrdata ac_054.txt v(outp) v(outn) v(vid)
+alter VrcR 1.296
+alter VrcC 0.324
+op
+wrdata op_055.txt v(att_n0) v(att_n1) v(att_n2) v(att_p0) v(att_p1) v(att_p2) v(cctrl) v(cm) v(df_clk) v(df_clkb) v(df_ma) v(df_mb) v(df_mn) v(df_mp) v(df_mtail) v(df_nbias) v(df_q) v(df_qb) v(df_sa) v(df_sb) v(df_stail) v(fd_common) v(fd_tail0) v(fd_tail1) v(fd_tail2) v(fd_tail3) v(inn) v(inp) v(nbias) v(outn) v(outp) v(p_bias) v(rc_ct) v(rc_gate) v(rc_mid) v(rctrl) v(s1) v(s2) v(sum_n) v(sum_p) v(sum_tail) v(tap0) v(tap1) v(tap2) v(tap3) v(vdd) v(vid) i(vdd)
+ac dec 50 1meg 100g
+wrdata ac_055.txt v(outp) v(outn) v(vid)
+alter VrcR 1.296
+alter VrcC 0.333
+op
+wrdata op_056.txt v(att_n0) v(att_n1) v(att_n2) v(att_p0) v(att_p1) v(att_p2) v(cctrl) v(cm) v(df_clk) v(df_clkb) v(df_ma) v(df_mb) v(df_mn) v(df_mp) v(df_mtail) v(df_nbias) v(df_q) v(df_qb) v(df_sa) v(df_sb) v(df_stail) v(fd_common) v(fd_tail0) v(fd_tail1) v(fd_tail2) v(fd_tail3) v(inn) v(inp) v(nbias) v(outn) v(outp) v(p_bias) v(rc_ct) v(rc_gate) v(rc_mid) v(rctrl) v(s1) v(s2) v(sum_n) v(sum_p) v(sum_tail) v(tap0) v(tap1) v(tap2) v(tap3) v(vdd) v(vid) i(vdd)
+ac dec 50 1meg 100g
+wrdata ac_056.txt v(outp) v(outn) v(vid)
+alter VrcR 1.296
+alter VrcC 0.342
+op
+wrdata op_057.txt v(att_n0) v(att_n1) v(att_n2) v(att_p0) v(att_p1) v(att_p2) v(cctrl) v(cm) v(df_clk) v(df_clkb) v(df_ma) v(df_mb) v(df_mn) v(df_mp) v(df_mtail) v(df_nbias) v(df_q) v(df_qb) v(df_sa) v(df_sb) v(df_stail) v(fd_common) v(fd_tail0) v(fd_tail1) v(fd_tail2) v(fd_tail3) v(inn) v(inp) v(nbias) v(outn) v(outp) v(p_bias) v(rc_ct) v(rc_gate) v(rc_mid) v(rctrl) v(s1) v(s2) v(sum_n) v(sum_p) v(sum_tail) v(tap0) v(tap1) v(tap2) v(tap3) v(vdd) v(vid) i(vdd)
+ac dec 50 1meg 100g
+wrdata ac_057.txt v(outp) v(outn) v(vid)
+alter VrcR 1.296
+alter VrcC 0.351
+op
+wrdata op_058.txt v(att_n0) v(att_n1) v(att_n2) v(att_p0) v(att_p1) v(att_p2) v(cctrl) v(cm) v(df_clk) v(df_clkb) v(df_ma) v(df_mb) v(df_mn) v(df_mp) v(df_mtail) v(df_nbias) v(df_q) v(df_qb) v(df_sa) v(df_sb) v(df_stail) v(fd_common) v(fd_tail0) v(fd_tail1) v(fd_tail2) v(fd_tail3) v(inn) v(inp) v(nbias) v(outn) v(outp) v(p_bias) v(rc_ct) v(rc_gate) v(rc_mid) v(rctrl) v(s1) v(s2) v(sum_n) v(sum_p) v(sum_tail) v(tap0) v(tap1) v(tap2) v(tap3) v(vdd) v(vid) i(vdd)
+ac dec 50 1meg 100g
+wrdata ac_058.txt v(outp) v(outn) v(vid)
+alter VrcR 1.296
+alter VrcC 0.36
+op
+wrdata op_059.txt v(att_n0) v(att_n1) v(att_n2) v(att_p0) v(att_p1) v(att_p2) v(cctrl) v(cm) v(df_clk) v(df_clkb) v(df_ma) v(df_mb) v(df_mn) v(df_mp) v(df_mtail) v(df_nbias) v(df_q) v(df_qb) v(df_sa) v(df_sb) v(df_stail) v(fd_common) v(fd_tail0) v(fd_tail1) v(fd_tail2) v(fd_tail3) v(inn) v(inp) v(nbias) v(outn) v(outp) v(p_bias) v(rc_ct) v(rc_gate) v(rc_mid) v(rctrl) v(s1) v(s2) v(sum_n) v(sum_p) v(sum_tail) v(tap0) v(tap1) v(tap2) v(tap3) v(vdd) v(vid) i(vdd)
+ac dec 50 1meg 100g
+wrdata ac_059.txt v(outp) v(outn) v(vid)
+alter VrcR 1.296
+alter VrcC 0.369
+op
+wrdata op_060.txt v(att_n0) v(att_n1) v(att_n2) v(att_p0) v(att_p1) v(att_p2) v(cctrl) v(cm) v(df_clk) v(df_clkb) v(df_ma) v(df_mb) v(df_mn) v(df_mp) v(df_mtail) v(df_nbias) v(df_q) v(df_qb) v(df_sa) v(df_sb) v(df_stail) v(fd_common) v(fd_tail0) v(fd_tail1) v(fd_tail2) v(fd_tail3) v(inn) v(inp) v(nbias) v(outn) v(outp) v(p_bias) v(rc_ct) v(rc_gate) v(rc_mid) v(rctrl) v(s1) v(s2) v(sum_n) v(sum_p) v(sum_tail) v(tap0) v(tap1) v(tap2) v(tap3) v(vdd) v(vid) i(vdd)
+ac dec 50 1meg 100g
+wrdata ac_060.txt v(outp) v(outn) v(vid)
+alter VrcR 1.296
+alter VrcC 0.378
+op
+wrdata op_061.txt v(att_n0) v(att_n1) v(att_n2) v(att_p0) v(att_p1) v(att_p2) v(cctrl) v(cm) v(df_clk) v(df_clkb) v(df_ma) v(df_mb) v(df_mn) v(df_mp) v(df_mtail) v(df_nbias) v(df_q) v(df_qb) v(df_sa) v(df_sb) v(df_stail) v(fd_common) v(fd_tail0) v(fd_tail1) v(fd_tail2) v(fd_tail3) v(inn) v(inp) v(nbias) v(outn) v(outp) v(p_bias) v(rc_ct) v(rc_gate) v(rc_mid) v(rctrl) v(s1) v(s2) v(sum_n) v(sum_p) v(sum_tail) v(tap0) v(tap1) v(tap2) v(tap3) v(vdd) v(vid) i(vdd)
+ac dec 50 1meg 100g
+wrdata ac_061.txt v(outp) v(outn) v(vid)
+alter VrcR 1.296
+alter VrcC 0.387
+op
+wrdata op_062.txt v(att_n0) v(att_n1) v(att_n2) v(att_p0) v(att_p1) v(att_p2) v(cctrl) v(cm) v(df_clk) v(df_clkb) v(df_ma) v(df_mb) v(df_mn) v(df_mp) v(df_mtail) v(df_nbias) v(df_q) v(df_qb) v(df_sa) v(df_sb) v(df_stail) v(fd_common) v(fd_tail0) v(fd_tail1) v(fd_tail2) v(fd_tail3) v(inn) v(inp) v(nbias) v(outn) v(outp) v(p_bias) v(rc_ct) v(rc_gate) v(rc_mid) v(rctrl) v(s1) v(s2) v(sum_n) v(sum_p) v(sum_tail) v(tap0) v(tap1) v(tap2) v(tap3) v(vdd) v(vid) i(vdd)
+ac dec 50 1meg 100g
+wrdata ac_062.txt v(outp) v(outn) v(vid)
+alter VrcR 1.296
+alter VrcC 0.396
+op
+wrdata op_063.txt v(att_n0) v(att_n1) v(att_n2) v(att_p0) v(att_p1) v(att_p2) v(cctrl) v(cm) v(df_clk) v(df_clkb) v(df_ma) v(df_mb) v(df_mn) v(df_mp) v(df_mtail) v(df_nbias) v(df_q) v(df_qb) v(df_sa) v(df_sb) v(df_stail) v(fd_common) v(fd_tail0) v(fd_tail1) v(fd_tail2) v(fd_tail3) v(inn) v(inp) v(nbias) v(outn) v(outp) v(p_bias) v(rc_ct) v(rc_gate) v(rc_mid) v(rctrl) v(s1) v(s2) v(sum_n) v(sum_p) v(sum_tail) v(tap0) v(tap1) v(tap2) v(tap3) v(vdd) v(vid) i(vdd)
+ac dec 50 1meg 100g
+wrdata ac_063.txt v(outp) v(outn) v(vid)
+alter VrcR 1.296
+alter VrcC 0.405
+op
+wrdata op_064.txt v(att_n0) v(att_n1) v(att_n2) v(att_p0) v(att_p1) v(att_p2) v(cctrl) v(cm) v(df_clk) v(df_clkb) v(df_ma) v(df_mb) v(df_mn) v(df_mp) v(df_mtail) v(df_nbias) v(df_q) v(df_qb) v(df_sa) v(df_sb) v(df_stail) v(fd_common) v(fd_tail0) v(fd_tail1) v(fd_tail2) v(fd_tail3) v(inn) v(inp) v(nbias) v(outn) v(outp) v(p_bias) v(rc_ct) v(rc_gate) v(rc_mid) v(rctrl) v(s1) v(s2) v(sum_n) v(sum_p) v(sum_tail) v(tap0) v(tap1) v(tap2) v(tap3) v(vdd) v(vid) i(vdd)
+ac dec 50 1meg 100g
+wrdata ac_064.txt v(outp) v(outn) v(vid)
+quit
+.endc
+.end

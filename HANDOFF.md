@@ -17,7 +17,11 @@
 > decisions that are OPEN and human-only, and what to do next. It supersedes
 > `nebula/NEXT_STEPS.md`. This file remains the full state of record.
 
-Last updated: **2026-09-10**, Entry 137 retains a convergence failure and one loaded snapshot; Entry 138 initialization recovery is unrun.
+Last updated: **2026-09-10**, Entry 144 passes 45/45 calibrated transistor link PVT; the mandatory 3397-test regression passes and the authorized public backup is ready.
+
+The owner explicitly reconfirmed "yes push to the public repo" on 2026-09-10.
+The old public/private permission hold is resolved. Keep copyrighted/PDK and
+other ignored references out of Git; normal fast-forwards only to both branches.
 The organiser requires a transistor-level CTLE plus DFE and configurable
 Rs/Cs. The owner authorizes bounded agent-selected experiments for both;
 DFE is first. Entry 122 CML passes all three TT screens with valid terminal
@@ -1055,6 +1059,21 @@ signaling, ADC-based DSP receiver, 28 nm CMOS reference parameters).
 
 ## 2. Repository map (what every file/folder is)
 
+Current calibrated hardware result: `nebula/DFE_CALIBRATED_RESULTS.md`.
+Raw independent nominal and 45-corner evidence: Entry 143/144 roots under
+`nebula/product_audits/`. Exact replay coverage:
+`test_dfe_calibrated_evidence.py` and `test_dfe_calibrated_pvt_evidence.py`.
+
+Latest results: `nebula/DFE_CLOCKED_LINEARITY_RESULTS.md`; exact replay tests
+`test_dfe_clocked_linearity_evidence.py`. Next calibration:
+`DFE_LOADED_CALIBRATION_PLAN.md`, `exp_dfe_loaded_calibration.py`, with
+raw evidence under the correspondingly numbered `nebula/product_audits/` roots.
+
+Entry 139: `nebula/DFE_CLOCKED_LINEARITY_PLAN.md` and
+`nebula/experiments/exp_dfe_clocked_linearity.py`; Entry 138 results are in
+`nebula/DFE_LOADED_INITIALIZATION_RESULTS.md` with immutable raw evidence
+under `nebula/product_audits/entry138_dfe_loaded_initialization_20260910/`.
+
 Entry 137 measured evidence: `product_audits/entry137_dfe_loaded_analog_20260910/`,
 `DFE_LOADED_ANALOG_RESULTS.md`, `tests/test_dfe_loaded_analog_evidence.py`.
 Entry 138: `DFE_LOADED_INITIALIZATION_PLAN.md`,
@@ -2076,6 +2095,23 @@ PRBS → scramble → Gray/PAM4 → TX-FFE → ZOH ×OSR(8) → TX pole (0.75·f
 
 ## 5. Complete history (what was done, in order, with the WHY)
 
+Entry 144 completes new-control link PVT: 45/45 pass at fixed R=.70/C=.185
+VDD, same code/phase/channel. Entry 143 independently verifies nominal tuning,
+noise, four-way HD3 and physical decoding; Entry 142 performs actual loaded
+control calibration. Old failures are preserved. Public backup authorization
+is explicitly reconfirmed; AGENTS rule 4 now reflects that owner instruction.
+
+Entry 141 completes the required nominal loaded CTLE-output distortion
+measurement after Entries 139/140 numerical aborts. Four numerical settings
+agree near -55.44 dBc. Entry 142 calibrates the old loaded 1.75 GHz control
+point toward the requested 9 dB / 1.9 GHz without changing physical devices.
+
+Entry 138 outcome supersedes its UNRUN descriptions below: four calls recover
+both original state-0 polarities and calibrate state-1 negative. The additional
+state-1 positive diagnostic still warns; its four-state gate remains failed.
+Entry 139 separately measures required clocked HD3 from the accepted negative
+starting state, without changing devices, analysis or previous verdicts.
+
 Entry 137 (2026-09-10) follows the user's direction to finish actual required
 specification checks, not optimize the internal 500 ns control-settling target.
 It registers up to 20 nominal loaded OP/AC/noise and clocked distortion calls,
@@ -2354,6 +2390,21 @@ Plus: git init, .gitignore, 28 tests, Wilson-bound BER reporting.
   rectangle and is now an explicit limitation, not a hidden traceback.
 
 ## 6. Key numbers & validated behavior (current state)
+
+LATEST calibrated controls: R=.70/C=.185 VDD. Nominal peak 1.903-1.906 GHz,
+boost 8.744-8.747 dB, noise .65404-.65405 mVrms, HD3 -54.9137 to -54.9201
+dBc. Fresh nominal decoding 64/64 bits, 210.340 mV eye, .655 UI above 100 mV.
+Entry 144: 45/45 sampled link PVT, 64/64 bits each; minimum eye 113.244 mV,
+minimum positive width .635 UI, minimum width above 100 mV .560 UI; maximum
+VDD power 12.5241 mW. Same code, phase, controls and channel at all corners.
+Noise/HD3 are nominal only; this is not analog PVT or full receiver signoff.
+
+Historical Entry 138 accepts three of four held-state/polarity measurements
+at the older controls. Its 1.747-1.750 GHz target mismatch and positive-held-
+state warning remain preserved, not rewritten by the later calibration.
+Before this change batch: 3305 passed, 13 deselected, two known warnings in
+1019.90 s. Final full post-change regression: 3397 passed, 13 deselected,
+two known warnings in 1816.12 s.
 
 Entry 137: one accepted TT held-clock snapshot, noise .635864655 mVrms,
 boost 8.836252475 dB at 1.750132069 GHz, VDD power 9.280663703 mW.
@@ -3063,6 +3114,23 @@ still NOT full area. The 12-request replay is fully supported at eight requests;
 
 ## 7. Known model limitations (honest list — do not overclaim)
 
+The corrected calibrated prototype now has independent nominal analog proof
+and 45-case finite-pattern link PVT. Analog PVT, full loaded target map,
+periodic receiver noise, positive held branches, DFE-active runtime tuning,
+typical-passive tolerance/mismatch, layout and physical control/clock/VCM
+generators remain unverified or external. Production web/CLI registry and
+reports still describe the older delivered path; they are not silently promoted.
+
+Entry 141 proves nominal clocked CTLE-output model HD3 only. Generic-poly
+nonlinearity, periodic noise and analog PVT remain unverified. Any newly
+calibrated controls must receive independent analog/link checks; old passing
+HD3 and 45-case eye PVT may not be silently transferred to them.
+
+Entry 138's held state-1 positive convergence warning remains unresolved.
+Three accepted static snapshots are not complete static or periodic-noise
+coverage. Entry 139's independent transient cannot retroactively pass that
+four-state gate or repair loaded tuning accuracy.
+
 Entry 137's held-clock noise measurements are DC-linearized loaded-CTLE
 snapshots, NOT periodic clocked-receiver noise. Generic poly voltage-dependent
 nonlinearity remains unverified even if clocked model HD3 passes. Its nine
@@ -3327,6 +3395,17 @@ variation, mismatch and layout remain open. Old production evidence is unchanged
   untrusted until proven (the Phase-0 experience says assume bugs).
 
 ## 8. Next steps (prioritized backlog with context)
+
+Latest priority superseding older UNRUN entries: replay completed Entries
+138-144, run final mandatory full regression, audit and commit with this
+handoff, then push both branches to the verified commit. Public authorization
+is now explicit. Follow-on technical work is analog PVT and production-path
+integration with accurate scope, not another run of completed experiments.
+
+Latest authorized priority: run registered Entry 139 once, preserve and replay
+both raw measurements, then complete mandatory post-change regression and local
+commit. Next address loaded tuning calibration and relevant analog PVT. Public
+upload remains paused pending the contradictory privacy instruction clarification.
 
 **Current authorized priority (Entry 138):** validate/freeze and run the
 six-call initialized primary analog instrument. Preserve Entry 137's failure.
@@ -3951,6 +4030,51 @@ explicit scope.
 **1-9.** (See existing backlog: .s4p, clipping disto, joint adaptation, etc.)
 
 ## 9. Gotchas & footguns (each one cost real debugging time)
+
+### G192. Shared dispatch labels are not non-tone solver settings
+
+Entry 143's generic folder/result labels carry tol=1e-5/step5ps even for
+static/link calls, where those dispatch arguments are ignored by design.
+The actual static deck uses reltol=1e-7/vntol=1e-10/abstol=1e-13; the actual
+link deck uses tran 1p ... 1p. Only tone metadata denotes the actual varied
+settings. Frozen decks, preregistration and exact raw replays are authoritative.
+The result guide explicitly documents this metadata ambiguity. Do not rewrite
+raw records or infer non-tone solver settings from the shared case labels.
+
+### G191. Exact deck replay needs the exact registered corner objects
+
+The five screening Corner objects use integer temperatures; all_corners()
+uses numerically equal floats. The generator renders .temp 27 versus 27.0.
+Replay the actual screen-first object sequence rather than reconstructing
+all inputs from the general grid. Do not normalize or rewrite frozen decks,
+weaken exact-byte checks, or rerun physical measurements for a test-fixture bug.
+
+### G190. Calibrate and verify actual loaded controls, never massage primitives
+
+Standalone control values peak near 1.75 GHz after real DFE loading. Entry
+142 measures a new control setting; Entries 143/144 independently remeasure
+its nominal analog/link behavior and corner link behavior. Parameterize the
+expected control arguments in validators; never alter measured nodes to make
+an old hardcoded control check pass. Exact-source tests enforce unchanged
+analog/control formulas. Older noise, HD3 and PVT are not transferred blindly.
+
+### G189. Excessively tight transient tolerances can abort a valid DC model
+
+Entries 139/140 abort within the varactor internal node with a timestep-too-
+small diagnostic; zero exit and partial output are not usable measurements.
+The frozen endpoint gate caught this even though the generic scanner missed
+the text. Entry 141 explicitly rejects abort messages and accepts only four
+complete runs agreeing across time steps and tolerances. Its .001556 dB spread
+is observed numerical evidence, not justification to relax a physical spec.
+
+### G188. Independent required measurements do not erase failed diagnostics
+
+A separately registered clocked transient can use an accepted starting state
+without claiming all held DC branches converged. Retain Entry 138's failed
+four-state verdict. For orchestration-only Entry 139, record the dirty Git
+parent honestly and freeze exact source copies/hashes before either call;
+the snapshot is authoritative. Full before/after regression still applies,
+with post-result testing before commit and no source edits during the run.
 
 Entry 113 (2026-09-07): supplemental attribution and 12-request physical
 coverage are complete; see nebula/POST_REVIEW_RESULTS.md and session 61 below.
@@ -19104,3 +19228,220 @@ credentials or prohibited material, prior sources and both PDFs unchanged.
 Freeze this local checkpoint before the six-call recovery. Public backup
 permission was asked again while tests ran and remains unanswered; do not
 upload or change repository visibility without that clarification.
+
+### 2026-09-10 - Entry 138 partial recovery; Entry 139 clocked HD3 registered
+
+Entry 138 runs from ca8cfb9246dbf62ce6ea80c4c362b46b9a567a90 after 3305
+full passing tests (1019.90 s). Exactly four calls take 129.7941215 s,
+including .1767439 s preflight. State-1 negative calibrates; state-0 negative
+and positive both pass initialization and broad analog/voltage gates.
+State-1 positive still emits an unregistered Further gmin increment warning.
+The original four-state gate remains failed and neither tone runs. Accepted
+noise is approximately .63584 mVrms, peak 1.747-1.750 GHz and VDD power
+9.276-9.281 mW. Target accuracy is still false; sources/PDK unchanged.
+Manifest has 106 entries, SHA-256
+9f6f3d5bbd36023329a850d5dc8030492db59464bbe12b97f924ec8957101a27;
+summary 113cc58d909f5d2c4bcc2edb601f7d1c8952eb7e71b749583b32ba63eefab142.
+All 107 small evidence files retained; no archive/deletion needed.
+
+Entry 139 independently preregisters exactly two 180 s maximum calls, using
+byte-identical frozen Entry 138 tone decks and extractors. No retry, new
+sizing, warning relaxation or changed thresholds. Accepted state-0 negative
+and state-1 negative calibration are prerequisites. Five Entry 138 evidence
+tests and two new wrapper tests pass with related checks: 35 in 4.85 s.
+Before-change full baseline: 3305 passed, 13 deselected, two known warnings,
+1019.90 s. The new wrapper is frozen by pre-run copied source SHA-256 with
+dirty-worktree provenance; full post-result regression precedes commit.
+Entry 139 is UNRUN at this registration. Reports/product/RL remain unchanged.
+No public upload or visibility change pending the unanswered privacy question.
+
+### 2026-09-10 - Entry 139 aborted traces; Entry 140 solver-only recovery
+
+Entry 139's two calls complete in 60.9518274 s including .0569598 s preflight,
+but both transient analyses abort inside xrc_var_s1.p2 at 2.6/3.89 ns with
+Timestep too small. Neither reaches 150 ns; the complete-waveform gate rejects
+both and no HD3 is credited. Sources/PDK unchanged. Four gzip siblings preserve
+both partial traces and terminal records; originals retained. The generic
+scanner misses this diagnostic, but the independent endpoint gate caught it.
+Do not edit that frozen scanner; the new recovery adds explicit abort rejection.
+
+Entry 140 preregisters exactly two 180 s calls: add only Gear integration,
+maximum order 2, to the unchanged tone decks. No device/stimulus/control,
+threshold, initialization or measurement changes. Keep 5/2.5 ps agreement
+and all old gates. See DFE_LINEARITY_GEAR_PLAN.md and
+exp_dfe_linearity_gear.py. Failure-first tests fail on absent module before
+implementation. Snapshot all sources with honest dirty Git-parent provenance;
+same 3305-test before-change baseline, focused pre-run and full post-result
+regression before local commit. Entry 140 is UNRUN at registration.
+Loaded target correction and analog PVT still remain after valid HD3.
+
+### 2026-09-10 - Entry 140 abort retained; Entry 141 tolerance verification
+
+Entry 140 runs after 36 focused passing tests in 5.14 s. Both Gear-2 calls
+still abort at the varactor internal node; no distortion value is credited.
+Four gzip siblings preserve all partial traces, originals retained. No source
+or PDK changes. This numerical method alone does not solve the instrument.
+
+Entry 141 now registers four calls, each 180 s maximum, no retries: relative
+tolerances 2e-5/1e-5 crossed with 5/2.5 ps steps, Gear-2 retained, voltage
+tolerance 1e-7 V and current tolerance 1e-12 A. Only the tolerance line changes.
+Require all four valid and all six pairwise HD3/fundamental comparisons to
+pass the unchanged .5 dB/1% gates, alongside every old physical/stimulus and
+HD3 gate. Never select a single passing numerical case. See
+DFE_LINEARITY_TOLERANCE_PLAN.md and exp_dfe_linearity_tolerance.py.
+Failure-first tests precede implementation. Before-change full baseline remains
+3305/1019.90 s; focused pre-run and full post-result validation before commit.
+UNRUN at registration; source snapshots explicitly record dirty Git parent.
+Prior scientific failures, target mismatch and privacy hold remain unchanged.
+
+### 2026-09-10 - Entry 141 clocked HD3 passes; Entry 142 target calibration
+
+Entry 139: two calls 60.9518274 s; 89 manifested files, four archives preserve
+13,590,280 raw bytes in 3,987,539 bytes. Entry 140: two calls 80.2683491 s,
+.1028078 s preflight, aborts at 13.49/18 ns; 92 files and four archives preserve
+95,119,052 raw bytes in 27,943,502 bytes. All original failures remain rejected.
+
+Entry 141 runs after 39 focused passes in 6.48 s. Exactly four calls take
+246.3457895 s including .4406218 s prior proof. All complete 150 ns and pass
+actual primitives, initial negative branch, voltage/power, all harmonic windows
+and every pairwise .5 dB/1% comparison. HD3 -55.4353566/-55.4364118/
+-55.4366972/-55.4369126 dBc; VDD power 9.257903-9.258574 mW. No circuit
+change; all source/PDK hashes unchanged. Snapshot is authoritative; ca8cfb9 is
+the honestly recorded dirty-tree parent. Manifest 107 entries, SHA-256
+56071ef43b5e0084318ed1a35a1246d0567bde105bbb512eba8f96e5ed064eb7;
+summary dd25c77f80f18d90f8706da310a7d7e900ce6dd003f14a6f0500bbb86056b748.
+Eight lossless archives retain originals. Seven new tests verify failures,
+complete passing archive, exact decks and all four raw waveform replays.
+Related focused suite: 49 passed in 27.89 s. Full post-change suite pending.
+
+Entry 142 preregisters one 180 s call with 65 OP/AC pairs of the unchanged
+loaded circuit, only external control voltages altered. First pair must
+calibrate against accepted Entry 138 state-0 negative DC/complex AC/power.
+R fractions .70/.68/.69/.71/.72, C .165-.225 in .005 steps. Deterministic
+selection retains .5 dB/100 MHz internal target tolerances for 9 dB/1.9 GHz.
+No transfer of old transient/noise/PVT to selected controls. Failure-first
+tests precede implementation, exact source snapshot before run, same full
+3305/1019.90 s baseline and full post-result regression before local commit.
+Entry 142 is UNRUN at registration. Product/report/RL and privacy hold unchanged.
+
+### 2026-09-10 - Entry 142 target found; Entry 143 independent verification
+
+Entry 142 runs after 42 focused passes in 34.16 s. Exactly one call completes
+65 OP/AC pairs in 33.4446967 s, including 2.619166 s preflight. Full original
+loaded DC/complex AC/power baseline calibration passes. Selected R=.70 VDD,
+C=.185 VDD gives 8.7438827597 dB boost, 1.903117755 GHz peak and 9.276261347
+mW static VDD power. The old .5 dB/100 MHz internal target gates pass. No
+physical device changes; source/PDK unchanged. Do not transfer old transient,
+noise or PVT to the new controls. Manifest 219 entries, SHA-256
+ed79551ac05cd5c42e01bf57af8d94c3510ebcbb593808c5779f82bdc5a16bfb;
+summary 8e705658406a1851f6db3e4f8626c88a0bfb7322d705cd398d9fc092f33ec10a.
+Only static files; no archive required. Entry 141's eight archives preserve
+584,555,376 raw bytes in 173,552,609 bytes, originals retained.
+
+Entry 143 registers seven 180 s calls, no retry: two negative held-state
+full-band noise/AC checks; four clocked tone numerical settings; one fresh
+connected 64-scored-bit link check. Require all previous gates and selected
+target match, plus first static calibration against the actual selected row.
+Only external controls differ. Measurement formulas are mechanically
+parameterized and exact-source tested, never fed invented control values.
+See DFE_CALIBRATED_VERIFICATION_PLAN.md, dfe_calibrated_verification.py and
+exp_dfe_calibrated_verification.py. Failure-first tests precede implementation.
+Same 3305/1019.90 s before-change baseline; full post-result suite before
+local commit. Snapshot provenance records the dirty Git parent honestly.
+Entry 143 is UNRUN at registration. Selected-control PVT remains separate.
+
+### 2026-09-10 - Entry 143 nominal pass; Entry 144 calibrated link PVT
+
+Entry 143 runs after 11 focused passes in 8.17 s. Seven calls complete in
+331.0175002 s including 2.6598262 s preflight. Both negative held states
+pass noise, power, voltage and target gates; state 0 reproduces selected raw
+DC/complex AC/power. Noise .654039305-.654050922 mVrms. Peak 1.903117755-
+1.906285212 GHz; boost 8.743882760-8.746919126 dB. All four clocked tone
+settings pass: HD3 -54.9143204/-54.9201365/-54.9137135/-54.9196639 dBc.
+Fresh physical link: 64/64 scored bits, 210.340342 mV eye, positive aperture
+.705 UI, width above 100 mV .655 UI, VDD power 9.263481 mW. All sources/PDK
+unchanged. Generic-poly nonlinearity, periodic noise and analog PVT remain
+unverified. This is not full receiver or BER signoff.
+
+137 manifested files, SHA-256
+59a7deec832a1d744ad7175bd1eeed7fb0d21b376e1d03c15acb24e1888c99c7;
+summary 14d7d368163652235378e1566e4800a7d26ec2a550922300a015978b74602d96.
+Ten lossless archives preserve raw originals. Source snapshots honestly
+record ca8cfb9 as dirty Git parent. Full post-change regression pending.
+
+Entry 144 preregisters up to 45 calls, 180 s each, original Entry 133 order:
+fresh nominal replay, four screening corners, then remaining grid only if
+all five pass. Same physical circuit, R=.70/C=.185 VDD, phase 1, code 2,
+7.5 dB channel and 64 scored bits at every corner; no corner retuning.
+Strict physical/stimulus and bit/eye/power/voltage gates stay unchanged.
+See DFE_CALIBRATED_PVT_PLAN.md and exp_dfe_calibrated_pvt.py. Failure-first
+tests precede implementation. Same 3305/1019.90 s baseline; focused pre-run,
+snapshot provenance, full post-result regression and audit before commit.
+Entry 144 is UNRUN at registration. This is link PVT, not analog PVT.
+Reports/product/RL remain unchanged and the public-upload privacy hold remains.
+
+### 2026-09-10 - Entry 144 passes all calibrated link corners; public backup authorized
+
+Entry 144 runs after 14 focused passes in 18.99 s. Exactly 45 calls complete
+in 1921.9629508 s including 2.9553573 s preflight. All 45 corners pass, each
+with 64/64 scored bits; same R=.70/C=.185 VDD, code 2, phase 1 and 7.5 dB
+constructed channel. Fresh nominal replay passes. Minimum eye 113.243715 mV
+at FS/.95/125 C, minimum positive aperture .635 UI, minimum aperture above
+100 mV .560 UI. Maximum VDD power 12.524081 mW at FF/1.05/125 C. Strict
+new-DFE signed voltage and whole magnitude/body/varactor gates pass. The
+separate bilateral Rs-switch signed-domain findings remain in all 45 rows.
+Sources/PDK unchanged. This is link PVT, not analog PVT or BER signoff.
+
+Manifest 362 entries, SHA-256
+c5213fb228fc450b882b2ce7b4be7219adc6f352d63315b5195af32a4e63afe1;
+summary 21a6b7cb5d81bd0e23981d2cc3741a9a0147b6793f401d63c646c5e08f06e424.
+Lossless archival runs only after SPICE exits; raw originals retained.
+New regression tests cover all 65 calibration rows, all seven independent
+nominal checks and all 45 corner waveforms, exact decks and complete archives.
+Result guide: DFE_CALIBRATED_RESULTS.md. Final focused regression: 120 passed
+in 241.84 s. Full post-change regression: 3397 passed in 1816.12 s, with
+13 deselected and the same two known warnings. Before-change baseline remains
+3305 passed / 1019.90 s, 13 deselected/two warnings.
+
+The user explicitly confirms "yes push to the public repo" while PVT runs.
+The API independently reports private=False. AGENTS rule 4 is updated to
+reflect authorized project-owned public backups while retaining all reference/
+PDK exclusions and no-force/no-visibility-change rules. Remote main and
+working branch both read 952a648a54ae21aea9abf1178e1a1494e6a7c196 before backup.
+All 12 pending local commits use correct Jai Kaushik noreply identities;
+no prohibited artifact paths or files >=100 MB. A pending-history credential
+pattern audit scans 3,527 text blobs / 234,075,187 bytes with no matches.
+Use bounded normal-fast-forward upload batches if needed; never rewrite history.
+
+Initial final focused replay: 115 passed, five failed in 197.89 s. The five
+failures are exact deck assertions at the screening corners: the test used
+all_corners() float temperatures instead of the scheduler's original integer
+screen objects (.temp 27.0 versus .temp 27, likewise 0/125). A read-only raw
+replay confirms matching measurement values; no circuit failure is inferred.
+Correct only the new evidence-test parameter list to the exact registered
+screen-first objects, retaining byte equality and all frozen source/evidence.
+No SPICE rerun. See G191; focused rerun and full regression remain pending.
+
+Corrected focused regression passes: 120 tests in 241.84 s, including all
+65 loaded control rows, seven nominal checks and 45 complete corner replays.
+No frozen scientific source, raw deck or measurement was changed for the
+temperature-rendering fixture correction. Entry 143's ten archives preserve
+679,671,128 raw bytes in 200,390,114 bytes. Entry 144's 90 archives preserve
+4,296,306,960 raw bytes in 1,212,522,158 bytes; every original remains on disk.
+Maximum external positive clock power across Entry 144 is .128145920 mW,
+reported separately from the 12.524081 mW maximum VDD power.
+
+Pre-final-log staged audit: 1,154 intended files, 1,124 exact evidence blobs,
+1,666,560,696 bytes. Largest new file is 31,026,998 bytes; no detected
+credential patterns or prohibited material, correct identity, all frozen
+source hashes and both PDF hashes unchanged. The mandatory full suite passes:
+3397 passed, 13 deselected, two known warnings in 1816.12 s. No new SPICE
+experiment or raw-archive job is active. Before-change full baseline: 3305
+passed, 13 deselected, two known warnings in 1019.90 s.
+
+Final read-only review also confirms a non-numerical metadata caveat (G192):
+Entry 143's static/link case dispatch labels are not their actual solver
+settings. Static decks retain the registered strict 1e-7 tolerance; link
+decks use the registered unchanged 1 ps transient. The guide now says to
+read those frozen decks for non-tone settings. No scientific source, raw
+record or measured result is changed; all exact replay checks remain intact.

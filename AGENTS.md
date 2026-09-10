@@ -46,9 +46,12 @@ zero**.
 3. **Git identity:** commit with the global config
    (`Jai Kaushik <jaikaushik-prog@users.noreply.github.com>`). Never use the
    BITS Pilani email (wrong GitHub attribution — see HANDOFF §9 G12).
-4. **This repo is PRIVATE and must stay private** — it contains copyrighted
-   reference PDFs (HANDOFF §9 G1). Never make it public or copy the PDFs to
-   any public location.
+4. **The existing GitHub repository is public with the owner's explicit
+   authorization, reconfirmed 2026-09-10.** Back up verified project-owned
+   changes to the working branch and main using normal fast-forwards only.
+   Never upload copyrighted reference PDFs, organiser handouts, reference
+   DOCX files, PDK model files or other ignored reference material. Do not
+   change repository visibility or force-push without explicit authorization.
 5. **The owner is a beginner in this domain.** Explain every change in plain
    language (what/why/implication) so they can present the work to their
    professor. Provide professor-ready takeaways for new findings.
