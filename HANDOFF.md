@@ -17,7 +17,7 @@
 > decisions that are OPEN and human-only, and what to do next. It supersedes
 > `nebula/NEXT_STEPS.md`. This file remains the full state of record.
 
-Last updated: **2026-09-10**, Entry 136 measures runtime settling at 850/690/650 ns; original 500 ns criterion stays failed.
+Last updated: **2026-09-10**, Entry 137 registers loaded analog/noise/clocked-HD3 checks; not yet run.
 The organiser requires a transistor-level CTLE plus DFE and configurable
 Rs/Cs. The owner authorizes bounded agent-selected experiments for both;
 DFE is first. Entry 122 CML passes all three TT screens with valid terminal
@@ -1055,6 +1055,12 @@ signaling, ADC-based DSP receiver, 28 nm CMOS reference parameters).
 
 ## 2. Repository map (what every file/folder is)
 
+Entry 137: `nebula/DFE_LOADED_ANALOG_PLAN.md`,
+`nebula/device/dfe_loaded_analog.py`,
+`nebula/experiments/exp_dfe_loaded_analog.py`, and
+`nebula/tests/test_dfe_loaded_analog.py` add a bounded loaded-CTLE analog
+instrument. Existing scientific sources and report/product paths stay frozen.
+
 Entry 122 adds the isolated hardware-development files `nebula/DFE_CML_PLAN.md`,
 `nebula/device/dfe_cml.py`, `nebula/experiments/exp_dfe_cml.py`, and
 `nebula/tests/test_dfe_cml.py`. They do not modify the deployed physical path.
@@ -2064,6 +2070,11 @@ PRBS → scramble → Gray/PAM4 → TX-FFE → ZOH ×OSR(8) → TX pole (0.75·f
 
 ## 5. Complete history (what was done, in order, with the WHY)
 
+Entry 137 (2026-09-10) follows the user's direction to finish actual required
+specification checks, not optimize the internal 500 ns control-settling target.
+It registers up to 20 nominal loaded OP/AC/noise and clocked distortion calls,
+with no sizing or new tuning selection. It is UNRUN until local source freeze.
+
 2026-09-09 / Entry 122: organiser clarification prompted the owner to reopen
 hardware work and authorize bounded agent-selected experiments. CML
 master/slave decision storage is the first new architecture; see Session Log.
@@ -2335,6 +2346,12 @@ Plus: git init, .gitignore, 28 tests, Wilson-bound BER reporting.
   rectangle and is now an explicit limitation, not a hidden traceback.
 
 ## 6. Key numbers & validated behavior (current state)
+
+Entry 137 is UNRUN pending the local source freeze. Fresh before-change
+regression: 3285 passed, 13 deselected, two known warnings, 952.18 s.
+Focused compatibility: 46 passed in 103.17 s. Post-change full regression:
+3294 passed, 13 deselected, two known warnings, 1058.84 s.
+No new noise, HD3 or loaded tuning result may be quoted yet.
 
 Entry 122: all 4/8/16 um CML sizes pass TT 32/32 and signed model-domain
 checks. The selected 4 um size passes 34/45 PVT, with weak hold at eleven
@@ -3034,6 +3051,12 @@ still NOT full area. The 12-request replay is fully supported at eight requests;
 
 ## 7. Known model limitations (honest list — do not overclaim)
 
+Entry 137's held-clock noise measurements will be DC-linearized loaded-CTLE
+snapshots, NOT periodic clocked-receiver noise. Generic poly voltage-dependent
+nonlinearity remains unverified even if clocked model HD3 passes. Its nine
+preselected controls do not establish the full tuning rectangle or analog
+PVT. These limits are preregistered, not added after seeing the results.
+
 Entry 122: a standalone CML decision/hold pass, if achieved, will not establish
 a complete DFE. Physical feedback, CTLE loading, closed-loop timing and
 receiver metrics require subsequent measured integration. External clock and
@@ -3292,6 +3315,13 @@ variation, mismatch and layout remain open. Old production evidence is unchanged
   untrusted until proven (the Phase-0 experience says assume bugs).
 
 ## 8. Next steps (prioritized backlog with context)
+
+**Current authorized priority (Entry 137):** validate/freeze the loaded analog
+instrument, run its bounded experiment once, retain failures, then use actual
+required-spec results to choose a justified next step. Do not prioritize app
+integration or the internal 500 ns settling criterion over these checks.
+Public backup remains paused pending explicit resolution of the conflicting
+new private-only instruction; local verification and commits remain authorized.
 
 **Entry 122 active objective:** implement transistor-level DFE first, then
 configurable Rs/Cs. Owner authorization covers bounded architecture/sizing
@@ -6908,6 +6938,14 @@ limit is an internal registered demonstration criterion, not an organiser spec.
 Entry 136 then measures eventual bounds of 850/690/650 ns with the same
 devices and longer holds. Both statements stay visible: eventual settling
 is demonstrated, while the original 500 ns criterion remains failed.
+
+### G186. Held-clock noise is not periodic receiver noise
+
+Ordinary ngspice noise
+linearizes at a DC operating point. Both held clock states and a physical DFE
+load do not turn that result into noise during switching or a worst-case
+receiver-noise bound. Keep measured CTLE port, frequency band and operating
+state beside the number. Clocked HD3 uses an actual transient and is separate.
 
 ## 10. Environment
 
@@ -18950,3 +18988,49 @@ large waveform archives explicitly reviewed, correct identity, no detected
 credentials/prohibited material, all frozen scientific sources and both
 PDF hashes unchanged. Save locally; no remote upload or visibility change
 while the public/private instruction conflict remains unanswered.
+
+### 2026-09-10 - Entry 137 loaded analog specification screen registered
+
+User asks to finish the remaining work after questioning the failed target.
+Clarified that the 500 ns settling bound was internal, not an organiser spec;
+prioritize required loaded noise/HD3/tuning checks over integration polish.
+Live branch nebula/winning-sprint-20260908, clean parent
+0c4c9a78ed3617a0228b3065db6850c689ac9913, correct Jai Kaushik noreply identity.
+Fresh mandatory before-change suite: 3285 passed, 13 deselected, two known
+warnings in 952.18 s. No active simulation or unfinished experiment existed.
+
+Entry 137 registers 20 calls maximum, 180 s each, no retries: primary control
+OP/AC/full-band noise at two held clock states; two 150 ns clocked 100 MHz
+distortion runs at 100 mV differential peak with 5/2.5 ps maximum steps;
+then the other eight preselected tuning identities at both held states.
+The exact Entry 133 devices, original output load, code 2, phase 1, references
+and geometry are unchanged. Only external test conditions/analysis change.
+Stop after two or four on early instrument failure; preserve every later
+failure. No retuning to new measurements and no frozen RL changes.
+
+Failure-first tests fail on the absent module, then nine pass in 2.51 s.
+They cover unchanged physical devices, exact target map, full noise band and
+RMS units with independent integration, exact harmonic windows, time-step
+agreement, warning qualification, two/four/20-call scheduling and complete
+analytic waveform extraction with deliberately corrupted clocks/power/tails.
+Synthetic fixtures are only tests, never exported as evidence.
+The ordinary DC noise/clocked transient distinction is explicit (G186).
+Generic-poly nonlinearity, periodic receiver noise, analog PVT, full target
+rectangle and full receiver signoff stay unverified. No new performance
+number exists yet. Focused/full regression is pending before source freeze.
+Reports, product registry and all older scientific source files are unchanged.
+No upload or visibility change while the privacy conflict is unresolved.
+
+Entry 137 focused compatibility passes: 46 tests in 103.17 s, including
+the real prior connected raw replay and simulator RMS-unit regression.
+The mandatory post-change full suite is RUNNING. No new experiment or
+archive job runs alongside it; Entry 137 remains UNRUN until source freeze.
+
+Entry 137 pre-run full regression passes: 3294 passed, 13 deselected, two
+known warnings in 1058.84 s. Focused compatibility: 46 passed in 103.17 s.
+Before-change baseline: 3285 passed in 952.18 s. No new simulator or archive
+job ran concurrently. Pre-final-log staged audit: seven intended files,
+1,261,653 bytes; correct identity, no detected credential patterns/prohibited
+material, old scientific sources and both PDFs unchanged. Freeze locally
+before the single registered experiment. No public upload is authorized
+until the private/public instruction conflict is explicitly resolved.
