@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="Nebula CTLE + DFE Designer - evidence-grounded SKY130 circuit sizing">
   <title>Nebula CTLE + DFE Designer</title>
-  <link rel="stylesheet" href="/styles.css?v=5">
+  <link rel="stylesheet" href="/styles.css?v=6">
 </head>
 <body data-view="hardware">
   <a class="skip-link" href="#workspace">Skip to workspace</a>
@@ -184,11 +184,20 @@
           <section class="hardware-blueprint" aria-labelledby="hardwareBlueprintTitle">
             <div class="hardware-blueprint-heading">
               <div><h3 id="hardwareBlueprintTitle">Implemented signal path</h3><p>Physical controls sit inside the CTLE; the decided bit returns through a current DAC.</p></div>
-              <span>5 Gbps NRZ</span>
+              <button id="inspectRcButton" class="button button-secondary" type="button">Inspect Rs/Cs controls</button>
             </div>
             <div id="hardwareTopology" class="hardware-signal-chain" aria-label="Transistor CTLE and DFE topology">
               <div class="loading-lines"><i></i><i></i><i></i></div>
             </div>
+          </section>
+
+          <section class="circuit-inspector" aria-labelledby="circuitInspectorTitle">
+            <div class="card-heading"><div><h3 id="circuitInspectorTitle">Inside the receiver</h3><p>Select a block to see its circuit connections.</p></div><span class="circuit-kind">Connectivity overview</span></div>
+            <nav id="circuitViewButtons" class="circuit-view-buttons" aria-label="Circuit blocks"></nav>
+            <p class="circuit-scroll-hint">Scroll sideways inside the drawing to inspect the full circuit.</p>
+            <div id="circuitViewCanvas" class="circuit-view-canvas" tabindex="0" aria-label="Circuit diagram; scroll horizontally on small screens"></div>
+            <p id="circuitViewDescription" class="circuit-view-description" aria-live="polite"></p>
+            <p class="circuit-view-source">Simplified connectivity from the calibrated transistor deck; bias, bulk and supply wiring are condensed. The complete device sheet below retains every SKY130 instance.</p>
           </section>
 
           <div class="hardware-control-strip" aria-label="Calibrated physical control values">
@@ -332,6 +341,7 @@
   </main>
 
   <template id="statusTemplate"><span class="status-dot"></span><span class="status-copy"></span></template>
-  <script src="/app.js?v=5" defer></script>
+  <script src="/circuit_views.js?v=6" defer></script>
+  <script src="/app.js?v=6" defer></script>
 </body>
 </html>

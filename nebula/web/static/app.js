@@ -251,7 +251,7 @@ function renderHardwareTopology(blocks) {
   const target = $("#hardwareTopology");
   target.replaceChildren();
   const byKey = new Map((blocks || []).map((block) => [block.key, block]));
-  const required = ["ctle", "rs", "cs", "summer", "memory", "dac"];
+  const required = ["attenuator", "ctle", "rs", "cs", "summer", "memory", "dac"];
   if (required.some((key) => !byKey.has(key))) {
     throw new Error("The verified topology record is incomplete.");
   }
@@ -265,6 +265,8 @@ function renderHardwareTopology(blocks) {
   controls.append(hardwareStage(byKey.get("cs"), "primitive"));
   ctle.append(controls);
   chain.append(
+    hardwareStage(byKey.get("attenuator")),
+    hardwareLink(),
     ctle,
     hardwareLink(),
     hardwareStage(byKey.get("summer")),
@@ -446,8 +448,9 @@ function renderHardwareCheckpoint(checkpoint) {
   $("#hardwareControlC").textContent = `${number(controls.c_fraction, 3)} VDD / ${number(controls.c_control_v_nominal, 3)} V nominal`;
   $("#hardwareControlNote").textContent = controls.corner_retuning
     ? "Corner-specific controls were used."
-    : "The same external control fractions, DFE code and clock phase are retained across all 45 Link PVT points.";
+    : "Calibrated settings (read-only). These are physical voltage controls, not fixed exported Rs/Cs. Editing them and running fresh verification is not available here; 45/45 Link PVT applies only to this saved setting.";
   renderHardwareTopology(checkpoint.topology);
+  NebulaCircuitViews.mount(checkpoint);
   renderHardwareMetrics(checkpoint);
   drawHardwarePvt(checkpoint);
   renderHardwareEvidence(checkpoint);

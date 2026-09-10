@@ -31,7 +31,7 @@ def test_checkpoint_is_derived_from_frozen_nominal_and_pvt_evidence():
         "runtime_settling_verified": False,
     }
     assert [block["key"] for block in shown["topology"]] == [
-        "ctle", "rs", "cs", "summer", "memory", "dac"]
+        "attenuator", "ctle", "rs", "cs", "summer", "memory", "dac"]
     assert all(block["status"] == "implemented" for block in shown["topology"])
 
     nominal = shown["nominal"]
@@ -171,3 +171,81 @@ def test_visual_source_tamper_is_rejected(tmp_path):
     changed.write_bytes(b"incorrect waveform")
     with pytest.raises(ValueError, match="SHA-256"):
         pinned(changed, TRACE_SHA)
+
+
+def test_block_view_connections_match_pinned_devices():
+    from nebula.web.hardware_visuals import devices
+    by_name = {r[0]: r[1] for r in devices()}
+    expected = {
+        "Xatt_sp": ["inx", "inp", "0"],
+        "Xatt_swp0": ["att_p0", "0", "cm", "vdd"],
+        "Xrc_rmax": ["s1", "s2", "0"],
+        "Xrc_branch": ["s1", "rc_mid", "0"],
+        "Xrc_switch": ["rc_mid", "rc_gate", "s2", "0"],
+        "Xrc_var_s1": ["s1", "rc_ct", "0"],
+        "Xrc_var_s2": ["s2", "rc_ct", "0"],
+        "Xdfe_sump": ["sum_n", "outn", "sum_tail", "0"],
+        "Xdfe_dacp": ["sum_p", "df_q", "fd_common", "0"],
+        "XM1": ["outp", "inp", "s1", "0"],
+    }
+    for name, nets in expected.items():
+        assert by_name[name] == nets
+
+
+def test_circuit_selector_renders_all_views_and_rc_shortcut():
+    import shutil
+    import subprocess
+    import xml.etree.ElementTree as ET
+    node = shutil.which("node")
+    if not node:
+        pytest.skip("Node is required for frontend interaction checks")
+    script = r"""
+const fs = require('fs'), vm = require('vm'), assert = require('assert');
+class Element {
+  constructor(){this.children=[];this.dataset={};this.attributes={};}
+  replaceChildren(){this.children=[];}
+  append(x){this.children.push(x);}
+  addEventListener(name, fn){this[name]=fn;}
+  setAttribute(k,v){this.attributes[k]=v;}
+  querySelector(s){return this.children.find(x=>s.includes('"'+x.dataset.circuit+'"'));}
+  focus(){this.focused=true;}
+  scrollIntoView(){this.scrolled=true;}
+}
+const elements = new Map();
+const document = {
+  getElementById(id){if(!elements.has(id))elements.set(id,new Element());return elements.get(id);},
+  createElement(){return new Element();},
+  querySelector(){return document.getElementById('inspector');}
+};
+const context = vm.createContext({document});
+vm.runInContext(fs.readFileSync('nebula/web/static/circuit_views.js','utf8')+
+  '\nNebulaCircuitViews.mount({controls:{r_control_v_nominal:1.26,c_control_v_nominal:.333,r_fraction:.7,c_fraction:.185}});', context);
+const buttons = document.getElementById('circuitViewButtons').children;
+assert.equal(buttons.length,4);
+assert.equal(buttons[0].attributes['aria-pressed'],'true');
+const svgs = {};
+for(const b of buttons){
+  b.click();
+  assert.equal(buttons.filter(x=>x.attributes['aria-pressed']==='true').length,1);
+  svgs[b.dataset.circuit] = document.getElementById('circuitViewCanvas').innerHTML;
+}
+buttons[0].click();
+document.getElementById('inspectRcButton').onclick();
+assert.equal(buttons[3].attributes['aria-pressed'],'true');
+assert(buttons[3].focused);
+assert(document.getElementById('inspector').scrolled);
+const desc=document.getElementById('circuitViewDescription').textContent;
+assert(desc.includes('1.260 V') && desc.includes('0.333 V'));
+assert(desc.includes('fresh SPICE') && desc.includes('saved calibration'));
+process.stdout.write(JSON.stringify(svgs));
+"""
+    result = subprocess.run([node, "-e", script], check=True, capture_output=True, text=True)
+    views = json.loads(result.stdout)
+    assert set(views) == {"dfe", "attenuator", "ctle", "rc"}
+    for svg in views.values():
+        root = ET.fromstring(svg)
+        assert root.attrib["role"] == "img"
+        assert root.attrib["viewBox"] == "0 0 1040 340"
+    assert "Feedback current" in views["dfe"]
+    assert "Xatt_swp2" in views["attenuator"]
+    assert "Xrc_var_s2" in views["rc"]

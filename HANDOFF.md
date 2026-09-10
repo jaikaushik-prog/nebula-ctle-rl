@@ -1298,6 +1298,10 @@ gates evidence grounding, failure visibility, Judge-mode provenance, ZIP
 contents, upload refusal, the single-worker guard and the absence of an
 algorithm leaderboard. Run with `py -3.13 -m nebula.web`.
 
+Entry 146 addition: `nebula/web/static/circuit_views.js` provides four
+source-checked connectivity guides (DFE, attenuator, CTLE and Rs/Cs) and the
+explicit read-only Rs/Cs inspection shortcut. No simulator controls are added.
+
 Entry 145 additions: `nebula/web/hardware_checkpoint.py` validates the pinned
 Entry 143/144 summary and nominal-netlist SHA-256 values, checks required Rs/Cs
 and DFE instances, and produces the compact `/api/hardware` display payload.
@@ -2108,6 +2112,10 @@ PRBS → scramble → Gray/PAM4 → TX-FFE → ZOH ×OSR(8) → TX pole (0.75·f
 
 ## 5. Complete history (what was done, in order, with the WHY)
 
+Entry 146 (2026-09-10): added dedicated frontend DFE/attenuator/CTLE/RsCs
+connectivity guides and a visible Rs/Cs shortcut after the owner could not
+find the configurable circuit. See the appended Session Log for verification.
+
 Entry 144 completes new-control link PVT: 45/45 pass at fixed R=.70/C=.185
 VDD, same code/phase/channel. Entry 143 independently verifies nominal tuning,
 noise, four-way HD3 and physical decoding; Entry 142 performs actual loaded
@@ -2403,6 +2411,12 @@ Plus: git init, .gitignore, 28 tests, Wilson-bound BER reporting.
   rectangle and is now an explicit limitation, not a hidden traceback.
 
 ## 6. Key numbers & validated behavior (current state)
+
+Entry 146 adds separate DFE, attenuator, CTLE and configurable Rs/Cs
+connectivity views in Receiver, with an "Inspect Rs/Cs controls" shortcut.
+The saved Rs/Cs bias voltages are read-only. Editing controls and running
+fresh transistor verification is not integrated into the frontend.
+The 45/45 checkpoint is unchanged and applies only to its saved calibration.
 
 LATEST calibrated controls: R=.70/C=.185 VDD. Nominal peak 1.903-1.906 GHz,
 boost 8.744-8.747 dB, noise .65404-.65405 mVrms, HD3 -54.9137 to -54.9201
@@ -3149,6 +3163,8 @@ generators remain unverified or external. Entry 145 adds a separate pinned
 Receiver view to the production frontend. The live generator, CLI/
 registry and reports still describe the older delivered paths; they are not
 silently promoted or attributed to the frozen RL policy.
+Entry 146 improves inspection only: saved Rs/Cs controls remain read-only,
+without a frontend path to edit voltages and verify the changed receiver.
 
 Entry 141 proves nominal clocked CTLE-output model HD3 only. Generic-poly
 nonlinearity, periodic noise and analog PVT remain unverified. Any newly
@@ -3424,6 +3440,10 @@ variation, mismatch and layout remain open. Old production evidence is unchanged
   untrusted until proven (the Phase-0 experience says assume bugs).
 
 ## 8. Next steps (prioritized backlog with context)
+
+Entry 146 addresses circuit-diagram and Rs/Cs discoverability feedback.
+Editable Rs/Cs bias controls with fresh SPICE verification remain separate
+work; do not present saved-checkpoint metrics as predictions for edited values.
 
 Latest priority superseding older UNRUN entries: Entry 145 frontend promotion
 is complete, with 33 focused tests, 3405 full-suite tests, desktop/mobile visual
@@ -4060,6 +4080,15 @@ explicit scope.
 **1-9.** (See existing backlog: .s4p, clipping disto, joint adaptation, etc.)
 
 ## 9. Gotchas & footguns (each one cost real debugging time)
+
+### G194. Physical configurable controls are not an interactive web control
+
+The calibrated receiver has real Rs/Cs voltage controls, but its frontend
+initially exposes only the saved .70/.185 VDD calibration. A diagram selector
+does not change the circuit or reverify a new setting. Label this read-only
+inspection honestly; changed voltages cannot inherit the frozen 45/45 badge.
+Connectivity guides condense supply/bulk/bias wiring; retain the exact
+named-net device sheet and hash-pinned deck for terminal-level inspection.
 
 ### G193. A new hardware checkpoint is not the older selectable design artifact
 
@@ -19538,3 +19567,47 @@ oversized artifacts or detected credential patterns. Correct Jai Kaushik
 GitHub noreply identity. Both report PDF hashes remain unchanged. Remote main
 and working branch were both at 572d3b6c before the normal fast-forward backup.
 No new SPICE/training run was launched. Temporary QA files remain ignored.
+
+### 2026-09-10 - Entry 146 circuit block views and Rs/Cs discoverability
+
+User asked for DFE and attenuator diagrams and could not find configurable
+Rs/Cs. The Receiver now includes one compact four-button circuit inspector:
+1-tap DFE, attenuator, CTLE core and Rs/Cs controls. The DFE guide shows the
+summer, clocked master/slave memory and current-feedback loop; the attenuator
+guide shows one mirrored input half with all three poly/PMOS shunts. The CTLE
+guide shows its loaded input pair and source-degeneration connections, and
+the Rs/Cs guide shows parallel Rs branches, the NMOS control, paired varactors
+and filtered bias nodes. These SVGs are clearly labeled connectivity guides
+with condensed bias/bulk/supply wiring, not replacements for the exact
+73-device named-net sheet or the frozen transistor deck.
+
+An explicit "Inspect Rs/Cs controls" shortcut selects that guide and moves
+keyboard focus to it. Calibrated 1.260 V / .333 V controls are labeled read-only;
+the frontend does not yet edit them or run fresh transistor verification.
+The existing 45/45 result remains tied to .70/.185 VDD, not arbitrary voltages.
+The input attenuator is also restored as an explicit signal-path stage and
+its pinned deck instances are checked by the fail-closed adapter.
+
+The frontend-design skill informed the compact shared diagram canvas and
+navy active selector, avoiding four separate always-open drawing cards.
+The two new regression tests check named device connections against the
+hash-pinned deck and execute every selector plus the Rs/Cs shortcut through
+a JavaScript DOM harness. The initial XML test caught an unescaped angle
+bracket; SVG text escaping fixes it. Final focused regression: 35 passed in
+17.02 s; both JavaScript syntax checks pass.
+
+All four views exercised at 1440 and true 390 px in hidden local Edge/CDP;
+desktop diagrams and mobile layout visually reviewed. Mobile diagrams retain
+readable scale with internal horizontal scrolling and a visible instruction,
+not page overflow. Visual corrections include gate-label clearance and an
+88 px scroll offset below the sticky header. The shortcut selects/focuses
+Rs/Cs, the legacy explorer still has two modes, and the updated default
+8765 viewer serves seven topology entries plus the new script with HTTP 200.
+No SPICE/training, scientific artifact, report or frozen metric changes.
+Both PDF hashes remain at the Entry 145 values.
+
+Before-change full baseline at 6614c00: 3405 passed, 13 deselected, two known
+warnings in 1269.25 s. Entry 146 final full regression: 3407 passed, 13 deselected, 2 warnings in 1438.15s.
+Temporary QA scripts/screenshots remain ignored; final staged audit and
+normal fast-forward backup follow completion of the mandatory suite.
+

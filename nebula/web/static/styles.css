@@ -226,8 +226,32 @@ textarea:hover, input:hover, select:hover { border-color: #9ab1c5; }
 }
 .hardware-signal-chain { padding: 21px; background: #f8fbfd; overflow-x: auto; }
 .hardware-chain-main {
-  display: grid; grid-template-columns: minmax(220px, 1.45fr) 34px minmax(135px, .8fr) 34px minmax(150px, .9fr) 34px minmax(145px, .85fr);
-  align-items: stretch; min-width: 840px;
+  display: grid; grid-template-columns: 1fr 24px 1.5fr 24px 1fr 24px 1fr 24px 1fr;
+  align-items: stretch; min-width: 1020px;
+}
+.circuit-inspector { margin: 22px 0 0; border: 1px solid var(--rule-soft); border-radius: 8px; overflow: hidden; scroll-margin-top: 88px; }
+.circuit-inspector .card-heading { padding: 16px 20px; }
+.circuit-kind { color: var(--muted); font-size: 11px; }
+.circuit-view-buttons { display: flex; flex-wrap: wrap; gap: 6px; padding: 0 20px 14px; }
+.circuit-view-buttons button { border: 1px solid var(--rule); border-radius: 5px; background: #fff; color: var(--ink); padding: 9px 16px; font: inherit; font-size: 12px; cursor: pointer; }
+.circuit-view-buttons button[aria-pressed="true"] { background: var(--ink); border-color: var(--ink); color: #fff; }
+.circuit-view-canvas { overflow-x: auto; border-top: 1px solid var(--rule-soft); }
+.circuit-view-canvas svg { display: block; width: 100%; min-width: 920px; height: auto; color: var(--ink); }
+.circuit-view-canvas text { fill: var(--ink); font: 15px "Cascadia Mono", Consolas, monospace; }
+.circuit-view-canvas .circuit-label { font: 600 17px Aptos, "Segoe UI", sans-serif; }
+.circuit-view-canvas .circuit-small { font-size: 12px; }
+.circuit-view-canvas .circuit-gate { text-anchor: end; }
+.circuit-scroll-hint { display: none; }
+.circuit-wire { fill: none; stroke: #35556e; stroke-width: 1.6; }
+.circuit-feedback { stroke: var(--cyan-deep); }
+.circuit-box { fill: #f6fafb; stroke: #b9cdd9; stroke-width: 1.2; }
+.circuit-component { fill: white; stroke: #35556e; stroke-width: 1.6; }
+.circuit-view-description { margin: 0; padding: 14px 20px 6px; font-size: 13px; line-height: 1.65; border-top: 1px solid var(--rule-soft); }
+.circuit-view-source { margin: 0; padding: 0 20px 16px; color: var(--muted); font-size: 11px; line-height: 1.5; }
+@media (max-width: 600px) {
+  .hardware-blueprint-heading { flex-wrap: wrap; }
+  .circuit-kind { display: none; }
+  .circuit-scroll-hint { display: block; padding: 0 20px; color: var(--muted); font-size: 11px; }
 }
 .hardware-stage {
   min-width: 0; padding: 13px; border: 1px solid #b8cad9; border-radius: 6px;

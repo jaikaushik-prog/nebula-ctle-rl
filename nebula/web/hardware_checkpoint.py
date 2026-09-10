@@ -99,6 +99,9 @@ def _validate_netlist(path: Path = NOMINAL_NETLIST) -> None:
         )
     deck = path.read_text(encoding="utf-8")
     required = {
+        "positive input attenuator": "Xatt_sp inx inp",
+        "negative input attenuator": "Xatt_sn iny inn",
+        "attenuator PMOS shunt": "Xatt_swp0 att_p0 0 cm vdd",
         "configurable Rs switch": "Xrc_switch rc_mid rc_gate s2",
         "first configurable Cs varactor": "Xrc_var_s1 s1 rc_ct",
         "second configurable Cs varactor": "Xrc_var_s2 s2 rc_ct",
@@ -225,6 +228,11 @@ def build_hardware_checkpoint(
         "status": "pass",
         "status_label": "45/45 LINK PVT",
         "topology": [
+            {
+                "key": "attenuator", "label": "Input attenuator",
+                "detail": "Differential high-poly / PMOS shunt network, code A7.",
+                "status": "implemented",
+            },
             {
                 "key": "ctle", "label": "SKY130 CTLE core",
                 "detail": "Differential transistor core with physical bias reference.",
