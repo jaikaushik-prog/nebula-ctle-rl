@@ -31,7 +31,7 @@ async function api(url, options = {}) {
 }
 
 function finite(value) {
-  return value !== null && value !== undefined && Number.isFinite(Number(value));
+  return value !== null && value !== undefined && value !== "" && typeof value !== "boolean" && Number.isFinite(Number(value));
 }
 
 function number(value, digits = 3) {
@@ -97,36 +97,41 @@ function artifactUrl(design, name) {
   return `/api/artifacts/${encodeURIComponent(design.id)}/${encodeURIComponent(name)}`;
 }
 
+function syncRequest(design) {
+  const req = design.request || {};
+  $("#peakingInput").value = finite(req.peaking_db) ? req.peaking_db : "";
+  $("#frequencyInput").value = finite(req.f_peak_ghz) ? req.f_peak_ghz : "";
+  if (finite(req.peaking_db) && finite(req.f_peak_ghz)) {
+    $("#requestText").value = `I need ${req.peaking_db} dB of peaking with the peak near ${req.f_peak_ghz} GHz`;
+  }
+  if (state.hardware) renderHardwareTargetState(state.hardware);
+}
+
 function renderDesign(design) {
   state.current = design;
   state.designs.set(design.id, design);
   clearMessage();
+  if (["rl-hybrid", "rl-physical"].includes(design.method)) {
+    $("#designMode").value = design.method;
+    updateModeSummary();
+  }
 
   const req = design.request || {};
+  syncRequest(design);
   $("#resultTitle").textContent = finite(req.peaking_db) && finite(req.f_peak_ghz)
     ? `${number(req.peaking_db, 2)} dB CTLE at ${number(req.f_peak_ghz, 3)} GHz`
     : "Generated CTLE design";
   $("#resultContext").textContent = design.cached
-    ? `Saved legacy explorer artifact / ${design.method === "rl-physical" ? "physical CTLE" : "RL adaptive bank"}`
-    : `Generated legacy explorer artifact / ${design.method === "rl-physical" ? "physical CTLE" : "RL adaptive bank"}`;
+    ? `Saved design / ${design.method === "rl-physical" ? "physical CTLE" : "RL adaptive bank"}`
+    : `Generated design / ${design.method === "rl-physical" ? "physical CTLE" : "RL adaptive bank"}`;
   const sourceBadge = $("#sourceBadge");
   sourceBadge.textContent = design.cached ? "Preverified" : "Live run";
   sourceBadge.classList.toggle("live", !design.cached);
 
-  const meas = design.nominal?.meas || {};
-  $("#metricPeaking").textContent = finite(meas.peaking_db) ? `${number(meas.peaking_db, 3)} dB` : "--";
-  $("#metricPeakingTarget").textContent = finite(req.peaking_db) ? `Requested ${number(req.peaking_db, 2)} dB` : "Not requested";
-  $("#metricFrequency").textContent = finite(meas._f_peak_ghz) ? `${number(meas._f_peak_ghz, 4)} GHz` : "--";
-  $("#metricFrequencyTarget").textContent = finite(req.f_peak_ghz) ? `Requested ${number(req.f_peak_ghz, 3)} GHz` : "Not requested";
-  $("#metricEye").textContent = finite(meas.eye_h_v) && finite(meas.eye_w_ui)
-    ? `${number(meas.eye_h_v * 1e3, 1)} mV / ${number(meas.eye_w_ui, 3)} UI` : "--";
-
+  NebulaCircuitViews.renderDesign(design);
   renderSchematic(design);
   renderSpecs(design.specs || []);
   renderSizing(design.nominal?.params || {}, design.method === "rl-physical");
-  const scope = design.implementation_scope || {};
-  const hardware = design.hardware || {};
-  renderHardware({...hardware, note: [hardware.note, ...(scope.notes || [])].filter(Boolean).join(" ")});
   renderOutcome(design);
   renderRunTruth(design);
   renderPvt(design);
@@ -142,6 +147,11 @@ function renderSchematic(design) {
   frame.replaceChildren();
   const hasImage = (design.artifacts || []).includes("design_schematic.png");
   const link = $("#openSchematic");
+  $("#generatedSchematicTitle").textContent = design.method === "rl-physical"
+    ? "Generated physical CTLE export" : "Generated adaptive-bank CTLE export";
+  $("#generatedSchematicScope").textContent = design.method === "rl-physical"
+    ? "Parsed from the selected transistor CTLE deck; Rs/Cs are fixed at the generated values in this export."
+    : "Parsed from the selected cached-bank CTLE deck; link scoring and transistor hardware evidence are shown separately.";
   if (!hasImage) {
     const p = document.createElement("p");
     p.className = "muted";
@@ -199,29 +209,6 @@ function renderSizing(params, physical = false) {
   });
 }
 
-function renderHardware(hardware) {
-  const target = $("#hardwareTruth");
-  target.replaceChildren();
-  const note = document.createElement("p");
-  note.textContent = hardware.note || "No hardware implementation record was stored.";
-  target.append(note);
-  const list = document.createElement("ul");
-  list.className = "truth-list";
-  Object.entries(hardware.items || {}).forEach(([name, value]) => {
-    const li = document.createElement("li");
-    const left = document.createElement("span"); left.textContent = name;
-    const right = document.createElement("strong"); right.textContent = String(value);
-    li.append(left, right); list.append(li);
-  });
-  target.append(list);
-  const incomplete = hardware.incomplete_items || [];
-  $("#hardwareNote").textContent = state.hardware?.status === "pass"
-    ? "Latest checkpoint: transistor DFE and configurable Rs/Cs pass 45/45 Link PVT points. The selected design's older boundary remains listed separately."
-    : incomplete.length
-      ? `${incomplete.length} implementation item${incomplete.length === 1 ? "" : "s"} remain. Open the hardware boundary below for details.`
-      : "All recorded hardware items are implemented.";
-}
-
 function hardwareStage(block, extraClass = "") {
   const article = document.createElement("article");
   article.className = `hardware-stage ${extraClass}`.trim();
@@ -232,7 +219,8 @@ function hardwareStage(block, extraClass = "") {
   const stateMark = document.createElement("span");
   stateMark.textContent = block.status === "implemented" ? "Implemented" : "Unverified";
   stateMark.className = block.status === "implemented" ? "implemented" : "unverified";
-  heading.append(title, stateMark);
+  heading.append(title);
+  if (block.status !== "implemented") heading.append(stateMark);
   const detail = document.createElement("p");
   detail.textContent = block.detail;
   article.append(heading, detail);
@@ -286,16 +274,49 @@ function renderHardwareTopology(blocks) {
   target.append(chain, feedback);
 }
 
+function hardwareTargetMatches(checkpoint, requestedBoost, requestedFrequency) {
+  if (!finite(checkpoint.nominal?.target_boost_db) || !finite(checkpoint.nominal?.target_peak_frequency_hz)) return false;
+  const checkpointBoost = Number(checkpoint.nominal?.target_boost_db);
+  const checkpointFrequency = Number(checkpoint.nominal?.target_peak_frequency_hz) / 1e9;
+  return checkpointBoost > 0 && checkpointFrequency > 0
+    && Number.isFinite(requestedBoost) && Number.isFinite(requestedFrequency)
+    && Math.abs(requestedBoost - checkpointBoost) < 1e-9
+    && Math.abs(requestedFrequency - checkpointFrequency) < 1e-9;
+}
+
+function renderHardwareTargetState(checkpoint) {
+  const requestedBoost = finite($("#peakingInput").value) ? Number($("#peakingInput").value) : NaN;
+  const requestedFrequency = finite($("#frequencyInput").value) ? Number($("#frequencyInput").value) : NaN;
+  const checkpointBoost = Number(checkpoint.nominal?.target_boost_db);
+  const checkpointFrequency = Number(checkpoint.nominal?.target_peak_frequency_hz) / 1e9;
+  const matches = hardwareTargetMatches(checkpoint, requestedBoost, requestedFrequency);
+  const requestLabel = `${number(requestedBoost, 2)} dB at ${number(requestedFrequency, 3)} GHz`;
+  const checkpointLabel = `${number(checkpointBoost, 2)} dB at ${number(checkpointFrequency, 3)} GHz`;
+  $("#hardwareRequestedTarget").textContent = requestLabel;
+  $("#hardwareMatchedEvidence").hidden = !matches;
+  $("#hardwareTargetMismatch").hidden = matches;
+  $("#hardwareTargetMatch").className = `checkpoint-match ${matches ? "pass" : "warning"}`;
+  $("#hardwareMatchMessage").textContent = matches
+    ? "Exact target match. The saved transistor eye and measurements are shown below."
+    : `The saved measurements belong to ${checkpointLabel}; they are hidden for this ${requestLabel} request.`;
+  $("#hardwareTargetSummary").textContent = matches
+    ? `The current ${requestLabel} request matches the calibrated configurable CTLE + transistor DFE.`
+    : `Circuit implementation is shown below, but this ${requestLabel} request has no matching transistor checkpoint.`;
+  $("#hardwareTargetMismatchCopy").textContent =
+    `Generate ${requestLabel} in Design Explorer. The circuit views remain useful, but the saved eye and measurements belong only to ${checkpointLabel}.`;
+}
+
 function renderHardwareMetrics(checkpoint) {
   const nominal = checkpoint.nominal || {};
   const pvt = checkpoint.pvt || {};
+  const scaled = (value, scale, digits) => number(finite(value) ? value * scale : null, digits);
   const rows = [
-    ["Loaded response", `${number(nominal.boost_db?.min, 3)}-${number(nominal.boost_db?.max, 3)} dB at ${number((nominal.peak_frequency_hz?.min || 0) / 1e9, 4)}-${number((nominal.peak_frequency_hz?.max || 0) / 1e9, 4)} GHz`, "Nominal held-state AC"],
-    ["Input noise", `${number((nominal.input_noise_vrms?.max || 0) * 1e3, 4)} mV rms`, "Nominal held-clock model, 10 MHz-5 GHz"],
+    ["Loaded response", `${number(nominal.boost_db?.min, 3)}-${number(nominal.boost_db?.max, 3)} dB at ${scaled(nominal.peak_frequency_hz?.min, 1e-9, 4)}-${scaled(nominal.peak_frequency_hz?.max, 1e-9, 4)} GHz`, "Nominal held-state AC"],
+    ["Input noise", `${scaled(nominal.input_noise_vrms?.max, 1e3, 4)} mV rms`, "Nominal held-clock model, 10 MHz-5 GHz"],
     ["HD3", `${number(nominal.hd3_dbc?.min, 3)} to ${number(nominal.hd3_dbc?.max, 3)} dBc`, "Clocked, 100 MHz, 100 mV differential peak"],
-    ["Fresh decode", `${number(nominal.correct_bits, 0)}/${number(nominal.scored_bits, 0)} bits`, `${number(nominal.sampled_eye_height_v * 1e3, 1)} mV sampled eye`],
-    ["Link PVT", `${number(pvt.n_pass, 0)}/${number(pvt.n_points, 0)} pass`, `${number(pvt.minimum_eye_height_v * 1e3, 1)} mV minimum eye; ${number(pvt.minimum_width_above_100mv_ui, 3)} UI above 100 mV`],
-    ["VDD power", `${number(pvt.maximum_vdd_power_w * 1e3, 3)} mW maximum`, "CTLE + transistor DFE across Link PVT"],
+    ["Fresh decode", `${number(nominal.correct_bits, 0)}/${number(nominal.scored_bits, 0)} bits`, `${scaled(nominal.sampled_eye_height_v, 1e3, 1)} mV sampled eye`],
+    ["VDD power", `${scaled(pvt.maximum_vdd_power_w, 1e3, 3)} mW maximum`, "CTLE + transistor DFE across Link PVT"],
+    ["Fixed-control Link PVT", `${number(pvt.n_pass, 0)}/${number(pvt.n_points, 0)} points pass`, `${scaled(pvt.minimum_eye_height_v, 1e3, 1)} mV minimum eye; ${number(pvt.minimum_width_above_100mv_ui, 3)} UI minimum above 100 mV`],
   ];
   const target = $("#hardwareMetrics");
   target.replaceChildren();
@@ -312,148 +333,24 @@ function renderHardwareMetrics(checkpoint) {
   });
 }
 
-function renderHardwareCorner(row) {
-  const target = $("#hardwareCornerDetail");
-  target.replaceChildren();
-  const heading = document.createElement("div");
-  const title = document.createElement("h4");
-  title.textContent = row.label;
-  heading.append(title, statusNode(row.status === "pass", "Pass"));
-  const values = [
-    ["Decoded", `${number(row.correct_bits, 0)}/${number(row.scored_bits, 0)} bits`],
-    ["Sampled eye", `${number(row.sampled_eye_height_v * 1e3, 3)} mV`],
-    ["Positive aperture", `${number(row.positive_width_ui, 3)} UI`],
-    ["Above 100 mV", `${number(row.width_above_100mv_ui, 3)} UI`],
-    ["VDD power", `${number(row.vdd_power_w * 1e3, 3)} mW`],
-    ["External clock", `${number(row.external_clock_positive_power_w * 1e3, 4)} mW`],
-  ];
-  const dl = document.createElement("dl");
-  values.forEach(([name, value]) => {
-    const wrap = document.createElement("div");
-    const dt = document.createElement("dt");
-    const dd = document.createElement("dd");
-    dt.textContent = name;
-    dd.textContent = value;
-    wrap.append(dt, dd);
-    dl.append(wrap);
-  });
-  const scope = document.createElement("p");
-  scope.textContent = "Finite noiseless 7.5 dB constructed-channel result; not a BER measurement.";
-  target.append(heading, dl, scope);
-  $$(".hardware-cell", $("#hardwarePvtGrid")).forEach((cell) => {
-    cell.classList.toggle("selected", cell.dataset.corner === row.corner);
-  });
-}
-
-function drawHardwarePvt(checkpoint) {
-  const pvt = checkpoint.pvt || {};
-  const target = $("#hardwarePvtGrid");
-  target.replaceChildren();
-  const corners = pvt.corners || [];
-  const processes = ["ss", "sf", "tt", "fs", "ff"];
-  const supplies = [0.95, 1.00, 1.05];
-  const temperatures = [0, 27, 125];
-  const rows = new Map(corners.map((row) => [
-    `${row.process}/${Number(row.vdd).toFixed(2)}/${row.temp_c}`,
-    row,
-  ]));
-  const blank = document.createElement("div");
-  blank.className = "hardware-pvt-head";
-  blank.textContent = "PVT";
-  target.append(blank);
-  supplies.forEach((vdd) => temperatures.forEach((temp) => {
-    const head = document.createElement("div");
-    head.className = "hardware-pvt-head";
-    const supply = document.createElement("strong");
-    supply.textContent = `${(1.8 * vdd).toFixed(2)} V`;
-    const temperature = document.createElement("span");
-    temperature.textContent = `${temp} C`;
-    head.append(supply, temperature);
-    target.append(head);
-  }));
-  processes.forEach((process) => {
-    const label = document.createElement("div");
-    label.className = "hardware-pvt-row";
-    label.textContent = process.toUpperCase();
-    target.append(label);
-    supplies.forEach((vdd) => temperatures.forEach((temp) => {
-      const row = rows.get(`${process}/${vdd.toFixed(2)}/${temp}`);
-      const button = document.createElement("button");
-      button.type = "button";
-      button.className = `hardware-cell ${row?.status || "missing"}`;
-      if (!row) {
-        button.disabled = true;
-        button.textContent = "Missing";
-      } else {
-        button.dataset.corner = row.corner;
-        button.setAttribute("aria-label", `${row.label}: pass, ${number(row.sampled_eye_height_v * 1e3, 1)} millivolt eye`);
-        const result = document.createElement("strong");
-        result.textContent = "PASS";
-        const eye = document.createElement("span");
-        eye.textContent = `${number(row.sampled_eye_height_v * 1e3, 0)} mV`;
-        button.append(result, eye);
-        button.addEventListener("click", () => renderHardwareCorner(row));
-      }
-      target.append(button);
-    }));
-  });
-  $("#hardwarePvtCount").textContent = `${number(pvt.n_pass, 0)} / ${number(pvt.n_points, 0)} PASS`;
-  if (corners.length) {
-    const worst = corners.reduce((left, right) => left.sampled_eye_height_v <= right.sampled_eye_height_v ? left : right);
-    renderHardwareCorner(worst);
-  }
-}
-
-function renderHardwareEvidence(checkpoint) {
-  const evidence = $("#hardwareEvidence");
-  evidence.replaceChildren();
-  (checkpoint.evidence || []).forEach((item) => {
-    const link = document.createElement("a");
-    link.href = item.url;
-    link.target = "_blank";
-    link.rel = "noopener";
-    const label = document.createElement("strong");
-    label.textContent = item.label;
-    const detail = document.createElement("span");
-    detail.textContent = item.key;
-    link.append(label, detail);
-    evidence.append(link);
-  });
-
-  const boundary = $("#hardwareBoundary");
-  boundary.replaceChildren();
-  (checkpoint.boundaries || []).forEach((item) => {
-    const row = document.createElement("div");
-    const label = document.createElement("strong");
-    label.textContent = item.label;
-    const detail = document.createElement("p");
-    detail.textContent = item.detail;
-    row.append(label, detail);
-    boundary.append(row);
-  });
-}
-
 function renderHardwareCheckpoint(checkpoint) {
   state.hardware = checkpoint;
   $("#hardwareLoadError").hidden = true;
   $("#hardwareContent").hidden = false;
   const badge = $("#hardwareStatusBadge");
-  badge.textContent = checkpoint.status_label || "Verified checkpoint";
+  badge.textContent = checkpoint.status === "pass" ? "Verified checkpoint" : "Unavailable";
   badge.className = `source-badge ${checkpoint.status === "pass" ? "pass" : ""}`;
-  $("#hardwareCalloutStatus").textContent = checkpoint.status === "pass"
-    ? checkpoint.status_label
-    : "Evidence unavailable";
   const controls = checkpoint.controls || {};
   $("#hardwareControlR").textContent = `${number(controls.r_fraction, 3)} VDD / ${number(controls.r_control_v_nominal, 3)} V nominal`;
   $("#hardwareControlC").textContent = `${number(controls.c_fraction, 3)} VDD / ${number(controls.c_control_v_nominal, 3)} V nominal`;
   $("#hardwareControlNote").textContent = controls.corner_retuning
     ? "Corner-specific controls were used."
-    : "Calibrated settings (read-only). These are physical voltage controls, not fixed exported Rs/Cs. Editing them and running fresh verification is not available here; 45/45 Link PVT applies only to this saved setting.";
+    : "Calibrated settings (read-only). These are physical voltage controls, not fixed exported Rs/Cs. Editing them and running fresh verification is not available here; the saved Link PVT result applies only to this setting.";
   renderHardwareTopology(checkpoint.topology);
   NebulaCircuitViews.mount(checkpoint);
   renderHardwareMetrics(checkpoint);
-  drawHardwarePvt(checkpoint);
-  renderHardwareEvidence(checkpoint);
+  renderHardwareTargetState(checkpoint);
+  if (state.current) NebulaCircuitViews.renderDesign(state.current);
   for (const [imageId, linkId, key] of [
     ["hardwareEye", "openHardwareEye", "nominal-eye"],
     ["hardwareSchematic", "openHardwareSchematic", "hardware-schematic"],
@@ -477,7 +374,6 @@ function renderHardwareFailure(message) {
   error.hidden = false;
   $("#hardwareStatusBadge").textContent = "Unavailable";
   $("#hardwareStatusBadge").className = "source-badge";
-  $("#hardwareCalloutStatus").textContent = "Evidence unavailable";
   $("#hardwareNote").textContent = "The latest hardware evidence could not be validated.";
 }
 
@@ -765,6 +661,7 @@ async function parseNaturalRequest() {
     const parsed = await api("/api/parse", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ request: $("#requestText").value }) });
     $("#peakingInput").value = parsed.peaking_db;
     $("#frequencyInput").value = parsed.f_peak_ghz;
+    if (state.hardware) renderHardwareTargetState(state.hardware);
     note.textContent = parsed.notes?.length ? parsed.notes.join(" ") : `Read as ${number(parsed.peaking_db, 2)} dB at ${number(parsed.f_peak_ghz, 3)} GHz.`;
     return parsed;
   } catch (error) {
@@ -794,8 +691,8 @@ async function generate() {
 function updateModeSummary() {
   const physical = $("#designMode").value === "rl-physical";
   $("#modeSummary").textContent = physical
-    ? "The live physical export is the legacy fixed Rs/Cs path. Open Receiver for the calibrated transistor DFE and configurable controls."
-    : "Legacy adaptive bank: the frozen RL policy proposes settings and a deterministic shield checks each condition. DFE scoring is behavioral.";
+    ? "Generates and verifies a request-specific transistor CTLE with fixed exported Rs/Cs. The Receiver checkpoint is a separate calibrated implementation."
+    : "The frozen RL policy proposes A/R/C codes and the deterministic safety shield selects a checked result; the transistor receiver is shown as a separate implementation checkpoint.";
 }
 
 function showProgress(job) {
@@ -885,6 +782,11 @@ function bindEvents() {
   $$('[data-open-tab]').forEach((button) => button.addEventListener("click", () => selectTab(button.dataset.openTab)));
   $("#readRequest").addEventListener("click", () => parseNaturalRequest().catch(() => {}));
   $("#designMode").addEventListener("change", updateModeSummary);
+  for (const input of [$("#peakingInput"), $("#frequencyInput")]) {
+    input.addEventListener("input", () => {
+      if (state.hardware) renderHardwareTargetState(state.hardware);
+    });
+  }
   $("#generateButton").addEventListener("click", generate);
   $("#judgeButton").addEventListener("click", enterJudgeMode);
   $("#exitJudge").addEventListener("click", exitJudgeMode);

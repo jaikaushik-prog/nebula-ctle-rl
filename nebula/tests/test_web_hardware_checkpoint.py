@@ -127,15 +127,23 @@ def test_frontend_has_a_visible_transistor_hardware_view():
     assert 'data-tab="hardware"' in html
     for identity in (
         "hardwareView", "hardwareTopology", "hardwareControlR",
-        "hardwareControlC", "hardwarePvtGrid", "hardwareCornerDetail",
-        "hardwareEvidence", "hardwareBoundary",
+        "hardwareControlC", "hardwareTargetMatch", "hardwareMatchedEvidence",
+        "hardwareTargetMismatch", "designBlockGrid",
     ):
         assert f'id="{identity}"' in html
-    assert "Transistor-level DFE" in html
+    for removed in (
+        "hardwarePvtGrid", "hardwareCornerDetail", "hardwareEvidence",
+        "hardwareBoundary",
+    ):
+        assert f'id="{removed}"' not in html
+    assert "Transistor receiver checkpoint" in html
     assert 'api("/api/hardware")' in js
     assert "renderHardwareCheckpoint" in js
-    assert "drawHardwarePvt" in js
+    assert "renderHardwareTargetState" in js
+    assert "NebulaCircuitViews.renderDesign(design)" in js
+    assert "drawHardwarePvt" not in js
     assert ".hardware-signal-chain" in css
+    assert ".design-block-grid" in css
     assert 'path == "/api/hardware"' in server
     assert 'path.startswith("/api/hardware/artifacts/")' in server
 
@@ -144,13 +152,18 @@ def test_frontend_copy_keeps_the_new_checkpoint_scope_explicit():
     static = Path("nebula/web/static")
     text = "\n".join(
         path.read_text(encoding="utf-8")
-        for path in (static / "index.html", static / "app.js")
+        for path in (
+            static / "index.html", static / "app.js",
+            static / "circuit_views.js",
+        )
     )
 
     assert "Link PVT" in text
-    assert "Analog PVT is not verified" in text
-    assert "finite noiseless" in text
-    assert "legacy fixed Rs/Cs" in text
+    assert "fixed exported Rs/Cs" in text
+    assert "saved eye and measurements belong only" in text
+    assert "selected run uses a 1-tap cursor score" in text
+    assert "finite, noiseless" in text
+    assert "analog PVT" in text
 
 
 def test_eye_visual_uses_the_registered_waveform_and_aperture():
@@ -184,6 +197,9 @@ def test_block_view_connections_match_pinned_devices():
         "Xrc_switch": ["rc_mid", "rc_gate", "s2", "0"],
         "Xrc_var_s1": ["s1", "rc_ct", "0"],
         "Xrc_var_s2": ["s2", "rc_ct", "0"],
+        "Xbpref": ["p_bias", "p_bias", "vdd", "vdd"],
+        "Xbpfeed": ["nbias", "p_bias", "vdd", "vdd"],
+        "XMR": ["nbias", "nbias", "0", "0"],
         "Xdfe_sump": ["sum_n", "outn", "sum_tail", "0"],
         "Xdfe_dacp": ["sum_p", "df_q", "fd_common", "0"],
         "XM1": ["outp", "inp", "s1", "0"],
@@ -221,7 +237,7 @@ const context = vm.createContext({document});
 vm.runInContext(fs.readFileSync('nebula/web/static/circuit_views.js','utf8')+
   '\nNebulaCircuitViews.mount({controls:{r_control_v_nominal:1.26,c_control_v_nominal:.333,r_fraction:.7,c_fraction:.185}});', context);
 const buttons = document.getElementById('circuitViewButtons').children;
-assert.equal(buttons.length,4);
+assert.equal(buttons.length,5);
 assert.equal(buttons[0].attributes['aria-pressed'],'true');
 const svgs = {};
 for(const b of buttons){
@@ -241,7 +257,7 @@ process.stdout.write(JSON.stringify(svgs));
 """
     result = subprocess.run([node, "-e", script], check=True, capture_output=True, text=True)
     views = json.loads(result.stdout)
-    assert set(views) == {"dfe", "attenuator", "ctle", "rc"}
+    assert set(views) == {"dfe", "attenuator", "ctle", "rc", "reference"}
     for svg in views.values():
         root = ET.fromstring(svg)
         assert root.attrib["role"] == "img"
@@ -249,3 +265,106 @@ process.stdout.write(JSON.stringify(svgs));
     assert "Feedback current" in views["dfe"]
     assert "Xatt_swp2" in views["attenuator"]
     assert "Xrc_var_s2" in views["rc"]
+    assert "Xbpref" in views["reference"]
+    assert "Xcbyp" in views["reference"]
+    # Reference rails must meet MOS terminals, without a drain-source short.
+    assert "M300 58V115" in views["reference"]
+    assert "M650 58V115" in views["reference"]
+    assert "M650 235V310" not in views["reference"]
+    assert "l30 -40" not in views["reference"]  # fixed MIM bypass
+    assert "l30 -40" in views["rc"]  # voltage-controlled varactors
+
+
+def test_design_explorer_renders_four_dynamic_receiver_blocks():
+    import shutil
+    import subprocess
+    node = shutil.which("node")
+    if not node:
+        pytest.skip("Node is required for frontend interaction checks")
+    script = r"""
+const fs = require('fs'), vm = require('vm'), assert = require('assert');
+class Element {
+  constructor(){this.children=[];this.dataset={};this.textContent='';this.innerHTML='';}
+  replaceChildren(...xs){this.children=xs;}
+  append(...xs){this.children.push(...xs);}
+  setAttribute(k,v){this[k]=v;}
+}
+const elements = new Map();
+const document = {
+  getElementById(id){if(!elements.has(id))elements.set(id,new Element());return elements.get(id);},
+  createElement(){return new Element();}
+};
+const context = vm.createContext({document});
+vm.runInContext(fs.readFileSync('nebula/web/static/circuit_views.js','utf8') +
+  '\nNebulaCircuitViews.renderDesign({method:"rl-hybrid",search:{setting:425,atten_code:6,bank_code:41},nominal:{params:{rs:356.8177,cs:2.19177e-12}}});', context);
+const cards = document.getElementById('designBlockGrid').children;
+assert.equal(cards.length,4);
+assert.deepEqual(cards.map(card=>card.dataset.block),['attenuator','ctle','dfe','reference']);
+assert.equal(cards[0].children[0].children[1].textContent,'A6');
+assert.equal(cards[0].name,'design-circuits');
+assert.equal(cards[0].open,true);
+assert(cards[0].children[1].innerHTML.includes('gate = VDD'));
+assert.equal((cards[0].children[1].innerHTML.match(/gate = 0/g)||[]).length,2);
+assert.equal(cards[1].children[0].children[1].textContent,'R5 / C1');
+assert(cards[1].children[1].innerHTML.includes('Fixed Rs/Cs'));
+assert(cards[1].children[2].textContent.includes('356.82 ohm'));
+assert(cards[2].children[2].textContent.includes('transistor summer'));
+assert(cards[3].children[1].innerHTML.includes('Xcbyp'));
+vm.runInContext('NebulaCircuitViews.renderDesign({method:"rl-hybrid",search:{atten_code:null,bank_code:null},nominal:{params:{rs:null,cs:null}}});', context);
+const missing = document.getElementById('designBlockGrid').children;
+assert.equal(missing[0].children[0].children[1].textContent,'Not recorded');
+assert.equal(missing[1].children[0].children[1].textContent,'Not recorded / Not recorded');
+assert(missing[1].children[2].textContent.includes('not measured'));
+"""
+    subprocess.run([node, "-e", script], check=True, capture_output=True, text=True)
+
+
+def test_receiver_checkpoint_match_is_exact_and_target_dependent():
+    import shutil
+    import subprocess
+    node = shutil.which("node")
+    if not node:
+        pytest.skip("Node is required for frontend interaction checks")
+    script = r"""
+const fs = require('fs'), vm = require('vm'), assert = require('assert');
+const elements = new Map();
+function element(id){
+  if(!elements.has(id)) elements.set(id,{value:'',hidden:false,className:'',textContent:''});
+  return elements.get(id);
+}
+element('peakingInput').value='9';
+element('frequencyInput').value='1.9';
+const document = {
+  addEventListener(){},
+  querySelector(selector){return element(selector.slice(1));}
+};
+const context = vm.createContext({document,result:null});
+vm.runInContext(fs.readFileSync('nebula/web/static/app.js','utf8') +
+  '\nresult=[' +
+  'hardwareTargetMatches({nominal:{target_boost_db:9,target_peak_frequency_hz:1.9e9}},9,1.9),' +
+  'hardwareTargetMatches({nominal:{target_boost_db:9,target_peak_frequency_hz:1.9e9}},8,1.9),' +
+  'hardwareTargetMatches({nominal:{target_boost_db:9,target_peak_frequency_hz:1.9e9}},9,2.0)' +
+  '];', context);
+assert.deepEqual([...context.result],[true,false,false]);
+const checkpoint={nominal:{target_boost_db:9,target_peak_frequency_hz:1.9e9}};
+vm.runInContext('renderHardwareTargetState('+JSON.stringify(checkpoint)+');',context);
+assert.equal(element('hardwareMatchedEvidence').hidden,false);
+assert.equal(element('hardwareTargetMismatch').hidden,true);
+element('peakingInput').value='8';
+vm.runInContext('renderHardwareTargetState('+JSON.stringify(checkpoint)+');',context);
+assert.equal(element('hardwareMatchedEvidence').hidden,true);
+assert.equal(element('hardwareTargetMismatch').hidden,false);
+assert(element('hardwareMatchMessage').textContent.includes('hidden for this 8 dB'));
+for (const nominal of [{}, {target_boost_db:null,target_peak_frequency_hz:null},
+    {target_boost_db:'',target_peak_frequency_hz:''}]) {
+  context.bad = {nominal};
+  vm.runInContext('result=hardwareTargetMatches(bad,0,0)',context);
+  assert.equal(context.result,false);
+}
+vm.runInContext('syncRequest({request:{peaking_db:9,f_peak_ghz:1.9}})',context);
+assert.equal(Number(element('peakingInput').value),9);
+assert.equal(Number(element('frequencyInput').value),1.9);
+vm.runInContext('renderHardwareTargetState('+JSON.stringify(checkpoint)+');',context);
+assert.equal(element('hardwareMatchedEvidence').hidden,false);
+"""
+    subprocess.run([node, "-e", script], check=True, capture_output=True, text=True)

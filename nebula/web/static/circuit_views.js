@@ -20,8 +20,8 @@ const NebulaCircuitViews = (() => {
     wire(`M${x + 45} ${y - 30}v15h-15v30h15v15M${x + 24} ${y - 15}v30M${x} ${y}h24`) +
     (pmos ? `<circle cx="${x + 18}" cy="${y}" r="4" class="circuit-component"/>` : "") +
     text(x + 56, y + 5, label, "circuit-small") +
-    text(x - 8, y + 4, gate, "circuit-small circuit-gate");
-  const capacitor = (x, y, label) => wire(`M${x} ${y}h25m10 0h25M${x + 25} ${y - 14}v28M${x + 35} ${y - 14}v28M${x + 16} ${y + 20}l30 -40`) +
+    text(x - 8, y + (gate.startsWith("gate") ? 26 : 4), gate, "circuit-small circuit-gate");
+  const capacitor = (x, y, label, variable = true) => wire(`M${x} ${y}h25m10 0h25M${x + 25} ${y - 14}v28M${x + 35} ${y - 14}v28` + (variable ? `M${x + 16} ${y + 20}l30 -40` : "")) +
     text(x - 10, y - 29, label, "circuit-small");
   const frame = (title, body) =>
     `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1040 340" role="img" aria-label="${title}"><title>${title}</title>${body}</svg>`;
@@ -101,7 +101,98 @@ const NebulaCircuitViews = (() => {
         box(630, 235, 305, 65, "Filtered cctrl + AC bypass") +
         text(570, 322, "Bias feed: Xrc_cfeed + Xrc_cbypass", "circuit-small")),
     },
+    reference: {
+      label: "Reference + bypass",
+      description: "The physical export derives nbias from VDD through a PMOS reference/feed pair and a diode-connected NMOS mirror device. A high-poly resistor establishes p_bias and a drawn MIM capacitor bypasses nbias at signal frequencies. It is supply-dependent, not a precision bandgap reference.",
+      svg: frame("Physical supply-dependent bias reference and MIM bypass",
+        text(30, 36, "Supply-dependent physical bias", "circuit-label") +
+        wire("M150 58H890M300 58V115M650 58V115") + text(505, 47, "VDD", "circuit-small") +
+        mos(255, 145, "Xbpref", "p_bias", true) +
+        mos(605, 145, "Xbpfeed", "p_bias", true) +
+        wire("M300 175V210M255 145H180V210H300M650 175V235M650 210H810") +
+        text(687, 201, "nbias", "circuit-small") +
+        resistor(300, 210, "Xrbias") +
+        wire("M380 210V310M810 210V265M870 265H930V310M650 295V310M380 310H930M605 265H540V210H650") +
+        mos(605, 265, "XMR", "nbias") + capacitor(810, 265, "Xcbyp (MIM)", false) +
+        text(455, 330, "Ground return; nbias drives both CTLE tail devices", "circuit-small")),
+    },
   };
+
+  function designBlockMeta(design) {
+    const search = design.search || {};
+    const params = (design.nominal || {}).params || {};
+    const bank = search.bank_code === null || search.bank_code === undefined
+      ? Number.NaN : Number(search.bank_code);
+    const rCode = Number.isFinite(bank) ? Math.floor(bank / 8) : null;
+    const cCode = Number.isFinite(bank) ? bank % 8 : null;
+    const present = (value) => value !== null && value !== undefined && Number.isFinite(Number(value));
+    const code = (value, prefix) => present(value) ? `${prefix}${Number(value)}` : "Not recorded";
+    const component = (value, scale, unit, digits) => present(value)
+      ? `${(Number(value) * scale).toFixed(digits)} ${unit}` : "not measured";
+    const physical = design.method === "rl-physical";
+    return {
+      attenuator: {
+        badge: code(search.atten_code, "A"),
+        note: "The selected attenuation code is applied ahead of the CTLE by the measured PMOS series-shunt input network.",
+      },
+      ctle: {
+        badge: `${code(rCode, "R")} / ${code(cCode, "C")}`,
+        note: `Selected values: Rs ${component(params.rs, 1, "ohm", 2)} and Cs ${component(params.cs, 1e12, "pF", 3)}. The saved run exports fixed values; the Receiver tab shows their voltage-configurable transistor implementation.`,
+      },
+      dfe: {
+        badge: "Transistor reference",
+        note: "The selected run uses a 1-tap cursor score. The circuit view shows the separately verified transistor summer, decision memory and feedback DAC used by the hardware checkpoint.",
+      },
+      reference: {
+        badge: physical ? "Included in export" : "Physical reference",
+        note: physical
+          ? "The physical CTLE export includes the supply-dependent PMOS reference, NMOS mirror and drawn MIM bypass."
+          : "The adaptive-bank result maps to the verified physical supply-dependent reference; that block is not re-simulated by the cached-bank score.",
+      },
+    };
+  }
+
+  function renderDesign(design) {
+    const target = document.getElementById("designBlockGrid");
+    target.replaceChildren();
+    const meta = designBlockMeta(design);
+    for (const key of ["attenuator", "ctle", "dfe", "reference"]) {
+      const view = views[key];
+      const article = document.createElement("details");
+      article.className = "design-block-card";
+      article.dataset.block = key;
+      article.setAttribute("name", "design-circuits");
+      article.open = key === "attenuator";
+      const heading = document.createElement("summary");
+      heading.className = "design-block-card-heading";
+      const title = document.createElement("h4");
+      title.textContent = view.label;
+      const badge = document.createElement("span");
+      badge.textContent = meta[key].badge;
+      heading.append(title, badge);
+      const canvas = document.createElement("div");
+      canvas.className = "design-block-canvas";
+      canvas.setAttribute("tabindex", "0");
+      canvas.setAttribute("aria-label", `${view.label} circuit drawing; scroll to inspect`);
+      let svg = view.svg;
+      if (key === "attenuator") {
+        const code = design.search?.atten_code;
+        let bit = 0;
+        svg = svg.replaceAll("gate = 0", () => {
+          const gate = Number.isInteger(code) && code >= 0 && code <= 7
+            ? (code & (1 << bit) ? "0" : "VDD") : "unknown";
+          bit += 1;
+          return `gate = ${gate}`;
+        });
+      }
+      if (key === "ctle") svg = svg.replace("Configurable Rs/Cs", "Fixed Rs/Cs");
+      canvas.innerHTML = svg;
+      const note = document.createElement("p");
+      note.textContent = meta[key].note;
+      article.append(heading, canvas, note);
+      target.append(article);
+    }
+  }
 
   function mount(checkpoint) {
     const buttons = document.getElementById("circuitViewButtons");
@@ -132,5 +223,5 @@ const NebulaCircuitViews = (() => {
     document.getElementById("inspectRcButton").onclick = () => select("rc", true);
     select("dfe");
   }
-  return {mount};
+  return {mount, renderDesign};
 })();

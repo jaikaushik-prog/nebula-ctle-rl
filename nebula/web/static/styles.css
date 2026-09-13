@@ -51,13 +51,50 @@ body[data-view] .hardware-visual-grid .hardware-proof { border: 0; margin: 0; }
 body[data-view] .hardware-visual-grid .hardware-proof-heading { padding: 14px 0; }
 body[data-view] .hardware-metric-tape { display: block; }
 body[data-view] .hardware-metric-tape > div { border: 0; border-bottom: 1px solid var(--rule-soft); padding: 10px 0; }
-body[data-view] .hardware-metric-tape strong { font-size: 12px; margin: 4px 0; }
+body[data-view] .hardware-metric-tape strong { font: 600 16px/1.4 Aptos, "Segoe UI", sans-serif; margin: 5px 0; }
+body[data-view] .hardware-metric-tape span, body[data-view] .hardware-metric-tape small { font-size: 13px; line-height: 1.45; }
+.hardware-scope { margin: 14px 0 0; color: var(--muted); font-size: 13px; line-height: 1.6; }
+.hardware-drawing > a { display: inline-block; margin-right: 18px; margin-bottom: 14px; }
 .hardware-drawing { margin: 24px 0; }
 .hardware-drawing summary span { float: right; font-size: 11px; color: var(--muted); font-weight: 400; }
 .hardware-drawing > p, .hardware-drawing > a { margin: 16px; font-size: 12px; color: var(--muted); }
 .hardware-drawing-scroll { overflow: auto; max-height: 650px; margin-top: 12px; }
 .hardware-drawing-scroll img { display: block; width: 1800px; max-width: none; }
 .explorer-scope { color: var(--muted); font-size: 12px; line-height: 1.6; padding: 12px 0; border-bottom: 1px solid var(--rule-soft); }
+.design-block-section { margin-bottom: 22px; }
+.design-block-heading { display: flex; align-items: end; justify-content: space-between; gap: 24px; margin-bottom: 12px; }
+.design-block-heading h3, .design-block-heading p { margin-bottom: 0; }
+.design-block-heading p { color: var(--muted); font-size: 12px; line-height: 1.5; }
+.design-block-grid { display: grid; grid-template-columns: minmax(0, 1fr); border: 1px solid var(--rule); border-radius: var(--radius); overflow: hidden; }
+.design-block-card { min-width: 0; background: #fff; border-right: 1px solid var(--rule-soft); border-bottom: 1px solid var(--rule-soft); }
+.design-block-card:nth-child(2n) { border-right: 0; }
+.design-block-card:last-child { border-bottom: 0; }
+.design-block-card-heading { display: flex; justify-content: space-between; align-items: center; gap: 14px; min-height: 48px; padding: 11px 14px; border-bottom: 1px solid var(--rule-soft); }
+.design-block-card-heading { cursor: pointer; }
+.design-block-card-heading::before { content: "+"; font-size: 20px; color: var(--cyan-deep); }
+.design-block-card[open] > .design-block-card-heading::before { content: "-"; }
+.design-block-card-heading h4 { margin: 0 auto 0 0; font-size: 16px; }
+.design-block-card-heading span { color: var(--cyan-deep); font: 600 13px "Cascadia Mono", Consolas, monospace; white-space: nowrap; }
+.design-block-canvas { overflow-x: auto; background: #fbfdff; }
+.design-block-canvas svg { display: block; width: 100%; min-width: 1040px; height: auto; color: var(--ink); }
+.design-block-canvas text { fill: var(--ink); font: 15px "Cascadia Mono", Consolas, monospace; }
+.design-block-canvas .circuit-label { font: 600 17px Aptos, "Segoe UI", sans-serif; }
+.design-block-canvas .circuit-small { font-size: 14px; }
+.design-block-canvas .circuit-gate { text-anchor: end; }
+.design-block-card > p { margin: 0; padding: 14px 18px; color: var(--muted); font-size: 14px; line-height: 1.6; border-top: 1px solid var(--rule-soft); }
+.generated-drawing { margin: 0 0 20px; }
+.generated-drawing > .card-heading { margin-top: 10px; }
+.checkpoint-match { display: flex; align-items: center; justify-content: space-between; gap: 24px; padding: 12px 15px; margin-bottom: 22px; border: 1px solid var(--rule); border-left: 3px solid var(--cyan); background: #fbfdff; }
+.checkpoint-match > div span, .checkpoint-match > div strong { display: block; }
+.checkpoint-match > div span { color: var(--muted); font-size: 10px; }
+.checkpoint-match > div strong { margin-top: 3px; font: 700 13px "Cascadia Mono", Consolas, monospace; }
+.checkpoint-match p { max-width: 650px; margin: 0; color: var(--muted); font-size: 12px; line-height: 1.5; text-align: right; }
+.checkpoint-match.pass { border-left-color: var(--pass); background: var(--pass-pale); }
+.checkpoint-match.warning { border-left-color: var(--warn); background: var(--warn-pale); }
+.checkpoint-empty { margin: 0 0 24px; padding: 28px; border: 1px solid #e5bf91; background: var(--warn-pale); text-align: center; }
+.checkpoint-empty[hidden], .hardware-visual-grid[hidden] { display: none; }
+.checkpoint-empty strong { display: block; font-size: 16px; }
+.checkpoint-empty p { max-width: 650px; margin: 8px auto 16px; color: var(--muted); font-size: 12px; line-height: 1.55; }
 body[data-view] .hardware-lower-grid { margin-top: 28px; align-items: start; }
 body[data-view] .hardware-review-panel { border: 0; padding: 0; }
 .hardware-review-panel summary { cursor: pointer; font-weight: 700; font-size: 14px; margin-bottom: 12px; }
@@ -236,10 +273,10 @@ textarea:hover, input:hover, select:hover { border-color: #9ab1c5; }
 .circuit-view-buttons button { border: 1px solid var(--rule); border-radius: 5px; background: #fff; color: var(--ink); padding: 9px 16px; font: inherit; font-size: 12px; cursor: pointer; }
 .circuit-view-buttons button[aria-pressed="true"] { background: var(--ink); border-color: var(--ink); color: #fff; }
 .circuit-view-canvas { overflow-x: auto; border-top: 1px solid var(--rule-soft); }
-.circuit-view-canvas svg { display: block; width: 100%; min-width: 920px; height: auto; color: var(--ink); }
+.circuit-view-canvas svg { display: block; width: 100%; min-width: 1040px; height: auto; color: var(--ink); }
 .circuit-view-canvas text { fill: var(--ink); font: 15px "Cascadia Mono", Consolas, monospace; }
 .circuit-view-canvas .circuit-label { font: 600 17px Aptos, "Segoe UI", sans-serif; }
-.circuit-view-canvas .circuit-small { font-size: 12px; }
+.circuit-view-canvas .circuit-small { font-size: 14px; }
 .circuit-view-canvas .circuit-gate { text-anchor: end; }
 .circuit-scroll-hint { display: none; }
 .circuit-wire { fill: none; stroke: #35556e; stroke-width: 1.6; }
@@ -247,7 +284,7 @@ textarea:hover, input:hover, select:hover { border-color: #9ab1c5; }
 .circuit-box { fill: #f6fafb; stroke: #b9cdd9; stroke-width: 1.2; }
 .circuit-component { fill: white; stroke: #35556e; stroke-width: 1.6; }
 .circuit-view-description { margin: 0; padding: 14px 20px 6px; font-size: 13px; line-height: 1.65; border-top: 1px solid var(--rule-soft); }
-.circuit-view-source { margin: 0; padding: 0 20px 16px; color: var(--muted); font-size: 11px; line-height: 1.5; }
+.circuit-view-source { margin: 0; padding: 0 20px 16px; color: var(--muted); font-size: 13px; line-height: 1.5; }
 @media (max-width: 600px) {
   .hardware-blueprint-heading { flex-wrap: wrap; }
   .circuit-kind { display: none; }
@@ -257,8 +294,8 @@ textarea:hover, input:hover, select:hover { border-color: #9ab1c5; }
   min-width: 0; padding: 13px; border: 1px solid #b8cad9; border-radius: 6px;
   background: #fff; position: relative;
 }
-.hardware-stage h4 { margin: 0; font-size: 12px; }
-.hardware-stage p { margin: 7px 0 0; color: var(--muted); font-size: 10px; line-height: 1.4; }
+.hardware-stage h4 { margin: 0; font-size: 14px; }
+.hardware-stage p { margin: 9px 0 0; color: var(--muted); font-size: 13px; line-height: 1.5; }
 .hardware-stage-heading { display: flex; align-items: start; justify-content: space-between; gap: 9px; }
 .hardware-stage-heading span { font-size: 8px; font-weight: 760; white-space: nowrap; }
 .hardware-stage-heading .implemented { color: var(--pass); }
@@ -279,7 +316,7 @@ textarea:hover, input:hover, select:hover { border-color: #9ab1c5; }
   margin: 15px 2px 0 31%; color: var(--cyan-deep);
 }
 .hardware-feedback > span { height: 14px; border-left: 1px solid var(--cyan); border-bottom: 1px solid var(--cyan); }
-.hardware-feedback strong { font-size: 9px; font-weight: 700; }
+.hardware-feedback strong { font-size: 12px; font-weight: 600; }
 
 .hardware-control-strip {
   display: grid; grid-template-columns: 1fr 1fr minmax(240px, 1.35fr); gap: 1px;
@@ -287,9 +324,9 @@ textarea:hover, input:hover, select:hover { border-color: #9ab1c5; }
   overflow: hidden; background: var(--rule-soft);
 }
 .hardware-control-strip > div, .hardware-control-strip > p { margin: 0; padding: 13px 15px; background: #fff; }
-.hardware-control-strip span, .hardware-control-strip small { display: block; color: var(--muted); font-size: 10px; }
+.hardware-control-strip span, .hardware-control-strip small { display: block; color: var(--muted); font-size: 12px; }
 .hardware-control-strip strong { display: block; margin: 5px 0 3px; font: 700 13px "Cascadia Mono", Consolas, monospace; }
-.hardware-control-strip p { display: grid; align-items: center; color: #285d3c; background: var(--pass-pale); font-size: 11px; line-height: 1.45; }
+.hardware-control-strip p { display: grid; align-items: center; color: #285d3c; background: var(--pass-pale); font-size: 13px; line-height: 1.5; }
 
 .hardware-proof { overflow: hidden; margin-bottom: 12px; }
 .hardware-metric-tape { display: grid; grid-template-columns: repeat(3, 1fr); }

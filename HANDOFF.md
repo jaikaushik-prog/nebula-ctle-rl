@@ -17,7 +17,26 @@
 > decisions that are OPEN and human-only, and what to do next. It supersedes
 > `nebula/NEXT_STEPS.md`. This file remains the full state of record.
 
-Last updated: **2026-09-10**, Entry 145 refreshes the frontend around the verified transistor receiver, adds its device schematic and saved eye plot; 3405 full-suite tests and desktop/mobile visual QA pass.
+Last updated: **2026-09-14**, Entries 147/148 complete: desktop frontend, balanced 25-page submission report and narration script; full regression and artifact review passed.
+
+
+> **CURRENT SUBMISSION EDITION (Entries 147/148):** Use
+> `output/pdf/Nebula_Submission_Report_20260914.pdf` and
+> `nebula/SUBMISSION_DEMO_SCRIPT_20260914.md`. Both previous report PDFs are
+> preserved byte-for-byte. The owner will record the video in their own voice.
+> The owner's later instruction supersedes the restart packet's proposal to
+> edit the academic edition: create a new report, retain the older editions.
+> For this submission session the owner explicitly authorized focused HANDOFF
+> reading: restart packet, current state, all gotchas and relevant recent logs.
+> CLAUDEwa.md, G0_RESULTS.md and NRZ_RETARGET_AUDIT.md were read in full.
+
+> **CURRENT RESTART PACKET: `NEBULA_SUBMISSION_START_20260914.md`.**
+> The owner requests a new session to finish frontend, academic report and demo
+> before the 15 September deadline. This packet supersedes the old
+> `NEXT_AGENT_PROMPT.md` for current status; read this full HANDOFF as required.
+> It records the dirty worktree, calibrated transistor hardware evidence,
+> pending checks and desktop-only presentation priorities. No submission work
+> is declared complete by creating the packet.
 
 The owner explicitly reconfirmed "yes push to the public repo" on 2026-09-10.
 The old public/private permission hold is resolved. Keep copyrighted/PDK and
@@ -1059,6 +1078,21 @@ signaling, ADC-based DSP receiver, 28 nm CMOS reference parameters).
 
 ## 2. Repository map (what every file/folder is)
 
+Submission edition additions (2026-09-14):
+- `nebula/report/submission_story.py`: independent 25-page story/report builder,
+  pinned hardware archives and separate frozen-policy/physical-export evidence.
+- `nebula/report/check_submission_story.py`: Poppler rendering, source hashes,
+  page bounds, scientific-symbol checks, outline and figure sequence.
+- `nebula/report/assets/submission_20260914/receiver_desktop.png`: project-owned
+  desktop screenshot; source of the report's product illustration.
+- `nebula/tests/test_submission_story.py`: preserved-PDF and evidence boundaries.
+- `nebula/web/rehearse_desktop.py`: local CDP saved-route desktop rehearsal.
+- `nebula/SUBMISSION_DEMO_SCRIPT_20260914.md`: timed narration, screen actions,
+  optional shorter cut and judge Q&A; recording is assigned to the owner.
+- `output/pdf/Nebula_Submission_Report_20260914.pdf` and companion sources/review
+  JSON: new submission edition. Both prior report editions remain unchanged.
+
+
 Current calibrated hardware result: `nebula/DFE_CALIBRATED_RESULTS.md`.
 Raw independent nominal and 45-corner evidence: Entry 143/144 roots under
 `nebula/product_audits/`. Exact replay coverage:
@@ -1298,9 +1332,15 @@ gates evidence grounding, failure visibility, Judge-mode provenance, ZIP
 contents, upload refusal, the single-worker guard and the absence of an
 algorithm leaderboard. Run with `py -3.13 -m nebula.web`.
 
-Entry 146 addition: `nebula/web/static/circuit_views.js` provides four
-source-checked connectivity guides (DFE, attenuator, CTLE and Rs/Cs) and the
-explicit read-only Rs/Cs inspection shortcut. No simulator controls are added.
+Entry 147 frontend state: `nebula/web/static/circuit_views.js` now provides
+five source-checked Receiver guides (DFE, attenuator, CTLE, Rs/Cs and physical
+reference+bypass) plus a four-panel generated-design map. The map attaches
+the selected A/R/C codes and fixed Rs/Cs values to their blocks while labeling
+the transistor DFE/reference as separate hardware evidence. Receiver eye and
+metrics render only when the current request exactly matches the saved
+9 dB / 1.9 GHz checkpoint. Duplicate Receiver PVT, evidence and scope panels
+are removed; generated-design PVT and run files retain their dedicated tabs.
+No simulator controls or new measurements are added.
 
 Entry 145 additions: `nebula/web/hardware_checkpoint.py` validates the pinned
 Entry 143/144 summary and nominal-netlist SHA-256 values, checks required Rs/Cs
@@ -2112,6 +2152,24 @@ PRBS → scramble → Gray/PAM4 → TX-FFE → ZOH ×OSR(8) → TX pole (0.75·f
 
 ## 5. Complete history (what was done, in order, with the WHY)
 
+Latest presentation milestone: Entries 147/148 (2026-09-14) finish the
+inherited desktop cleanup and create a separate report with an AAPMS-inspired
+chapter/story structure. The final hardware evidence is promoted into the new
+report without relabeling the older reports, generated CTLE paths or frozen
+RL experiment. See the final session entry for validation and backup status.
+
+
+Entry 147 (2026-09-10): simplified the desktop product after owner review.
+The Receiver now matches the current requested peaking/frequency to the fixed
+transistor checkpoint and hides its saved eye/metrics on any mismatch. Design
+Explorer replaces its repeated signal cartoon/callout and prominent single
+deck image with four circuit views: attenuator, CTLE with selected R/C codes,
+transistor DFE implementation reference, and physical supply-dependent
+reference plus MIM bypass. The exact generated CTLE image remains available
+under one disclosure. Duplicate Receiver Link-PVT, evidence, measurement-scope
+and old Design Explorer hardware-boundary panels are removed. No frozen
+artifact, measurement, backend route, simulator or policy changes.
+
 Entry 146 (2026-09-10): added dedicated frontend DFE/attenuator/CTLE/RsCs
 connectivity guides and a visible Rs/Cs shortcut after the owner could not
 find the configurable circuit. See the appended Session Log for verification.
@@ -2411,6 +2469,34 @@ Plus: git init, .gitignore, 28 tests, Wilson-bound BER reporting.
   rectangle and is now an explicit limitation, not a hidden traceback.
 
 ## 6. Key numbers & validated behavior (current state)
+
+LATEST PRESENTATION STATE (Entries 147/148, 2026-09-14): Receiver retains one
+shared five-view circuit inspector and one scoped measurement region. Design
+Explorer uses four full-width, one-at-a-time circuit disclosures, with dynamic
+attenuator gates and selected A/R/C values. The bias-reference wiring is fixed;
+fixed MIM bypass no longer carries a varactor arrow. Visible control/result
+text is larger and duplicate per-block implementation badges are removed.
+Judge mode restores the actual 9 dB / 1.9 GHz saved request; missing target
+values cannot match a checkpoint. Changed targets hide the calibrated eye and
+measurements. Latest Link PVT and generated-design PVT remain separate.
+
+The new 25-page submission report covers problem/deliverables, architecture,
+learning and controls, physical CTLE/RsCs/DFE decisions, nominal/link evidence,
+challenges, UX, reproduction/costs, S1-S9 assessment and conclusions. It is
+independent of both unchanged earlier editions. All figures are derived from
+pinned project evidence or a real local screenshot. The owner will record the
+provided narration; no video recording was requested from the agent.
+
+
+Entry 147 changes presentation, not scientific evidence. The default Receiver
+shows the saved eye and measured-performance tape only for an exact current
+request of 9 dB at 1.9 GHz. Any other input replaces those values with a clear
+no-matching-checkpoint state while retaining the circuit topology for
+inspection. Design Explorer shows four desktop circuit panels driven by the
+selected run: A code, derived R/C codes and measured Rs/Cs values update with
+the result. Its DFE and reference captions explicitly separate the generated
+link score from the transistor checkpoint. The dedicated Design PVT and Run
+files tabs remain the places for generated-run verification and artifacts.
 
 Entry 146 adds separate DFE, attenuator, CTLE and configurable Rs/Cs
 connectivity views in Receiver, with an "Inspect Rs/Cs controls" shortcut.
@@ -3155,6 +3241,23 @@ still NOT full area. The 12-request replay is fully supported at eight requests;
 
 ## 7. Known model limitations (honest list — do not overclaim)
 
+Submission packaging caveat (Entries 147/148): the delivered PDF and local
+report rebuild pass. Nine older JSON evidence inputs have different CRLF/LF
+bytes in the worktree and Git index. Their content matches, but a strict report
+rebuild from a fresh clone needs original legacy line endings restored. Exact
+paths are listed in the new report review JSON; see G197. Latest Entry 143/144
+archived evidence matches the index. Frozen evidence was not rewritten.
+
+Submission presentation update (2026-09-14): the independent report now
+includes the calibrated transistor receiver. That promotion closes a report
+currency gap, not an electrical gap. Full loaded target coverage, analog PVT,
+DFE-active runtime tuning, mismatch/passive tolerances, layout, external clock/
+control/common-mode generation and signed Rs-switch model-domain findings
+remain open. Production adaptive-bank generation can use classical fallback/
+centering and performs one representative export SPICE call; the frozen 91.8x
+candidate-visit ratio is not its complete generation cost.
+
+
 The corrected calibrated prototype now has independent nominal analog proof
 and 45-case finite-pattern link PVT. Analog PVT, full loaded target map,
 periodic receiver noise, positive held branches, DFE-active runtime tuning,
@@ -3165,6 +3268,11 @@ registry and reports still describe the older delivered paths; they are not
 silently promoted or attributed to the frozen RL policy.
 Entry 146 improves inspection only: saved Rs/Cs controls remain read-only,
 without a frontend path to edit voltages and verify the changed receiver.
+Entry 147 prevents target edits from visually inheriting the fixed checkpoint:
+nonmatching requests hide the saved eye and performance values. This is an
+honest refusal, not new target coverage. The four Design Explorer block views
+map generated codes to implementation evidence; they do not make the older
+generated artifact an integrated configurable-CTLE/transistor-DFE simulation.
 
 Entry 141 proves nominal clocked CTLE-output model HD3 only. Generic-poly
 nonlinearity, periodic noise and analog PVT remain unverified. Any newly
@@ -3440,6 +3548,23 @@ variation, mismatch and layout remain open. Old production evidence is unchanged
   untrusted until proven (the Phase-0 experience says assume bugs).
 
 ## 8. Next steps (prioritized backlog with context)
+
+CURRENT SUBMISSION PRIORITY (Entries 147/148, supersedes historical backlog):
+the owner records the walkthrough using `nebula/SUBMISSION_DEMO_SCRIPT_20260914.md` and submits the new
+report with the authorized competition materials. Retain the two older PDFs
+for comparison. No new circuit campaign or training is needed for recording.
+Use judge mode for the saved route. A fresh adaptive-bank generation reuses
+cached search/PVT data but makes one representative export SPICE call; do not
+advertise it as zero SPICE. Further scientific work is the scoped roadmap on
+report page 24, not unfinished presentation work.
+
+
+Historical Entry 147 note (verification completed by Entries 147/148 above):
+the requested desktop frontend cleanup includes reviewed diagrams. Do not restore the
+duplicate Receiver PVT/evidence/scope panels or expose the fixed checkpoint eye
+for arbitrary target inputs. The remaining product gap is functional, not
+visual: editable physical Rs/Cs controls and fresh integrated transistor
+verification are still not wired into the request generator.
 
 Entry 146 addresses circuit-diagram and Rs/Cs discoverability feedback.
 Editable Rs/Cs bias controls with fresh SPICE verification remain separate
@@ -4080,6 +4205,27 @@ explicit scope.
 **1-9.** (See existing backlog: .s4p, clipping disto, joint adaptation, etc.)
 
 ## 9. Gotchas & footguns (each one cost real debugging time)
+
+### G197. Check the Git blob as well as the current evidence file
+
+A passing worktree hash and clean-looking Git status do not prove that an old
+Git blob preserves the same bytes. The submission audit found nine legacy
+JSON inputs with CRLF working bytes and LF index bytes despite current -text
+attributes. Their readable content matches, but strict hash verification on a
+fresh checkout can fail. Compare raw evidence against the index before claiming
+clean-clone reproducibility. Do not normalize frozen evidence or rewrite its
+original hashes to conceal the difference; retain the finding and restore only
+bytes proven to match the original manifest in any future repair.
+
+### G195. A static checkpoint must not look responsive to a changed request
+
+The Receiver checkpoint is one measured 9 dB / 1.9 GHz calibration. Leaving
+its eye and metric tape visible after a user edits peaking or frequency makes
+unchanged evidence look like a prediction for the new request. Compare the
+current numeric inputs with the checkpoint's recorded target and hide
+checkpoint-only measurements on any mismatch. Keep topology visible, state
+the missing checkpoint, and direct the user to generation; never interpolate
+or relabel a saved waveform in the frontend.
 
 ### G194. Physical configurable controls are not an interactive web control
 
@@ -7162,6 +7308,18 @@ supplies preliminary guesses that are released before the final solution.
 It is not .ic/UIC, a physical reset or an ideal decision source. Entry 138
 derives guesses from accepted DC primitives and checks both actual stored
 polarities. Never relax the warning gate or swap device terminals to pass.
+
+### G196. Presentation checks must preserve scientific signs and all plotted points
+
+A PowerShell here-string piped through the default encoding replaced non-ASCII
+report symbols with question marks before Python received the patch. Encode
+Unicode escapes in JSON before piping, or use an explicitly UTF-8 transport;
+ASCII scientific notation is a safe fallback. Inspect rendered pages and
+assert negative HD3 signs, ranges and units. Text extraction without the
+replacement-character glyph is not sufficient: a literal question mark can
+already have replaced the original character. A fixed 300 mV PVT chart ceiling
+also clipped larger valid eye values; autoscale or assert every datum is within
+the plot limits. These presentation changes never alter the saved measurements.
 
 ## 10. Environment
 
@@ -19611,3 +19769,152 @@ warnings in 1269.25 s. Entry 146 final full regression: 3407 passed, 13 deselect
 Temporary QA scripts/screenshots remain ignored; final staged audit and
 normal fast-forward backup follow completion of the mandatory suite.
 
+### 2026-09-14 - Submission-night restart packet; Entry 147 still pending
+
+The laptop was unavailable for 2-3 days. The owner requests a new-session
+Markdown handoff to finish frontend, formal report and demo tonight before
+15 September. Added root NEBULA_SUBMISSION_START_20260914.md as the current
+entry point, superseding the historical NEXT_AGENT_PROMPT.md status without
+overwriting it. This is a documentation-only continuation checkpoint.
+
+Live local HEAD and both remote refs (main and
+nebula/winning-sprint-20260908) are c8cdff4216b39fc8bbab2acbdbb802cdd9d23439.
+The six pre-existing dirty files are HANDOFF.md, test_web_hardware_checkpoint.py
+and four frontend static files (app.js, circuit_views.js, index.html, styles.css).
+They are preserved. No Python/ngspice process was returned by the process
+check. No old test/server session is assumed active.
+
+Entry 147's prior recorded baseline was 3407 passed / 1191.12 s, with
+13 deselected and two known warnings; latest focused web checks were 23 passed
+/ 2.99 s and both JavaScript syntax checks passed. Its final full run was last
+observed at 86%; completion was not captured. Do not call this a final pass.
+The new session must complete frontend diagram/provenance/desktop QA and
+regression, append final Entry 147 results, then update report and rehearse demo.
+The packet-only turn does not rerun code tests or commit/push unverified work.
+
+Both PDFs are still unchanged: academic SHA-256
+a573db02335879e0a6a0b3feb2c9eeea2172c2f3f4b4e4699dfc8123c8f90670;
+fallback 3cd67ffc933b8f369d601a72f16e39295542780777ca5bccc797135278faf43b.
+The packet highlights the successful calibrated Entry 143/144 transistor
+CTLE/DFE/configurable-RsCs evidence, while preserving its separation from old
+fixed-passive/cursor-DFE generators and the frozen RL benchmark. No scientific
+artifact, frontend code, report, simulator run or policy is changed here.
+
+
+### 2026-09-14 - Entries 147/148 desktop completion, independent report and narration
+
+The owner explicitly authorized focused HANDOFF reading and asked for a new
+AAPMS-style academic report with an engineering story and competition focus,
+preserving both existing PDFs. They will record the walkthrough in their own
+voice; the requested deliverable is a script and screen directions. The
+frontend-design and PDF skills informed the work. No sub-agents were used.
+
+Completed inherited Entry 147 desktop edits. Four tiny always-visible design
+panels became readable full-width circuit disclosures, one open at a time.
+Attenuator gate labels now follow the selected A code; generated CTLE drawings
+say fixed Rs/Cs. Repaired reference supply/drain/ground connections and removed
+the variable-capacitor arrow from the fixed MIM bypass. Visual review fixed
+label collisions. Signal-path and measurement text increased in size and
+repeated implementation badges were removed. Judge loading now synchronizes
+both numeric and plain-language targets; malformed/missing checkpoint targets
+cannot match. Missing noise/power/eye values do not become fabricated zeroes.
+The eye's finite/noiseless scope, nominal-only analog checks and direct exact-
+deck/PVT-record links sit next to the relevant evidence. Removed duplicate
+Receiver panels remain removed; generated-design PVT retains failure slicing.
+
+Created `Nebula_Submission_Report_20260914.pdf`, 25 pages in six numbered
+chapters with abstract, contents, deliverable/evidence map and references.
+The narrative explains problem understanding, proposal/verifier separation,
+policy observations/reward/controls, physical CTLE and Rs/Cs, transistor DFE,
+loaded calibration, independent analog checks, 45-point link results, failures
+and resolutions, product UX, cost accounting, S1-S9 assessment and next steps.
+It distinguishes frozen policy visits, production classical fallback/centering,
+earlier physical CTLE exports and the later transistor receiver. Quality is
+explicitly normalized compliant eye area, not a vague learned score. Failed
+near-optimality and local-random compliance advantage remain in the report.
+Geometry is not routed area; nominal analog and finite noiseless link evidence
+are not full receiver signoff. External references are official SKY130/ngspice
+documentation and the original PPO paper; AAPMS content was not copied.
+
+The owner then requested full-looking pages and restoration of five circuit
+sections from the earlier report. The new edition retains its complete story
+and adds The source-degenerated CTLE, Reference current made physical,
+Physical attenuation and peaking, From transistor response to eye, and What
+the 1-tap DFE contributes. Original project circuit/AC/eye/DFE figures are
+regenerated from saved evidence; old behavioral results remain labeled as
+such, and the old failed-prototype conclusion is updated to the separate
+current transistor checkpoint. Font sizing and small paragraph-space changes
+balance the pages to a common bottom margin without stretching images or text.
+The narration now points to pages 8, 18 and 23. No old PDF was rebuilt.
+
+Source records declare raw or LF-text hashing explicitly. Frozen scientific
+artifacts retain strict byte hashes; active Git text accepts CRLF/LF checkout
+changes only, with the original raw build hash also retained. A regression
+check proves that changed content and changed frozen bytes still fail.
+
+Builder verification uses pinned original manifests and the existing streaming
+gzip archive verifier, so ignored uncompressed traces are not needed for the latest hardware
+archive verification. Previous PDF SHA-256 hashes remain exactly:
+academic a573db02335879e0a6a0b3feb2c9eeea2172c2f3f4b4e4699dfc8123c8f90670;
+competition 3cd67ffc933b8f369d601a72f16e39295542780777ca5bccc797135278faf43b.
+No old report builder, old PDF, raw science evidence, PDK, policy or threshold
+was changed. The new PDF is explicitly staged despite the generic PDF ignore. Its exact
+path is marked binary in .gitattributes so Git does not treat ASCII-encoded
+PDF streams as source text; its bytes are not modified.
+
+Saved-route browser rehearsal: 1440x1000 and 1280x900, all five circuit views,
+one-open design disclosures, no page overflow, 8 dB checkpoint mismatch,
+9 dB judge reset, 45 generated-PVT cells and run-file navigation. Zero new jobs
+in this route, and no runtime exceptions. Screenshots and checks remain in
+ignored tmp/submission-desktop-review; the report illustration is project-owned.
+A separate real 9 dB / 1.9 GHz adaptive-bank generation completed: 315/315 cached
+conditions pass, zero search/measurement SPICE calls and ONE representative
+export SPICE call (job 122cc70aa2ec410aaddcee03115f731d). An initial assumption
+that this path used zero SPICE missed prepare_output_deck; the actual ledger
+and narration were corrected. No training or new verification campaign ran.
+
+Narration: `nebula/SUBMISSION_DEMO_SCRIPT_20260914.md`, approximately 5-6 minutes,
+with exact screen actions/spoken paragraphs, saved/live alternatives, short-cut
+instructions and likely judge questions. Recording and submission remain the
+owner's actions; no video, email or external competition submission was sent.
+
+Validation baseline: 3409 passed, 13 deselected, two known warnings in 1090.73 s
+(18:10). New frontend regression checks first failed in four intended places;
+then focused web checks passed 23/23 in 8.36 s. New report tests first failed
+because the separate builder/artifact did not exist. PDF source/hash checks
+correctly rejected a stale report after a frontend source edit. Rendering uses
+Poppler; visual review corrected symbol corruption and plot-axis clipping.
+
+Final visual review: all 25 pages pass, with consistent 760 pt content bottoms.
+Only architecture page 6 changed after the full inspection; it was rechecked
+and the other 24 pages are raster-identical. Four focused report checks passed
+(1.39 s; pinned hardware/archive loading is also exercised in the full suite).
+
+The Git-index audit found an older reproducibility limitation: nine legacy
+summary/hash JSON inputs have CRLF worktree bytes but LF Git blobs. Their
+normalized content matches. Current local evidence checks pass, and the latest
+Entry 143/144 archived hardware inputs match the index, but a strict rebuild
+using the legacy loader on a fresh clone requires restoring original legacy
+line endings. The review JSON lists all nine paths. Do not claim a fully clean-
+clone report rebuild was verified. No frozen file or original hash was changed.
+
+An intermediate full regression was interrupted after the requested report
+expansion; it is not a completed pass. The PDF phrase test now normalizes
+extracted whitespace, so a line break inside "not routed" is not a false failure.
+
+FINAL_SUBMISSION_VALIDATION: PASS. Baseline 3409 passed / 13 deselected /
+2 known warnings in 1090.73 s. Final full command, py -3.13 -m pytest tests
+nebula/tests -q -m "not slow": 3414 passed / 13 deselected / the same 2 known
+warnings in 1527.90 s (25:27). No failures. Warnings are optional scikit-rf
+availability and the existing BC test's tensor-to-scalar conversion.
+Final PDF SHA-256 ec08a592cf064ca2b76b7f3bd5b4daa3e138a2fb50da83abc1b8f22a2cbde758.
+All 25 rendered pages, source hashes, text bounds, outline and 13 figures pass;
+old PDFs remain unchanged. Desktop rehearsal passes at both tested widths.
+The staged 17-file audit passes and contains only project-owned code/docs,
+a screenshot and the new PDF with manifests. Git identity is Jai Kaushik
+<jaikaushik-prog@users.noreply.github.com>. Both remote heads were rechecked
+at c8cdff4216b39fc8bbab2acbdbb802cdd9d23439 before backup; this verified change
+is prepared for normal fast-forward backup to nebula/winning-sprint-20260908
+and main. No force push, reference upload, training or new circuit campaign.
+The remaining submission actions belong to the owner: record the supplied
+narration, review the recording and submit the chosen materials.
