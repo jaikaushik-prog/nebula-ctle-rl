@@ -1,5 +1,7 @@
 # HANDOFF.md — Living Project State & Continuation Guide
 
+> **Entry 154 in progress (14 September):** Owner authorized automatic physical candidate recovery, a matched RL/classical full-workflow benchmark, and wider target coverage. Entry153 final artifacts remain preserved and usable. Same electrical limits, frozen bank/policy/registry and fixed geometry per candidate; all rejected attempts billed. New recovery-enabled app is a separate entry point. Recording and email remain owner actions.
+
 > **Entry 153 complete (14 September):** The separate final report is 12 pages with 11 intentionally blank fillable identity fields; the matching Word narration is three visually checked pages. Use `nebula/SUBMISSION_PACKAGE_20260915.md`. Full regression: **3473 passed, 13 deselected, 2 warnings in 2048.39 s** (recorded before baseline: 3427 passed). The saved demo and actual automation receipt are preserved. The extra analog pilot reproduced nominal checks but failed required latch initialization at FS/1.71 V/125 C, so it adds no valid analog-PVT coverage. The owner fills details, records/reviews the video and sends the prepared email.
 
 > **Entry 152:** The owner explicitly authorized subagents for submission execution. Section 1A of `NEBULA_FINAL_SUBMISSION_AGENT_HANDOFF_20260914.md` defines one lead plus three workers, exact file ownership, exclusive simulator scheduling and lead-owned integration/testing/backup.
@@ -20296,3 +20298,49 @@ verification/recovery and physical acceptance have distinct evidence. Nominal
 hardware behavior reproduces; the stress experiment exposes an initialization
 limit instead of turning finite simulator output into a false corner pass.
 End-to-end runtime acceleration remains unproven and is not claimed.
+
+
+### Entry 154 - 2026-09-14 - Bounded automatic recovery and fair coverage/runtime study (in progress)
+
+The owner selected priorities 1, 2 and 4 from the judge-style review and explicitly
+requested parallel agents. The lead integrates the new recovery web entry point,
+protocol, validation, report delivery and backup. Recovery and benchmark workers
+own separate sources; the report worker reviews target coverage and prepares a
+separate v2 report. Actual simulator work is serialized.
+
+The actual Entry153 full run (3473 passed, 13 deselected, two warnings in
+2048.39 s) is the before baseline: no implementation changed between that run
+and this work. Its full log and unavailable-launcher-exit-code limitation remain
+in output/submission/Nebula_Final_Validation_20260914.json. New behavior tests
+are written before implementation. Initial five web adapter tests observed the
+expected missing-module failure, then all five passed after implementation.
+
+The current owner-created 6 dB / 2.1 GHz run selected setting288 and returned
+314/315 model conditions. At SF/.95/0C and 3dB loss, the swing guard refused
+the linear eye calculation (909.8mVpp demanded versus869.6mVpp limit). This
+exposed case motivates recovery but is not held-out evidence; its existing
+untracked artifacts are preserved and will not be silently incorporated.
+
+The extension tries distinct eligible candidates under an eight-candidate cap.
+It does not retune a candidate by corner, change reward/ranges/tolerances, retry
+failed simulator settings, or treat old-bank passes as fresh physical evidence.
+Both methods have the same cached data and exact-target registry access. The
+classical arm bypasses policy loading/inference; later physical verification
+and output work are identical. A registered target set and complete billing
+will precede any measurement. Outcomes and final regression remain pending.
+
+Repo additions: nebula/physical_recovery.py, nebula/recovery_workflow.py,
+nebula/web/recovery_server.py, separate benchmark/coverage experiment and plan,
+and final_submission_v2 report sources. The old server, registry and v1 report
+are preserved so historical source checks and owner fallback remain usable.
+
+Entry154 protocol registration: SUBMISSION_RECOVERY_BENCHMARK_PLAN_20260915.md
+is frozen before new physical measurements. It defines thirteen coverage
+workflows and twenty-four counterbalanced benchmark workflows, separate
+denominators, fresh interpreters, eight-candidate caps, a shared10800second
+wall ceiling and explicit refusal/unrun accounting. Cached preflight found
+five nonempty target intersections; this is not physical success. Combined
+lightweight recovery/legacyphysical/web/benchmark/report checks:64passed3.25s
+at integration checkpoint; subsequent instrumentation checks remain local.
+The plan-only commit contains this handoff update; executable additions remain
+uncommitted until complete measurements and final regression pass.
