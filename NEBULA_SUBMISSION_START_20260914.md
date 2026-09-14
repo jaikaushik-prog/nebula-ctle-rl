@@ -1,5 +1,14 @@
 # Nebula submission-night restart - 14 September 2026
 
+> **Entry 150 supersedes the Receiver workflow below.** Five tabs remain:
+> Design Explorer, Design PVT, Compare circuits, Channel, Run files. Explorer
+> owns the result bar and a shared four-block circuit canvas (CTLE/tails first)
+> beside a Response/Specs/Sizing/Run record inspector. Expand circuit gives it
+> full width. Exact export and separate 9 dB checkpoint are two panels below.
+> New target opens a dialog.
+> Compare circuits owns waveform eyes and margin envelopes. Current report
+> and voice script follow this route. Final validation: HANDOFF Entry 150.
+
 > Entry 149 desktop update (14 September): Receiver now follows the selected
 > completed run, with verdict/coverage first, CTLE + tails initially open,
 > optional other blocks, and its own saved-AC eye opening. The 9 dB transistor

@@ -6,14 +6,16 @@ quoted text. The report provides the detailed methods, results and limitations.
 
 ## Before recording
 
-1. From the repository root, run `py -3.13 -m nebula.web`. Open the local URL
-   printed by the server (normally http://127.0.0.1:8765).
+1. Use the running app at http://127.0.0.1:8765. Start a server only if no
+   instance is running: from the repository root, run `py -3.13 -m nebula.web`
+   and open the printed URL. Keep the current instance for your saved 3 dB run;
+   restarting with its original `--run-root` restores that result.
 2. Use a desktop browser at 1440 x 1000 or larger, 100% zoom. Hide unrelated
    tabs and notifications. Use browser full screen if it makes text clearer.
 3. Open `output/pdf/Nebula_Submission_Report_20260914.pdf` in another tab.
    Bookmark pages 8, 18 and 23 for the policy comparison, hardware PVT plot and
    requirement matrix. Both older PDFs remain available for comparison.
-4. Click **Enter judge mode**. Confirm the Receiver target is **9 dB at 1.9 GHz**.
+4. Click **Enter judge mode**. Confirm the selected design target is **9 dB at 1.9 GHz**.
    Expand **Explore the separate transistor CTLE + DFE checkpoint** and confirm its measured hardware region shows **45/45 points pass**. Collapse it again before starting.
 5. The reliable recording route uses saved completed results. You can optionally
    show a new request with **RL shield - adaptive bank**, then **Generate and
@@ -24,7 +26,7 @@ quoted text. The report provides the detailed methods, results and limitations.
 
 ## 0:00-0:35 | Introduce the problem
 
-**Screen:** Receiver, top of page. Keep the selected result, measured response and verification coverage visible.
+**Screen:** Design Explorer, top of page. Keep the selected result, measured response and verification coverage visible.
 
 > Hello, we are Jai Kaushik, Rishabh Agarwal and Avi Mehta from BITS Pilani.
 > Our project is Nebula, an RL-assisted design framework for a five-gigabit
@@ -37,9 +39,7 @@ quoted text. The report provides the detailed methods, results and limitations.
 
 ## 0:35-1:25 | Show specifications becoming a result
 
-**Screen:** Click **Design explorer**. Point to the plain-language request,
-click **Read this request**, then point to the peaking and frequency fields.
-Stay with **RL shield - adaptive bank**. Show **Measured specifications**, then return to **Receiver** to inspect the CTLE and its tail devices. Expand **Inspect the exact generated CTLE drawing** if useful. The verdict and coverage stay at the top; **Inspect all PVT corners** opens the grid directly.
+**Screen:** In **Design explorer**, click **New target**. Expand **Describe the target in words**, enter the nine-decibel request and click **Read this request**. Point to the numerical fields and **RL shield - adaptive bank**, then close the editor to continue with the saved run. The CTLE with tail devices opens first beside the inspector. For the saved adaptive-bank demo, choose **Specs**: this artifact has scalar measurements but no retained raw AC plot. Your saved physical 3 dB run also offers the **Response** plot. Use the four block controls to switch drawings; **Expand circuit** gives any drawing the full width. In the right inspector, choose **Specs**, **Sizing** or **Run record**. The two panels below open the exact generated drawing and the independent transistor checkpoint. **Inspect all PVT corners** opens the grid directly.
 
 > Here I can describe the response in plain language, and the tool extracts
 > the numerical target. For this example, we request nine decibels of peaking
@@ -64,7 +64,7 @@ Do not call a saved run a live generation.
 
 ## 1:25-2:20 | Explain the physical implementation
 
-**Screen:** In **Receiver**, expand **Explore the separate transistor CTLE + DFE checkpoint**. Clearly point to its independent **9 dB / 1.9 GHz** label. Its inspector starts with **CTLE core + tail current sources**; select **Rs/Cs controls**, then **1-tap DFE**. Each drawing fits the panel.
+**Screen:** In **Design explorer**, expand **Explore the separate transistor CTLE + DFE checkpoint**. Clearly point to its independent **9 dB / 1.9 GHz** label. Its inspector starts with **CTLE core + tail current sources**; select **Rs/Cs controls**, then **1-tap DFE**. Each drawing fits the panel.
 
 > This separate checkpoint implements the complete transistor feedback path.
 > Its physical signal path starts with an input attenuator, followed by the
@@ -123,15 +123,12 @@ candidate-visit and near-optimality paragraphs.
 
 ## 4:00-4:40 | Demonstrate trustworthy behavior
 
-**Screen:** Return to **Design explorer**. Change only peaking from **9** to **8**.
-Click **Receiver**. Show the unavailable checkpoint message. Then click
-**Enter judge mode** (or **Judge mode active**) to restore the nine-decibel
-saved target. Expand **Inspect the transistor device schematic** and point
-to **Exact SPICE deck** and **45-point measurement record**.
+**Screen:** Return to **Design explorer**. Open **New target**, change peaking to **8**, and close the editor. The selected completed run retains its original target and evidence. Expand the separate **9 dB / 1.9 GHz** checkpoint, then **Inspect the transistor device schematic**. Point to **Exact SPICE deck** and **45-point measurement record**.
 
-> If I change the request, the interface does not reuse the nine-decibel
-> receiver's pass result. It tells me that the new request has no matching
-> transistor checkpoint. Returning to judge mode restores the saved target.
+> Editing a future request does not relabel a completed circuit. The selected
+> run keeps its original measurements, while the independent transistor
+> checkpoint keeps its own nine-decibel target and source files.
+> A new circuit needs its own verification before it can claim a pass.
 >
 > Every displayed hardware result links back to the exact circuit and
 > measurement record. The tool checks source integrity and preserves failed
@@ -141,7 +138,7 @@ to **Exact SPICE deck** and **45-point measurement record**.
 ## 4:40-5:15 | Close with the contribution
 
 **Screen:** Report page **23** for the requirement matrix, then page **24** or
-the Receiver overview for the final sentence.
+the Design Explorer overview for the final sentence.
 
 > Our submission delivers the Python automation workflow, open-source SPICE
 > integration, circuit outputs and a calibrated transistor CTLE-plus-DFE
@@ -156,7 +153,7 @@ the Receiver overview for the final sentence.
 ## Shorten or extend without changing the claims
 
 - For a 3-minute cut: omit the detailed Rs/Cs explanation, spend 25 seconds on
-  the RL comparison, and show the mismatch behavior in one sentence. Keep the
+  the RL comparison, and show the selected-run behavior in one sentence. Keep the
   saved/live distinction and the finite-pattern limitation.
 - For a longer version: open the bias-reference view, explain that it derives
   its bias from VDD, and show the exact transistor device sheet. Use report
@@ -203,7 +200,7 @@ LLM-backed tuning conversation unless that optional backend is actually used.
 ## Rehearsal record
 
 The saved route was exercised at 1440 x 1000 and 1280 x 900 with all five
-circuit selections, one-at-a-time design blocks, target mismatch hiding,
+circuit selections, shared circuit canvas, four inspector modes, full-width expansion, comparison eye modes, target-editor independence,
 judge target reset, generated-design PVT and run files. No new SPICE or
 training was required for that rehearsal. The exact results are recorded in
 the final submission HANDOFF entry. The video itself is to be recorded by the
@@ -218,16 +215,19 @@ rehearsal and from the pinned 45-point transistor receiver evidence.
 
 **Screen:** Choose **3 dB / 1.9 GHz - physical CTLE** in **Selected design**.
 Point to MODEL PASS, the actual measured response, and **315/315** coverage.
-The CTLE opens first. Scroll once to **Eye opening of this design**.
+The CTLE opens first. Click **Compare eyes** to open **Compare circuits**. Circuit A shows the saved physical run; select **CTLE output**, then **Ideal 1-tap DFE**. The bank demo has no retained raw AC, so its waveform is explicitly unavailable. **Margin envelope** shows the conservative opening underlying the recorded dimensions.
 
 > This is our completed three-decibel physical CTLE request. The result shows
 > the actual measured response and all three hundred fifteen checked conditions:
 > forty-five PVT corners across seven channel losses. This eye opening comes
 > from this circuit's saved AC response with our ideal one-tap DFE model.
+> These traces show the modeled signal; the displayed margin dimensions use
+> a separate conservative cursor calculation.
 > It measures about three hundred forty-two millivolts and zero point eight
 > five nine UI. The separate transistor checkpoint keeps its own evidence.
 
 The recorded response is **3.910 dB at 2.131 GHz**, accepted under the physical
 export path's existing 1.5 dB / 0.3 octave target tolerances. Say "requested"
-for 3 dB / 1.9 GHz and "measured" for these actual values. The eye graphic is a
-worst-case ISI opening envelope, not a measured transient trace or a BER test.
+for 3 dB / 1.9 GHz and "measured" for these actual values. The waveform is a noiseless, finite-pattern model with ideal known-bit feedback.
+The separate margin envelope supplies the recorded height and width. Neither
+is a transistor transient measurement or BER test.

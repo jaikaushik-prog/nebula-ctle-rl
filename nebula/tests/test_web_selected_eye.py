@@ -98,16 +98,43 @@ done=(async()=>{
  state.current={id:'older'};
  const pending=renderSelectedEye(state.current);
  state.current={id:'newer'};
- document.querySelector('#selectedEye').textContent='Newer result';
+ document.querySelector('#designAcPlot').textContent='Newer result';
  release({run_id:'older',height_v:[.2],phase_ui:[0]});
  await pending;
 })();`,context);
 (async()=>{await context.done;
- assert.deepEqual(JSON.parse(JSON.stringify(context.events)),[['render','physical3'],['tab','hardware']]);
+ assert.deepEqual(JSON.parse(JSON.stringify(context.events)),[['render','physical3'],['tab','results']]);
  assert.equal(el('progressPanel').hidden,true);
  assert.equal(el('referenceCheckpoint').open,false);
  assert.equal(el('resultOverview').focused,true);
- assert.equal(el('selectedEye').textContent,'Newer result');
+ assert.equal(el('designAcPlot').textContent,'Newer result');
 })().catch(error=>{console.error(error);process.exitCode=1;});
 """
     subprocess.run([node, "-e", script], check=True, capture_output=True, text=True)
+
+
+def test_comparison_discards_stale_pair_and_uses_shared_axes():
+    import subprocess
+    node = shutil.which("node")
+    if not node:
+        pytest.skip("Node required for frontend behavior check")
+    script = r"""
+const fs=require('fs'),vm=require('vm'),assert=require('assert');
+const nodes=new Map();
+const document={addEventListener(){},querySelector(s){if(!nodes.has(s))nodes.set(s,{id:s,textContent:''});return nodes.get(s);}};
+const plotted=[];
+const context=vm.createContext({document,console,plotted,NebulaDesignPlots:{eye(target,data,mode,limit){plotted.push([target.id,data.label,mode,limit]);},envelope(){throw Error('Unexpected mode');}},done:null});
+vm.runInContext(fs.readFileSync('nebula/web/static/app.js','utf8')+`
+done=(async()=>{
+ const pending=new Map();loadDesignVisual=d=>new Promise(resolve=>pending.set(d.id,resolve));
+ const design=id=>({id,request:{peaking_db:3,f_peak_ghz:1.9},nominal:{meas:{eye_h_v:.3,eye_w_ui:.8}}});
+ state.signalView='dfe';
+ const older=renderCompareEyes(design('oldA'),design('oldB'));
+ const newer=renderCompareEyes(design('newA'),design('newB'));
+ const data=(label,amplitude)=>({design_id:label,channel_loss_db:7.5,waveform:{label,ctle_v:[[amplitude]],ideal_dfe_v:[[-amplitude]]}});
+ pending.get('newA')(data('newA',.2));pending.get('newB')(data('newB',.4));await newer;
+ pending.get('oldA')(data('oldA',.9));pending.get('oldB')(data('oldB',.8));await older;
+})();`,context);
+(async()=>{await context.done;assert.equal(plotted.length,2);assert.equal(plotted[0][1],'newA');assert.equal(plotted[1][1],'newB');assert.equal(plotted[0][3],plotted[1][3]);assert(plotted[0][3]>.4);})().catch(e=>{console.error(e);process.exitCode=1});
+"""
+    subprocess.run([node,"-e",script],check=True,capture_output=True,text=True)

@@ -117,16 +117,17 @@ def test_hardware_api_and_allow_listed_artifact_are_served(tmp_path):
         thread.join(timeout=2)
 
 
-def test_frontend_has_a_visible_transistor_hardware_view():
+def test_explorer_preserves_optional_transistor_evidence_without_receiver_tab():
     static = Path("nebula/web/static")
     html = (static / "index.html").read_text(encoding="utf-8")
     js = (static / "app.js").read_text(encoding="utf-8")
     css = (static / "styles.css").read_text(encoding="utf-8")
     server = Path("nebula/web/server.py").read_text(encoding="utf-8")
 
-    assert 'data-tab="hardware"' in html
+    assert 'data-tab="hardware"' not in html
+    assert 'data-tab="results"' in html
     for identity in (
-        "hardwareView", "hardwareTopology", "hardwareControlR",
+        "resultsView", "referenceCheckpoint", "hardwareTopology", "hardwareControlR",
         "hardwareControlC", "hardwareTargetMatch", "hardwareMatchedEvidence",
         "hardwareTargetMismatch", "designBlockGrid",
     ):
@@ -275,7 +276,7 @@ process.stdout.write(JSON.stringify(svgs));
     assert "l30 -40" in views["rc"]  # voltage-controlled varactors
 
 
-def test_receiver_opens_complete_ctle_and_keeps_other_blocks_optional():
+def test_explorer_opens_complete_ctle_and_keeps_three_other_blocks_optional():
     import shutil
     import subprocess
     node = shutil.which("node")
@@ -298,8 +299,8 @@ const context = vm.createContext({document});
 vm.runInContext(fs.readFileSync('nebula/web/static/circuit_views.js','utf8') +
   '\nNebulaCircuitViews.renderDesign({method:"rl-hybrid",search:{setting:425,atten_code:6,bank_code:41},nominal:{params:{rs:356.8177,cs:2.19177e-12}}});', context);
 const cards = document.getElementById('designBlockGrid').children;
-assert.equal(cards.length,3);
-assert.deepEqual(cards.map(card=>card.dataset.block),['ctle','attenuator','reference']);
+assert.equal(cards.length,4);
+assert.deepEqual(cards.map(card=>card.dataset.block),['ctle','attenuator','reference','dfe']);
 assert.equal(cards[0].open,true);
 assert.equal(cards[1].open,false);
 assert(cards[0].children[1].innerHTML.includes('XMT1'));
@@ -311,6 +312,14 @@ assert.equal(cards[0].children[0].children[1].textContent,'R5 / C1');
 assert(cards[0].children[1].innerHTML.includes('Fixed Rs/Cs'));
 assert(cards[0].children[2].textContent.includes('356.82 ohm'));
 assert(cards[2].children[1].innerHTML.includes('Xcbyp'));
+const selectors=document.getElementById('designBlockButtons').children;
+assert.equal(selectors.length,4);
+selectors[2].onclick();
+assert.equal(cards[2].hidden,false);assert.equal(cards[2].open,true);
+assert.equal(cards[0].hidden,true);assert.equal(cards[0].open,false);
+assert.equal(selectors[2]['aria-pressed'],'true');assert.equal(selectors[0]['aria-pressed'],'false');
+selectors[0].onclick();assert.equal(cards[0].hidden,false);
+
 vm.runInContext('NebulaCircuitViews.renderDesign({method:"rl-hybrid",search:{atten_code:null,bank_code:null},nominal:{params:{rs:null,cs:null}}});', context);
 const missing = document.getElementById('designBlockGrid').children;
 assert.equal(missing[1].children[0].children[1].textContent,'Not recorded');

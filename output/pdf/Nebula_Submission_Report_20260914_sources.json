@@ -1,7 +1,7 @@
 {
   "report": "Nebula_Submission_Report_20260914.pdf",
   "page_count": 25,
-  "report_sha256": "7802f0b1d3ac14646eaa90a6a9cb6149291b39048875bdef53c7c71212c2a521",
+  "report_sha256": "169845fac6690d16630a18d70d7118b0936b66ce9bca277aed7380ae2025c15f",
   "edition": "Independent submission story / 2026-09-14",
   "previous_reports_preserved": {
     "Nebula_Competition_Report_Academic.pdf": "a573db02335879e0a6a0b3feb2c9eeea2172c2f3f4b4e4699dfc8123c8f90670",
@@ -129,7 +129,6 @@
     "18": 1.1540164943942608,
     "19": 1.1520940351402444,
     "20": 1.1263093427984927,
-    "21": 1.0428053697589696,
     "22": 1.074679482018826,
     "23": 1.0900031105425714,
     "24": 1.1154879242205091,
@@ -183,7 +182,7 @@
     "18": -0.5539999999999964,
     "19": 0.07200000000000273,
     "20": 0.9249999999999924,
-    "21": 2.4480000000000017,
+    "21": 1.140000000000009,
     "22": 2.2139999999999986,
     "23": 3.5549999999999975,
     "24": 2.768571428571428,
@@ -192,9 +191,9 @@
   "sources": [
     {
       "path": "nebula/report/submission_story.py",
-      "sha256": "f4eafbb075f3fc075bcec735bbe6777e01f0ed479aa0aff3f19640ae0c936801",
+      "sha256": "b5d25e7eba92a5058da84a39dff5c77bce9bb9c14a22cc52c7131b0da507dcb8",
       "hash_mode": "lf-text",
-      "raw_sha256_at_build": "f4eafbb075f3fc075bcec735bbe6777e01f0ed479aa0aff3f19640ae0c936801"
+      "raw_sha256_at_build": "b5d25e7eba92a5058da84a39dff5c77bce9bb9c14a22cc52c7131b0da507dcb8"
     },
     {
       "path": "nebula/report/competition_2026.py",
@@ -276,27 +275,45 @@
     },
     {
       "path": "nebula/web/static/app.js",
-      "sha256": "9f891fecaa86f9b2243703fcb66f17340bd9d971aa00ebd07e1d523328cbf7c2",
+      "sha256": "a82640136592463c16f8319555aa48bfa846bd338b8d4066979bbb20093d1e1a",
       "hash_mode": "lf-text",
-      "raw_sha256_at_build": "9f891fecaa86f9b2243703fcb66f17340bd9d971aa00ebd07e1d523328cbf7c2"
+      "raw_sha256_at_build": "a82640136592463c16f8319555aa48bfa846bd338b8d4066979bbb20093d1e1a"
+    },
+    {
+      "path": "nebula/web/static/design_plots.js",
+      "sha256": "984d5cc6aecb06c789ad06c1ca126ae047c1abae234fd9c7931de37cb920118b",
+      "hash_mode": "lf-text",
+      "raw_sha256_at_build": "984d5cc6aecb06c789ad06c1ca126ae047c1abae234fd9c7931de37cb920118b"
+    },
+    {
+      "path": "nebula/web/design_visuals.py",
+      "sha256": "b12bc5468f124e3cb13ad185a85187c8799ff7bce5afd64ef6d5bcf0589971cd",
+      "hash_mode": "lf-text",
+      "raw_sha256_at_build": "b12bc5468f124e3cb13ad185a85187c8799ff7bce5afd64ef6d5bcf0589971cd"
+    },
+    {
+      "path": "nebula/web/server.py",
+      "sha256": "5fd7ce440dec1e383981c58d71dfd1177813693c32377ed6cf2271c31a965d59",
+      "hash_mode": "lf-text",
+      "raw_sha256_at_build": "5fd7ce440dec1e383981c58d71dfd1177813693c32377ed6cf2271c31a965d59"
     },
     {
       "path": "nebula/web/static/circuit_views.js",
-      "sha256": "44a6543ef53dcfd59d91b0771a125133cb84557ac659e9fba103c0ae427d18d0",
+      "sha256": "beb062150b65f1e914d38360043543b06e77d724c5942cc62a1858e3ddca8ed1",
       "hash_mode": "lf-text",
-      "raw_sha256_at_build": "44a6543ef53dcfd59d91b0771a125133cb84557ac659e9fba103c0ae427d18d0"
+      "raw_sha256_at_build": "beb062150b65f1e914d38360043543b06e77d724c5942cc62a1858e3ddca8ed1"
     },
     {
       "path": "nebula/web/static/styles.css",
-      "sha256": "561e50e916ae053cce53b2f18d30d47d48fec4aa3a25bd493c09d4c10a942dfe",
+      "sha256": "a05c21ff5f5fd2b4e1434cfe7f0aa6186ada9cab5d50551af9e54a7f35b3ed87",
       "hash_mode": "lf-text",
-      "raw_sha256_at_build": "561e50e916ae053cce53b2f18d30d47d48fec4aa3a25bd493c09d4c10a942dfe"
+      "raw_sha256_at_build": "a05c21ff5f5fd2b4e1434cfe7f0aa6186ada9cab5d50551af9e54a7f35b3ed87"
     },
     {
       "path": "nebula/web/static/index.html",
-      "sha256": "d370204ba7b404e5d4238a0b3edced529c55a3d88e4b8a7138299715b1ea7314",
+      "sha256": "06595ccedecd89bb58b0317dbc667d9e26b53d28615227815de4c33ed10044f6",
       "hash_mode": "lf-text",
-      "raw_sha256_at_build": "d370204ba7b404e5d4238a0b3edced529c55a3d88e4b8a7138299715b1ea7314"
+      "raw_sha256_at_build": "06595ccedecd89bb58b0317dbc667d9e26b53d28615227815de4c33ed10044f6"
     },
     {
       "path": "nebula/rl/margin_improve_env.py",
@@ -360,9 +377,9 @@
     },
     {
       "path": "nebula/report/assets/submission_20260914/receiver_desktop.png",
-      "sha256": "1b6b8be675e82de187c23d51661af896400ca972d6bf2609a18e2b66f166b4af",
+      "sha256": "957b642351c0d1ec08432b624e5f9dc25577f876435dc6372f4d0a88fca90bbd",
       "hash_mode": "raw",
-      "raw_sha256_at_build": "1b6b8be675e82de187c23d51661af896400ca972d6bf2609a18e2b66f166b4af"
+      "raw_sha256_at_build": "957b642351c0d1ec08432b624e5f9dc25577f876435dc6372f4d0a88fca90bbd"
     },
     {
       "path": "nebula/product_audits/entry113_attribution_20260907/summary.json",

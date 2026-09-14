@@ -28,8 +28,8 @@ body[data-view] .workspace { display: grid; grid-template-columns: minmax(0, 1fr
 body[data-view] .main-panel { padding: 0 0 48px; }
 body[data-view] { background: #fff; }
 body[data-view] .target-panel { display: none; }
-body[data-view="results"] .workspace { grid-template-columns: 260px minmax(0,1fr); gap: 28px; }
-body[data-view="results"] .target-panel { display: block; border: 0; padding: 30px 18px; margin-top: 62px; border-radius: 8px; align-self: start; }
+body[data-view="results"] .workspace { grid-template-columns: minmax(0,1fr); gap: 0; }
+body[data-view="results"] .target-panel { display: block; border: 1px solid var(--rule-soft); padding: 18px; margin: 0; border-radius: 8px; align-self: start; }
 body[data-view="hardware"] .explorer-tab { display: inline-flex; }
 body[data-view] .run-details .verification-panel { display: block; border: 0; background: #fff; padding: 20px; }
 body[data-view] .run-details .side-button, body[data-view] .run-details .hardware-side { display: none; }
@@ -577,3 +577,164 @@ body[data-view] .receiver-heading p { margin: 0; }
 body[data-view] .receiver-heading h2 { margin: 4px 0; }
 #designBlockGrid .design-block-canvas svg { height: 290px; }
 @media (max-width: 700px) { #designBlockGrid .design-block-canvas svg { height: auto; } }
+
+/* One navigation level; Explorer controls belong to its workbench only. */
+.explorer-workbench { display: grid; grid-template-columns: 280px minmax(0,1fr); gap: 24px; align-items: start; margin: 12px 0 24px; }
+.explorer-design { min-width: 0; }
+body[data-view] .explorer-design .section-intro { margin: 0 0 18px; }
+body[data-view] .explorer-design .section-intro h2 { font-size: 25px; }
+.explorer-scope { margin: 0; font-size: 14px; }
+body[data-view] .target-panel { scroll-margin-top: 84px; }
+.target-panel label, .target-panel select, .target-panel input, .target-panel textarea { font-size: 14px; }
+.target-panel .field-note, .target-panel .mode-summary { font-size: 12px; }
+.target-panel .panel-heading { margin-bottom: 14px; }
+.target-panel .panel-heading p { font-size: 13px; margin-bottom: 0; }
+#explorerCircuitGrid .design-block-canvas text { font-size: 17px; }
+#explorerCircuitGrid .design-block-canvas .circuit-small { font-size: 16px; }
+#explorerCircuitGrid .design-block-card > p { padding: 10px 14px; font-size: 13px; }
+#explorerExactSchematic { min-height: 0; padding: 12px; }
+#explorerOpenSchematic { display: inline-block; margin: 12px 16px; }
+.result-highlights small { display: block; margin-top: 6px; font-size: 12px; line-height: 1.35; color: var(--muted); }
+.result-highlights { padding-top: 12px; padding-bottom: 12px; }
+.plot-panel { border: 1px solid var(--rule); border-radius: 8px; background: #fff; margin: 24px 0; overflow: hidden; }
+.analysis-heading { display: flex; justify-content: space-between; align-items: center; gap: 18px; padding: 20px 22px 12px; }
+.analysis-heading h3 { font-size: 23px; }
+.analysis-heading p { margin: 4px 0 0; font-size: 14px; color: var(--muted); }
+.plot-controls { display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 22px 20px; }
+.plot-controls button { border: 1px solid var(--rule); background: #fff; border-radius: 5px; padding: 9px 12px; font-size: 14px; }
+.plot-controls button[aria-pressed="true"] { background: var(--cyan-pale); border-color: var(--cyan); color: var(--cyan-deep); font-weight: 650; }
+.analysis-layout { display: grid; grid-template-columns: minmax(0,2.8fr) minmax(240px,1fr); gap: 22px; padding: 0 22px 20px; }
+.plot-frame { min-width: 0; min-height: 180px; }
+.plot-frame svg { width: 100%; height: auto; display: block; }
+.plot-frame svg text { font: 17px Aptos, "Segoe UI", sans-serif; }
+.plot-scope { font-size: 13px; color: var(--muted); line-height: 1.55; margin: 12px 0 0; overflow-wrap: anywhere; }
+.analysis-notes { border-left: 1px solid var(--rule-soft); padding-left: 20px; }
+.analysis-notes h4 { font-size: 17px; margin: 0 0 9px; }
+.analysis-notes p { font-size: 13px; line-height: 1.55; color: var(--muted); }
+.analysis-notes dl { margin: 18px 0; }
+.analysis-notes dl > div { padding: 9px 0; border-bottom: 1px solid var(--rule-soft); }
+.analysis-notes dt { font-size: 12px; color: var(--muted); }
+.analysis-notes dd { margin: 4px 0 0; font-size: 18px; font-weight: 600; }
+.response-panel .plot-frame { max-width: 1040px; margin: 10px auto; }
+.response-panel .plot-scope { padding: 0 22px 18px; }
+body[data-view] #hardwareView .receiver-heading { margin-top: 4px; }
+body[data-view] #hardwareView .receiver-heading .eyebrow { display: none; }
+@media (max-width: 850px) {
+  .explorer-workbench, .analysis-layout { grid-template-columns: 1fr; }
+  body[data-view="results"] .target-panel { margin: 0; order: 0; }
+  .analysis-notes { border-left: 0; padding-left: 0; border-top: 1px solid var(--rule); padding-top: 16px; }
+  .analysis-heading { flex-wrap: wrap; }
+}
+
+/* Analog-design workspace: results first, optional detail on demand. */
+.visually-hidden { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+body[data-view] .workspace { max-width: 1400px; }
+body[data-view="results"] #resultsView { padding-top: 0; }
+body[data-view] .tabs { align-items: stretch; height: 62px; }
+body[data-view] .tab { font-size: 14px; padding: 0 20px; }
+.circuit-toolbar { display: flex; align-items: center; justify-content: space-between; margin: 12px 0; }
+.circuit-toolbar h2 { font-size: 22px; margin: 0; }
+.circuit-toolbar > div { display: flex; gap: 22px; }
+#resultsView > .details-card { margin: 14px 0; }
+#resultsView > .details-card > summary { min-height: 52px; padding: 16px 18px; font-size: 15px; font-weight: 600; }
+#designBlockGrid .design-block-card-heading { min-height: 48px; }
+#designBlockGrid .design-block-card-heading h4 { font-size: 16px; }
+#designBlockGrid .design-block-canvas svg { height: 285px; }
+#designBlockGrid .design-block-card > p { font-size: 13px; line-height: 1.5; }
+.run-picker .source-badge { margin-left: auto; font-size: 12px; white-space: nowrap; }
+.run-picker .button { font-size: 13px; white-space: nowrap; min-height: 38px; }
+.result-actions button { font-size: 13px; }
+#targetDialog { width: min(470px,calc(100vw - 32px)); max-height: 90vh; padding: 0; border: 1px solid #b6c9d5; border-radius: 10px; box-shadow: 0 24px 90px #0b234233; overflow-y: auto; }
+#targetDialog::backdrop { background: #18334455; backdrop-filter: blur(2px); }
+#targetDialog .target-panel { display: block; padding: 26px; margin: 0; border: 0; background: #fff; }
+#targetDialog .target-panel .panel-heading { margin-bottom: 22px; }
+#targetDialog h1 { font-size: 24px; margin-bottom: 0; }
+.dialog-close { float: right; color: var(--muted); border: 0; background: transparent; padding: 4px; font-size: 13px; }
+.language-request { border-top: 1px solid var(--rule-soft); margin: 14px 0 20px; padding-top: 14px; }
+.language-request > summary { font-size: 13px; cursor: pointer; color: var(--cyan-deep); }
+.language-request[open] > summary { margin-bottom: 14px; }
+.dialog-error { color: var(--fail); background: var(--fail-pale); font-size: 13px; padding: 10px; border-radius: 4px; }
+#targetDialog .mode-summary { font-size: 13px; min-height: 0; padding: 8px 0; border: 0; margin: 0 0 18px; }
+body[data-view] #progressPanel { margin: 14px 0; padding: 12px 18px; }
+#progressPanel > p { display: none; }
+.compare-pickers { max-width: none; margin-bottom: 18px; grid-template-columns: minmax(0,1fr) auto minmax(0,1fr); }
+.compare-pickers select { font-size: 14px; }
+.compare-controls { margin: 0 0 18px; }
+.compare-eyes { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 18px; }
+.compare-eyes figure { margin: 0; border: 1px solid var(--rule); border-radius: 8px; overflow: hidden; padding: 16px 12px 12px; }
+.compare-eyes figcaption { padding: 0 8px 12px; display: flex; flex-direction: column; gap: 5px; }
+.compare-eyes figcaption strong { font-size: 17px; font-weight: 600; }
+.compare-eyes figcaption span { font-size: 13px; color: var(--muted); }
+.compare-eyes .plot-frame { min-height: 280px; }
+.compare-eyes .plot-frame:has(svg) { min-height: 0; }
+.compare-eyes .plot-frame:not(:has(svg)) { display: grid; place-content: center; color: var(--muted); background: #f6fafb; border-radius: 6px; font-size: 16px; }
+.compare-eyes .plot-scope { margin: 9px 8px 0; font-size: 12px; }
+.plot-frame svg text { font-size: 18px; }
+.plot-method { margin: 16px 0; }
+.plot-method > p { margin: 0; padding: 12px 18px 18px; font-size: 14px; line-height: 1.6; color: var(--muted); }
+.response-panel .plot-frame { max-width: 900px; margin: 12px auto; }
+.reference-checkpoint > .reference-note { font-size: 14px; }
+@media (max-width: 850px) {
+  .compare-eyes { grid-template-columns: 1fr; }
+  .run-picker { gap: 10px; }
+  .run-picker .source-badge { margin-left: 0; }
+  body[data-view] .tab { padding: 0 12px; }
+}
+
+/* Author display rules must respect application visibility state. */
+[hidden] { display: none !important; }
+
+/* A circuit canvas and adjacent property inspector, followed by evidence. */
+.circuit-workbench { display: grid; grid-template-columns: minmax(0,1.7fr) minmax(370px,1fr); border: 1px solid var(--rule); border-radius: 10px; overflow: hidden; margin-bottom: 22px; }
+.circuit-stage { min-width: 0; background: #fbfdfe; }
+.stage-controls { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 58px; padding: 10px 16px; border-bottom: 1px solid var(--rule-soft); background: #fff; }
+.block-switcher, .inspector-switcher { display: flex; align-items: center; gap: 4px; }
+.block-switcher button { border: 0; border-radius: 5px; background: transparent; color: var(--muted); padding: 9px 11px; font-size: 14px; white-space: nowrap; }
+.block-switcher button[aria-pressed="true"] { background: var(--cyan-pale); color: var(--cyan-deep); font-weight: 650; }
+#expandCircuit { font-size: 12px; white-space: nowrap; }
+#designBlockGrid { display: block; margin: 0; border: 0; }
+#designBlockGrid .design-block-card { border: 0; border-radius: 0; margin: 0; background: transparent; }
+#designBlockGrid .design-block-card-heading { background: transparent; padding: 15px 20px 8px; border: 0; min-height: 44px; }
+#designBlockGrid .design-block-card-heading h4 { font-size: 15px; }
+#designBlockGrid .design-block-card-heading::before { display: none; }
+#designBlockGrid .design-block-card-heading > span { font-size: 12px; }
+#designBlockGrid .design-block-canvas { background: radial-gradient(#9ab3c329 .65px,transparent .65px); background-size: 18px 18px; padding: 8px 12px; border: 0; }
+#designBlockGrid .design-block-canvas svg { height: 285px; max-width: 100%; }
+#designBlockGrid .design-block-card > p { padding: 13px 20px 18px; margin: 0; border: 0; min-height: 68px; font-size: 13px; line-height: 1.5; }
+.design-inspector { border-left: 1px solid var(--rule); background: #fff; min-width: 0; }
+.inspector-switcher { padding: 10px 12px; min-height: 58px; border-bottom: 1px solid var(--rule-soft); justify-content: space-between; }
+.inspector-switcher button { border: 0; border-radius: 4px; background: transparent; color: var(--muted); font-size: 13px; padding: 9px 8px; white-space: nowrap; }
+.inspector-switcher button[aria-pressed="true"] { color: var(--ink); font-weight: 650; background: #eef3f7; }
+.inspector-body { height: 405px; overflow-y: auto; padding: 22px 18px; }
+.inspector-body h3 { margin: 0 0 20px; font-size: 17px; font-weight: 600; }
+.inspector-body .plot-frame { min-height: 0; margin: 30px -10px 0; }
+.inspector-body .plot-frame svg text { font-size: 23px; }
+.inspector-body .plot-scope { font-size: 12px; line-height: 1.5; margin-top: 18px; }
+.inspector-body table { min-width: 0; width: 100%; }
+.inspector-body th, .inspector-body td { padding: 10px 5px; font-size: 13px; overflow-wrap: anywhere; }
+.inspector-body .data-grid { grid-template-columns: 1fr 1fr; gap: 12px; }
+.inspector-body .data-item { padding: 10px; }
+body[data-view] #inspectorProvenance .verification-panel { display: block; padding: 0; border: 0; background: transparent; }
+#inspectorProvenance .side-section { padding: 0 0 18px; margin-bottom: 18px; }
+#inspectorProvenance .side-section h2 { font-size: 17px; }
+#inspectorProvenance .hardware-side, #inspectorProvenance .side-button { display: none; }
+.circuit-workbench.circuit-focus { grid-template-columns: 1fr; }
+.circuit-focus #designBlockGrid .design-block-canvas svg { height: 380px; }
+.evidence-shelf { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; align-items: start; }
+.evidence-shelf > details { margin: 0; border: 1px solid var(--rule); border-radius: 8px; overflow: hidden; }
+.evidence-shelf > details > summary { min-height: 100px; display: flex; align-items: center; flex-wrap: wrap; gap: 8px 18px; padding: 24px; font-size: 16px; line-height: 1.5; font-weight: 600; }
+.evidence-shelf > details > summary::before { content: "+"; color: var(--cyan-deep); font-size: 24px; font-weight: 400; }
+.evidence-shelf > details[open] { grid-column: 1 / -1; }
+.evidence-shelf > details[open] > summary { min-height: 64px; border-bottom: 1px solid var(--rule-soft); }
+.evidence-shelf > details[open] > summary::before { content: "-"; }
+.evidence-shelf > .generated-drawing > summary { background: #f0f8fa; }
+.evidence-shelf > .reference-checkpoint > summary { background: #f4f6f9; }
+.evidence-shelf > .reference-checkpoint > summary > span { display: block; color: var(--muted); font-size: 13px; font-weight: 500; }
+@media (max-width: 1100px) { .circuit-workbench { grid-template-columns: 1fr; } .design-inspector { border-left: 0; border-top: 1px solid var(--rule); } .inspector-body { height: auto; max-height: 450px; } .inspector-body .plot-frame { max-width: 650px; margin: 12px auto; } }
+@media (max-width: 650px) { .stage-controls { flex-wrap: wrap; } .block-switcher { flex-wrap: wrap; } .evidence-shelf { grid-template-columns: 1fr; } .evidence-shelf > details > summary { padding: 18px; } }
+
+.inspector-body .data-grid span { font-size: 13px; }
+.inspector-body .data-grid strong { font-size: 15px; }
+
+.inspector-body .data-grid { background: transparent; gap: 0 18px; border: 0; }
+.inspector-body .data-grid > div { padding: 14px 0; border-bottom: 1px solid var(--rule-soft); }

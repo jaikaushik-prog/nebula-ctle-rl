@@ -66,7 +66,6 @@ const NebulaCircuitViews = (() => {
       label: "CTLE core + tail current sources",
       description: "The SKY130 input pair converts inp / inn into differential output voltage through poly loads. Rs/Cs connect the source nodes s1 and s2. Tail devices use the physical bias reference; open Rs/Cs controls for the reconfigurable degeneration network.",
       svg: frame("CTLE differential pair and configurable source degeneration",
-        text(30, 36, "Source-degenerated differential pair", "circuit-label") +
         wire("M350 55H735M395 55V80M695 55V80M395 116V140M695 116V140") +
         text(540, 42, "VDD", "circuit-small") +
         '<rect x="387" y="80" width="16" height="36" class="circuit-component"/><rect x="687" y="80" width="16" height="36" class="circuit-component"/>' +
@@ -133,36 +132,49 @@ const NebulaCircuitViews = (() => {
     return {
       attenuator: {
         badge: code(search.atten_code, "A"),
-        note: "The selected attenuation code is applied ahead of the CTLE by the measured PMOS series-shunt input network.",
+        note: "PMOS series-shunt network ahead of the CTLE.",
       },
       ctle: {
         badge: `${code(rCode, "R")} / ${code(cCode, "C")}`,
-        note: `Selected values: Rs ${component(params.rs, 1, "ohm", 2)} and Cs ${component(params.cs, 1e12, "pF", 3)}. This topology guide includes both tail devices. Open the exact generated drawing for all device sizes, loads and bias connections. The separate checkpoint below uses voltage-configurable Rs/Cs.`,
+        note: `Selected values: Rs ${component(params.rs, 1, "ohm", 2)} and Cs ${component(params.cs, 1e12, "pF", 3)}. Topology guide with both tail devices; exact sizes and connections are in the exported drawing.`,
       },
       dfe: {
         badge: "Transistor reference",
-        note: "The selected run uses a 1-tap cursor score. The circuit view shows the separately verified transistor summer, decision memory and feedback DAC used by the hardware checkpoint.",
+        note: "Separate transistor checkpoint: summer, decision memory and feedback DAC. The selected run uses a 1-tap cursor score.",
       },
       reference: {
         badge: physical ? "Included in export" : "Physical reference",
         note: physical
-          ? "The physical CTLE export includes the supply-dependent PMOS reference, NMOS mirror and drawn MIM bypass."
+          ? "Supply-dependent PMOS reference, NMOS mirror and MIM bypass in this export."
           : "The adaptive-bank result maps to the verified physical supply-dependent reference; that block is not re-simulated by the cached-bank score.",
       },
     };
   }
 
-  function renderDesign(design) {
-    const target = document.getElementById("designBlockGrid");
+  function renderDesign(design, targetId = "designBlockGrid") {
+    const target = document.getElementById(targetId);
     target.replaceChildren();
     const meta = designBlockMeta(design);
-    for (const key of ["ctle", "attenuator", "reference"]) {
+    const buttons = document.getElementById("designBlockButtons");
+    buttons.replaceChildren();
+    const select = (key) => {
+      for (const card of target.children) {card.hidden = card.dataset.block !== key; card.open = !card.hidden;}
+      for (const button of buttons.children) button.setAttribute("aria-pressed", String(button.dataset.designBlock === key));
+    };
+    for (const key of ["ctle", "attenuator", "reference", "dfe"]) {
       const view = views[key];
       const article = document.createElement("details");
       article.className = "design-block-card";
       article.dataset.block = key;
-      article.setAttribute("name", "design-circuits");
+      article.setAttribute("name", targetId === "designBlockGrid" ? "design-circuits" : "explorer-circuits");
       article.open = key === "ctle";
+      article.hidden = key !== "ctle";
+      const button = document.createElement("button");
+      button.type = "button"; button.dataset.designBlock = key;
+      button.textContent = {ctle:"CTLE",attenuator:"Attenuator",reference:"Bias reference",dfe:"1-tap DFE"}[key];
+      button.setAttribute("aria-pressed", String(key === "ctle"));
+      button.onclick = () => select(key);
+      buttons.append(button);
       const heading = document.createElement("summary");
       heading.className = "design-block-card-heading";
       const title = document.createElement("h4");
@@ -185,7 +197,7 @@ const NebulaCircuitViews = (() => {
           return `gate = ${gate}`;
         });
       }
-      if (key === "ctle") svg = svg.replace("Configurable Rs/Cs", "Fixed Rs/Cs");
+      if (key === "ctle") svg = svg.replace("Configurable Rs/Cs", "Fixed Rs/Cs").replace('viewBox="0 0 1040 340"', 'viewBox="180 30 760 310"');
       canvas.innerHTML = svg;
       const note = document.createElement("p");
       note.textContent = meta[key].note;

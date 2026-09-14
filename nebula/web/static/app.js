@@ -3,6 +3,9 @@
 const state = {
   current: null,
   hardware: null,
+  visuals: new Map(),
+  compareRevision: 0,
+  signalView: "dfe",
   designs: new Map(),
   selectedCondition: null,
   judgeMode: false,
@@ -79,18 +82,20 @@ function statusNode(status, label = null) {
 }
 
 function selectTab(name, updateHash = true) {
-  if (!["hardware", "results", "pvt", "compare", "channel", "evidence"].includes(name)) name = "hardware";
+  const checkpoint = name === "checkpoint";
+  if (name === "hardware" || checkpoint) name = "results";
+  if (!["results", "pvt", "compare", "channel", "evidence"].includes(name)) name = "results";
   $$(".tab").forEach((button) => button.classList.toggle("active", button.dataset.tab === name));
   $$(".view").forEach((view) => view.classList.toggle("active", view.dataset.view === name));
   document.body.dataset.view = name;
-  $(".target-panel").hidden = name !== "results";
   if (name === "compare") renderCompare();
   if (state.current) {
     renderOutcome(state.current);
     renderRunTruth(state.current);
   }
-  $("#resultOverview").hidden = !["hardware", "results"].includes(name);
+  $("#resultOverview").hidden = name !== "results";
   if (updateHash) { history.replaceState(null, "", `#${name}`); window.scrollTo({top: 0, behavior: "instant"}); }
+  if (checkpoint) { $("#referenceCheckpoint").open = true; $("#referenceCheckpoint").scrollIntoView({block:"start",behavior:"instant"}); }
 }
 
 function artifactUrl(design, name) {
@@ -125,7 +130,7 @@ function renderDesign(design) {
     ? `Saved design / ${design.method === "rl-physical" ? "physical CTLE" : "RL adaptive bank"}`
     : `Generated design / ${design.method === "rl-physical" ? "physical CTLE" : "RL adaptive bank"}`;
   const sourceBadge = $("#sourceBadge");
-  sourceBadge.textContent = design.cached ? "Preverified" : "Live run";
+  sourceBadge.textContent = design.cached ? "Preverified" : design.source === "saved-run" ? "Saved run" : "Generated run";
   sourceBadge.classList.toggle("live", !design.cached);
 
   renderSelectedOverview(design);
@@ -139,6 +144,8 @@ function renderDesign(design) {
   renderPvt(design);
   renderEvidence(design);
   refreshComparePickers();
+  $("#compareA").value = design.id;
+  if ($("#compareB").value === design.id) $("#compareB").value = [...state.designs.keys()].find(id=>id!==design.id) || design.id;
   if ($('.tab[data-tab="hardware"]')?.classList.contains("active") && state.hardware) {
     renderOutcome(state.current);
     renderRunTruth(state.current);
@@ -162,34 +169,58 @@ function renderSelectedOverview(design) {
   $("#resultCoverage").textContent = `${number(v.n_pass, 0)}/${number(v.n_points, 0)} conditions pass across ${number(v.n_corners, 0)} PVT corners and ${number(v.n_channel_losses, 0)} channel losses. ${design.method === "rl-physical" ? "One fixed exported CTLE." : "Adaptive settings by condition."}`;
 }
 
+function loadDesignVisual(design) {
+  if (state.visuals.has(design.id)) return state.visuals.get(design.id);
+  const promise = api(`/api/eye/${encodeURIComponent(design.id)}`).then(data => {
+    if (data.run_id !== design.id) throw new Error("Visual evidence belongs to a different run.");
+    return data;
+  }).catch(error => {state.visuals.delete(design.id);throw error;});
+  state.visuals.set(design.id,promise);
+  return promise;
+}
+
 async function renderSelectedEye(design) {
-  const target = $("#selectedEye"), scope = $("#selectedEyeScope");
-  target.replaceChildren(); target.textContent = "Reading this run's saved AC evidence..."; scope.textContent = "";
+  $("#designAcPlot").textContent = "Loading saved AC...";
+  $("#designAcScope").textContent = "";
   try {
-    const data = await api(`/api/eye/${encodeURIComponent(design.id)}`);
-    if (state.current?.id !== design.id || data.run_id !== design.id) return;
-    const ns = "http://www.w3.org/2000/svg", svg = document.createElementNS(ns, "svg");
-    svg.setAttribute("viewBox", "0 0 660 290"); svg.setAttribute("role", "img");
-    svg.setAttribute("aria-label", `Worst-case modeled eye opening for ${design.id}`);
-    const max = Math.max(...data.height_v.map(Math.abs), .001) * .62;
-    const x = phase => 58 + (phase + .5) * 560, y = volts => 133 - volts / max * 102;
-    const add = (tag, attrs, text) => { const node = document.createElementNS(ns, tag); Object.entries(attrs).forEach(([k,v]) => node.setAttribute(k,String(v))); if(text) node.textContent=text; svg.append(node); return node; };
-    add("rect", {x:58,y:20,width:560,height:226,fill:"#f2f9fc"});
-    for (const phase of [-.5,-.25,0,.25,.5]) { add("line",{x1:x(phase),x2:x(phase),y1:20,y2:246,stroke:"#d4e3eb"}); add("text",{x:x(phase),y:268,"text-anchor":"middle"},String(phase)); }
-    add("line",{x1:58,x2:618,y1:133,y2:133,stroke:"#a5bdca"});
-    for (const sign of [-1,1]) {
-      const points = data.phase_ui.map((phase,i)=>`${i?'L':'M'}${x(phase).toFixed(2)},${y(sign*data.height_v[i]/2).toFixed(2)}`).join(" ");
-      add("path",{d:points,fill:"none",stroke:"#0089a8","stroke-width":3});
-    }
-    add("text",{x:338,y:287,"text-anchor":"middle"},"Phase relative to sampling cursor (UI)");
-    add("text",{x:66,y:40},`Opening: ${number(data.eye_h_v*1000,1)} mV / ${number(data.eye_w_ui,3)} UI`);
-    target.replaceChildren(svg);
-    scope.textContent = `${data.scope} Channel loss: ${number(data.channel_loss_db,1)} dB. Source: ${data.design_id}.`;
+    const data = await loadDesignVisual(design);
+    if (state.current?.id !== design.id) return;
+    NebulaDesignPlots.ac($("#designAcPlot"),data.ac);
+    $("#designAcScope").textContent = `Nominal ngspice AC / ${data.design_id}`;
   } catch (error) {
     if (state.current?.id !== design.id) return;
-    target.textContent = "An eye trace is not available for this saved artifact.";
-    scope.textContent = error.message;
+    $("#designAcPlot").textContent = "No raw AC retained for this artifact.";
+    $("#designAcScope").textContent = "Recorded specifications remain available below.";
   }
+}
+
+async function renderCompareEyes(a,b) {
+  const revision = ++state.compareRevision;
+  const designs = [a,b];
+  for (const [i,key] of ["A","B"].entries()) {
+    const design=designs[i],m=design?.nominal?.meas || {};
+    $(`#eye${key}Title`).textContent = design ? `${key} / ${number(design.request?.peaking_db,2)} dB at ${number(design.request?.f_peak_ghz,3)} GHz` : `Circuit ${key}`;
+    $(`#eye${key}Metrics`).textContent = design ? `${number(finite(m.eye_h_v)?m.eye_h_v*1000:null,1)} mV / ${number(m.eye_w_ui,3)} UI recorded margin` : "";
+    $(`#eye${key}Plot`).textContent = design ? "Loading waveform..." : "Select a circuit.";
+    $(`#eye${key}Scope`).textContent = "";
+  }
+  const results = await Promise.allSettled(designs.map(design => design ? loadDesignVisual(design) : Promise.reject(new Error("Select a circuit."))));
+  if (revision !== state.compareRevision) return;
+  const data = results.filter(r=>r.status==="fulfilled").map(r=>r.value);
+  const mode=state.signalView;
+  const max = data.reduce((value,d)=>Math.max(value,...(mode==="envelope"?d.height_v.map(v=>Math.abs(v)/2):[...d.waveform.ctle_v.flat(),...d.waveform.ideal_dfe_v.flat()].map(Math.abs))),.01);
+  const limit = Math.ceil(max*1.06*20)/20;
+  results.forEach((result,i)=>{
+    const key=i===0?"A":"B",target=$(`#eye${key}Plot`),scope=$(`#eye${key}Scope`);
+    if (result.status !== "fulfilled") {target.textContent="Waveform unavailable";scope.textContent=designs[i]?"This saved artifact retains scalar margins, not raw AC for a waveform.":"Select another completed design.";return;}
+    const d=result.value;
+    if (mode==="envelope") NebulaDesignPlots.envelope(target,d,limit);
+    else NebulaDesignPlots.eye(target,d.waveform,mode,limit);
+    scope.textContent = `${d.channel_loss_db} dB channel / ${d.design_id}`;
+  });
+  $("#compareEyeMethod").textContent = mode === "envelope"
+    ? "Worst-case ISI opening envelope with ideal first-post-cursor cancellation at each sampling phase. This is the source of the recorded margin dimensions; it is not a waveform or BER measurement."
+    : "Noiseless modeled waveform from each circuit's saved transistor AC and constructed channel. Both eyes use identical voltage and time scales. Ideal feedback removes the sampled h1 contribution using the known previous bit; rectangular feedback updates between samples. No decision errors, jitter, noise or transistor clock circuitry are modeled. Recorded margins come from the separate worst-case cursor analysis, not from these finite overlays.";
 }
 
 function renderSchematic(design) {
@@ -399,7 +430,7 @@ function renderHardwareCheckpoint(checkpoint) {
     document.getElementById(linkId).href = visual.url;
   }
   $("#hardwareNote").textContent = "Latest checkpoint: transistor DFE and configurable Rs/Cs pass 45/45 Link PVT points. Open Hardware proof for the exact scope.";
-  if (state.current && $('.tab[data-tab="hardware"]')?.classList.contains("active")) {
+  if (state.current) {
     renderOutcome(state.current);
     renderRunTruth(state.current);
   }
@@ -665,6 +696,7 @@ function refreshComparePickers() {
 function renderCompare() {
   const a = state.designs.get($("#compareA").value);
   const b = state.designs.get($("#compareB").value);
+  if (document.body.dataset.view === "compare") renderCompareEyes(a,b);
   const canCompare = a && b && a.id !== b.id;
   $("#compareEmpty").hidden = Boolean(canCompare);
   $("#compareTableWrap").hidden = !canCompare;
@@ -712,16 +744,18 @@ async function generate() {
   clearMessage();
   const peaking = Number($("#peakingInput").value);
   const frequency = Number($("#frequencyInput").value);
-  if (!finite($("#peakingInput").value) || !finite($("#frequencyInput").value)) { showMessage("Enter both requested values.", "error"); return; }
+  if (!finite($("#peakingInput").value) || !finite($("#frequencyInput").value)) { $("#dialogError").textContent="Enter both requested values."; $("#dialogError").hidden=false; return; }
   const request = `${peaking} dB of peaking with the peak near ${frequency} GHz`;
   $("#requestText").value = request;
   const button = $("#generateButton"); button.disabled = true;
   try {
     const job = await api("/api/design", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ request, method: $("#designMode").value }) });
+    $("#targetDialog").close();
     showProgress(job);
     await pollJob(job.id, (update) => showProgress(update));
   } catch (error) {
-    showMessage(error.message, "error");
+    if ($("#targetDialog").open) {$("#dialogError").textContent=error.message;$("#dialogError").hidden=false;}
+    else showMessage(error.message, "error");
   } finally {
     button.disabled = false;
   }
@@ -730,8 +764,8 @@ async function generate() {
 function updateModeSummary() {
   const physical = $("#designMode").value === "rl-physical";
   $("#modeSummary").textContent = physical
-    ? "Generates a transistor CTLE with fixed exported Rs/Cs, then verifies it across PVT. Receiver opens with your circuit, result and modeled eye."
-    : "The frozen RL policy proposes A/R/C codes and the deterministic safety shield selects a checked result; the transistor receiver is shown as a separate implementation checkpoint.";
+    ? "Fixed Rs/Cs and physical reference; fresh PVT verification."
+    : "Frozen RL proposals with measured-bank safety checks.";
 }
 
 function showProgress(job) {
@@ -747,7 +781,7 @@ async function pollJob(id, onUpdate) {
     onUpdate(job);
     if (job.status === "complete") {
       localStorage.setItem("nebula-selected-design", job.result.id);
-      renderDesign(job.result); selectTab("hardware");
+      renderDesign(job.result); selectTab("results");
       $("#referenceCheckpoint").open = false;
       $("#progressPanel").hidden = true;
       $("#resultOverview").focus({preventScroll: true});
@@ -815,7 +849,7 @@ async function enterJudgeMode() {
     if (!state.hardware) renderHardwareCheckpoint(await api("/api/hardware"));
     const design = await api("/api/demo");
     state.judgeMode = true; $("#judgeStrip").hidden = false; $("#judgeButton").textContent = "Judge mode active";
-    renderDesign(design); selectTab("hardware");
+    renderDesign(design); selectTab("results");
   } catch (error) { showMessage(error.message, "error"); }
 }
 
@@ -826,9 +860,26 @@ function exitJudgeMode() {
 function bindEvents() {
   $$(".tab").forEach((button) => button.addEventListener("click", () => selectTab(button.dataset.tab)));
   $$('[data-open-tab]').forEach((button) => button.addEventListener("click", () => selectTab(button.dataset.openTab)));
+  $$('[data-signal-view]').forEach(button => button.addEventListener("click", () => {
+    state.signalView=button.dataset.signalView;
+    $$('[data-signal-view]').forEach(item=>item.setAttribute("aria-pressed",String(item===button)));
+    renderCompare();
+  }));
+  for (const button of $$("[data-inspector]")) button.addEventListener("click", () => {
+    for (const item of $$("[data-inspector]")) item.setAttribute("aria-pressed",String(item === button));
+    for (const panel of $$("[data-inspector-panel]")) panel.hidden = panel.dataset.inspectorPanel !== button.dataset.inspector;
+  });
+  $("#expandCircuit").addEventListener("click", () => {
+    const expanded = $("#circuitWorkbench").classList.toggle("circuit-focus");
+    $("#designInspector").hidden = expanded;
+    $("#expandCircuit").setAttribute("aria-pressed",String(expanded));
+    $("#expandCircuit").textContent = expanded ? "Show inspector" : "Expand circuit";
+  });
+  $("#setTargetButton").addEventListener("click", () => {$("#dialogError").hidden=true;$("#targetDialog").showModal();$("#peakingInput").focus();});
+  $("#closeTargetDialog").addEventListener("click", () => $("#targetDialog").close());
   $("#selectedRun").addEventListener("change", event => {
     const design = state.designs.get(event.target.value);
-    if (design) { localStorage.setItem("nebula-selected-design", design.id); renderDesign(design); selectTab("hardware"); }
+    if (design) { localStorage.setItem("nebula-selected-design", design.id); renderDesign(design); selectTab("results"); }
   });
   $("#readRequest").addEventListener("click", () => parseNaturalRequest().catch(() => {}));
   $("#designMode").addEventListener("change", updateModeSummary);
@@ -852,22 +903,9 @@ function bindEvents() {
 
 async function init() {
   bindEvents();
-  const targetPanel = $(".target-panel");
-  const compactLayout = matchMedia("(max-width: 850px)");
-  const positionControls = () => {
-    if (compactLayout.matches) $(".explorer-scope").after(targetPanel);
-    else $("#workspace").prepend(targetPanel);
-  };
-  compactLayout.addEventListener("change", positionControls);
-  positionControls();
   $("#resultVerdict").append($("#outcomeCard"), $("#failureBox"));
-  const runDetails = document.createElement("details");
-  runDetails.className = "details-card run-details";
-  const runSummary = document.createElement("summary");
-  runSummary.textContent = "Run verification and provenance";
-  runDetails.append(runSummary, $(".verification-panel"));
-  $("#resultsView").append(runDetails);
-  selectTab(location.hash.slice(1) || "hardware", false);
+  $("#inspectorProvenance").append($(".verification-panel"));
+  selectTab(location.hash.slice(1) || "results", false);
   updateModeSummary();
   const hardwareRequest = api("/api/hardware")
     .then(renderHardwareCheckpoint)

@@ -318,7 +318,7 @@ def build(e=None):
     r.heading("2.2 Two paths with explicit responsibilities")
     r.para("Adaptive-bank mode combines policy proposals and a visited-candidate shield with a deterministic measured-bank fallback and centering lookup. These classical checks are billed separately. Physical-export mode establishes a fixed eligible setting, emits physical bias and passive devices, and verifies the CTLE. The registry reuses exact accepted targets only after integrity checks; it does not authorize interpolation between targets.")
     r.heading("2.3 Verification is part of the product")
-    r.para("The runner parses measurements and simulator diagnostics rather than relying on an exit code. Source hashes connect visible numbers to the files that produced them. Missing artifacts, changed pinned hardware sources and unsuccessful requests remain visible failures or unavailable states. The Receiver tab uses a separate adapter for the latest transistor checkpoint, preventing older policy results from being relabeled as integrated hardware.")
+    r.para("The runner parses measurements and simulator diagnostics rather than relying on an exit code. Source hashes connect visible numbers to the files that produced them. Missing artifacts, changed pinned hardware sources and unsuccessful requests remain visible failures or unavailable states. The optional transistor checkpoint uses a separate adapter for the latest transistor checkpoint, preventing older policy results from being relabeled as integrated hardware.")
 
     r.new("Chapter 2 / Learning method","Learning a useful search behavior","The demonstrated policy moves through a characterized circuit bank.")
     r.heading("2.4 Search space and observations")
@@ -488,13 +488,13 @@ def finish_product_chapters(r,e):
     r.new("Chapter 5 / Desktop product","A product an engineer can inspect","The interface organizes the evidence around the questions a reviewer will ask.")
     screenshot=ROOT/"nebula/report/assets/submission_20260914/receiver_desktop.png"
     if not screenshot.is_file():
-        raise ValueError("Capture the reviewed desktop receiver before building the submission report")
+        raise ValueError("Capture the reviewed desktop Design Explorer before building the submission report")
     from shutil import copyfile
     copyfile(screenshot,SCRATCH/"desktop.png")
-    r.figure("desktop","The desktop Receiver view, captured from the local application. The selected physical design opens with its verdict, measured response and PVT coverage. The CTLE and tail devices lead the circuit inspection; source files remain one click away.",230)
+    r.figure("desktop","Design Explorer, captured from the local application. The selected physical circuit opens with measured response and verification coverage. Its CTLE and AC response share one workspace; circuit selection and a property inspector keep detailed evidence accessible.",230)
     r.heading("5.5 Progressive inspection")
-    r.para("The Receiver view follows the selected completed design. Its verdict, measured response and corner coverage appear first, followed by the CTLE including its tail devices. Other circuit blocks expand on demand. Physical-export eye openings are reconstructed from that run's saved transistor AC response and checked against its recorded dimensions before display.")
-    r.para("Design Explorer handles numerical targets, measured specifications and sizing without repeating the circuit drawings. A completed request opens Receiver at the top, with a direct path to all PVT corners. The run selector restores earlier results; editing a future request does not relabel the result already on screen.")
+    r.para("Design Explorer follows the selected completed circuit. Verdict, measured response and PVT coverage lead. A shared canvas switches between four circuit blocks, starting with the CTLE and tail devices. An adjacent inspector offers AC response, specifications, sizing and the run record. Expand circuit gives the drawing full width; two panels below open the exact export and independent checkpoint. New target opens a focused editor.")
+    r.para("Compare circuits overlays noiseless NRZ waveforms reconstructed from retained transistor AC, with CTLE-only and ideal one-tap DFE views on common axes. Recorded eye dimensions come from conservative cursor analysis; a separate envelope view preserves that distinction. Scalar-only bank records cannot supply a waveform. The independent 9 dB transistor checkpoint remains a labeled disclosure in Design Explorer.")
     r.heading("5.6 A demo that does not borrow a pass")
     r.para("The calibrated transistor CTLE + DFE checkpoint remains an optional, separately labeled 9 dB / 1.9 GHz experiment. Its transient eye never substitutes for a generated design's modeled eye. Bank artifacts retaining only eye dimensions display those measurements without inventing a waveform. Design PVT and run files stay attached to the selected run; the narration follows these same evidence boundaries.")
 
@@ -552,7 +552,7 @@ def finish_product_chapters(r,e):
              ROOT/"nebula/report/check_submission_story.py",FINAL,NOMINAL_SUMMARY,PVT_SUMMARY,NOMINAL_NETLIST,
              POINT/"trace.txt.gz",ROOT/"nebula/DFE_CALIBRATED_RESULTS.md",ROOT/"nebula/POST_REVIEW_RESULTS.md",
              ROOT/"CLAUDEwa.md",ROOT/"nebula/web/hardware_checkpoint.py",ROOT/"nebula/web/hardware_visuals.py",
-             ROOT/"nebula/web/static/app.js",ROOT/"nebula/web/static/circuit_views.js",ROOT/"nebula/web/static/styles.css",
+             ROOT/"nebula/web/static/app.js", ROOT/"nebula/web/static/design_plots.js", ROOT/"nebula/web/design_visuals.py", ROOT/"nebula/web/server.py",ROOT/"nebula/web/static/circuit_views.js",ROOT/"nebula/web/static/styles.css",
              ROOT/"nebula/web/static/index.html",ROOT/"nebula/rl/margin_improve_env.py",ROOT/"nebula/rl/margin_adapt_env.py",ROOT/"nebula/rl/safety_shield.py",ROOT/"nebula/rl/hybrid_designer.py",
              PHYS/"summary.json",PHYS/"evidence_sha256.json",WIN_BENCH/"summary.json",WIN_BENCH/"sha256.json",
              WIN_RECOVERY/"summary.json",WIN_RECOVERY/"sha256.json",screenshot]

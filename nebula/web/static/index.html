@@ -5,9 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="Nebula CTLE + DFE Designer - evidence-grounded SKY130 circuit sizing">
   <title>Nebula CTLE + DFE Designer</title>
-  <link rel="stylesheet" href="/styles.css?v=9">
+  <link rel="stylesheet" href="/styles.css?v=12">
 </head>
-<body data-view="hardware">
+<body data-view="results">
   <a class="skip-link" href="#workspace">Skip to workspace</a>
   <header class="topbar">
     <a class="brand" href="/" aria-label="Nebula CTLE and DFE Designer home">
@@ -28,7 +28,7 @@
     <div><strong>Judge mode</strong><span>Preverified evidence is loaded instantly; this view does not rerun SPICE.</span></div>
     <ol>
       <li><button data-judge-target="results">See the result</button></li>
-      <li><button data-judge-target="hardware">Inspect transistor hardware</button></li>
+      <li><button data-judge-target="checkpoint">Inspect transistor hardware</button></li>
       <li><button data-judge-target="pvt">Inspect generated-design PVT</button></li>
       <li><button data-judge-target="evidence">Download evidence</button></li>
     </ol>
@@ -36,100 +36,53 @@
   </div>
 
   <main id="workspace" class="workspace">
-    <aside class="target-panel" aria-labelledby="targetTitle">
-      <div class="panel-heading">
-        <p class="eyebrow">RECEIVER DESIGN</p>
-        <h1 id="targetTitle">Set the response</h1>
-        <p>Generate a CTLE result, then inspect how it maps into the implemented receiver.</p>
-      </div>
+    <section class="main-panel">
+      <nav class="tabs" aria-label="Design views">
+        <button class="tab active" data-tab="results" type="button">Design explorer</button>
+        <button class="tab explorer-tab" data-tab="pvt" type="button">Design PVT</button>
+        <button class="tab explorer-tab" data-tab="compare" type="button">Compare circuits</button>
+        <button class="tab explorer-tab" data-tab="channel" type="button">Channel</button>
+        <button class="tab explorer-tab" data-tab="evidence" type="button">Run files</button>
+      </nav>
 
-      <label for="requestText">Plain-language request</label>
-      <textarea id="requestText" rows="2">I need 9 dB of peaking with the peak near 1.9 GHz</textarea>
-      <button id="readRequest" class="text-button read-request" type="button">Read this request</button>
-
-      <div class="field-row">
-        <div>
-          <label for="peakingInput">Peaking</label>
-          <div class="unit-input"><input id="peakingInput" type="number" min="3" max="12" step="0.1" value="9"><span>dB</span></div>
-        </div>
-        <div>
-          <label for="frequencyInput">Peak frequency</label>
-          <div class="unit-input"><input id="frequencyInput" type="number" min="1.25" max="2.5" step="0.01" value="1.9"><span>GHz</span></div>
-        </div>
-      </div>
-      <p id="parseNote" class="field-note">Supported request: 3-12 dB at 1.25-2.50 GHz.</p>
-      <label for="designMode">Design path</label>
-      <select id="designMode">
-        <option value="rl-hybrid">RL shield - adaptive bank</option>
-        <option value="rl-physical" selected>Physical CTLE export</option>
-      </select>
-      <p id="modeSummary" class="mode-summary">Generates and verifies a request-specific transistor CTLE with fixed exported Rs/Cs. The Receiver checkpoint is a separate calibrated implementation.</p>
-
-      <button id="generateButton" class="button button-primary generate-button" type="button">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="2"/><circle cx="18" cy="5" r="2"/><circle cx="18" cy="19" r="2"/><path d="M7 11l9-5M7 13l9 5"/></svg>
-        Generate and verify
-      </button>
-
+      <div id="message" class="message" hidden></div>
       <section id="progressPanel" class="progress-panel" aria-live="polite" hidden>
         <div class="progress-copy"><strong id="progressStage">Queued</strong><span id="progressValue">0%</span></div>
         <div class="progress-track"><span id="progressBar"></span></div>
         <p>One protected worker runs the engineering pipeline. You can continue using this page.</p>
       </section>
 
-    </aside>
-
-    <section class="main-panel">
-      <nav class="tabs" aria-label="Design views">
-        <button class="tab active" data-tab="hardware" type="button">Receiver</button>
-        <button class="tab" data-tab="results" type="button">Design explorer</button>
-        <button class="tab explorer-tab" data-tab="pvt" type="button">Design PVT</button>
-        <button class="tab explorer-tab" data-tab="compare" type="button">Compare</button>
-        <button class="tab explorer-tab" data-tab="channel" type="button">Channel</button>
-        <button class="tab explorer-tab" data-tab="evidence" type="button">Run files</button>
-      </nav>
-
-      <div id="message" class="message" hidden></div>
-
       <section id="resultOverview" class="result-overview" aria-live="polite" tabindex="-1">
-        <div class="run-picker"><label for="selectedRun">Selected design</label><select id="selectedRun"></select><button class="text-button" data-open-tab="results" type="button">Set a new target</button></div>
+        <div class="run-picker"><label for="selectedRun">Selected design</label><select id="selectedRun"></select><span id="sourceBadge" class="source-badge"></span><button class="button button-secondary" id="setTargetButton" type="button">New target</button></div>
         <div id="resultVerdict"></div>
         <div class="result-highlights" id="resultHighlights"></div>
         <div class="result-actions"><p id="resultCoverage"></p><button class="button button-secondary" data-open-tab="pvt" type="button">Inspect all PVT corners</button></div>
       </section>
 
-      <section id="resultsView" class="view" data-view="results">
-        <p class="explorer-scope"><strong>Generated design</strong> &middot; Measurements below follow the selected run. Open Receiver for the circuit and eye; this view collects the measured specifications and sizing.</p>
-        <div class="section-intro">
-          <div>
-            <p id="resultContext" class="context-line">Preverified judge artifact</p>
-            <h2 id="resultTitle">Loading verified design</h2>
-          </div>
-          <span id="sourceBadge" class="source-badge">Loading</span>
+      <section id="resultsView" class="view active" data-view="results">
+        <div class="circuit-toolbar"><h2>Circuit workspace</h2><div><button class="text-button" data-open-tab="compare" type="button">Compare eyes</button><button class="text-button" data-open-tab="evidence" type="button">Circuit files</button></div></div>
+        <span id="resultContext" class="visually-hidden"></span><span id="resultTitle" class="visually-hidden"></span>
+        <div id="circuitWorkbench" class="circuit-workbench">
+          <section class="circuit-stage" aria-label="Selected circuit inspection">
+            <div class="stage-controls"><div id="designBlockButtons" class="block-switcher" role="group" aria-label="Select circuit block"></div><button id="expandCircuit" class="text-button" type="button" aria-pressed="false">Expand circuit</button></div>
+            <div id="designBlockGrid" class="design-block-grid"></div>
+          </section>
+          <aside id="designInspector" class="design-inspector" aria-label="Selected design measurements and properties">
+            <div class="inspector-switcher" role="group" aria-label="Design inspector">
+              <button type="button" data-inspector="response" aria-pressed="true">Response</button>
+              <button type="button" data-inspector="specs" aria-pressed="false">Specs</button>
+              <button type="button" data-inspector="sizing" aria-pressed="false">Sizing</button>
+              <button type="button" data-inspector="provenance" aria-pressed="false">Run record</button>
+            </div>
+            <div class="inspector-body">
+              <section data-inspector-panel="response"><h3>Nominal AC response</h3><div id="designAcPlot" class="plot-frame">Loading saved response.</div><p id="designAcScope" class="plot-scope"></p></section>
+              <section data-inspector-panel="specs" hidden><h3>Measured specifications</h3><div class="table-scroll"><table><thead><tr><th>Metric</th><th>Requirement</th><th>Measured</th><th>Status</th></tr></thead><tbody id="specTable"></tbody></table></div></section>
+              <section data-inspector-panel="sizing" hidden><h3>Device sizing</h3><div id="sizingGrid" class="data-grid"></div></section>
+              <section id="inspectorProvenance" data-inspector-panel="provenance" hidden></section>
+            </div>
+          </aside>
         </div>
-
-        <div class="table-card">
-          <div class="card-heading"><div><h3>Measured specifications</h3><p>Every number comes from the selected design artifact.</p></div></div>
-          <div class="table-scroll">
-            <table>
-              <thead><tr><th>Metric</th><th>Requirement</th><th>Measured</th><th>Status</th></tr></thead>
-              <tbody id="specTable"></tbody>
-            </table>
-          </div>
-        </div>
-
-        <details class="details-card">
-          <summary>Circuit sizing and device values</summary>
-          <div id="sizingGrid" class="data-grid"></div>
-        </details>
-      </section>
-
-      <section id="hardwareView" class="view active" data-view="hardware">
-        <div class="receiver-heading"><div><p class="eyebrow">SELECTED CIRCUIT</p><h2>From circuit to recovered signal</h2></div><button class="text-button" data-open-tab="evidence" type="button">Open this run's files</button></div>
-        <div id="designBlockGrid" class="design-block-grid"></div>
-        <div class="selected-eye-layout">
-          <figure class="selected-eye-panel"><h3>Eye opening of this design</h3><div id="selectedEye" aria-live="polite">Loading saved eye evidence.</div><figcaption id="selectedEyeScope"></figcaption></figure>
-          <div class="selected-eye-explanation"><h3>What this eye tells us</h3><p>The open region shows the timing and voltage margin after the CTLE and an ideal 1-tap DFE. It is computed from this design's saved transistor AC response.</p><p>The eye dimensions above use the same calculation as the verification record. The separate transistor DFE experiment is available below.</p><button class="text-button" data-open-tab="pvt" type="button">See the eye across PVT</button></div>
-        </div>
+        <div class="evidence-shelf" aria-label="Circuit evidence">
         <details class="details-card generated-drawing">
           <summary>Inspect the exact generated CTLE drawing</summary>
           <div class="card-heading">
@@ -215,6 +168,8 @@
 
         </div>
         </details>
+
+        </div>
       </section>
 
       <section id="pvtView" class="view" data-view="pvt">
@@ -238,12 +193,22 @@
       </section>
 
       <section id="compareView" class="view" data-view="compare">
-        <div class="section-intro"><div><p class="context-line">Generated designs only</p><h2>Compare two circuits</h2><p>Compare component values and measured outcomes, not design algorithms.</p></div></div>
+        <div class="section-intro"><div><h2>Compare circuits</h2><p>Same axes. Separate evidence for each circuit.</p></div></div>
         <div class="compare-pickers">
           <label>Circuit A<select id="compareA"></select></label>
           <button id="swapCompare" class="swap-button" type="button" aria-label="Swap circuits">&#8646;</button>
           <label>Circuit B<select id="compareB"></select></label>
         </div>
+        <div class="plot-controls compare-controls" role="group" aria-label="Eye comparison mode">
+          <button type="button" data-signal-view="dfe" aria-pressed="true">Ideal 1-tap DFE</button>
+          <button type="button" data-signal-view="ctle" aria-pressed="false">CTLE output</button>
+          <button type="button" data-signal-view="envelope" aria-pressed="false">Margin envelope</button>
+        </div>
+        <div class="compare-eyes">
+          <figure><figcaption><strong id="eyeATitle">Circuit A</strong><span id="eyeAMetrics"></span></figcaption><div id="eyeAPlot" class="plot-frame"></div><p id="eyeAScope" class="plot-scope"></p></figure>
+          <figure><figcaption><strong id="eyeBTitle">Circuit B</strong><span id="eyeBMetrics"></span></figcaption><div id="eyeBPlot" class="plot-frame"></div><p id="eyeBScope" class="plot-scope"></p></figure>
+        </div>
+        <details class="details-card plot-method"><summary>Eye model and measurement scope</summary><p id="compareEyeMethod">Waveforms use saved transistor AC and a noiseless NRZ model. Ideal feedback assumes correct previous bits. Recorded height and width are conservative cursor margins, not measurements of these finite overlays.</p></details>
         <div id="compareEmpty" class="empty-state"><strong>Generate one more circuit to compare.</strong><span>The preverified demo is already available as Circuit A.</span></div>
         <div id="compareTableWrap" class="table-card" hidden>
           <table><thead><tr><th>Property</th><th id="compareAHead">Circuit A</th><th id="compareBHead">Circuit B</th></tr></thead><tbody id="compareTable"></tbody></table>
@@ -302,13 +267,57 @@
         <p id="hardwareNote">No hardware record loaded.</p>
       </section>
       <button class="button button-secondary side-button" data-open-tab="pvt" type="button">Explore PVT conditions</button>
-      <button class="button button-secondary side-button" data-open-tab="hardware" type="button">Open hardware proof</button>
+      <button class="button button-secondary side-button" data-open-tab="checkpoint" type="button">Open hardware proof</button>
       <button class="button button-secondary side-button" data-open-tab="evidence" type="button">Open evidence</button>
     </aside>
   </main>
 
+  <dialog id="targetDialog" aria-labelledby="targetTitle">
+    <aside class="target-panel" aria-labelledby="targetTitle">
+      <div class="panel-heading">
+        <button id="closeTargetDialog" class="dialog-close" type="button" aria-label="Close target editor">Close</button>
+        <h1 id="targetTitle">New design</h1>
+
+      </div>
+
+      <div class="field-row">
+        <div>
+          <label for="peakingInput">Peaking</label>
+          <div class="unit-input"><input id="peakingInput" type="number" min="3" max="12" step="0.1" value="9"><span>dB</span></div>
+        </div>
+        <div>
+          <label for="frequencyInput">Peak frequency</label>
+          <div class="unit-input"><input id="frequencyInput" type="number" min="1.25" max="2.5" step="0.01" value="1.9"><span>GHz</span></div>
+        </div>
+      </div>
+      <p id="parseNote" class="field-note">Supported request: 3-12 dB at 1.25-2.50 GHz.</p>
+      <details class="language-request"><summary>Describe the target in words</summary>
+      <label for="requestText">Plain-language request</label>
+      <textarea id="requestText" rows="2">I need 9 dB of peaking with the peak near 1.9 GHz</textarea>
+      <button id="readRequest" class="text-button read-request" type="button">Read this request</button>
+
+      </details>
+      <label for="designMode">Design path</label>
+      <select id="designMode">
+        <option value="rl-hybrid">RL shield - adaptive bank</option>
+        <option value="rl-physical" selected>Physical CTLE export</option>
+      </select>
+      <p id="modeSummary" class="mode-summary">Fixed Rs/Cs and physical reference; fresh PVT verification.</p>
+
+      <p id="dialogError" class="dialog-error" role="alert" hidden></p>
+      <button id="generateButton" class="button button-primary generate-button" type="button">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="2"/><circle cx="18" cy="5" r="2"/><circle cx="18" cy="19" r="2"/><path d="M7 11l9-5M7 13l9 5"/></svg>
+        Generate and verify
+      </button>
+
+
+
+    </aside>
+  </dialog>
+
   <template id="statusTemplate"><span class="status-dot"></span><span class="status-copy"></span></template>
-  <script src="/circuit_views.js?v=9" defer></script>
-  <script src="/app.js?v=9" defer></script>
+  <script src="/circuit_views.js?v=12" defer></script>
+  <script src="/design_plots.js?v=12" defer></script>
+  <script src="/app.js?v=12" defer></script>
 </body>
 </html>
