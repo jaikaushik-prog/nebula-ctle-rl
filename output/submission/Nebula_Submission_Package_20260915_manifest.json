@@ -1,0 +1,72 @@
+{
+  "package": "Nebula_Submission_Package_20260915.zip",
+  "owner_actions": [
+    "Fill blank report identity fields",
+    "Record and review video",
+    "Send email"
+  ],
+  "video_included": false,
+  "email_sent": false,
+  "report_pages": 12,
+  "word_pages": 3,
+  "baseline_existing_passed": 3427,
+  "final_tests": {
+    "passed": 3473,
+    "deselected": 13,
+    "warnings": 2,
+    "pytest_seconds": 2048.39,
+    "command": "py -3.13 -m pytest tests nebula/tests -q -m \"not slow\"",
+    "exit_code": null,
+    "validation_basis": "complete_pytest_summary",
+    "summary": "3473 passed, 13 deselected, 2 warnings in 2048.39s (0:34:08)",
+    "runner_issue": "PowerShell Start-Process lost access to ExitCode after WaitForExit and Refresh; wrapper threw. No exit code is inferred. Pytest completed with the passing summary.",
+    "stdout_sha256": "2c4bf32207f2b658d00e3a16608ea0d5848e7bff62be2093d0c42b38faeefd66",
+    "source_freeze": "PASS"
+  },
+  "files": [
+    {
+      "source": "output/pdf/Nebula_Final_Submission_12p_20260915.pdf",
+      "archive_name": "Nebula_Final_Submission_12p_20260915.pdf",
+      "sha256": "764d6f510168430d7386e2b5189f8fe19c6d1c0bef223818d0932bef85364446",
+      "bytes": 1418013
+    },
+    {
+      "source": "output/docx/Nebula_Final_Demo_Script_20260915.docx",
+      "archive_name": "Nebula_Final_Demo_Script_20260915.docx",
+      "sha256": "09e1c00a5d87f91c6f674db416b1661325d37a5dfd2035c7bb335625feb7bd13",
+      "bytes": 40083
+    },
+    {
+      "source": "nebula/SUBMISSION_FINAL_DEMO_SCRIPT_20260915.md",
+      "archive_name": "SUBMISSION_FINAL_DEMO_SCRIPT_20260915.md",
+      "sha256": "bfe20d81f4ed7d2cb7b95ebb60b1bdbf9e2923470f9bbb1e410276846ed6ac43",
+      "bytes": 6279
+    },
+    {
+      "source": "nebula/SUBMISSION_RECORDING_CHECKLIST_20260915.md",
+      "archive_name": "SUBMISSION_RECORDING_CHECKLIST_20260915.md",
+      "sha256": "a712d36f824a8f2f8bdeae42418fcacb0f0457623f0843bef704ffdc7868f620",
+      "bytes": 5784
+    },
+    {
+      "source": "nebula/SUBMISSION_EMAIL_DRAFT_20260915.md",
+      "archive_name": "SUBMISSION_EMAIL_DRAFT_20260915.md",
+      "sha256": "3d3d83ac0bb67c63c83876deed6fc1619f5f2505cd3af13e06c0a29b8336af9f",
+      "bytes": 856
+    },
+    {
+      "source": "nebula/AUTOMATION_RECEIPT_20260914.md",
+      "archive_name": "AUTOMATION_RECEIPT_20260914.md",
+      "sha256": "5ff17fbaba228560d364ae32e1e97fc5759f14a5b48ede992de77097da9b8a3e",
+      "bytes": 6006
+    },
+    {
+      "source": "nebula/DFE_ANALOG_PVT_SUBMISSION_RESULTS.md",
+      "archive_name": "DFE_ANALOG_PVT_SUBMISSION_RESULTS.md",
+      "sha256": "f76a62d7b3cfd8e7985af43adf5300b9e7648c4d77ec29f72d76c6e03e95c549",
+      "bytes": 8121
+    }
+  ],
+  "zip_sha256": "34c0184b1d4f044c959d227672e64c697b49211d30c8240baf3f0142285372a5",
+  "zip_bytes": 1150663
+}

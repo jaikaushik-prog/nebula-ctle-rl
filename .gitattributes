@@ -35,3 +35,19 @@ output/pdf/archive_before_academic_restructure_20260909/** -text
 
 # The submission PDF contains ASCII-encoded streams but is still binary.
 output/pdf/Nebula_Submission_Report_20260914.pdf binary
+
+# Final submission sources and evidence keep their registered bytes.
+nebula/DFE_ANALOG_PVT_SUBMISSION_PLAN.md text eol=lf
+nebula/results/submission_receipt_20260914/** -text
+output/pdf/Nebula_Final_Submission_12p_20260915.pdf binary
+output/docx/Nebula_Final_Demo_Script_20260915.docx binary
+nebula/DFE_ANALOG_PVT_SECOND_ATTEMPT_PLAN.md text eol=lf
+nebula/AUTOMATION_RECEIPT_20260914.md -text
+nebula/SUBMISSION_PACKAGE_20260915.md text eol=lf
+nebula/SUBMISSION_FINAL_DEMO_SCRIPT_20260915.md text eol=lf
+nebula/SUBMISSION_RECORDING_CHECKLIST_20260915.md text eol=lf
+nebula/SUBMISSION_EMAIL_DRAFT_20260915.md text eol=lf
+output/pdf/Nebula_Final_Submission_12p_20260915*.json -text
+output/docx/Nebula_Final_Demo_Script_20260915*.json -text
+nebula/DFE_ANALOG_PVT_SUBMISSION_RESULTS.md text eol=lf
+output/submission/*.json -text

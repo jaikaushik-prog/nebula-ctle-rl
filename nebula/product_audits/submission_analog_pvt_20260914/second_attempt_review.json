@@ -1,0 +1,186 @@
+{
+  "verified_files": 175,
+  "verified_archives": 16,
+  "manifest_sha256": "709e65586b10aa46ff29961dad454047f8a4e72c3dbaadfb07334e2e32f68f86",
+  "summary_sha256": "da6095639be9f93349f00206aa2ec4b0ad06ac38a8b61d3154dfe6b71f8fe47b",
+  "config_sha256": "55c7ce5a12a4e5c13313af9ee229dda3b049fdcf0e716c8bf68a603e0b4ed8fa",
+  "raw_bytes": 1135238316,
+  "gzip_bytes": 336371097,
+  "all_originals_retained": true,
+  "source_snapshots_match_config": true,
+  "source_file_count": 91,
+  "spice_calls": 12,
+  "total_launched_calls_including_interruption": 17,
+  "simulator_wall_seconds": 781.8891957000005,
+  "wall_seconds": 835.4922908000001,
+  "pilot_complete": false,
+  "stop_reason": "invalid_instrument_or_initialization",
+  "corners": [
+    {
+      "corner": "tt_vdd1.00_t27",
+      "instrument_complete": true,
+      "analog_model_pass": true,
+      "target_match": true,
+      "four_way_agreement": true,
+      "static": [
+        {
+          "source": "pvt_tt_vdd1.00_t27/static_state0_tol1e-05_step5ps/result.json",
+          "instrument_ok": true,
+          "initialization_valid": true,
+          "initial_stored_differential_v": -0.27418486100652584,
+          "boost_db": 8.743882759698478,
+          "peak_frequency_hz": 1903117755.0807912,
+          "nyquist_boost_db": 8.64142904166697,
+          "noise_vrms": 0.0006540509224963711,
+          "power_w": 0.00927626134737341,
+          "small_signal_specs_pass": true,
+          "target_match": true,
+          "signed_rs_switch_documented_ranges_ok": false
+        },
+        {
+          "source": "pvt_tt_vdd1.00_t27/static_state1_tol1e-05_step5ps/result.json",
+          "instrument_ok": true,
+          "initialization_valid": true,
+          "initial_stored_differential_v": -0.2741934169822391,
+          "boost_db": 8.746919126302751,
+          "peak_frequency_hz": 1906285212.4517019,
+          "nyquist_boost_db": 8.645756731582225,
+          "noise_vrms": 0.000654039305008745,
+          "power_w": 0.009280663703315201,
+          "small_signal_specs_pass": true,
+          "target_match": true,
+          "signed_rs_switch_documented_ranges_ok": false
+        }
+      ],
+      "tones": [
+        {
+          "source": "pvt_tt_vdd1.00_t27/tone_state0_tol2e-05_step5ps/result.json",
+          "instrument_ok": true,
+          "initialization_valid": true,
+          "initial_stored_differential_v": -0.27418486100652584,
+          "hd3_dbc": -54.91432037590192,
+          "power_w": 0.009258538081524494,
+          "hd3_model_pass": true,
+          "fail_reason": null,
+          "signed_rs_switch_documented_ranges_ok": false
+        },
+        {
+          "source": "pvt_tt_vdd1.00_t27/tone_state0_tol2e-05_step2.5ps/result.json",
+          "instrument_ok": true,
+          "initialization_valid": true,
+          "initial_stored_differential_v": -0.27418486100652584,
+          "hd3_dbc": -54.92013654716911,
+          "power_w": 0.009258185570144765,
+          "hd3_model_pass": true,
+          "fail_reason": null,
+          "signed_rs_switch_documented_ranges_ok": false
+        },
+        {
+          "source": "pvt_tt_vdd1.00_t27/tone_state0_tol1e-05_step5ps/result.json",
+          "instrument_ok": true,
+          "initialization_valid": true,
+          "initial_stored_differential_v": -0.27418486100652584,
+          "hd3_dbc": -54.913713538981,
+          "power_w": 0.009258081103339125,
+          "hd3_model_pass": true,
+          "fail_reason": null,
+          "signed_rs_switch_documented_ranges_ok": false
+        },
+        {
+          "source": "pvt_tt_vdd1.00_t27/tone_state0_tol1e-05_step2.5ps/result.json",
+          "instrument_ok": true,
+          "initialization_valid": true,
+          "initial_stored_differential_v": -0.27418486100652584,
+          "hd3_dbc": -54.91966389845288,
+          "power_w": 0.009257867452069577,
+          "hd3_model_pass": true,
+          "fail_reason": null,
+          "signed_rs_switch_documented_ranges_ok": false
+        }
+      ]
+    },
+    {
+      "corner": "fs_vdd0.95_t125",
+      "instrument_complete": false,
+      "analog_model_pass": false,
+      "target_match": false,
+      "four_way_agreement": true,
+      "static": [
+        {
+          "source": "pvt_fs_vdd0.95_t125/static_state0_tol1e-05_step5ps/result.json",
+          "instrument_ok": true,
+          "initialization_valid": false,
+          "initial_stored_differential_v": 2.183397291855016e-07,
+          "boost_db": 5.477713695966759,
+          "peak_frequency_hz": 1460785267.4164956,
+          "nyquist_boost_db": 5.206806018891675,
+          "noise_vrms": 0.0007789892152662714,
+          "power_w": 0.008624848492775488,
+          "small_signal_specs_pass": true,
+          "target_match": false,
+          "signed_rs_switch_documented_ranges_ok": false
+        },
+        {
+          "source": "pvt_fs_vdd0.95_t125/static_state1_tol1e-05_step5ps/result.json",
+          "instrument_ok": true,
+          "initialization_valid": false,
+          "initial_stored_differential_v": 2.1271635808339795e-07,
+          "boost_db": 5.479173193936554,
+          "peak_frequency_hz": 1462869022.438624,
+          "nyquist_boost_db": 5.209832594838306,
+          "noise_vrms": 0.0007789891232630888,
+          "power_w": 0.00862704282611947,
+          "small_signal_specs_pass": true,
+          "target_match": false,
+          "signed_rs_switch_documented_ranges_ok": false
+        }
+      ],
+      "tones": [
+        {
+          "source": "pvt_fs_vdd0.95_t125/tone_state0_tol2e-05_step5ps/result.json",
+          "instrument_ok": true,
+          "initialization_valid": false,
+          "initial_stored_differential_v": 2.1833973318230449e-07,
+          "hd3_dbc": -62.23460458798142,
+          "power_w": 0.008610828840397669,
+          "hd3_model_pass": true,
+          "fail_reason": null,
+          "signed_rs_switch_documented_ranges_ok": false
+        },
+        {
+          "source": "pvt_fs_vdd0.95_t125/tone_state0_tol2e-05_step2.5ps/result.json",
+          "instrument_ok": true,
+          "initialization_valid": false,
+          "initial_stored_differential_v": 2.1833973318230449e-07,
+          "hd3_dbc": -62.234466286403375,
+          "power_w": 0.008610714477596426,
+          "hd3_model_pass": true,
+          "fail_reason": null,
+          "signed_rs_switch_documented_ranges_ok": false
+        },
+        {
+          "source": "pvt_fs_vdd0.95_t125/tone_state0_tol1e-05_step5ps/result.json",
+          "instrument_ok": true,
+          "initialization_valid": false,
+          "initial_stored_differential_v": 2.1833973318230449e-07,
+          "hd3_dbc": -62.23463878839048,
+          "power_w": 0.008610499218743671,
+          "hd3_model_pass": true,
+          "fail_reason": null,
+          "signed_rs_switch_documented_ranges_ok": false
+        },
+        {
+          "source": "pvt_fs_vdd0.95_t125/tone_state0_tol1e-05_step2.5ps/result.json",
+          "instrument_ok": true,
+          "initialization_valid": false,
+          "initial_stored_differential_v": 2.1833973318230449e-07,
+          "hd3_dbc": -62.23449916148124,
+          "power_w": 0.008610300433635676,
+          "hd3_model_pass": true,
+          "fail_reason": null,
+          "signed_rs_switch_documented_ranges_ok": false
+        }
+      ]
+    }
+  ]
+}

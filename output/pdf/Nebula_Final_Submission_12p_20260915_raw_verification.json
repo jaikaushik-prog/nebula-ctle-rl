@@ -1,0 +1,666 @@
+{
+  "status": "PASS",
+  "completed_at_utc": "2026-09-14T15:55:09.237675+00:00",
+  "nominal": {
+    "verified_files": 137,
+    "verified_archives": 10,
+    "manifest_sha256": "59a7deec832a1d744ad7175bd1eeed7fb0d21b376e1d03c15acb24e1888c99c7"
+  },
+  "pvt": {
+    "verified_files": 362,
+    "verified_archives": 90,
+    "manifest_sha256": "c5213fb228fc450b882b2ce7b4be7219adc6f352d63315b5195af32a4e63afe1"
+  },
+  "nominal_scope": "Original A.verify completed in the frozen pilot prerequisite and interruption closeout; current manifest, archive index, every compressed archive and all non-trace evidence rechecked here.",
+  "pvt_scope": "Original evidence_archive.verify completed here, decompressing every archive and matching its original raw digest and byte length.",
+  "sources": [
+    {
+      "path": "nebula/product_audits/submission_analog_pvt_20260914/pilot/interruption_closeout.json",
+      "sha256": "bcf1d41b5769075fb2a3d8c02395f613010cf1eae8b9d53f576497d7135a59a2",
+      "hash_mode": "raw",
+      "raw_sha256_at_build": "bcf1d41b5769075fb2a3d8c02395f613010cf1eae8b9d53f576497d7135a59a2"
+    },
+    {
+      "path": "nebula/experiments/evidence_archive.py",
+      "sha256": "f6ac2de40aa296ad7db2b41ce8c94a288bc09d5f393b935fe437b877dcaf0879",
+      "hash_mode": "lf-text",
+      "raw_sha256_at_build": "f6ac2de40aa296ad7db2b41ce8c94a288bc09d5f393b935fe437b877dcaf0879"
+    },
+    {
+      "path": "nebula/product_audits/entry143_dfe_calibrated_verification_20260910/trace_archives.json",
+      "sha256": "cf4f03cb11297c2644f37ccbe057b3b98d8f612d852a7dc9bc1c4df9db0a5bea",
+      "hash_mode": "raw",
+      "raw_sha256_at_build": "cf4f03cb11297c2644f37ccbe057b3b98d8f612d852a7dc9bc1c4df9db0a5bea"
+    },
+    {
+      "path": "nebula/product_audits/entry143_dfe_calibrated_verification_20260910/evidence_sha256.json",
+      "sha256": "59a7deec832a1d744ad7175bd1eeed7fb0d21b376e1d03c15acb24e1888c99c7",
+      "hash_mode": "raw",
+      "raw_sha256_at_build": "59a7deec832a1d744ad7175bd1eeed7fb0d21b376e1d03c15acb24e1888c99c7"
+    },
+    {
+      "path": "nebula/product_audits/entry143_dfe_calibrated_verification_20260910/summary.json",
+      "sha256": "14d7d368163652235378e1566e4800a7d26ec2a550922300a015978b74602d96",
+      "hash_mode": "raw",
+      "raw_sha256_at_build": "14d7d368163652235378e1566e4800a7d26ec2a550922300a015978b74602d96"
+    },
+    {
+      "path": "nebula/product_audits/entry143_dfe_calibrated_verification_20260910/link_state0_tol1e-05_step5ps/terminals.txt.gz",
+      "sha256": "a08afa51af3501e195ffe560cfa3abf60d5a3000fbb623aac442e9848cf2945b",
+      "hash_mode": "raw",
+      "raw_sha256_at_build": "a08afa51af3501e195ffe560cfa3abf60d5a3000fbb623aac442e9848cf2945b"
+    },
+    {
+      "path": "nebula/product_audits/entry143_dfe_calibrated_verification_20260910/link_state0_tol1e-05_step5ps/trace.txt.gz",
+      "sha256": "c0607f6b2baff56a5316878dc768bc9fe22f534816e2cc1cd480e65e80ded943",
+      "hash_mode": "raw",
+      "raw_sha256_at_build": "c0607f6b2baff56a5316878dc768bc9fe22f534816e2cc1cd480e65e80ded943"
+    },
+    {
+      "path": "nebula/product_audits/entry143_dfe_calibrated_verification_20260910/tone_state0_tol1e-05_step2.5ps/terminals.txt.gz",
+      "sha256": "a7aca0f42d7a3b005097ce58a43bc56a76d1ce92c79c28364ab8d529c4182db6",
+      "hash_mode": "raw",
+      "raw_sha256_at_build": "a7aca0f42d7a3b005097ce58a43bc56a76d1ce92c79c28364ab8d529c4182db6"
+    },
+    {
+      "path": "nebula/product_audits/entry143_dfe_calibrated_verification_20260910/tone_state0_tol1e-05_step2.5ps/trace.txt.gz",
+      "sha256": "9fec85a5a62bddf845ee08f588ebbfac42eedbc062e8814d14a5c2c29c7b7c02",
+      "hash_mode": "raw",
+      "raw_sha256_at_build": "9fec85a5a62bddf845ee08f588ebbfac42eedbc062e8814d14a5c2c29c7b7c02"
+    },
+    {
+      "path": "nebula/product_audits/entry143_dfe_calibrated_verification_20260910/tone_state0_tol1e-05_step5ps/terminals.txt.gz",
+      "sha256": "753e0366c2674c6a8be80aead9a443c6aa822261e5a8190ff02bd64830b5a4df",
+      "hash_mode": "raw",
+      "raw_sha256_at_build": "753e0366c2674c6a8be80aead9a443c6aa822261e5a8190ff02bd64830b5a4df"
+    },
+    {
+      "path": "nebula/product_audits/entry143_dfe_calibrated_verification_20260910/tone_state0_tol1e-05_step5ps/trace.txt.gz",
+      "sha256": "7f801caf97f7618ba5e5a12a302f7af772cb5a18ebfa0d4bbe2e128c800649b0",
+      "hash_mode": "raw",
+      "raw_sha256_at_build": "7f801caf97f7618ba5e5a12a302f7af772cb5a18ebfa0d4bbe2e128c800649b0"
+    },
+    {
+      "path": "nebula/product_audits/entry143_dfe_calibrated_verification_20260910/tone_state0_tol2e-05_step2.5ps/terminals.txt.gz",
+      "sha256": "dd840e9282e07bd1a55cf68d9c8e576e3e1f5ec6a7ca3e5ee431a8157fb1db6a",
+      "hash_mode": "raw",
+      "raw_sha256_at_build": "dd840e9282e07bd1a55cf68d9c8e576e3e1f5ec6a7ca3e5ee431a8157fb1db6a"
+    },
+    {
+      "path": "nebula/product_audits/entry143_dfe_calibrated_verification_20260910/tone_state0_tol2e-05_step2.5ps/trace.txt.gz",
+      "sha256": "72dbad4df6119f516251192924bf9064302435d731b2f0cd08e86c1c66557bfb",
+      "hash_mode": "raw",
+      "raw_sha256_at_build": "72dbad4df6119f516251192924bf9064302435d731b2f0cd08e86c1c66557bfb"
+    },
+    {
+      "path": "nebula/product_audits/entry143_dfe_calibrated_verification_20260910/tone_state0_tol2e-05_step5ps/terminals.txt.gz",
+      "sha256": "81bc96a623b3a32412b4a7c7ef2dbf644c93ed9dc198d0de6f1c80d3f9b651df",
+      "hash_mode": "raw",
+      "raw_sha256_at_build": "81bc96a623b3a32412b4a7c7ef2dbf644c93ed9dc198d0de6f1c80d3f9b651df"
+    },
+    {
+      "path": "nebula/product_audits/entry143_dfe_calibrated_verification_20260910/tone_state0_tol2e-05_step5ps/trace.txt.gz",
+      "sha256": "3e50c2664150bd4d44081bc0dcb5214302008d7a55a62232cf19a3696de98b5c",
+      "hash_mode": "raw",
+      "raw_sha256_at_build": "3e50c2664150bd4d44081bc0dcb5214302008d7a55a62232cf19a3696de98b5c"
+    },
+    {
+      "path": "nebula/product_audits/entry144_dfe_calibrated_pvt_20260910/trace_archives.json",
+      "sha256": "aa3446867c55114005bb3f1f99b7ec7a003a9280de4088ea11e75ed6ea3e83dc",
+      "hash_mode": "raw",
+      "raw_sha256_at_build": "aa3446867c55114005bb3f1f99b7ec7a003a9280de4088ea11e75ed6ea3e83dc"
+    },
+    {
+      "path": "nebula/product_audits/entry144_dfe_calibrated_pvt_20260910/evidence_sha256.json",
+      "sha256": "c5213fb228fc450b882b2ce7b4be7219adc6f352d63315b5195af32a4e63afe1",
+      "hash_mode": "raw",
+      "raw_sha256_at_build": "c5213fb228fc450b882b2ce7b4be7219adc6f352d63315b5195af32a4e63afe1"
+    },
+    {
+      "path": "nebula/product_audits/entry144_dfe_calibrated_pvt_20260910/summary.json",
+      "sha256": "21a6b7cb5d81bd0e23981d2cc3741a9a0147b6793f401d63c646c5e08f06e424",
+      "hash_mode": "raw",
+      "raw_sha256_at_build": "21a6b7cb5d81bd0e23981d2cc3741a9a0147b6793f401d63c646c5e08f06e424"
+    },
+    {
+      "path": "nebula/product_audits/entry144_dfe_calibrated_pvt_20260910/pvt_ff_vdd0.95_t0/terminals.txt.gz",
+      "sha256": "ce7e76f6a2bd8566dcd998f8774bc86fc91b494826d9d22aac09c74de83edf85",
+      "hash_mode": "raw",
+      "raw_sha256_at_build": "ce7e76f6a2bd8566dcd998f8774bc86fc91b494826d9d22aac09c74de83edf85"
+    },
+    {
+      "path": "nebula/product_audits/entry144_dfe_calibrated_pvt_20260910/pvt_ff_vdd0.95_t0/trace.txt.gz",
+      "sha256": "625c3ceed84c2eeea9ba026a8f8bd8f5d75ea2b9b309350a9e2d6d46e1165586",
+      "hash_mode": "raw",
+      "raw_sha256_at_build": "625c3ceed84c2eeea9ba026a8f8bd8f5d75ea2b9b309350a9e2d6d46e1165586"
+    },
+    {
+      "path": "nebula/product_audits/entry144_dfe_calibrated_pvt_20260910/pvt_ff_vdd0.95_t125/terminals.txt.gz",
+      "sha256": "6bdb47cf4c30af69921e2c4f1ca2b08dd709ea14af28934a2a65f00ba93246d8",
+      "hash_mode": "raw",
+      "raw_sha256_at_build": "6bdb47cf4c30af69921e2c4f1ca2b08dd709ea14af28934a2a65f00ba93246d8"
+    },
+    {
+      "path": "nebula/product_audits/entry144_dfe_calibrated_pvt_20260910/pvt_ff_vdd0.95_t125/trace.txt.gz",
+      "sha256": "8a5805ec763ab38bb6f3391981693bf21c72420657294cbf511c35de37e54583",
+      "hash_mode": "raw",
+      "raw_sha256_at_build": "8a5805ec763ab38bb6f3391981693bf21c72420657294cbf511c35de37e54583"
+    },
+    {
+      "path": "nebula/product_audits/entry144_dfe_calibrated_pvt_20260910/pvt_ff_vdd0.95_t27/terminals.txt.gz",
+      "sha256": "563a9e81a5317aa092e4c5d311cf2591081be9267e34357735d950c66755dcef",
+      "hash_mode": "raw",
+      "raw_sha256_at_build": "563a9e81a5317aa092e4c5d311cf2591081be9267e34357735d950c66755dcef"
+    },
+    {
+      "path": "nebula/product_audits/entry144_dfe_calibrated_pvt_20260910/pvt_ff_vdd0.95_t27/trace.txt.gz",
+      "sha256": "e56906265d503c45670f210aeddb7ec215b08deb9396d5f732fea7514ee25f90",
+      "hash_mode": "raw",
+      "raw_sha256_at_build": "e56906265d503c45670f210aeddb7ec215b08deb9396d5f732fea7514ee25f90"
+    },
+    {
+      "path": "nebula/product_audits/entry144_dfe_calibrated_pvt_20260910/pvt_ff_vdd1.00_t0/terminals.txt.gz",
+      "sha256": "7a0928b578e24742f27152ff48b2b488969516581cba0efcc9639037fe908ea7",
+      "hash_mode": "raw",
+      "raw_sha256_at_build": "7a0928b578e24742f27152ff48b2b488969516581cba0efcc9639037fe908ea7"
+    },
+    {
+      "path": "nebula/product_audits/entry144_dfe_calibrated_pvt_20260910/pvt_ff_vdd1.00_t0/trace.txt.gz",
+      "sha256": "f946ed09ced3320b6abab970e1e4f20b420ed3068a92385f945b64c5267f3786",
+      "hash_mode": "raw",
+      "raw_sha256_at_build": "f946ed09ced3320b6abab970e1e4f20b420ed3068a92385f945b64c5267f3786"
+    },
+    {
+      "path": "nebula/product_audits/entry144_dfe_calibrated_pvt_20260910/pvt_ff_vdd1.00_t125/terminals.txt.gz",
+      "sha256": "7536a87b9f4fb41da7a588b5e1f5028b281b3e170c19e657b80911f5b6d8aa9c",
+      "hash_mode": "raw",
+      "raw_sha256_at_build": "7536a87b9f4fb41da7a588b5e1f5028b281b3e170c19e657b80911f5b6d8aa9c"
+    },
+    {
+      "path": "nebula/product_audits/entry144_dfe_calibrated_pvt_20260910/pvt_ff_vdd1.00_t125/trace.txt.gz",
+      "sha256": "ead4fd94abe0058bab5b180f056b603671cc9db35eb6d551ee92b49a4750bbd4",
+      "hash_mode": "raw",
+      "raw_sha256_at_build": "ead4fd94abe0058bab5b180f056b603671cc9db35eb6d551ee92b49a4750bbd4"
+    },
+    {
+      "path": "nebula/product_audits/entry144_dfe_calibrated_pvt_20260910/pvt_ff_vdd1.00_t27/terminals.txt.gz",
+      "sha256": "c8a361752fcf1ede22a0ce0b41a2ca8cd81fccead2a1e628a98ef75dba654bc1",
+      "hash_mode": "raw",
+      "raw_sha256_at_build": "c8a361752fcf1ede22a0ce0b41a2ca8cd81fccead2a1e628a98ef75dba654bc1"
+    },
+    {
+      "path": "nebula/product_audits/entry144_dfe_calibrated_pvt_20260910/pvt_ff_vdd1.00_t27/trace.txt.gz",
+      "sha256": "e7b5c6baaa3293498251b07709261a4c4bdc95fcd4944fafe2645cb64e4deb94",
+      "hash_mode": "raw",
+      "raw_sha256_at_build": "e7b5c6baaa3293498251b07709261a4c4bdc95fcd4944fafe2645cb64e4deb94"
+    },
+    {
+      "path": "nebula/product_audits/entry144_dfe_calibrated_pvt_20260910/pvt_ff_vdd1.05_t0/terminals.txt.gz",
+      "sha256": "c440cb198fa6ff77ab5135201b240778d2cd3a0acdf809502859a7fd19f4acca",
+      "hash_mode": "raw",
+      "raw_sha256_at_build": "c440cb198fa6ff77ab5135201b240778d2cd3a0acdf809502859a7fd19f4acca"
+    },
+    {
+      "path": "nebula/product_audits/entry144_dfe_calibrated_pvt_20260910/pvt_ff_vdd1.05_t0/trace.txt.gz",
+      "sha256": "f79bbb83677816226a763e1bf82584793327ad3df8c076252bea6fc99d19d843",
+      "hash_mode": "raw",
+      "raw_sha256_at_build": "f79bbb83677816226a763e1bf82584793327ad3df8c076252bea6fc99d19d843"
+    },
+    {
+      "path": "nebula/product_audits/entry144_dfe_calibrated_pvt_20260910/pvt_ff_vdd1.05_t125/terminals.txt.gz",
+      "sha256": "11429eb1153528f4c643e6f791bab05ebe35911a77a55963d05bf4fe30871667",
+      "hash_mode": "raw",
+      "raw_sha256_at_build": "11429eb1153528f4c643e6f791bab05ebe35911a77a55963d05bf4fe30871667"
+    },
+    {
+      "path": "nebula/product_audits/entry144_dfe_calibrated_pvt_20260910/pvt_ff_vdd1.05_t125/trace.txt.gz",
+      "sha256": "d3da9403d6dd0713205fe48838fa0b29e9595e25219ad778502e647c6b5afeab",
+      "hash_mode": "raw",
+      "raw_sha256_at_build": "d3da9403d6dd0713205fe48838fa0b29e9595e25219ad778502e647c6b5afeab"
+    },
+    {
+      "path": "nebula/product_audits/entry144_dfe_calibrated_pvt_20260910/pvt_ff_vdd1.05_t27/terminals.txt.gz",
+      "sha256": "b4ddd2d44130af8e2990f87ff65a565ec98edcc3f7f86f60fb59038fdd2a1041",
+      "hash_mode": "raw",
+      "raw_sha256_at_build": "b4ddd2d44130af8e2990f87ff65a565ec98edcc3f7f86f60fb59038fdd2a1041"
+    },
+    {
+      "path": "nebula/product_audits/entry144_dfe_calibrated_pvt_20260910/pvt_ff_vdd1.05_t27/trace.txt.gz",
+      "sha256": "ffac050a72150cd2ba83d2bb84a36bc2ea28cf89e40e1e3d18a82b0caae668a3",
+      "hash_mode": "raw",
+      "raw_sha256_at_build": "ffac050a72150cd2ba83d2bb84a36bc2ea28cf89e40e1e3d18a82b0caae668a3"
+    },
+    {
+      "path": "nebula/product_audits/entry144_dfe_calibrated_pvt_20260910/pvt_fs_vdd0.95_t0/terminals.txt.gz",
+      "sha256": "816fe79fee6ed95ffdca9e2a4beb13137bb494131007a9d7609c24919f801c54",
+      "hash_mode": "raw",
+      "raw_sha256_at_build": "816fe79fee6ed95ffdca9e2a4beb13137bb494131007a9d7609c24919f801c54"
+    },
+    {
+      "path": "nebula/product_audits/entry144_dfe_calibrated_pvt_20260910/pvt_fs_vdd0.95_t0/trace.txt.gz",
+      "sha256": "12a462caa0f2c9fb6ac996f9dbb7040e9269cb2e02fbd688482ac82f9765b3a0",
+      "hash_mode": "raw",
+      "raw_sha256_at_build": "12a462caa0f2c9fb6ac996f9dbb7040e9269cb2e02fbd688482ac82f9765b3a0"
+    },
+    {
+      "path": "nebula/product_audits/entry144_dfe_calibrated_pvt_20260910/pvt_fs_vdd0.95_t125/terminals.txt.gz",
+      "sha256": "31514a72827123becd7fa7ad3050fd1aabd0ee247242931764cc8d20a87d9cfb",
+      "hash_mode": "raw",
+      "raw_sha256_at_build": "31514a72827123becd7fa7ad3050fd1aabd0ee247242931764cc8d20a87d9cfb"
+    },
+    {
+      "path": "nebula/product_audits/entry144_dfe_calibrated_pvt_20260910/pvt_fs_vdd0.95_t125/trace.txt.gz",
+      "sha256": "fe6568b6964b470243ea86f2b060095a57e0c464d41ee541508ab71f71f553a6",
+      "hash_mode": "raw",
+      "raw_sha256_at_build": "fe6568b6964b470243ea86f2b060095a57e0c464d41ee541508ab71f71f553a6"
+    },
+    {
+      "path": "nebula/product_audits/entry144_dfe_calibrated_pvt_20260910/pvt_fs_vdd0.95_t27/terminals.txt.gz",
+      "sha256": "b0608fb97b18e9adf491908cda2f97500de5357b91e205439652de34f2c2ae66",
+      "hash_mode": "raw",
+      "raw_sha256_at_build": "b0608fb97b18e9adf491908cda2f97500de5357b91e205439652de34f2c2ae66"
+    },
+    {
+      "path": "nebula/product_audits/entry144_dfe_calibrated_pvt_20260910/pvt_fs_vdd0.95_t27/trace.txt.gz",
+      "sha256": "3afc72070fea2bc09c056ee18ee72ebfac3b74ae052c41f0ca51e027fd1e53cd",
+      "hash_mode": "raw",
+      "raw_sha256_at_build": "3afc72070fea2bc09c056ee18ee72ebfac3b74ae052c41f0ca51e027fd1e53cd"
+    },
+    {
+      "path": "nebula/product_audits/entry144_dfe_calibrated_pvt_20260910/pvt_fs_vdd1.00_t0/terminals.txt.gz",
+      "sha256": "41683f7b5903eb4d3a342c25661509a6ffc89da3c184aa10cbc995ac1150262a",
+      "hash_mode": "raw",
+      "raw_sha256_at_build": "41683f7b5903eb4d3a342c25661509a6ffc89da3c184aa10cbc995ac1150262a"
+    },
+    {
+      "path": "nebula/product_audits/entry144_dfe_calibrated_pvt_20260910/pvt_fs_vdd1.00_t0/trace.txt.gz",
+      "sha256": "1be78f45fdfc61da7dc7d69b536e9b93ab31b7886d7e350bf65c527a3ea631f8",
+      "hash_mode": "raw",
+      "raw_sha256_at_build": "1be78f45fdfc61da7dc7d69b536e9b93ab31b7886d7e350bf65c527a3ea631f8"
+    },
+    {
+      "path": "nebula/product_audits/entry144_dfe_calibrated_pvt_20260910/pvt_fs_vdd1.00_t125/terminals.txt.gz",
+      "sha256": "78fdaef8e556645e8bf3304eb4c68323d9c9bc0834a3a2b326067b11d6aebcab",
+      "hash_mode": "raw",
+      "raw_sha256_at_build": "78fdaef8e556645e8bf3304eb4c68323d9c9bc0834a3a2b326067b11d6aebcab"
+    },
+    {
+      "path": "nebula/product_audits/entry144_dfe_calibrated_pvt_20260910/pvt_fs_vdd1.00_t125/trace.txt.gz",
+      "sha256": "2bb2af92f69d1be3bde595b67bb2a1212ea0036f87f862f43b29f6e4a3b59f5a",
+      "hash_mode": "raw",
+      "raw_sha256_at_build": "2bb2af92f69d1be3bde595b67bb2a1212ea0036f87f862f43b29f6e4a3b59f5a"
+    },
+    {
+      "path": "nebula/product_audits/entry144_dfe_calibrated_pvt_20260910/pvt_fs_vdd1.00_t27/terminals.txt.gz",
+      "sha256": "8e4eadbdb7d1706703fe04b281b7882d13a72d2b7fe1241b667d1c353bd6be29",
+      "hash_mode": "raw",
+      "raw_sha256_at_build": "8e4eadbdb7d1706703fe04b281b7882d13a72d2b7fe1241b667d1c353bd6be29"
+    },
+    {
+      "path": "nebula/product_audits/entry144_dfe_calibrated_pvt_20260910/pvt_fs_vdd1.00_t27/trace.txt.gz",
+      "sha256": "bb2ed3322c98b77849edbfd34672379a61ad2e2e2ace248dd1223165697d7680",
+      "hash_mode": "raw",
+      "raw_sha256_at_build": "bb2ed3322c98b77849edbfd34672379a61ad2e2e2ace248dd1223165697d7680"
+    },
+    {
+      "path": "nebula/product_audits/entry144_dfe_calibrated_pvt_20260910/pvt_fs_vdd1.05_t0/terminals.txt.gz",
+      "sha256": "753bd63565d4bc6a3975d41fcd2099e97138102c9970336ee7486a048f7206c4",
+      "hash_mode": "raw",
+      "raw_sha256_at_build": "753bd63565d4bc6a3975d41fcd2099e97138102c9970336ee7486a048f7206c4"
+    },
+    {
+      "path": "nebula/product_audits/entry144_dfe_calibrated_pvt_20260910/pvt_fs_vdd1.05_t0/trace.txt.gz",
+      "sha256": "61f497cacc4112a6b1bbaefbc2565127a95d05afe48ca25922f9c08f4e14c326",
+      "hash_mode": "raw",
+      "raw_sha256_at_build": "61f497cacc4112a6b1bbaefbc2565127a95d05afe48ca25922f9c08f4e14c326"
+    },
+    {
+      "path": "nebula/product_audits/entry144_dfe_calibrated_pvt_20260910/pvt_fs_vdd1.05_t125/terminals.txt.gz",
+      "sha256": "b423589e0cdac8341df3e1af90a1dc89f4eda1ab771c7bbfab148c76b9615002",
+      "hash_mode": "raw",
+      "raw_sha256_at_build": "b423589e0cdac8341df3e1af90a1dc89f4eda1ab771c7bbfab148c76b9615002"
+    },
+    {
+      "path": "nebula/product_audits/entry144_dfe_calibrated_pvt_20260910/pvt_fs_vdd1.05_t125/trace.txt.gz",
+      "sha256": "6f5af0627010a5f57df21056e8fdb41876b44e678e514ba17b9693a1ce58d99c",
+      "hash_mode": "raw",
+      "raw_sha256_at_build": "6f5af0627010a5f57df21056e8fdb41876b44e678e514ba17b9693a1ce58d99c"
+    },
+    {
+      "path": "nebula/product_audits/entry144_dfe_calibrated_pvt_20260910/pvt_fs_vdd1.05_t27/terminals.txt.gz",
+      "sha256": "2596013dea4c4fe2e008ab58bb1d307af51258b8636412bbdb2106211f09179e",
+      "hash_mode": "raw",
+      "raw_sha256_at_build": "2596013dea4c4fe2e008ab58bb1d307af51258b8636412bbdb2106211f09179e"
+    },
+    {
+      "path": "nebula/product_audits/entry144_dfe_calibrated_pvt_20260910/pvt_fs_vdd1.05_t27/trace.txt.gz",
+      "sha256": "9162433b4caa7bd4b23a6b2be2a81ebf5c98d2a9845c4b1c0c98e69180bccd91",
+      "hash_mode": "raw",
+      "raw_sha256_at_build": "9162433b4caa7bd4b23a6b2be2a81ebf5c98d2a9845c4b1c0c98e69180bccd91"
+    },
+    {
+      "path": "nebula/product_audits/entry144_dfe_calibrated_pvt_20260910/pvt_sf_vdd0.95_t0/terminals.txt.gz",
+      "sha256": "064c9afd84b204b9344a9dfbc065c0f2ce4e0552cf7aab6439a1b0e97df7c784",
+      "hash_mode": "raw",
+      "raw_sha256_at_build": "064c9afd84b204b9344a9dfbc065c0f2ce4e0552cf7aab6439a1b0e97df7c784"
+    },
+    {
+      "path": "nebula/product_audits/entry144_dfe_calibrated_pvt_20260910/pvt_sf_vdd0.95_t0/trace.txt.gz",
+      "sha256": "a5bdc24c3639b5732d9ca5ef7e691b3c8de790691c379445a053e656b4f7b213",
+      "hash_mode": "raw",
+      "raw_sha256_at_build": "a5bdc24c3639b5732d9ca5ef7e691b3c8de790691c379445a053e656b4f7b213"
+    },
+    {
+      "path": "nebula/product_audits/entry144_dfe_calibrated_pvt_20260910/pvt_sf_vdd0.95_t125/terminals.txt.gz",
+      "sha256": "22e8d636bbd02e76fbf9e909881f940956c283818f3905036e2fa9e066544a81",
+      "hash_mode": "raw",
+      "raw_sha256_at_build": "22e8d636bbd02e76fbf9e909881f940956c283818f3905036e2fa9e066544a81"
+    },
+    {
+      "path": "nebula/product_audits/entry144_dfe_calibrated_pvt_20260910/pvt_sf_vdd0.95_t125/trace.txt.gz",
+      "sha256": "fb307eb44d9ff7447e03bcffc75ceec58e6b57c9a5b00abc619ac8366d6ecaff",
+      "hash_mode": "raw",
+      "raw_sha256_at_build": "fb307eb44d9ff7447e03bcffc75ceec58e6b57c9a5b00abc619ac8366d6ecaff"
+    },
+    {
+      "path": "nebula/product_audits/entry144_dfe_calibrated_pvt_20260910/pvt_sf_vdd0.95_t27/terminals.txt.gz",
+      "sha256": "606c9591bbad4b1dc545931755fff1347fdcd3dad638acb0c11ba88823956bc5",
+      "hash_mode": "raw",
+      "raw_sha256_at_build": "606c9591bbad4b1dc545931755fff1347fdcd3dad638acb0c11ba88823956bc5"
+    },
+    {
+      "path": "nebula/product_audits/entry144_dfe_calibrated_pvt_20260910/pvt_sf_vdd0.95_t27/trace.txt.gz",
+      "sha256": "17dd9fd914b597aedfef67238480158f1fa065a96dac252d4c7c3edbd215b8c1",
+      "hash_mode": "raw",
+      "raw_sha256_at_build": "17dd9fd914b597aedfef67238480158f1fa065a96dac252d4c7c3edbd215b8c1"
+    },
+    {
+      "path": "nebula/product_audits/entry144_dfe_calibrated_pvt_20260910/pvt_sf_vdd1.00_t0/terminals.txt.gz",
+      "sha256": "01e23c4c931d073a01f0182bc02aea77a8de886ad08ce4ba1a6e2d31c2ac0353",
+      "hash_mode": "raw",
+      "raw_sha256_at_build": "01e23c4c931d073a01f0182bc02aea77a8de886ad08ce4ba1a6e2d31c2ac0353"
+    },
+    {
+      "path": "nebula/product_audits/entry144_dfe_calibrated_pvt_20260910/pvt_sf_vdd1.00_t0/trace.txt.gz",
+      "sha256": "89afea98e2e1c5676b19026297e86260c3f1585661cf777d7ed0376fd55963f7",
+      "hash_mode": "raw",
+      "raw_sha256_at_build": "89afea98e2e1c5676b19026297e86260c3f1585661cf777d7ed0376fd55963f7"
+    },
+    {
+      "path": "nebula/product_audits/entry144_dfe_calibrated_pvt_20260910/pvt_sf_vdd1.00_t125/terminals.txt.gz",
+      "sha256": "ca1e40015d328ab32273edf33192a8cd90247d7a2d5e0ad7d5f60db84a388c6b",
+      "hash_mode": "raw",
+      "raw_sha256_at_build": "ca1e40015d328ab32273edf33192a8cd90247d7a2d5e0ad7d5f60db84a388c6b"
+    },
+    {
+      "path": "nebula/product_audits/entry144_dfe_calibrated_pvt_20260910/pvt_sf_vdd1.00_t125/trace.txt.gz",
+      "sha256": "9f20004382f4afaa235ed4196988bdf2258dbff7e2d841fababfe93eba04df77",
+      "hash_mode": "raw",
+      "raw_sha256_at_build": "9f20004382f4afaa235ed4196988bdf2258dbff7e2d841fababfe93eba04df77"
+    },
+    {
+      "path": "nebula/product_audits/entry144_dfe_calibrated_pvt_20260910/pvt_sf_vdd1.00_t27/terminals.txt.gz",
+      "sha256": "363309f93bd30cdc66126dbb18dffd05cb7a98d1344bfce9e484a588e20685b2",
+      "hash_mode": "raw",
+      "raw_sha256_at_build": "363309f93bd30cdc66126dbb18dffd05cb7a98d1344bfce9e484a588e20685b2"
+    },
+    {
+      "path": "nebula/product_audits/entry144_dfe_calibrated_pvt_20260910/pvt_sf_vdd1.00_t27/trace.txt.gz",
+      "sha256": "90df8032688dedb4b3867bb58257a7930b01cf9aa172b77e03c6e10740f3edad",
+      "hash_mode": "raw",
+      "raw_sha256_at_build": "90df8032688dedb4b3867bb58257a7930b01cf9aa172b77e03c6e10740f3edad"
+    },
+    {
+      "path": "nebula/product_audits/entry144_dfe_calibrated_pvt_20260910/pvt_sf_vdd1.05_t0/terminals.txt.gz",
+      "sha256": "49b30dd3f774d06126e640bf3913169b11912a9fc571819c3ed6682562a2ea49",
+      "hash_mode": "raw",
+      "raw_sha256_at_build": "49b30dd3f774d06126e640bf3913169b11912a9fc571819c3ed6682562a2ea49"
+    },
+    {
+      "path": "nebula/product_audits/entry144_dfe_calibrated_pvt_20260910/pvt_sf_vdd1.05_t0/trace.txt.gz",
+      "sha256": "102e337153b5a4e969e38bf3ebf27006a83adab4ea49ee72f822031b3bfab80e",
+      "hash_mode": "raw",
+      "raw_sha256_at_build": "102e337153b5a4e969e38bf3ebf27006a83adab4ea49ee72f822031b3bfab80e"
+    },
+    {
+      "path": "nebula/product_audits/entry144_dfe_calibrated_pvt_20260910/pvt_sf_vdd1.05_t125/terminals.txt.gz",
+      "sha256": "a92584887a94d3a7b97f17451f6081c6cf1051bd722cd7a32c4205ec1ce0dcbb",
+      "hash_mode": "raw",
+      "raw_sha256_at_build": "a92584887a94d3a7b97f17451f6081c6cf1051bd722cd7a32c4205ec1ce0dcbb"
+    },
+    {
+      "path": "nebula/product_audits/entry144_dfe_calibrated_pvt_20260910/pvt_sf_vdd1.05_t125/trace.txt.gz",
+      "sha256": "40281e49f3b67e0068045cabe29299a7a29572e95008f335d59918ca9352b3b0",
+      "hash_mode": "raw",
+      "raw_sha256_at_build": "40281e49f3b67e0068045cabe29299a7a29572e95008f335d59918ca9352b3b0"
+    },
+    {
+      "path": "nebula/product_audits/entry144_dfe_calibrated_pvt_20260910/pvt_sf_vdd1.05_t27/terminals.txt.gz",
+      "sha256": "34841bc213f60af0cef49a6e3af80d26ac1759b26bba97f1f6bc15785744bca8",
+      "hash_mode": "raw",
+      "raw_sha256_at_build": "34841bc213f60af0cef49a6e3af80d26ac1759b26bba97f1f6bc15785744bca8"
+    },
+    {
+      "path": "nebula/product_audits/entry144_dfe_calibrated_pvt_20260910/pvt_sf_vdd1.05_t27/trace.txt.gz",
+      "sha256": "cc16d20241c113dcfa20e58e20e757b5784b377ee4c5f2196c671983a7526c93",
+      "hash_mode": "raw",
+      "raw_sha256_at_build": "cc16d20241c113dcfa20e58e20e757b5784b377ee4c5f2196c671983a7526c93"
+    },
+    {
+      "path": "nebula/product_audits/entry144_dfe_calibrated_pvt_20260910/pvt_ss_vdd0.95_t0/terminals.txt.gz",
+      "sha256": "15c1d2376ba0af8d5631b112b77dd60c7f46546370f0b866fff922acd4289ba1",
+      "hash_mode": "raw",
+      "raw_sha256_at_build": "15c1d2376ba0af8d5631b112b77dd60c7f46546370f0b866fff922acd4289ba1"
+    },
+    {
+      "path": "nebula/product_audits/entry144_dfe_calibrated_pvt_20260910/pvt_ss_vdd0.95_t0/trace.txt.gz",
+      "sha256": "aaaaaa129ba5f9423c341cf6fa95df344c09485cf5f6a7c3462ade89d572ebc7",
+      "hash_mode": "raw",
+      "raw_sha256_at_build": "aaaaaa129ba5f9423c341cf6fa95df344c09485cf5f6a7c3462ade89d572ebc7"
+    },
+    {
+      "path": "nebula/product_audits/entry144_dfe_calibrated_pvt_20260910/pvt_ss_vdd0.95_t125/terminals.txt.gz",
+      "sha256": "bb4ff71f32be771faed71ebb6aaeda97f91487992ec0ddb8143098bb2aa21465",
+      "hash_mode": "raw",
+      "raw_sha256_at_build": "bb4ff71f32be771faed71ebb6aaeda97f91487992ec0ddb8143098bb2aa21465"
+    },
+    {
+      "path": "nebula/product_audits/entry144_dfe_calibrated_pvt_20260910/pvt_ss_vdd0.95_t125/trace.txt.gz",
+      "sha256": "303e8db419ac7683a1c082e4aa598e3ea57ac8d900be942ca0e793ade6c50326",
+      "hash_mode": "raw",
+      "raw_sha256_at_build": "303e8db419ac7683a1c082e4aa598e3ea57ac8d900be942ca0e793ade6c50326"
+    },
+    {
+      "path": "nebula/product_audits/entry144_dfe_calibrated_pvt_20260910/pvt_ss_vdd0.95_t27/terminals.txt.gz",
+      "sha256": "56e137fd9ba312fdc79392bbc8e6dd2c9a6e1943c0d117287d94adda23071e18",
+      "hash_mode": "raw",
+      "raw_sha256_at_build": "56e137fd9ba312fdc79392bbc8e6dd2c9a6e1943c0d117287d94adda23071e18"
+    },
+    {
+      "path": "nebula/product_audits/entry144_dfe_calibrated_pvt_20260910/pvt_ss_vdd0.95_t27/trace.txt.gz",
+      "sha256": "57724ff445dbb8e7f9dba319b1182fd36ff0c990df7d2e668b7e9deeea5eef8d",
+      "hash_mode": "raw",
+      "raw_sha256_at_build": "57724ff445dbb8e7f9dba319b1182fd36ff0c990df7d2e668b7e9deeea5eef8d"
+    },
+    {
+      "path": "nebula/product_audits/entry144_dfe_calibrated_pvt_20260910/pvt_ss_vdd1.00_t0/terminals.txt.gz",
+      "sha256": "90ae450ac69e6d29fac8dacd881b9b8c1ef5ac2d73b1082b0c291b1a0681c4cb",
+      "hash_mode": "raw",
+      "raw_sha256_at_build": "90ae450ac69e6d29fac8dacd881b9b8c1ef5ac2d73b1082b0c291b1a0681c4cb"
+    },
+    {
+      "path": "nebula/product_audits/entry144_dfe_calibrated_pvt_20260910/pvt_ss_vdd1.00_t0/trace.txt.gz",
+      "sha256": "28411f43974277fa9fec5a1aa02989149a11e8eec6e0610e4198e082220d8438",
+      "hash_mode": "raw",
+      "raw_sha256_at_build": "28411f43974277fa9fec5a1aa02989149a11e8eec6e0610e4198e082220d8438"
+    },
+    {
+      "path": "nebula/product_audits/entry144_dfe_calibrated_pvt_20260910/pvt_ss_vdd1.00_t125/terminals.txt.gz",
+      "sha256": "c9650def7a1b7226fdacbd8f567236175deee330b220389249e6390c71736a14",
+      "hash_mode": "raw",
+      "raw_sha256_at_build": "c9650def7a1b7226fdacbd8f567236175deee330b220389249e6390c71736a14"
+    },
+    {
+      "path": "nebula/product_audits/entry144_dfe_calibrated_pvt_20260910/pvt_ss_vdd1.00_t125/trace.txt.gz",
+      "sha256": "b598e6dc59bfea82fa9ef290580b9a4006451a9cc2095bdd431bc8c3373e9453",
+      "hash_mode": "raw",
+      "raw_sha256_at_build": "b598e6dc59bfea82fa9ef290580b9a4006451a9cc2095bdd431bc8c3373e9453"
+    },
+    {
+      "path": "nebula/product_audits/entry144_dfe_calibrated_pvt_20260910/pvt_ss_vdd1.00_t27/terminals.txt.gz",
+      "sha256": "521c4e234718dac7894457b695c5d14e604918fd4800d20f5e8387aed6f32902",
+      "hash_mode": "raw",
+      "raw_sha256_at_build": "521c4e234718dac7894457b695c5d14e604918fd4800d20f5e8387aed6f32902"
+    },
+    {
+      "path": "nebula/product_audits/entry144_dfe_calibrated_pvt_20260910/pvt_ss_vdd1.00_t27/trace.txt.gz",
+      "sha256": "d5aa69db054c9c6c3249fe83e2bbd3fb6e689536e2d60754bc1693811a445cfb",
+      "hash_mode": "raw",
+      "raw_sha256_at_build": "d5aa69db054c9c6c3249fe83e2bbd3fb6e689536e2d60754bc1693811a445cfb"
+    },
+    {
+      "path": "nebula/product_audits/entry144_dfe_calibrated_pvt_20260910/pvt_ss_vdd1.05_t0/terminals.txt.gz",
+      "sha256": "988c926509acc01ef005ca1e31c5a4ef7735b0efa7b7463f813062c6bd47429c",
+      "hash_mode": "raw",
+      "raw_sha256_at_build": "988c926509acc01ef005ca1e31c5a4ef7735b0efa7b7463f813062c6bd47429c"
+    },
+    {
+      "path": "nebula/product_audits/entry144_dfe_calibrated_pvt_20260910/pvt_ss_vdd1.05_t0/trace.txt.gz",
+      "sha256": "91e83d74a4aa2f7fd3b505167d267da5ed9d07fba18785d562c2fd4d4794e431",
+      "hash_mode": "raw",
+      "raw_sha256_at_build": "91e83d74a4aa2f7fd3b505167d267da5ed9d07fba18785d562c2fd4d4794e431"
+    },
+    {
+      "path": "nebula/product_audits/entry144_dfe_calibrated_pvt_20260910/pvt_ss_vdd1.05_t125/terminals.txt.gz",
+      "sha256": "9a5228e4020fbc902cc42b1bde4678f6b5be0d57c6b4ddb9484dd3b15555eff7",
+      "hash_mode": "raw",
+      "raw_sha256_at_build": "9a5228e4020fbc902cc42b1bde4678f6b5be0d57c6b4ddb9484dd3b15555eff7"
+    },
+    {
+      "path": "nebula/product_audits/entry144_dfe_calibrated_pvt_20260910/pvt_ss_vdd1.05_t125/trace.txt.gz",
+      "sha256": "98c1d2a986a50052ff67368123ccc7adb862469694913a2acd0576257de99eee",
+      "hash_mode": "raw",
+      "raw_sha256_at_build": "98c1d2a986a50052ff67368123ccc7adb862469694913a2acd0576257de99eee"
+    },
+    {
+      "path": "nebula/product_audits/entry144_dfe_calibrated_pvt_20260910/pvt_ss_vdd1.05_t27/terminals.txt.gz",
+      "sha256": "6777305f6786e9d96ad034d815e3896c0fb2b62ec234c215f5ea8899f0f51cba",
+      "hash_mode": "raw",
+      "raw_sha256_at_build": "6777305f6786e9d96ad034d815e3896c0fb2b62ec234c215f5ea8899f0f51cba"
+    },
+    {
+      "path": "nebula/product_audits/entry144_dfe_calibrated_pvt_20260910/pvt_ss_vdd1.05_t27/trace.txt.gz",
+      "sha256": "2ceb99b5aecdd5cc6c8717b142eb956b9c332d22d8e440e2515be2c25f62184f",
+      "hash_mode": "raw",
+      "raw_sha256_at_build": "2ceb99b5aecdd5cc6c8717b142eb956b9c332d22d8e440e2515be2c25f62184f"
+    },
+    {
+      "path": "nebula/product_audits/entry144_dfe_calibrated_pvt_20260910/pvt_tt_vdd0.95_t0/terminals.txt.gz",
+      "sha256": "1ebba64b9c78cd5e6d1e85514f6b2c921a8535c158f0bea518cdd4a1a2d18e29",
+      "hash_mode": "raw",
+      "raw_sha256_at_build": "1ebba64b9c78cd5e6d1e85514f6b2c921a8535c158f0bea518cdd4a1a2d18e29"
+    },
+    {
+      "path": "nebula/product_audits/entry144_dfe_calibrated_pvt_20260910/pvt_tt_vdd0.95_t0/trace.txt.gz",
+      "sha256": "dcfcc673219938d44125b3fc16c70feec3ffe35e06a14373cb9e5ef5bb5c74bc",
+      "hash_mode": "raw",
+      "raw_sha256_at_build": "dcfcc673219938d44125b3fc16c70feec3ffe35e06a14373cb9e5ef5bb5c74bc"
+    },
+    {
+      "path": "nebula/product_audits/entry144_dfe_calibrated_pvt_20260910/pvt_tt_vdd0.95_t125/terminals.txt.gz",
+      "sha256": "c102cf5dbbc60e1be2d8de118cf3b5908f1202acbd14da72ee5b1ebb05bad07b",
+      "hash_mode": "raw",
+      "raw_sha256_at_build": "c102cf5dbbc60e1be2d8de118cf3b5908f1202acbd14da72ee5b1ebb05bad07b"
+    },
+    {
+      "path": "nebula/product_audits/entry144_dfe_calibrated_pvt_20260910/pvt_tt_vdd0.95_t125/trace.txt.gz",
+      "sha256": "72a6d7045c926040593ba9ddbbbc9d4eeb13634f21d568e9b6eb84e7f3c3fcf3",
+      "hash_mode": "raw",
+      "raw_sha256_at_build": "72a6d7045c926040593ba9ddbbbc9d4eeb13634f21d568e9b6eb84e7f3c3fcf3"
+    },
+    {
+      "path": "nebula/product_audits/entry144_dfe_calibrated_pvt_20260910/pvt_tt_vdd0.95_t27/terminals.txt.gz",
+      "sha256": "f2da4ddc479b83aa0153d11c507b1fa0f0be2e0508412b7996889a56061ddb88",
+      "hash_mode": "raw",
+      "raw_sha256_at_build": "f2da4ddc479b83aa0153d11c507b1fa0f0be2e0508412b7996889a56061ddb88"
+    },
+    {
+      "path": "nebula/product_audits/entry144_dfe_calibrated_pvt_20260910/pvt_tt_vdd0.95_t27/trace.txt.gz",
+      "sha256": "67fda1aa5086e08c85d818ca6a399dfc8e30e3241b7ffdfd8d0836a709a98ace",
+      "hash_mode": "raw",
+      "raw_sha256_at_build": "67fda1aa5086e08c85d818ca6a399dfc8e30e3241b7ffdfd8d0836a709a98ace"
+    },
+    {
+      "path": "nebula/product_audits/entry144_dfe_calibrated_pvt_20260910/pvt_tt_vdd1.00_t0/terminals.txt.gz",
+      "sha256": "c09c6e83fe68dea666db31c9cef1a0dc856ebf7d7d31a128af711a8a932a5d5e",
+      "hash_mode": "raw",
+      "raw_sha256_at_build": "c09c6e83fe68dea666db31c9cef1a0dc856ebf7d7d31a128af711a8a932a5d5e"
+    },
+    {
+      "path": "nebula/product_audits/entry144_dfe_calibrated_pvt_20260910/pvt_tt_vdd1.00_t0/trace.txt.gz",
+      "sha256": "5330cfcc7e88042593c8db49acc53cbd75b876ff66beb6056f3ecfecfaa9486d",
+      "hash_mode": "raw",
+      "raw_sha256_at_build": "5330cfcc7e88042593c8db49acc53cbd75b876ff66beb6056f3ecfecfaa9486d"
+    },
+    {
+      "path": "nebula/product_audits/entry144_dfe_calibrated_pvt_20260910/pvt_tt_vdd1.00_t125/terminals.txt.gz",
+      "sha256": "9a494765f69e8f0327a0157f004ba86b47f8807aec93adeb814c1028b1a909ed",
+      "hash_mode": "raw",
+      "raw_sha256_at_build": "9a494765f69e8f0327a0157f004ba86b47f8807aec93adeb814c1028b1a909ed"
+    },
+    {
+      "path": "nebula/product_audits/entry144_dfe_calibrated_pvt_20260910/pvt_tt_vdd1.00_t125/trace.txt.gz",
+      "sha256": "e00565816d99dc3d735241fa0749254a663115e3c733d3b31f5735836d3bc290",
+      "hash_mode": "raw",
+      "raw_sha256_at_build": "e00565816d99dc3d735241fa0749254a663115e3c733d3b31f5735836d3bc290"
+    },
+    {
+      "path": "nebula/product_audits/entry144_dfe_calibrated_pvt_20260910/pvt_tt_vdd1.00_t27/terminals.txt.gz",
+      "sha256": "a08afa51af3501e195ffe560cfa3abf60d5a3000fbb623aac442e9848cf2945b",
+      "hash_mode": "raw",
+      "raw_sha256_at_build": "a08afa51af3501e195ffe560cfa3abf60d5a3000fbb623aac442e9848cf2945b"
+    },
+    {
+      "path": "nebula/product_audits/entry144_dfe_calibrated_pvt_20260910/pvt_tt_vdd1.00_t27/trace.txt.gz",
+      "sha256": "c0607f6b2baff56a5316878dc768bc9fe22f534816e2cc1cd480e65e80ded943",
+      "hash_mode": "raw",
+      "raw_sha256_at_build": "c0607f6b2baff56a5316878dc768bc9fe22f534816e2cc1cd480e65e80ded943"
+    },
+    {
+      "path": "nebula/product_audits/entry144_dfe_calibrated_pvt_20260910/pvt_tt_vdd1.05_t0/terminals.txt.gz",
+      "sha256": "d6993088260a8ca5cb8991adff8ac7caa8e896ef22a49af88f96f842ee499c5f",
+      "hash_mode": "raw",
+      "raw_sha256_at_build": "d6993088260a8ca5cb8991adff8ac7caa8e896ef22a49af88f96f842ee499c5f"
+    },
+    {
+      "path": "nebula/product_audits/entry144_dfe_calibrated_pvt_20260910/pvt_tt_vdd1.05_t0/trace.txt.gz",
+      "sha256": "106611c30bff482dbbbc79692dd73623256ec7682fb9b032a342e065e7506f98",
+      "hash_mode": "raw",
+      "raw_sha256_at_build": "106611c30bff482dbbbc79692dd73623256ec7682fb9b032a342e065e7506f98"
+    },
+    {
+      "path": "nebula/product_audits/entry144_dfe_calibrated_pvt_20260910/pvt_tt_vdd1.05_t125/terminals.txt.gz",
+      "sha256": "2b98d54e50535700ef5034cdf496848c8c42a0d3e474aae9e4a020928859f538",
+      "hash_mode": "raw",
+      "raw_sha256_at_build": "2b98d54e50535700ef5034cdf496848c8c42a0d3e474aae9e4a020928859f538"
+    },
+    {
+      "path": "nebula/product_audits/entry144_dfe_calibrated_pvt_20260910/pvt_tt_vdd1.05_t125/trace.txt.gz",
+      "sha256": "b08fd2f7ca09d56864016abb27e3ce6220949461b84439018c1d0a58a5de1683",
+      "hash_mode": "raw",
+      "raw_sha256_at_build": "b08fd2f7ca09d56864016abb27e3ce6220949461b84439018c1d0a58a5de1683"
+    },
+    {
+      "path": "nebula/product_audits/entry144_dfe_calibrated_pvt_20260910/pvt_tt_vdd1.05_t27/terminals.txt.gz",
+      "sha256": "f9e9f21dff0de1f6d489055ee7ae0d310e2813551da47aff5816bb1b3ff332dd",
+      "hash_mode": "raw",
+      "raw_sha256_at_build": "f9e9f21dff0de1f6d489055ee7ae0d310e2813551da47aff5816bb1b3ff332dd"
+    },
+    {
+      "path": "nebula/product_audits/entry144_dfe_calibrated_pvt_20260910/pvt_tt_vdd1.05_t27/trace.txt.gz",
+      "sha256": "4b3ebe87c8fe4c92431aa4dad68bbe0e2c7c83085fa3a904ede2c4ecf6fa49cf",
+      "hash_mode": "raw",
+      "raw_sha256_at_build": "4b3ebe87c8fe4c92431aa4dad68bbe0e2c7c83085fa3a904ede2c4ecf6fa49cf"
+    }
+  ]
+}

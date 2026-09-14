@@ -1,0 +1,39 @@
+{
+    "status":  "PASS",
+    "reviewed_at":  "2026-09-14T21:11:54.3123177+05:30",
+    "document_sha256":  "09e1c00a5d87f91c6f674db416b1661325d37a5dfd2035c7bb335625feb7bd13",
+    "actual_pages":  3,
+    "pages":  [
+                  {
+                      "page":  1,
+                      "path":  "tmp/final-submission-demo/render-final/page-1.png",
+                      "sha256":  "3b75e2980dd486a85775df71245fb2526b1dc0887f52f56857fdac18160ef95b",
+                      "visual_review":  "PASS; readable complete text, no clipping or overlap, clean margins and footer"
+                  },
+                  {
+                      "page":  2,
+                      "path":  "tmp/final-submission-demo/render-final/page-2.png",
+                      "sha256":  "4722ecaf117fc518124e26638412c9e752b9fcb437a31a99d93123a08ec922ee",
+                      "visual_review":  "PASS; readable complete text, no clipping or overlap, clean margins and footer"
+                  },
+                  {
+                      "page":  3,
+                      "path":  "tmp/final-submission-demo/render-final/page-3.png",
+                      "sha256":  "59df4b3f4d1a8d66bef394aeaf5fd3f38f79f4eff6315c4e958496b5ff0ffefe",
+                      "visual_review":  "PASS; readable complete text, no clipping or overlap, clean margins and footer"
+                  }
+              ],
+    "renderer":  "Canonical documents/render_docx.py from bundled documents skill 26.909.12148",
+    "backend":  "Isolated LibreOffice Portable 26.2.4, extracted under ignored task scratch space",
+    "soffice":  "C:\\Users\\DELL\\Desktop\\serdes-dsp-framework-main\\tmp\\final-submission-demo\\LibreOfficePortable\\App\\libreoffice\\program\\soffice.exe",
+    "portable_installer_sha256":  "4bde93374aef4409243505b20d16561a4628ac7591457dd01fc6e1ccf571ba65",
+    "portable_installer_authenticode":  "Valid",
+    "portable_official_checksum_url":  "https://download.documentfoundation.org/libreoffice/portable/26.2.4/LibreOfficePortable_26.2.4_MultilingualStandard.paf.exe.mirrorlist",
+    "poppler":  "C:/Users/DELL/.cache/codex-runtimes/codex-primary-runtime/dependencies/native/poppler/Library/bin",
+    "notes":  [
+                  "Initial render showed inherited blue Title border; source now removes inherited paragraph borders and font theme overrides.",
+                  "All three corrected final pages visually inspected.",
+                  "No desktop LibreOffice installation, system setting change or document upload.",
+                  "608 narration words; cue schedule is estimated, no video recorded or reviewed."
+              ]
+}

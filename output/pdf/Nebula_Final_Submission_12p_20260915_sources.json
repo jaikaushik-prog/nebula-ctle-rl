@@ -1,0 +1,513 @@
+{
+  "report": "Nebula_Final_Submission_12p_20260915.pdf",
+  "page_count": 12,
+  "report_sha256": "764d6f510168430d7386e2b5189f8fe19c6d1c0bef223818d0932bef85364446",
+  "page_titles": [
+    "NEBULA",
+    "Requirements and evidence coverage",
+    "From specification to circuit",
+    "What the learned policy does",
+    "The circuit and its physical bias",
+    "Physical attenuation and peaking",
+    "From transistor response to eye",
+    "The integrated transistor receiver",
+    "Measured results and PVT scope",
+    "An inspectable automation receipt",
+    "The designer workflow",
+    "Conclusions and evidence guide"
+  ],
+  "preserved_reports": {
+    "Nebula_Submission_Report_20260914.pdf": "169845fac6690d16630a18d70d7118b0936b66ce9bca277aed7380ae2025c15f",
+    "Nebula_Competition_Report_Academic.pdf": "a573db02335879e0a6a0b3feb2c9eeea2172c2f3f4b4e4699dfc8123c8f90670",
+    "Nebula_Competition_Report.pdf": "3cd67ffc933b8f369d601a72f16e39295542780777ca5bccc797135278faf43b"
+  },
+  "content_bottoms_pt": [
+    741.37,
+    744.71,
+    716.17,
+    710.98,
+    773.0,
+    772.38,
+    726.05,
+    737.0,
+    762.22,
+    743.92,
+    766.8,
+    768.99
+  ],
+  "figures": [
+    {
+      "number": 1,
+      "page": 1,
+      "asset": "nebula/report/final_submission_assets/receiver.png",
+      "caption": "Calibrated transistor checkpoint. The feedback path is physical; clock and control generators remain external."
+    },
+    {
+      "number": 2,
+      "page": 3,
+      "asset": "nebula/report/final_submission_assets/architecture.png",
+      "caption": "Cached bank scoring and fresh physical acceptance are separate execution paths. The verifier controls acceptance; the policy proposes candidates."
+    },
+    {
+      "number": 3,
+      "page": 4,
+      "asset": "nebula/report/final_submission_assets/learning.png",
+      "caption": "Exposed matched controls, eight-visit cap. PPO plus shield improves mean quality; local random exploration achieves higher compliance. All arms retain the fixed start. [E4]"
+    },
+    {
+      "number": 4,
+      "page": 5,
+      "asset": "nebula/report/final_submission_assets/submission_core.png",
+      "caption": "Earlier verified fixed physical export [E6]. Rs/Cs here are drawn fixed values; shared net labels connect the attenuator and bias. NMOS bulks connect to ground."
+    },
+    {
+      "number": 5,
+      "page": 5,
+      "asset": "nebula/report/final_submission_assets/submission_bias.png",
+      "caption": "Physical PMOS reference/feed, poly bias resistor, diode-connected NMOS and MIM bypass [E6]. PMOS bulks connect to VDD. The bypass is a fixed capacitor."
+    },
+    {
+      "number": 6,
+      "page": 6,
+      "asset": "nebula/report/final_submission_assets/submission_attenuator.png",
+      "caption": "One leg of the earlier differential input attenuator [E6]; the other is identical. Three PMOS-switched shunts have real ON resistance and OFF parasitics."
+    },
+    {
+      "number": 7,
+      "page": 6,
+      "asset": "nebula/report/final_submission_assets/submission_ac.png",
+      "caption": "Absolute voltage gain and the 45-corner envelope of the earlier fixed CTLE [E6]. These curves do not establish analog PVT for the later integrated receiver."
+    },
+    {
+      "number": 8,
+      "page": 7,
+      "asset": "nebula/report/final_submission_assets/submission_eyes.png",
+      "caption": "Earlier fixed physical CTLE: modeled ideal-DFE eye ranges across 45 corners at each of seven constructed losses, totaling 315 conditions. Heights and widths are cursor metrics. [E6]"
+    },
+    {
+      "number": 9,
+      "page": 7,
+      "asset": "nebula/report/final_submission_assets/submission_dfe.png",
+      "caption": "Saved behavioral comparison [E6]. This CTLE already meets eye targets without cancellation; ideal feedback chiefly increases width margin. Four model policies are not four transistor DAC implementations."
+    },
+    {
+      "number": 10,
+      "page": 8,
+      "asset": "nebula/report/final_submission_assets/receiver.png",
+      "caption": "73-device integrated checkpoint: configurable CTLE, CML summer, master/slave memory and current DAC. Physical bleeders prevent floating inactive DAC tails. [E1]"
+    },
+    {
+      "number": 11,
+      "page": 8,
+      "asset": "nebula/report/final_submission_assets/eye.png",
+      "caption": "Saved transistor DFE-summer waveform overlay at nominal conditions [E1]. The finite, noiseless test scores 64 bits after settling on one constructed 7.5 dB channel."
+    },
+    {
+      "number": 12,
+      "page": 9,
+      "asset": "nebula/report/final_submission_assets/pvt.png",
+      "caption": "All 45 fixed-control link points, grouped by MOS process; each group includes three supplies and three temperatures. Dashed lines are the eye-height and VDD-power limits. [E2]"
+    },
+    {
+      "number": 13,
+      "page": 11,
+      "asset": "nebula/report/final_submission_assets/desktop.png",
+      "caption": "Design Explorer from the local application. A shared circuit canvas and adjacent inspector connect the selected circuit to response, specifications, sizing and its run record. [E9]"
+    }
+  ],
+  "hardware_archive_checks": [
+    {
+      "verified_files": 137,
+      "verified_archives": 10,
+      "manifest_sha256": "59a7deec832a1d744ad7175bd1eeed7fb0d21b376e1d03c15acb24e1888c99c7",
+      "scope": "Exact compressed archives and non-trace files; raw equivalence inherited from pinned original index, not re-decompressed."
+    },
+    {
+      "verified_files": 362,
+      "verified_archives": 90,
+      "manifest_sha256": "c5213fb228fc450b882b2ce7b4be7219adc6f352d63315b5195af32a4e63afe1",
+      "scope": "Exact compressed archives and non-trace files; raw equivalence inherited from pinned original index, not re-decompressed."
+    },
+    {
+      "status": "PASS",
+      "raw_verification": "output/pdf/Nebula_Final_Submission_12p_20260915_raw_verification.json",
+      "sha256": "fef30241f591cfae617facddb2312bc5ffc42c17840b4d0b1c0e3b2decee51d8"
+    }
+  ],
+  "receipt": {
+    "conditions": 315,
+    "policy_visits": 2406,
+    "rl_selected": 81,
+    "centered": 185,
+    "recovered": 49,
+    "table_checks": 119808,
+    "setting": 425,
+    "wall_s": 5.8936417999939295,
+    "export_wall_s": 0.22458719999849563,
+    "simulations": {
+      "search": 0,
+      "measure": 0,
+      "total": 1,
+      "export": 1
+    },
+    "fallback_example": {
+      "visits": [
+        360,
+        296,
+        232,
+        168,
+        104,
+        168,
+        232
+      ],
+      "selected": 496,
+      "reason": "no-compliant-rl-proposal"
+    }
+  },
+  "cover_fields": "11 intentionally blank AcroForm fields",
+  "source_claim_map": {
+    "E1": [
+      1,
+      2,
+      5,
+      6,
+      7,
+      8,
+      9
+    ],
+    "E2": [
+      1,
+      2,
+      8,
+      9
+    ],
+    "E3": [
+      3,
+      4
+    ],
+    "E4": [
+      4,
+      10
+    ],
+    "E5": [
+      10
+    ],
+    "E6": [
+      3,
+      5,
+      6,
+      7
+    ],
+    "E7": [
+      1,
+      2,
+      5
+    ],
+    "E8": [
+      10
+    ],
+    "E9": [
+      11
+    ],
+    "E10": [
+      9
+    ]
+  },
+  "sources": [
+    {
+      "path": "nebula/product_audits/submission_analog_pvt_20260914/second_attempt/summary.json",
+      "sha256": "da6095639be9f93349f00206aa2ec4b0ad06ac38a8b61d3154dfe6b71f8fe47b",
+      "hash_mode": "raw",
+      "raw_sha256_at_build": "da6095639be9f93349f00206aa2ec4b0ad06ac38a8b61d3154dfe6b71f8fe47b"
+    },
+    {
+      "path": "output/pdf/Nebula_Submission_Report_20260914_sources.json",
+      "sha256": "90642d8f3228351ca76687ea88477543063b53c3a96ecf2bf81270a671ab9f85",
+      "hash_mode": "lf-text",
+      "raw_sha256_at_build": "68f0b93b1c3a322ae89e620681d43fc790f02b45de7bfce6685c14d5a910fe44"
+    },
+    {
+      "path": "nebula/report/final_submission.py",
+      "sha256": "6e57f5072540b2fb7e1cc1b8500a91d04067ddc1a91e7b8ee8bf02ab29d53dba",
+      "hash_mode": "lf-text",
+      "raw_sha256_at_build": "6e57f5072540b2fb7e1cc1b8500a91d04067ddc1a91e7b8ee8bf02ab29d53dba"
+    },
+    {
+      "path": "nebula/report/check_final_submission.py",
+      "sha256": "4751374a02a2ecfa572c35b2fac188d86be02ffd987f83a8a1cbdf80905de91a",
+      "hash_mode": "lf-text",
+      "raw_sha256_at_build": "4751374a02a2ecfa572c35b2fac188d86be02ffd987f83a8a1cbdf80905de91a"
+    },
+    {
+      "path": "nebula/report/submission_story.py",
+      "sha256": "b5d25e7eba92a5058da84a39dff5c77bce9bb9c14a22cc52c7131b0da507dcb8",
+      "hash_mode": "lf-text",
+      "raw_sha256_at_build": "b5d25e7eba92a5058da84a39dff5c77bce9bb9c14a22cc52c7131b0da507dcb8"
+    },
+    {
+      "path": "nebula/report/competition_submission.py",
+      "sha256": "9a0f6faee11b78692d31aa7716d781be351d61dcbb5c6787a85f63b2817831d4",
+      "hash_mode": "lf-text",
+      "raw_sha256_at_build": "69750339adb60584e932475ac3b507b64a46d67bc5bb56115f44e0a58abbc813"
+    },
+    {
+      "path": "nebula/product_audits/entry143_dfe_calibrated_verification_20260910/summary.json",
+      "sha256": "14d7d368163652235378e1566e4800a7d26ec2a550922300a015978b74602d96",
+      "hash_mode": "raw",
+      "raw_sha256_at_build": "14d7d368163652235378e1566e4800a7d26ec2a550922300a015978b74602d96"
+    },
+    {
+      "path": "nebula/product_audits/entry144_dfe_calibrated_pvt_20260910/summary.json",
+      "sha256": "21a6b7cb5d81bd0e23981d2cc3741a9a0147b6793f401d63c646c5e08f06e424",
+      "hash_mode": "raw",
+      "raw_sha256_at_build": "21a6b7cb5d81bd0e23981d2cc3741a9a0147b6793f401d63c646c5e08f06e424"
+    },
+    {
+      "path": "nebula/product_audits/entry143_dfe_calibrated_verification_20260910/link_state0_tol1e-05_step5ps/design.cir",
+      "sha256": "c1b2598b57278cbc1101bf8600284bcf95f853cd612c36ceb1b809dade89bede",
+      "hash_mode": "raw",
+      "raw_sha256_at_build": "c1b2598b57278cbc1101bf8600284bcf95f853cd612c36ceb1b809dade89bede"
+    },
+    {
+      "path": "nebula/experiments/shielded_policy_final_results.json",
+      "sha256": "f2a2509de8efbc891ce6e953729054585581d80edd33a6148f5a701346e0c0d7",
+      "hash_mode": "lf-text",
+      "raw_sha256_at_build": "942cddd8b62fc862d81602af87182d0841533505fb045ce04eb0dcada8919fea"
+    },
+    {
+      "path": "nebula/product_demo/rl_hybrid_9db_1p9ghz/design.json",
+      "sha256": "906bcedce089909acf3504462fad6270d8712a6f9f2c521ef35df356c694e4f3",
+      "hash_mode": "raw",
+      "raw_sha256_at_build": "906bcedce089909acf3504462fad6270d8712a6f9f2c521ef35df356c694e4f3"
+    },
+    {
+      "path": "nebula/product_demo/physical_bias_9db_1p9ghz_20260906/physical_evidence/summary.json",
+      "sha256": "f2cb0716ccb4105fd0f9bac808f852c69413813c07fe68c3b00ab47c2b9fb6b8",
+      "hash_mode": "raw",
+      "raw_sha256_at_build": "f2cb0716ccb4105fd0f9bac808f852c69413813c07fe68c3b00ab47c2b9fb6b8"
+    },
+    {
+      "path": "nebula/product_demo/physical_bias_9db_1p9ghz_20260906/physical_evidence/evidence_sha256.json",
+      "sha256": "56a0f26deaeb36e7c6aabb9cd3f4c7fdf8cb55407836940b05090a7d5e863f4f",
+      "hash_mode": "raw",
+      "raw_sha256_at_build": "56a0f26deaeb36e7c6aabb9cd3f4c7fdf8cb55407836940b05090a7d5e863f4f"
+    },
+    {
+      "path": "nebula/product_audits/entry115_exhaustive_benchmark_20260908/summary.json",
+      "sha256": "b5c33e4584a4054ea21d6e8ff4f78f67834900862212f305f863cccc0fcbd9e6",
+      "hash_mode": "raw",
+      "raw_sha256_at_build": "b5c33e4584a4054ea21d6e8ff4f78f67834900862212f305f863cccc0fcbd9e6"
+    },
+    {
+      "path": "nebula/product_audits/entry115_exhaustive_benchmark_20260908/sha256.json",
+      "sha256": "1aba62510775e4aea36aa22f143acf27cb312bdfc682f01d1a2e1b7144232836",
+      "hash_mode": "raw",
+      "raw_sha256_at_build": "1aba62510775e4aea36aa22f143acf27cb312bdfc682f01d1a2e1b7144232836"
+    },
+    {
+      "path": "nebula/product_audits/entry115_physical_recovery_20260908/summary.json",
+      "sha256": "bb933902d381937a92f73a9d4cb63ae0fb636e5e3d678174669fe6b7e85b61a4",
+      "hash_mode": "raw",
+      "raw_sha256_at_build": "bb933902d381937a92f73a9d4cb63ae0fb636e5e3d678174669fe6b7e85b61a4"
+    },
+    {
+      "path": "nebula/product_audits/entry115_physical_recovery_20260908/sha256.json",
+      "sha256": "7a6da6bba3f45442918a0ef12184bf2e3567ee7a17b1cc4cd325a16294ebabd8",
+      "hash_mode": "raw",
+      "raw_sha256_at_build": "7a6da6bba3f45442918a0ef12184bf2e3567ee7a17b1cc4cd325a16294ebabd8"
+    },
+    {
+      "path": "nebula/POST_REVIEW_RESULTS.md",
+      "sha256": "57f30cf25e879f0f07d289a74f5fef394f44f03d3d8742ff11dd4388be657d3a",
+      "hash_mode": "lf-text",
+      "raw_sha256_at_build": "419fa4954a87215b525ed62883b7519353720ddba6d993a60e63e8f01eada9b2"
+    },
+    {
+      "path": "nebula/DFE_CALIBRATED_RESULTS.md",
+      "sha256": "f036b95be0891ec8d82c3997cd813d00c241f506a22a5b6fa87800bfa900ca08",
+      "hash_mode": "lf-text",
+      "raw_sha256_at_build": "f036b95be0891ec8d82c3997cd813d00c241f506a22a5b6fa87800bfa900ca08"
+    },
+    {
+      "path": "CLAUDEwa.md",
+      "sha256": "5076f967b4f8add98ec7d63402b7386caa503cff7a669b40971cda90eb1cec1b",
+      "hash_mode": "lf-text",
+      "raw_sha256_at_build": "5076f967b4f8add98ec7d63402b7386caa503cff7a669b40971cda90eb1cec1b"
+    },
+    {
+      "path": "nebula/rl/hybrid_designer.py",
+      "sha256": "067d4f38d55f4ee7423f8148e3d1d4031f99d31dbbc703a9accb2c34e9242da0",
+      "hash_mode": "lf-text",
+      "raw_sha256_at_build": "067d4f38d55f4ee7423f8148e3d1d4031f99d31dbbc703a9accb2c34e9242da0"
+    },
+    {
+      "path": "nebula/web/static/app.js",
+      "sha256": "a82640136592463c16f8319555aa48bfa846bd338b8d4066979bbb20093d1e1a",
+      "hash_mode": "lf-text",
+      "raw_sha256_at_build": "a82640136592463c16f8319555aa48bfa846bd338b8d4066979bbb20093d1e1a"
+    },
+    {
+      "path": "nebula/web/static/design_plots.js",
+      "sha256": "984d5cc6aecb06c789ad06c1ca126ae047c1abae234fd9c7931de37cb920118b",
+      "hash_mode": "lf-text",
+      "raw_sha256_at_build": "984d5cc6aecb06c789ad06c1ca126ae047c1abae234fd9c7931de37cb920118b"
+    },
+    {
+      "path": "nebula/web/design_visuals.py",
+      "sha256": "b12bc5468f124e3cb13ad185a85187c8799ff7bce5afd64ef6d5bcf0589971cd",
+      "hash_mode": "lf-text",
+      "raw_sha256_at_build": "b12bc5468f124e3cb13ad185a85187c8799ff7bce5afd64ef6d5bcf0589971cd"
+    },
+    {
+      "path": "nebula/web/hardware_checkpoint.py",
+      "sha256": "1d0c40ed61e5443e21f3fb62e12bc41dcc2a09f861891f608d48f79fe3c8c7df",
+      "hash_mode": "lf-text",
+      "raw_sha256_at_build": "1d0c40ed61e5443e21f3fb62e12bc41dcc2a09f861891f608d48f79fe3c8c7df"
+    },
+    {
+      "path": "nebula/web/hardware_visuals.py",
+      "sha256": "09669ed12dca1aaefd26e024c875712a034e81e97921cf1cfe8e25c6980d2ec4",
+      "hash_mode": "lf-text",
+      "raw_sha256_at_build": "09669ed12dca1aaefd26e024c875712a034e81e97921cf1cfe8e25c6980d2ec4"
+    },
+    {
+      "path": "nebula/experiments/evidence_archive.py",
+      "sha256": "f6ac2de40aa296ad7db2b41ce8c94a288bc09d5f393b935fe437b877dcaf0879",
+      "hash_mode": "lf-text",
+      "raw_sha256_at_build": "f6ac2de40aa296ad7db2b41ce8c94a288bc09d5f393b935fe437b877dcaf0879"
+    },
+    {
+      "path": "nebula/AUTOMATION_RECEIPT_20260914.md",
+      "sha256": "e3933c88f3dbedb08ea7f6ac380fe2b8958ff256194c15c2881563b25af00d2c",
+      "hash_mode": "lf-text",
+      "raw_sha256_at_build": "5ff17fbaba228560d364ae32e1e97fc5759f14a5b48ede992de77097da9b8a3e"
+    },
+    {
+      "path": "nebula/results/submission_receipt_20260914/receipt.json",
+      "sha256": "51ae22411ea4dd2ee73bd781aa1396d5a242980b0ce0d43e0e6865adaf339bff",
+      "hash_mode": "lf-text",
+      "raw_sha256_at_build": "51ae22411ea4dd2ee73bd781aa1396d5a242980b0ce0d43e0e6865adaf339bff"
+    },
+    {
+      "path": "nebula/product_audits/entry113_attribution_20260907/summary.json",
+      "sha256": "1a62cf339db5f38918420f7789edd11a29b29d018b62e3ca6608030e7b1f7dc2",
+      "hash_mode": "raw",
+      "raw_sha256_at_build": "1a62cf339db5f38918420f7789edd11a29b29d018b62e3ca6608030e7b1f7dc2"
+    },
+    {
+      "path": "nebula/product_audits/entry113_coverage_20260907/summary.json",
+      "sha256": "c30af98b628cb14a30f57dab5aeb9d188661927aa4e4234ac547bf7912956f1f",
+      "hash_mode": "raw",
+      "raw_sha256_at_build": "c30af98b628cb14a30f57dab5aeb9d188661927aa4e4234ac547bf7912956f1f"
+    },
+    {
+      "path": "nebula/product_audits/entry113_models_20260907/summary.json",
+      "sha256": "49bbb0aaedc62d8c16e11245531c3386d9c354694772afdf86db04fe42b67107",
+      "hash_mode": "raw",
+      "raw_sha256_at_build": "49bbb0aaedc62d8c16e11245531c3386d9c354694772afdf86db04fe42b67107"
+    },
+    {
+      "path": "nebula/product_audits/entry143_dfe_calibrated_verification_20260910/evidence_sha256.json",
+      "sha256": "59a7deec832a1d744ad7175bd1eeed7fb0d21b376e1d03c15acb24e1888c99c7",
+      "hash_mode": "raw",
+      "raw_sha256_at_build": "59a7deec832a1d744ad7175bd1eeed7fb0d21b376e1d03c15acb24e1888c99c7"
+    },
+    {
+      "path": "nebula/product_audits/entry143_dfe_calibrated_verification_20260910/trace_archives.json",
+      "sha256": "cf4f03cb11297c2644f37ccbe057b3b98d8f612d852a7dc9bc1c4df9db0a5bea",
+      "hash_mode": "raw",
+      "raw_sha256_at_build": "cf4f03cb11297c2644f37ccbe057b3b98d8f612d852a7dc9bc1c4df9db0a5bea"
+    },
+    {
+      "path": "nebula/product_audits/entry144_dfe_calibrated_pvt_20260910/evidence_sha256.json",
+      "sha256": "c5213fb228fc450b882b2ce7b4be7219adc6f352d63315b5195af32a4e63afe1",
+      "hash_mode": "raw",
+      "raw_sha256_at_build": "c5213fb228fc450b882b2ce7b4be7219adc6f352d63315b5195af32a4e63afe1"
+    },
+    {
+      "path": "nebula/product_audits/entry144_dfe_calibrated_pvt_20260910/trace_archives.json",
+      "sha256": "aa3446867c55114005bb3f1f99b7ec7a003a9280de4088ea11e75ed6ea3e83dc",
+      "hash_mode": "raw",
+      "raw_sha256_at_build": "aa3446867c55114005bb3f1f99b7ec7a003a9280de4088ea11e75ed6ea3e83dc"
+    },
+    {
+      "path": "nebula/report/final_submission_assets/architecture.png",
+      "sha256": "e3683d70eea88e7d0bb5469f04fedc7167cd6591c5d7df7e011119660686168d",
+      "hash_mode": "raw",
+      "raw_sha256_at_build": "e3683d70eea88e7d0bb5469f04fedc7167cd6591c5d7df7e011119660686168d"
+    },
+    {
+      "path": "nebula/report/final_submission_assets/desktop.png",
+      "sha256": "957b642351c0d1ec08432b624e5f9dc25577f876435dc6372f4d0a88fca90bbd",
+      "hash_mode": "raw",
+      "raw_sha256_at_build": "957b642351c0d1ec08432b624e5f9dc25577f876435dc6372f4d0a88fca90bbd"
+    },
+    {
+      "path": "nebula/report/final_submission_assets/eye.png",
+      "sha256": "62b34bab9841185fd2b06c2d0d0f43ff17aa86ad9449e943472f7876d5ba9d77",
+      "hash_mode": "raw",
+      "raw_sha256_at_build": "62b34bab9841185fd2b06c2d0d0f43ff17aa86ad9449e943472f7876d5ba9d77"
+    },
+    {
+      "path": "nebula/report/final_submission_assets/learning.png",
+      "sha256": "dff1e9a2b125009177b1912cb17ca977f2ad5376a97fdaf0758f1e8d11d3e542",
+      "hash_mode": "raw",
+      "raw_sha256_at_build": "dff1e9a2b125009177b1912cb17ca977f2ad5376a97fdaf0758f1e8d11d3e542"
+    },
+    {
+      "path": "nebula/report/final_submission_assets/pvt.png",
+      "sha256": "cc40c0b3a05fd8534ffd82f4294c03a72841a61a40acd26f9338f30850a5534a",
+      "hash_mode": "raw",
+      "raw_sha256_at_build": "cc40c0b3a05fd8534ffd82f4294c03a72841a61a40acd26f9338f30850a5534a"
+    },
+    {
+      "path": "nebula/report/final_submission_assets/receiver.png",
+      "sha256": "43cd2d1501f71a37561bf0d67e0a25bcb59da111f7d5976e7f75fb7dfe486fb3",
+      "hash_mode": "raw",
+      "raw_sha256_at_build": "43cd2d1501f71a37561bf0d67e0a25bcb59da111f7d5976e7f75fb7dfe486fb3"
+    },
+    {
+      "path": "nebula/report/final_submission_assets/submission_ac.png",
+      "sha256": "c49ac4864ae8c8c2aedbf1726bbb6a446cab731dcb92a8605fc18e42333f1eca",
+      "hash_mode": "raw",
+      "raw_sha256_at_build": "c49ac4864ae8c8c2aedbf1726bbb6a446cab731dcb92a8605fc18e42333f1eca"
+    },
+    {
+      "path": "nebula/report/final_submission_assets/submission_attenuator.png",
+      "sha256": "9376ba47c82da92a2932ec92a1248bc0fda1df05cec71042ed6cb465133a6a4e",
+      "hash_mode": "raw",
+      "raw_sha256_at_build": "9376ba47c82da92a2932ec92a1248bc0fda1df05cec71042ed6cb465133a6a4e"
+    },
+    {
+      "path": "nebula/report/final_submission_assets/submission_bias.png",
+      "sha256": "d470a69eb0ddf55408309acd73941a5be4d770408a7910ed7cae21a8f5a66420",
+      "hash_mode": "raw",
+      "raw_sha256_at_build": "d470a69eb0ddf55408309acd73941a5be4d770408a7910ed7cae21a8f5a66420"
+    },
+    {
+      "path": "nebula/report/final_submission_assets/submission_core.png",
+      "sha256": "35eb983f3bc4b6b5441949651e42dc128d2c7dfa5b04355b4f4fe9edffd7386b",
+      "hash_mode": "raw",
+      "raw_sha256_at_build": "35eb983f3bc4b6b5441949651e42dc128d2c7dfa5b04355b4f4fe9edffd7386b"
+    },
+    {
+      "path": "nebula/report/final_submission_assets/submission_dfe.png",
+      "sha256": "019aa15e12581f23f9d4e13e7c034ea716b41dc1e1d3ac1dd6aa719a7348f734",
+      "hash_mode": "raw",
+      "raw_sha256_at_build": "019aa15e12581f23f9d4e13e7c034ea716b41dc1e1d3ac1dd6aa719a7348f734"
+    },
+    {
+      "path": "nebula/report/final_submission_assets/submission_eyes.png",
+      "sha256": "034afa0c84d81962682a455e9b3590a29a131f1536d7af26182276bad4ebc7eb",
+      "hash_mode": "raw",
+      "raw_sha256_at_build": "034afa0c84d81962682a455e9b3590a29a131f1536d7af26182276bad4ebc7eb"
+    },
+    {
+      "path": "output/pdf/Nebula_Final_Submission_12p_20260915_raw_verification.json",
+      "sha256": "fef30241f591cfae617facddb2312bc5ffc42c17840b4d0b1c0e3b2decee51d8",
+      "hash_mode": "lf-text",
+      "raw_sha256_at_build": "fef30241f591cfae617facddb2312bc5ffc42c17840b4d0b1c0e3b2decee51d8"
+    }
+  ],
+  "scope": "Saved evidence only; no new simulation or training."
+}

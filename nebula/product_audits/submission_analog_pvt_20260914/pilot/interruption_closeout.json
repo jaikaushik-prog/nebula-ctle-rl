@@ -1,0 +1,245 @@
+{
+  "status": "INTERRUPTED_INCOMPLETE",
+  "closed_at_utc": "2026-09-14T15:31:11.340912+00:00",
+  "campaign_resumed": false,
+  "raw_measurements_overwritten": false,
+  "pilot_complete": false,
+  "full_receiver_verified": false,
+  "analog_pvt45_verified": false,
+  "stress_corner_measured": false,
+  "registered_max_calls": 12,
+  "completed_measurements": 4,
+  "launched_calls_observed": 5,
+  "incomplete_calls": [
+    "pvt_tt_vdd1.00_t27/tone_state0_tol1e-05_step5ps"
+  ],
+  "never_launched_calls": 7,
+  "completed_ledger_elapsed_seconds": 181.68437070000027,
+  "elapsed_scope": "last durable progress only; excludes incomplete fifth call and interruption; not campaign total",
+  "complete_campaign_wall_seconds": null,
+  "incomplete_call_wall_seconds": null,
+  "completed_simulator_wall_seconds": 166.67455050000035,
+  "source_snapshots_match_config": true,
+  "active_sources_match_snapshot": true,
+  "pdk_matches_snapshot_at_closeout": true,
+  "prior_manifest_proof": {
+    "verified_files": 137,
+    "verified_archives": 10,
+    "manifest_sha256": "59a7deec832a1d744ad7175bd1eeed7fb0d21b376e1d03c15acb24e1888c99c7"
+  },
+  "termination_cause": "Execution interrupted; precise process termination cause unestablished. No simulator process at closeout.",
+  "rows": [
+    {
+      "kind": "static",
+      "clock_state": 0,
+      "instrument_ok": true,
+      "initialization_valid": true,
+      "nominal_replay_matches": true,
+      "small_signal_specs_pass": true,
+      "positive_nyquist_pass": true,
+      "nyquist_boost_db": 8.64142904166697,
+      "target_match": true,
+      "hd3_model_pass": null,
+      "ctle_hd3": null,
+      "vdd_power_w": 0.00927626134737341,
+      "ctle_plus_dfe_vdd_power_w": null,
+      "simulator_wall_seconds": 28.110015500000372,
+      "measurement_wall_seconds": 28.24102340000036,
+      "model_warnings": {
+        "ignored_model_parameters": [
+          "isnoisy",
+          "p2",
+          "p3",
+          "q2",
+          "q3",
+          "sw_et"
+        ],
+        "passive_nonlinearity_verified": false,
+        "reliability_verified": false
+      },
+      "evidence_folder": "pvt_tt_vdd1.00_t27/static_state0_tol1e-05_step5ps",
+      "raw_replay_matches": true,
+      "result_sha256": "1bdbc3f9ddd99ab211aeb2d2afb19d9fcbeebacdc685196c0010f2e2d20e4317",
+      "deck_sha256": "df2be16c177395eabc387b812ea5c7b15afefbf9de7d1c1642e7cbc8333f6277",
+      "response": {
+        "dc_gain_db": -9.280212862071684,
+        "interior_peak": true,
+        "ac_shape_pass": true,
+        "boost_db": 8.743882759698478,
+        "peak_frequency_hz": 1903117755.0807912
+      },
+      "noise": {
+        "input_noise_vrms": 0.0006540509224963711,
+        "output_noise_vrms": 0.0004971044156906971,
+        "spectrum_reintegrated_vrms": [
+          0.0006560618556757241,
+          0.0004971521794385339
+        ],
+        "integral_relative_errors": [
+          0.003074581978537161,
+          9.608393393656378e-05
+        ],
+        "noise_limit_pass": true,
+        "band_hz": [
+          10000000.0,
+          5000000000.0
+        ],
+        "clocked_receiver_noise_verified": false,
+        "scope": "loaded CTLE output, held-clock DC small-signal model; not periodic receiver noise"
+      },
+      "signed_rs_switch_documented_ranges_ok": false
+    },
+    {
+      "kind": "static",
+      "clock_state": 1,
+      "instrument_ok": true,
+      "initialization_valid": true,
+      "nominal_replay_matches": true,
+      "small_signal_specs_pass": true,
+      "positive_nyquist_pass": true,
+      "nyquist_boost_db": 8.645756731582225,
+      "target_match": true,
+      "hd3_model_pass": null,
+      "ctle_hd3": null,
+      "vdd_power_w": 0.009280663703315201,
+      "ctle_plus_dfe_vdd_power_w": null,
+      "simulator_wall_seconds": 29.80568110000013,
+      "measurement_wall_seconds": 29.976755400000002,
+      "model_warnings": {
+        "ignored_model_parameters": [
+          "isnoisy",
+          "p2",
+          "p3",
+          "q2",
+          "q3",
+          "sw_et"
+        ],
+        "passive_nonlinearity_verified": false,
+        "reliability_verified": false
+      },
+      "evidence_folder": "pvt_tt_vdd1.00_t27/static_state1_tol1e-05_step5ps",
+      "raw_replay_matches": true,
+      "result_sha256": "7b34b6771c3b9c2e7ebf87e2a1a740f52c9e4e4a0082e14f713f4fa60095cc9b",
+      "deck_sha256": "233707238ceaab7c32657029f63b00d794cd3d9d32562a81dc760733fb3eaf6b",
+      "response": {
+        "dc_gain_db": -9.280212860931034,
+        "interior_peak": true,
+        "ac_shape_pass": true,
+        "boost_db": 8.746919126302751,
+        "peak_frequency_hz": 1906285212.4517019
+      },
+      "noise": {
+        "input_noise_vrms": 0.000654039305008745,
+        "output_noise_vrms": 0.0004972839210414465,
+        "spectrum_reintegrated_vrms": [
+          0.000656050560245075,
+          0.0004973316672130077
+        ],
+        "integral_relative_errors": [
+          0.0030751290036048484,
+          9.60139058210352e-05
+        ],
+        "noise_limit_pass": true,
+        "band_hz": [
+          10000000.0,
+          5000000000.0
+        ],
+        "clocked_receiver_noise_verified": false,
+        "scope": "loaded CTLE output, held-clock DC small-signal model; not periodic receiver noise"
+      },
+      "signed_rs_switch_documented_ranges_ok": false
+    },
+    {
+      "kind": "tone",
+      "clock_state": 0,
+      "instrument_ok": true,
+      "initialization_valid": true,
+      "nominal_replay_matches": true,
+      "small_signal_specs_pass": null,
+      "positive_nyquist_pass": null,
+      "nyquist_boost_db": null,
+      "target_match": null,
+      "hd3_model_pass": true,
+      "ctle_hd3": {
+        "hd3_dbc": -54.91432037590192,
+        "fundamental_peak_v": 0.03791942158553401,
+        "third_harmonic_peak_v": 6.80997762972176e-05,
+        "clock_5ghz_peak_v": 9.785847581470491e-08,
+        "start_s": 5e-08,
+        "stop_s": 1.5e-07,
+        "cycles": 10,
+        "uniform_samples": 40000
+      },
+      "vdd_power_w": null,
+      "ctle_plus_dfe_vdd_power_w": 0.009258538081524494,
+      "simulator_wall_seconds": 50.784165799999755,
+      "measurement_wall_seconds": 53.15392870000005,
+      "model_warnings": {
+        "ignored_model_parameters": [
+          "isnoisy",
+          "p2",
+          "p3",
+          "q2",
+          "q3",
+          "sw_et"
+        ],
+        "passive_nonlinearity_verified": false,
+        "reliability_verified": false
+      },
+      "evidence_folder": "pvt_tt_vdd1.00_t27/tone_state0_tol2e-05_step5ps",
+      "raw_replay_matches": true,
+      "result_sha256": "6871db09859f4865cf97a1d6251625df584e2298771ae41d810403efe4fa8f71",
+      "deck_sha256": "d985f183d20bc7741a259505e2c8f7faf5b3959f2422ffe91bc41ea267f6c6a5",
+      "response": null,
+      "noise": null,
+      "signed_rs_switch_documented_ranges_ok": false
+    },
+    {
+      "kind": "tone",
+      "clock_state": 0,
+      "instrument_ok": true,
+      "initialization_valid": true,
+      "nominal_replay_matches": true,
+      "small_signal_specs_pass": null,
+      "positive_nyquist_pass": null,
+      "nyquist_boost_db": null,
+      "target_match": null,
+      "hd3_model_pass": true,
+      "ctle_hd3": {
+        "hd3_dbc": -54.92013654716911,
+        "fundamental_peak_v": 0.037919844564319335,
+        "third_harmonic_peak_v": 6.805495029256821e-05,
+        "clock_5ghz_peak_v": 1.016350356897799e-07,
+        "start_s": 5e-08,
+        "stop_s": 1.5e-07,
+        "cycles": 10,
+        "uniform_samples": 40000
+      },
+      "vdd_power_w": null,
+      "ctle_plus_dfe_vdd_power_w": 0.009258185570144765,
+      "simulator_wall_seconds": 57.974688100000094,
+      "measurement_wall_seconds": 61.06769290000011,
+      "model_warnings": {
+        "ignored_model_parameters": [
+          "isnoisy",
+          "p2",
+          "p3",
+          "q2",
+          "q3",
+          "sw_et"
+        ],
+        "passive_nonlinearity_verified": false,
+        "reliability_verified": false
+      },
+      "evidence_folder": "pvt_tt_vdd1.00_t27/tone_state0_tol2e-05_step2.5ps",
+      "raw_replay_matches": true,
+      "result_sha256": "2e80d1f32a2f5a4603be47c7d6fa9ccab3b10ae5fb1e7a73d8d6dba281ef8caa",
+      "deck_sha256": "38702ee61f73ac850c0ab448cbc9b7d6c3ec1dd7fbbd0833ee4cd67f7dd3bf0c",
+      "response": null,
+      "noise": null,
+      "signed_rs_switch_documented_ranges_ok": false
+    }
+  ],
+  "four_way_hd3_agreement_verified": false,
+  "source_plan_sha256": "c4e6bfab5502eb3fe41f99fbe1d682411633400d83bb9d6493d248253192cf53"
+}

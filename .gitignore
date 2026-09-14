@@ -274,3 +274,15 @@ session25_desktop_transcript.jsonl
 /nebula/product_audits/entry144_dfe_calibrated_pvt_20260910/*/trace.txt
 /nebula/product_audits/entry144_dfe_calibrated_pvt_20260910/*/terminals.txt
 !nebula/product_audits/entry144_dfe_calibrated_pvt_20260910/**/*.log
+
+# Local final-submission convenience ZIP duplicates the separately tracked artifacts.
+output/submission/*.zip
+
+# Submission analog traces are backed up as verified lossless gzip; originals stay local.
+/nebula/product_audits/submission_analog_pvt_20260914/**/trace.txt
+/nebula/product_audits/submission_analog_pvt_20260914/**/terminals.txt
+!nebula/product_audits/submission_analog_pvt_20260914/**/*.log
+# Exact project-owned final artifacts and saved-record receipt only.
+!output/pdf/Nebula_Final_Submission_12p_20260915.pdf
+!output/docx/Nebula_Final_Demo_Script_20260915.docx
+!nebula/product_demo/submission_runs_20260914/**/*.log

@@ -1,5 +1,7 @@
 # HANDOFF.md — Living Project State & Continuation Guide
 
+> **Entry 153 complete (14 September):** The separate final report is 12 pages with 11 intentionally blank fillable identity fields; the matching Word narration is three visually checked pages. Use `nebula/SUBMISSION_PACKAGE_20260915.md`. Full regression: **3473 passed, 13 deselected, 2 warnings in 2048.39 s** (recorded before baseline: 3427 passed). The saved demo and actual automation receipt are preserved. The extra analog pilot reproduced nominal checks but failed required latch initialization at FS/1.71 V/125 C, so it adds no valid analog-PVT coverage. The owner fills details, records/reviews the video and sends the prepared email.
+
 > **Entry 152:** The owner explicitly authorized subagents for submission execution. Section 1A of `NEBULA_FINAL_SUBMISSION_AGENT_HANDOFF_20260914.md` defines one lead plus three workers, exact file ownership, exclusive simulator scheduling and lead-owned integration/testing/backup.
 
 > **14 September final-submission update (Entry 151):** Start with `NEBULA_FINAL_SUBMISSION_AGENT_HANDOFF_20260914.md`. The organiser requires a 10-12-page report plus demo video by 15 September 2026, 11:00 PM. The current 25-page report must be condensed into a separate final artifact. The owner authorized focused HANDOFF reading; the new packet defines that set and bounded technical priorities.
@@ -21,10 +23,10 @@
 > decisions that are OPEN and human-only, and what to do next. It supersedes
 > `nebula/NEXT_STEPS.md`. This file remains the full state of record.
 
-Last updated: **2026-09-14**, Entry 150 complete: five-tab circuit workspace, adjacent inspector, modeled comparison eyes, refreshed report and narration. Full regression and visual review passed.
+Last updated: **2026-09-14**, Entry 153 complete: final report, Word narration, saved automation receipt, bounded analog outcome, durable demo and full regression (3473 passed). Owner recording and email sending remain owner actions.
 
 
-> **CURRENT SUBMISSION EDITION (Entries 147/148):** Use
+> **PREVIOUS SUBMISSION EDITION (Entries 147/148):** Preserved background:
 > `output/pdf/Nebula_Submission_Report_20260914.pdf` and
 > `nebula/SUBMISSION_DEMO_SCRIPT_20260914.md`. Both previous report PDFs are
 > preserved byte-for-byte. The owner will record the video in their own voice.
@@ -1081,6 +1083,8 @@ signaling, ADC-based DSP receiver, 28 nm CMOS reference parameters).
   **PRIVATE, and must stay private** (contains copyrighted PDFs, see G1).
 
 ## 2. Repository map (what every file/folder is)
+
+**Entry 153 additions:** `nebula/report/final_submission.py` and `check_final_submission.py` own the separate 12-page report; `final_demo_script.py` owns its Word/text narration. `nebula/experiments/build_submission_receipt.py` extracts the saved adaptive receipt, with `nebula/AUTOMATION_RECEIPT_20260914.md` explaining it. `nebula/SUBMISSION_PACKAGE_20260915.md`, `SUBMISSION_RECORDING_CHECKLIST_20260915.md` and `SUBMISSION_EMAIL_DRAFT_20260915.md` guide the owner's remaining work. `nebula/product_demo/submission_runs_20260914/` preserves the selected completed physical run and byte manifest. The separately named analog PVT plan/adapter/experiment/tests write only fresh `nebula/product_audits/submission_analog_pvt_20260914/` evidence.
 
 **Entry 151 addition:** `NEBULA_FINAL_SUBMISSION_AGENT_HANDOFF_20260914.md` is the current execution packet for a new agent: confirmed submission requirements, evidence boundaries, prioritized task prompts, artifact status and verification/backup rules.
 
@@ -2164,6 +2168,8 @@ PRBS → scramble → Gray/PAM4 → TX-FFE → ZOH ×OSR(8) → TX pole (0.75·f
 
 ## 5. Complete history (what was done, in order, with the WHY)
 
+**14 September, Entry 153:** The lead reused the recorded 3427-pass baseline only after confirming that intervening commits changed documentation alone. Three workers own separate report, saved-receipt/demo and bounded analog-PVT paths. The existing frontend was independently rehearsed at two desktop sizes; the saved physical run was preserved to remove its temporary-folder dependency. Final artifact checks and full regression passed; normal fast-forward backup remains the authorized policy.
+
 **14 September 2026, Entry 151:** Owner supplied the final submission email and requested a complete new-agent Markdown instruction packet. This documentation update records the new 10-12-page requirement and proposes bounded evidence improvements; it does not execute them.
 
 
@@ -2489,6 +2495,8 @@ Plus: git init, .gitignore, 28 tests, Wilson-bound BER reporting.
   rectangle and is now an explicit limitation, not a hidden traceback.
 
 ## 6. Key numbers & validated behavior (current state)
+
+**Entry 153:** Saved automation receipt proves 2406 billed visits over 315 adaptive conditions, including 315 fixed starts and repeats; 234 bank-selected outcomes comprise 185 centering refinements and 49 safety recoveries. Representative code is 425; the displayed recovery episode selects code 496 outside its policy trace. These are the earlier 9 dB adaptive run, not the selected 3 dB fixed physical run or the separate integrated receiver. No new policy replay, training or simulator work was used to extract the receipt. The saved 5.8936418 s timer includes 0.2245872 s representative export but excludes later drawing/file writes; full runtime acceleration remains unproven.
 
 **Entry 152 delegation update:** Use the new packet section 1A for the owner-authorized four-agent workflow. Lead coordinates evidence, report and automation/demo workers, serializes expensive runs and owns shared handoff/Git integration.
 
@@ -3271,6 +3279,8 @@ still NOT full area. The 12-request replay is fully supported at eight requests;
 
 ## 7. Known model limitations (honest list — do not overclaim)
 
+**Entry 153:** The bounded analog pilot reproduced the TT result but failed required latch initialization in all six FS/1.71 V/125 C measurements. No new valid analog corner coverage is established; finite diagnostic scalars cannot override the failed state gate. The new Word document is complete: three canonical-rendered pages visually reviewed. Missing bundled LibreOffice and stalled Word COM were resolved using checksum-verified, signed LibreOffice Portable 26.2.4 under ignored scratch only; no desktop installation. No final recording exists. Team/contact fields are blank by owner instruction. Task C matched runtime comparison is deferred to protect mandatory artifacts and recording time.
+
 **Entry 151 submission limitations:** Existing integrated-receiver 45-corner results establish link PVT, not all-corner AC/noise/HD3 coverage. Proposed extra analog PVT and runtime experiments are not completed results. The intended Word output `output/docx/Nebula_RL_Assisted_Demo_Script.docx` is currently absent (cause unknown); its builder survives in `tmp/demo-word/build_script.py`, but rendering/visual QA did not complete. No final demo video is verified.
 
 
@@ -3586,6 +3596,8 @@ variation, mismatch and layout remain open. Old production evidence is unchanged
   untrusted until proven (the Phase-0 experience says assume bugs).
 
 ## 8. Next steps (prioritized backlog with context)
+
+**Entry 153 next steps:** Owner fills the blank identity/contact fields, records and reviews the video with the completed script, then sends the report/video using the prepared email draft. Aim for 15 September 20:00 IST, ahead of the 23:00 deadline. The submission code and artifacts have completed full verification. Further analog initialization work, target coverage, runtime benchmarking and layout belong after this submission closeout.
 
 **Entry 152 delegation update:** Use the new packet section 1A for the owner-authorized four-agent workflow. Lead coordinates evidence, report and automation/demo workers, serializes expensive runs and owns shared handoff/Git integration.
 
@@ -7365,6 +7377,15 @@ supplies preliminary guesses that are released before the final solution.
 It is not .ic/UIC, a physical reset or an ideal decision source. Entry 138
 derives guesses from accepted DC primitives and checks both actual stored
 polarities. Never relax the warning gate or swap device terminals to pass.
+
+Entry 153 reinforces the state gate beyond warning parsing: FS/1.71 V/125 C
+writes finite primitives and numerically consistent distortion, but the
+initial q-qb is about +2.18e-7 V instead of the required < -0.1 V. That is
+an unresolved latch, not a resolved opposite branch. Both held states and
+all four tone resolutions fail initialization. Good-looking analog scalars
+cannot validate the registered branch; the separate finite-pattern link
+results retain their own meaning. Do not turn this measurement setup failure
+into either an analog corner pass or a blanket functional receiver failure.
 
 ### G196. Presentation checks must preserve scientific signs and all plotted points
 
@@ -20154,3 +20175,124 @@ code or submission artifact is completed by this change. Documentation
 validation uses content review and Git diff checks; no new full test result
 is claimed. A read-only subagent reviewed delegation risks while the lead
 edited the packet. The owner attachment remains excluded from staging.
+
+### Entry 153 - 2026-09-14 - Final submission artifacts, traceable evidence and verification
+
+Owner requested execution of the final packet, then explicitly requested blank
+team, college and member/contact spaces and said they will send the email.
+The lead read the authorized focused HANDOFF set, full Nebula contract and
+required evidence documents. Baseline reuse is supported by the documentation-
+only diff since implementation checkpoint 8d8e25a7 and the actual UTF-16
+`tmp/demo-word/full-tests.log`: 3427 passed, 13 deselected, two warnings,
+1517.67 s. This is prior evidence, not a newly run baseline. The completed final full-suite result is recorded below before this commit.
+
+The owner-authorized workers have exclusive file ownership. The evidence
+worker received only the registered 12-call / 180-second-per-call / 45-minute
+analog pilot simulator slot after the lead reviewed its plan, narrow supply
+parameterization, frozen nominal-deck equality and failure tests. It is the
+only simulator workload. No full PVT expansion has been approved. Optional
+matched runtime benchmarking is deferred. The report can finish using
+established results even if the pilot fails.
+
+The unchanged frontend passed a fresh automated browser rehearsal at
+1440x1000 and 1280x900, including input dialog, saved completion, all circuit
+blocks and inspector modes, expanded views, checkpoint evidence, 45-corner
+PVT and comparison modes, with no browser exceptions. A clean Explorer
+screenshot was reviewed. Exact temporary saved-run preservation copied
+622 files / 28,437,981 bytes; all file hashes and 617 original manifest entries
+match, and selected_eye reproduces from the durable copy. The original
+provenance stays unchanged. No PDK model libraries or reference handouts
+were copied. `preservation.json` records raw-byte identity.
+
+Saved adaptive receipt and narration sources are new separate files; older
+reports and frontend implementation remain intact. Final PDF/Word visual checks, pilot outcomes, full regression and package identities are recorded below. No final video is claimed.
+
+Entry 153 closeout progress: the initial analog process was interrupted by an
+unknown external termination after five launched/four completed calls. The
+fifth log stops around 86.29 ns; its elapsed time is unknown. No FS measurement
+ran. Four completed nominal results replay exactly; 125 captured files and
+four lossless trace archives verify. The first attempt is not a completed
+pilot. A separate preregistered second attempt uses the same exact protocol,
+12 additional calls maximum (17 total), a 1200-second wall budget and the
+unchanged 180-second per-call timeout. No third attempt is authorized.
+Only the scheduler wall-budget parameter and its boundary tests changed; old
+source snapshots are immutable. Thirty-three focused tests passed before
+the second attempt.
+
+Word closeout: `output/docx/Nebula_Final_Demo_Script_20260915.docx` exists,
+608 spoken words across six scenes, three rendered pages. All were visually
+reviewed; the lead independently inspected pages 1 and 3. DOCX SHA-256
+09e1c00a5d87f91c6f674db416b1661325d37a5dfd2035c7bb335625feb7bd13.
+The final script, content metadata and visual review record are separate from
+older scripts. Screen cues match final report pages. Eight receipt tests
+passed before final integration. The durable server restarted successfully
+from the preserved run root; `/api/health` and restored design identity pass.
+
+New source LF attributes and byte-preserved generated metadata prevent new
+Git newline/provenance drift. All 622 staged saved-demo blobs were independently
+compared to their original raw SHA-256 values and match. Raw new analog traces
+stay local; verified gzip archives are the public backup representation.
+
+Entry 153 analog outcome reviewed: the separately registered second attempt
+completed all 12 calls within 835.492291 s wall (781.889196 s summed simulator
+time), with scientific source and PDK hashes unchanged. TT passes both held
+states, all four tone settings, four-way numerical agreement, the broad
+small-signal gate including positive Nyquist boost, and internal target match;
+all six reproduce the frozen nominal reference. FS/0.95/125 fails the required
+negative-latch initialization in all six cases: stored differential is near
++2.18e-7 V, not below -0.1 V. Finite scalars, diagnostic HD3 agreement and broad
+AC values cannot override that failure. The pilot is failed, not completed
+analog-PVT coverage; no retuning, threshold change or third attempt follows.
+The lead independently reviewed every case's initialization/replay status and
+aggregate source/PDK checks. Seventeen simulator launches across both attempts
+are billed, including the original incomplete call with unknown elapsed time.
+The unchanged earlier 45/45 finite-pattern link-PVT result remains separate.
+
+Entry 153 final verification and delivery:
+
+- Separate PDF: `output/pdf/Nebula_Final_Submission_12p_20260915.pdf`,
+  SHA-256 764d6f510168430d7386e2b5189f8fe19c6d1c0bef223818d0932bef85364446.
+  Exactly 12 total pages, 13 ordered figures, 11 empty fillable identity fields;
+  all pages visually inspected, final changed pages 9/11/12 checked again.
+  Forty-nine source records and 108 raw-proof dependencies are checked.
+  Entry 144 original raw verification: 362 files, 90 archives; Entry 143
+  completed original proof: 137 files, 10 archives, with current identity checks.
+  All three older PDFs retain their pinned hashes. Five focused report tests pass.
+- Word: three fully rendered/reviewed pages, 608 spoken words, six scenes.
+  The lead reviewed final pages 1/3 and independently crosschecked report
+  measurements, page cues and all three distinct circuit records. Full raw
+  DOCX/source/rendered-page hashes pass. Team/contact areas remain blank.
+- Both new analog attempts preserve 300 manifest files and 20 lossless
+  archives, with 1,409,597,856 raw bytes retained and 417,794,503 gzip bytes.
+  The second attempt's 91 source snapshots and all aggregate/source/PDK
+  checks pass. Original interrupted evidence and source snapshots stay immutable.
+- Required full command: `py -3.13 -m pytest tests nebula/tests -q -m "not slow"`.
+  **Before:** reused 3427 passed, 13 deselected, two warnings, 1517.67 s
+  from the actual prior unchanged-implementation log. **After:** 3473 passed,
+  13 deselected, 2 warnings in 2048.39 s. Final new-source SHA-256
+  snapshot remains unchanged throughout this run. No implementation changes
+  followed that freeze. The original SerDes suite remains included.
+  The full passing pytest summary is preserved in
+  `output/submission/Nebula_Final_Validation_20260914.json`. The PowerShell
+  launcher could not retrieve ExitCode after WaitForExit/Refresh and threw;
+  the validation records exit_code as null and relies on the complete passing
+  pytest summary, empty test stderr and unchanged source hashes.
+- The new receipt narrative contains a preserved mixed-line-ending byte; its
+  attribute is deliberately `-text`, and the staged blob was explicitly refreshed.
+  Every staged artifact was compared with its reviewed raw working bytes;
+  this prevents adding a new version of the known G197 provenance problem.
+- The convenience ZIP under `output/submission/` is ignored because it
+  duplicates separately tracked files. Its tracked manifest identifies report,
+  narration, checklist, draft, receipt and findings; it contains no video or PDK.
+  Public source/evidence link is in the email draft and owner guide.
+- HANDOFF and verified project-owned changes are committed together. Backup
+  policy is normal fast-forwards to working branch and main, without switching
+  the active worktree or rewriting frozen history. Owner `eye_Diag.jpeg`,
+  copyrighted references, PDK models and renderer scratch remain excluded.
+
+Professor-ready takeaway: the submission connects target input to a measured
+circuit and an auditable decision trail. Learned proposals, deterministic
+verification/recovery and physical acceptance have distinct evidence. Nominal
+hardware behavior reproduces; the stress experiment exposes an initialization
+limit instead of turning finite simulator output into a false corner pass.
+End-to-end runtime acceleration remains unproven and is not claimed.
