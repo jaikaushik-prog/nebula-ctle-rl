@@ -1,5 +1,7 @@
 # HANDOFF.md — Living Project State & Continuation Guide
 
+> **Entry 152:** The owner explicitly authorized subagents for submission execution. Section 1A of `NEBULA_FINAL_SUBMISSION_AGENT_HANDOFF_20260914.md` defines one lead plus three workers, exact file ownership, exclusive simulator scheduling and lead-owned integration/testing/backup.
+
 > **14 September final-submission update (Entry 151):** Start with `NEBULA_FINAL_SUBMISSION_AGENT_HANDOFF_20260914.md`. The organiser requires a 10-12-page report plus demo video by 15 September 2026, 11:00 PM. The current 25-page report must be condensed into a separate final artifact. The owner authorized focused HANDOFF reading; the new packet defines that set and bounded technical priorities.
 
 > **READ THIS FIRST.** This file is the single source of truth for project
@@ -2488,6 +2490,8 @@ Plus: git init, .gitignore, 28 tests, Wilson-bound BER reporting.
 
 ## 6. Key numbers & validated behavior (current state)
 
+**Entry 152 delegation update:** Use the new packet section 1A for the owner-authorized four-agent workflow. Lead coordinates evidence, report and automation/demo workers, serializes expensive runs and owns shared handoff/Git integration.
+
 **Entry 151 current submission state:** Deadline is 15 September 2026 at 11:00 PM, assuming IST pending any organiser timezone clarification. At the owner-stated 14 September 12:33 PM, 34 h 27 min remained. The 25-page report is preserved but exceeds the newly confirmed limit. Frontend remains at the Entry 150 verified implementation. A subsequent full-suite log in `tmp/demo-word/full-tests.log` records 3427 passed, 13 deselected and two warnings in 1517.67 s; no new suite was run for this Markdown-only packet.
 
 
@@ -3582,6 +3586,8 @@ variation, mismatch and layout remain open. Old production evidence is unchanged
   untrusted until proven (the Phase-0 experience says assume bugs).
 
 ## 8. Next steps (prioritized backlog with context)
+
+**Entry 152 delegation update:** Use the new packet section 1A for the owner-authorized four-agent workflow. Lead coordinates evidence, report and automation/demo workers, serializes expensive runs and owns shared handoff/Git integration.
 
 **Entry 151 active submission priorities:** Follow `NEBULA_FINAL_SUBMISSION_AGENT_HANDOFF_20260914.md`. Protect a separate 10-12-page report, a verified Word script and owner-recorded 5-6-minute video. Within explicit time limits, improve analog PVT coverage, produce a traceable automation receipt and attempt a fair small runtime comparison. Preserve the verified frontend, frozen scientific evidence and older reports. Prepare the submission email and confirm team details; do not send without authorization.
 
@@ -20131,3 +20137,20 @@ in 1517.67 s. No new executable/scientific changes or fresh test run are part
 of this documentation-only update; validation checks the packet, referenced
 paths, unchanged report hash and Git diff. Only the three project-owned
 Markdown files are intended for backup; the owner attachment stays untracked.
+
+
+### Entry 152 - 2026-09-14 - Explicit subagent execution workflow
+
+Owner requested subagents for the submission task and asked that authorization
+be recorded in the new-agent Markdown. Added section 1A and updated the
+startup prompt/checklist: lead plus evidence, report and automation/demo
+workers; copy-paste bounded prompts; exact file ownership; exclusive SPICE
+slot; evidence cutoff; lead-owned HANDOFF, integration, tests and backup.
+Workers must report actual checks and source-linked results, preserve frozen
+evidence and old reports, and avoid overlapping shared edits or commits.
+
+This update changes instructions only. No new scientific campaign, production
+code or submission artifact is completed by this change. Documentation
+validation uses content review and Git diff checks; no new full test result
+is claimed. A read-only subagent reviewed delegation risks while the lead
+edited the packet. The owner attachment remains excluded from staging.

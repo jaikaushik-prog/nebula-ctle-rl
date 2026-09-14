@@ -4,9 +4,49 @@ Prepared 14 September 2026. Read this before older restart prompts.
 
 ## 1. Copy-paste startup prompt
 
-> Read NEBULA_FINAL_SUBMISSION_AGENT_HANDOFF_20260914.md and the required repository documents using the owner-approved focused reading set below. Continue the Nebula submission work. First inspect the current files, Git state, remaining time and scientific evidence. Preserve the verified frontend and existing reports. Produce a separate 10-12-page final report, a matching 5-6-minute narration script in Word, and a concrete recording/submission package. Improve the supporting technical evidence using the bounded priorities below only while preserving time for those mandatory deliverables. Distinguish proven results, partial coverage and proposed experiments. Do the authorized work and verification, keep HANDOFF.md current, and back up verified project-owned changes using normal fast-forwards. Draft the submission email but do not send it. Explain progress simply; do not stop at a plan or repeatedly ask for permission for ordinary reversible work.
+> Read NEBULA_FINAL_SUBMISSION_AGENT_HANDOFF_20260914.md and the required repository documents using the owner-approved focused reading set below. Continue the Nebula submission work using the explicitly authorized subagent workflow in section 1A. First inspect the current files, Git state, remaining time and scientific evidence. Preserve the verified frontend and existing reports. Produce a separate 10-12-page final report, a matching 5-6-minute narration script in Word, and a concrete recording/submission package. Improve the supporting technical evidence using the bounded priorities below only while preserving time for those mandatory deliverables. Distinguish proven results, partial coverage and proposed experiments. Do the authorized work and verification, keep HANDOFF.md current, and back up verified project-owned changes using normal fast-forwards. Draft the submission email but do not send it. Explain progress simply; do not stop at a plan or repeatedly ask for permission for ordinary reversible work.
 
 This packet describes work for the NEXT agent. Its proposed experiments have NOT been executed by creating this file.
+
+## 1A. Owner-authorized subagent workflow
+
+The owner explicitly requested on 14 September: **use subagents for this task and add that instruction to this file**. The executing lead agent should delegate concrete independent work while continuing useful coordination and integration itself. This authorization does not waive scientific gates, evidence review, testing or deadline protection.
+
+Use up to **four concurrent agents total: one lead and three workers**, subject to the actual available slots. Start with these assignments after the lead checks the working tree and current processes:
+
+| Owner | Bounded assignment | Write ownership |
+|---|---|---|
+| Lead | Clock/budget, repository baseline, integration, final claims review, required full tests, HANDOFF, Git backup and final submission package | Shared handoffs, common infrastructure, final manifests and commits |
+| Evidence worker | Task A: audit missing analog PVT coverage, prepare a bounded pilot, then run only after the lead allocates the simulator slot | Fresh experiment plan, separately named adapter/tests if required, new audit output directory |
+| Report worker | Task D: build and render a separate 10-12-page report from established evidence; retain the five circuit narratives | New report builder/content, its focused checks and separately named final report/review artifacts |
+| Automation/demo worker | Task B: actual run receipt; prepare matching 5-6-minute script, recover Word output, recording checklist and email draft; Task C only if budget and simulator slot permit | Separately named receipt instrumentation/tests, demo/script sources, Word output and email draft |
+
+The lead must assign exact filenames/output directories before workers edit. The table gives areas, not permission for overlapping edits. Workers may read shared evidence; only one owner may edit a given file at a time. Preserve the existing frontend and report builder unless a concrete fix is assigned. If two tasks need a common module, workers propose the patch to the lead or explicitly transfer ownership before editing. Never use Git restore/reset to discard another worker's changes.
+
+### Copy-paste worker prompts
+
+**Evidence worker**
+
+> Follow this packet's focused reading set and read CLAUDEwa.md in full. Own only the files assigned by the lead. Execute Task A first as a read-only coverage audit and written experiment plan, reporting exact missing checks, model limitations, pilot costs and proposed output paths. Do not launch SPICE, heavy tests, or training until the lead gives you the exclusive simulator slot. Once allocated, follow the time/call budget and preserve frozen sources, parameters and evidence. Report failures as well as passes and send the report worker a source-linked result table. Do not edit HANDOFF, commit, push or alter shared frontend/report files. End with changed paths, checks actually run, measured results, unresolved limitations and a proposed handoff note.
+
+**Report worker**
+
+> Follow this packet and the PDF skill. Own only the new report files assigned by the lead. Start Task D immediately using verified existing evidence and build a separate 10-12-page report, retaining all five requested circuit narratives and the deliverable/judging-criteria story. Preserve prior PDFs and builders. New experiment results remain pending until the lead validates their source-linked table; never assume success or let pending evidence block a complete report based on established results. Coordinate figure and page references with the demo worker. Render and visually inspect every final page, checking total page count and readability. Do not run SPICE or edit HANDOFF, commit or push. Return artifact paths, source mapping, exact validation performed and remaining issues.
+
+**Automation/demo worker**
+
+> Follow this packet and the documents skill. Own only the receipt and demo files assigned by the lead. Inspect saved production records for Task B before adding instrumentation. Produce an honest trace of policy proposals, verifier/fallback and final export; distinguish replay/cached data from measured live work. Request the lead's exclusive simulator slot for any new production/timing run, and do not claim speedup from an unmatched comparison. Recover and refine the 5-6-minute Word script, screen cues and recording checklist while evidence work runs. Coordinate with the report worker's actual page references. Draft the submission email with unconfirmed team details visibly pending; do not send. Render and review the DOCX, verify its actual path, and do not claim a recorded video exists. No HANDOFF edits, commits or pushes. Return changed paths, artifacts, checks and a proposed handoff note.
+
+### Scheduling and integration rules
+
+1. **One simulator owner at a time.** The lead explicitly allocates/releases the slot for SPICE campaigns, live design generation, timing runs and full simulator-heavy tests. A worker's task assignment alone does not grant the slot. Inspect existing locks/processes first. Do not bypass an existing lock or kill another job. Fair timing also requires other heavy work to pause.
+2. Start report structure/known-evidence drafting and saved-record/script work alongside the scientific audit. Serialize new simulations. Task C is optional and follows a reliable receipt; the mandatory report and owner recording window take precedence.
+3. Workers notify the lead before touching unassigned files or encountering a scientific decision requiring approval. They may continue independent allowed work while that decision is pending. They must not spawn additional workers without coordinating capacity and ownership with the lead.
+4. Workers send concise checkpoints: completed work, changed paths, evidence source, tests actually run, blockers and next step. A failed/interrupted test is not a pass; a proposed experiment is not evidence. The lead reviews results before they enter report claims or narration.
+5. The lead owns HANDOFF updates and all commits/pushes so each integrated change includes its session record. Worker-provided handoff notes are inputs, not a substitute. Keep commits reviewable; do not accidentally stage an unfinished worker file. Use the existing public-repository exclusions.
+6. The lead controls the required baseline and final full-suite checks. Workers may run agreed lightweight focused tests that do not conflict with the simulator slot. Freeze implementation edits before the final full run; subsequent executable changes require appropriate revalidation. Use document/source/layout checks for final report and script revisions.
+7. Set an evidence cutoff early enough for final report/script integration, rendering, owner recording and the submission buffer. At cutoff, retain valid completed evidence and label omissions; do not wait indefinitely for optional improvements. Stop workers cleanly and inspect partial files/processes before final packaging.
+8. Before declaring completion, the lead independently checks final artifact existence, page count, claim consistency, script/product alignment, relevant test outcomes and backup state. The owner records/narrates; agents support rehearsal and review. Only explicit owner authorization permits sending the final email.
 
 ## 2. Confirmed submission requirements and remaining time
 
@@ -271,6 +311,7 @@ Git backup is already authorized for project-owned verified material in this **p
 ## 10. Completion checklist for the next agent
 
 - [ ] Current branch/source state and remaining time verified; required reading completed.
+- [ ] Subagents assigned bounded work with exact file ownership; simulator scheduling and evidence cutoff agreed.
 - [ ] Mandatory report/script/recording time protected; technical experiment plan and stop limits recorded.
 - [ ] Any new scientific evidence is traceable, validated and honestly scoped; failed/untested conditions retained.
 - [ ] Automation role and any measured speed claim match the actual production path and comparison accounting.
