@@ -491,12 +491,12 @@ def finish_product_chapters(r,e):
         raise ValueError("Capture the reviewed desktop receiver before building the submission report")
     from shutil import copyfile
     copyfile(screenshot,SCRATCH/"desktop.png")
-    r.figure("desktop","The desktop Receiver view, captured from the local application. A signal-path overview leads to a readable circuit inspector and scoped measurements. The exact device sheet is available separately.",230)
+    r.figure("desktop","The desktop Receiver view, captured from the local application. The selected physical design opens with its verdict, measured response and PVT coverage. The CTLE and tail devices lead the circuit inspection; source files remain one click away.",230)
     r.heading("5.5 Progressive inspection")
-    r.para("The Receiver view opens on the calibrated hardware checkpoint. A reader first sees the implemented signal path, then selects a block to understand its connections. The recovered eye and measurements share one evidence region. The full device sheet and source files are available on demand rather than competing with the main explanation.")
-    r.para("Design Explorer handles numerical targets and generated-run results. Its circuit blocks expand one at a time, preserving readable labels. Selected A/R/C codes and fixed-export values stay attached to the chosen run. The DFE reference is explicitly identified as a separate transistor implementation, while the run's original cursor-based score remains visible in its verification scope.")
+    r.para("The Receiver view follows the selected completed design. Its verdict, measured response and corner coverage appear first, followed by the CTLE including its tail devices. Other circuit blocks expand on demand. Physical-export eye openings are reconstructed from that run's saved transistor AC response and checked against its recorded dimensions before display.")
+    r.para("Design Explorer handles numerical targets, measured specifications and sizing without repeating the circuit drawings. A completed request opens Receiver at the top, with a direct path to all PVT corners. The run selector restores earlier results; editing a future request does not relabel the result already on screen.")
     r.heading("5.6 A demo that does not borrow a pass")
-    r.para("Changing the target away from 9 dB / 1.9 GHz hides the calibrated receiver's eye and measurement claims for that request. Returning through judge mode restores the saved target. Design PVT, comparison and run-file views refer to the selected generated design. The interface distinguishes saved evidence from a new verification job; the accompanying narration follows the same distinction.")
+    r.para("The calibrated transistor CTLE + DFE checkpoint remains an optional, separately labeled 9 dB / 1.9 GHz experiment. Its transient eye never substitutes for a generated design's modeled eye. Bank artifacts retaining only eye dimensions display those measurements without inventing a waveform. Design PVT and run files stay attached to the selected run; the narration follows these same evidence boundaries.")
 
     r.new("Chapter 5 / Reproducibility","From a result to its source","A reviewable submission includes enough information to challenge its own conclusions.")
     r.heading("5.7 Reproducing the evidence chain")

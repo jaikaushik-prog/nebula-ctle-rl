@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="Nebula CTLE + DFE Designer - evidence-grounded SKY130 circuit sizing">
   <title>Nebula CTLE + DFE Designer</title>
-  <link rel="stylesheet" href="/styles.css?v=8">
+  <link rel="stylesheet" href="/styles.css?v=9">
 </head>
 <body data-view="hardware">
   <a class="skip-link" href="#workspace">Skip to workspace</a>
@@ -90,8 +90,15 @@
 
       <div id="message" class="message" hidden></div>
 
+      <section id="resultOverview" class="result-overview" aria-live="polite" tabindex="-1">
+        <div class="run-picker"><label for="selectedRun">Selected design</label><select id="selectedRun"></select><button class="text-button" data-open-tab="results" type="button">Set a new target</button></div>
+        <div id="resultVerdict"></div>
+        <div class="result-highlights" id="resultHighlights"></div>
+        <div class="result-actions"><p id="resultCoverage"></p><button class="button button-secondary" data-open-tab="pvt" type="button">Inspect all PVT corners</button></div>
+      </section>
+
       <section id="resultsView" class="view" data-view="results">
-        <p class="explorer-scope"><strong>Generated design</strong> &middot; Measurements below follow the selected run. The four block drawings show how that result maps into the implemented receiver.</p>
+        <p class="explorer-scope"><strong>Generated design</strong> &middot; Measurements below follow the selected run. Open Receiver for the circuit and eye; this view collects the measured specifications and sizing.</p>
         <div class="section-intro">
           <div>
             <p id="resultContext" class="context-line">Preverified judge artifact</p>
@@ -99,25 +106,6 @@
           </div>
           <span id="sourceBadge" class="source-badge">Loading</span>
         </div>
-
-        <section class="design-block-section" aria-labelledby="designBlocksTitle">
-          <div class="design-block-heading">
-            <div><h3 id="designBlocksTitle">Receiver implementation map</h3><p>Four circuit views, with the selected design codes and evidence boundary attached to the relevant block.</p></div>
-            <button class="text-button" data-open-tab="hardware" type="button">Open transistor checkpoint</button>
-          </div>
-          <div id="designBlockGrid" class="design-block-grid"></div>
-        </section>
-
-        <details class="details-card generated-drawing">
-          <summary>Inspect the exact generated CTLE drawing</summary>
-          <div class="card-heading">
-            <div><h3 id="generatedSchematicTitle">Generated CTLE export</h3><p id="generatedSchematicScope">This image is parsed from the selected run's exact SPICE deck.</p></div>
-            <a id="openSchematic" class="text-button" href="#" target="_blank" rel="noopener">Open full size</a>
-          </div>
-          <div id="schematicFrame" class="schematic-frame">
-            <div class="loading-lines"><i></i><i></i><i></i></div>
-          </div>
-        </details>
 
         <div class="table-card">
           <div class="card-heading"><div><h3>Measured specifications</h3><p>Every number comes from the selected design artifact.</p></div></div>
@@ -136,6 +124,27 @@
       </section>
 
       <section id="hardwareView" class="view active" data-view="hardware">
+        <div class="receiver-heading"><div><p class="eyebrow">SELECTED CIRCUIT</p><h2>From circuit to recovered signal</h2></div><button class="text-button" data-open-tab="evidence" type="button">Open this run's files</button></div>
+        <div id="designBlockGrid" class="design-block-grid"></div>
+        <div class="selected-eye-layout">
+          <figure class="selected-eye-panel"><h3>Eye opening of this design</h3><div id="selectedEye" aria-live="polite">Loading saved eye evidence.</div><figcaption id="selectedEyeScope"></figcaption></figure>
+          <div class="selected-eye-explanation"><h3>What this eye tells us</h3><p>The open region shows the timing and voltage margin after the CTLE and an ideal 1-tap DFE. It is computed from this design's saved transistor AC response.</p><p>The eye dimensions above use the same calculation as the verification record. The separate transistor DFE experiment is available below.</p><button class="text-button" data-open-tab="pvt" type="button">See the eye across PVT</button></div>
+        </div>
+        <details class="details-card generated-drawing">
+          <summary>Inspect the exact generated CTLE drawing</summary>
+          <div class="card-heading">
+            <div><h3 id="generatedSchematicTitle">Generated CTLE export</h3><p id="generatedSchematicScope">This image is parsed from the selected run's exact SPICE deck.</p></div>
+            <a id="openSchematic" class="text-button" href="#" target="_blank" rel="noopener">Open full size</a>
+          </div>
+          <div id="schematicFrame" class="schematic-frame">
+            <div class="loading-lines"><i></i><i></i><i></i></div>
+          </div>
+        </details>
+
+
+        <details id="referenceCheckpoint" class="details-card reference-checkpoint">
+          <summary>Explore the separate transistor CTLE + DFE checkpoint <span>9 dB / 1.9 GHz</span></summary>
+          <p class="reference-note">Independent calibrated implementation. These measurements stay attached to its own 9 dB / 1.9 GHz target; they do not replace the selected design above.</p>
         <div class="section-intro">
           <div>
             <p class="context-line">SKY130 / 5 Gbps NRZ</p>
@@ -148,7 +157,7 @@
         <div id="hardwareLoadError" class="message error" role="alert" hidden></div>
         <div id="hardwareContent">
           <section id="hardwareTargetMatch" class="checkpoint-match" aria-live="polite">
-            <div><span>Current request</span><strong id="hardwareRequestedTarget">9 dB at 1.9 GHz</strong></div>
+            <div><span>Checkpoint target</span><strong id="hardwareRequestedTarget">9 dB at 1.9 GHz</strong></div>
             <p id="hardwareMatchMessage">Checking for an exact transistor checkpoint.</p>
           </section>
           <section class="hardware-blueprint" aria-labelledby="hardwareBlueprintTitle">
@@ -164,8 +173,8 @@
           <section class="circuit-inspector" aria-labelledby="circuitInspectorTitle">
             <div class="card-heading"><div><h3 id="circuitInspectorTitle">Inside the receiver</h3><p>Select a block to see its circuit connections.</p></div><span class="circuit-kind">Connectivity overview</span></div>
             <nav id="circuitViewButtons" class="circuit-view-buttons" aria-label="Circuit blocks"></nav>
-            <p class="circuit-scroll-hint">Scroll inside the drawing when needed; labels retain a readable size.</p>
-            <div id="circuitViewCanvas" class="circuit-view-canvas" tabindex="0" aria-label="Circuit diagram; scroll horizontally on small screens"></div>
+            <p class="circuit-scroll-hint">The complete circuit fits the panel; open the exact device sheet for a larger view.</p>
+            <div id="circuitViewCanvas" class="circuit-view-canvas" tabindex="0" aria-label="Circuit diagram"></div>
             <p id="circuitViewDescription" class="circuit-view-description" aria-live="polite"></p>
             <p class="circuit-view-source">Simplified connectivity from the calibrated transistor deck; bias, bulk and supply wiring are condensed. The complete device sheet below retains every SKY130 instance.</p>
           </section>
@@ -205,6 +214,7 @@
           </details>
 
         </div>
+        </details>
       </section>
 
       <section id="pvtView" class="view" data-view="pvt">
@@ -298,7 +308,7 @@
   </main>
 
   <template id="statusTemplate"><span class="status-dot"></span><span class="status-copy"></span></template>
-  <script src="/circuit_views.js?v=8" defer></script>
-  <script src="/app.js?v=8" defer></script>
+  <script src="/circuit_views.js?v=9" defer></script>
+  <script src="/app.js?v=9" defer></script>
 </body>
 </html>

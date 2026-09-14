@@ -14,7 +14,7 @@ quoted text. The report provides the detailed methods, results and limitations.
    Bookmark pages 8, 18 and 23 for the policy comparison, hardware PVT plot and
    requirement matrix. Both older PDFs remain available for comparison.
 4. Click **Enter judge mode**. Confirm the Receiver target is **9 dB at 1.9 GHz**.
-   The hardware measurement region must show **45/45 points pass**.
+   Expand **Explore the separate transistor CTLE + DFE checkpoint** and confirm its measured hardware region shows **45/45 points pass**. Collapse it again before starting.
 5. The reliable recording route uses saved completed results. You can optionally
    show a new request with **RL shield - adaptive bank**, then **Generate and
    verify**. That path uses frozen bank measurements for search and PVT, then
@@ -24,7 +24,7 @@ quoted text. The report provides the detailed methods, results and limitations.
 
 ## 0:00-0:35 | Introduce the problem
 
-**Screen:** Receiver, top of page. Keep the implemented signal path visible.
+**Screen:** Receiver, top of page. Keep the selected result, measured response and verification coverage visible.
 
 > Hello, we are Jai Kaushik, Rishabh Agarwal and Avi Mehta from BITS Pilani.
 > Our project is Nebula, an RL-assisted design framework for a five-gigabit
@@ -39,8 +39,7 @@ quoted text. The report provides the detailed methods, results and limitations.
 
 **Screen:** Click **Design explorer**. Point to the plain-language request,
 click **Read this request**, then point to the peaking and frequency fields.
-Stay with **RL shield - adaptive bank**. Open the generated CTLE drawing, then
-show **Measured specifications**. Open **Run files** briefly if useful.
+Stay with **RL shield - adaptive bank**. Show **Measured specifications**, then return to **Receiver** to inspect the CTLE and its tail devices. Expand **Inspect the exact generated CTLE drawing** if useful. The verdict and coverage stay at the top; **Inspect all PVT corners** opens the grid directly.
 
 > Here I can describe the response in plain language, and the tool extracts
 > the numerical target. For this example, we request nine decibels of peaking
@@ -65,11 +64,10 @@ Do not call a saved run a live generation.
 
 ## 1:25-2:20 | Explain the physical implementation
 
-**Screen:** Return to **Receiver**. Click **CTLE core**, then **Rs/Cs controls**,
-then **1-tap DFE**. Scroll so each drawing is fully visible. Do not open all
-details at once.
+**Screen:** In **Receiver**, expand **Explore the separate transistor CTLE + DFE checkpoint**. Clearly point to its independent **9 dB / 1.9 GHz** label. Its inspector starts with **CTLE core + tail current sources**; select **Rs/Cs controls**, then **1-tap DFE**. Each drawing fits the panel.
 
-> The physical signal path starts with an input attenuator, followed by the
+> This separate checkpoint implements the complete transistor feedback path.
+> Its physical signal path starts with an input attenuator, followed by the
 > source-degenerated CTLE. Resistance and capacitance shape the response.
 > Here they are implemented as electrical controls: an NMOS-controlled
 > resistor branch and two bias-controlled varactors.
@@ -215,3 +213,21 @@ A separate new 9 dB / 1.9 GHz adaptive-bank generation was also rehearsed:
 315/315 cached conditions pass, with zero search/measurement calls and one
 representative export SPICE call. It is separate from the zero-job saved-route
 rehearsal and from the pinned 45-point transistor receiver evidence.
+
+## Optional: show your completed 3 dB physical run (about 25 seconds)
+
+**Screen:** Choose **3 dB / 1.9 GHz - physical CTLE** in **Selected design**.
+Point to MODEL PASS, the actual measured response, and **315/315** coverage.
+The CTLE opens first. Scroll once to **Eye opening of this design**.
+
+> This is our completed three-decibel physical CTLE request. The result shows
+> the actual measured response and all three hundred fifteen checked conditions:
+> forty-five PVT corners across seven channel losses. This eye opening comes
+> from this circuit's saved AC response with our ideal one-tap DFE model.
+> It measures about three hundred forty-two millivolts and zero point eight
+> five nine UI. The separate transistor checkpoint keeps its own evidence.
+
+The recorded response is **3.910 dB at 2.131 GHz**, accepted under the physical
+export path's existing 1.5 dB / 0.3 octave target tolerances. Say "requested"
+for 3 dB / 1.9 GHz and "measured" for these actual values. The eye graphic is a
+worst-case ISI opening envelope, not a measured transient trace or a BER test.

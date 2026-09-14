@@ -85,12 +85,12 @@ function selectTab(name, updateHash = true) {
   document.body.dataset.view = name;
   $(".target-panel").hidden = name !== "results";
   if (name === "compare") renderCompare();
-  if (name === "hardware" && state.hardware) renderHardwareSidebar();
-  else if (state.current) {
+  if (state.current) {
     renderOutcome(state.current);
     renderRunTruth(state.current);
   }
-  if (updateHash) history.replaceState(null, "", `#${name}`);
+  $("#resultOverview").hidden = !["hardware", "results"].includes(name);
+  if (updateHash) { history.replaceState(null, "", `#${name}`); window.scrollTo({top: 0, behavior: "instant"}); }
 }
 
 function artifactUrl(design, name) {
@@ -128,6 +128,8 @@ function renderDesign(design) {
   sourceBadge.textContent = design.cached ? "Preverified" : "Live run";
   sourceBadge.classList.toggle("live", !design.cached);
 
+  renderSelectedOverview(design);
+  renderSelectedEye(design);
   NebulaCircuitViews.renderDesign(design);
   renderSchematic(design);
   renderSpecs(design.specs || []);
@@ -138,7 +140,55 @@ function renderDesign(design) {
   renderEvidence(design);
   refreshComparePickers();
   if ($('.tab[data-tab="hardware"]')?.classList.contains("active") && state.hardware) {
-    renderHardwareSidebar();
+    renderOutcome(state.current);
+    renderRunTruth(state.current);
+  }
+}
+
+function renderSelectedOverview(design) {
+  const picker = $("#selectedRun"); picker.replaceChildren();
+  for (const item of state.designs.values()) {
+    const option = document.createElement("option"); option.value = item.id;
+    option.textContent = `${number(item.request?.peaking_db, 2)} dB / ${number(item.request?.f_peak_ghz, 3)} GHz - ${item.method === "rl-physical" ? "physical CTLE" : "adaptive bank"} (${item.id === "judge-demo" ? "demo" : item.id.slice(0, 8)})`;
+    picker.append(option);
+  }
+  picker.value = design.id;
+  const m = design.nominal?.meas || {}, v = design.verification || {};
+  $("#resultHighlights").replaceChildren();
+  for (const [label, value] of [["Measured peaking", `${number(m.peaking_db, 3)} dB`], ["Measured peak", `${number(m._f_peak_ghz, 3)} GHz`], ["Modeled eye height", `${number(finite(m.eye_h_v) ? m.eye_h_v * 1000 : null, 1)} mV`], ["Modeled eye width", `${number(m.eye_w_ui, 3)} UI`]]) {
+    const box = document.createElement("div"), name = document.createElement("span"), strong = document.createElement("strong");
+    name.textContent = label; strong.textContent = value; box.append(name, strong); $("#resultHighlights").append(box);
+  }
+  $("#resultCoverage").textContent = `${number(v.n_pass, 0)}/${number(v.n_points, 0)} conditions pass across ${number(v.n_corners, 0)} PVT corners and ${number(v.n_channel_losses, 0)} channel losses. ${design.method === "rl-physical" ? "One fixed exported CTLE." : "Adaptive settings by condition."}`;
+}
+
+async function renderSelectedEye(design) {
+  const target = $("#selectedEye"), scope = $("#selectedEyeScope");
+  target.replaceChildren(); target.textContent = "Reading this run's saved AC evidence..."; scope.textContent = "";
+  try {
+    const data = await api(`/api/eye/${encodeURIComponent(design.id)}`);
+    if (state.current?.id !== design.id || data.run_id !== design.id) return;
+    const ns = "http://www.w3.org/2000/svg", svg = document.createElementNS(ns, "svg");
+    svg.setAttribute("viewBox", "0 0 660 290"); svg.setAttribute("role", "img");
+    svg.setAttribute("aria-label", `Worst-case modeled eye opening for ${design.id}`);
+    const max = Math.max(...data.height_v.map(Math.abs), .001) * .62;
+    const x = phase => 58 + (phase + .5) * 560, y = volts => 133 - volts / max * 102;
+    const add = (tag, attrs, text) => { const node = document.createElementNS(ns, tag); Object.entries(attrs).forEach(([k,v]) => node.setAttribute(k,String(v))); if(text) node.textContent=text; svg.append(node); return node; };
+    add("rect", {x:58,y:20,width:560,height:226,fill:"#f2f9fc"});
+    for (const phase of [-.5,-.25,0,.25,.5]) { add("line",{x1:x(phase),x2:x(phase),y1:20,y2:246,stroke:"#d4e3eb"}); add("text",{x:x(phase),y:268,"text-anchor":"middle"},String(phase)); }
+    add("line",{x1:58,x2:618,y1:133,y2:133,stroke:"#a5bdca"});
+    for (const sign of [-1,1]) {
+      const points = data.phase_ui.map((phase,i)=>`${i?'L':'M'}${x(phase).toFixed(2)},${y(sign*data.height_v[i]/2).toFixed(2)}`).join(" ");
+      add("path",{d:points,fill:"none",stroke:"#0089a8","stroke-width":3});
+    }
+    add("text",{x:338,y:287,"text-anchor":"middle"},"Phase relative to sampling cursor (UI)");
+    add("text",{x:66,y:40},`Opening: ${number(data.eye_h_v*1000,1)} mV / ${number(data.eye_w_ui,3)} UI`);
+    target.replaceChildren(svg);
+    scope.textContent = `${data.scope} Channel loss: ${number(data.channel_loss_db,1)} dB. Source: ${data.design_id}.`;
+  } catch (error) {
+    if (state.current?.id !== design.id) return;
+    target.textContent = "An eye trace is not available for this saved artifact.";
+    scope.textContent = error.message;
   }
 }
 
@@ -285,25 +335,13 @@ function hardwareTargetMatches(checkpoint, requestedBoost, requestedFrequency) {
 }
 
 function renderHardwareTargetState(checkpoint) {
-  const requestedBoost = finite($("#peakingInput").value) ? Number($("#peakingInput").value) : NaN;
-  const requestedFrequency = finite($("#frequencyInput").value) ? Number($("#frequencyInput").value) : NaN;
-  const checkpointBoost = Number(checkpoint.nominal?.target_boost_db);
-  const checkpointFrequency = Number(checkpoint.nominal?.target_peak_frequency_hz) / 1e9;
-  const matches = hardwareTargetMatches(checkpoint, requestedBoost, requestedFrequency);
-  const requestLabel = `${number(requestedBoost, 2)} dB at ${number(requestedFrequency, 3)} GHz`;
-  const checkpointLabel = `${number(checkpointBoost, 2)} dB at ${number(checkpointFrequency, 3)} GHz`;
-  $("#hardwareRequestedTarget").textContent = requestLabel;
-  $("#hardwareMatchedEvidence").hidden = !matches;
-  $("#hardwareTargetMismatch").hidden = matches;
-  $("#hardwareTargetMatch").className = `checkpoint-match ${matches ? "pass" : "warning"}`;
-  $("#hardwareMatchMessage").textContent = matches
-    ? "Exact target match. The saved transistor eye and measurements are shown below."
-    : `The saved measurements belong to ${checkpointLabel}; they are hidden for this ${requestLabel} request.`;
-  $("#hardwareTargetSummary").textContent = matches
-    ? `The current ${requestLabel} request matches the calibrated configurable CTLE + transistor DFE.`
-    : `Circuit implementation is shown below, but this ${requestLabel} request has no matching transistor checkpoint.`;
-  $("#hardwareTargetMismatchCopy").textContent =
-    `Generate ${requestLabel} in Design Explorer. The circuit views remain useful, but the saved eye and measurements belong only to ${checkpointLabel}.`;
+  const label = `${number(checkpoint.nominal?.target_boost_db, 2)} dB at ${number(checkpoint.nominal?.target_peak_frequency_hz / 1e9, 3)} GHz`;
+  $("#hardwareRequestedTarget").textContent = label;
+  $("#hardwareMatchedEvidence").hidden = false;
+  $("#hardwareTargetMismatch").hidden = true;
+  $("#hardwareTargetMatch").className = "checkpoint-match";
+  $("#hardwareMatchMessage").textContent = "Saved transistor evidence for this independent calibration.";
+  $("#hardwareTargetSummary").textContent = `${label} calibrated configurable CTLE + transistor DFE. Separate from the selected run.`;
 }
 
 function renderHardwareMetrics(checkpoint) {
@@ -361,8 +399,9 @@ function renderHardwareCheckpoint(checkpoint) {
     document.getElementById(linkId).href = visual.url;
   }
   $("#hardwareNote").textContent = "Latest checkpoint: transistor DFE and configurable Rs/Cs pass 45/45 Link PVT points. Open Hardware proof for the exact scope.";
-  if ($('.tab[data-tab="hardware"]')?.classList.contains("active")) {
-    renderHardwareSidebar();
+  if (state.current && $('.tab[data-tab="hardware"]')?.classList.contains("active")) {
+    renderOutcome(state.current);
+    renderRunTruth(state.current);
   }
 }
 
@@ -673,7 +712,7 @@ async function generate() {
   clearMessage();
   const peaking = Number($("#peakingInput").value);
   const frequency = Number($("#frequencyInput").value);
-  if (!Number.isFinite(peaking) || !Number.isFinite(frequency)) { showMessage("Enter both requested values.", "error"); return; }
+  if (!finite($("#peakingInput").value) || !finite($("#frequencyInput").value)) { showMessage("Enter both requested values.", "error"); return; }
   const request = `${peaking} dB of peaking with the peak near ${frequency} GHz`;
   $("#requestText").value = request;
   const button = $("#generateButton"); button.disabled = true;
@@ -691,7 +730,7 @@ async function generate() {
 function updateModeSummary() {
   const physical = $("#designMode").value === "rl-physical";
   $("#modeSummary").textContent = physical
-    ? "Generates and verifies a request-specific transistor CTLE with fixed exported Rs/Cs. The Receiver checkpoint is a separate calibrated implementation."
+    ? "Generates a transistor CTLE with fixed exported Rs/Cs, then verifies it across PVT. Receiver opens with your circuit, result and modeled eye."
     : "The frozen RL policy proposes A/R/C codes and the deterministic safety shield selects a checked result; the transistor receiver is shown as a separate implementation checkpoint.";
 }
 
@@ -706,7 +745,14 @@ async function pollJob(id, onUpdate) {
   for (;;) {
     const job = await api(`/api/jobs/${encodeURIComponent(id)}`);
     onUpdate(job);
-    if (job.status === "complete") { renderDesign(job.result); selectTab("results"); showMessage("Circuit generated and evidence recorded.", "info"); return job.result; }
+    if (job.status === "complete") {
+      localStorage.setItem("nebula-selected-design", job.result.id);
+      renderDesign(job.result); selectTab("hardware");
+      $("#referenceCheckpoint").open = false;
+      $("#progressPanel").hidden = true;
+      $("#resultOverview").focus({preventScroll: true});
+      return job.result;
+    }
     if (job.status === "failed") throw new Error(job.error || "The pipeline stopped without a result.");
     await new Promise((resolve) => setTimeout(resolve, 700));
   }
@@ -780,6 +826,10 @@ function exitJudgeMode() {
 function bindEvents() {
   $$(".tab").forEach((button) => button.addEventListener("click", () => selectTab(button.dataset.tab)));
   $$('[data-open-tab]').forEach((button) => button.addEventListener("click", () => selectTab(button.dataset.openTab)));
+  $("#selectedRun").addEventListener("change", event => {
+    const design = state.designs.get(event.target.value);
+    if (design) { localStorage.setItem("nebula-selected-design", design.id); renderDesign(design); selectTab("hardware"); }
+  });
   $("#readRequest").addEventListener("click", () => parseNaturalRequest().catch(() => {}));
   $("#designMode").addEventListener("change", updateModeSummary);
   for (const input of [$("#peakingInput"), $("#frequencyInput")]) {
@@ -810,6 +860,7 @@ async function init() {
   };
   compactLayout.addEventListener("change", positionControls);
   positionControls();
+  $("#resultVerdict").append($("#outcomeCard"), $("#failureBox"));
   const runDetails = document.createElement("details");
   runDetails.className = "details-card run-details";
   const runSummary = document.createElement("summary");
@@ -837,6 +888,10 @@ async function init() {
       }
     }
     refreshComparePickers();
+    const savedId = localStorage.getItem("nebula-selected-design");
+    const saved = state.designs.get(savedId) || [...state.designs.values()].filter(d => d.id !== "judge-demo").at(-1);
+    if (saved) renderDesign(saved);
+    else renderSelectedOverview(state.current);
     const requestedView = location.hash.slice(1);
     if (["results", "hardware", "pvt", "compare", "channel", "evidence"].includes(requestedView)) {
       selectTab(requestedView, false);

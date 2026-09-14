@@ -343,6 +343,20 @@ class NebulaWebApp:
         self.designs: dict[str, dict] = {}
         self.design_dirs: dict[str, Path] = {}
         self.lock = threading.Lock()
+        # Explicit run roots retain completed artifacts across a desktop restart.
+        for path in sorted(self.run_root.glob("*/design.json"), key=lambda p: p.stat().st_mtime):
+            if path.parent.is_symlink() or not re.fullmatch(r"[0-9a-f]{32}", path.parent.name):
+                continue
+            try:
+                raw = json.loads(path.read_text(encoding="utf-8"))
+                if not isinstance(raw.get("nominal"), dict) or not raw.get("verification"):
+                    continue
+                artifacts = sorted(p.name for p in path.parent.iterdir() if p.is_file())
+                shown = present_design(path.parent.name, raw, source="saved-run", artifacts=artifacts)
+                self.designs[shown["id"]] = shown
+                self.design_dirs[shown["id"]] = path.parent
+            except (ValueError, TypeError, KeyError):
+                continue
         # Deliberately one worker: ngspice and result directories are isolated,
         # but serial work avoids demo-machine contention and unpredictable lag.
         self.executor = ThreadPoolExecutor(max_workers=WORKER_LIMIT,
@@ -594,6 +608,15 @@ class _Handler(BaseHTTPRequestHandler):
                 return
             if path == "/api/designs":
                 self._json({"designs": self.app.design_list()})
+                return
+            if path.startswith("/api/eye/"):
+                item_id = path.rsplit("/", 1)[-1]
+                directory = self.app.design_dirs.get(item_id)
+                if directory is None:
+                    self._error(HTTPStatus.NOT_FOUND, "Unknown design.")
+                else:
+                    from nebula.web.design_visuals import selected_eye
+                    self._json(dict(selected_eye(directory), run_id=item_id))
                 return
             if path.startswith("/api/designs/"):
                 design = self.app.get_design(path.rsplit("/", 1)[-1])

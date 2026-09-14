@@ -275,7 +275,7 @@ process.stdout.write(JSON.stringify(svgs));
     assert "l30 -40" in views["rc"]  # voltage-controlled varactors
 
 
-def test_design_explorer_renders_four_dynamic_receiver_blocks():
+def test_receiver_opens_complete_ctle_and_keeps_other_blocks_optional():
     import shutil
     import subprocess
     node = shutil.which("node")
@@ -298,28 +298,29 @@ const context = vm.createContext({document});
 vm.runInContext(fs.readFileSync('nebula/web/static/circuit_views.js','utf8') +
   '\nNebulaCircuitViews.renderDesign({method:"rl-hybrid",search:{setting:425,atten_code:6,bank_code:41},nominal:{params:{rs:356.8177,cs:2.19177e-12}}});', context);
 const cards = document.getElementById('designBlockGrid').children;
-assert.equal(cards.length,4);
-assert.deepEqual(cards.map(card=>card.dataset.block),['attenuator','ctle','dfe','reference']);
-assert.equal(cards[0].children[0].children[1].textContent,'A6');
-assert.equal(cards[0].name,'design-circuits');
+assert.equal(cards.length,3);
+assert.deepEqual(cards.map(card=>card.dataset.block),['ctle','attenuator','reference']);
 assert.equal(cards[0].open,true);
-assert(cards[0].children[1].innerHTML.includes('gate = VDD'));
-assert.equal((cards[0].children[1].innerHTML.match(/gate = 0/g)||[]).length,2);
-assert.equal(cards[1].children[0].children[1].textContent,'R5 / C1');
-assert(cards[1].children[1].innerHTML.includes('Fixed Rs/Cs'));
-assert(cards[1].children[2].textContent.includes('356.82 ohm'));
-assert(cards[2].children[2].textContent.includes('transistor summer'));
-assert(cards[3].children[1].innerHTML.includes('Xcbyp'));
+assert.equal(cards[1].open,false);
+assert(cards[0].children[1].innerHTML.includes('XMT1'));
+assert(cards[0].children[1].innerHTML.includes('XMT2'));
+assert.equal(cards[1].children[0].children[1].textContent,'A6');
+assert(cards[1].children[1].innerHTML.includes('gate = VDD'));
+assert.equal((cards[1].children[1].innerHTML.match(/gate = 0/g)||[]).length,2);
+assert.equal(cards[0].children[0].children[1].textContent,'R5 / C1');
+assert(cards[0].children[1].innerHTML.includes('Fixed Rs/Cs'));
+assert(cards[0].children[2].textContent.includes('356.82 ohm'));
+assert(cards[2].children[1].innerHTML.includes('Xcbyp'));
 vm.runInContext('NebulaCircuitViews.renderDesign({method:"rl-hybrid",search:{atten_code:null,bank_code:null},nominal:{params:{rs:null,cs:null}}});', context);
 const missing = document.getElementById('designBlockGrid').children;
-assert.equal(missing[0].children[0].children[1].textContent,'Not recorded');
-assert.equal(missing[1].children[0].children[1].textContent,'Not recorded / Not recorded');
-assert(missing[1].children[2].textContent.includes('not measured'));
+assert.equal(missing[1].children[0].children[1].textContent,'Not recorded');
+assert.equal(missing[0].children[0].children[1].textContent,'Not recorded / Not recorded');
+assert(missing[0].children[2].textContent.includes('not measured'));
 """
     subprocess.run([node, "-e", script], check=True, capture_output=True, text=True)
 
 
-def test_receiver_checkpoint_match_is_exact_and_target_dependent():
+def test_optional_checkpoint_keeps_its_own_target_when_request_changes():
     import shutil
     import subprocess
     node = shutil.which("node")
@@ -352,9 +353,10 @@ assert.equal(element('hardwareMatchedEvidence').hidden,false);
 assert.equal(element('hardwareTargetMismatch').hidden,true);
 element('peakingInput').value='8';
 vm.runInContext('renderHardwareTargetState('+JSON.stringify(checkpoint)+');',context);
-assert.equal(element('hardwareMatchedEvidence').hidden,true);
-assert.equal(element('hardwareTargetMismatch').hidden,false);
-assert(element('hardwareMatchMessage').textContent.includes('hidden for this 8 dB'));
+assert.equal(element('hardwareMatchedEvidence').hidden,false);
+assert.equal(element('hardwareTargetMismatch').hidden,true);
+assert.equal(element('hardwareRequestedTarget').textContent,'9 dB at 1.9 GHz');
+assert(element('hardwareTargetSummary').textContent.includes('Separate from the selected run'));
 for (const nominal of [{}, {target_boost_db:null,target_peak_frequency_hz:null},
     {target_boost_db:'',target_peak_frequency_hz:''}]) {
   context.bad = {nominal};

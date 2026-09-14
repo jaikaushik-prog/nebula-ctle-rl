@@ -1,5 +1,16 @@
 # Nebula submission-night restart - 14 September 2026
 
+> Entry 149 desktop update (14 September): Receiver now follows the selected
+> completed run, with verdict/coverage first, CTLE + tails initially open,
+> optional other blocks, and its own saved-AC eye opening. The 9 dB transistor
+> checkpoint is a separate optional disclosure. Use the updated narration;
+> the earlier default-checkpoint/hide-on-target-change UI descriptions below
+> are historical. Explicit run roots restore completed results after restart.
+> The current saved 3 dB run is under
+> `C:\Users\DELL\AppData\Local\Temp\nebula-web-85d05pa4`.
+> Resume it with `py -3.13 -m nebula.web --run-root "C:\Users\DELL\AppData\Local\Temp\nebula-web-85d05pa4"`.
+
+
 ## Read this first: active instruction
 
 You are continuing Jai Kaushik's Nebula competition project. The laptop was

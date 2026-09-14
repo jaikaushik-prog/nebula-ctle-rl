@@ -30,7 +30,7 @@ body[data-view] { background: #fff; }
 body[data-view] .target-panel { display: none; }
 body[data-view="results"] .workspace { grid-template-columns: 260px minmax(0,1fr); gap: 28px; }
 body[data-view="results"] .target-panel { display: block; border: 0; padding: 30px 18px; margin-top: 62px; border-radius: 8px; align-self: start; }
-body[data-view="hardware"] .explorer-tab { display: none; }
+body[data-view="hardware"] .explorer-tab { display: inline-flex; }
 body[data-view] .run-details .verification-panel { display: block; border: 0; background: #fff; padding: 20px; }
 body[data-view] .run-details .side-button, body[data-view] .run-details .hardware-side { display: none; }
 body[data-view] .signal-path, body[data-view] .hardware-callout, body[data-view] .metric-rail { display: none; }
@@ -524,3 +524,56 @@ td.numeric { font-family: "Cascadia Mono", Consolas, monospace; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; transition: none !important; animation: none !important; }
 }
+
+/* Selected-run results stay visible before any circuit details. */
+.result-overview { margin: 18px 0 26px; border: 1px solid var(--rule); border-radius: 10px; overflow: hidden; background: #fff; }
+.run-picker { display: flex; align-items: center; gap: 16px; padding: 12px 18px; border-bottom: 1px solid var(--rule-soft); }
+.run-picker label { margin: 0; white-space: nowrap; font-size: 14px; }
+.run-picker select { margin: 0; max-width: 520px; font-size: 15px; }
+.run-picker .text-button { margin-left: auto; white-space: nowrap; }
+#resultVerdict .outcome-card { margin: 0; border: 0; border-radius: 0; padding: 15px 20px; }
+#resultVerdict .outcome-card strong { font-size: 21px; }
+#resultVerdict .outcome-card span { font-size: 14px; }
+#resultVerdict .failure-box { margin: 0; padding: 14px 20px; }
+.result-highlights { display: grid; grid-template-columns: repeat(4,1fr); padding: 16px 20px; gap: 18px; }
+.result-highlights span { display: block; color: var(--muted); font-size: 13px; }
+.result-highlights strong { display: block; font-size: 23px; font-weight: 600; margin-top: 4px; }
+.result-actions { padding: 10px 20px; display: flex; justify-content: space-between; gap: 18px; align-items: center; background: #f6fafb; }
+.result-actions p { margin: 0; font-size: 14px; line-height: 1.5; }
+.result-actions button { flex-shrink: 0; }
+.receiver-heading { display: flex; justify-content: space-between; align-items: center; margin: 22px 0 14px; }
+.receiver-heading h2 { font-size: 25px; margin: 4px 0; }
+body[data-view] .design-block-canvas svg, body[data-view] .circuit-view-canvas svg { width: 100%; min-width: 0; height: auto; }
+body[data-view] .design-block-canvas, body[data-view] .circuit-view-canvas { overflow: visible; }
+body[data-view] .hardware-drawing-scroll { max-height: none; overflow: visible; }
+body[data-view] .hardware-drawing-scroll img { width: 100%; max-width: 100%; }
+.selected-eye-layout { display: grid; grid-template-columns: 1.6fr 1fr; gap: 32px; margin: 24px 0; }
+.selected-eye-panel { margin: 0; min-width: 0; }
+.selected-eye-panel h3, .selected-eye-explanation h3 { font-size: 19px; }
+.selected-eye-panel svg { display: block; width: 100%; }
+.selected-eye-panel svg text { fill: var(--ink); font: 14px Aptos, sans-serif; }
+.selected-eye-panel figcaption, .selected-eye-explanation p { font-size: 14px; line-height: 1.6; color: var(--muted); }
+.reference-checkpoint { padding: 0 20px; }
+.reference-checkpoint > summary { font-size: 16px; padding: 18px 0; }
+.reference-checkpoint > summary span { color: var(--muted); font-size: 14px; margin-left: 20px; }
+.reference-note { font-size: 15px; line-height: 1.6; }
+@media (max-width: 850px) {
+  .result-highlights { grid-template-columns: repeat(2,1fr); }
+  .run-picker, .result-actions, .receiver-heading { flex-wrap: wrap; }
+  .run-picker select { max-width: 100%; }
+  .selected-eye-layout { grid-template-columns: 1fr; }
+}
+
+body[data-view="hardware"] #hardwareView { padding-top: 0; }
+body[data-view] .receiver-heading { margin-top: 10px; }
+#designBlockGrid .design-block-canvas svg { height: 310px; }
+#designBlockGrid .design-block-canvas text { font-size: 17px; }
+#designBlockGrid .design-block-card > p { padding: 10px 16px; }
+#designBlockGrid .design-block-canvas .circuit-small { font-size: 16px; }
+@media (max-width: 700px) { #designBlockGrid .design-block-canvas svg { height: auto; } }
+
+body[data-view] .result-overview { margin-bottom: 12px; }
+body[data-view] .receiver-heading p { margin: 0; }
+body[data-view] .receiver-heading h2 { margin: 4px 0; }
+#designBlockGrid .design-block-canvas svg { height: 290px; }
+@media (max-width: 700px) { #designBlockGrid .design-block-canvas svg { height: auto; } }

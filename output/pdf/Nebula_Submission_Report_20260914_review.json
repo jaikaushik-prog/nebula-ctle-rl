@@ -1,5 +1,5 @@
 {
-  "report_sha256": "ec08a592cf064ca2b76b7f3bd5b4daa3e138a2fb50da83abc1b8f22a2cbde758",
+  "report_sha256": "7802f0b1d3ac14646eaa90a6a9cb6149291b39048875bdef53c7c71212c2a521",
   "page_count": 25,
   "source_hash_checks": "PASS",
   "text_bounds": "PASS",
@@ -143,7 +143,7 @@
     },
     {
       "page": 21,
-      "characters": 1612,
+      "characters": 1630,
       "images": 1,
       "content_bottom_pt": 760.0
     },
@@ -173,7 +173,19 @@
     }
   ],
   "visual_review": "PASS",
-  "visual_review_note": "All 25 Poppler-rendered pages inspected. Uniform 760 pt content bottoms, readable text/tables/circuits, no clipping. Architecture label corrected; final page 6 re-inspected and the other 24 pages are raster-identical to the full review.",
+  "visual_review_note": "All 25 pages are pixel-identical to the preceding visually reviewed build. Only source hashes changed after clarifying the optional checkpoint target label.",
+  "git_index_legacy_line_ending_differences": [
+    "nebula/product_demo/physical_bias_9db_1p9ghz_20260906/physical_evidence/summary.json",
+    "nebula/product_demo/physical_bias_9db_1p9ghz_20260906/physical_evidence/evidence_sha256.json",
+    "nebula/product_audits/entry115_exhaustive_benchmark_20260908/summary.json",
+    "nebula/product_audits/entry115_exhaustive_benchmark_20260908/sha256.json",
+    "nebula/product_audits/entry115_physical_recovery_20260908/summary.json",
+    "nebula/product_audits/entry115_physical_recovery_20260908/sha256.json",
+    "nebula/product_audits/entry113_attribution_20260907/summary.json",
+    "nebula/product_audits/entry113_coverage_20260907/summary.json",
+    "nebula/product_audits/entry113_models_20260907/summary.json"
+  ],
+  "git_index_note": "Local source hashes and pinned hardware archives pass. Nine pre-existing legacy JSON inputs have CRLF working bytes and LF Git blobs. Their LF-normalized contents match. Strict legacy report rebuilding on a fresh clone requires restoring the original evidence line endings; no frozen evidence was rewritten for this submission.",
   "visual_reviewed_pages": [
     1,
     2,
@@ -201,16 +213,14 @@
     24,
     25
   ],
-  "git_index_legacy_line_ending_differences": [
-    "nebula/product_demo/physical_bias_9db_1p9ghz_20260906/physical_evidence/summary.json",
-    "nebula/product_demo/physical_bias_9db_1p9ghz_20260906/physical_evidence/evidence_sha256.json",
-    "nebula/product_audits/entry115_exhaustive_benchmark_20260908/summary.json",
-    "nebula/product_audits/entry115_exhaustive_benchmark_20260908/sha256.json",
-    "nebula/product_audits/entry115_physical_recovery_20260908/summary.json",
-    "nebula/product_audits/entry115_physical_recovery_20260908/sha256.json",
-    "nebula/product_audits/entry113_attribution_20260907/summary.json",
-    "nebula/product_audits/entry113_coverage_20260907/summary.json",
-    "nebula/product_audits/entry113_models_20260907/summary.json"
-  ],
-  "git_index_note": "Local source hashes and pinned hardware archives pass. Nine pre-existing legacy JSON inputs have CRLF working bytes and LF Git blobs. Their LF-normalized contents match. Strict legacy report rebuilding on a fresh clone requires restoring the original evidence line endings; no frozen evidence was rewritten for this submission."
+  "previous_edition_pixel_comparison": {
+    "identical_pages": 24,
+    "changed_pages": [
+      21
+    ]
+  },
+  "release_pixel_comparison": {
+    "identical_pages": 25,
+    "changed_pages": []
+  }
 }

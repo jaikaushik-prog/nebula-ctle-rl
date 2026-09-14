@@ -63,7 +63,7 @@ const NebulaCircuitViews = (() => {
         text(35, 325, "Mirrored negative half: iny -> Xatt_sn -> inn; Xatt_rn0..2 / Xatt_swn0..2", "circuit-small")),
     },
     ctle: {
-      label: "CTLE core",
+      label: "CTLE core + tail current sources",
       description: "The SKY130 input pair converts inp / inn into differential output voltage through poly loads. Rs/Cs connect the source nodes s1 and s2. Tail devices use the physical bias reference; open Rs/Cs controls for the reconfigurable degeneration network.",
       svg: frame("CTLE differential pair and configurable source degeneration",
         text(30, 36, "Source-degenerated differential pair", "circuit-label") +
@@ -137,7 +137,7 @@ const NebulaCircuitViews = (() => {
       },
       ctle: {
         badge: `${code(rCode, "R")} / ${code(cCode, "C")}`,
-        note: `Selected values: Rs ${component(params.rs, 1, "ohm", 2)} and Cs ${component(params.cs, 1e12, "pF", 3)}. The saved run exports fixed values; the Receiver tab shows their voltage-configurable transistor implementation.`,
+        note: `Selected values: Rs ${component(params.rs, 1, "ohm", 2)} and Cs ${component(params.cs, 1e12, "pF", 3)}. This topology guide includes both tail devices. Open the exact generated drawing for all device sizes, loads and bias connections. The separate checkpoint below uses voltage-configurable Rs/Cs.`,
       },
       dfe: {
         badge: "Transistor reference",
@@ -156,13 +156,13 @@ const NebulaCircuitViews = (() => {
     const target = document.getElementById("designBlockGrid");
     target.replaceChildren();
     const meta = designBlockMeta(design);
-    for (const key of ["attenuator", "ctle", "dfe", "reference"]) {
+    for (const key of ["ctle", "attenuator", "reference"]) {
       const view = views[key];
       const article = document.createElement("details");
       article.className = "design-block-card";
       article.dataset.block = key;
       article.setAttribute("name", "design-circuits");
-      article.open = key === "attenuator";
+      article.open = key === "ctle";
       const heading = document.createElement("summary");
       heading.className = "design-block-card-heading";
       const title = document.createElement("h4");
@@ -173,7 +173,7 @@ const NebulaCircuitViews = (() => {
       const canvas = document.createElement("div");
       canvas.className = "design-block-canvas";
       canvas.setAttribute("tabindex", "0");
-      canvas.setAttribute("aria-label", `${view.label} circuit drawing; scroll to inspect`);
+      canvas.setAttribute("aria-label", `${view.label} circuit drawing, fitted to the panel`);
       let svg = view.svg;
       if (key === "attenuator") {
         const code = design.search?.atten_code;
@@ -212,7 +212,8 @@ const NebulaCircuitViews = (() => {
         document.querySelector(".circuit-inspector").scrollIntoView({behavior: "smooth", block: "start"});
       }
     }
-    for (const [key, view] of Object.entries(views)) {
+    for (const key of ["ctle", "attenuator", "dfe", "rc", "reference"]) {
+      const view = views[key];
       const button = document.createElement("button");
       button.type = "button";
       button.dataset.circuit = key;
@@ -221,7 +222,7 @@ const NebulaCircuitViews = (() => {
       buttons.append(button);
     }
     document.getElementById("inspectRcButton").onclick = () => select("rc", true);
-    select("dfe");
+    select("ctle");
   }
   return {mount, renderDesign};
 })();

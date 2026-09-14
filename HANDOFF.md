@@ -1078,6 +1078,9 @@ signaling, ADC-based DSP receiver, 28 nm CMOS reference parameters).
 
 ## 2. Repository map (what every file/folder is)
 
+Entry 149: `nebula/web/design_visuals.py` reconstructs selected physical-export eye openings from saved, hash-checked nominal AC. `nebula/tests/test_web_selected_eye.py` covers recorded dimensions, tampering, completion, stale responses and run-root restoration.
+
+
 Submission edition additions (2026-09-14):
 - `nebula/report/submission_story.py`: independent 25-page story/report builder,
   pinned hardware archives and separate frozen-policy/physical-export evidence.
@@ -2152,6 +2155,9 @@ PRBS → scramble → Gray/PAM4 → TX-FFE → ZOH ×OSR(8) → TX pole (0.75·f
 
 ## 5. Complete history (what was done, in order, with the WHY)
 
+Entry 149 (2026-09-14): the completed 3 dB run exposed a Receiver state split. Receiver now follows the selected run, shows verdict/coverage first, opens the CTLE with tail devices, and retains the calibrated transistor checkpoint as separately labeled optional evidence.
+
+
 Latest presentation milestone: Entries 147/148 (2026-09-14) finish the
 inherited desktop cleanup and create a separate report with an AAPMS-inspired
 chapter/story structure. The final hardware evidence is promoted into the new
@@ -2469,6 +2475,9 @@ Plus: git init, .gitignore, 28 tests, Wilson-bound BER reporting.
   rectangle and is now an explicit limitation, not a hidden traceback.
 
 ## 6. Key numbers & validated behavior (current state)
+
+ENTRY 149 CURRENT DESKTOP: selected-run Receiver replaces the fixed-checkpoint default. Preserved run ab981d69dac840e9820155d7e46e14dc: 315/315 conditions, 45 corners x seven losses, measured 3.910114900 dB / 2.131143537 GHz, modeled eye 0.341791199 V / 0.859375 UI. Its saved AC reproduces both eye dimensions exactly. Scientific acceptance checks and tolerances are unchanged.
+
 
 LATEST PRESENTATION STATE (Entries 147/148, 2026-09-14): Receiver retains one
 shared five-view circuit inspector and one scoped measurement region. Design
@@ -3241,6 +3250,9 @@ still NOT full area. The 12-request replay is fully supported at eight requests;
 
 ## 7. Known model limitations (honest list — do not overclaim)
 
+Entry 149 display scope: physical-run eye graphics are worst-case ISI opening envelopes from saved transistor AC + canonical constructed channel + ideal 1-tap DFE, not transient waveforms or BER evidence. Bank artifacts retaining only scalar eye dimensions cannot supply a trace; the UI says so. The separate 9 dB checkpoint keeps its own transistor transient and 45-point Link PVT evidence.
+
+
 Submission packaging caveat (Entries 147/148): the delivered PDF and local
 report rebuild pass. Nine older JSON evidence inputs have different CRLF/LF
 bytes in the worktree and Git index. Their content matches, but a strict report
@@ -3548,6 +3560,9 @@ variation, mismatch and layout remain open. Old production evidence is unchanged
   untrusted until proven (the Phase-0 experience says assume bugs).
 
 ## 8. Next steps (prioritized backlog with context)
+
+Entry 149 recording route: show the completed physical run for result/CTLE/eye/PVT continuity, then explicitly expand the separate 9 dB transistor checkpoint. Follow the updated narration. No new SPICE campaign is needed. An explicit --run-root restores completed design artifacts after restart.
+
 
 CURRENT SUBMISSION PRIORITY (Entries 147/148, supersedes historical backlog):
 the owner records the walkthrough using `nebula/SUBMISSION_DEMO_SCRIPT_20260914.md` and submits the new
@@ -4206,6 +4221,11 @@ explicit scope.
 
 ## 9. Gotchas & footguns (each one cost real debugging time)
 
+### G198. Separate selected results, future targets and reference evidence
+
+A completed run controls Receiver, PVT and files together. Editing the next target does not relabel that result. Show verdict/coverage immediately on completion; discard eye responses for older selections. Reconstruct eyes only from matching saved AC/deck hashes and cross-check recorded dimensions. Never fabricate a waveform from scalar metrics. Normalize Windows manifest separators for lookup only; source bytes must still match. Optional checkpoint evidence always labels its own target.
+
+
 ### G197. Check the Git blob as well as the current evidence file
 
 A passing worktree hash and clean-looking Git status do not prove that an old
@@ -4218,6 +4238,8 @@ original hashes to conceal the difference; retain the finding and restore only
 bytes proven to match the original manifest in any future repair.
 
 ### G195. A static checkpoint must not look responsive to a changed request
+
+Entry 149 supersedes the original hide-on-input behavior below: Receiver follows the selected completed run. The independent checkpoint is now in a closed disclosure explicitly labeled 9 dB / 1.9 GHz. Changing a future target never changes or relabels that evidence. The provenance rule is unchanged.
 
 The Receiver checkpoint is one measured 9 dB / 1.9 GHz calibration. Leaving
 its eye and metric tape visible after a user edits peaking or frequency makes
@@ -19918,3 +19940,56 @@ is prepared for normal fast-forward backup to nebula/winning-sprint-20260908
 and main. No force push, reference upload, training or new circuit campaign.
 The remaining submission actions belong to the owner: record the supplied
 narration, review the recording and submit the chosen materials.
+
+
+### 2026-09-14 - Entry 149 selected-run Receiver and result-first desktop flow
+
+The owner reported that a completed 3 dB physical export passed all corners,
+but Receiver kept a yellow request mismatch and hid its eye. Circuit blocks
+repeated across two tabs, diagrams scrolled internally, and results were buried.
+Receiver now follows the selected completed run. Its top summary shows verdict,
+actual response, modeled eye dimensions and coverage with a direct PVT button.
+Completion opens Receiver at the top and focuses the summary. The CTLE and both
+tail devices start open; attenuation and bias are optional. Diagrams fit the
+panel. Explorer contains inputs/specs/sizing without repeated circuit grids.
+A run picker restores earlier results. Future request edits cannot relabel them.
+The independent 9 dB transistor CTLE + DFE checkpoint is an optional disclosure.
+
+The physical eye reuses the canonical saved-AC fit, channel, pulse and cursor
+functions. Deck/AC hashes and agreement with recorded eye dimensions are checked.
+The plot is explicitly a worst-case ISI opening envelope, not transient or BER
+evidence. Bank records without AC retain dimensions but cannot supply a trace.
+Explicit run roots restore completed designs after restart, skipping malformed
+or incomplete JSON. Existing verification/status logic is reused unchanged.
+
+The 25-page report keeps the five requested circuit sections and balanced
+bottom margins; desktop narrative/screenshot are refreshed. Both earlier PDFs
+remain immutable. The voice script follows the revised flow, including an
+optional 25-second explanation of the owner's saved 3 dB physical run.
+
+Before edits, exact unchanged HEAD ea0e5b56 had 3414 passed / 13 deselected /
+two known warnings in the preceding full run (1527.90 s). Focused post-change:
+30 passed in 6.51 s, including seven new tests. Browser rehearsal passes at
+1440x1000 and 1280x900: own 3 dB eye, CTLE/tails fit initially, no circuit
+horizontal overflow, completion focus/top landing, run switching, future target
+edits, separate checkpoint, 45-cell PVT and no duplicated Explorer circuit grid.
+Completion was replayed with the real saved result; no new jobs were submitted.
+Full post-change regression and refreshed PDF review are pending below.
+
+Entry 149 final UX checks also cover checkpoint-before-design startup and
+all 45 PVT cells fitting the initial desktop viewport. Seven selected-eye/state
+regressions pass after the startup guard. Both browser sizes pass again.
+Final PDF review: 25 balanced pages, all source hashes/bounds/figures pass;
+page 21 visually inspected, other 24 pages pixel-identical to the prior edition.
+Normal desktop URL http://127.0.0.1:8765 now serves the preserved 3 dB run and
+its exact 0.341791199 V / 0.859375 UI eye. The server was started only after
+confirming no existing listener; the owner's saved files were not replaced.
+
+Entry 149 FINAL VALIDATION (resumed after status interruption): full required
+command completed successfully: 3421 passed, 13 deselected, two known warnings
+in 1543.17 s. Baseline was 3414 passed. Final focused checks: 30 passed.
+Release report SHA-256 7802f0b1d3ac14646eaa90a6a9cb6149291b39048875bdef53c7c71212c2a521.
+All 25 pages passed rendering/source/bounds checks and are pixel-identical to
+the reviewed build before the checkpoint-label clarification. Both old PDFs
+are unchanged. This verified checkpoint is saved before the owner's next
+requested engineering-workbench and waveform-eye revision.
