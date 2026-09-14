@@ -1,3 +1,5 @@
+> **Superseded for current submission execution:** Read [NEBULA_FINAL_SUBMISSION_AGENT_HANDOFF_20260914.md](NEBULA_FINAL_SUBMISSION_AGENT_HANDOFF_20260914.md) first. It records the organiser-confirmed 10-12-page limit, deadline, current frontend, evidence priorities and unfinished Word/video status. The owner explicitly authorized its focused HANDOFF reading set instead of every historical line.
+
 # Nebula submission-night restart - 14 September 2026
 
 > **Entry 150 supersedes the Receiver workflow below.** Five tabs remain:

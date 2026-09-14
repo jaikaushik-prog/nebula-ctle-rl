@@ -1,5 +1,7 @@
 # HANDOFF.md — Living Project State & Continuation Guide
 
+> **14 September final-submission update (Entry 151):** Start with `NEBULA_FINAL_SUBMISSION_AGENT_HANDOFF_20260914.md`. The organiser requires a 10-12-page report plus demo video by 15 September 2026, 11:00 PM. The current 25-page report must be condensed into a separate final artifact. The owner authorized focused HANDOFF reading; the new packet defines that set and bounded technical priorities.
+
 > **READ THIS FIRST.** This file is the single source of truth for project
 > state. It exists so that ANY person or AI agent picking up this repository —
 > at any point, with zero prior context — knows what this project is, what has
@@ -1077,6 +1079,9 @@ signaling, ADC-based DSP receiver, 28 nm CMOS reference parameters).
   **PRIVATE, and must stay private** (contains copyrighted PDFs, see G1).
 
 ## 2. Repository map (what every file/folder is)
+
+**Entry 151 addition:** `NEBULA_FINAL_SUBMISSION_AGENT_HANDOFF_20260914.md` is the current execution packet for a new agent: confirmed submission requirements, evidence boundaries, prioritized task prompts, artifact status and verification/backup rules.
+
 
 Entry 150: design_plots.js draws AC, modeled waveform eyes and margin envelopes; test_web_waveform_eye.py checks FFT reconstruction and fixed-tap feedback. Selected-eye tests check stale comparisons and shared axes.
 
@@ -2157,6 +2162,9 @@ PRBS → scramble → Gray/PAM4 → TX-FFE → ZOH ×OSR(8) → TX pole (0.75·f
 
 ## 5. Complete history (what was done, in order, with the WHY)
 
+**14 September 2026, Entry 151:** Owner supplied the final submission email and requested a complete new-agent Markdown instruction packet. This documentation update records the new 10-12-page requirement and proposes bounded evidence improvements; it does not execute them.
+
+
 Entry 150: owner removed Receiver. Design Explorer owns the result, four expandable circuit views, exact drawing and independent checkpoint; Compare circuits owns eyes. New target opens a focused dialog.
 
 Entry 149 (2026-09-14): the completed 3 dB run exposed a Receiver state split. Receiver now follows the selected run, shows verdict/coverage first, opens the CTLE with tail devices, and retains the calibrated transistor checkpoint as separately labeled optional evidence.
@@ -2479,6 +2487,9 @@ Plus: git init, .gitignore, 28 tests, Wilson-bound BER reporting.
   rectangle and is now an explicit limitation, not a hidden traceback.
 
 ## 6. Key numbers & validated behavior (current state)
+
+**Entry 151 current submission state:** Deadline is 15 September 2026 at 11:00 PM, assuming IST pending any organiser timezone clarification. At the owner-stated 14 September 12:33 PM, 34 h 27 min remained. The 25-page report is preserved but exceeds the newly confirmed limit. Frontend remains at the Entry 150 verified implementation. A subsequent full-suite log in `tmp/demo-word/full-tests.log` records 3427 passed, 13 deselected and two warnings in 1517.67 s; no new suite was run for this Markdown-only packet.
+
 
 Entry 150 current UI: Design Explorer, Design PVT, Compare circuits, Channel, Run files. CTLE/tails open first. Compare has CTLE output, ideal DFE and margin envelope modes. Saved 3 dB dimensions remain 341.791199 mV / 0.859375 UI, measured 3.910115 dB at 2.131144 GHz, 315/315 model conditions. Full baseline 3421 passed / 13 deselected; focused revision 36 passed. Final full suite 3427 passed / 13 deselected / two known warnings in 1127.20 s.
 
@@ -3256,6 +3267,9 @@ still NOT full area. The 12-request replay is fully supported at eight requests;
 
 ## 7. Known model limitations (honest list — do not overclaim)
 
+**Entry 151 submission limitations:** Existing integrated-receiver 45-corner results establish link PVT, not all-corner AC/noise/HD3 coverage. Proposed extra analog PVT and runtime experiments are not completed results. The intended Word output `output/docx/Nebula_RL_Assisted_Demo_Script.docx` is currently absent (cause unknown); its builder survives in `tmp/demo-word/build_script.py`, but rendering/visual QA did not complete. No final demo video is verified.
+
+
 Entry 150 supersedes envelope-only display: 128 two-UI waveform segments use a 512-bit periodic NRZ sequence through the canonical saved-AC/channel pulse. Ideal DFE subtracts sampled h1 using the known previous bit with rectangular updates. Recorded margins still use separate worst-case cursor analysis, not finite overlays. No noise, jitter, decision errors or transistor clock model. Missing raw AC means waveform unavailable.
 
 Entry 149 display scope: physical-run eye graphics are worst-case ISI opening envelopes from saved transistor AC + canonical constructed channel + ideal 1-tap DFE, not transient waveforms or BER evidence. Bank artifacts retaining only scalar eye dimensions cannot supply a trace; the UI says so. The separate 9 dB checkpoint keeps its own transistor transient and 45-point Link PVT evidence.
@@ -3568,6 +3582,9 @@ variation, mismatch and layout remain open. Old production evidence is unchanged
   untrusted until proven (the Phase-0 experience says assume bugs).
 
 ## 8. Next steps (prioritized backlog with context)
+
+**Entry 151 active submission priorities:** Follow `NEBULA_FINAL_SUBMISSION_AGENT_HANDOFF_20260914.md`. Protect a separate 10-12-page report, a verified Word script and owner-recorded 5-6-minute video. Within explicit time limits, improve analog PVT coverage, produce a traceable automation receipt and attempt a fair small runtime comparison. Preserve the verified frontend, frozen scientific evidence and older reports. Prepare the submission email and confirm team details; do not send without authorization.
+
 
 Entry 150 recording route: Explorer for result/CTLE/exact drawing and separately labeled 9 dB transistor checkpoint; Compare circuits for waveform eyes and conservative margin envelope. New target opens the editor; completion focuses the result; direct PVT opens all 45 cells. Follow the current voice script; earlier Receiver directions are historical.
 
@@ -20085,3 +20102,32 @@ Global Git identity remains Jai Kaushik <jaikaushik-prog@users.noreply.github.co
 No PDK/reference material, force push, training or fresh SPICE campaign is part
 of this revision. Remaining owner actions: rehearse, record their own narration,
 review the recording and submit the chosen files.
+
+
+### Entry 151 - 2026-09-14 - Final-submission new-agent packet
+
+The owner supplied the organiser email: final submission by 15 September 2026,
+11:00 PM; a 10-12-page report covering all deliverables plus a demo video;
+judging on deliverable coverage, innovation and thought process. The owner
+chose a 5-6-minute own-voice walkthrough. At their stated 14 September 12:33 PM,
+34 h 27 min remained, assuming IST for both times. Recompute on restart.
+
+Created `NEBULA_FINAL_SUBMISSION_AGENT_HANDOFF_20260914.md` with a startup
+prompt, focused reading authorization, current product and evidence context,
+bounded analog PVT / automation-receipt / runtime-comparison prompts, a
+12-page report outline, recording guidance and verification/backup rules.
+Prepended a supersession pointer to the older restart packet. Existing
+frontend and scientific artifacts were not changed. The proposed experiments
+are future work, not new verified results.
+
+Artifact audit: detailed report remains 25 pages; its recorded SHA-256 is
+169845fac6690d16630a18d70d7118b0936b66ce9bca277aed7380ae2025c15f.
+The Word-script builder exists under tmp/demo-word, but the intended DOCX
+is currently absent; cause unknown. Rendering/visual QA did not complete,
+and no final recording is verified. The packet directs recovery and review.
+
+Existing later full-test log records 3427 passed, 13 deselected, two warnings
+in 1517.67 s. No new executable/scientific changes or fresh test run are part
+of this documentation-only update; validation checks the packet, referenced
+paths, unchanged report hash and Git diff. Only the three project-owned
+Markdown files are intended for backup; the owner attachment stays untracked.
