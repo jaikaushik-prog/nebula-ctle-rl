@@ -1,0 +1,32 @@
+{
+  "entry": 160,
+  "full_receiver_verified": false,
+  "nominal_receiver_verified": false,
+  "static": [
+    {
+      "instrument_ok": false,
+      "full_receiver_verified": false,
+      "fail_reason": "ValueError: unregistered simulator warning: Trying gmin =   3.1623E-10 Warning: Further gmin increment",
+      "kind": "static",
+      "clock_state": 0,
+      "max_step_s": 5e-12
+    }
+  ],
+  "tones": [],
+  "resolution_agreement": false,
+  "sources_unchanged": true,
+  "parent_unchanged": true,
+  "calls": [
+    {
+      "index": 1,
+      "case": "static_state0_step5ps",
+      "wall_seconds": 22.24278559999948,
+      "instrument_ok": false,
+      "fail_reason": "ValueError: unregistered simulator warning: Trying gmin =   3.1623E-10 Warning: Further gmin increment"
+    }
+  ],
+  "charged_calls": 1,
+  "total_entry160_charged_calls": 8,
+  "wall_seconds": 23.479543899999044,
+  "completed_utc": "2026-09-15T12:29:27.321380+00:00"
+}

@@ -1,0 +1,66 @@
+{
+  "entry": 160,
+  "parent_setting": 352,
+  "parent_unchanged": true,
+  "full_receiver_verified": false,
+  "nominal_receiver_verified": false,
+  "status": "NO_MATCH_IN_BOUNDED_SAMPLE",
+  "states": [
+    {
+      "clock_state": 0,
+      "instrument_ok": false,
+      "rows": [],
+      "fail_reason": "snapshot 0: Invalid negative-latch initialization",
+      "all_raw_snapshots_retained": true
+    }
+  ],
+  "calls": [
+    {
+      "index": 1,
+      "case": "held_state0",
+      "started_utc": "2026-09-15T12:14:21.942865+00:00",
+      "instrument_ok": false,
+      "wall_seconds": 29.104433999999856,
+      "fail_reason": "snapshot 0: Invalid negative-latch initialization"
+    }
+  ],
+  "selected_control": {
+    "target_boost_db": 6.0,
+    "target_frequency_hz": 2100000000.0,
+    "nominal_ac_match": false,
+    "nominal_receiver_verified": false,
+    "full_receiver_verified": false,
+    "signed_model_domain_pass": false
+  },
+  "export": {
+    "schema": "nebula-programmable-selected-receiver-v1",
+    "status": "EXPERIMENTAL_UNVERIFIED",
+    "structurally_integrated": true,
+    "derived_from_setting": 352,
+    "inherits_parent_verification": false,
+    "parent_ctle_sha256": "e8f8b0c82e6d797ce6baff14b2df551812915ad575a5b4a6871757b0cce4eaed",
+    "receiver_deck_sha256": "f7b112f4097e43e44476b74387d9b52304b7bf4307d7205bbaf1168d6eac5f88",
+    "r_fraction": 0.73,
+    "c_fraction": 0.195,
+    "control_voltage_v": [
+      1.314,
+      0.35100000000000003
+    ],
+    "tuning_geometry": [
+      500,
+      0.0
+    ],
+    "nominal_receiver_verified": false,
+    "full_receiver_verified": false,
+    "phase_ui": 1.0,
+    "tap_code": 2,
+    "control_selection": "external values, not learned policy output",
+    "scope": "Derived selected amplifier/bias/attenuator with physical Rs/Cs and transistor DFE; external clock and controls; new verification required"
+  },
+  "sources_unchanged": true,
+  "pdk_unchanged": true,
+  "simulator_unchanged": true,
+  "charged_calls": 1,
+  "wall_seconds": 32.64686100000017,
+  "completed_utc": "2026-09-15T12:14:52.019010+00:00"
+}

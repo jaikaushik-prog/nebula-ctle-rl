@@ -1,0 +1,176 @@
+{
+  "status": "PASS",
+  "manifest_verified_files": 2105,
+  "summary_sha256": "cd08f782254bd7dc883156b671663f3531992ed2527d702e897ba79031a8291b",
+  "manifest_sha256": "e34bdb81db5be8e8f0009ad89b1f7e1196b1384fc4fa5096d889d3454b11bbfe",
+  "candidates": [
+    {
+      "candidate": "base480_cs1p01",
+      "accepted": false,
+      "request_met": true,
+      "n_pass": 308,
+      "charged": 137,
+      "ngspice_logs": 137,
+      "peak_ghz_range": [
+        2.057621601222495,
+        2.507924719251564
+      ],
+      "boost_db_range": [
+        5.711514311443847,
+        7.408574094580311
+      ],
+      "failed_conditions": [
+        {
+          "corner": "ff/1.05/0C",
+          "loss": 3.0,
+          "failed": [
+            "S3_f_peak_band"
+          ],
+          "unmeasured": []
+        },
+        {
+          "corner": "ff/1.05/0C",
+          "loss": 4.5,
+          "failed": [
+            "S3_f_peak_band"
+          ],
+          "unmeasured": []
+        },
+        {
+          "corner": "ff/1.05/0C",
+          "loss": 6.0,
+          "failed": [
+            "S3_f_peak_band"
+          ],
+          "unmeasured": []
+        },
+        {
+          "corner": "ff/1.05/0C",
+          "loss": 7.5,
+          "failed": [
+            "S3_f_peak_band"
+          ],
+          "unmeasured": []
+        },
+        {
+          "corner": "ff/1.05/0C",
+          "loss": 9.0,
+          "failed": [
+            "S3_f_peak_band"
+          ],
+          "unmeasured": []
+        },
+        {
+          "corner": "ff/1.05/0C",
+          "loss": 10.5,
+          "failed": [
+            "S3_f_peak_band"
+          ],
+          "unmeasured": []
+        },
+        {
+          "corner": "ff/1.05/0C",
+          "loss": 12.0,
+          "failed": [
+            "S3_f_peak_band"
+          ],
+          "unmeasured": []
+        }
+      ],
+      "nominal": {
+        "g_dc_db": -7.182026902198389,
+        "peaking_db": 6.738311290044248,
+        "f_peak_oct": -0.09155829954389413,
+        "nyq_boost_db": 6.7317025,
+        "inoise_vrms": 0.0006108098891575747,
+        "power_w": 0.006965786644753122,
+        "pair_margin_v": 0.6491147345646019,
+        "tail_margin_v": 0.35026270539064436,
+        "_f_peak_ghz": 2.3462712237335275,
+        "_noise_mv": 0.6108098891575747,
+        "_power_mw": 6.9657866447531225,
+        "area_mm2": 0.0073485371070017005,
+        "eye_h_v": 0.2847740737897464,
+        "eye_w_ui": 0.84375,
+        "hd3_nyq_dbc": -54.49162141873508,
+        "hd3_100mhz_dbc": -87.8187764519299
+      },
+      "deck_sha256": "57ca8c0886ae1d85ac3b2249d298fe60130a5e2121eb90c2c2998d4b129c9479",
+      "result_sha256": "04109c531881fa6adabb61f49ac86b60fc111837111a163db14edc999eb8155d"
+    },
+    {
+      "candidate": "base480_cs1p02",
+      "accepted": true,
+      "request_met": true,
+      "n_pass": 315,
+      "charged": 137,
+      "ngspice_logs": 137,
+      "peak_ghz_range": [
+        2.048262667774308,
+        2.4963244508349054
+      ],
+      "boost_db_range": [
+        5.7193389352268245,
+        7.417816042290213
+      ],
+      "failed_conditions": [],
+      "nominal": {
+        "g_dc_db": -7.182022428080069,
+        "peaking_db": 6.746978999811293,
+        "f_peak_oct": -0.09822465130676211,
+        "nyq_boost_db": 6.7394805,
+        "inoise_vrms": 0.0006098541612132848,
+        "power_w": 0.006965786644753122,
+        "pair_margin_v": 0.6491147345646019,
+        "tail_margin_v": 0.35026270539064436,
+        "_f_peak_ghz": 2.335454670251822,
+        "_noise_mv": 0.6098541612132847,
+        "_power_mw": 6.9657866447531225,
+        "area_mm2": 0.0073569695820017,
+        "eye_h_v": 0.28496160472033605,
+        "eye_w_ui": 0.84375,
+        "hd3_nyq_dbc": -54.479444745310765,
+        "hd3_100mhz_dbc": -87.78109501562427
+      },
+      "deck_sha256": "30cfb1506f21b23d3aee79a8efc3589b887123ff073272df295d32f1c5f49c07",
+      "result_sha256": "ff41986b53f48970b80098d0680c92ec6a2b8c6a25cd1c727e3508c0fe6ca87c"
+    },
+    {
+      "candidate": "base480_cs1p03",
+      "accepted": true,
+      "request_met": true,
+      "n_pass": 315,
+      "charged": 137,
+      "ngspice_logs": 137,
+      "peak_ghz_range": [
+        2.0392919419232856,
+        2.4852307944294982
+      ],
+      "boost_db_range": [
+        5.726791306025168,
+        7.4266237689002255
+      ],
+      "failed_conditions": [],
+      "nominal": {
+        "g_dc_db": -7.182018134155381,
+        "peaking_db": 6.755248287448796,
+        "f_peak_oct": -0.10464053093290385,
+        "nyq_boost_db": 6.7468379999999994,
+        "inoise_vrms": 0.0006089417200666196,
+        "power_w": 0.006965786644753122,
+        "pair_margin_v": 0.6491147345646019,
+        "tail_margin_v": 0.35026270539064436,
+        "_f_peak_ghz": 2.3250916157478683,
+        "_noise_mv": 0.6089417200666196,
+        "_power_mw": 6.9657866447531225,
+        "area_mm2": 0.0073651511820017,
+        "eye_h_v": 0.2851411946027178,
+        "eye_w_ui": 0.84375,
+        "hd3_nyq_dbc": -54.46795571366704,
+        "hd3_100mhz_dbc": -87.74453450294125
+      },
+      "deck_sha256": "4056965f1b310bb4d6d1dcfcd13519cded062924d58cfbf085b7315f98c5ffdb",
+      "result_sha256": "6bd75d86b07e56444bf565432dc2e554954e11756edf6f3816b2e3c5482d88fe"
+    }
+  ]
+}

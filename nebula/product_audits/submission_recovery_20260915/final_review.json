@@ -1,0 +1,23 @@
+{
+  "status": "PASS",
+  "summary_sha256": "be0c1d9b3e38f5a903b3bb740f8e3d96c3481b686d06dec679153bec9c845893",
+  "workflows_sha256": "674cb77d7c71070fea4432d46575d12a3402dfa8bbf2bcb72a7380f83fbe0cd8",
+  "protocol_sha256": "7bd67de5d228a89ba26bc03fcd2e0350e84a0c994da0493e260a45e78b96613c",
+  "checked_workflows": 37,
+  "expected_coverage": 13,
+  "expected_benchmark": 24,
+  "source_freeze": "PASS",
+  "raw_check": "Registered deep raw-artifact check completed as final driver phase with exit0.",
+  "independent_checks": [
+    "Exact37ordered planned identities",
+    "All37workers exit0 without timeout",
+    "Every attempted candidate billed once",
+    "Accepted final designs pass unchanged physical gate and request criteria",
+    "Export receipt identities match parent rows",
+    "Complete source fingerprints unchanged"
+  ],
+  "coverage_successes": 4,
+  "benchmark_successes": 17,
+  "total_spice_calls": 4110,
+  "driver_result_sha256": "6a96a3c7890eab6263396af32d954149b0337c2f4652de79584b951a8a732f6a"
+}

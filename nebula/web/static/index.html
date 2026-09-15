@@ -3,37 +3,27 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Nebula CTLE + DFE Designer - evidence-grounded SKY130 circuit sizing">
-  <title>Nebula CTLE + DFE Designer</title>
-  <link rel="stylesheet" href="/styles.css?v=12">
+  <meta name="description" content="Nebula - evidence-grounded SKY130 equalizer design">
+  <title>Nebula</title>
+  <link rel="stylesheet" href="/styles.css?v=18">
+  <link rel="stylesheet" href="/explorer_refinement.css?v=4">
 </head>
 <body data-view="results">
   <a class="skip-link" href="#workspace">Skip to workspace</a>
   <header class="topbar">
-    <a class="brand" href="/" aria-label="Nebula CTLE and DFE Designer home">
+    <a class="brand" href="/" aria-label="Nebula home">
       <svg class="brand-mark" viewBox="0 0 48 32" aria-hidden="true">
         <path d="M2 22c7 0 7-17 14-17s7 22 14 22S37 10 46 10" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>
         <circle cx="16" cy="5" r="2.4" fill="currentColor"/>
         <circle cx="30" cy="27" r="2.4" fill="currentColor"/>
       </svg>
-      <span>Nebula CTLE + DFE Designer</span>
+      <span>Nebula</span>
     </a>
     <div class="top-actions">
       <span class="truth-badge">SKY130 hardware evidence</span>
-      <button id="judgeButton" class="button button-secondary" type="button">Enter judge mode</button>
     </div>
   </header>
 
-  <div id="judgeStrip" class="judge-strip" hidden>
-    <div><strong>Judge mode</strong><span>Preverified evidence is loaded instantly; this view does not rerun SPICE.</span></div>
-    <ol>
-      <li><button data-judge-target="results">See the result</button></li>
-      <li><button data-judge-target="checkpoint">Inspect transistor hardware</button></li>
-      <li><button data-judge-target="pvt">Inspect generated-design PVT</button></li>
-      <li><button data-judge-target="evidence">Download evidence</button></li>
-    </ol>
-    <button id="exitJudge" class="text-button" type="button">Exit</button>
-  </div>
 
   <main id="workspace" class="workspace">
     <section class="main-panel">
@@ -59,8 +49,20 @@
         <div class="result-actions"><p id="resultCoverage"></p><button class="button button-secondary" data-open-tab="pvt" type="button">Inspect all PVT corners</button></div>
       </section>
 
+      <section id="recoveryTrace" class="recovery-trace" aria-labelledby="recoveryTraceTitle" hidden>
+        <div class="recovery-heading"><h2 id="recoveryTraceTitle">Recorded recovery sequence</h2><button class="text-button" data-open-tab="evidence" type="button">Inspect run files</button></div>
+        <ol id="recoverySteps" class="recovery-steps"></ol>
+      </section>
+
       <section id="resultsView" class="view active" data-view="results">
-        <div class="circuit-toolbar"><h2>Circuit workspace</h2><div><button class="text-button" data-open-tab="compare" type="button">Compare eyes</button><button class="text-button" data-open-tab="evidence" type="button">Circuit files</button></div></div>
+        <section class="selected-circuit-intro" aria-labelledby="selectedCircuitHeading">
+          <div class="circuit-toolbar"><div class="circuit-identity"><h2 id="selectedCircuitHeading">Selected CTLE</h2><span id="selectedCircuitIdentity"></span></div><div class="circuit-actions"><button class="button button-secondary" data-open-tab="compare" type="button">Compare eyes</button><button class="button button-secondary" data-open-tab="evidence" type="button">Circuit files</button></div></div>
+          <p id="selectedCircuitSummary" class="circuit-summary-line">Loading the selected circuit.</p>
+          <details class="circuit-selection-scope">
+            <summary>Selection and verification scope</summary>
+            <div class="circuit-scope-grid"><section><h3>Candidate search</h3><p id="candidateCatalogue" class="candidate-catalogue">512-setting candidate catalogue: 8 attenuation x 8 Rs x 8 Cs settings.</p></section><section><h3>Circuit and evidence</h3><p class="selected-circuit-scope">Main design.cir: physical CTLE, attenuation, bias and fixed Rs/Cs; ideal behavioral DFE is outside this CTLE netlist. A separate connected receiver artifact is shown only when recorded for this run.</p></section></div>
+          </details>
+        </section>
         <span id="resultContext" class="visually-hidden"></span><span id="resultTitle" class="visually-hidden"></span>
         <div id="circuitWorkbench" class="circuit-workbench">
           <section class="circuit-stage" aria-label="Selected circuit inspection">
@@ -82,9 +84,20 @@
             </div>
           </aside>
         </div>
+        <details class="details-card language-assistant">
+          <summary>Explain the selected result</summary>
+          <p id="selectedParserProvenance" class="field-note"></p>
+          <label class="llm-opt-in"><input id="explanationUseLlm" type="checkbox" disabled> Use optional LLM wording</label>
+          <p id="explanationAvailability" class="field-note">Checking optional language assistant availability.</p>
+          <button id="explainResultButton" class="button button-secondary" type="button">Explain result</button>
+          <div id="explanationResult" class="explanation-result" aria-live="polite" hidden>
+            <strong id="explanationLabel"></strong><p id="explanationVerdict"></p>
+            <p id="explanationText"></p><p id="explanationScope" class="field-note"></p>
+          </div>
+        </details>
         <div class="evidence-shelf" aria-label="Circuit evidence">
         <details class="details-card generated-drawing">
-          <summary>Inspect the exact generated CTLE drawing</summary>
+          <summary><span class="evidence-summary-copy"><strong>Inspect the exact generated CTLE drawing</strong><span>Device sizes and connections from this run</span></span></summary>
           <div class="card-heading">
             <div><h3 id="generatedSchematicTitle">Generated CTLE export</h3><p id="generatedSchematicScope">This image is parsed from the selected run's exact SPICE deck.</p></div>
             <a id="openSchematic" class="text-button" href="#" target="_blank" rel="noopener">Open full size</a>
@@ -95,13 +108,14 @@
         </details>
 
 
-        <details id="referenceCheckpoint" class="details-card reference-checkpoint">
-          <summary>Explore the separate transistor CTLE + DFE checkpoint <span>9 dB / 1.9 GHz</span></summary>
+        <details id="selectedReceiverEvidence" class="details-card selected-receiver-evidence" hidden aria-live="polite"></details>
+      <details id="referenceCheckpoint" class="details-card reference-checkpoint">
+          <summary><span class="evidence-summary-copy"><strong>Independent transistor receiver evidence</strong><span>Separate 9 dB / 1.9 GHz reference</span></span></summary>
           <p class="reference-note">Independent calibrated implementation. These measurements stay attached to its own 9 dB / 1.9 GHz target; they do not replace the selected design above.</p>
         <div class="section-intro">
           <div>
             <p class="context-line">SKY130 / 5 Gbps NRZ</p>
-            <h2>Transistor receiver checkpoint</h2>
+            <h2>Calibrated receiver checkpoint</h2>
             <p id="hardwareTargetSummary">Matching the current request to the calibrated receiver evidence.</p>
           </div>
           <span id="hardwareStatusBadge" class="source-badge">Loading</span>
@@ -163,7 +177,7 @@
             <a id="openHardwareSchematic" class="text-button" target="_blank" rel="noopener">Open full-size PNG</a>
             <a class="text-button" href="/api/hardware/artifacts/nominal-netlist" target="_blank" rel="noopener">Exact SPICE deck</a>
             <a class="text-button" href="/api/hardware/artifacts/pvt-summary" target="_blank" rel="noopener">45-point measurement record</a>
-            <div class="hardware-drawing-scroll"><img id="hardwareSchematic" alt="Named-net schematic of all SKY130 devices in the calibrated CTLE and transistor DFE" loading="lazy"></div>
+            <div class="hardware-drawing-scroll"><img id="hardwareSchematic" alt="Named-net schematic of all SKY130 devices in the calibrated CTLE and transistor DFE" width="1800" height="1200" loading="eager"></div>
           </details>
 
         </div>
@@ -234,6 +248,9 @@
 
       <section id="evidenceView" class="view" data-view="evidence">
         <div class="section-intro"><div><p class="context-line">Traceable output</p><h2>Evidence bundle</h2><p>Download the exact SPICE deck, JSON record, schematic and supporting views produced for this design.</p></div></div>
+        <section id="programmableRunEvidence" aria-live="polite" hidden></section>
+        <section id="judgeEvidenceIndex" class="judge-evidence-index" aria-live="polite"></section>
+        <section id="engineeringDiagnostics" aria-live="polite"></section>
         <div class="evidence-layout">
           <div id="artifactList" class="artifact-list"></div>
           <div class="download-panel">
@@ -292,6 +309,8 @@
       </div>
       <p id="parseNote" class="field-note">Supported request: 3-12 dB at 1.25-2.50 GHz.</p>
       <details class="language-request"><summary>Describe the target in words</summary>
+      <label class="llm-opt-in"><input id="use-llm" type="checkbox" disabled> Use optional LLM parsing and wording</label>
+      <p id="llmAvailability" class="field-note">Checking optional language assistant availability.</p>
       <label for="requestText">Plain-language request</label>
       <textarea id="requestText" rows="2">I need 9 dB of peaking with the peak near 1.9 GHz</textarea>
       <button id="readRequest" class="text-button read-request" type="button">Read this request</button>
@@ -316,8 +335,14 @@
   </dialog>
 
   <template id="statusTemplate"><span class="status-dot"></span><span class="status-copy"></span></template>
-  <script src="/circuit_views.js?v=12" defer></script>
+  <script src="/circuit_views.js?v=13" defer></script>
   <script src="/design_plots.js?v=12" defer></script>
-  <script src="/app.js?v=12" defer></script>
+  <script src="/recovery_trace.js?v=13" defer></script>
+  <script src="/language_assistant.js?v=13" defer></script>
+  <script src="/evidence_loading.js?v=1" defer></script>
+  <script src="/prototype_run_files.js?v=1" defer></script>
+  <script src="/judge_evidence.js?v=5" defer></script>
+  <script src="/engineering_diagnostics.js?v=2" defer></script>
+  <script src="/app.js?v=16" defer></script>
 </body>
 </html>

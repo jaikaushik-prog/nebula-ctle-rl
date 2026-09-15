@@ -1,0 +1,85 @@
+{
+  "status": "PASS",
+  "scope": "Two separate actual HTTP app requests outside the timing campaign. Pre-fix failed evidence retained; post-fix acceptance does not replace the original benchmark.",
+  "runs": [
+    {
+      "run_id": "daf7cf8a8bb5425b9be750f6cd804a87",
+      "delivered_success": false,
+      "status": "exhausted",
+      "spice_calls_charged": 959,
+      "attempts": [
+        {
+          "setting": 288,
+          "accepted": false,
+          "n_pass": 314,
+          "spice_calls_charged": 137
+        },
+        {
+          "setting": 352,
+          "accepted": false,
+          "n_pass": 308,
+          "spice_calls_charged": 137
+        },
+        {
+          "setting": 416,
+          "accepted": false,
+          "n_pass": 308,
+          "spice_calls_charged": 137
+        },
+        {
+          "setting": 417,
+          "accepted": false,
+          "n_pass": 294,
+          "spice_calls_charged": 137
+        },
+        {
+          "setting": 473,
+          "accepted": false,
+          "n_pass": 308,
+          "spice_calls_charged": 137
+        },
+        {
+          "setting": 480,
+          "accepted": false,
+          "n_pass": 308,
+          "spice_calls_charged": 137
+        },
+        {
+          "setting": 481,
+          "accepted": false,
+          "n_pass": 308,
+          "spice_calls_charged": 137
+        }
+      ],
+      "wall_s": 639.0284191999999,
+      "setting": 481,
+      "n_pass": 308,
+      "receipt_sha256": "9095910639700ba5e0f6db441d02acfe40525ec22bcc19f40e16f392ef85f43e"
+    },
+    {
+      "run_id": "4608cf1c525f4e59b2d5226059b0ce5d",
+      "delivered_success": true,
+      "status": "accepted",
+      "spice_calls_charged": 274,
+      "attempts": [
+        {
+          "setting": 288,
+          "accepted": false,
+          "n_pass": 314,
+          "spice_calls_charged": 137
+        },
+        {
+          "setting": 352,
+          "accepted": true,
+          "n_pass": 315,
+          "spice_calls_charged": 137
+        }
+      ],
+      "wall_s": 164.76610580000124,
+      "setting": 352,
+      "n_pass": 315,
+      "receipt_sha256": "08b92001c3903e3c0bcbdcc5c85ef5d5223e111ba24b746b38d2af469fce2c93"
+    }
+  ],
+  "hardened_source_sha256": "ed00429048c30350391c3e7925333036e85cb0d5131f3f525f54681fa928591e"
+}

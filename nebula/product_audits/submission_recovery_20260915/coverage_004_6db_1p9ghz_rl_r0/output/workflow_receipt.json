@@ -1,0 +1,182 @@
+{
+  "status": "accepted",
+  "attempts": [
+    {
+      "setting": 474,
+      "directory": "C:\\Users\\DELL\\Desktop\\serdes-dsp-framework-main\\nebula\\product_audits\\submission_recovery_20260915\\coverage_004_6db_1p9ghz_rl_r0\\output\\physical_recovery\\candidate_01_setting_474",
+      "accepted": true,
+      "spice_calls": 137,
+      "n_pass": 315,
+      "n_points": 315,
+      "wall_s": 57.133246400000644
+    }
+  ],
+  "spice_calls": 137,
+  "selection_mode": "rl",
+  "max_candidates": 8,
+  "delivered_success": true,
+  "output_complete": true,
+  "request_met": true,
+  "written": [
+    "C:\\Users\\DELL\\Desktop\\serdes-dsp-framework-main\\nebula\\product_audits\\submission_recovery_20260915\\coverage_004_6db_1p9ghz_rl_r0\\output\\design.json",
+    "C:\\Users\\DELL\\Desktop\\serdes-dsp-framework-main\\nebula\\product_audits\\submission_recovery_20260915\\coverage_004_6db_1p9ghz_rl_r0\\output\\design.cir",
+    "C:\\Users\\DELL\\Desktop\\serdes-dsp-framework-main\\nebula\\product_audits\\submission_recovery_20260915\\coverage_004_6db_1p9ghz_rl_r0\\output\\design_schematic.png",
+    "C:\\Users\\DELL\\Desktop\\serdes-dsp-framework-main\\nebula\\product_audits\\submission_recovery_20260915\\coverage_004_6db_1p9ghz_rl_r0\\output\\explanation.txt"
+  ],
+  "artifact_warnings": [],
+  "parse_wall_s": 0.13311959999919054,
+  "selection_wall_s": 6.658426500000132,
+  "physical_wall_s": 57.133246400000644,
+  "export_wall_s": 0.8949886999998853,
+  "error": null,
+  "parsed_request": {
+    "peaking_db": 6.0,
+    "f_peak_hz": 1900000000.0,
+    "f_peak_ghz": 1.9,
+    "parsed_by": "regex",
+    "request": "6 dB at 1.9 GHz",
+    "notes": []
+  },
+  "schema": "nebula-physical-recovery-v1",
+  "max_spice_calls": 1096,
+  "known_spice_calls": 137,
+  "call_count_complete": true,
+  "cached_physical_passes_used": false,
+  "same_candidate_retries": 0,
+  "full_receiver_verified": false,
+  "run_pid": 17432,
+  "run_started_unix": 1789410416.8385444,
+  "run_host": "JAI",
+  "request": {
+    "peaking_db": 6.0,
+    "f_peak_hz": 1900000000.0
+  },
+  "eligible_settings": [
+    288,
+    346,
+    352,
+    353,
+    410,
+    417,
+    473,
+    474,
+    481
+  ],
+  "candidate_order": [
+    474,
+    288,
+    346,
+    352,
+    353,
+    410,
+    417,
+    473,
+    481
+  ],
+  "legacy_nominal_setting": 160,
+  "registered_setting": 474,
+  "source_hashes": {
+    "entry85_sha256": "352D8589CCF0D0874F1C8359E6F9B4122A802B418EDCD82E41A64A3A0102E1BF",
+    "baseline_decoded_sha256": "A205303614ABCC5F76D6EA78CFA1C9687E49A3817FA1E9FA9EC314336E20CA33",
+    "root_source_sha256": "9A06AA65D71B463D4F75CC2072D82BC845799BAF6FE073F66C25C069ED2F358B",
+    "table_decoded_sha256": "1B5F941DF4B34F3C90F6DD050F264D8A77C7BB2E5CE4D9EED8CC29EBD9F9843F"
+  },
+  "fixed_prescreen_rows_checked": 161280,
+  "rl_proposals": 2183,
+  "channel_losses_db": [
+    3.0,
+    4.5,
+    6.0,
+    7.5,
+    9.0,
+    10.5,
+    12.0
+  ],
+  "wall_s": 65.14652539999952,
+  "recovery_receipt": {
+    "schema": "nebula-physical-recovery-v1",
+    "selection_mode": "rl",
+    "status": "accepted",
+    "max_candidates": 8,
+    "max_spice_calls": 1096,
+    "attempts": [
+      {
+        "setting": 474,
+        "directory": "C:\\Users\\DELL\\Desktop\\serdes-dsp-framework-main\\nebula\\product_audits\\submission_recovery_20260915\\coverage_004_6db_1p9ghz_rl_r0\\output\\physical_recovery\\candidate_01_setting_474",
+        "accepted": true,
+        "spice_calls": 137,
+        "n_pass": 315,
+        "n_points": 315,
+        "wall_s": 57.133246400000644
+      }
+    ],
+    "spice_calls": 137,
+    "known_spice_calls": 137,
+    "call_count_complete": true,
+    "selection_wall_s": 6.658426500000132,
+    "physical_wall_s": 57.133246400000644,
+    "cached_physical_passes_used": false,
+    "same_candidate_retries": 0,
+    "full_receiver_verified": false,
+    "run_pid": 17432,
+    "run_started_unix": 1789410416.8385444,
+    "run_host": "JAI",
+    "request": {
+      "peaking_db": 6.0,
+      "f_peak_hz": 1900000000.0
+    },
+    "eligible_settings": [
+      288,
+      346,
+      352,
+      353,
+      410,
+      417,
+      473,
+      474,
+      481
+    ],
+    "candidate_order": [
+      474,
+      288,
+      346,
+      352,
+      353,
+      410,
+      417,
+      473,
+      481
+    ],
+    "legacy_nominal_setting": 160,
+    "registered_setting": 474,
+    "source_hashes": {
+      "entry85_sha256": "352D8589CCF0D0874F1C8359E6F9B4122A802B418EDCD82E41A64A3A0102E1BF",
+      "baseline_decoded_sha256": "A205303614ABCC5F76D6EA78CFA1C9687E49A3817FA1E9FA9EC314336E20CA33",
+      "root_source_sha256": "9A06AA65D71B463D4F75CC2072D82BC845799BAF6FE073F66C25C069ED2F358B",
+      "table_decoded_sha256": "1B5F941DF4B34F3C90F6DD050F264D8A77C7BB2E5CE4D9EED8CC29EBD9F9843F"
+    },
+    "fixed_prescreen_rows_checked": 161280,
+    "rl_proposals": 2183,
+    "channel_losses_db": [
+      3.0,
+      4.5,
+      6.0,
+      7.5,
+      9.0,
+      10.5,
+      12.0
+    ],
+    "wall_s": 63.797604199999114
+  },
+  "artifact_sha256": {
+    "design.json": "de1adaa1f855038321e64a17ea73c266b560217fb986ef71daf90c22702217ea",
+    "design.cir": "8f6807b1f54f78ba1c041771cb76070bdda61565292efff52ec6a16d12c58303",
+    "design_schematic.png": "dd3906b8601b22054fc456943675e47d4d67a1cf0cf86818b14f3b299143e515",
+    "explanation.txt": "d1eae34ed65c5dd96338f94306a9132fb7f31000d75c26276bdfc9e264da4c72"
+  },
+  "timing_scope": "Entry through parsing/imports, all recovery attempts, verification, exact deck, drawing, explanation, design.json writes and required-output checks/hashes. The following workflow receipt serialization is excluded; a benchmark parent timer includes it and process startup/shutdown. Not a warm-cache guarantee.",
+  "full_receiver_compliance": false,
+  "scope": "Fixed physical CTLE plus ideal behavioral DFE; full receiver/S7 signoff excluded.",
+  "workflow_receipt": "C:\\Users\\DELL\\Desktop\\serdes-dsp-framework-main\\nebula\\product_audits\\submission_recovery_20260915\\coverage_004_6db_1p9ghz_rl_r0\\output\\workflow_receipt.json",
+  "design_json": "design.json"
+}

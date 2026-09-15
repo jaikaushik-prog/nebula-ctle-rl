@@ -1,0 +1,236 @@
+{
+  "schema": "nebula-generated-receiver-independent-review-v1",
+  "reviewed_at_utc": "2026-09-14T20:54:27.253273+00:00",
+  "status": "PASS",
+  "review_scope": "Evidence integrity and reproducibility of one nominal finite-pattern signal gate; not full receiver signoff. Raw tables reanalyzed, no SPICE rerun.",
+  "checks": {
+    "selected_ctle_raw_hash_matches_design": true,
+    "selected_output_manifest_matches": true,
+    "selected_physical_accepted": true,
+    "one_model_library_and_control": true,
+    "no_inline_model_or_behavioral_decision_sources": true,
+    "transistor_dfe_devices_present": true,
+    "terminal_export_lists_every_device_terminal": true,
+    "trace_export_matches_analysis_vectors": true,
+    "no_known_silent_simulator_failures": true,
+    "warnings_are_only_ignored_resistor_model_parameters": true,
+    "simulator_completion_marker": true,
+    "logged_and_exported_row_counts_match": true,
+    "finite_complete_monotonic_shared_time_axis": true,
+    "all_recomputed_measurements_and_audits_match": true,
+    "honest_scope_flags": true,
+    "one_recorded_spice_call": true,
+    "receiver_rebuild_matches_windows_text_writer_bytes": true
+  },
+  "differences": [],
+  "evidence_sha256": {
+    ".spiceinit": "8b97b36a4bd54e39135b7a8b487e6a689ae156a6ba0baf2e7d08b00a2c457cb3",
+    "design.cir": "69c15b41e547c96770d48bb19cf9a193c7f88447b38f82ee86c15bad8924672c",
+    "ngspice.log": "0607eb3908b81505a610e1b528baf3d8f7268ed2b19eabf028f61e5548826291",
+    "result.json": "ab4af88fbb993809e0615935787dc5f56544bbfc609cc9e0f5ba4faa2514d2b2",
+    "terminals.txt": "56f793da33c785b3dc33202bbb808c99f0bf2cc3cf767f078ecc8d29dcb0b9f5",
+    "trace.txt": "323a22a84e784f6e5dcf1533cae87f79271187d6eeaabff2452551711118ac12"
+  },
+  "selected_ctle": {
+    "run_directory": "nebula/product_demo/submission_runs_20260915_v2/4608cf1c525f4e59b2d5226059b0ce5d",
+    "setting": 352,
+    "request": {
+      "peaking_db": 6.0,
+      "f_peak_hz": 2100000000.0,
+      "f_peak_ghz": 2.1
+    },
+    "deck_sha256": "e8f8b0c82e6d797ce6baff14b2df551812915ad575a5b4a6871757b0cce4eaed",
+    "design_json_sha256": "60f0afdcb54afe4f3744ff85d8e9ba3b52f4fdd7ed282a90bcf97d285b15c66f",
+    "workflow_receipt_sha256": "08b92001c3903e3c0bcbdcc5c85ef5d5223e111ba24b746b38d2af469fce2c93"
+  },
+  "netlist": {
+    "mos_count": 45,
+    "added_dfe_mos_count": 32,
+    "mos_models": {
+      "sky130_fd_pr__pfet_01v8": 8,
+      "sky130_fd_pr__nfet_01v8": 37
+    },
+    "model_library_count": 1,
+    "model_library_path": "C:\\Users\\DELL\\Desktop\\serdes-dsp-framework-main\\nebula\\device\\spice\\pdk_trim\\sections\\sky130_ctle_pfet__tt.lib.spice",
+    "model_library_section": "tt",
+    "model_library_sha256": "f45d2510f2714d6e54539293531c2f05f9f7111f89fe40b04c5c57c12cb252a5",
+    "model_hash_scope": "Direct referenced library only; does not independently certify its transitive include closure.",
+    "inline_model_count": 0,
+    "external_clocks": 2,
+    "external_tap_controls": 4,
+    "serialization_note": "spice_capture writes text with Windows newline translation. The selected deck already contains CRLF; 66 retained source lines become CRCRLF. Rebuilding then applying the exact Windows writer translation matches the recorded raw bytes; no circuit-line difference.",
+    "rebuilt_windows_bytes_sha256": "69c15b41e547c96770d48bb19cf9a193c7f88447b38f82ee86c15bad8924672c"
+  },
+  "tables": {
+    "rows": 54494,
+    "trace_vectors": 25,
+    "terminal_vectors": 41,
+    "time_start_s": 0.0,
+    "time_end_s": 1.68e-08,
+    "max_step_s": 8.000000000101716e-13
+  },
+  "simulator_log": {
+    "known_failure_lines": [],
+    "model_warning_count": 38,
+    "ignored_resistor_parameters": {
+      "sw_et": 38,
+      "isnoisy": 38,
+      "p2": 38,
+      "q2": 38,
+      "p3": 19,
+      "q3": 19
+    },
+    "completion": "ngspice-41 done",
+    "exit_code_independently_retained": false
+  },
+  "measurements": {
+    "correct_bits": 64,
+    "scored_bits": 64,
+    "sampled_eye_height_v": 0.296981033056547,
+    "minimum_sample_signed_v": 0.1472364211202779,
+    "ctle_plus_dfe_vdd_power_w": 0.00926359970647246,
+    "external_clock_positive_supplied_power_w": 0.00010840723619723875,
+    "external_tap_control_positive_supplied_power_w": 1.5507725460945098e-07,
+    "signal_gate_pass": true,
+    "nominal_transistor_verified": true,
+    "full_receiver_verified": false
+  },
+  "aperture": {
+    "eye_width_ui": 0.72,
+    "eye_width_at_100mv_ui": 0.675,
+    "grid_step_ui": 0.005,
+    "ber_verified": false
+  },
+  "voltage_audit": {
+    "added_dfe_documented_ranges_ok": true,
+    "whole_circuit_documented_ranges_ok": false,
+    "whole_circuit_out_of_range_device_quantity_samples": 276104,
+    "whole_circuit_envelope_pass": true,
+    "whole_circuit_violations": [
+      {
+        "instance": "Xatt_swp0",
+        "model": "sky130_fd_pr__pfet_01v8",
+        "quantities": {
+          "vds": {
+            "min_v": -0.008141825006318104,
+            "max_v": 0.007679576983727898,
+            "documented_min_v": -1.95,
+            "documented_max_v": 0,
+            "below_samples": 0,
+            "above_samples": 25411
+          }
+        }
+      },
+      {
+        "instance": "Xatt_swn0",
+        "model": "sky130_fd_pr__pfet_01v8",
+        "quantities": {
+          "vds": {
+            "min_v": -0.007773230226195027,
+            "max_v": 0.008041043407746917,
+            "documented_min_v": -1.95,
+            "documented_max_v": 0,
+            "below_samples": 0,
+            "above_samples": 30242
+          }
+        }
+      },
+      {
+        "instance": "Xatt_swp1",
+        "model": "sky130_fd_pr__pfet_01v8",
+        "quantities": {
+          "vds": {
+            "min_v": -0.06329022079905311,
+            "max_v": 0.060361354157987934,
+            "documented_min_v": -1.95,
+            "documented_max_v": 0,
+            "below_samples": 0,
+            "above_samples": 25484
+          },
+          "vgs": {
+            "min_v": 0.29897702678023297,
+            "max_v": 0.29897702678023297,
+            "documented_min_v": -1.95,
+            "documented_max_v": 0,
+            "below_samples": 0,
+            "above_samples": 54494
+          }
+        }
+      },
+      {
+        "instance": "Xatt_swn1",
+        "model": "sky130_fd_pr__pfet_01v8",
+        "quantities": {
+          "vds": {
+            "min_v": -0.060438166590524034,
+            "max_v": 0.06321177153194402,
+            "documented_min_v": -1.95,
+            "documented_max_v": 0,
+            "below_samples": 0,
+            "above_samples": 30331
+          },
+          "vgs": {
+            "min_v": 0.29897702678023297,
+            "max_v": 0.29897702678023297,
+            "documented_min_v": -1.95,
+            "documented_max_v": 0,
+            "below_samples": 0,
+            "above_samples": 54494
+          }
+        }
+      },
+      {
+        "instance": "Xatt_swp2",
+        "model": "sky130_fd_pr__pfet_01v8",
+        "quantities": {
+          "vds": {
+            "min_v": -0.008142440011453145,
+            "max_v": 0.007680364331692946,
+            "documented_min_v": -1.95,
+            "documented_max_v": 0,
+            "below_samples": 0,
+            "above_samples": 25404
+          }
+        }
+      },
+      {
+        "instance": "Xatt_swn2",
+        "model": "sky130_fd_pr__pfet_01v8",
+        "quantities": {
+          "vds": {
+            "min_v": -0.007773902209138983,
+            "max_v": 0.008041895477785888,
+            "documented_min_v": -1.95,
+            "documented_max_v": 0,
+            "below_samples": 0,
+            "above_samples": 30244
+          }
+        }
+      }
+    ],
+    "reliability_verified": false
+  },
+  "source_sha256": {
+    "nebula/generated_receiver.py": "625b4a22c121c5c4dd4995e7795e8314c48765c4c44fdc3460cce9842e9eeef4",
+    "nebula/device/dfe_connected.py": "9c5b46621f466e04ed05a169c02b26ac114b65835f89c561e1fd22b85fdf0859",
+    "nebula/device/dfe_cml.py": "de9b4c2fc37e6d9485c66dc72f3f99fd20060f506aa97533a8504cb55bad48de",
+    "nebula/device/dfe_hardware.py": "7b53e09c181615226c138bf34729d7caffa2b35e65232f622da5f887134849e6",
+    "nebula/device/dfe_tail_bleed.py": "2b1fb4c7d82435c43906e07324f60a1d6244b5a459a25433e1675fcc512c2363",
+    "nebula/device/dfe_timing.py": "fb093150d70a9110bdbaf541bffb5b69c90c3233ed7df335abbdec761a2bd64a",
+    "nebula/device/dfe_voltage_audit.py": "70ba71334ad88d2ec6beb7b9b880af796eb07b3094f2c5c06686535f24794cd6",
+    "nebula/experiments/exp_dfe_connected.py": "c235497afd7afd7390f492c68b0328794ad38bda52bce1a55a96755a367d88bb",
+    "nebula/experiments/exp_dfe_tail_bleed.py": "d625ffedb468898bd8ec0c8848b944014bd502fec2809353280d0278a4a8786d",
+    "nebula/experiments/exp_physical_bias.py": "95676fed54257fbbae7223230bce97e3cec37d187cf3c5f1ac9979b4fcbe1c1c",
+    "nebula/experiments/spice_capture.py": "40f81eb4c96ab442eb306063d94d88ca9aebb994088859d6422fd3bb2273265b",
+    "nebula/device/crosscheck.py": "8dc724d5fe027e466d332808e85fc3e2dd688849ae0da2978d122c4160b1868a",
+    "nebula/link/config.py": "21f311197dcef9f7de72d3f41804d590036a433068b89aecfa5e50477461073c"
+  },
+  "limitations": [
+    "One TT/1.8 V/27 C run; constructed 7.5 dB channel; fixed phase 1 UI, tap code 2, sign +1, 4 um bleed length.",
+    "Finite noiseless pattern: 80 stimulus bits, 16 warm-up, 64 scored; not BER evidence.",
+    "External clock and tap-control drivers are not integrated; VDD power excludes those sources, which are separately measured.",
+    "Whole-circuit signed terminal model-domain check remains false despite passing voltage envelope and added-DFE check.",
+    "No analog/link PVT sweep, noise/HD3 signoff, layout/DRC/LVS, or full-receiver verification established by this run.",
+    "Model warnings were present and classified; this is not a warning-free log."
+  ]
+}

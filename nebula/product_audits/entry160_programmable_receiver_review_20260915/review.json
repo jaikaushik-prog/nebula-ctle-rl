@@ -1,0 +1,394 @@
+{
+  "schema": "nebula-programmable-receiver-reviewed-v1",
+  "parent_setting": 352,
+  "parent_ctle_sha256": "e8f8b0c82e6d797ce6baff14b2df551812915ad575a5b4a6871757b0cce4eaed",
+  "parent_unchanged": true,
+  "status": "EXPERIMENTAL_NOMINAL_AC_AND_SIGNAL",
+  "nominal_ac_match": true,
+  "signal_gate_pass": true,
+  "nominal_receiver_verified": false,
+  "full_receiver_verified": false,
+  "signed_model_domain_pass": false,
+  "control_voltage_v": [
+    1.314,
+    0.378
+  ],
+  "r_fraction": 0.73,
+  "c_fraction": 0.21,
+  "target_boost_db": 6.0,
+  "target_frequency_hz": 2100000000.0,
+  "internal_tolerance_db": 0.5,
+  "internal_tolerance_hz": 100000000.0,
+  "response": [
+    {
+      "clock_state": 0,
+      "boost_db": 5.61471468506064,
+      "peak_frequency_hz": 2068083102.2105596,
+      "vdd_power_w": 0.009276261347393394
+    },
+    {
+      "clock_state": 1,
+      "boost_db": 5.61811593068585,
+      "peak_frequency_hz": 2070591863.2549362,
+      "vdd_power_w": 0.009280663703335185
+    }
+  ],
+  "control_points": [
+    {
+      "r_fraction": 0.73,
+      "c_fraction": 0.195,
+      "states": [
+        {
+          "clock_state": 0,
+          "boost_db": 5.685998424803733,
+          "peak_frequency_hz": 1954175786.735875
+        },
+        {
+          "clock_state": 1,
+          "boost_db": 5.689140056184391,
+          "peak_frequency_hz": 1956683601.832055
+        }
+      ]
+    },
+    {
+      "r_fraction": 0.73,
+      "c_fraction": 0.21,
+      "states": [
+        {
+          "clock_state": 0,
+          "boost_db": 5.61471468506064,
+          "peak_frequency_hz": 2068083102.2105596
+        },
+        {
+          "clock_state": 1,
+          "boost_db": 5.61811593068585,
+          "peak_frequency_hz": 2070591863.2549362
+        }
+      ]
+    },
+    {
+      "r_fraction": 0.73,
+      "c_fraction": 0.225,
+      "states": [
+        {
+          "clock_state": 0,
+          "boost_db": 5.538459613130299,
+          "peak_frequency_hz": 2167509523.937967
+        },
+        {
+          "clock_state": 1,
+          "boost_db": 5.542081326248154,
+          "peak_frequency_hz": 2169996213.810456
+        }
+      ]
+    }
+  ],
+  "correct_bits": 64,
+  "scored_bits": 64,
+  "eye_height_mv": 325.629066858971,
+  "positive_aperture_ui": 0.72,
+  "aperture_above_100mv_ui": 0.6799999999999999,
+  "power_mw": 9.2642651684366,
+  "model_violations": [
+    {
+      "instance": "Xatt_swp0",
+      "model": "sky130_fd_pr__pfet_01v8",
+      "quantities": {
+        "vds": {
+          "min_v": -0.008136205088565163,
+          "max_v": 0.007669231346695948,
+          "documented_min_v": -1.95,
+          "documented_max_v": 0,
+          "below_samples": 0,
+          "above_samples": 25411
+        }
+      }
+    },
+    {
+      "instance": "Xatt_swn0",
+      "model": "sky130_fd_pr__pfet_01v8",
+      "quantities": {
+        "vds": {
+          "min_v": -0.007758858680701142,
+          "max_v": 0.00802865151241794,
+          "documented_min_v": -1.95,
+          "documented_max_v": 0,
+          "below_samples": 0,
+          "above_samples": 30236
+        }
+      }
+    },
+    {
+      "instance": "Xatt_swp1",
+      "model": "sky130_fd_pr__pfet_01v8",
+      "quantities": {
+        "vds": {
+          "min_v": -0.06324882495902306,
+          "max_v": 0.06031525464404397,
+          "documented_min_v": -1.95,
+          "documented_max_v": 0,
+          "below_samples": 0,
+          "above_samples": 25481
+        },
+        "vgs": {
+          "min_v": 0.29897702678023297,
+          "max_v": 0.29897702678023297,
+          "documented_min_v": -1.95,
+          "documented_max_v": 0,
+          "below_samples": 0,
+          "above_samples": 54494
+        }
+      }
+    },
+    {
+      "instance": "Xatt_swn1",
+      "model": "sky130_fd_pr__pfet_01v8",
+      "quantities": {
+        "vds": {
+          "min_v": -0.06038026433635513,
+          "max_v": 0.06311406813731191,
+          "documented_min_v": -1.95,
+          "documented_max_v": 0,
+          "below_samples": 0,
+          "above_samples": 30344
+        },
+        "vgs": {
+          "min_v": 0.29897702678023297,
+          "max_v": 0.29897702678023297,
+          "documented_min_v": -1.95,
+          "documented_max_v": 0,
+          "below_samples": 0,
+          "above_samples": 54494
+        }
+      }
+    },
+    {
+      "instance": "Xatt_swp2",
+      "model": "sky130_fd_pr__pfet_01v8",
+      "quantities": {
+        "vds": {
+          "min_v": -0.00813687462961199,
+          "max_v": 0.007669960600955816,
+          "documented_min_v": -1.95,
+          "documented_max_v": 0,
+          "below_samples": 0,
+          "above_samples": 25410
+        }
+      }
+    },
+    {
+      "instance": "Xatt_swn2",
+      "model": "sky130_fd_pr__pfet_01v8",
+      "quantities": {
+        "vds": {
+          "min_v": -0.007759460060057011,
+          "max_v": 0.00802945932305299,
+          "documented_min_v": -1.95,
+          "documented_max_v": 0,
+          "below_samples": 0,
+          "above_samples": 30252
+        }
+      }
+    },
+    {
+      "instance": "Xrc_switch",
+      "model": "sky130_fd_pr__nfet_01v8",
+      "quantities": {
+        "vds": {
+          "min_v": -0.04577712410574447,
+          "max_v": 0.04038218445859093,
+          "documented_min_v": 0,
+          "documented_max_v": 1.95,
+          "below_samples": 31706,
+          "above_samples": 0
+        }
+      }
+    }
+  ],
+  "noise_status": "Instrument rejected on convergence warning; no measurement credited",
+  "hd3_status": "Not run after noise instrument rejection",
+  "pvt_status": "Not verified for this derived receiver",
+  "runtime_tuning_verified": false,
+  "control_selection": "Deterministic calibration among three measured existing controls, not RL",
+  "scope": "Derived from selected352; same amplifier, attenuator, bias and DFE, new physical Rs/Cs network. Nominal TT/1.8V/27C, external clock phase1UI/tap2, constructed7.5dB channel. Not the fixed352 circuit or independent9dB reference.",
+  "retained_failures": "Two unresolved held-state batches and two convergence-warning analog cases; initial zero-call control-validation failure retained.",
+  "charged_calls": 8,
+  "call_history": [
+    {
+      "experiment": "entry160_programmable_receiver_20260915",
+      "charged_calls": 0,
+      "wall_seconds": 5.4830620000002455,
+      "calls": [],
+      "failure": "ValueError: controls must be an existing registered finite fine-grid pair",
+      "status": "INCOMPLETE_OR_INVALID"
+    },
+    {
+      "experiment": "entry160_programmable_receiver_20260915_r2",
+      "charged_calls": 1,
+      "wall_seconds": 32.64686100000017,
+      "calls": [
+        {
+          "index": 1,
+          "case": "held_state0",
+          "started_utc": "2026-09-15T12:14:21.942865+00:00",
+          "instrument_ok": false,
+          "wall_seconds": 29.104433999999856,
+          "fail_reason": "snapshot 0: Invalid negative-latch initialization"
+        }
+      ],
+      "failure": null,
+      "status": "NO_MATCH_IN_BOUNDED_SAMPLE"
+    },
+    {
+      "experiment": "entry160_programmable_receiver_20260915_r3",
+      "charged_calls": 1,
+      "wall_seconds": 26.527999399999317,
+      "calls": [
+        {
+          "index": 1,
+          "case": "held_state0",
+          "started_utc": "2026-09-15T12:17:04.145431+00:00",
+          "instrument_ok": false,
+          "wall_seconds": 23.284501199999795,
+          "fail_reason": "snapshot 0: Invalid negative-latch initialization"
+        }
+      ],
+      "failure": null,
+      "status": "INCOMPLETE_OR_INVALID"
+    },
+    {
+      "experiment": "entry160_programmable_receiver_followup_20260915",
+      "charged_calls": 2,
+      "wall_seconds": 53.61631329999909,
+      "calls": [
+        {
+          "index": 1,
+          "case": "clocked_link",
+          "wall_seconds": 31.90610689999994,
+          "instrument_ok": true,
+          "fail_reason": null
+        },
+        {
+          "index": 2,
+          "case": "held_state1",
+          "wall_seconds": 20.615530999999464,
+          "instrument_ok": false,
+          "fail_reason": "ValueError: unregistered simulator warning: Trying gmin =   1.0000E-09 Warning: Further gmin increment"
+        }
+      ],
+      "failure": null,
+      "status": null
+    },
+    {
+      "experiment": "entry160_programmable_receiver_measured_seed_20260915",
+      "charged_calls": 3,
+      "wall_seconds": 75.0797265000001,
+      "calls": [
+        {
+          "case": "held_state1",
+          "index": 1,
+          "wall_seconds": 19.45960709999963,
+          "instrument_ok": true,
+          "fail_reason": null
+        },
+        {
+          "case": "held_state0",
+          "index": 2,
+          "wall_seconds": 19.214599500000986,
+          "instrument_ok": true,
+          "fail_reason": null
+        },
+        {
+          "case": "selected_control_link",
+          "index": 3,
+          "wall_seconds": 32.98581849999937,
+          "instrument_ok": true,
+          "fail_reason": null
+        }
+      ],
+      "failure": null,
+      "status": null
+    },
+    {
+      "experiment": "entry160_programmable_receiver_analog_20260915",
+      "charged_calls": 1,
+      "wall_seconds": 23.479543899999044,
+      "calls": [
+        {
+          "index": 1,
+          "case": "static_state0_step5ps",
+          "wall_seconds": 22.24278559999948,
+          "instrument_ok": false,
+          "fail_reason": "ValueError: unregistered simulator warning: Trying gmin =   3.1623E-10 Warning: Further gmin increment"
+        }
+      ],
+      "failure": null,
+      "status": null
+    }
+  ],
+  "verified_archived_files": 775,
+  "experiment_bindings": {
+    "entry160_programmable_receiver_20260915": {
+      "manifest_sha256": "8baeca5fb982dff1b124716975b75aa6f6a1cba2b927d640f377afea7d5effb4",
+      "summary_sha256": "0a0117812a86de0bc549cb47b62d8b572f1238edfe0acc2746e73d523f9dbcf2"
+    },
+    "entry160_programmable_receiver_20260915_r2": {
+      "manifest_sha256": "e5057ae756f6dd8fce980c74bb06608bd7c2897292f46c34bae9bb109ae35ec0",
+      "summary_sha256": "90d7856fb50ba8fb16709d9cad33ff7b8e1da5ab4aa8cdd4822b83fc7f470348"
+    },
+    "entry160_programmable_receiver_20260915_r3": {
+      "manifest_sha256": "c1bb403a610fe74559dd19e2623679da6d0d6d305292fe3cae2a32c274def44b",
+      "summary_sha256": "20e2ba380ab7110a39f337ef5ffff2aeaee038a453d68c2a12b6f417ef208b47"
+    },
+    "entry160_programmable_receiver_followup_20260915": {
+      "manifest_sha256": "20ef8719a54017a69e908c791f622f6091a780cd36e9d4b2a53681bca6118be0",
+      "summary_sha256": "db064ebaa858340470a0785ee14f4008c61db3773b9ff3cb410f0224b8f12fb6"
+    },
+    "entry160_programmable_receiver_measured_seed_20260915": {
+      "manifest_sha256": "c48f81722fd733c74d49e1a8bc6ff653936f1880215ea15d58119e020bb4642a",
+      "summary_sha256": "4885d7b7d1501b215dbade76e91662ddc110ed25821a950a2312a3ec6222e09c"
+    },
+    "entry160_programmable_receiver_analog_20260915": {
+      "manifest_sha256": "3f3d86bcdc3c371c3c164906c6534e6e59f3a47966d93e67ad30b6e654c5343b",
+      "summary_sha256": "67d454a9a0513df5834ee5ba820f4532c3c6afd150d51a894d8d1f62ba02f1a3"
+    }
+  },
+  "artifacts": {
+    "deck": {
+      "path": "nebula/product_audits/entry160_programmable_receiver_measured_seed_20260915/selected_control_link/design.cir",
+      "sha256": "e7323661f9e47b7bb941c3b996bfc7ed7bf2369495abcf526bb693ee5deabbda"
+    },
+    "waveform": {
+      "path": "nebula/product_audits/entry160_programmable_receiver_measured_seed_20260915/selected_control_link/trace.txt",
+      "sha256": "b53b2c3252e00f52c9c1400a2f4c8a64f2cad42e765706984ddd3b6f6e9f301f"
+    },
+    "terminals": {
+      "path": "nebula/product_audits/entry160_programmable_receiver_measured_seed_20260915/selected_control_link/terminals.txt",
+      "sha256": "d5e4e9d0a7d013fb4e2b51db678e13375dcc714e4b6f912ab96802669bb85cdf"
+    },
+    "link-result": {
+      "path": "nebula/product_audits/entry160_programmable_receiver_measured_seed_20260915/selected_control_link/result.json",
+      "sha256": "074931fb5fb4f8846681111862f044b997196d0abfe623c5588d8e77739f80bb"
+    },
+    "summary": {
+      "path": "nebula/product_audits/entry160_programmable_receiver_measured_seed_20260915/summary.json",
+      "sha256": "4885d7b7d1501b215dbade76e91662ddc110ed25821a950a2312a3ec6222e09c"
+    },
+    "config": {
+      "path": "nebula/product_audits/entry160_programmable_receiver_measured_seed_20260915/config.json",
+      "sha256": "746086572ff974c5df4583e69824e5554484db6d1772d34461900f8cac4577e7"
+    },
+    "ac-state0": {
+      "path": "nebula/product_audits/entry160_programmable_receiver_measured_seed_20260915/held_state0/ac_001.txt",
+      "sha256": "464dd6d8fccca36cd0088df731c27b1d9daf1d33e4a46264c9b7e6df685c1abb"
+    },
+    "ac-state1": {
+      "path": "nebula/product_audits/entry160_programmable_receiver_measured_seed_20260915/held_state1/ac_001.txt",
+      "sha256": "b4d90139d8e6799b4432a00d282ce563b4b24f9ee5ed02aa60630496295e6999"
+    }
+  },
+  "generator_matches_normalized_measured_deck": true,
+  "newline_note": "Structural export is LF; measurement writer records Windows newlines. Exact measured deck is served; normalized generator equivalence is checked separately.",
+  "simulations_launched": 0,
+  "read_only": true
+}

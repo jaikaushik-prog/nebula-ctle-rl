@@ -1,0 +1,9 @@
+# Entry160 exact new-DUT measured-state seed check
+
+Registered after four charged calls. The new receiver clocked at controls .73/.195 passes the existing signal gate (64/64 scored decisions; about321.861mV sampled eye) but fails signed model-domain checks. Held-state1 separately triggers source/gmin stepping warnings and remains invalid; neither DC failure is erased.
+
+One final DC-instrument approach uses actual node voltages from the newly measured receiver, not another circuit. For each held-clock state, take an actual transient sample after the warmup with the corresponding clock levels, q-qb < -0.1V and mp-mn < -0.1V. Choose the sample with smallest absolute input voltage, breaking ties by earliest time. Use all recorded non-source internal node voltages as released NODESET guesses; the sources and circuit remain unchanged. This is numerical initialization, not a reset or ideal decision source. Verify the final solved negative state and all existing warning, shape, voltage and repeatability gates.
+
+The small control list is (.73,.195),(.73,.210),(.73,.225),(.73,.195), all existing fine-grid controls. Measure held state1, then state0 only if the first instrument passes. Keep both fresh raw data and seed sample time/values/hash. If DC initialization still fails, stop this DC approach and retain the valid clocked finite-pattern result as separate experimental evidence. No further seed guessing, gate relaxation or broad PVT.
+
+If both states are valid, choose the minimum worst-state normalized target error within the unchanged internal0.5dB/100MHz bounds around6dB/2.1GHz. If different from the first clocked control, perform its own nominal transistor link check. Whole signed-domain failures still prohibit receiver signoff and default promotion. Same14:04:35UTC measurement cutoff and14:34:35UTC task hard stop.

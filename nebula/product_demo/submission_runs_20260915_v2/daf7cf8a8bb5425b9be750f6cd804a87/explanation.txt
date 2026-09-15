@@ -1,0 +1,11 @@
+NEBULA - fixed physical-bias circuit
+NEEDS WORK - physical verification did not pass
+One unchanged setting: 481; 308/315 conditions pass.
+Fresh SPICE calls: 959.
+TT peaking: 6.9386 dB at 2.083598 GHz.
+TT CTLE + reference power: 6.9658 mW; noise: 0.5883 mVrms.
+Fresh verification tests one unchanged physical-bias circuit and fixed setting across PVT; the old RL bank supplies proposals, not these results.
+S7 full area is unknown and excluded from the electrical gate. Counted geometry includes the physical bypass MIM, bias devices and all netlisted passive/MOS bodies; it is not layout area.
+Power includes the CTLE and physical reference VDD branch, not DFE, clocking or external common-mode generation.
+DFE remains behavioural. Physical Rs/Cs selector switches, independent passive variation, mismatch and layout parasitics are unverified.
+One assumed external load and constructed channels are tested; physical bias current is supply/process/temperature dependent.

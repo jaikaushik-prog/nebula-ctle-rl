@@ -1,6 +1,30 @@
 # HANDOFF.md — Living Project State & Continuation Guide
 
-> **Entry 154 in progress (14 September):** Owner authorized automatic physical candidate recovery, a matched RL/classical full-workflow benchmark, and wider target coverage. Entry153 final artifacts remain preserved and usable. Same electrical limits, frozen bank/policy/registry and fixed geometry per candidate; all rejected attempts billed. New recovery-enabled app is a separate entry point. Recording and email remain owner actions.
+> Entry168 (2026-09-16): owner explicitly authorized GitHub submission publication after ZIP upload failed. Current entry points are README.md and docs/SUBMISSION_GUIDE.md; six large new traces use verified gzip plus nebula.restore_submission_evidence. No scientific results changed. See nebula/GITHUB_SUBMISSION_CLOSEOUT_20260916.md. Remote success must be confirmed after push; publication is not backdated.
+
+> **15 September Entry166: owner requested a quick, conversational app-only demo guide. Created `nebula/NEBULA_APP_DEMO_NATURAL_20260915.md` from the immediately preceding walkthrough, with exact controls, spoken narration, saved-run safeguards and no report references in narration. No prior demo narration was opened. Recording remains owner work.**
+
+> **15 September Entry165 complete: current report `output/docx/Nebula_Competition_Report_20260915_Final_v2.docx`,12pages/4134words. Results-first S1-S9 table replaces repetitive status labels; concise qualification roadmap added. Scientific results, identity details,12figures and3equations unchanged. All pages visually reviewed; focused integrity checks pass. See `nebula/RESULTS_SCOPE_REPORT_CLOSEOUT_20260915.md`.**
+
+> **Entry164 complete (15 September):** Competition-facing Word report: `output/docx/Nebula_Competition_Report_20260915_Final.docx` (12 visually reviewed pages,4099 words). Stronger deliverable/innovation/thought-process narrative; scientific results and material scope unchanged. Owner-completed identity/contact fields preserved; academic v4 unchanged. Five focused document checks pass. See `nebula/COMPETITION_REPORT_CLOSEOUT_20260915.md`.
+
+> **Entry163 complete (15 September):** Three requested presentation tasks complete. Run files has a lazy, hash-bound Programmable receiver prototype disclosure; accepted setting352 unchanged. Current report: `output/docx/Nebula_Academic_Final_Report_20260915_v4.docx` (12 pages,3911 words). Fresh demo: `output/docx/Nebula_Current_App_Demo_20260915_v2.docx` (4 pages,675 core spoken words,approximately5:55). All pages visually checked;34 focused tests pass; desktop/mobile saved-evidence rehearsal passes. No new science. See `nebula/PRESENTATION_CLOSEOUT_20260915.md`.
+
+> **Entry162 complete (15 September):** Confirmed owner was on legacy port8765, which shares the new UI but lacks submission evidence routes. Current app is http://127.0.0.1:8766/#results. Legacy errors now offer an explicit current-app link; other errors offer read-only retry. No data was missing or regenerated. Baseline26/final29 focused tests pass; actual ports and all11 evidence links checked. See `nebula/EVIDENCE_SERVER_FIX_20260915.md`.
+
+> **Entry161 complete (15 September):** Owner-requested Design explorer cleanup. Compact selected-circuit header; detailed scope is expandable. Exact drawing, selected transistor receiver and independent reference are full-width white panels. Receiver metrics and file links are organized inside its disclosure. The failing programmable prototype panel is removed from this explorer only; its source/evidence/API/export remain intact. Final35focused tests passed; browser checks1440x1000,1280x900,390x844, no page errors or simulation requests. See `nebula/EXPLORER_UI_REFINEMENT_20260915.md`. Refresh port8766. Scientific report unchanged; its earlier UI description predates this cleanup.
+
+> **Entry160 complete (15 September):** Selected-derived programmable receiver integrated as an experimental option in the app and matching future 6 dB / 2.1 GHz exports. Eight simulator calls total; no further science authorized by closeout. Nominal 64/64 bits, 325.629 mV, 0.720 UI, 9.2643 mW; seven signed-domain findings remain, noise instrument rejected, HD3/PVT outstanding. Fixed setting352 stays primary. Current Word report: `output/docx/Nebula_Academic_Final_Report_20260915_v2.docx`, 12 visually reviewed pages, 3905 words. See `nebula/PROGRAMMABLE_RECEIVER_RESULTS_20260915.md`. Final focused tests26 passed; actual download and saved UI checked. A failed panel load now offers a no-simulation retry; refresh port8766 to load current assets.
+
+> **Entry 159 complete (15 September):** Current requested Word report is `output/docx/Nebula_Academic_Final_Report_20260915.docx` (11 visually verified pages). New final web demo is `output/docx/Nebula_Final_Web_App_Demo_Script_20260915.docx` (4 visually verified pages, 5:55 core plus optional comprehensive scenes). App brand is Nebula. See `nebula/FINAL_PROJECT_STATUS_20260915.md`. Implementation is frozen for this scope; owner fills identities, records and submits. Engineering limitations remain open, not silently passed. No new simulations during closeout.
+
+> **Entry157:** Independent-audit presentation/replay improvements implemented; judge mode removed. Separate v4 report:12 visually checked pages. Focused tests59 passed; no new scientific experiments. Recording deferred to owner. Next order: target tuning, RL evidence, receiver PMOS/PVT; channel/BER only if time permits.
+
+
+
+> **Entry 156 complete (15 September):** The submission report and complete demo narration are updated as separate v3 artifacts. The report remains 12 pages with 11 blank identity fields; the DOCX is three pages, 661 spoken words and a 5:45 cue schedule. Both passed source/integrity checks and all-page visual review. Earlier editions remain preserved.
+> **Entry 155 complete (15 September):** Five focused submission improvements are complete: clearer selected-versus-reference circuit scope, a visible recovery trace, a guarded optional LLM wrapper, measured continuous-Cs endpoint coverage, and a generated selected-CTLE plus transistor-DFE deck. Focused integration tests: 126 passed. Reports/packages and the full suite were deliberately left untouched at the owner's request.
+> **Entry 154 complete (15 September):** Owner authorized automatic physical candidate recovery, a matched RL/classical full-workflow benchmark, and wider target coverage. Entry153 final artifacts remain preserved and usable. Same electrical limits, frozen bank/policy/registry and fixed geometry per candidate; all rejected attempts billed. New recovery-enabled app is a separate entry point. Recording and email remain owner actions.
 
 > **Entry 153 complete (14 September):** The separate final report is 12 pages with 11 intentionally blank fillable identity fields; the matching Word narration is three visually checked pages. Use `nebula/SUBMISSION_PACKAGE_20260915.md`. Full regression: **3473 passed, 13 deselected, 2 warnings in 2048.39 s** (recorded before baseline: 3427 passed). The saved demo and actual automation receipt are preserved. The extra analog pilot reproduced nominal checks but failed required latch initialization at FS/1.71 V/125 C, so it adds no valid analog-PVT coverage. The owner fills details, records/reviews the video and sends the prepared email.
 
@@ -25,7 +49,7 @@
 > decisions that are OPEN and human-only, and what to do next. It supersedes
 > `nebula/NEXT_STEPS.md`. This file remains the full state of record.
 
-Last updated: **2026-09-14**, Entry 153 complete: final report, Word narration, saved automation receipt, bounded analog outcome, durable demo and full regression (3473 passed). Owner recording and email sending remain owner actions.
+Last updated: **2026-09-15**, Entry165 complete: results-first S1-S9 report revision,12 visually checked pages. Owner details and scientific evidence preserved. Recording and submission remain owner actions.
 
 
 > **PREVIOUS SUBMISSION EDITION (Entries 147/148):** Preserved background:
@@ -1085,6 +1109,43 @@ signaling, ADC-based DSP receiver, 28 nm CMOS reference parameters).
   **PRIVATE, and must stay private** (contains copyrighted PDFs, see G1).
 
 ## 2. Repository map (what every file/folder is)
+
+Entry168 (2026-09-16): owner explicitly authorized GitHub submission publication after ZIP upload failed. Current entry points are README.md and docs/SUBMISSION_GUIDE.md; six large new traces use verified gzip plus nebula.restore_submission_evidence. No scientific results changed. See nebula/GITHUB_SUBMISSION_CLOSEOUT_20260916.md. Remote success must be confirmed after push; publication is not backdated.
+
+Entry167 (2026-09-15): owner-authorized code-only submission packaging. See nebula/FINAL_CODE_PACKAGE_20260915.md and output/submission/Nebula_Final_Code_20260915.validation.json. Report/video remain separate. No scientific or application changes.
+
+Entry166: `nebula/NEBULA_APP_DEMO_NATURAL_20260915.md` is the owner-requested conversational app-only speaking guide.
+
+Entry165: `nebula/report/results_scope_revision.py` and `nebula/RESULTS_SCOPE_REPORT_CLOSEOUT_20260915.md` track the results-first specification table revision.
+
+Entry164: `nebula/report/competition_reframe.py`, `nebula/report/check_competition_reframe.py` and `nebula/COMPETITION_REPORT_CLOSEOUT_20260915.md` record the separate competition-facing report and its focused integrity checks.
+
+Entry163: `web/static/prototype_run_files.js`, `tests/test_run_files_prototype.py`, `report/current_presentation_update.py`, `report/check_current_presentation.py`, `CURRENT_APP_DEMO_20260915.md` and `PRESENTATION_CLOSEOUT_20260915.md` under nebula contain the current UI/presentation closeout.
+
+Entry162: `nebula/web/static/evidence_loading.js` is shared read-only error guidance; `nebula/tests/test_evidence_loading.py` protects scope and same-origin behavior.
+
+Entry161 adds `nebula/web/static/explorer_refinement.css` as a scoped, versioned presentation layer; new behavior contracts are `nebula/tests/test_explorer_refinement.py`. UI changes and verification are recorded in `nebula/EXPLORER_UI_REFINEMENT_20260915.md`; source/UI hashes are `tmp/academic-closeout/explorer-closeout.json`.
+
+Entry160: `nebula/programmable_receiver.py` builds the selected-derived physical Rs/Cs receiver. `programmable_option.py` exposes the exact measured option with hash-bound artifacts. `web/static/programmable_option.js` presents it read-only with reload/error handling. `experiments/exp_programmable_receiver*.py` and `review_programmable_receiver.py` own separate immutable experiment directories and independent raw-data recomputation. `report/academic_programmable_update.py` preserves the original academic DOCX and member names while building the v2 report; `report/programmable_receiver_visuals.py` builds exact device/measurement graphics. Results and fresh optional presentation note are `PROGRAMMABLE_RECEIVER_RESULTS_20260915.md` and `PROGRAMMABLE_RECEIVER_PRESENTATION_NOTE_20260915.md`.
+
+Entry159 artifacts: `nebula/report/academic_word.py`, `academic_report_content.py`, and `academic_final_assets/` build the academic Word report; `nebula/report/final_demo_word.py` builds the new `nebula/FINAL_WEB_APP_DEMO_20260915.md`. Canonical closeout is `nebula/FINAL_PROJECT_STATUS_20260915.md`; current artifact/source hashes are `output/docx/Nebula_Academic_Closeout_20260915_sources.json`.
+
+Entry157 adds `nebula/submission_evidence.py`, `nebula/submission_preflight.py`, `nebula/web/static/judge_evidence.js` (read-only evidence presenter, not a mode), and `nebula/report/final_submission_v4.py` / checker / saved-control plot.
+
+Entry156 additions (15 September): `nebula/report/final_submission_v3.py` and `check_final_submission_v3.py` build/check the separate updated 12-page PDF. `final_submission_v3_assets/` contains the reviewed current UI screenshot and generated receiver aperture figure. `nebula/report/final_demo_script_v3.py` plus its Markdown companion build the matching three-page narration DOCX. Final v3 PDF/DOCX and their source/review metadata are under `output/pdf/` and `output/docx/`; v1/v2 remain preserved.
+
+Entry155 additions (15 September): `nebula/generated_receiver.py` builds the exact selected physical CTLE plus established transistor DFE deck. `nebula/device/continuous_cs_refinement.py` and its experiment/audit files own the three-candidate endpoint study. `optional_llm.py`, `language_assistant.js` and `recovery_trace.js` add guarded language assistance and visible recovery. New accepted recovery outputs include hashed `receiver/receiver.cir` and `receiver/metadata.json`; the server permits only recorded safe relative artifact paths.
+
+Entry154 additions (15 September): `nebula/physical_recovery.py` and
+`recovery_workflow.py` provide bounded candidate recovery and complete exports;
+`nebula/web/recovery_server.py` serves the separate port8766 workbench.
+`nebula/experiments/exp_submission_recovery_benchmark.py` and
+`product_audits/submission_recovery_20260915/` hold the registered37-workflow
+study. New v2 report/script builders and `SUBMISSION_PACKAGE_20260915_v2.md`
+retain the earlier final artifacts. `SUBMISSION_RECOVERY_RESULTS_20260915.md`
+and `SUBMISSION_RECOVERY_HARDENING_20260915.json` separate measured evidence
+from later progress-file reliability hardening.
+
 
 **Entry 153 additions:** `nebula/report/final_submission.py` and `check_final_submission.py` own the separate 12-page report; `final_demo_script.py` owns its Word/text narration. `nebula/experiments/build_submission_receipt.py` extracts the saved adaptive receipt, with `nebula/AUTOMATION_RECEIPT_20260914.md` explaining it. `nebula/SUBMISSION_PACKAGE_20260915.md`, `SUBMISSION_RECORDING_CHECKLIST_20260915.md` and `SUBMISSION_EMAIL_DRAFT_20260915.md` guide the owner's remaining work. `nebula/product_demo/submission_runs_20260914/` preserves the selected completed physical run and byte manifest. The separately named analog PVT plan/adapter/experiment/tests write only fresh `nebula/product_audits/submission_analog_pvt_20260914/` evidence.
 
@@ -2170,6 +2231,36 @@ PRBS → scramble → Gray/PAM4 → TX-FFE → ZOH ×OSR(8) → TX pole (0.75·f
 
 ## 5. Complete history (what was done, in order, with the WHY)
 
+Entry168 (2026-09-16): owner explicitly authorized GitHub submission publication after ZIP upload failed. Current entry points are README.md and docs/SUBMISSION_GUIDE.md; six large new traces use verified gzip plus nebula.restore_submission_evidence. No scientific results changed. See nebula/GITHUB_SUBMISSION_CLOSEOUT_20260916.md. Remote success must be confirmed after push; publication is not backdated.
+
+Entry167 (2026-09-15): owner-authorized code-only submission packaging. See nebula/FINAL_CODE_PACKAGE_20260915.md and output/submission/Nebula_Final_Code_20260915.validation.json. Report/video remain separate. No scientific or application changes.
+
+Entry165: owner approved a demonstrated-results/scope table instead of repeated self-grading labels. Separate Final_v2 DOCX preserves all earlier reports.
+
+Entry164: owner requested more positive competition framing. Revised contributions and engineering narrative in a separate Word edition; did not alter measured results or claim additional coverage.
+
+Entry163: owner chose prototype discovery, report/demo alignment and safe rehearsal. Restored prototype discovery in Run files only, not as a fourth Design explorer result. New report v4 and fresh demo v2 preserve previous editions.
+
+Entry162: the repeated evidence404 was traced to the owner's legacy8765 tab, not saved scientific files. Added explicit navigation to8766 and read-only retry.
+
+Entry161 follows the owner repeated404 report and explicit visual critique. It removes only the experimental panel from the explorer, groups scope and nominal receiver material into ordered disclosures, and makes drawing/reference headers full-width and consistently white. No science or circuit changes.
+
+Entry160 completes the separately authorized 2.5-hour integration task. The physical Rs/Cs network now loads the selected amplifier and transistor DFE in a separate nominally measured variant; calibration is deterministic and all failed attempts are retained. App/export integration and a new academic report incorporate the option without changing the primary fixed circuit or transferring independent-reference PVT. Details and measured limitations are in the Entry160 session log and PROGRAMMABLE_RECEIVER_RESULTS_20260915.md.
+
+Entry156 (15 September): after the five focused technical improvements, the owner requested an updated report and complete DOCX demo script. The report was revised in place as a separate v3 edition so the new recovery, continuous-Cs coverage, guarded LLM and generated transistor receiver evidence appear in the main judging story. The narration follows one clear path from the 512-setting learned candidate catalog through rejected setting288 and accepted setting352 to the final physical CTLE, then presents the coverage refinement and nominal generated receiver with their limits. A cue correction directs the owner to report page8 for selected-receiver evidence because the saved app run predates structural receiver export; the different 9dB checkpoint is explicitly excluded.
+
+Entry155 (15 September): the owner chose five direct score improvements. The UI now separates the selected generated CTLE, its ideal modeled DFE score, and the independent 9 dB transistor reference, and shows the actual rejected-to-accepted recovery record. Optional LLM parsing/explanation is explicit opt-in and cannot select or accept circuits; deterministic word-number parsing covers the declared grid. A registered continuous-Cs pilot closes the 6 dB/2.5 GHz endpoint. The selected 6 dB/2.1 GHz CTLE was also connected to the existing transistor DFE and measured once at nominal. Every future accepted workflow exports that connected deck without converting structural generation into a verification claim.
+
+Entry154 (15 September): automatic physical recovery and the complete registered
+coverage/timing study are measured. The exposed6dB/2.1GHz request rejected288
+at314/315 then accepted352 at315/315. All37 planned workflows finished;
+coverage4/13 (3/12 grid), benchmark9/12 RL and8/12 classical delivered. The extra
+classical failure was Windows ledger-file replacement, not inferior selection.
+The measured median classical/RL time ratio0.939 on8 both-success pairs does
+not establish RL acceleration. A separate bounded file-I/O retry follows the
+study; original timed sources and failures remain preserved.
+
+
 **14 September, Entry 153:** The lead reused the recorded 3427-pass baseline only after confirming that intervening commits changed documentation alone. Three workers own separate report, saved-receipt/demo and bounded analog-PVT paths. The existing frontend was independently rehearsed at two desktop sizes; the saved physical run was preserved to remove its temporary-folder dependency. Final artifact checks and full regression passed; normal fast-forward backup remains the authorized policy.
 
 **14 September 2026, Entry 151:** Owner supplied the final submission email and requested a complete new-agent Markdown instruction packet. This documentation update records the new 10-12-page requirement and proposes bounded evidence improvements; it does not execute them.
@@ -2497,6 +2588,42 @@ Plus: git init, .gitignore, 28 tests, Wilson-bound BER reporting.
   rectangle and is now an explicit limitation, not a hidden traceback.
 
 ## 6. Key numbers & validated behavior (current state)
+
+Entry168 (2026-09-16): owner explicitly authorized GitHub submission publication after ZIP upload failed. Current entry points are README.md and docs/SUBMISSION_GUIDE.md; six large new traces use verified gzip plus nebula.restore_submission_evidence. No scientific results changed. See nebula/GITHUB_SUBMISSION_CLOSEOUT_20260916.md. Remote success must be confirmed after push; publication is not backdated.
+
+Entry167 (2026-09-15): owner-authorized code-only submission packaging. See nebula/FINAL_CODE_PACKAGE_20260915.md and output/submission/Nebula_Final_Code_20260915.validation.json. Report/video remain separate. No scientific or application changes.
+
+Entry166: conversational Markdown demo added; no app, report or scientific changes. Its timing is a suggested recording schedule, not a measured performance.
+
+Entry165: Final_v2 report12pages/4134words; all pages visually reviewed; focused integrity checks pass. Identity fields,12figures,3equations and all unrelated content preserved.
+
+Entry164: current competition report12pages/4099words; all12figures and3native equations preserved;5focused checks pass; every page visually reviewed. Owner identity/contact fields are filled and preserved. Scientific numbers unchanged.
+
+Entry163:34 focused tests pass in3.01s; browser1440x1000/1280x900/390x844; eight prototype links and downloaded bytes verified; seven45-point PVT slices inspected. Report12pages/3911words, demo4pages/675core spoken words. Science unchanged.
+
+Entry162: current recovery server8766 returns the evidence index, diagnostics and all11 indexed artifacts. Focused29tests and both-server browser checks pass. No scientific numbers changed.
+
+Entry161 UI checks: baseline16passed/2.67s; final35passed/3.84s. Desktop evidence panel widths1336px at1440 and1216px at1280; mobile354px at390. All three summary surfaces white. Five selected receiver links200, no page errors/overflow, zero non-GET or programmable requests. Selected receiver still64/64,296.981mV,.720UI positive,.675UI above100mV,9.2636mW; no numeric remeasurement.
+
+Entry160: R/C controls1.314/0.378V; loaded boost5.614715/5.618116dB and peak2.068083/2.070592GHz in held states0/1. Clocked nominal64/64,325.629067mV,.720UI positive,.680UI above100mV,9.264265mW. Eight charged calls total; independent read-only recomputation of775 archived files is unchanged. Final focused tests26passed in3.12s (baseline16passed in5.96s); real download click gives the exact measured deck. App checked1440x1000 and1280x900, including failed-parent hiding, alternate accepted parent, eight artifact links and retry after injected404. New academic v2 report12pages/3905words/12figures/three native equations; entered member names preserved. DOCX SHA256 d40cc1cf297fe317b1ac7e9c414a54c7ec777d0d555d62965ba94a9e7b4ed17f.
+
+Entry159 current presentation: academic report 11 pages / 3525 whitespace-counted words / 11 figures; final demo 4 pages / 733 spoken core words / 355 seconds. Brand/title/accessibility label Nebula. Compare labels include Accepted or FAILED and short run identity. Read-only preflight PASS with 1240 attempt artifacts and 11 evidence rows. Focused 21-test union passed; final two branding/comparison tests passed. Saved pass/fail browser checks passed at 1440x1000 and 1280x900.
+
+Entry157 current submission edition: v4,12 pages,11 blank identity fields;59 focused tests passed. The original scientific coverage remains4/12 grid targets and selected352 CTLE315/315 model conditions; selected transistor receiver remains nominal-only with signed PMOS findings.
+
+Entry156 artifact state: `Nebula_Final_Submission_12p_20260915_v3.pdf` is exactly12 pages, SHA-256 35011417c6c27aece63ef91194bc9f04ecc9fb14fdc91c248102c909c274988f, with11 empty AcroForm identity fields. Source checks, inherited completed raw proof, previous-report hashes, bounds, outline, figure order and every rendered page pass. `Nebula_Final_Demo_Script_20260915_v3.docx` is three pages/661 spoken words/six scenes, SHA-256 2fc33bfa2b00ec63ff021aa22b22e5cf7144362c730d24979f6ea133010a1f3a; cue schedule5:45 and estimated spoken duration5-6 minutes. All final DOCX pages pass native-resolution review. Five final report tests and the final DOCX metadata/hash/OOXML check pass.
+
+Entry155 measured state: continuous Cs factors 1.01/1.02/1.03 give 308/315, 315/315 and 315/315 for 6 dB/2.5 GHz. All 411 charges completed in 281.4683 s; 2,105 evidence files and source/PDK fingerprints passed review. Combined declared evidence is now 5/13 requests, including 4/12 on the rectangular grid. Production proposes labeled base480_cs1p02 only for the exact endpoint and still performs a fresh 137-call gate. The nominal generated receiver gives 64/64 decisions, 296.981 mV sampled eye, 0.720 UI positive aperture and 9.263600 mW VDD power; its independent review passes 17/17 integrity checks. Browser checks pass at 1440x1000 and 1280x900. The final focused union is 126 passed in 7.56 s.
+
+Entry154 measured state:13 coverage workflows plus24 matched timing workflows,
+4110 charged invocations (one documented charge preceded a failed launch).
+Full study/deep raw check exit0; independent37-row final review PASS. The saved
+recording run94b55321c7f245df8093284b402c8a40 is a byte-identical copy of the
+completed coverage recovery, not a new optimization. It delivers setting352,
+6.614732dB at2.159514GHz,315/315 modeled conditions; archived complete parent
+workflow166.084985s includes rejected288. Final release tests/visual checks
+are recorded in the Entry154 closeout below when complete.
+
 
 **Entry 153:** Saved automation receipt proves 2406 billed visits over 315 adaptive conditions, including 315 fixed starts and repeats; 234 bank-selected outcomes comprise 185 centering refinements and 49 safety recoveries. Representative code is 425; the displayed recovery episode selects code 496 outside its policy trace. These are the earlier 9 dB adaptive run, not the selected 3 dB fixed physical run or the separate integrated receiver. No new policy replay, training or simulator work was used to extract the receipt. The saved 5.8936418 s timer includes 0.2245872 s representative export but excludes later drawing/file writes; full runtime acceleration remains unproven.
 
@@ -3281,6 +3408,38 @@ still NOT full area. The 12-request replay is fully supported at eight requests;
 
 ## 7. Known model limitations (honest list — do not overclaim)
 
+Entry168 (2026-09-16): owner explicitly authorized GitHub submission publication after ZIP upload failed. Current entry points are README.md and docs/SUBMISSION_GUIDE.md; six large new traces use verified gzip plus nebula.restore_submission_evidence. No scientific results changed. See nebula/GITHUB_SUBMISSION_CLOSEOUT_20260916.md. Remote success must be confirmed after push; publication is not backdated.
+
+Entry167 (2026-09-15): owner-authorized code-only submission packaging. See nebula/FINAL_CODE_PACKAGE_20260915.md and output/submission/Nebula_Final_Code_20260915.validation.json. Report/video remain separate. No scientific or application changes.
+
+Entry165: results-first labels do not change4/12 coverage, ideal-versus-transistor DFE scope, signed-domain findings or unproven RL speed advantage. Qualifications remain explicit.
+
+Entry164: S3 editorial label is Partial coverage with4/12 and full-range not met explicit; not a new pass. Prior source hash now differs because the owner filled identity details. Preserve historical manifests; current provenance is in the new competition manifest.
+
+Entry163: the prototype is visible again under Run files, but is still nominal-only. Opening/downloading it adds neither selected-circuit acceptance nor coverage; older archives are unchanged. Final filenames supersede the preserved locked intermediate v3 report.
+
+Entry162: fixing a UI404 adds no verification. The Entry160 prototype remains nominal-only with its retained signed-domain findings; the removed explorer panel has not been restored.
+
+Entry161 changes presentation only. Six selected-receiver signed PMOS findings and all verification limitations remain inside the selected receiver disclosure. The programmable prototype is no longer a visible explorer panel; raw results and export code remain unchanged. Earlier report v2 UI wording and optional presentation-note panel actions predate this cleanup; use report/evidence fallback for the prototype rather than claiming a visible current panel. No report or scientific manifest was retrospectively changed.
+
+Entry160: the new programmable option is experimental nominal AC/signal evidence, not full receiver verification. Seven signed-model violations remain (six attenuator PMOS plus bilateral Rs NMOS). Noise instrumentation was invalid; HD3 and new-receiver PVT were not completed. No BER, runtime tuning, full-range, routed area or integrated external-source power claim. Three static C controls at one R control are not a dynamic tuning demonstration. Controls are measured deterministic calibration, not an RL achievement. Accepted352 remains fixed Rs/Cs; its315/315 ideal-DFE gate and the independent9dB reference PVT do not transfer. Coverage remains4/12. All eight calls are consumed; no follow-on simulations during recording preparation.
+
+Entry159 freeze: software/report closeout is not full receiver signoff. Selected 352 uses ideal DFE for 315/315; selected transistor receiver remains nominal only with six signed PMOS violations. Entry158 gives 5/12 nominal loaded-AC matches, not an increase to 4/12 end-to-end coverage. No RL speed or near-optimality, routed layout, measured-channel BER, complete tuning-range or selected-receiver PVT claim. Two approved Entry158 ngspice calls are already consumed; do not repeat them.
+
+Entry156 artifact limits: the narration schedule is an estimate, not a recorded video. The owner must fill all blank identity fields and review the actual recording. Report page8 keeps the generated receiver nominal-only and signed-PMOS limitations; page9 keeps the separate73-device reference distinct; page10 states that the matched study found no RL speed advantage; page11 states that the live LLM provider is unavailable. No full regression was run for this report/DOCX-only update by the owner's earlier direction, so no new full-suite or release-commit claim is made.
+
+Entry155 limits: the optional live provider is unverified and unavailable on this machine because its SDK/credentials are absent; deterministic fallback is visible. Continuous-Cs evidence improves one target and does not prove full 3-12 dB/1.25-2.5 GHz coverage. The generated receiver is one TT/1.8 V/27 C finite-pattern case with fixed external clock/tap controls and constructed channel. It does not establish BER, analog/link PVT, noise/HD3, routed area, integrated control drivers or full receiver signoff. Six attenuator PMOS instances retain signed model-domain violations even though the added DFE terminal check and whole-circuit envelope pass. Reports/packages were not regenerated and the full suite was not rerun by explicit owner direction; no new full-suite or release-commit claim is made.
+
+Entry154 limits: only4/13 declared physical requests pass (3/12 grid plus the
+exposed recovery diagnostic), not full3-12dB/1.25-2.5GHz coverage. New315/315
+results are physical CTLE plus ideal behavioral DFE, not integrated receiver
+analog-PVT or fullS7 signoff. Three timing repeats per target are descriptive;
+no RL time advantage is demonstrated. Classical8/12 versus RL9/12 includes
+one Windows progress-file infrastructure failure and is not selection-quality
+evidence. Charged invocations are not proof every simulator process launched.
+Post-study I/O hardening does not alter or replace those timings/failures.
+
+
 **Entry 153:** The bounded analog pilot reproduced the TT result but failed required latch initialization in all six FS/1.71 V/125 C measurements. No new valid analog corner coverage is established; finite diagnostic scalars cannot override the failed state gate. The new Word document is complete: three canonical-rendered pages visually reviewed. Missing bundled LibreOffice and stalled Word COM were resolved using checksum-verified, signed LibreOffice Portable 26.2.4 under ignored scratch only; no desktop installation. No final recording exists. Team/contact fields are blank by owner instruction. Task C matched runtime comparison is deferred to protect mandatory artifacts and recording time.
 
 **Entry 151 submission limitations:** Existing integrated-receiver 45-corner results establish link PVT, not all-corner AC/noise/HD3 coverage. Proposed extra analog PVT and runtime experiments are not completed results. The intended Word output `output/docx/Nebula_RL_Assisted_Demo_Script.docx` is currently absent (cause unknown); its builder survives in `tmp/demo-word/build_script.py`, but rendering/visual QA did not complete. No final demo video is verified.
@@ -3598,6 +3757,42 @@ variation, mismatch and layout remain open. Old production evidence is unchanged
   untrusted until proven (the Phase-0 experience says assume bugs).
 
 ## 8. Next steps (prioritized backlog with context)
+
+Entry168 (2026-09-16): owner explicitly authorized GitHub submission publication after ZIP upload failed. Current entry points are README.md and docs/SUBMISSION_GUIDE.md; six large new traces use verified gzip plus nebula.restore_submission_evidence. No scientific results changed. See nebula/GITHUB_SUBMISSION_CLOSEOUT_20260916.md. Remote success must be confirmed after push; publication is not backdated.
+
+Entry167 (2026-09-15): owner-authorized code-only submission packaging. See nebula/FINAL_CODE_PACKAGE_20260915.md and output/submission/Nebula_Final_Code_20260915.validation.json. Report/video remain separate. No scientific or application changes.
+
+Entry166: owner can record from the new natural-language Markdown guide using saved results on port8766. Recording and submission are still owner actions.
+
+Entry165: use Competition_Report_20260915_Final_v2.docx for the latest report. Owner records/reviews/submits. No further science or app changes authorized by this report edit.
+
+Entry164: use the new Competition_Report_20260915_Final.docx. Identities are completed; owner reviews the competition narrative, records and submits. Existing demo and app remain unchanged. No further science authorized by this editorial closeout.
+
+Entry163: implementation of the three presentation items is complete. Use port8766 and final report v4/demo v2. Owner fills identity/contact fields, records and reviews the video, then submits. No further science, full regression or publication is authorized by this closeout.
+
+Entry162: use8766 for recording. Prioritize presentation alignment, clear prototype discovery, owner identity fields and required video. No new science is authorized by this navigation repair.
+
+Entry161: Ctrl+F5 on port8766 to inspect the cleaned Design explorer. Record with the full-width drawing, selected nominal receiver and independent reference panels. Do not reopen the removed programmable panel as a recording requirement. If editing report/demo descriptions again, align UI wording with this cleanup while retaining the prototype measured science and limitations. No further simulation authority follows from visual cleanup.
+
+Entry160 next action is submission preparation, not more science: use the v2 academic DOCX, complete team/institution and contact/email cells (three member names already entered), record the saved app and optionally use the independently written35-45second programmable scene if the video time limit allows, then manually submit before23:00IST. Full receiver verification remains future work. If an old tab displays an evidence error, open http://127.0.0.1:8766 and Ctrl+F5; current panel includes a saved-only reload button and HTTP error details. Backend200 and fresh-browser recovery were checked; the exact cause of the owner old-tab failure was not reproduced. No commit/push/publication or new broad regression was requested.
+
+Entry159 owner priority: fill the 11 report identity fields, record/review the new demo, export the completed academic DOCX only if the submission requires PDF and verify 10-12 pages, then manually submit before 23:00 IST. No additional implementation remains in the requested closeout. Further scientific work needs a separate scope and time budget; do not start it as recording preparation.
+
+Entry157 owner priority: programmable Rs/Cs/coverage, then RL cost/optimality, then selected-receiver PMOS/PVT; measured channel/BER only if time permits. No new training or SPICE campaign without an agreed bound. Recording remains the owner task.
+
+Entry156 deadline actions: fill the11 report identity fields, rehearse with the v3 DOCX, record and play back the complete video, then email the v3 PDF and reviewed video before23:00 IST. In Scene5 show report page8 or the preserved selected-receiver result; do not substitute the app's separate9dB checkpoint. The previous report/script editions remain fallback artifacts.
+
+Entry155 immediate deadline action: use the running port8766 app to record the demo, fill the intentionally blank team/college/member fields, and send the report plus video by 23:00 IST. If time remains after submission safety is secured, run the required full suite before committing/backing up these new implementation changes. Do not present the nominal generated receiver as full-PVT signoff or the optional LLM as live-provider verified.
+
+Entry154 submission priority: complete v2 report/demo visual QA, fresh app smoke
+and final full regression, then verified normal-fast-forward backup. Use the
+new v2 guide for the final recording route. Preserve the original final report
+as fallback. The owner fills the blank identity fields, records/reviews the
+video and sends it with the report by15September23:00 (target20:00IST).
+No further scientific campaign, training or topology change is needed for
+this closeout. Do not run timing, live generation and simulator-heavy tests
+concurrently.
+
 
 **Entry 153 next steps:** Owner fills the blank identity/contact fields, records and reviews the video with the completed script, then sends the report/video using the prepared email draft. Aim for 15 September 20:00 IST, ahead of the 23:00 deadline. The submission code and artifacts have completed full verification. Further analog initialization work, target coverage, runtime benchmarking and layout belong after this submission closeout.
 
@@ -4267,6 +4462,30 @@ explicit scope.
 **1-9.** (See existing backlog: .s4p, clipping disto, joint adaptation, etc.)
 
 ## 9. Gotchas & footguns (each one cost real debugging time)
+
+**G202:** The legacy `nebula.web` server defaults to8765 and shares static assets with `nebula.web.recovery_server` on8766, but lacks submission routes. A modern-looking UI can therefore return generic File not found for evidence. Confirm the actual browser URL before diagnosing missing artifacts; never substitute another run's data to make a panel pass.
+
+### G201. A connected clocked receiver may work while a weak held-state initial guess is invalid
+
+Entry160 retained two invalid held-state batches despite a valid clocked finite-pattern result. Use the actual clocked receiver internal voltages as released .nodeset guesses when registering a bounded follow-up, and recheck latch state plus repeated DC/AC/power controls. Do not force decisions, relax convergence-warning rules or call an unresolved-initialization NO_MATCH an electrical failure. The later noise call still failed convergence and was stopped. UI availability errors are a separate software state: do not erase scientific hash checks to make a panel load; expose the HTTP failure and allow saved-only retry.
+
+### G200. Windows text translation can change an exact generated deck without changing its circuit
+
+`Path.write_text(..., newline="\n")` applied to a string that already contains CRLF segments can write CRCRLF bytes on Windows. Entry155's first exact rebuild comparison therefore differed even though the circuit text was the same. Hash the bytes produced by the actual writer and preserve line-ending provenance; do not normalize frozen evidence or dismiss a hash mismatch without explaining and reproducing the serialization path.
+
+### G199. Charged calls and Windows atomic-file replacement are different gates
+
+Entry154 observed PermissionError/WinError5 replacing call_progress.json before
+an intended simulator launch. The counter had already been charged, so137
+charges corresponded to136 captured simulator logs. Seven channel conditions
+were unmeasured, not electrically failed. Keep the delivered failure and elapsed
+time in the benchmark. A later bounded retry applies only to the same pending
+file replacement (initial attempt plus6 retries,50ms each); it must never
+recharge or rerun SPICE. Permanent permission errors still propagate and reject
+the candidate. Timed-campaign sources remain immutable; the later product fix
+has a separate before/after hash record. A successful process exit or finite
+other measurements cannot replace the missing measurement.
+
 
 Entry 150: CSS display:grid can override native [hidden]. Global [hidden] display:none!important prevents a completed comparison retaining its empty state. Async comparison loads need a revision counter and common axes. Recorded cursor margins are not measurements from finite waveform overlays.
 
@@ -20344,3 +20563,170 @@ lightweight recovery/legacyphysical/web/benchmark/report checks:64passed3.25s
 at integration checkpoint; subsequent instrumentation checks remain local.
 The plan-only commit contains this handoff update; executable additions remain
 uncommitted until complete measurements and final regression pass.
+
+Entry154 measured campaign closeout (15 September): the frozen plan ran all13
+coverage plus24 benchmark workflows in2524.930750s driver wall, including its
+final deep raw-artifact check; all three phases returned exit0. The separate
+independent review checked all37 ordered identities, known charged counts,
+accepted unchanged physical gates, request matching, complete exports and
+source fingerprints before any later fix. Total4110charged invocations; no
+unknown-count workflows. Coverage4/13 and3/12grid, benchmark17/24 delivered.
+The sole additional classical non-delivery is a pre-launch Windows ledger
+replacement failure atFS/1.05/27C; later identical-deck repeats pass. It is
+retained as infrastructure failure, not a claim of RL superiority. Eight
+matched both-success pairs give median classical/RL0.9394150795. No RL speed
+advantage is established. All failed work remains billed.
+
+The same Windows file error recurred during a separately billed live-app smoke
+with the measured source. A minimal post-study fix retries PermissionError on
+only pending.replace, same bytes and charged count, at most300ms programmed
+sleep. Two new tests failed before the fix;41 focused tests passed afterward.
+Permanent and other I/O errors remain failures. Original campaign inputs,
+protocol, summary, final review and failed evidence remain unchanged.
+SUBMISSION_RECOVERY_HARDENING_20260915.json identifies exact old/new source
+hashes. New app checks and the required final regression follow this freeze.
+
+Entry154 app integration: the pre-fix live6dB/2.1GHz request exhausted its7
+eligible candidates (959 charged invocations,639.028419s) with failed evidence
+retained. After the bounded file-replacement fix, a separate fresh HTTP request
+4608cf1c525f4e59b2d5226059b0ce5d rejected288 at314/315 then accepted352 at315/315,
+274 charged invocations in164.766106s complete workflow time. Neither app run
+is pooled into the matched timing study. Their receipts and export hashes
+pass independent app_smoke_review.json checks.
+
+The recovery layout initially lacked a display adapter for the old
+physical_evidence directory convention. New recovery_visuals.py resolves the
+last local candidate, verifies exact design/deck/AC bytes, and feeds a temporary
+compatibility view to the unchanged canonical selected_eye engine. It never
+follows preserved absolute paths outside the copied run. Nine regression tests
+include the real saved352 result and tampered/missing evidence refusal; eight
+web tests include the new HTTP route. Final app rehearsal passes1440x1000 and
+1280x900: selected measured AC, modeled eyes, four circuit blocks/inspectors,
+45-corner view, target input and saved completion; no runtime exceptions. The
+lead visually inspected the saved352 Explorer screenshot. Source hashes and
+review are preserved in the new demo root.
+
+### Entry 155 - 2026-09-15 - Five focused submission improvements
+
+The owner explicitly requested the five identified score improvements and asked to avoid more report, packaging and full-regression work. UI scope now labels the selected generated CTLE, ideal modeled DFE and independent transistor receiver evidence separately. A saved recovery trace displays request, rejected setting288 at314/315, accepted setting352 at315/315 and produced files. The optional language service is explicit opt-in, validates only target numbers, cannot choose or accept a circuit, fails safely to deterministic parsing, and exposes provider availability. The local provider is unavailable/unverified; after an idle-server restart, the live sentence "six dB near 2.1 GHz" parses to6dB/2.1GHz by regex.
+
+The preregistered continuous-Cs campaign measured all three planned refinements of base480 with no early stop or retry: factor1.01 passes308/315, while1.02 and1.03 each pass315/315. Exactly411 calls were charged in281.4683s; source/PDK fingerprints and2,105 evidence files pass independent review. This raises combined tested coverage to5/13, including4/12 grid points. Production recovery now proposes labeled continuous candidate base480_cs1p02 only for exact6dB/2.5GHz, with null bank code and preserved base identity, then runs the same fresh137-call acceptance gate. No bank, range, reward, tolerance or topology definition changed.
+
+The accepted setting352 CTLE was connected to the established transistor summer, memory and feedback DAC. One nominal TT/1.8V/27C finite-pattern run passes the registered signal gate with64/64 decisions,296.981mV sampled eye,0.720UI positive aperture and9.263600mW VDD power. Independent review passes17/17 evidence checks. Full receiver verification remains false: six attenuator PMOS devices violate signed model-domain limits, and BER, analog/link PVT, noise/HD3, integrated controls and routed layout remain unverified. Future accepted workflows export hashed receiver/receiver.cir plus metadata while preserving the CTLE-only design.cir. Secure artifact serving permits only recorded hashed relative paths.
+
+Browser QA passes at1440x1000 and1280x900 with no exceptions or new design jobs; an isolated HTTP check fetched the exact connected receiver hash and refused an unrecorded path. Final focused union:126 passed in7.56s. Reports, packages and historical outputs were untouched, and no full regression was run per the owner's instruction. Consequently these local changes are not claimed as a fully validated release commit. Owner actions remain filling identity fields, recording the demo and sending the submission email.
+
+### Entry 156 - 2026-09-15 - Updated final report and complete demo narration
+
+The owner requested the five new results be incorporated into the report and asked for a complete `.docx` demo script. Created separate v3 editions and preserved v1/v2. The report keeps the exact12-page limit and11 blank identity fields. Its main changes are: a single policy-candidate-to-physical-output architecture; a judging/deliverables matrix; measured4/12 grid coverage and continuous-Cs evidence; nominal selected-CTLE plus transistor-DFE evidence; the separate9dB reference; actual288-to-352 recovery/cost; current UI and guarded optional LLM; and an updated limitations/source guide. PDF SHA-256 is35011417c6c27aece63ef91194bc9f04ecc9fb14fdc91c248102c909c274988f. The strict checker and five focused tests pass; all12 rendered pages were individually inspected with no overlap, clipping, missing glyphs or blank pages. The PDF artifact-operation marker ran once before authoring.
+
+The matching DOCX contains six scenes,661 spoken words and a5:45 cue schedule, rendering as three clean pages. It explains that the RL policy proposes from a512-setting catalog, setting288 is physically rejected at314/315, deterministic recovery chooses setting352 at315/315, and only the accepted physical CTLE is the final circuit. It then covers45PVT x7 losses, combined3/12-to4/12 coverage, the nominal generated transistor receiver, LLM fallback and remaining limits. Scene5 directs the owner to updated report page8 or preserved receiver evidence because the saved app run predates structural receiver export, and explicitly excludes the separate9dB checkpoint. Final DOCX SHA-256 is2fc33bfa2b00ec63ff021aa22b22e5cf7144362c730d24979f6ea133010a1f3a. All three pages were rerendered and visually checked;12 final content/metadata checks plus an independent hash/OOXML check pass. The DOCX marker ran once before authoring; the runtime lacked bundled LibreOffice, so the canonical renderer used the previously verified signed isolated workspace-portable fallback, never desktop Word/LibreOffice.
+
+No SPICE, training, report packaging or full regression ran for Entry156. The owner fills identity fields, records and reviews the video and sends the submission. No final video is claimed.
+
+### Entry 157 - 2026-09-15 - Independent audit follow-up, first twelve items
+
+The owner requested implementation of the first twelve independent-audit improvements, explicitly deferred recording, then requested removal (not repair) of judge mode. Eleven non-recording items are implemented. Judge-mode button/banner/state/listeners/styles are removed. The normal recovery entry point defaults to the saved submission root and chooses accepted setting352/run4608cf1c. Saved playback is labeled as replay, the512-setting catalogue is distinguished from fixed physical output, and failure/recovery evidence remains288/314 to352/315.
+
+Read-only submission_evidence.py and submission_preflight.py provide circuit-owned evidence links and integrity checks. The nominal transistor receiver card is bound to the exact selected CTLE deck and pinned original review/result hashes; unrelated circuits cannot inherit its results. PMOS signed-domain violations and full_receiver_verified=false stay visible. The preflight checked four workflow artifacts,1240 attempt artifacts and11 indexed evidence rows, plus direct PDK and ngspice executable paths without executing ngspice. Native Windows manifest separators are normalized only for safe lookup; no frozen deck or manifest is rewritten.
+
+The UI now exposes numerical request tolerances, setting/A/R/C identifiers, V*UI eye-area units and ideal-DFE PVT scope. Inspector tables use ordinary page scrolling. The reference drawing loads eagerly with dimensions and a failure fallback; Chromium nested details-content needed an explicit visibility rule for open panels. Browser acceptance passed at1440x1000 and1280x900,315 condition rows and11 artifact links each, no page exceptions or horizontal overflow. Generation/package routes were blocked during QA.
+
+Created separate output/pdf/Nebula_Final_Submission_12p_20260915_v4.pdf with12 pages and11 blank identity fields. Page2 has categorical S1-S9 statuses; page5 contains the exact selected352 drawing; page4 separates frozen FINAL raw/shielded PPO from exposed matched controls and reports regret; pages11-12 have the saved-root command, preflight and evidence ownership guide. All12 pages were visually inspected. Final rerender is pixel-identical on all12 pages. PDF SHA256:5619ae9f015f8e9d53c96300c79c3af854354e9409a5fded9323a8b41e053384. The checker passed115 source bindings. v3 and earlier reports, the independent audit and independent demo DOCX remain unchanged.
+
+Focused baseline26 passed; final focused union59 passed in6.31s. No full regression, fresh SPICE, training, packaging, email, commit or push. Owner explicitly waived further broad verification to preserve time. Recording and identity completion remain owner actions.
+
+Next authorized priority order: (1) programmable Rs/Cs and target coverage, (2) RL speed/near-optimality evidence, (3) selected-receiver signed PMOS/PVT gaps, then (5) measured-channel/BER if time permits. Start with bounded assessment of existing evidence. Fresh campaigns/training still require a concrete agreed cap; no new scientific pass is implied by this closeout. Deadline remains15September23:00IST.
+
+### Entry 158 - 2026-09-15 - Approved bounded loaded-tuning diagnostic
+
+Owner approved at most two ngspice calls, each capped at180s, using only the existing programmable reference and already measured controls. No training, full PVT, topology change, retry or replacement of final352. Implementation/focused-check stop11:17:31UTC (16:47:31IST), within one hour. The preregistered plan is nebula/LOADED_TUNING_BOUND_PLAN_20260915.md; new device/loaded_tuning_bound.py and experiments/exp_loaded_tuning_bound.py retain pinned source/deck/PDK provenance and raw failure evidence. Baseline14 focused tests passed. New failure-first tests exposed missing state-alignment guard and scheduler; these are being implemented before any fresh call. The10/12 standalone AC matches are an exposed saved-data diagnostic, not a change to4/12 end-to-end coverage. Nominal loaded results remain pending.
+
+Entry158 measured closeout: the approved two calls completed, 31 OP/AC snapshots per held state, 62 total, 78.514194s driver wall. Both calibrated first/last snapshots match; all319 external PDK files,91 source bindings and simulator hash stayed unchanged. All226 new archived files were checked and62 rows recomputed without simulation by review_loaded_tuning_bound.py. Five of12 target requests match nominal AC in both states:6dB/1.9GHz,6dB/2.5GHz,9dB/1.25GHz,9dB/1.9GHz,12dB/1.9GHz. No matched3dB target; seven targets have no match in this bounded sample. These are NOT full receiver passes: signed model-domain findings remain, and no new transient/noise/HD3/PVT/retuning check ran. Selected352 and4/12 end-to-end coverage are unchanged. Summary SHA256:aedb02fbc6c30b92e4ff3c7c2679088fba1e958cf3dbc59c5d66feafeee30583. Focused baseline14; postimplementation21 passed8.36s. No further SPICE calls authorized by this approval.
+
+Entry158 next-priority read-only work: deadline_evidence.py recomputes oracle regret from12,150 saved rows (2,430 identities x5seeds) and complete-workflow cost from24 original rows, checking receipt hashes. Regret0.283098; within0.05 fraction20.905%;91.7657x cached-visit reduction is not physical runtime gain. RL/classical both1,644 charged calls;949.914/929.424s;8 both-success pairs median classical/RL0.939415. No speed or near-optimality advantage is established. Selected receiver gap summary retains six PMOS signed violations; all Vds intervals cross zero and two off devices have+0.298977V Vgs, so a static source/drain relabel cannot close the gap. No model bounds, geometry, topology or scientific gates were changed. Three new evidence tests passed. A separate collapsed Run-files diagnostic panel is being added; report v5 will preserve v4. Broader receiver PVT and measured-channel/BER campaigns remain unapproved and unperformed.
+
+### Entry 159 - 2026-09-15 - Academic Word report and final project closeout
+
+The owner requests a plain academic Word version of the present v5 PDF, a newly written complete web-app demo with pass/fail/query/download cases, and changing the top brand to Nebula. No additional scientific work is requested: freeze the current circuit/evidence and close the implementation for now. The report remains within the official10-12 page limit; recording remains owner work. Brand/title/accessibility name are now Nebula. Existing reports and prior narrations remain preserved. The new report/script and final read-only checks are in progress. No new SPICE, training, full regression, packaging, email, commit or push is authorized by this closeout.
+
+#### Entry159 completion record
+
+The plain academic report and new full web-app narration are complete. All 11 report pages and all 4 demo pages were rendered with the Documents skill renderer and inspected at full image size. A previously verified portable LibreOffice fallback was used because the managed runtime has no bundled LibreOffice; the user's desktop office application was not used. The original PDFs and prior narrations remain preserved. Current report content JSON is persisted beside the report builder, not only in tmp.
+
+Report SHA-256: 71ae0da960940f99be64b7bf24f359c1b8ea435f7aa8e92ef33f8d71ed4b9d0c. Demo SHA-256: 21c729ff7d4f4f163ac7c056a18e8cb3091de56bffaaa591c5d665880f52e5f3. Report word count is 3525 whitespace-delimited words including table cells. Demo is 2389 whitespace-delimited document words; its authoring metadata uses a different word-token counter (2410). Spoken narration is 733 core words plus 531 optional words, with a 5:55 core and approximately 10-12 minutes including optional scenes and actions.
+
+The first branding assertion was observed failing before implementation. Current focused union: 21 passed; final branding/comparison subset: 2 passed in 0.20 s. JavaScript syntax check passed. Read-only preflight passed: 4 workflow artifacts, 1240 attempt artifacts, 11 evidence rows, direct PDK path present, simulator not executed, no files changed. Browser checks of saved accepted/failed runs and distinct Compare circuits labels passed at both requested sizes without page errors or horizontal overflow. The failed workflow is 308/315; its shown FF/1.05/0C/3dB cell fails S3 peaking match despite an open modeled eye. It is not the 288 attempt inside the accepted recovery record. Query validation, deterministic explanation, direct artifact download, missing artifact refusal and empty channel input were also checked. Browser harness assumptions (hidden run selector after changing tabs and exact selector option count) were corrected; these were harness errors, not application defects.
+
+Entry158 is now closed into the academic report and optional diagnostics: two bounded calls only, 62 measured snapshots, 5/12 nominal loaded-AC matches, no full model-domain pass. Read-only RL and PMOS assessments added no simulation. Existing 4/12 end-to-end coverage remains unchanged. The v5 PDF is preserved; final UI edits postdate its source bindings, and the new academic closeout manifest binds the current UI separately. No archive build, SPICE, training, full regression, full design, email, commit, push or submission occurred during Entry159.
+
+Project closeout is complete for the owner's requested scope. Identity completion, recording, any required final PDF export and submission remain owner actions. Scientific gaps stay explicitly open as documented in FINAL_PROJECT_STATUS_20260915.md.
+
+### Entry160 - 2026-09-15 - Selected receiver programmable integration
+
+Owner approved a separate programmable receiver candidate for possible incorporation, with a 2.5-hour total limit replacing the proposed four-call limit. No parameter/spec relaxation, training or automatic replacement of setting352. Start12:04:35UTC, hard stop14:34:35UTC; reserve final30minutes for focused checks and handoff. Reuse physical network (500,0) and existing measured fine-grid controls. Frozen old submissions remain unchanged. Baseline focused receiver/tuning tests:16passed in5.96s. Six new integration tests failed before implementation, then6passed in1.61s. New generator preserves accepted source hash and retained devices, exports real control inputs, and explicitly refuses inherited verification. Measured control selection is deterministic calibration, not new RL. Experiment sources/PDK/runtime and raw failures will be retained. No commit, push or submission.
+
+
+#### Entry160 measured and product closeout
+
+Completed within the 12:04:35-14:34:35UTC authorization window. Eight charged simulator calls across six retained directories, including a zero-call validation failure; no new science during app/report work. Two invalid held-state batches were followed by a valid clocked link; a measured-waveform released-node initialization then produced valid paired loaded-AC batches and the chosen-control clocked link. A separate noise call failed convergence warnings, so remaining analog calls stopped. No noise result or HD3/PVT pass was manufactured. Raw-data review checks775 files and reproduces the exact measurements and control choice; parent files and evidence remain unchanged.
+
+The physical network has nominal controls R1.314V/C0.378V and loaded5.615-5.618dB near2.068-2.071GHz; clocked64/64bits,325.629mV,.720UI,.680UI above100mV,9.2643mW. Seven signed-domain device findings keep full receiver verification false. Main352 output remains fixed; the separate measured programmable option appears in Design explorer and eligible future exports. Its measured bytes/drawing/metadata are receipt-bound. Missing optional evidence does not invalidate the primary export; other requests/parents do not inherit calibration. No RL credit for deterministic control calibration or new coverage beyond4/12.
+
+Focused verification: baseline16passed/5.96s; final26passed/3.12s. Both required viewport checks pass, eight direct downloads return200, unknown/malformed paths404, unrelated failed parent hides the option, and an actual browser download matches e7323661f9e47b7bb941c3b996bfc7ed7bf2369495abcf526bb693ee5deabbda. Owner reported a stale-looking generic unavailable panel; server19368 returned200 and fresh browser worked, so cause is not proven. Added no-cache fetch, explicit HTTP error and Reload saved evidence; injected404 followed by manual retry recovers without simulation. Selected preflight still PASS1240attempt artifacts/11evidence rows; distinct from new775-file review.
+
+New academic v2 DOCX:12pages,3905 whitespace-counted words,12figures,three native equations. Preserved current source SHA f8233b46f1a701779961ce00a3730762977959609859a294b38757cb0bd746e2 and entered Jai Kaushik/Rishabh Agarwal/Avi Mehta names. Final report SHA d40cc1cf297fe317b1ac7e9c414a54c7ec777d0d555d62965ba94a9e7b4ed17f; all page pixels reviewed, with identical-page hashes used after the last pagination-only correction. Source metadata is output/docx/Nebula_Academic_Final_Report_20260915_v2_sources.json. No old PDF/DOCX/narration was replaced. The new35-45second presentation note is independent of prior demo scripts, which were not consulted. Owner approved a concise future-work qualification in the report. No broad regression, training, full design, packaging, commit, push, email or publication.
+
+
+Entry160 provenance follow-up: original academic DOCX was externally re-saved at13:24UTC (current SHA34a01a1e2a15d35054654b88b802404091a0a018ddccaae0d874361bedaee7cd), after the v2 build input was read. It was not overwritten by this task. The final check initially detected the byte change and stopped; inspected narrative diff contains only the planned v2 receiver changes and member/contact fields match. The checker now explicitly reports PASS_WITH_SOURCE_RESAVE, preserving both old-at-build and current source hashes rather than replacing a historical hash. Final v2 report hash and visual review remain unchanged. New checker/source record: nebula/report/check_academic_programmable.py and output/docx/Nebula_Programmable_Closeout_20260915_sources.json. Final focused rerun26passed/3.25s.
+
+
+### Entry161 - 2026-09-15 - Design explorer presentation cleanup
+
+Owner reports the programmable area still shows404 and requests experienced UI/UX cleanup of awkward scope paragraphs, half-width drawing/reference panels, gray reference header and unstructured nominal receiver text. Implemented a compact selected CTLE/setting header with aligned actions, visible one-line physical/behavioral scope and expandable detailed source explanation. Three full-width white evidence disclosures follow the existing circuit canvas: exact generated drawing, selected transistor receiver and independent9dB reference. The nominal receiver uses a semantic four-column measurement strip, conditions, explicit verification limits and five labeled artifact links; mobile uses two columns and aligned expand controls. The reference uses the common white/navy/cyan treatment and smaller internal heading.
+
+Removed the experimental programmable panel and automatic fetch only; preserved all prototype source, raw data, API and matching export behavior. This is not suppression of a scientific failure or replacement of setting352. Scientific facts and signed limitations remain in their evidence records. Academic v2 report and all old manifests remain unchanged; its prior UI prose/screenshots are now historical. The optional prototype presentation note must use its report/evidence fallback if used.
+
+Frontend-design skill was read and applied: explicit existing six-color palette, Aptos/Segoe hierarchy, sequential evidence rather than unrelated half-width tiles, then screenshot critique. Baseline16tests passed in2.67s; final35in3.84s. Browser checks at1440x1000,1280x900,390x844 pass full-width/white-header assertions, scope and all three disclosures, five artifact links, failed-parent evidence hiding, no page errors or horizontal overflow. No non-GET application requests and no programmable endpoint calls. Desktop and mobile screenshots visually inspected. No science, training, full regression, document regeneration, packaging, commit, push or publication. See EXPLORER_UI_REFINEMENT_20260915.md and tmp/academic-closeout/explorer-refinement.json.
+
+
+### Entry162 - 2026-09-15 - Confirmed legacy-server evidence404
+
+The owner supplied http://127.0.0.1:8765/#results. Read-only process and API inspection confirmed legacy server8765 versus recovery server8766. Added shared error guidance, an explicit current-app link only on confirmed local8765/404, and same-origin retry for other errors. No automatic navigation, server restart, scientific mutation or cross-origin evidence substitution. Frontend-design guidance favored one concise existing-theme notice; screenshots show readable guidance and no notice on the correct server. Baseline26/final29tests pass (one intermediate stale cache-version assertion corrected). Browser1440x1000/1280x900 checked both ports,11 artifact HTTP200 responses and injected503 recovery. No page errors, non-GET requests or overflow. Source/report/prototype evidence unchanged. See EVIDENCE_SERVER_FIX_20260915.md. No full regression, simulations, training, packaging, commit or push.
+
+
+### Entry163 - 2026-09-15 - Prototype discovery and final presentation alignment
+
+Owner authorized the first three recommended improvements. Added a lazy Run files disclosure for the separate programmable receiver, eight safe named links, four nominal measurements, control conditions, retained limits and optional full-width drawing/plots. Reused existing hash-bound API; no backend or scientific changes. Current report v4 changes four paragraphs and the current screenshot, preserving all scientific tables, identities and native equations. Fresh narration from app/report/evidence is CURRENT_APP_DEMO_20260915.md and Current_App_Demo_20260915_v2.docx; no existing narration was consulted. Report v3 became locked by another process during a formatting correction, so v4 was created without closing it.
+
+Frontend-design guidance kept the existing white/navy/cyan hierarchy and separate evidence identity. Documents skill required a single two-output authoring marker, canonical isolated renders and all-page inspection. Final report12pages/3911words/SHA586be1c4733643ead1225170c10be0c1347e94c0156d73fd89918cc371fae46a. Demo4pages/1529total words/675core spoken/SHA8a0f875de840f4ac6fe8b54459a0964a39871763a6c6bb6cfe7aaa6db97c7456. Approximately5:55 core plus optional cases. All pages inspected; final report1-9/12 pixels identical to inspected first render,10-11 rechecked.
+
+Final focused34tests pass in3.01s. Browser rehearsal1440/1280/mobile passes valid/invalid parsing, recovery identity, seven45-cell PVT slices, separate failed run, all eight prototype hashes, actual deck download, HTTP503 retry, nominal/reference disclosures, deterministic explanation, compare swap and missing-parent isolation. Only parse/explain POST requests occurred; no design, profile or archive requests. No fresh SPICE, training, complete design, full regression, packaging, commit, push, email or publication. Scientific verification gaps remain open. See PRESENTATION_CLOSEOUT_20260915.md for intermediate test-only issues and exact deliverables.
+
+### Entry164 - 2026-09-15 - Competition-facing report narrative
+
+Owner requested stronger positive framing around deliverable coverage, innovation and thought process. Created a separate Competition_Report_20260915_Final.docx,12pages/4099words; retained the academic source and owner-completed identity/contact details. Abstract, page2 contributions, engineering reasoning and conclusion now lead with achievements. Repetitive qualifications consolidated; material scopes remain. S3 label becomes Partial coverage with4/12/full-range not met explicit, not a new pass. No numerical evidence or circuit changes.
+
+Documents skill render-and-inspect workflow completed for all12pages. All12figures and3native equations unchanged. Five focused document checks pass in0.396s. Final page2 rechecked; other final PNGs identical to individually reviewed render. SHA256:0c10e6dcadcc31b19d2f6aa86debc14485f7fa50ac51cfc788ec631dbd832349. The older Entry163 frozen source hash no longer matches because the owner filled identities; this is documented, not silently rebased. Full provenance and before/after edits are in the new sources manifest. See COMPETITION_REPORT_CLOSEOUT_20260915.md.
+
+No app, existing report, existing demo or scientific evidence was edited. No simulation, training, full regression, packaging, commit, push, email or publication. Owner records/reviews/submits; this is editorial improvement, not additional scientific verification.
+
+### Entry165 - 2026-09-15 - Results first specification presentation
+
+Entry165 complete: current report `output/docx/Nebula_Competition_Report_20260915_Final_v2.docx`,12pages/4134words. Results-first S1-S9 table replaces repetitive status labels; concise qualification roadmap added. Scientific results, identity details,12figures and3equations unchanged. All pages visually reviewed; focused integrity checks pass. See `nebula/RESULTS_SCOPE_REPORT_CLOSEOUT_20260915.md`.
+
+Page1 introduction/table now foreground demonstrated outcomes and exact scope; page2 has one qualification roadmap. Removed only the unnecessary PCIe protocol disclaimer. Full tuning coverage, model-domain findings, nominal receiver scope, geometry-versus-layout and measured RL comparison remain explicit. First-render label wrapping and paragraph font were corrected. All12 final pages inspected. SHA256:55d8d8dd4c684d2ddc7187cb955e4573a7c389996cd4f423ed77bc1febedbdda. Source Final DOCX untouched. No app/science/demo changes, simulations, training, full regression, packaging, commit, push or submission.
+
+### Entry166 - 2026-09-15 - Conversational app only demo guide
+
+Entry166: owner requested a quick, conversational app-only demo guide. Created `nebula/NEBULA_APP_DEMO_NATURAL_20260915.md` from the immediately preceding walkthrough, with exact controls, spoken narration, saved-run safeguards and no report references in narration. No prior demo narration was opened. Recording remains owner work. It covers target parsing/design paths, recovery288-to-352, circuit blocks/inspectors, PVT, comparisons, nominal receiver/prototype/reference, channel intake, optional explanation and downloads. Preserves ideal-versus-transistor scope and no-live-job boundaries. No existing narration, application, report or evidence edited; no simulations, regression, packaging, commit, push or submission.
+
+### Entry167 - 2026-09-15 - Final code submission package
+
+Code-only archive prepared from current working tree with saved selected/rejected workflows, policies, receiver evidence, setup instructions and per-file hashes. Original evidence was copied byte-for-byte; installed PDK, environments, credentials, reports, videos and narration excluded. Large historical trace omissions are explicit in CODE_MANIFEST.json. Baseline focused tests34passed; new packaging tests18passed. Isolated saved-app HTTP checks, downloads, diagnostics, registry pins, five policy sets and1812Python syntax checks passed with original-checkout reads and child processes denied. Denied diagnostic source-inspection probes of the smoke harness itself are retained in PACKAGE_VALIDATION.json. No clean-machine installation or fresh scientific reproduction claim. No full regression, SPICE, training, commit, push, email or submission. The final archive validation sidecar is authoritative for successful completion, size and SHA-256; an incomplete archive must not be delivered. Owner states video recorded and submits report/video separately. Temporary interrupted copies are preserved.
+
+### Entry168 - 2026-09-16 - GitHub submission publication
+
+Entry168 (2026-09-16): owner explicitly authorized GitHub submission publication after ZIP upload failed. Current entry points are README.md and docs/SUBMISSION_GUIDE.md; six large new traces use verified gzip plus nebula.restore_submission_evidence. No scientific results changed. See nebula/GITHUB_SUBMISSION_CLOSEOUT_20260916.md. Remote success must be confirmed after push; publication is not backdated.
+
+The owner reports the GitHub URL was submitted because the2.27GB ZIP could not be uploaded. Replaced stale private/September4 README presentation with current deliverables, quick start, selected352 metrics, recovery and scope; preserved original project infrastructure and history. Added detailed review guide, lossless evidence restoration and nine restore tests. Six new large traces total286420464 raw bytes and80766212 compressed bytes; all compressed round trips match original scientific SHA256. Original raw files retained locally and excluded from this commit. The ZIP, current report/video, demo narration, installed PDK and credentials are not staged. Public destination is the existing origin nebula-ctle-rl; no force-push or history rewrite. Baseline34focused tests passed in25.99s; restore tests9passed in0.28s. Final focused publication checks:92passed in11.79s (including nine new restoration tests). Staged scientific byte checks and real missing-file restoration are required before commit; largest new Git object17.273089MB. Original scientific bytes and report/video remain unchanged. No new simulator calls, training, complete design jobs or full regression; no deadline or full clean-machine certification claim.

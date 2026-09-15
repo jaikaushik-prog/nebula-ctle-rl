@@ -286,3 +286,17 @@ output/submission/*.zip
 !output/pdf/Nebula_Final_Submission_12p_20260915.pdf
 !output/docx/Nebula_Final_Demo_Script_20260915.docx
 !nebula/product_demo/submission_runs_20260914/**/*.log
+
+# Exact project-owned recovery revision artifacts.
+!output/pdf/Nebula_Final_Submission_12p_20260915_v2.pdf
+!output/docx/Nebula_Final_Demo_Script_20260915_v2.docx
+!nebula/product_audits/submission_recovery_20260915/**/*.log
+!nebula/product_demo/submission_runs_20260915_v2/**/*.log
+
+# Current submission waveforms: original bytes remain local; verified gzip is published.
+/nebula/product_audits/entry160_programmable_receiver_followup_20260915/clocked_link/terminals.txt
+/nebula/product_audits/entry160_programmable_receiver_followup_20260915/clocked_link/trace.txt
+/nebula/product_audits/entry160_programmable_receiver_measured_seed_20260915/selected_control_link/terminals.txt
+/nebula/product_audits/entry160_programmable_receiver_measured_seed_20260915/selected_control_link/trace.txt
+/nebula/product_audits/generated_receiver_6db_2p1ghz_20260915/terminals.txt
+/nebula/product_audits/generated_receiver_6db_2p1ghz_20260915/trace.txt

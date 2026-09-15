@@ -1,0 +1,58 @@
+{
+  "schema": "nebula-post-campaign-progress-io-hardening-v1",
+  "recorded_at_utc": "2026-09-14T19:20:41.527990+00:00",
+  "scope": "Post-campaign product reliability change; not a revision to completed campaign measurements.",
+  "reason": "Observed WinError 5 AccessDenied replacing call_progress.json before a planned AC/noise invocation; preserved classical 9 dB / 1.9 GHz repeat 0 failure. A separate live-app run also reported a replacement failure.",
+  "implementation": {
+    "function": "nebula.physical_design._record_call_progress",
+    "operation": "pending.replace only",
+    "retry_exception": "PermissionError",
+    "maximum_replace_attempts": 7,
+    "maximum_retries": 6,
+    "sleep_between_retries_seconds": 0.05,
+    "maximum_programmed_sleep_seconds": 0.3,
+    "same_pending_bytes": true,
+    "simulator_retries": 0,
+    "extra_charge_increments": 0,
+    "permanent_error_propagates": true,
+    "non_permission_errors_propagate_without_retry": true,
+    "acceptance_threshold_changes": false,
+    "scientific_definition_changes": false
+  },
+  "source_changes": [
+    {
+      "path": "nebula/physical_design.py",
+      "before_sha256": "8bf25b5fae2d90c272481451513afdd10f4ed10d0b1b6e11f9624d8b952c2959",
+      "after_sha256": "ed00429048c30350391c3e7925333036e85cb0d5131f3f525f54681fa928591e"
+    },
+    {
+      "path": "nebula/tests/test_physical_recovery_v2.py",
+      "before_sha256": "b98345788b45d7e18e90d9df27cef13aeeff2765f96373d8c5e8ecfafc3e7193",
+      "after_sha256": "2a066dd8bb189fdd02aadbd02555742fc15dd0b6c3d197f43abc1addb03ada9d"
+    }
+  ],
+  "validation": {
+    "fail_first_command": "py -3.13 -m pytest nebula/tests/test_physical_recovery_v2.py -q -k progress_replace",
+    "fail_first_result": "2 failed, 19 deselected in 1.04 s before implementation",
+    "focused_command": "py -3.13 -m pytest nebula/tests/test_physical_recovery_v2.py nebula/tests/test_physical_recovery.py nebula/tests/test_physical_product.py -q",
+    "focused_result": "41 passed in 7.01 s",
+    "checks": [
+      "Two transient PermissionErrors followed by success use exactly the same pending bytes and charged count.",
+      "Permanent PermissionError uses seven attempts and six 50 ms delays, then propagates while previous durable bytes remain unchanged.",
+      "Existing generic OSError atomic-failure test still propagates; original product/recovery tests remain passing."
+    ],
+    "simulations_run_by_this_hardening_task": 0,
+    "fresh_product_smoke_test": "Lead-owned, not claimed by this note."
+  },
+  "historical_campaign": {
+    "directory": "nebula/product_audits/submission_recovery_20260915",
+    "summary_sha256": "be0c1d9b3e38f5a903b3bb740f8e3d96c3481b686d06dec679153bec9c845893",
+    "protocol_sha256": "7bd67de5d228a89ba26bc03fcd2e0350e84a0c994da0493e260a45e78b96613c",
+    "frozen_physical_design_sha256": "8bf25b5fae2d90c272481451513afdd10f4ed10d0b1b6e11f9624d8b952c2959",
+    "checked_original_snapshot": "nebula/product_audits/submission_recovery_20260915/coverage_001_3db_1p9ghz_rl_r0/output/physical_recovery/candidate_01_setting_401/inputs/00_physical_design.py",
+    "checked_original_snapshot_sha256": "8bf25b5fae2d90c272481451513afdd10f4ed10d0b1b6e11f9624d8b952c2959",
+    "measurement_artifacts_edited": false,
+    "campaign_reexecuted": false,
+    "caveat": "4110 is the preserved charged-invocation total, not proof all calls launched. The infrastructure failure remains failed; newer product code does not reinterpret or replace it."
+  }
+}

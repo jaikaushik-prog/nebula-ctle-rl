@@ -1,0 +1,11 @@
+# Saved replay and the implemented numerical/RL framework.
+# Based on the recorded environment; installation itself is not clean-machine certified.
+numpy==2.2.6
+scipy==1.15.3
+matplotlib==3.10.3
+pandas==2.3.3
+Pillow==11.2.1
+torch==2.9.1
+pytest>=8,<10
+# Optional language provider: install anthropic separately if configuring credentials.
+# NGSpice and SKY130 are separate system/PDK installations, not pip dependencies.

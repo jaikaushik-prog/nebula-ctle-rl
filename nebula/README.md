@@ -1,5 +1,7 @@
 # Nebula — RL-driven CTLE sizing
 
+> Current submission: start with the [main README](../README.md) and [review guide](../docs/SUBMISSION_GUIDE.md). Use `python -m nebula.web.recovery_server` on port8766 after restoring evidence. The milestone index below is preserved development history, not the current app walkthrough.
+
 Competition entry for **Nebula** (Astera Labs × BITS Pilani, Goa), *AI/ML for
 Analog Circuit Design* track. Final submission **15 Sept 2026**.
 

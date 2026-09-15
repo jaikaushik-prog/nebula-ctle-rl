@@ -1,0 +1,25 @@
+{
+  "schema": "nebula-programmable-selected-receiver-v1",
+  "status": "EXPERIMENTAL_UNVERIFIED",
+  "structurally_integrated": true,
+  "derived_from_setting": 352,
+  "inherits_parent_verification": false,
+  "parent_ctle_sha256": "e8f8b0c82e6d797ce6baff14b2df551812915ad575a5b4a6871757b0cce4eaed",
+  "receiver_deck_sha256": "e37417a98d79551e682927932c1570d48ad94aefe14a23b8062e90bd39c4e4f6",
+  "r_fraction": 0.73,
+  "c_fraction": 0.21,
+  "control_voltage_v": [
+    1.314,
+    0.378
+  ],
+  "tuning_geometry": [
+    500,
+    0.0
+  ],
+  "nominal_receiver_verified": false,
+  "full_receiver_verified": false,
+  "phase_ui": 1.0,
+  "tap_code": 2,
+  "control_selection": "external values, not learned policy output",
+  "scope": "Derived selected amplifier/bias/attenuator with physical Rs/Cs and transistor DFE; external clock and controls; new verification required"
+}

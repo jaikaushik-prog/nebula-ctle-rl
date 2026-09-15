@@ -117,6 +117,20 @@ const NebulaCircuitViews = (() => {
     },
   };
 
+  const modeledDfeView = {
+    label: "Modeled 1-tap DFE",
+    svg: frame("Ideal behavioral one-tap DFE model, outside the exported netlist",
+      text(55, 40, "Ideal behavioral model - outside exported CTLE netlist", "circuit-label") +
+      '<rect x="280" y="105" width="180" height="75" rx="8" fill="none" stroke="currentColor"/>' +
+      '<rect x="610" y="105" width="240" height="75" rx="8" fill="none" stroke="currentColor"/>' +
+      '<rect x="450" y="245" width="270" height="60" rx="8" fill="none" stroke="currentColor"/>' +
+      wire("M70 143H280M460 143H610M850 143H970M910 143V275H720M450 275H370V180") +
+      text(90, 125, "CTLE cursors", "circuit-small") +
+      text(308, 150, "Subtract h1", "circuit-label") +
+      text(643, 150, "Ideal decision", "circuit-label") +
+      text(472, 282, "Previous bit x h1/h0", "circuit-small")),
+  };
+
   function designBlockMeta(design) {
     const search = design.search || {};
     const params = (design.nominal || {}).params || {};
@@ -139,8 +153,8 @@ const NebulaCircuitViews = (() => {
         note: `Selected values: Rs ${component(params.rs, 1, "ohm", 2)} and Cs ${component(params.cs, 1e12, "pF", 3)}. Topology guide with both tail devices; exact sizes and connections are in the exported drawing.`,
       },
       dfe: {
-        badge: "Transistor reference",
-        note: "Separate transistor checkpoint: summer, decision memory and feedback DAC. The selected run uses a 1-tap cursor score.",
+        badge: "Ideal behavioral",
+        note: "Ideal one-tap cursor cancellation for modeled eye scoring. No transistor summer, latch or feedback DAC is included in the selected exported CTLE netlist. The independent transistor receiver evidence is a separate reference below.",
       },
       reference: {
         badge: physical ? "Included in export" : "Physical reference",
@@ -162,7 +176,7 @@ const NebulaCircuitViews = (() => {
       for (const button of buttons.children) button.setAttribute("aria-pressed", String(button.dataset.designBlock === key));
     };
     for (const key of ["ctle", "attenuator", "reference", "dfe"]) {
-      const view = views[key];
+      const view = key === "dfe" ? modeledDfeView : views[key];
       const article = document.createElement("details");
       article.className = "design-block-card";
       article.dataset.block = key;
@@ -171,7 +185,7 @@ const NebulaCircuitViews = (() => {
       article.hidden = key !== "ctle";
       const button = document.createElement("button");
       button.type = "button"; button.dataset.designBlock = key;
-      button.textContent = {ctle:"CTLE",attenuator:"Attenuator",reference:"Bias reference",dfe:"1-tap DFE"}[key];
+      button.textContent = {ctle:"CTLE",attenuator:"Attenuator",reference:"Bias reference",dfe:"Modeled 1-tap DFE"}[key];
       button.setAttribute("aria-pressed", String(key === "ctle"));
       button.onclick = () => select(key);
       buttons.append(button);

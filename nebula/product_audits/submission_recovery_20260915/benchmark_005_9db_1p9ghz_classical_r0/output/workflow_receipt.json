@@ -1,0 +1,150 @@
+{
+  "status": "exhausted",
+  "attempts": [
+    {
+      "setting": 490,
+      "directory": "C:\\Users\\DELL\\Desktop\\serdes-dsp-framework-main\\nebula\\product_audits\\submission_recovery_20260915\\benchmark_005_9db_1p9ghz_classical_r0\\output\\physical_recovery\\candidate_01_setting_490",
+      "accepted": false,
+      "spice_calls": 137,
+      "n_pass": 308,
+      "n_points": 315,
+      "wall_s": 63.07094979999965
+    }
+  ],
+  "spice_calls": 137,
+  "selection_mode": "classical",
+  "max_candidates": 8,
+  "delivered_success": false,
+  "output_complete": true,
+  "request_met": true,
+  "written": [
+    "C:\\Users\\DELL\\Desktop\\serdes-dsp-framework-main\\nebula\\product_audits\\submission_recovery_20260915\\benchmark_005_9db_1p9ghz_classical_r0\\output\\design.json",
+    "C:\\Users\\DELL\\Desktop\\serdes-dsp-framework-main\\nebula\\product_audits\\submission_recovery_20260915\\benchmark_005_9db_1p9ghz_classical_r0\\output\\design.cir",
+    "C:\\Users\\DELL\\Desktop\\serdes-dsp-framework-main\\nebula\\product_audits\\submission_recovery_20260915\\benchmark_005_9db_1p9ghz_classical_r0\\output\\design_schematic.png",
+    "C:\\Users\\DELL\\Desktop\\serdes-dsp-framework-main\\nebula\\product_audits\\submission_recovery_20260915\\benchmark_005_9db_1p9ghz_classical_r0\\output\\explanation.txt"
+  ],
+  "artifact_warnings": [],
+  "parse_wall_s": 0.12398320000102103,
+  "selection_wall_s": 2.754801099999895,
+  "physical_wall_s": 63.07094979999965,
+  "export_wall_s": 0.6726142999996227,
+  "error": null,
+  "parsed_request": {
+    "peaking_db": 9.0,
+    "f_peak_hz": 1900000000.0,
+    "f_peak_ghz": 1.9,
+    "parsed_by": "regex",
+    "request": "9 dB at 1.9 GHz",
+    "notes": []
+  },
+  "schema": "nebula-physical-recovery-v1",
+  "max_spice_calls": 1096,
+  "known_spice_calls": 137,
+  "call_count_complete": true,
+  "cached_physical_passes_used": false,
+  "same_candidate_retries": 0,
+  "full_receiver_verified": false,
+  "run_pid": 10628,
+  "run_started_unix": 1789411304.5373485,
+  "run_host": "JAI",
+  "request": {
+    "peaking_db": 9.0,
+    "f_peak_hz": 1900000000.0
+  },
+  "eligible_settings": [
+    490
+  ],
+  "candidate_order": [
+    490
+  ],
+  "legacy_nominal_setting": null,
+  "registered_setting": null,
+  "source_hashes": {
+    "entry85_sha256": "352D8589CCF0D0874F1C8359E6F9B4122A802B418EDCD82E41A64A3A0102E1BF",
+    "baseline_decoded_sha256": "A205303614ABCC5F76D6EA78CFA1C9687E49A3817FA1E9FA9EC314336E20CA33",
+    "root_source_sha256": "9A06AA65D71B463D4F75CC2072D82BC845799BAF6FE073F66C25C069ED2F358B",
+    "table_decoded_sha256": "1B5F941DF4B34F3C90F6DD050F264D8A77C7BB2E5CE4D9EED8CC29EBD9F9843F"
+  },
+  "fixed_prescreen_rows_checked": 161280,
+  "rl_proposals": 0,
+  "channel_losses_db": [
+    3.0,
+    4.5,
+    6.0,
+    7.5,
+    9.0,
+    10.5,
+    12.0
+  ],
+  "wall_s": 66.92982909999955,
+  "recovery_receipt": {
+    "schema": "nebula-physical-recovery-v1",
+    "selection_mode": "classical",
+    "status": "exhausted",
+    "max_candidates": 8,
+    "max_spice_calls": 1096,
+    "attempts": [
+      {
+        "setting": 490,
+        "directory": "C:\\Users\\DELL\\Desktop\\serdes-dsp-framework-main\\nebula\\product_audits\\submission_recovery_20260915\\benchmark_005_9db_1p9ghz_classical_r0\\output\\physical_recovery\\candidate_01_setting_490",
+        "accepted": false,
+        "spice_calls": 137,
+        "n_pass": 308,
+        "n_points": 315,
+        "wall_s": 63.07094979999965
+      }
+    ],
+    "spice_calls": 137,
+    "known_spice_calls": 137,
+    "call_count_complete": true,
+    "selection_wall_s": 2.754801099999895,
+    "physical_wall_s": 63.07094979999965,
+    "cached_physical_passes_used": false,
+    "same_candidate_retries": 0,
+    "full_receiver_verified": false,
+    "run_pid": 10628,
+    "run_started_unix": 1789411304.5373485,
+    "run_host": "JAI",
+    "request": {
+      "peaking_db": 9.0,
+      "f_peak_hz": 1900000000.0
+    },
+    "eligible_settings": [
+      490
+    ],
+    "candidate_order": [
+      490
+    ],
+    "legacy_nominal_setting": null,
+    "registered_setting": null,
+    "source_hashes": {
+      "entry85_sha256": "352D8589CCF0D0874F1C8359E6F9B4122A802B418EDCD82E41A64A3A0102E1BF",
+      "baseline_decoded_sha256": "A205303614ABCC5F76D6EA78CFA1C9687E49A3817FA1E9FA9EC314336E20CA33",
+      "root_source_sha256": "9A06AA65D71B463D4F75CC2072D82BC845799BAF6FE073F66C25C069ED2F358B",
+      "table_decoded_sha256": "1B5F941DF4B34F3C90F6DD050F264D8A77C7BB2E5CE4D9EED8CC29EBD9F9843F"
+    },
+    "fixed_prescreen_rows_checked": 161280,
+    "rl_proposals": 0,
+    "channel_losses_db": [
+      3.0,
+      4.5,
+      6.0,
+      7.5,
+      9.0,
+      10.5,
+      12.0
+    ],
+    "wall_s": 65.83249239999896
+  },
+  "artifact_sha256": {
+    "design.json": "257203a449bb8b69adeb3ecd078b3a60d19a5b799ee799f2f2ef90ca1103ac04",
+    "design.cir": "22b2ed8c7535578869f4f339ef483d47069199ec08eb6d3c3906f4dc19ed5e77",
+    "design_schematic.png": "75ab4a943f09bd278a401f7ff38079dd081a1290dc8f1098ad21330f6bd62ffd",
+    "explanation.txt": "47f9f56d4624809e413f6b5f23abd113bc31be7bddf1a38cd4456d0a1f657f4f"
+  },
+  "timing_scope": "Entry through parsing/imports, all recovery attempts, verification, exact deck, drawing, explanation, design.json writes and required-output checks/hashes. The following workflow receipt serialization is excluded; a benchmark parent timer includes it and process startup/shutdown. Not a warm-cache guarantee.",
+  "full_receiver_compliance": false,
+  "scope": "Fixed physical CTLE plus ideal behavioral DFE; full receiver/S7 signoff excluded.",
+  "workflow_receipt": "C:\\Users\\DELL\\Desktop\\serdes-dsp-framework-main\\nebula\\product_audits\\submission_recovery_20260915\\benchmark_005_9db_1p9ghz_classical_r0\\output\\workflow_receipt.json",
+  "design_json": "design.json"
+}

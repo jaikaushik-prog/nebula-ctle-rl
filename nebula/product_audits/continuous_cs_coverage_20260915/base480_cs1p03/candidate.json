@@ -1,0 +1,39 @@
+{
+  "request": {
+    "peaking_db": 6.0,
+    "f_peak_hz": 2500000000.0,
+    "f_peak_ghz": 2.5
+  },
+  "search": {
+    "u": [
+      0.47470897153701547,
+      0.5052153178730102,
+      0.7146841021685507,
+      0.5474291169979152,
+      0.6196732835861933,
+      0.5871048097551593,
+      0.8020459464395331
+    ],
+    "atten_code": 7,
+    "atten_max_x": 2.3173946499684783,
+    "channel_loss_mode": "automatic-family",
+    "channel_losses_db": [
+      3.0,
+      4.5,
+      6.0,
+      7.5,
+      9.0,
+      10.5,
+      12.0
+    ],
+    "representative_channel_loss_db": 7.5,
+    "setting": "base480_cs1p03",
+    "candidate_id": "base480_cs1p03",
+    "bank_setting": null,
+    "bank_code": null,
+    "base_setting": 480,
+    "cs_factor": 1.03,
+    "which_path": "deterministic-continuous-cs-refinement",
+    "eligibility_scope": "Continuous candidate; no legacy-bank eligibility claim."
+  }
+}

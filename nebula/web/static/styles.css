@@ -142,19 +142,6 @@ select:focus-visible, a:focus-visible, summary:focus-visible {
 }
 .source-badge.live { color: var(--cyan-deep); border-color: #8bc9d8; background: var(--cyan-pale); }
 
-.judge-strip {
-  min-height: 62px; padding: 10px 26px; background: #102e4e; color: #fff;
-  display: grid; grid-template-columns: minmax(250px, 1fr) auto auto;
-  align-items: center; gap: 24px;
-}
-.judge-strip[hidden] { display: none; }
-.judge-strip > div { display: flex; align-items: baseline; gap: 12px; }
-.judge-strip strong { font-size: 14px; }
-.judge-strip span { color: #bdd1e2; font-size: 12px; }
-.judge-strip ol { display: flex; gap: 6px; padding: 0; margin: 0; list-style: none; }
-.judge-strip ol button, .judge-strip .text-button { border-color: #45627e; color: #e9f5fb; }
-.judge-strip ol button { background: transparent; border: 1px solid #45627e; border-radius: 5px; padding: 7px 10px; }
-
 .workspace { display: grid; grid-template-columns: 252px minmax(700px, 1fr) 286px; max-width: 1800px; margin: 0 auto; min-height: calc(100vh - 72px); }
 .target-panel, .verification-panel { background: var(--paper-blue); padding: 22px 18px; }
 .target-panel { border-right: 1px solid var(--rule); }
@@ -503,7 +490,6 @@ td.numeric { font-family: "Cascadia Mono", Consolas, monospace; }
   .hardware-metric-tape > div:nth-last-child(-n+2) { border-bottom: 0; }
   .hardware-corner-detail dl { grid-template-columns: repeat(3, 1fr); }
   .hardware-lower-grid { grid-template-columns: 1fr; }
-  .judge-strip { grid-template-columns: 1fr auto; }.judge-strip ol { grid-column: 1 / -1; overflow-x: auto; }.judge-strip > div { display: block; }.judge-strip span { display: block; margin-top: 2px; }
 }
 
 @media (max-width: 560px) {
@@ -705,7 +691,7 @@ body[data-view] #progressPanel { margin: 14px 0; padding: 12px 18px; }
 .inspector-switcher { padding: 10px 12px; min-height: 58px; border-bottom: 1px solid var(--rule-soft); justify-content: space-between; }
 .inspector-switcher button { border: 0; border-radius: 4px; background: transparent; color: var(--muted); font-size: 13px; padding: 9px 8px; white-space: nowrap; }
 .inspector-switcher button[aria-pressed="true"] { color: var(--ink); font-weight: 650; background: #eef3f7; }
-.inspector-body { height: 405px; overflow-y: auto; padding: 22px 18px; }
+.inspector-body { min-height: 405px; height: auto; overflow: visible; padding: 22px 18px; }
 .inspector-body h3 { margin: 0 0 20px; font-size: 17px; font-weight: 600; }
 .inspector-body .plot-frame { min-height: 0; margin: 30px -10px 0; }
 .inspector-body .plot-frame svg text { font-size: 23px; }
@@ -730,7 +716,7 @@ body[data-view] #inspectorProvenance .verification-panel { display: block; paddi
 .evidence-shelf > .generated-drawing > summary { background: #f0f8fa; }
 .evidence-shelf > .reference-checkpoint > summary { background: #f4f6f9; }
 .evidence-shelf > .reference-checkpoint > summary > span { display: block; color: var(--muted); font-size: 13px; font-weight: 500; }
-@media (max-width: 1100px) { .circuit-workbench { grid-template-columns: 1fr; } .design-inspector { border-left: 0; border-top: 1px solid var(--rule); } .inspector-body { height: auto; max-height: 450px; } .inspector-body .plot-frame { max-width: 650px; margin: 12px auto; } }
+@media (max-width: 1100px) { .circuit-workbench { grid-template-columns: 1fr; } .design-inspector { border-left: 0; border-top: 1px solid var(--rule); } .inspector-body { height: auto; max-height: none; } .inspector-body .plot-frame { max-width: 650px; margin: 12px auto; } }
 @media (max-width: 650px) { .stage-controls { flex-wrap: wrap; } .block-switcher { flex-wrap: wrap; } .evidence-shelf { grid-template-columns: 1fr; } .evidence-shelf > details > summary { padding: 18px; } }
 
 .inspector-body .data-grid span { font-size: 13px; }
@@ -738,3 +724,63 @@ body[data-view] #inspectorProvenance .verification-panel { display: block; paddi
 
 .inspector-body .data-grid { background: transparent; gap: 0 18px; border: 0; }
 .inspector-body .data-grid > div { padding: 14px 0; border-bottom: 1px solid var(--rule-soft); }
+
+/* Selected physical output and recorded recovery are independent of the reference receiver. */
+.selected-circuit-scope { margin: 0 0 16px; color: var(--muted, #50677c); font-size: 13px; line-height: 1.6; }
+.recovery-trace { margin: 0 0 22px; padding: 16px 18px; border: 1px solid #b8d9de; border-radius: 10px; background: #f5fbfc; }
+.recovery-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 12px; }
+.recovery-heading h2 { margin: 0; font-size: 16px; }
+.recovery-steps { display: flex; align-items: stretch; flex-wrap: wrap; gap: 20px; padding: 0; margin: 0; list-style: none; }
+.recovery-step { flex: 1 1 150px; min-width: 0; position: relative; padding: 10px 12px; background: white; border: 1px solid #d3e1e7; border-radius: 6px; }
+.recovery-step + .recovery-step::before { content: "\2192"; position: absolute; left: -17px; top: 14px; color: #526d80; }
+.recovery-step strong, .recovery-step span { display: block; overflow-wrap: anywhere; }
+.recovery-step strong { font-size: 13px; margin-bottom: 5px; }
+.recovery-step span { font-size: 12px; line-height: 1.5; color: #496276; }
+.recovery-step.accepted { border-color: #77b5a2; background: #f1fbf5; }
+.recovery-step.rejected { border-color: #d9b77d; background: #fffaf1; }
+@media (max-width: 700px) { .recovery-steps { display: grid; grid-template-columns: 1fr; } .recovery-step + .recovery-step::before { content: "\2193"; top: -20px; left: 18px; } }
+
+.language-assistant { margin: 18px 0; }
+.llm-opt-in { display: flex; gap: 8px; align-items: center; margin: 12px 0 4px; font-size: 13px; }
+.llm-opt-in input[type="checkbox"] { width: 16px; height: 16px; margin: 0; flex-shrink: 0; }
+.explanation-result { margin-top: 14px; padding: 14px; border-left: 3px solid var(--cyan); background: var(--paper-blue); }
+#explanationText { white-space: pre-wrap; overflow-wrap: anywhere; }
+
+/* Evidence hierarchy follows circuit ownership, not identical promotional cards. */
+.candidate-catalogue { color: var(--ink); font-size: 14px; line-height: 1.6; max-width: 100ch; }
+.selected-receiver-evidence { border-left: 3px solid var(--cyan); padding: 4px 20px 14px; margin: 28px 0; }
+.selected-receiver-evidence p { max-width: 95ch; line-height: 1.6; }
+.evidence-links { display: flex; flex-wrap: wrap; gap: 12px 22px; }
+.judge-evidence-index { margin: 20px 0 32px; }
+.judge-evidence-index table { width: 100%; table-layout: fixed; }
+.judge-evidence-index th:nth-child(1) { width: 26%; }
+.judge-evidence-index th:nth-child(2) { width: 46%; }
+.judge-evidence-index td { overflow-wrap: anywhere; vertical-align: top; font-size: 13px; padding: 12px; }
+.judge-evidence-index td:last-child { font-size: 11px; }
+#hardwareSchematic { height: auto; }
+
+.evidence-shelf > .selected-receiver-evidence { grid-column: 1 / -1; margin: 0; }
+.evidence-links a, .judge-evidence-index a { color: var(--cyan-deep); text-underline-offset: 3px; }
+
+/* Keep nested open evidence visible in Chromium details-content layout. */
+#referenceCheckpoint[open]::details-content, .hardware-drawing[open]::details-content { content-visibility: visible; }
+
+/* Optional engineering details follow the existing workbench typography. */
+#engineeringDiagnostics { margin: 24px 0; scroll-margin-top: 88px; }
+#engineeringDiagnostics details { padding: 18px 20px; }
+#engineeringDiagnostics h3 { margin: 22px 0 8px; font-size: 16px; }
+#engineeringDiagnostics p { max-width: 90ch; line-height: 1.55; }
+#engineeringDiagnostics table { width: 100%; margin: 16px 0; }
+#engineeringDiagnostics a { color: var(--cyan); display: inline-block; margin-top: 12px; }
+
+
+/* Parent-bound prototype evidence uses the established workbench styles. */
+#programmableReceiverOption { margin: 0; grid-column: 1 / -1; scroll-margin-top: 88px; }
+#programmableReceiverOption summary { font: inherit; font-size: 16px; font-weight: 600; padding: 8px 0; }
+#programmableReceiverOption details { padding: 18px 20px; }
+#programmableReceiverOption h3 { margin: 20px 0 12px; font-size: 18px; }
+#programmableReceiverOption p { max-width: 90ch; line-height: 1.6; margin: 12px 0; }
+#programmableReceiverOption img { display: block; width: 100%; height: auto; margin: 18px 0; }
+#programmableReceiverOption .programmable-limits { color: var(--warn); font-weight: 600; }
+#programmableReceiverOption table { width: 100%; margin: 18px 0; }
+#programmableReceiverOption th, #programmableReceiverOption td { padding: 10px; text-align: left; font-family: inherit; font-size: 14px; }
